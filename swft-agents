@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT — AI Agents</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#0a0a0a; --surface:#111111; --surface2:#181818;
+    --border:#1f1f1f; --border2:#2c2c2c;
+    --green:#c8f135; --white:#f0f0f0; --gray:#7a7a7a; --gray2:#444444;
+    --blue:#4d9fff; --amber:#f5a623; --red:#ff5252; --purple:#b388ff;
+    --sidebar-w:228px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(–sidebar-w);min-height:100vh;background:var(–surface);border-right:1px solid var(–border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:3px;color:var(–white);line-height:1;}
+.logo-mark em{color:var(–green);font-style:normal;}
+.logo-sub{font-size:9.5px;color:var(–gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(–border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(–surface2);color:var(–white);}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9px;letter-spacing:2.5px;color:var(–gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(–gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(–surface2);color:var(–white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(–green);font-weight:500;}
+.nav-item.active::before{content:’’;position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(–green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.nav-badge{margin-left:auto;background:var(–green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:‘JetBrains Mono’,monospace;}
+.nav-divider{height:1px;background:var(–border);margin:8px 12px;}
+.sidebar-footer{border-top:1px solid var(–border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(–surface2);}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(–green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(–white);}
+.user-role{font-size:10.5px;color:var(–gray2);margin-top:1px;}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:300;width:32px;height:32px;border-radius:8px;background:var(–surface2);border:1px solid var(–border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(–border2);color:var(–white);}
+
+/* ── MAIN ── */
+.main{margin-left:var(–sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
+
+/* ── TOPBAR ── */
+.topbar{height:60px;border-bottom:1px solid var(–border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);z-index:100;}
+.topbar-page{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:2.5px;color:var(–white);}
+.topbar-slash{color:var(–border2);font-family:‘JetBrains Mono’,monospace;font-size:16px;}
+.topbar-sub{font-size:12px;color:var(–gray);font-style:italic;font-weight:300;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.ai-pill{display:flex;align-items:center;gap:7px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;padding:5px 13px;font-size:11.5px;font-weight:500;color:var(–green);}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(–green);animation:glow 2.2s ease-in-out infinite;}
+@keyframes glow{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(200,241,53,0.5);}50%{opacity:0.6;box-shadow:0 0 0 4px rgba(200,241,53,0);}}
+
+/* ── PAGE BODY ── */
+.page-body{flex:1;padding:28px 28px 48px;display:flex;flex-direction:column;gap:20px;}
+
+/* ── HERO STRIP ── */
+.hero-strip{background:linear-gradient(135deg,rgba(200,241,53,0.06) 0%,rgba(200,241,53,0.02) 100%);border:1px solid rgba(200,241,53,0.14);border-radius:14px;padding:20px 26px;display:flex;align-items:center;gap:18px;}
+.hero-icon{font-size:36px;flex-shrink:0;}
+.hero-text h2{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:2px;color:var(–white);}
+.hero-text p{font-size:13px;color:var(–gray);margin-top:4px;line-height:1.5;}
+.hero-stats{margin-left:auto;display:flex;gap:28px;flex-shrink:0;}
+.hstat{text-align:right;}
+.hstat-val{font-family:‘Bebas Neue’,sans-serif;font-size:26px;letter-spacing:1px;color:var(–green);}
+.hstat-label{font-size:10px;color:var(–gray2);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+
+/* ── AGENT CARD ── */
+.agent-card{background:var(–surface);border:1px solid var(–border);border-radius:16px;overflow:hidden;transition:border-color 0.2s;animation:fadeUp 0.4s ease both;}
+.agent-card:nth-child(1){animation-delay:.06s;}
+.agent-card:nth-child(2){animation-delay:.13s;}
+.agent-card:nth-child(3){animation-delay:.20s;}
+.agent-card.expanded{border-color:var(–border2);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* Card header — always visible */
+.agent-header{display:flex;align-items:center;gap:16px;padding:20px 22px;cursor:pointer;user-select:none;}
+.agent-header:hover .agent-name{color:var(–white);}
+
+.agent-icon-wrap{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+
+.agent-info{flex:1;min-width:0;}
+.agent-name{font-family:‘Bebas Neue’,sans-serif;font-size:18px;letter-spacing:1.5px;color:var(–white);transition:color 0.14s;}
+.agent-desc{font-size:12px;color:var(–gray);margin-top:3px;}
+
+.agent-meta{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+
+/* Toggle switch */
+.toggle-wrap{display:flex;align-items:center;gap:8px;}
+.toggle-label{font-size:11px;color:var(–gray);}
+.toggle{width:38px;height:22px;border-radius:11px;background:var(–border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:var(–green);}
+.toggle::after{content:’’;position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(16px);}
+
+.activity-badge{font-family:‘JetBrains Mono’,monospace;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(200,241,53,0.1);color:var(–green);}
+.activity-badge.amber{background:rgba(245,166,35,0.1);color:var(–amber);}
+
+.expand-chevron{color:var(–gray2);transition:transform 0.25s;flex-shrink:0;}
+.agent-card.expanded .expand-chevron{transform:rotate(180deg);}
+
+/* Stat row inside header */
+.agent-stats{display:flex;gap:20px;padding:0 22px 16px;border-bottom:1px solid var(–border);}
+.astat{display:flex;flex-direction:column;}
+.astat-val{font-family:‘JetBrains Mono’,monospace;font-size:14px;font-weight:500;color:var(–white);}
+.astat-label{font-size:10px;color:var(–gray2);letter-spacing:0.5px;margin-top:2px;}
+
+/* Expandable detail panel */
+.agent-detail{max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.22,1,0.36,1);}
+.agent-card.expanded .agent-detail{max-height:900px;}
+
+.detail-inner{padding:20px 22px;display:flex;flex-direction:column;gap:18px;border-top:1px solid var(–border);}
+
+/* Two-col layout inside detail */
+.detail-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* Config panel */
+.config-panel{background:var(–surface2);border:1px solid var(–border);border-radius:11px;padding:16px;}
+.config-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(–gray2);margin-bottom:12px;}
+.config-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(–border);}
+.config-row:last-child{border-bottom:none;}
+.config-label{font-size:12.5px;color:var(–gray);}
+.config-val{font-size:12.5px;color:var(–white);font-weight:500;}
+.config-edit{font-size:11px;color:var(–green);cursor:pointer;font-weight:500;}
+.config-edit:hover{text-decoration:underline;}
+
+/* Activity log */
+.activity-log{background:var(–surface2);border:1px solid var(–border);border-radius:11px;overflow:hidden;}
+.log-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(–border);}
+.log-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(–gray2);}
+.log-link{font-size:11px;color:var(–green);cursor:pointer;font-weight:500;}
+.log-item{display:flex;align-items:flex-start;gap:12px;padding:11px 16px;border-bottom:1px solid var(–border);}
+.log-item:last-child{border-bottom:none;}
+.log-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.log-body{flex:1;}
+.log-text{font-size:12.5px;color:#c8c8c8;line-height:1.4;}
+.log-text strong{color:var(–white);}
+.log-time{font-family:‘JetBrains Mono’,monospace;font-size:10px;color:var(–gray2);margin-top:3px;}
+
+/* Performance bar */
+.perf-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(–border);}
+.perf-row:last-child{border-bottom:none;}
+.perf-label{font-size:12px;color:var(–gray);flex:1;}
+.perf-bar-track{width:100px;height:4px;background:var(–border);border-radius:2px;overflow:hidden;flex-shrink:0;}
+.perf-bar-fill{height:100%;border-radius:2px;background:var(–green);}
+.perf-pct{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:var(–white);width:36px;text-align:right;flex-shrink:0;}
+
+/* Prompt/script preview */
+.prompt-box{background:#0d0d0d;border:1px solid var(–border2);border-radius:9px;padding:14px;font-family:‘JetBrains Mono’,monospace;font-size:11.5px;color:#8aab1f;line-height:1.6;}
+.prompt-box .comment{color:var(–gray2);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(–border2);border-radius:2px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(–surface2);border:1px solid var(–border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(–white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(–green);flex-shrink:0;}
+
+/* ── TOPBAR COLLAPSE OFFSET ── */
+.topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
+.main.expanded .topbar { padding-left: 56px; }
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div>
+      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-sub">simple. smart. swft.</div>
+    </div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>Dashboard</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/></svg>Customers <span class="nav-badge">14</span></div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>Jobs <span class="nav-badge">6</span></div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>Quotes</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>Schedule</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>Invoices <span class="nav-badge">3</span></div>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Growth</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Pipeline</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>Campaigns</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8"/></svg>Reviews</div>
+    <div class="nav-divider"></div>
+    <div class="nav-label">AI</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="1.8"/></svg>AI Agents</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-tile">
+      <div class="s-avatar">JR</div>
+      <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+
+<div class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-page">AI AGENTS</div>
+    <span class="topbar-slash">/</span>
+    <div class="topbar-sub">3 agents active</div>
+    <div class="topbar-right">
+      <div class="ai-pill"><div class="pulse"></div>3 / 3 Online</div>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+```
+<!-- Hero -->
+<div class="hero-strip">
+  <div class="hero-icon">🤖</div>
+  <div class="hero-text">
+    <h2>YOUR AI WORKFORCE</h2>
+    <p>These agents run 24/7 in the background — booking jobs, sending quotes, chasing payments, and requesting reviews so you don't have to.</p>
+  </div>
+  <div class="hero-stats">
+    <div class="hstat">
+      <div class="hstat-val">47</div>
+      <div class="hstat-label">Actions this week</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-val">~11h</div>
+      <div class="hstat-label">Time saved</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AGENT 1: RECEPTIONIST ── -->
+<div class="agent-card" id="card-receptionist">
+  <div class="agent-header" onclick="toggleCard('receptionist')">
+    <div class="agent-icon-wrap" style="background:rgba(200,241,53,0.1);">📞</div>
+    <div class="agent-info">
+      <div class="agent-name">AI RECEPTIONIST</div>
+      <div class="agent-desc">Answers inbound calls & texts 24/7 — qualifies leads, books estimates, and sends confirmations automatically.</div>
+    </div>
+    <div class="agent-meta">
+      <div class="toggle-wrap">
+        <div class="toggle on" id="toggle-receptionist" onclick="event.stopPropagation();toggleAgent('receptionist')"></div>
+        <span class="toggle-label" id="toggle-label-receptionist">On</span>
+      </div>
+      <span class="activity-badge">9 actions today</span>
+      <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
+    </div>
+  </div>
+
+  <div class="agent-stats">
+    <div class="astat"><div class="astat-val">32</div><div class="astat-label">Calls handled MTD</div></div>
+    <div class="astat"><div class="astat-val">18</div><div class="astat-label">Estimates booked</div></div>
+    <div class="astat"><div class="astat-val">94%</div><div class="astat-label">Booking rate</div></div>
+    <div class="astat"><div class="astat-val">&lt;30s</div><div class="astat-label">Avg response time</div></div>
+  </div>
+
+  <div class="agent-detail" id="detail-receptionist">
+    <div class="detail-inner">
+
+      <div class="detail-cols">
+        <div class="config-panel">
+          <div class="config-title">Configuration</div>
+          <div class="config-row"><span class="config-label">Business hours</span><span class="config-val">24/7</span></div>
+          <div class="config-row"><span class="config-label">Voice / SMS</span><span class="config-val">Both enabled</span></div>
+          <div class="config-row"><span class="config-label">Escalate to owner</span><span class="config-val">If confused</span></div>
+          <div class="config-row"><span class="config-label">Booking calendar</span><span class="config-val">Connected ✓</span></div>
+          <div class="config-row"><span class="config-label">Tone</span><span class="config-val">Friendly, professional <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
+        </div>
+
+        <div class="config-panel">
+          <div class="config-title">Performance</div>
+          <div class="perf-row"><span class="perf-label">Lead qualification</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:92%;"></div></div><span class="perf-pct">92%</span></div>
+          <div class="perf-row"><span class="perf-label">Booking conversion</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:78%;"></div></div><span class="perf-pct">78%</span></div>
+          <div class="perf-row"><span class="perf-label">Customer satisfaction</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:96%;"></div></div><span class="perf-pct">96%</span></div>
+          <div class="perf-row"><span class="perf-label">Correct escalations</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:100%;"></div></div><span class="perf-pct">100%</span></div>
+        </div>
+      </div>
+
+      <div class="activity-log">
+        <div class="log-header">
+          <div class="log-title">Recent Activity</div>
+          <span class="log-link">View all →</span>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--green);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Booked estimate</strong> for Nguyen — driveway resurface, 1,200 sqft · Mar 31 @ 11am</div>
+            <div class="log-time">9 min ago</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--blue);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Inbound SMS</strong> from (512) 441-8823 — qualified as driveway lead, sent booking link</div>
+            <div class="log-time">1 hr ago</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--green);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Confirmed appointment</strong> for Pham estimate · sent reminder SMS</div>
+            <div class="log-time">3 hrs ago</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--amber);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Escalated to Jake</strong> — caller asked about commercial pricing, outside agent scope</div>
+            <div class="log-time">Yesterday, 2:14 PM</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="config-title" style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;">Opening Script Preview</div>
+        <div class="prompt-box"><span class="comment">// Agent greeting — editable</span>
+```
+
+“Hi, thanks for calling SWFT Concrete!
+I’m the SWFT assistant. I can help you
+get a free estimate or answer questions.
+Are you looking for a driveway, patio,
+or something else today?”</div>
+</div>
+
+```
+    </div>
+  </div>
+</div>
+
+<!-- ── AGENT 2: ESTIMATOR ── -->
+<div class="agent-card" id="card-estimator">
+  <div class="agent-header" onclick="toggleCard('estimator')">
+    <div class="agent-icon-wrap" style="background:rgba(77,159,255,0.1);">📐</div>
+    <div class="agent-info">
+      <div class="agent-name">AI ESTIMATOR</div>
+      <div class="agent-desc">Generates quotes from customer photos or job descriptions — learns from your past jobs to improve accuracy over time.</div>
+    </div>
+    <div class="agent-meta">
+      <div class="toggle-wrap">
+        <div class="toggle on" id="toggle-estimator" onclick="event.stopPropagation();toggleAgent('estimator')"></div>
+        <span class="toggle-label" id="toggle-label-estimator">On</span>
+      </div>
+      <span class="activity-badge">4 quotes today</span>
+      <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
+    </div>
+  </div>
+
+  <div class="agent-stats">
+    <div class="astat"><div class="astat-val">41</div><div class="astat-label">Quotes generated MTD</div></div>
+    <div class="astat"><div class="astat-val">±6%</div><div class="astat-label">Avg estimate accuracy</div></div>
+    <div class="astat"><div class="astat-val">67%</div><div class="astat-label">Quote close rate</div></div>
+    <div class="astat"><div class="astat-val">3 min</div><div class="astat-label">Avg quote time</div></div>
+  </div>
+
+  <div class="agent-detail" id="detail-estimator">
+    <div class="detail-inner">
+
+      <div class="detail-cols">
+        <div class="config-panel">
+          <div class="config-title">Configuration</div>
+          <div class="config-row"><span class="config-label">Input types</span><span class="config-val">Photos + text</span></div>
+          <div class="config-row"><span class="config-label">Base price / sqft</span><span class="config-val">$9–$17 <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
+          <div class="config-row"><span class="config-label">Markup</span><span class="config-val">22% <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
+          <div class="config-row"><span class="config-label">Auto-send quotes</span><span class="config-val">After owner review</span></div>
+          <div class="config-row"><span class="config-label">Training data</span><span class="config-val">41 past jobs ✓</span></div>
+        </div>
+
+        <div class="config-panel">
+          <div class="config-title">Accuracy by Service</div>
+          <div class="perf-row"><span class="perf-label">Broom finish</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:96%;"></div></div><span class="perf-pct">96%</span></div>
+          <div class="perf-row"><span class="perf-label">Exposed aggregate</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:91%;"></div></div><span class="perf-pct">91%</span></div>
+          <div class="perf-row"><span class="perf-label">Stamped concrete</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:88%;"></div></div><span class="perf-pct">88%</span></div>
+          <div class="perf-row"><span class="perf-label">Epoxy coating</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:94%;"></div></div><span class="perf-pct">94%</span></div>
+        </div>
+      </div>
+
+      <div class="activity-log">
+        <div class="log-header">
+          <div class="log-title">Recent Activity</div>
+          <span class="log-link">View all →</span>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--blue);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Generated quote #1047</strong> for Flores — backyard patio 520 sqft · estimated $6,240 · awaiting review</div>
+            <div class="log-time">22 min ago</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--green);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Quote approved & sent</strong> — #1046 Nguyen Walkway $2,250 · customer opened after 14 min</div>
+            <div class="log-time">2 hrs ago</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--blue);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Photo analysis complete</strong> — Pham driveway · detected 880 sqft + 2 obstacles · quote draft ready</div>
+            <div class="log-time">4 hrs ago</div>
+          </div>
+        </div>
+        <div class="log-item">
+          <div class="log-dot" style="background:var(--amber);"></div>
+          <div class="log-body">
+            <div class="log-text"><strong>Low confidence flag</strong> — Martinez patio photo quality poor, recommended on-site estimate instead</div>
+            <div class="log-time">Yesterday</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="config-title" style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;">Estimation Logic Preview</div>
+        <div class="prompt-box"><span class="comment">// Price calculation — editable per service type</span>
+```
+
+sqft × base_rate[service_type]
+
+- complexity_factor(obstacles, grade)
+- material_upcharge[finish]
+  × (1 + markup_pct)
+  <span class="comment">// Rounded to nearest $50, min margin 18%</span></div>
+  </div>
+  
+  ```
+  </div>
+  ```
+  
+    </div>
+  </div>
+  
+  <!-- ── AGENT 3: FOLLOW-UP ── -->
+  
+  <div class="agent-card" id="card-followup">
+    <div class="agent-header" onclick="toggleCard('followup')">
+      <div class="agent-icon-wrap" style="background:rgba(245,166,35,0.1);">🔔</div>
+      <div class="agent-info">
+        <div class="agent-name">AI FOLLOW-UP AGENT</div>
+        <div class="agent-desc">Automatically follows up on unsigned quotes, overdue invoices, and completed jobs to request Google reviews.</div>
+      </div>
+      <div class="agent-meta">
+        <div class="toggle-wrap">
+          <div class="toggle on" id="toggle-followup" onclick="event.stopPropagation();toggleAgent('followup')"></div>
+          <span class="toggle-label" id="toggle-label-followup">On</span>
+        </div>
+        <span class="activity-badge amber">2 pending actions</span>
+        <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
+      </div>
+    </div>
+  
+    <div class="agent-stats">
+      <div class="astat"><div class="astat-val">$6,400</div><div class="astat-label">Invoices collected via follow-up</div></div>
+      <div class="astat"><div class="astat-val">8</div><div class="astat-label">Reviews requested MTD</div></div>
+      <div class="astat"><div class="astat-val">5</div><div class="astat-label">5-star reviews received</div></div>
+      <div class="astat"><div class="astat-val">63%</div><div class="astat-label">Quote follow-up close rate</div></div>
+    </div>
+  
+    <div class="agent-detail" id="detail-followup">
+      <div class="detail-inner">
+  
+  ```
+    <div class="detail-cols">
+      <div class="config-panel">
+        <div class="config-title">Follow-up Sequences</div>
+        <div class="config-row"><span class="config-label">Unsigned quote</span><span class="config-val">Day 1, 3, 7 <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
+        <div class="config-row"><span class="config-label">Overdue invoice</span><span class="config-val">Day 1, 3, 7 <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
+        <div class="config-row"><span class="config-label">Review request</span><span class="config-val">24h after complete</span></div>
+        <div class="config-row"><span class="config-label">Re-engagement</span><span class="config-val">12 months inactive</span></div>
+        <div class="config-row"><span class="config-label">Channel</span><span class="config-val">SMS (primary)</span></div>
+      </div>
+  
+      <div class="config-panel">
+        <div class="config-title">Pending Actions</div>
+        <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <div style="font-size:12.5px;color:var(--white);font-weight:500;">Chen Invoice Reminder</div>
+          <div style="font-size:11px;color:var(--amber);">$2,600 overdue · sends in 2 hrs</div>
+        </div>
+        <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <div style="font-size:12.5px;color:var(--white);font-weight:500;">Martinez Quote Follow-up</div>
+          <div style="font-size:11px;color:var(--gray);">Day 4 · sends tonight at 6 PM</div>
+        </div>
+        <div class="config-row">
+          <span class="config-label" style="font-size:11px;">Next review request</span>
+          <span class="config-val" style="font-size:11px;color:var(--gray2);">Henderson · tomorrow</span>
+        </div>
+      </div>
+    </div>
+  
+    <div class="activity-log">
+      <div class="log-header">
+        <div class="log-title">Recent Activity</div>
+        <span class="log-link">View all →</span>
+      </div>
+      <div class="log-item">
+        <div class="log-dot" style="background:var(--green);"></div>
+        <div class="log-body">
+          <div class="log-text"><strong>Review request sent</strong> to Linda Chen · she left a 5-star Google review 18 min later</div>
+          <div class="log-time">Yesterday, 4:02 PM</div>
+        </div>
+      </div>
+      <div class="log-item">
+        <div class="log-dot" style="background:var(--amber);"></div>
+        <div class="log-body">
+          <div class="log-text"><strong>Invoice reminder sent</strong> to Patel · $4,200 · payment received same day</div>
+          <div class="log-time">Mar 21</div>
+        </div>
+      </div>
+      <div class="log-item">
+        <div class="log-dot" style="background:var(--green);"></div>
+        <div class="log-body">
+          <div class="log-text"><strong>Quote follow-up sent</strong> to Kim (Day 3) · customer replied and approved within 2 hrs</div>
+          <div class="log-time">Mar 18</div>
+        </div>
+      </div>
+      <div class="log-item">
+        <div class="log-dot" style="background:var(--blue);"></div>
+        <div class="log-body">
+          <div class="log-text"><strong>Re-engagement sent</strong> to 3 customers inactive 12+ months · 1 reply received</div>
+          <div class="log-time">Mar 15</div>
+        </div>
+      </div>
+    </div>
+  
+    <div>
+      <div class="config-title" style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;">Review Request Message Preview</div>
+      <div class="prompt-box"><span class="comment">// Sent 24hrs after job marked complete</span>
+  ```
+
+“Hey [first name]! It was great working
+on your [service] at [address]. If you’re
+happy with how it turned out, a quick
+Google review would mean a lot to us 🙏
+[google_review_link]
+— Jake & the SWFT team”</div>
+</div>
+
+```
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- Floating re-open btn -->
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<script>
+  function toggleCard(id) {
+    const card = document.getElementById('card-' + id);
+    card.classList.toggle('expanded');
+  }
+
+  function toggleAgent(id) {
+    const toggle = document.getElementById('toggle-' + id);
+    const label  = document.getElementById('toggle-label-' + id);
+    toggle.classList.toggle('on');
+    label.textContent = toggle.classList.contains('on') ? 'On' : 'Off';
+    label.style.color = toggle.classList.contains('on') ? 'var(--gray)' : 'var(--gray2)';
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
+  }
+
+  let _toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+</script>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- ── FIREBASE AUTH GUARD ── -->
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  document.body.style.visibility = "hidden";
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "swft-login.html";
+    } else {
+      document.body.style.visibility = "visible";
+      window.__swftUser = user;
+    }
+  });
+</script>
+
+</body>
+</html>
