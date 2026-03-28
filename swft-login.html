@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -17,94 +18,94 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--white);fo
 
 /* ── BACKGROUND TEXTURE ── */
 body::before{
-  content:'';position:fixed;inset:0;
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
-  pointer-events:none;z-index:0;
+content:’’;position:fixed;inset:0;
+background:
+radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+pointer-events:none;z-index:0;
 }
 
 /* grid lines */
 body::after{
-  content:'';position:fixed;inset:0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size:40px 40px;
-  pointer-events:none;z-index:0;
+content:’’;position:fixed;inset:0;
+background-image:
+linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+background-size:40px 40px;
+pointer-events:none;z-index:0;
 }
 
 /* ── LAYOUT ── */
 .wrapper{
-  position:relative;z-index:1;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:40px 20px;
+position:relative;z-index:1;
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:40px 20px;
 }
 
 /* ── CARD ── */
 .card{
-  width:100%;max-width:440px;
-  background:var(--surface);
-  border:1px solid var(--border2);
-  border-radius:20px;
-  overflow:hidden;
-  box-shadow:0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
-  animation:slideUp 0.45s cubic-bezier(0.22,1,0.36,1) both;
+width:100%;max-width:440px;
+background:var(–surface);
+border:1px solid var(–border2);
+border-radius:20px;
+overflow:hidden;
+box-shadow:0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+animation:slideUp 0.45s cubic-bezier(0.22,1,0.36,1) both;
 }
 
 @keyframes slideUp{
-  from{opacity:0;transform:translateY(24px);}
-  to{opacity:1;transform:translateY(0);}
+from{opacity:0;transform:translateY(24px);}
+to{opacity:1;transform:translateY(0);}
 }
 
 /* ── HEADER ── */
 .card-header{
-  padding:36px 36px 28px;
-  border-bottom:1px solid var(--border);
-  position:relative;
-  overflow:hidden;
+padding:36px 36px 28px;
+border-bottom:1px solid var(–border);
+position:relative;
+overflow:hidden;
 }
 .card-header::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg, var(--green), rgba(200,241,53,0.2));
+content:’’;position:absolute;top:0;left:0;right:0;height:2px;
+background:linear-gradient(90deg, var(–green), rgba(200,241,53,0.2));
 }
 
 .logo{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:32px;letter-spacing:4px;
-  color:var(--white);line-height:1;
-  display:flex;align-items:center;gap:2px;
+font-family:‘Bebas Neue’,sans-serif;
+font-size:32px;letter-spacing:4px;
+color:var(–white);line-height:1;
+display:flex;align-items:center;gap:2px;
 }
-.logo em{color:var(--green);font-style:normal;}
+.logo em{color:var(–green);font-style:normal;}
 
 .tagline{
-  font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
-  color:var(--gray2);margin-top:4px;font-weight:400;
-  font-family:'JetBrains Mono',monospace;
+font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+color:var(–gray2);margin-top:4px;font-weight:400;
+font-family:‘JetBrains Mono’,monospace;
 }
 
 /* ── TABS ── */
 .tab-row{
-  display:flex;gap:0;
-  margin-top:24px;
-  background:var(--bg);
-  border-radius:10px;
-  padding:3px;
+display:flex;gap:0;
+margin-top:24px;
+background:var(–bg);
+border-radius:10px;
+padding:3px;
 }
 .tab{
-  flex:1;padding:9px;border-radius:8px;
-  font-size:12px;font-weight:600;letter-spacing:0.5px;
-  cursor:pointer;text-align:center;
-  color:var(--gray);transition:all 0.18s;
-  user-select:none;
+flex:1;padding:9px;border-radius:8px;
+font-size:12px;font-weight:600;letter-spacing:0.5px;
+cursor:pointer;text-align:center;
+color:var(–gray);transition:all 0.18s;
+user-select:none;
 }
 .tab.active{
-  background:var(--surface2);
-  color:var(--white);
-  box-shadow:0 1px 4px rgba(0,0,0,0.5);
+background:var(–surface2);
+color:var(–white);
+box-shadow:0 1px 4px rgba(0,0,0,0.5);
 }
 
 /* ── FORM BODY ── */
@@ -116,64 +117,64 @@ body::after{
 /* ── FIELD ── */
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{
-  font-size:10px;letter-spacing:1.8px;text-transform:uppercase;
-  color:var(--gray);font-weight:600;
+font-size:10px;letter-spacing:1.8px;text-transform:uppercase;
+color:var(–gray);font-weight:600;
 }
 .field-wrap{position:relative;}
 .field-wrap svg{
-  position:absolute;left:13px;top:50%;transform:translateY(-50%);
-  color:var(--gray2);pointer-events:none;
+position:absolute;left:13px;top:50%;transform:translateY(-50%);
+color:var(–gray2);pointer-events:none;
 }
 .field input{
-  width:100%;
-  background:var(--bg);
-  border:1px solid var(--border2);
-  border-radius:10px;
-  padding:12px 13px 12px 38px;
-  color:var(--white);
-  font-family:'DM Sans',sans-serif;font-size:14px;
-  outline:none;
-  transition:border-color 0.15s, box-shadow 0.15s;
+width:100%;
+background:var(–bg);
+border:1px solid var(–border2);
+border-radius:10px;
+padding:12px 13px 12px 38px;
+color:var(–white);
+font-family:‘DM Sans’,sans-serif;font-size:14px;
+outline:none;
+transition:border-color 0.15s, box-shadow 0.15s;
 }
 .field input:focus{
-  border-color:var(--green);
-  box-shadow:0 0 0 3px rgba(200,241,53,0.08);
+border-color:var(–green);
+box-shadow:0 0 0 3px rgba(200,241,53,0.08);
 }
-.field input::placeholder{color:var(--gray2);}
-.field input.error{border-color:var(--red);}
+.field input::placeholder{color:var(–gray2);}
+.field input.error{border-color:var(–red);}
 
 .field-error{
-  font-size:11px;color:var(--red);
-  display:none;
+font-size:11px;color:var(–red);
+display:none;
 }
 .field-error.show{display:block;}
 
 /* password toggle */
 .pwd-toggle{
-  position:absolute;right:12px;top:50%;transform:translateY(-50%);
-  cursor:pointer;color:var(--gray2);transition:color 0.14s;
-  background:none;border:none;padding:2px;
+position:absolute;right:12px;top:50%;transform:translateY(-50%);
+cursor:pointer;color:var(–gray2);transition:color 0.14s;
+background:none;border:none;padding:2px;
 }
-.pwd-toggle:hover{color:var(--gray);}
+.pwd-toggle:hover{color:var(–gray);}
 
 /* ── SUBMIT BTN ── */
 .submit-btn{
-  width:100%;padding:13px;
-  background:var(--green);color:#0a0a0a;
-  font-weight:700;font-size:13.5px;font-family:'DM Sans',sans-serif;
-  letter-spacing:0.3px;
-  border:none;border-radius:11px;cursor:pointer;
-  transition:all 0.18s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  margin-top:4px;
+width:100%;padding:13px;
+background:var(–green);color:#0a0a0a;
+font-weight:700;font-size:13.5px;font-family:‘DM Sans’,sans-serif;
+letter-spacing:0.3px;
+border:none;border-radius:11px;cursor:pointer;
+transition:all 0.18s;
+display:flex;align-items:center;justify-content:center;gap:8px;
+margin-top:4px;
 }
 .submit-btn:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 6px 24px rgba(200,241,53,0.25);}
 .submit-btn:active{transform:translateY(0);box-shadow:none;}
-.submit-btn:disabled{background:var(--gray2);color:var(--border2);cursor:not-allowed;transform:none;box-shadow:none;}
+.submit-btn:disabled{background:var(–gray2);color:var(–border2);cursor:not-allowed;transform:none;box-shadow:none;}
 .submit-btn .spinner{
-  width:14px;height:14px;border-radius:50%;
-  border:2px solid rgba(0,0,0,0.3);border-top-color:#0a0a0a;
-  animation:spin 0.6s linear infinite;display:none;
+width:14px;height:14px;border-radius:50%;
+border:2px solid rgba(0,0,0,0.3);border-top-color:#0a0a0a;
+animation:spin 0.6s linear infinite;display:none;
 }
 .submit-btn.loading .btn-text{display:none;}
 .submit-btn.loading .spinner{display:block;}
@@ -181,52 +182,349 @@ body::after{
 
 /* ── DIVIDER ── */
 .divider{
-  display:flex;align-items:center;gap:12px;
-  font-size:11px;color:var(--gray2);
-  margin:4px 0;
+display:flex;align-items:center;gap:12px;
+font-size:11px;color:var(–gray2);
+margin:4px 0;
 }
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.divider::before,.divider::after{content:’’;flex:1;height:1px;background:var(–border);}
 
 /* ── GOOGLE BTN ── */
 .google-btn{
-  width:100%;padding:11px;
-  background:transparent;
-  border:1px solid var(--border2);
-  border-radius:11px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  font-size:13px;font-weight:500;color:var(--gray);
-  font-family:'DM Sans',sans-serif;
-  transition:all 0.14s;
+width:100%;padding:11px;
+background:transparent;
+border:1px solid var(–border2);
+border-radius:11px;cursor:pointer;
+display:flex;align-items:center;justify-content:center;gap:10px;
+font-size:13px;font-weight:500;color:var(–gray);
+font-family:‘DM Sans’,sans-serif;
+transition:all 0.14s;
 }
-.google-btn:hover{background:var(--surface2);color:var(--white);border-color:var(--gray2);}
+.google-btn:hover{background:var(–surface2);color:var(–white);border-color:var(–gray2);}
 .google-btn svg{flex-shrink:0;}
 
 /* ── FORGOT / TERMS ── */
 .forgot-link{
-  font-size:12px;color:var(--green);cursor:pointer;
-  text-align:right;margin-top:-8px;
-  font-weight:500;
+font-size:12px;color:var(–green);cursor:pointer;
+text-align:right;margin-top:-8px;
+font-weight:500;
 }
 .forgot-link:hover{text-decoration:underline;}
 
 .terms{
-  font-size:11px;color:var(--gray2);line-height:1.5;text-align:center;margin-top:4px;
+font-size:11px;color:var(–gray2);line-height:1.5;text-align:center;margin-top:4px;
 }
-.terms a{color:var(--green);text-decoration:none;}
+.terms a{color:var(–green);text-decoration:none;}
 .terms a:hover{text-decoration:underline;}
 
 /* ── ALERT ── */
 .alert{
-  padding:11px 14px;border-radius:9px;
-  font-size:12.5px;line-height:1.4;
-  display:none;align-items:flex-start;gap:9px;
-  animation:fadeIn 0.2s ease;
+padding:11px 14px;border-radius:9px;
+font-size:12.5px;line-height:1.4;
+display:none;align-items:flex-start;gap:9px;
+animation:fadeIn 0.2s ease;
 }
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 .alert.show{display:flex;}
 .alert.error{background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);color:#ff8080;}
-.alert.success{background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.2);color:var(--green);}
-< truncated lines 229-518 >
+.alert.success{background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.2);color:var(–green);}
+.alert svg{flex-shrink:0;margin-top:1px;}
+
+/* ── PASSWORD STRENGTH ── */
+.pwd-strength{margin-top:6px;}
+.pwd-strength-bar{height:3px;border-radius:2px;background:var(–border);overflow:hidden;}
+.pwd-strength-fill{height:100%;border-radius:2px;width:0%;transition:width 0.3s,background 0.3s;}
+.pwd-strength-label{font-size:10.5px;color:var(–gray2);margin-top:4px;}
+
+/* ── FOOTER ── */
+.card-footer{
+padding:16px 36px;
+border-top:1px solid var(–border);
+display:flex;align-items:center;justify-content:center;
+gap:6px;
+}
+.footer-text{font-size:12px;color:var(–gray2);}
+.footer-link{font-size:12px;color:var(–green);cursor:pointer;font-weight:500;}
+.footer-link:hover{text-decoration:underline;}
+
+/* ── SUCCESS STATE ── */
+.success-state{
+display:none;flex-direction:column;align-items:center;
+gap:16px;text-align:center;padding:8px 0;
+}
+.success-state.show{display:flex;}
+.success-icon{
+width:64px;height:64px;border-radius:50%;
+background:rgba(200,241,53,0.1);border:2px solid rgba(200,241,53,0.3);
+display:flex;align-items:center;justify-content:center;
+font-size:28px;
+animation:popIn 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes popIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.success-title{font-family:‘Bebas Neue’,sans-serif;font-size:24px;letter-spacing:2px;color:var(–white);}
+.success-sub{font-size:13px;color:var(–gray);line-height:1.5;}
+.go-btn{
+padding:12px 32px;background:var(–green);color:#0a0a0a;
+font-weight:700;font-size:13px;font-family:‘DM Sans’,sans-serif;
+border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
+}
+.go-btn:hover{background:#d5ff40;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(–border2);border-radius:2px;}
+</style>
+
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="card">
+
+```
+<!-- HEADER -->
+<div class="card-header">
+  <div class="logo">SWFT<em>.</em></div>
+  <div class="tagline">simple. smart. swft.</div>
+  <div class="tab-row" id="tab-row">
+    <div class="tab active" onclick="switchTab('login')">Sign In</div>
+    <div class="tab" onclick="switchTab('signup')">Create Account</div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="card-body">
+
+  <!-- GLOBAL ALERT -->
+  <div class="alert error" id="global-error">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>
+    <span id="global-error-msg">Something went wrong.</span>
+  </div>
+  <div class="alert success" id="global-success" style="margin-bottom:4px;">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span id="global-success-msg"></span>
+  </div>
+
+  <!-- ── LOGIN FORM ── -->
+  <div class="form-section active" id="form-login">
+
+    <div class="field">
+      <label>Email Address</label>
+      <div class="field-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <span class="field-error" id="login-email-err">Please enter a valid email.</span>
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <div class="field-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="1.8"/></svg>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+        <button class="pwd-toggle" type="button" onclick="togglePwd('login-password',this)" tabindex="-1">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke-width="1.8"/></svg>
+        </button>
+      </div>
+      <span class="field-error" id="login-pwd-err">Please enter your password.</span>
+    </div>
+
+    <div class="forgot-link" onclick="handleForgotPassword()">Forgot password?</div>
+
+    <button class="submit-btn" id="login-btn" onclick="handleLogin()">
+      <span class="btn-text">Sign In</span>
+      <div class="spinner"></div>
+    </button>
+
+    <div class="divider">or</div>
+
+    <button class="google-btn" onclick="handleGoogleSignIn()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+
+  </div>
+
+  <!-- ── SIGNUP FORM ── -->
+  <div class="form-section" id="form-signup">
+
+    <div class="edit-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="field">
+        <label>First Name</label>
+        <div class="field-wrap">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="12" cy="7" r="4" stroke-width="1.8"/></svg>
+          <input type="text" id="signup-fname" placeholder="Jake" autocomplete="given-name"/>
+        </div>
+        <span class="field-error" id="signup-fname-err">Required.</span>
+      </div>
+      <div class="field">
+        <label>Last Name</label>
+        <div class="field-wrap">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="12" cy="7" r="4" stroke-width="1.8"/></svg>
+          <input type="text" id="signup-lname" placeholder="Reynolds" autocomplete="family-name"/>
+        </div>
+        <span class="field-error" id="signup-lname-err">Required.</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Business Name</label>
+      <div class="field-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="1.8"/><polyline points="9,22 9,12 15,12 15,22" stroke-width="1.8"/></svg>
+        <input type="text" id="signup-biz" placeholder="SWFT Concrete LLC" autocomplete="organization"/>
+      </div>
+      <span class="field-error" id="signup-biz-err">Required.</span>
+    </div>
+
+    <div class="field">
+      <label>Email Address</label>
+      <div class="field-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
+        <input type="email" id="signup-email" placeholder="jake@swftconcrete.com" autocomplete="email"/>
+      </div>
+      <span class="field-error" id="signup-email-err">Please enter a valid email.</span>
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <div class="field-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="1.8"/></svg>
+        <input type="password" id="signup-password" placeholder="Min. 8 characters" autocomplete="new-password" oninput="checkPasswordStrength(this.value)"/>
+        <button class="pwd-toggle" type="button" onclick="togglePwd('signup-password',this)" tabindex="-1">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke-width="1.8"/></svg>
+        </button>
+      </div>
+      <div class="pwd-strength">
+        <div class="pwd-strength-bar"><div class="pwd-strength-fill" id="pwd-fill"></div></div>
+        <div class="pwd-strength-label" id="pwd-label"></div>
+      </div>
+      <span class="field-error" id="signup-pwd-err">Password must be at least 8 characters.</span>
+    </div>
+
+    <button class="submit-btn" id="signup-btn" onclick="handleSignup()">
+      <span class="btn-text">Create Account</span>
+      <div class="spinner"></div>
+    </button>
+
+    <div class="divider">or</div>
+
+    <button class="google-btn" onclick="handleGoogleSignIn()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="terms">
+      By creating an account you agree to our
+      <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    </div>
+
+  </div>
+
+  <!-- ── SUCCESS STATE ── -->
+  <div class="success-state" id="success-state">
+    <div class="success-icon">✓</div>
+    <div class="success-title">YOU'RE IN.</div>
+    <div class="success-sub" id="success-sub">Account created. Redirecting to your dashboard...</div>
+    <button class="go-btn" onclick="goToDashboard()">Open Dashboard →</button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="card-footer" id="card-footer">
+  <span class="footer-text" id="footer-text">Don't have an account?</span>
+  <span class="footer-link" id="footer-link" onclick="switchTab('signup')">Create one free →</span>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+  FIREBASE SETUP
+  ─────────────────────────────────────────
+  1. Go to console.firebase.google.com
+  2. Create a project → Add Web App
+  3. Copy your firebaseConfig object below
+  4. Enable Authentication → Email/Password + Google
+  5. Enable Firestore Database
+══════════════════════════════════════ -->
+
+<!-- Firebase SDK -->
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
+    sendPasswordResetEmail,
+    updateProfile,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+  // ─────────────────────────────────────
+  // 🔧 PASTE YOUR FIREBASE CONFIG HERE
+  // ─────────────────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app      = initializeApp(firebaseConfig);
+  const auth     = getAuth(app);
+  const db       = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  // ── ALWAYS SHOW LOGIN PAGE ──
+  // Make page visible immediately — no hiding on login page
+  document.body.style.visibility = 'visible';
+
+  // Only redirect away if user is already logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.location.href = 'swft-shell.html';
+    }
+  });
+
+  // ── SAVE USER TO FIRESTORE ──
+  async function saveUserToFirestore(user, extraData = {}) {
+    const ref = doc(db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || '',
+        createdAt: serverTimestamp(),
+        plan: 'free',
+        ...extraData
+      });
+    }
+  }
+
+  // ── LOGIN ──
+  window.handleLogin = async function() {
+    clearErrors();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    let valid = true;
+
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      showFieldError('login-email-err', 'login-email'); valid = false;
     }
     if (!password) {
       showFieldError('login-pwd-err', 'login-password'); valid = false;
