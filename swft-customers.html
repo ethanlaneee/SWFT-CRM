@@ -544,7 +544,6 @@ user-select:none;
 
   <div class="page-body">
 
-```
 <!-- Toolbar -->
 <div class="toolbar">
   <div class="search-wrap">
@@ -682,7 +681,6 @@ user-select:none;
 
   </div>
 </div>
-```
 
   </div><!-- /page-body -->
 </div><!-- /main -->
@@ -738,7 +736,6 @@ user-select:none;
 
   <div class="drawer-content" id="drawer-content">
 
-```
 <!-- CONTACT TAB -->
 <div id="tab-contact">
   <!-- VIEW MODE -->
@@ -916,7 +913,6 @@ user-select:none;
     </div>
   </div>
 </div>
-```
 
   </div>
 
@@ -1110,7 +1106,6 @@ const address = document.getElementById(‘e-address’).value.trim();
 const since   = document.getElementById(‘e-since’).value.trim();
 const fullName = (fname + ’ ’ + lname).trim();
 
-```
 // Persist to customer data
 if (_currentCustomer) {
   _currentCustomer.name    = fullName;
@@ -1134,7 +1129,6 @@ document.getElementById('c-view-mode').style.display = 'block';
 document.getElementById('c-footer-edit').style.display = 'none';
 document.getElementById('c-footer-view').style.display = 'flex';
 showToast('Customer saved ✓');
-```
 
 }
 
@@ -1176,7 +1170,6 @@ const activeEl = document.getElementById(‘so-’ + key);
 if (activeEl) activeEl.classList.add(‘active’);
 document.getElementById(‘sort-label’).textContent = sortLabels[key] || key;
 
-```
 // Close menu
 document.getElementById('sort-menu').classList.remove('open');
 document.getElementById('sort-btn').classList.remove('open');
@@ -1218,7 +1211,6 @@ rows.sort((a, b) => {
 // Re-append in sorted order
 rows.forEach(r => tbody.appendChild(r));
 showToast('Sorted by ' + sortLabels[key]);
-```
 
 }
 
