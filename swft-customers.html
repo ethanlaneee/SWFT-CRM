@@ -231,6 +231,8 @@ transition:transform 0.3s cubic-bezier(0.22,1,0.36,1);
 overflow:hidden;
 }
 .drawer.open { transform:translateX(0); }
+.drawer.center-modal{position:fixed;top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:520px;max-width:92vw;max-height:88vh;border-radius:16px;border:1px solid var(--border2);box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.drawer.center-modal.open{transform:translate(-50%,-50%);}
 
 /* Drawer header */
 .drawer-header {
@@ -991,6 +993,8 @@ phone:’(512) 667-8821’, email:‘d.nguyen@email.com’, address:‘2422 Oak 
 let _currentCustomer = null;
 function openDrawer(id) {
 if (id === ‘new’) { closeDrawer(); return; }
+document.querySelector(‘.drawer-tabs’).style.display = ‘’;
+document.querySelector(‘.drawer-stats’).style.display = ‘’;
 const c = customers[id];
 if (!c) return;
 document.getElementById(‘d-avatar’).textContent    = c.initials;
@@ -1038,13 +1042,17 @@ document.getElementById('c-view-mode').style.display = 'none';
 document.getElementById('c-edit-mode').style.display = 'flex';
 document.getElementById('c-footer-view').style.display = 'none';
 document.getElementById('c-footer-edit').style.display = 'flex';
-document.getElementById('overlay').classList.add('open');
-document.getElementById('drawer').classList.add('open');
+document.querySelector(‘.drawer-tabs’).style.display = ‘none’;
+document.querySelector(‘.drawer-stats’).style.display = ‘none’;
+document.getElementById(‘overlay’).classList.add(‘open’);
+document.getElementById(‘drawer’).classList.add(‘open’, ‘center-modal’);
 }
 
 function closeDrawer() {
 document.getElementById(‘overlay’).classList.remove(‘open’);
-document.getElementById(‘drawer’).classList.remove(‘open’);
+document.getElementById(‘drawer’).classList.remove(‘open’, ‘center-modal’);
+document.querySelector(‘.drawer-tabs’).style.display = ‘’;
+document.querySelector(‘.drawer-stats’).style.display = ‘’;
 }
 
 function switchTab(el, tab) {
@@ -1119,6 +1127,7 @@ document.getElementById(‘c-footer-edit’).style.display = ‘flex’;
 }
 
 function cancelCustomerEdit() {
+if (_currentCustomer && _currentCustomer.name === ‘’) { closeDrawer(); return; }
 document.getElementById(‘c-edit-mode’).style.display = ‘none’;
 document.getElementById(‘c-view-mode’).style.display = ‘block’;
 document.getElementById(‘c-footer-edit’).style.display = ‘none’;
@@ -1158,6 +1167,7 @@ document.getElementById('c-view-mode').style.display = 'block';
 document.getElementById('c-footer-edit').style.display = 'none';
 document.getElementById('c-footer-view').style.display = 'flex';
 showToast('Customer saved ✓');
+if (_currentCustomer && _currentCustomer.initials === '?') { closeDrawer(); return; }
 
 }
 

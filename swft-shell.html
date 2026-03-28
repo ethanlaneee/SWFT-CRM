@@ -972,6 +972,29 @@ box-shadow: 4px 0 24px rgba(0,0,0,0.6);
 .btn-primary svg { font-size: initial; }
 }
 
+/* ── NEW JOB MODAL ── */
+.nj-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.nj-overlay.open{opacity:1;pointer-events:all;}
+.nj-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:480px;max-width:92vw;max-height:88vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;}
+.nj-overlay.open+.nj-modal,.nj-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%) scale(1);}
+.nj-header{padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.nj-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);}
+.nj-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
+.nj-close:hover{background:var(--surface2);color:var(--white);}
+.nj-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px;}
+.nj-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.nj-field{display:flex;flex-direction:column;gap:5px;}
+.nj-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
+.nj-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.nj-input:focus{border-color:var(--green);}
+.nj-input option{background:var(--surface2);}
+.nj-textarea{resize:none;min-height:60px;line-height:1.5;}
+.nj-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.nj-btn{flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
+.nj-btn:hover{background:var(--surface2);color:var(--white);}
+.nj-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);flex:2;}
+.nj-btn.primary:hover{background:#d5ff40;}
+
 </style>
 </head>
 <body>
@@ -1104,7 +1127,7 @@ box-shadow: 4px 0 24px rgba(0,0,0,0.6);
     <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.8"/></svg>
   </div>
 
-  <button class="btn-primary" onclick="window.location.href='swft-jobs.html'">
+  <button class="btn-primary" onclick="openNewJobModal()">
     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
     New Job
   </button>
@@ -1551,6 +1574,25 @@ box-shadow: 4px 0 24px rgba(0,0,0,0.6);
     _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  function openNewJobModal() {
+    document.getElementById('nj-overlay').classList.add('open');
+    document.getElementById('nj-modal').classList.add('open');
+  }
+  function closeNewJobModal() {
+    document.getElementById('nj-overlay').classList.remove('open');
+    document.getElementById('nj-modal').classList.remove('open');
+    // Clear fields
+    ['nj-title','nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount','nj-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('nj-service').selectedIndex = 0;
+    document.getElementById('nj-crew').selectedIndex = 0;
+  }
+  function saveNewJob() {
+    const title = document.getElementById('nj-title').value.trim();
+    if (!title) { showToast('Enter a job title'); return; }
+    closeNewJobModal();
+    showToast('Job created — ' + title + ' ✓');
+  }
+
   // ── Helpers ──
   function fmtCurrency(val) {
     return '$' + Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -1706,6 +1748,48 @@ box-shadow: 4px 0 24px rgba(0,0,0,0.6);
 
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<!-- NEW JOB MODAL -->
+<div class="nj-overlay" id="nj-overlay" onclick="closeNewJobModal()"></div>
+<div class="nj-modal" id="nj-modal">
+  <div class="nj-header">
+    <div class="nj-title">NEW JOB</div>
+    <div class="nj-close" onclick="closeNewJobModal()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+    </div>
+  </div>
+  <div class="nj-body">
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Job Title</label><input class="nj-input" id="nj-title" type="text" placeholder="e.g. Backyard Patio"/></div>
+      <div class="nj-field"><label class="nj-label">Customer</label><input class="nj-input" id="nj-customer" type="text" placeholder="e.g. Tom Henderson"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="nj-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="nj-date" type="text" placeholder="e.g. March 29, 2026"/></div>
+      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="nj-time" type="text" placeholder="e.g. 7:00 AM"/></div>
+    </div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Service Type</label>
+        <select class="nj-input" id="nj-service"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option></select>
+      </div>
+      <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="nj-sqft" type="text" placeholder="e.g. 480"/></div>
+    </div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Crew</label>
+        <select class="nj-input" id="nj-crew"><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option>Jake Reynolds</option><option>Unassigned</option></select>
+      </div>
+      <div class="nj-field"><label class="nj-label">Amount ($)</label><input class="nj-input" id="nj-amount" type="text" placeholder="e.g. 7200"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Notes</label><textarea class="nj-input nj-textarea" id="nj-notes" placeholder="Mix details, special instructions..."></textarea></div>
+  </div>
+  <div class="nj-footer">
+    <button class="nj-btn" onclick="closeNewJobModal()">Cancel</button>
+    <button class="nj-btn primary" onclick="saveNewJob()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Create Job
+    </button>
+  </div>
 </div>
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>

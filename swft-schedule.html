@@ -127,6 +127,8 @@
 .drawer-overlay.open{opacity:1;pointer-events:all;}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:460px;background:var(--surface);border-left:1px solid var(--border2);z-index:400;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.22,1,0.36,1);overflow:hidden;}
 .drawer.open{transform:translateX(0);}
+.drawer.center-modal{position:fixed;top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:520px;max-width:92vw;max-height:88vh;border-radius:16px;border:1px solid var(--border2);box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.drawer.center-modal.open{transform:translate(-50%,-50%);}
 
 .drawer-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);}
 .drawer-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
@@ -777,7 +779,7 @@
 
   function closeDrawer() {
     document.getElementById('overlay').classList.remove('open');
-    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('drawer').classList.remove('open', 'center-modal');
   }
 
   function toggleSidebar() {
@@ -881,10 +883,11 @@
 
     // Open drawer
     document.getElementById('overlay').classList.add('open');
-    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawer').classList.add('open', 'center-modal');
   }
 
   function cancelEdit() {
+    if (_currentJob && _currentJob.num === 'J-NEW') { closeDrawer(); return; }
     document.getElementById('d-edit').style.display  = 'none';
     document.getElementById('d-view').style.display  = 'flex';
     document.getElementById('footer-edit').style.display = 'none';
@@ -952,6 +955,7 @@
     document.getElementById('footer-edit').style.display = 'none';
     document.getElementById('footer-view').style.display = 'flex';
     showToast('Job saved ✓');
+    if (_currentJob && _currentJob.num === 'J-NEW') { closeDrawer(); return; }
   }
 
 </script>
