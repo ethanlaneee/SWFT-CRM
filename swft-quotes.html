@@ -246,7 +246,8 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
 .topbar { padding:0 16px; padding-left:56px; }
 .topbar-sub, .topbar-slash { display:none; }
 .page-body { padding:16px; gap:12px; }
-.sidebar-toggle { opacity:1 !important; pointer-events:all !important; }
+.sidebar-toggle { opacity:1 !important; pointer-events:all !important; z-index:9999 !important; }
+.topbar { -webkit-backdrop-filter:none !important; backdrop-filter:none !important; background:#0a0a0a !important; }
 .mobile-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:199; backdrop-filter:blur(2px); }
 .mobile-overlay.open { display:block; }
 .ai-pill { padding:5px 9px; font-size:0; }

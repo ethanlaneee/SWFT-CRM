@@ -963,7 +963,8 @@ box-shadow: 4px 0 24px rgba(0,0,0,0.6);
 .kpi-bg-icon { font-size: 28px; }
 .two-col { grid-template-columns: 1fr; }
 .chart-stats { flex-wrap: wrap; gap: 14px; }
-.sidebar-toggle { opacity: 1 !important; pointer-events: all !important; }
+.sidebar-toggle { opacity: 1 !important; pointer-events: all !important; z-index: 9999 !important; }
+.topbar { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: #0a0a0a !important; }
 .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 199; backdrop-filter: blur(2px); }
 .mobile-overlay.open { display: block; }
 .ai-pill { padding: 5px 9px; font-size: 0; }
