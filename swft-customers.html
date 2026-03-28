@@ -443,6 +443,25 @@ user-select:none;
 .topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
 .main.expanded .topbar { padding-left: 56px; }
 
+/* ─── MOBILE RESPONSIVE ─── */
+@media (max-width: 768px) {
+.sidebar { width:280px; transform:translateX(-100%); transition:transform 0.28s cubic-bezier(0.22,1,0.36,1); }
+.sidebar.mobile-open { transform:translateX(0); box-shadow:4px 0 24px rgba(0,0,0,0.6); }
+.main { margin-left:0 !important; }
+.topbar { padding:0 16px; padding-left:56px; }
+.topbar-sub, .topbar-slash { display:none; }
+.page-body { padding:16px; gap:12px; }
+.sidebar-toggle { opacity:1 !important; pointer-events:all !important; }
+.mobile-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:199; backdrop-filter:blur(2px); }
+.mobile-overlay.open { display:block; }
+.ai-pill { padding:5px 9px; font-size:0; }
+.ai-pill .pulse { margin:0; }
+.btn-primary { font-size:0; padding:8px; }
+.btn-primary svg { font-size:initial; }
+.drawer { width:100% !important; max-width:100vw; }
+.drawer.center-modal { width:92vw !important; max-width:92vw; }
+}
+
 </style>
 </head>
 <body>
@@ -1079,12 +1098,26 @@ row.style.display = name.includes(query) ? ‘grid’ : ‘none’;
 });
 }
 function toggleSidebar() {
-const sidebar = document.querySelector(’.sidebar’);
-const main    = document.querySelector(’.main’);
+const sidebar = document.querySelector(‘.sidebar’);
+const main    = document.querySelector(‘.main’);
 const toggle  = document.getElementById(‘sidebar-toggle’);
-sidebar.classList.toggle(‘collapsed’);
-main.classList.toggle(‘expanded’);
-toggle.classList.toggle(‘visible’);
+const isMobile = window.innerWidth <= 768;
+if (isMobile) {
+  sidebar.classList.toggle(‘mobile-open’);
+  let overlay = document.getElementById(‘mobile-overlay’);
+  if (!overlay) {
+    overlay = document.createElement(‘div’);
+    overlay.id = ‘mobile-overlay’;
+    overlay.className = ‘mobile-overlay’;
+    overlay.onclick = toggleSidebar;
+    document.body.appendChild(overlay);
+  }
+  overlay.classList.toggle(‘open’, sidebar.classList.contains(‘mobile-open’));
+} else {
+  sidebar.classList.toggle(‘collapsed’);
+  main.classList.toggle(‘expanded’);
+  toggle.classList.toggle(‘visible’);
+}
 }
 
 let toastTimer;
