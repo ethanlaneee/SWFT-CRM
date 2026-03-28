@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+  --blue:#4d9fff;--red:#ff5252;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+
+/* grid lines */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── LAYOUT ── */
+.wrapper{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px 20px;
+}
+
+/* ── CARD ── */
+.card{
+  width:100%;max-width:440px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+  animation:slideUp 0.45s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(24px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* ── HEADER ── */
+.card-header{
+  padding:36px 36px 28px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+}
+.card-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg, var(--green), rgba(200,241,53,0.2));
+}
+
+.logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:32px;letter-spacing:4px;
+  color:var(--white);line-height:1;
+  display:flex;align-items:center;gap:2px;
+}
+.logo em{color:var(--green);font-style:normal;}
+
+.tagline{
+  font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--gray2);margin-top:4px;font-weight:400;
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* ── TABS ── */
+.tab-row{
+  display:flex;gap:0;
+  margin-top:24px;
+  background:var(--bg);
+  border-radius:10px;
+  padding:3px;
+}
+.tab{
+  flex:1;padding:9px;border-radius:8px;
+  font-size:12px;font-weight:600;letter-spacing:0.5px;
+  cursor:pointer;text-align:center;
+  color:var(--gray);transition:all 0.18s;
+  user-select:none;
+}
+.tab.active{
+  background:var(--surface2);
+  color:var(--white);
+  box-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* ── FORM BODY ── */
+.card-body{padding:28px 36px 32px;}
+
+.form-section{display:none;flex-direction:column;gap:18px;}
+.form-section.active{display:flex;}
+
+/* ── FIELD ── */
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{
+  font-size:10px;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--gray);font-weight:600;
+}
+.field-wrap{position:relative;}
+.field-wrap svg{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  color:var(--gray2);pointer-events:none;
+}
+.field input{
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:12px 13px 12px 38px;
+  color:var(--white);
+  font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+.field input:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(200,241,53,0.08);
+}
+.field input::placeholder{color:var(--gray2);}
+.field input.error{border-color:var(--red);}
+
+.field-error{
+  font-size:11px;color:var(--red);
+  display:none;
+}
+.field-error.show{display:block;}
+
+/* password toggle */
+.pwd-toggle{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  cursor:pointer;color:var(--gray2);transition:color 0.14s;
+  background:none;border:none;padding:2px;
+}
+.pwd-toggle:hover{color:var(--gray);}
+
+/* ── SUBMIT BTN ── */
+.submit-btn{
+  width:100%;padding:13px;
+  background:var(--green);color:#0a0a0a;
+  font-weight:700;font-size:13.5px;font-family:'DM Sans',sans-serif;
+  letter-spacing:0.3px;
+  border:none;border-radius:11px;cursor:pointer;
+  transition:all 0.18s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:4px;
+}
+.submit-btn:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 6px 24px rgba(200,241,53,0.25);}
+.submit-btn:active{transform:translateY(0);box-shadow:none;}
+.submit-btn:disabled{background:var(--gray2);color:var(--border2);cursor:not-allowed;transform:none;box-shadow:none;}
+.submit-btn .spinner{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid rgba(0,0,0,0.3);border-top-color:#0a0a0a;
+  animation:spin 0.6s linear infinite;display:none;
+}
+.submit-btn.loading .btn-text{display:none;}
+.submit-btn.loading .spinner{display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── DIVIDER ── */
+.divider{
+  display:flex;align-items:center;gap:12px;
+  font-size:11px;color:var(--gray2);
+  margin:4px 0;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── GOOGLE BTN ── */
+.google-btn{
+  width:100%;padding:11px;
+  background:transparent;
+  border:1px solid var(--border2);
+  border-radius:11px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-size:13px;font-weight:500;color:var(--gray);
+  font-family:'DM Sans',sans-serif;
+  transition:all 0.14s;
+}
+.google-btn:hover{background:var(--surface2);color:var(--white);border-color:var(--gray2);}
+.google-btn svg{flex-shrink:0;}
+
+/* ── FORGOT / TERMS ── */
+.forgot-link{
+  font-size:12px;color:var(--green);cursor:pointer;
+  text-align:right;margin-top:-8px;
+  font-weight:500;
+}
+.forgot-link:hover{text-decoration:underline;}
+
+.terms{
+  font-size:11px;color:var(--gray2);line-height:1.5;text-align:center;margin-top:4px;
+}
+.terms a{color:var(--green);text-decoration:none;}
+.terms a:hover{text-decoration:underline;}
+
+/* ── ALERT ── */
+.alert{
+  padding:11px 14px;border-radius:9px;
+  font-size:12.5px;line-height:1.4;
+  display:none;align-items:flex-start;gap:9px;
+  animation:fadeIn 0.2s ease;
+}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.alert.show{display:flex;}
+.alert.error{background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);color:#ff8080;}
+.alert.success{background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.2);color:var(--green);}
+< truncated lines 229-518 >
+    }
+    if (!password) {
+      showFieldError('login-pwd-err', 'login-password'); valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('login-btn');
+    setLoading(btn, true);
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      showSuccess('Signed in! Redirecting...');
+      setTimeout(() => goToDashboard(), 1200);
+    } catch (err) {
+      setLoading(btn, false);
+      showGlobalError(firebaseErrorMsg(err.code));
+    }
+  };
+
+  // ── SIGNUP ──
+  window.handleSignup = async function() {
+    clearErrors();
+    const fname    = document.getElementById('signup-fname').value.trim();
+    const lname    = document.getElementById('signup-lname').value.trim();
+    const biz      = document.getElementById('signup-biz').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    let valid = true;
+
+    if (!fname) { showFieldError('signup-fname-err', 'signup-fname'); valid = false; }
+    if (!lname) { showFieldError('signup-lname-err', 'signup-lname'); valid = false; }
+    if (!biz)   { showFieldError('signup-biz-err',   'signup-biz');   valid = false; }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { showFieldError('signup-email-err', 'signup-email'); valid = false; }
+    if (password.length < 8) { showFieldError('signup-pwd-err', 'signup-password'); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('signup-btn');
+    setLoading(btn, true);
+
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: `${fname} ${lname}` });
+      await saveUserToFirestore(cred.user, {
+        firstName: fname,
+        lastName: lname,
+        businessName: biz,
+        displayName: `${fname} ${lname}`
+      });
+      showSuccessState(`Welcome to SWFT, ${fname}! Your account is ready.`);
+    } catch (err) {
+      setLoading(btn, false);
+      showGlobalError(firebaseErrorMsg(err.code));
+    }
+  };
+
+  // ── GOOGLE SIGN-IN ──
+  window.handleGoogleSignIn = async function() {
+    clearErrors();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      await saveUserToFirestore(result.user);
+      const isNew = result._tokenResponse?.isNewUser;
+      showSuccessState(isNew
+        ? `Welcome to SWFT, ${result.user.displayName?.split(' ')[0] || 'there'}!`
+        : `Welcome back, ${result.user.displayName?.split(' ')[0] || 'there'}!`
+      );
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        showGlobalError(firebaseErrorMsg(err.code));
+      }
+    }
+  };
+
+  // ── FORGOT PASSWORD ──
+  window.handleForgotPassword = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      showGlobalError('Enter your email address above first.');
+      showFieldError('login-email-err', 'login-email');
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      document.getElementById('global-error').classList.remove('show');
+      const el = document.getElementById('global-success');
+      document.getElementById('global-success-msg').textContent = 'Reset email sent — check your inbox.';
+      el.classList.add('show');
+    } catch (err) {
+      showGlobalError(firebaseErrorMsg(err.code));
+    }
+  };
+
+  // ── HELPERS ──
+  function setLoading(btn, state) {
+    btn.disabled = state;
+    btn.classList.toggle('loading', state);
+  }
+
+  function showFieldError(errId, inputId) {
+    document.getElementById(errId).classList.add('show');
+    document.getElementById(inputId)?.classList.add('error');
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.field input').forEach(i => i.classList.remove('error'));
+    document.getElementById('global-error').classList.remove('show');
+    document.getElementById('global-success').classList.remove('show');
+  }
+
+  function showGlobalError(msg) {
+    const el = document.getElementById('global-error');
+    document.getElementById('global-error-msg').textContent = msg;
+    el.classList.add('show');
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('global-success');
+    document.getElementById('global-success-msg').textContent = msg;
+    el.classList.add('show');
+  }
+
+  function showSuccessState(sub) {
+    document.getElementById('form-login').classList.remove('active');
+    document.getElementById('form-signup').classList.remove('active');
+    document.getElementById('global-error').classList.remove('show');
+    document.getElementById('global-success').classList.remove('show');
+    document.getElementById('tab-row').style.display = 'none';
+    document.getElementById('card-footer').style.display = 'none';
+    document.getElementById('success-sub').textContent = sub;
+    document.getElementById('success-state').classList.add('show');
+    setTimeout(() => goToDashboard(), 2500);
+  }
+
+  window.goToDashboard = function() {
+    // Change this to your actual dashboard filename
+    window.location.href = 'swft-shell.html';
+  };
+
+  function firebaseErrorMsg(code) {
+    const map = {
+      'auth/user-not-found':       'No account found with that email.',
+      'auth/wrong-password':       'Incorrect password. Try again.',
+      'auth/invalid-credential':   'Email or password is incorrect.',
+      'auth/email-already-in-use': 'An account with this email already exists.',
+      'auth/weak-password':        'Password must be at least 6 characters.',
+      'auth/invalid-email':        'Please enter a valid email address.',
+      'auth/too-many-requests':    'Too many attempts. Please wait a moment and try again.',
+      'auth/network-request-failed': 'Network error. Check your connection.',
+      'auth/popup-blocked':        'Popup blocked. Allow popups for this site.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+</script>
+
+<script>
+  // ── UI HELPERS (non-Firebase) ──
+
+  let currentTab = 'login';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+    });
+    document.getElementById('form-login').classList.toggle('active', tab === 'login');
+    document.getElementById('form-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('global-error').classList.remove('show');
+    document.getElementById('global-success').classList.remove('show');
+
+    const footerText = document.getElementById('footer-text');
+    const footerLink = document.getElementById('footer-link');
+    if (tab === 'login') {
+      footerText.textContent = "Don't have an account?";
+      footerLink.textContent = 'Create one free →';
+      footerLink.onclick = () => switchTab('signup');
+    } else {
+      footerText.textContent = 'Already have an account?';
+      footerLink.textContent = 'Sign in →';
+      footerLink.onclick = () => switchTab('login');
+    }
+  }
+
+  function togglePwd(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const isText = input.type === 'text';
+    input.type = isText ? 'password' : 'text';
+    btn.innerHTML = isText
+      ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke-width="1.8"/></svg>'
+      : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke-width="1.8"/><line x1="1" y1="1" x2="23" y2="23" stroke-width="1.8"/></svg>';
+  }
+
+  function checkPasswordStrength(val) {
+    const fill  = document.getElementById('pwd-fill');
+    const label = document.getElementById('pwd-label');
+    if (!val) { fill.style.width = '0%'; label.textContent = ''; return; }
+    let score = 0;
+    if (val.length >= 8)  score++;
+    if (val.length >= 12) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { w:'20%', c:'#ff5252', t:'Weak' },
+      { w:'40%', c:'#ff5252', t:'Weak' },
+      { w:'60%', c:'#f5a623', t:'Fair' },
+      { w:'80%', c:'#4d9fff', t:'Good' },
+      { w:'100%',c:'#c8f135', t:'Strong' },
+    ];
+    const lv = levels[Math.min(score, 4)];
+    fill.style.width = lv.w;
+    fill.style.background = lv.c;
+    label.textContent = lv.t;
+    label.style.color = lv.c;
+  }
+
+  // Allow Enter key to submit
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (currentTab === 'login')  window.handleLogin?.();
+      else                          window.handleSignup?.();
+    }
+  });
+</script>
+
+</body>
+</html>
