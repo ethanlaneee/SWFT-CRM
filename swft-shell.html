@@ -1609,17 +1609,28 @@ box-shadow: 4px 0 24px rgba(0,0,0,0.6);
   });
 
   async function loadDashboard(user) {
-    // Try displayName first, then fallback to Firestore
-    let firstName = user.displayName?.split(' ')[0]?.toUpperCase();
+    // Get first name from displayName, Firestore, or email
+    let firstName = null;
+
+    // Try displayName first (e.g. "Ethan Lane" -> "ETHAN")
+    if (user.displayName && user.displayName.trim()) {
+      firstName = user.displayName.trim().split(' ')[0].toUpperCase();
+    }
+
+    // Try Firestore if no displayName
     if (!firstName) {
       try {
         const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js');
         const db = getFirestore();
         const snap = await getDoc(doc(db, 'users', user.uid));
-        if (snap.exists()) firstName = snap.data().firstName?.toUpperCase();
+        if (snap.exists() && snap.data().firstName) {
+          firstName = snap.data().firstName.trim().toUpperCase();
+        }
       } catch(e) {}
     }
-    if (!firstName) firstName = user.email?.split('@')[0]?.toUpperCase() || 'JAKE';
+
+    // Final fallback
+    if (!firstName) firstName = 'JAKE';
 
     // Greeting
     const greetEl = document.querySelector('.greeting h2');
