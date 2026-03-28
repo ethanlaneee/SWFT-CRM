@@ -274,7 +274,7 @@
       <div class="icon-btn" onclick="showToast('Notifications — 2 unread')">
         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>
       </div>
-      <button class="btn-primary" onclick="showToast('New Job — opening job form')">
+      <button class="btn-primary" onclick="openNewJob()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
         New Job
       </button>
@@ -836,6 +836,52 @@
     document.getElementById('d-edit').style.display  = 'flex';
     document.getElementById('footer-view').style.display = 'none';
     document.getElementById('footer-edit').style.display = 'flex';
+  }
+
+  function openNewJob() {
+    _currentJob = {date:'', title:'', customer:'', tag:'Scheduled', tagStyle:'background:rgba(77,159,255,0.12);color:#4d9fff;', crew:'Crew A', amount:'$0', sqft:'—', dur:'—', num:'J-NEW', address:'', service:'—', wx:'☀️', wxDesc:'—', wxNote:'', wxBadge:'', wxText:''};
+
+    // Update drawer header
+    document.getElementById('d-date').textContent     = 'New Job';
+    document.getElementById('d-title').textContent    = 'New Job';
+    document.getElementById('d-customer').textContent = '';
+    document.getElementById('d-tag').textContent      = 'Scheduled';
+    document.getElementById('d-tag').style.cssText    = _currentJob.tagStyle;
+    document.getElementById('d-crew').innerHTML       = 'Crew A';
+
+    // Reset display stats
+    document.getElementById('d-amount').textContent   = '$0';
+    document.getElementById('d-sqft').textContent     = '—';
+    document.getElementById('d-dur').textContent      = '—';
+    document.getElementById('d-num').textContent      = 'J-NEW';
+    document.getElementById('d-address').textContent  = '';
+    document.getElementById('d-service').textContent  = '—';
+    document.getElementById('d-crew-detail').textContent = 'Crew A';
+    document.getElementById('d-wx').innerHTML         = '';
+
+    // Show edit mode directly
+    document.getElementById('d-view').style.display       = 'none';
+    document.getElementById('d-edit').style.display       = 'flex';
+    document.getElementById('footer-view').style.display  = 'none';
+    document.getElementById('footer-edit').style.display  = 'flex';
+
+    // Clear all edit fields
+    document.getElementById('e-title').value    = '';
+    document.getElementById('e-customer').value = '';
+    document.getElementById('e-date').value     = '';
+    document.getElementById('e-time').value     = '';
+    document.getElementById('e-address').value  = '';
+    document.getElementById('e-service').selectedIndex = 0;
+    document.getElementById('e-sqft').value     = '';
+    document.getElementById('e-crew').selectedIndex = 0;
+    document.getElementById('e-dur').value      = '';
+    document.getElementById('e-amount').value   = '';
+    document.getElementById('e-status').selectedIndex = 0;
+    document.getElementById('e-notes').value    = '';
+
+    // Open drawer
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('drawer').classList.add('open');
   }
 
   function cancelEdit() {
