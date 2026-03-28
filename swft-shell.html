@@ -183,24 +183,28 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(–green);flex-shrink:0;}
 
-/* MOBILE */
-@media(max-width:768px){
-.sidebar{width:260px;transform:translateX(-100%);background:#111111;}
-.sidebar.mobile-open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,0.8);}
-.main{margin-left:0!important;}
-.sidebar-toggle{opacity:1!important;pointer-events:all!important;}
-.topbar{padding:0 16px;}
-.topbar-sub,.topbar-slash{display:none;}
-.page-body{padding:16px;gap:12px;}
-.kpi-grid{grid-template-columns:1fr 1fr;gap:10px;}
-.kpi-value{font-size:28px;}
-.kpi-bg-icon{display:none;}
-.two-col{grid-template-columns:1fr;}
-.chart-stats{flex-wrap:wrap;gap:12px;}
-.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:199;}
-.mobile-overlay.open{display:block;}
-.ai-pill{padding:5px 10px;}
-}
+/* ── NEW JOB MODAL ── */
+.nj-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.nj-overlay.open{opacity:1;pointer-events:all;}
+.nj-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:480px;max-width:92vw;max-height:88vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;}
+.nj-overlay.open+.nj-modal,.nj-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%) scale(1);}
+.nj-header{padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.nj-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);}
+.nj-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
+.nj-close:hover{background:var(--surface2);color:var(--white);}
+.nj-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px;}
+.nj-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.nj-field{display:flex;flex-direction:column;gap:5px;}
+.nj-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
+.nj-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.nj-input:focus{border-color:var(--green);}
+.nj-input option{background:var(--surface2);}
+.nj-textarea{resize:none;min-height:60px;line-height:1.5;}
+.nj-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.nj-btn{flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
+.nj-btn:hover{background:var(--surface2);color:var(--white);}
+.nj-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);flex:2;}
+.nj-btn.primary:hover{background:#d5ff40;}
 </style>
 
 </head>
@@ -275,8 +279,6 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </div>
 </aside>
-
-<div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebar()"></div>
 
 <!-- MAIN -->
 
@@ -424,18 +426,9 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     });
   }
   function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('mobile-overlay');
-    const toggle  = document.getElementById('sidebar-toggle');
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      sidebar.classList.toggle('mobile-open');
-      overlay.classList.toggle('open', sidebar.classList.contains('mobile-open'));
-    } else {
-      sidebar.classList.toggle('collapsed');
-      document.getElementById('main').classList.toggle('expanded');
-      toggle.classList.toggle('visible');
-    }
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
   }
   let _toastTimer;
   function showToast(msg) {
