@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SWFT — Shell</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:        #0a0a0a;
+    --surface:   #111111;
+    --surface2:  #181818;
+    --border:    #1f1f1f;
+    --border2:   #2c2c2c;
+    --green:     #c8f135;
+    --white:     #f0f0f0;
+    --gray:      #7a7a7a;
+    --gray2:     #444444;
+    --sidebar-w: 228px;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+  body { visibility: hidden; }
+
+body {
+background: var(–bg);
+color: var(–white);
+font-family: ‘DM Sans’, sans-serif;
+min-height: 100vh;
+display: flex;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+width: var(–sidebar-w);
+min-height: 100vh;
+background: var(–surface);
+border-right: 1px solid var(–border);
+display: flex;
+flex-direction: column;
+position: fixed;
+top: 0; left: 0; bottom: 0;
+z-index: 200;
+transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+
+.sidebar.collapsed { transform: translateX(-100%); }
+
+.main { transition: margin-left 0.28s cubic-bezier(0.22,1,0.36,1); }
+.main.expanded { margin-left: 0 !important; }
+
+.sidebar-toggle {
+position: fixed; top: 14px; left: 14px; z-index: 300;
+width: 32px; height: 32px; border-radius: 8px;
+background: var(–surface2); border: 1px solid var(–border2);
+display: flex; align-items: center; justify-content: center;
+cursor: pointer; color: var(–gray); transition: all 0.15s;
+opacity: 0; pointer-events: none;
+}
+.sidebar-toggle.visible { opacity: 1; pointer-events: all; }
+.sidebar-toggle:hover { background: var(–border2); color: var(–white); }
+
+/* Logo */
+.logo-wrap {
+padding: 26px 22px 22px;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.logo-mark {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 30px;
+letter-spacing: 3px;
+color: var(–white);
+line-height: 1;
+}
+
+.logo-mark em {
+color: var(–green);
+font-style: normal;
+}
+
+.logo-sub {
+font-size: 9.5px;
+color: var(–gray2);
+letter-spacing: 1.8px;
+margin-top: 3px;
+font-weight: 300;
+}
+
+/* Nav */
+.nav {
+flex: 1;
+padding: 16px 10px;
+display: flex;
+flex-direction: column;
+gap: 1px;
+overflow-y: auto;
+}
+
+.nav-label {
+font-size: 9px;
+letter-spacing: 2.5px;
+color: var(–gray2);
+text-transform: uppercase;
+padding: 14px 12px 5px;
+}
+
+.nav-item {
+display: flex;
+align-items: center;
+gap: 11px;
+padding: 9px 12px;
+border-radius: 9px;
+cursor: pointer;
+font-size: 13px;
+font-weight: 400;
+color: var(–gray);
+transition: background 0.14s, color 0.14s;
+position: relative;
+user-select: none;
+}
+
+.nav-item:hover {
+background: var(–surface2);
+color: var(–white);
+}
+
+.nav-item.active {
+background: rgba(200, 241, 53, 0.07);
+color: var(–green);
+font-weight: 500;
+}
+
+.nav-item.active .nav-accent {
+opacity: 1;
+}
+
+.nav-accent {
+position: absolute;
+left: 0; top: 50%;
+transform: translateY(-50%);
+width: 3px; height: 18px;
+background: var(–green);
+border-radius: 0 3px 3px 0;
+opacity: 0;
+transition: opacity 0.14s;
+}
+
+.nav-icon {
+width: 15px; height: 15px;
+flex-shrink: 0;
+opacity: 0.8;
+}
+
+.nav-item.active .nav-icon { opacity: 1; }
+
+.nav-badge {
+margin-left: auto;
+background: var(–green);
+color: #0a0a0a;
+font-size: 9.5px;
+font-weight: 700;
+padding: 2px 7px;
+border-radius: 20px;
+font-family: ‘JetBrains Mono’, monospace;
+letter-spacing: 0.3px;
+}
+
+.nav-divider {
+height: 1px;
+background: var(–border);
+margin: 8px 12px;
+}
+
+/* Footer */
+.sidebar-footer {
+border-top: 1px solid var(–border);
+padding: 12px 10px;
+}
+
+.user-tile {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 9px 12px;
+border-radius: 9px;
+cursor: pointer;
+transition: background 0.14s;
+}
+
+.user-tile:hover { background: var(–surface2); }
+
+.avatar {
+width: 30px; height: 30px;
+border-radius: 50%;
+background: var(–green);
+color: #0a0a0a;
+font-size: 11px;
+font-weight: 700;
+display: flex; align-items: center; justify-content: center;
+flex-shrink: 0;
+letter-spacing: 0.5px;
+}
+
+.user-info { flex: 1; overflow: hidden; }
+.user-name  { font-size: 12px; font-weight: 500; color: var(–white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-role  { font-size: 10.5px; color: var(–gray2); margin-top: 1px; }
+
+.settings-icon { color: var(–gray2); flex-shrink: 0; }
+
+/* ─── MAIN ─── */
+.main {
+margin-left: var(–sidebar-w);
+flex: 1;
+display: flex;
+flex-direction: column;
+min-height: 100vh;
+}
+
+/* ─── TOPBAR ─── */
+.topbar {
+height: 60px;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: center;
+padding: 0 28px;
+gap: 16px;
+position: sticky;
+top: 0;
+background: rgba(10,10,10,0.88);
+backdrop-filter: blur(14px);
+-webkit-backdrop-filter: blur(14px);
+z-index: 100;
+animation: fadeDown 0.3s ease 0.15s both;
+}
+
+@keyframes fadeDown {
+from { opacity: 0; transform: translateY(-8px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+.topbar-page {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 20px;
+letter-spacing: 2.5px;
+color: var(–white);
+}
+
+.topbar-slash {
+color: var(–border2);
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 16px;
+}
+
+.topbar-sub {
+font-size: 12px;
+color: var(–gray);
+font-style: italic;
+font-weight: 300;
+}
+
+.topbar-right {
+margin-left: auto;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+/* AI status pill */
+.ai-pill {
+display: flex;
+align-items: center;
+gap: 7px;
+background: rgba(200, 241, 53, 0.07);
+border: 1px solid rgba(200, 241, 53, 0.18);
+border-radius: 20px;
+padding: 5px 13px;
+font-size: 11.5px;
+font-weight: 500;
+color: var(–green);
+cursor: pointer;
+transition: background 0.15s, border-color 0.15s;
+letter-spacing: 0.3px;
+}
+
+.ai-pill:hover {
+background: rgba(200, 241, 53, 0.12);
+border-color: rgba(200, 241, 53, 0.3);
+}
+
+.pulse {
+width: 6px; height: 6px;
+border-radius: 50%;
+background: var(–green);
+animation: glow 2.2s ease-in-out infinite;
+}
+
+@keyframes glow {
+0%, 100% { opacity: 1;   box-shadow: 0 0 0 0 rgba(200,241,53,0.5); }
+50%       { opacity: 0.6; box-shadow: 0 0 0 4px rgba(200,241,53,0); }
+}
+
+/* Icon buttons */
+.icon-btn {
+width: 34px; height: 34px;
+border-radius: 8px;
+background: transparent;
+border: 1px solid var(–border2);
+display: flex; align-items: center; justify-content: center;
+cursor: pointer;
+color: var(–gray);
+transition: all 0.14s;
+position: relative;
+flex-shrink: 0;
+}
+
+.icon-btn:hover {
+background: var(–surface2);
+color: var(–white);
+border-color: var(–gray2);
+}
+
+.badge-dot {
+position: absolute;
+top: 5px; right: 5px;
+width: 7px; height: 7px;
+background: var(–green);
+border-radius: 50%;
+border: 2px solid var(–bg);
+}
+
+/* Primary action button */
+.btn-primary {
+display: flex;
+align-items: center;
+gap: 7px;
+background: var(–green);
+color: #0a0a0a;
+font-weight: 700;
+font-size: 12.5px;
+padding: 8px 16px;
+border-radius: 9px;
+border: none;
+cursor: pointer;
+transition: all 0.18s;
+letter-spacing: 0.2px;
+white-space: nowrap;
+}
+
+.btn-primary:hover {
+background: #d5ff40;
+transform: translateY(-1px);
+box-shadow: 0 4px 18px rgba(200,241,53,0.22);
+}
+
+.btn-primary:active {
+transform: translateY(0);
+box-shadow: none;
+}
+
+/* ─── PAGE CONTENT ─── */
+.page-body {
+flex: 1;
+padding: 32px;
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+/* greeting */
+.greeting {
+margin-bottom: 10px;
+animation: fadeUp 0.4s ease both;
+}
+
+.greeting h2 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 30px;
+letter-spacing: 2px;
+color: var(–white);
+line-height: 1;
+}
+
+.greeting h2 em {
+color: var(–green);
+font-style: normal;
+}
+
+.greeting p {
+font-size: 12.5px;
+color: var(–gray);
+margin-top: 5px;
+font-weight: 300;
+}
+
+/* KPI grid */
+.kpi-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 14px;
+}
+
+.kpi-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 14px;
+padding: 22px 22px 18px;
+position: relative;
+overflow: hidden;
+cursor: default;
+transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+animation: fadeUp 0.45s ease both;
+}
+
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.12s; }
+.kpi-card:nth-child(3) { animation-delay: 0.19s; }
+.kpi-card:nth-child(4) { animation-delay: 0.26s; }
+
+.kpi-card:hover {
+transform: translateY(-3px);
+border-color: var(–border2);
+box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+}
+
+/* colored top bar */
+.kpi-card::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+background: var(–accent);
+border-radius: 14px 14px 0 0;
+opacity: 0.85;
+}
+
+.kpi-card.c-green { –accent: var(–green); }
+.kpi-card.c-blue  { –accent: #4d9fff; }
+.kpi-card.c-amber { –accent: #f5a623; }
+.kpi-card.c-red   { –accent: #ff5252; }
+
+.kpi-label {
+font-size: 10px;
+letter-spacing: 1.8px;
+text-transform: uppercase;
+color: var(–gray);
+font-weight: 500;
+}
+
+.kpi-value {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 42px;
+letter-spacing: 1px;
+color: var(–white);
+line-height: 1;
+margin-top: 8px;
+}
+
+.kpi-footer {
+display: flex;
+align-items: center;
+gap: 7px;
+margin-top: 10px;
+}
+
+.kpi-delta {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px;
+font-weight: 500;
+padding: 2px 7px;
+border-radius: 5px;
+}
+
+.kpi-delta.up   { color: var(–green); background: rgba(200,241,53,0.1); }
+.kpi-delta.down { color: #ff5252;      background: rgba(255,82,82,0.1);  }
+.kpi-delta.warn { color: #f5a623;      background: rgba(245,166,35,0.1); }
+
+.kpi-period {
+font-size: 11.5px;
+color: var(–gray2);
+}
+
+/* large muted bg icon */
+.kpi-bg-icon {
+position: absolute;
+bottom: 12px; right: 16px;
+font-size: 44px;
+opacity: 0.055;
+pointer-events: none;
+user-select: none;
+}
+
+/* mini sparkline */
+.sparkline {
+position: absolute;
+bottom: 0; right: 0;
+opacity: 0.18;
+}
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(14px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── ACTIVE JOBS PANEL ─── */
+.panel {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 14px;
+overflow: hidden;
+animation: fadeUp 0.45s ease 0.32s both;
+}
+
+.panel-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 16px 20px;
+border-bottom: 1px solid var(–border);
+}
+
+.panel-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 15px;
+letter-spacing: 2.5px;
+color: var(–white);
+}
+
+.panel-link {
+font-size: 11.5px;
+color: var(–green);
+cursor: pointer;
+font-weight: 500;
+transition: opacity 0.14s;
+}
+.panel-link:hover { opacity: 0.75; }
+
+.job-filters {
+display: flex;
+gap: 4px;
+padding: 12px 20px;
+border-bottom: 1px solid var(–border);
+}
+
+.filter-tab {
+font-size: 11.5px;
+font-weight: 500;
+padding: 4px 12px;
+border-radius: 20px;
+cursor: pointer;
+border: 1px solid transparent;
+color: var(–gray);
+transition: all 0.14s;
+user-select: none;
+}
+
+.filter-tab:hover { color: var(–white); border-color: var(–border2); }
+.filter-tab.active {
+background: rgba(200,241,53,0.1);
+color: var(–green);
+border-color: rgba(200,241,53,0.2);
+}
+
+.job-row {
+display: flex;
+align-items: center;
+gap: 14px;
+padding: 13px 20px;
+border-bottom: 1px solid var(–border);
+cursor: pointer;
+transition: background 0.12s;
+}
+.job-row:last-child { border-bottom: none; }
+.job-row:hover { background: var(–surface2); }
+
+.status-dot {
+width: 8px; height: 8px;
+border-radius: 50%;
+flex-shrink: 0;
+}
+.dot-green { background: var(–green); box-shadow: 0 0 6px rgba(200,241,53,0.5); }
+.dot-blue  { background: #4d9fff;      box-shadow: 0 0 6px rgba(77,159,255,0.4); }
+.dot-amber { background: #f5a623;      box-shadow: 0 0 6px rgba(245,166,35,0.4); }
+.dot-gray  { background: var(–gray2); }
+
+.job-info { flex: 1; min-width: 0; }
+.job-name { font-size: 13px; font-weight: 500; color: var(–white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.job-sub  { font-size: 11px; color: var(–gray); margin-top: 2px; }
+
+.job-tag {
+font-size: 10px; font-weight: 600;
+padding: 3px 9px; border-radius: 6px;
+letter-spacing: 0.4px; white-space: nowrap; flex-shrink: 0;
+}
+.tag-active    { background: rgba(200,241,53,0.1);   color: var(–green); }
+.tag-scheduled { background: rgba(77,159,255,0.1);   color: #4d9fff; }
+.tag-pending   { background: rgba(245,166,35,0.1);   color: #f5a623; }
+.tag-complete  { background: rgba(100,100,100,0.12); color: var(–gray); }
+
+.job-amount {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 12.5px; font-weight: 500;
+color: var(–white); text-align: right;
+flex-shrink: 0; min-width: 58px;
+}
+
+/* ─── TWO-COL LAYOUT ─── */
+.two-col {
+display: grid;
+grid-template-columns: 1.35fr 1fr;
+gap: 14px;
+align-items: start;
+}
+
+/* ─── SCHEDULE PANEL ─── */
+.weather-strip {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 9px 20px;
+border-bottom: 1px solid var(–border);
+background: rgba(77,159,255,0.03);
+}
+.weather-icon { font-size: 15px; }
+.weather-text { font-size: 11.5px; color: var(–gray); }
+.weather-text strong { color: var(–white); }
+.weather-badge {
+margin-left: auto;
+font-size: 10px; font-weight: 600;
+padding: 2px 8px; border-radius: 5px;
+}
+.weather-badge.good { color: var(–green); background: rgba(200,241,53,0.1); }
+.weather-badge.warn { color: #f5a623;      background: rgba(245,166,35,0.1); }
+
+.schedule-row {
+display: flex;
+align-items: stretch;
+gap: 12px;
+padding: 12px 20px;
+border-bottom: 1px solid var(–border);
+cursor: pointer;
+transition: background 0.12s;
+position: relative;
+}
+.schedule-row:last-child { border-bottom: none; }
+.schedule-row:hover { background: var(–surface2); }
+.schedule-row.now { background: rgba(200,241,53,0.03); }
+.schedule-row.now::before {
+content: ‘’;
+position: absolute;
+left: 0; top: 0; bottom: 0;
+width: 2px;
+background: var(–green);
+border-radius: 0 2px 2px 0;
+}
+
+.sched-time {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10.5px;
+color: var(–gray2);
+width: 40px;
+flex-shrink: 0;
+text-align: right;
+padding-top: 2px;
+line-height: 1.3;
+}
+.schedule-row.now .sched-time { color: var(–green); }
+
+.sched-timeline {
+display: flex;
+flex-direction: column;
+align-items: center;
+flex-shrink: 0;
+width: 12px;
+}
+.sched-dot {
+width: 9px; height: 9px;
+border-radius: 50%;
+border: 2px solid currentColor;
+flex-shrink: 0;
+margin-top: 2px;
+}
+.sched-connector {
+width: 1px;
+flex: 1;
+min-height: 10px;
+background: var(–border2);
+margin-top: 3px;
+}
+.schedule-row:last-child .sched-connector { display: none; }
+
+.sched-body { flex: 1; padding-bottom: 4px; }
+.sched-title {
+font-size: 13px; font-weight: 500;
+color: var(–white); line-height: 1.3;
+}
+.sched-meta {
+display: flex;
+align-items: center;
+gap: 6px;
+margin-top: 4px;
+flex-wrap: wrap;
+}
+.sched-chip {
+font-size: 10px;
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: 4px;
+padding: 1px 7px;
+color: var(–gray);
+}
+.sched-addr {
+font-size: 11px;
+color: var(–gray2);
+}
+.sched-dur {
+margin-left: auto;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–gray2);
+flex-shrink: 0;
+align-self: flex-start;
+padding-top: 3px;
+}
+
+/* ─── REVENUE CHART ─── */
+.chart-body { padding: 24px 24px 20px; }
+
+.chart-stats {
+display: flex;
+gap: 28px;
+margin-bottom: 24px;
+}
+
+.chart-stat-item { }
+
+.chart-stat-label {
+font-size: 10px;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+color: var(–gray);
+}
+
+.chart-stat-value {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 26px;
+letter-spacing: 1px;
+color: var(–white);
+line-height: 1.1;
+margin-top: 2px;
+}
+
+.chart-stat-value.accent { color: var(–green); }
+
+.chart-stat-delta {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–green);
+margin-top: 1px;
+}
+
+.chart-area {
+position: relative;
+height: 110px;
+display: flex;
+align-items: flex-end;
+gap: 6px;
+}
+
+.bar-col {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 6px;
+height: 100%;
+justify-content: flex-end;
+cursor: pointer;
+}
+
+.bar-col:hover .bar-fill { filter: brightness(1.15); }
+
+.bar-fill {
+width: 100%;
+border-radius: 5px 5px 0 0;
+background: var(–border2);
+transition: filter 0.15s;
+position: relative;
+min-height: 4px;
+}
+
+.bar-fill.current { background: var(–green); }
+
+.bar-fill.forecast {
+background: transparent;
+border: 1px dashed var(–border2);
+border-bottom: none;
+opacity: 0.5;
+}
+
+.bar-tooltip {
+position: absolute;
+top: -26px; left: 50%;
+transform: translateX(-50%);
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: 5px;
+padding: 2px 7px;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 9.5px;
+color: var(–white);
+white-space: nowrap;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.15s;
+}
+
+.bar-col:hover .bar-tooltip { opacity: 1; }
+
+.bar-label {
+font-size: 9.5px;
+color: var(–gray2);
+font-family: ‘JetBrains Mono’, monospace;
+letter-spacing: 0.5px;
+}
+
+.bar-col.current-col .bar-label { color: var(–green); }
+
+.chart-divider {
+height: 1px;
+background: var(–border);
+margin: 16px 0 0;
+}
+
+.chart-footer {
+display: flex;
+align-items: center;
+gap: 18px;
+padding-top: 14px;
+}
+
+.chart-legend {
+display: flex;
+align-items: center;
+gap: 6px;
+font-size: 11px;
+color: var(–gray);
+}
+
+.legend-dot {
+width: 8px; height: 8px;
+border-radius: 2px;
+}
+
+.chart-goal {
+margin-left: auto;
+font-size: 11px;
+color: var(–gray);
+}
+
+.chart-goal strong { color: var(–white); }
+
+.goal-bar-track {
+width: 80px;
+height: 4px;
+background: var(–border);
+border-radius: 2px;
+overflow: hidden;
+display: inline-block;
+vertical-align: middle;
+margin: 0 6px;
+}
+
+.goal-bar-fill {
+height: 100%;
+background: var(–green);
+border-radius: 2px;
+width: 71%;
+}
+
+/* ─── ACTIVITY FEED ─── */
+.activity-item {
+display: flex;
+align-items: flex-start;
+gap: 13px;
+padding: 13px 20px;
+border-bottom: 1px solid var(–border);
+transition: background 0.12s;
+cursor: default;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-item:hover { background: var(–surface2); }
+
+.activity-icon {
+width: 32px; height: 32px;
+border-radius: 9px;
+display: flex; align-items: center; justify-content: center;
+font-size: 14px;
+flex-shrink: 0;
+}
+
+.activity-body { flex: 1; min-width: 0; }
+
+.activity-text {
+font-size: 12.5px;
+color: #c8c8c8;
+line-height: 1.45;
+}
+.activity-text strong { color: var(–white); font-weight: 600; }
+
+.activity-footer {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-top: 4px;
+}
+
+.activity-time {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px;
+color: var(–gray2);
+}
+
+.activity-tag {
+font-size: 9.5px;
+font-weight: 600;
+padding: 1px 6px;
+border-radius: 4px;
+letter-spacing: 0.3px;
+}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(–surface2);border:1px solid var(–border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(–white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(–green);flex-shrink:0;}
+
+/* ── TOPBAR COLLAPSE OFFSET ── */
+.topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
+.main.expanded .topbar { padding-left: 56px; }
+
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+
+<aside class="sidebar">
+
+  <div class="logo-wrap" style="justify-content:space-between;">
+    <div>
+      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-sub">simple. smart. swft.</div>
+    </div>
+    <div onclick="toggleSidebar()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--white)'" onmouseout="this.style.background='transparent';this.style.color='var(--gray)'">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <nav class="nav">
+
+```
+<div class="nav-label">Main</div>
+
+<div class="nav-item active" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>
+  Dashboard
+</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
+  Customers
+  <span class="nav-badge">14</span>
+</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
+  Jobs
+  <span class="nav-badge">6</span>
+</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.8"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.8"/></svg>
+  Quotes
+</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
+  Schedule
+</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>
+  Invoices
+  <span class="nav-badge">3</span>
+</div>
+
+<div class="nav-divider"></div>
+<div class="nav-label">Growth</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Pipeline
+</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
+  Campaigns
+</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8"/></svg>
+  Reviews
+</div>
+
+<div class="nav-divider"></div>
+<div class="nav-label">AI</div>
+
+<div class="nav-item" onclick="setActive(this)">
+  <div class="nav-accent"></div>
+  <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="1.8"/></svg>
+  AI Agents
+</div>
+```
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-tile">
+      <div class="avatar">JR</div>
+      <div class="user-info">
+        <div class="user-name">Jake Reynolds</div>
+        <div class="user-role">Owner</div>
+      </div>
+      <svg class="settings-icon" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="2"/></svg>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ── MAIN ── -->
+
+<div class="main">
+
+  <!-- TOPBAR -->
+
+  <header class="topbar">
+    <div class="topbar-page" id="topbar-title">DASHBOARD</div>
+    <span class="topbar-slash">/</span>
+    <div class="topbar-sub" id="topbar-sub">Overview</div>
+
+```
+<div class="topbar-right">
+  <div class="ai-pill">
+    <div class="pulse"></div>
+    AI Active
+  </div>
+
+  <div class="icon-btn" title="Notifications">
+    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>
+    <div class="badge-dot"></div>
+  </div>
+
+  <div class="icon-btn" title="Search">
+    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.8"/></svg>
+  </div>
+
+  <button class="btn-primary" onclick="showToast('New Job — opening job form')">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
+    New Job
+  </button>
+</div>
+```
+
+  </header>
+
+  <div class="page-body">
+
+```
+<!-- Greeting -->
+<div class="greeting">
+  <h2>GOOD MORNING, <em id="greeting-name">JAKE.</em></h2>
+  <p id="greeting-sub">Loading...</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+
+  <!-- Revenue -->
+  <div class="kpi-card c-green">
+    <div class="kpi-label" id="kpi-rev-label">Revenue — March</div>
+    <div class="kpi-value" id="kpi-rev">$—</div>
+    <div class="kpi-footer">
+      <span class="kpi-delta up" id="kpi-rev-delta">—</span>
+      <span class="kpi-period">vs last month</span>
+    </div>
+    <div class="kpi-bg-icon">💰</div>
+    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40">
+      <polyline points="0,35 15,28 30,30 45,18 60,22 75,10 90,6"
+        fill="none" stroke="#c8f135" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Jobs -->
+  <div class="kpi-card c-blue">
+    <div class="kpi-label">Jobs This Month</div>
+    <div class="kpi-value" id="kpi-jobs">—</div>
+    <div class="kpi-footer">
+      <span class="kpi-delta up" id="kpi-jobs-delta">—</span>
+      <span class="kpi-period">active + scheduled</span>
+    </div>
+    <div class="kpi-bg-icon">🔨</div>
+    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40">
+      <polyline points="0,32 15,26 30,28 45,20 60,16 75,14 90,8"
+        fill="none" stroke="#4d9fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Invoices -->
+  <div class="kpi-card c-amber">
+    <div class="kpi-label">Outstanding Invoices</div>
+    <div class="kpi-value" id="kpi-outstanding">$—</div>
+    <div class="kpi-footer">
+      <span class="kpi-delta warn" id="kpi-outstanding-delta">—</span>
+      <span class="kpi-period">follow-up due</span>
+    </div>
+    <div class="kpi-bg-icon">📄</div>
+    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40">
+      <polyline points="0,10 15,16 30,12 45,20 60,18 75,26 90,30"
+        fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Leads / Quotes -->
+  <div class="kpi-card c-red">
+    <div class="kpi-label">Open Quotes</div>
+    <div class="kpi-value" id="kpi-quotes">—</div>
+    <div class="kpi-footer">
+      <span class="kpi-delta up" id="kpi-quotes-delta">—</span>
+      <span class="kpi-period">awaiting approval</span>
+    </div>
+    <div class="kpi-bg-icon">📥</div>
+    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40">
+      <polyline points="0,30 15,26 30,22 45,24 60,14 75,12 90,8"
+        fill="none" stroke="#ff5252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+</div>
+
+<!-- Two-col: Jobs + Schedule -->
+<div class="two-col">
+
+<!-- Active Jobs Panel -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">ACTIVE JOBS</div>
+    <a class="panel-link">View all →</a>
+  </div>
+  <div class="job-filters">
+    <div class="filter-tab active" onclick="filterJobs(this,'all')">All</div>
+    <div class="filter-tab" onclick="filterJobs(this,'active')">In Progress</div>
+    <div class="filter-tab" onclick="filterJobs(this,'scheduled')">Scheduled</div>
+    <div class="filter-tab" onclick="filterJobs(this,'pending')">Pending</div>
+    <div class="filter-tab" onclick="filterJobs(this,'complete')">Complete</div>
+  </div>
+  <div class="job-list" id="job-list">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<!-- Today's Schedule Panel -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">TODAY'S SCHEDULE</div>
+    <a class="panel-link">Full calendar →</a>
+  </div>
+
+  <!-- Weather -->
+  <div class="weather-strip">
+    <span class="weather-icon">⛅</span>
+    <span class="weather-text"><strong>72°F</strong> &nbsp;Partly cloudy — good pour conditions</span>
+    <span class="weather-badge good">✓ Clear</span>
+  </div>
+
+  <!-- Schedule rows -->
+  <div class="schedule-row now">
+    <div class="sched-time">7:00<br>AM</div>
+    <div class="sched-timeline">
+      <div class="sched-dot" style="color:var(--green);"></div>
+      <div class="sched-connector"></div>
+    </div>
+    <div class="sched-body">
+      <div class="sched-title">Henderson — Backyard Patio</div>
+      <div class="sched-meta">
+        <span class="sched-chip">Crew A</span>
+        <span class="sched-chip">Marcus · Devon · Luis</span>
+        <span class="sched-addr">411 Birchwood Dr</span>
+      </div>
+    </div>
+    <div class="sched-dur">~6 hrs</div>
+  </div>
+
+  <div class="schedule-row now">
+    <div class="sched-time">8:30<br>AM</div>
+    <div class="sched-timeline">
+      <div class="sched-dot" style="color:var(--green);"></div>
+      <div class="sched-connector"></div>
+    </div>
+    <div class="sched-body">
+      <div class="sched-title">Ortiz — Pool Deck</div>
+      <div class="sched-meta">
+        <span class="sched-chip">Crew B</span>
+        <span class="sched-chip">Ray · Tomas</span>
+        <span class="sched-addr">88 Lakeview Ct</span>
+      </div>
+    </div>
+    <div class="sched-dur">~5 hrs</div>
+  </div>
+
+  <div class="schedule-row">
+    <div class="sched-time">11:00<br>AM</div>
+    <div class="sched-timeline">
+      <div class="sched-dot" style="color:#4d9fff;"></div>
+      <div class="sched-connector"></div>
+    </div>
+    <div class="sched-body">
+      <div class="sched-title">Site Estimate — Pham Driveway</div>
+      <div class="sched-meta">
+        <span class="sched-chip">Jake Reynolds</span>
+        <span class="sched-addr">2422 Oak St</span>
+      </div>
+    </div>
+    <div class="sched-dur">~1 hr</div>
+  </div>
+
+  <div class="schedule-row">
+    <div class="sched-time">2:00<br>PM</div>
+    <div class="sched-timeline">
+      <div class="sched-dot" style="color:#f5a623;"></div>
+      <div class="sched-connector"></div>
+    </div>
+    <div class="sched-body">
+      <div class="sched-title">Follow-up Call — Garcia</div>
+      <div class="sched-meta">
+        <span class="sched-chip">AI Scheduled</span>
+        <span class="sched-addr">Quote #1039 · $3,400</span>
+      </div>
+    </div>
+    <div class="sched-dur">15 min</div>
+  </div>
+
+  <div class="schedule-row">
+    <div class="sched-time">4:30<br>PM</div>
+    <div class="sched-timeline">
+      <div class="sched-dot" style="color:var(--gray2);"></div>
+      <div class="sched-connector"></div>
+    </div>
+    <div class="sched-body">
+      <div class="sched-title">Henderson Final Walkthrough</div>
+      <div class="sched-meta">
+        <span class="sched-chip">Inspection</span>
+        <span class="sched-addr">411 Birchwood Dr</span>
+      </div>
+    </div>
+    <div class="sched-dur">30 min</div>
+  </div>
+
+</div><!-- /schedule panel -->
+
+</div><!-- /two-col -->
+
+<!-- Revenue Chart -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">MONTHLY REVENUE</div>
+    <a class="panel-link">Full report →</a>
+  </div>
+  <div class="chart-body">
+
+    <!-- Stat row -->
+    <div class="chart-stats">
+      <div class="chart-stat-item">
+        <div class="chart-stat-label">This Month</div>
+        <div class="chart-stat-value accent">$28,450</div>
+        <div class="chart-stat-delta">↑ 18% vs Feb</div>
+      </div>
+      <div class="chart-stat-item">
+        <div class="chart-stat-label">YTD Revenue</div>
+        <div class="chart-stat-value">$71,200</div>
+      </div>
+      <div class="chart-stat-item">
+        <div class="chart-stat-label">Avg Job Value</div>
+        <div class="chart-stat-value">$1,185</div>
+      </div>
+      <div class="chart-stat-item">
+        <div class="chart-stat-label">Jobs Completed</div>
+        <div class="chart-stat-value">24</div>
+      </div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="chart-area">
+
+      <div class="bar-col">
+        <div class="bar-fill" style="height:38%;">
+          <div class="bar-tooltip">$16,200</div>
+        </div>
+        <div class="bar-label">OCT</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-fill" style="height:26%;">
+          <div class="bar-tooltip">$11,400</div>
+        </div>
+        <div class="bar-label">NOV</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-fill" style="height:16%;">
+          <div class="bar-tooltip">$7,100</div>
+        </div>
+        <div class="bar-label">DEC</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-fill" style="height:22%;">
+          <div class="bar-tooltip">$9,800</div>
+        </div>
+        <div class="bar-label">JAN</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-fill" style="height:54%;">
+          <div class="bar-tooltip">$24,100</div>
+        </div>
+        <div class="bar-label">FEB</div>
+      </div>
+      <div class="bar-col current-col">
+        <div class="bar-fill current" style="height:100%;">
+          <div class="bar-tooltip">$28,450</div>
+        </div>
+        <div class="bar-label">MAR</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-fill forecast" style="height:72%;">
+          <div class="bar-tooltip">~$32k est.</div>
+        </div>
+        <div class="bar-label">APR</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-fill forecast" style="height:80%;">
+          <div class="bar-tooltip">~$36k est.</div>
+        </div>
+        <div class="bar-label">MAY</div>
+      </div>
+
+    </div>
+
+    <div class="chart-divider"></div>
+    <div class="chart-footer">
+      <div class="chart-legend">
+        <div class="legend-dot" style="background:var(--green);"></div>
+        Actual
+      </div>
+      <div class="chart-legend">
+        <div class="legend-dot" style="background:var(--border2); border: 1px dashed var(--gray2);"></div>
+        AI Forecast
+      </div>
+      <div class="chart-goal">
+        Monthly goal &nbsp;<div class="goal-bar-track"><div class="goal-bar-fill"></div></div>&nbsp; <strong>$28,450</strong> / $40,000
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Activity Feed -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">RECENT ACTIVITY</div>
+    <a class="panel-link">View all →</a>
+  </div>
+
+  <div class="activity-item">
+    <div class="activity-icon" style="background:rgba(200,241,53,0.1);">🤖</div>
+    <div class="activity-body">
+      <div class="activity-text"><strong>AI Receptionist</strong> booked an estimate for Nguyen — driveway resurface, approx 1,200 sqft</div>
+      <div class="activity-footer">
+        <span class="activity-time">9 min ago</span>
+        <span class="activity-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">AI</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <div class="activity-icon" style="background:rgba(77,159,255,0.1);">💳</div>
+    <div class="activity-body">
+      <div class="activity-text"><strong>Deposit received</strong> — Kim Driveway Resurface · $775 via card</div>
+      <div class="activity-footer">
+        <span class="activity-time">42 min ago</span>
+        <span class="activity-tag" style="background:rgba(77,159,255,0.1);color:#4d9fff;">Payment</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <div class="activity-icon" style="background:rgba(245,166,35,0.1);">📋</div>
+    <div class="activity-body">
+      <div class="activity-text"><strong>Quote #1042 sent</strong> to Martinez — $4,800 stamped driveway · awaiting approval</div>
+      <div class="activity-footer">
+        <span class="activity-time">2 hrs ago</span>
+        <span class="activity-tag" style="background:rgba(245,166,35,0.1);color:#f5a623;">Quote</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <div class="activity-icon" style="background:rgba(200,241,53,0.08);">⭐</div>
+    <div class="activity-body">
+      <div class="activity-text"><strong>New 5-star review</strong> from Chen — "Professional, fast, and clean work. Highly recommend."</div>
+      <div class="activity-footer">
+        <span class="activity-time">Yesterday, 4:12 PM</span>
+        <span class="activity-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">Review</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <div class="activity-icon" style="background:rgba(100,100,100,0.1);">✅</div>
+    <div class="activity-body">
+      <div class="activity-text"><strong>Job completed</strong> — Chen Garage Floor · Invoice #1038 sent · $2,600</div>
+      <div class="activity-footer">
+        <span class="activity-time">Mar 25, 5:30 PM</span>
+        <span class="activity-tag" style="background:rgba(100,100,100,0.12);color:var(--gray);">Job</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <div class="activity-icon" style="background:rgba(200,241,53,0.08);">🤖</div>
+    <div class="activity-body">
+      <div class="activity-text"><strong>AI Follow-up Agent</strong> sent a payment reminder to Patel · Invoice #1036 overdue 7 days</div>
+      <div class="activity-footer">
+        <span class="activity-time">Mar 25, 9:00 AM</span>
+        <span class="activity-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">AI</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+```
+
+  </div>
+</div>
+
+<script>
+  function filterJobs(tab, status) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.job-row').forEach(row => {
+      row.style.display = (status === 'all' || row.dataset.status === status) ? 'flex' : 'none';
+    });
+  }
+
+  const pageTitles = {
+    'Dashboard':  ['DASHBOARD',  'Overview'],
+    'Customers':  ['CUSTOMERS',  'Manage contacts'],
+    'Jobs':       ['JOBS',       'Active & upcoming'],
+    'Quotes':     ['QUOTES',     'Estimates & approvals'],
+    'Schedule':   ['SCHEDULE',   'Calendar view'],
+    'Invoices':   ['INVOICES',   'Billing & payments'],
+    'Pipeline':   ['PIPELINE',   'Lead stages'],
+    'Campaigns':  ['CAMPAIGNS',  'Marketing automation'],
+    'Reviews':    ['REVIEWS',    'Reputation management'],
+    'AI Agents':  ['AI AGENTS',  'Automation & AI'],
+  };
+
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const main    = document.querySelector('.main');
+    const toggle  = document.getElementById('sidebar-toggle');
+    sidebar.classList.toggle('collapsed');
+    main.classList.toggle('expanded');
+    toggle.classList.toggle('visible');
+  }
+
+  function setActive(el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    const label = el.innerText.trim().split('\n')[0];
+    const key   = Object.keys(pageTitles).find(k => label.startsWith(k));
+    if (key) {
+      document.getElementById('topbar-title').textContent = pageTitles[key][0];
+      document.getElementById('topbar-sub').textContent   = pageTitles[key][1];
+    }
+  }
+
+  let _toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── Helpers ──
+  function fmtCurrency(val) {
+    return '$' + Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'GOOD MORNING';
+    if (h < 17) return 'GOOD AFTERNOON';
+    return 'GOOD EVENING';
+  }
+  function formatDate(ts) {
+    if (!ts) return '—';
+    const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+</script>
+
+<!-- ══════════════════════════════════════
+     FIREBASE + API CONNECTION
+     ─────────────────────────────────────
+     Paste your firebaseConfig below.
+     Make sure swft-api.js is in the same folder.
+══════════════════════════════════════ -->
+
+<script src="swft-api.js"></script>
+
+<script type="module">
+  import { initializeApp }       from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // ── Auth guard ──
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'swft-login.html';
+      return;
+    }
+    document.body.style.visibility = 'visible';
+    await loadDashboard(user);
+  });
+
+  async function loadDashboard(user) {
+    const firstName = user.displayName?.split(' ')[0]?.toUpperCase() || 'THERE';
+
+    // Greeting
+    const greetEl = document.querySelector('.greeting h2');
+    if (greetEl) greetEl.innerHTML = `${getGreeting()}, <em>${firstName}.</em>`;
+
+    try {
+      // Load stats + jobs in parallel
+      const [stats, jobs] = await Promise.all([
+        API.dashboard.stats(),
+        API.jobs.list()
+      ]);
+
+      // ── KPI Cards ──
+      const month = new Date().toLocaleString('en-US', { month: 'long' });
+      document.getElementById('kpi-rev-label').textContent  = `Revenue — ${month}`;
+      document.getElementById('kpi-rev').textContent        = fmtCurrency(stats.revenueMTD);
+      document.getElementById('kpi-rev-delta').textContent  = `${stats.activeJobs} active`;
+      document.getElementById('kpi-jobs').textContent       = stats.activeJobs + stats.scheduledJobs;
+      document.getElementById('kpi-jobs-delta').textContent = `${stats.activeJobs} active · ${stats.scheduledJobs} scheduled`;
+      document.getElementById('kpi-outstanding').textContent    = fmtCurrency(stats.outstanding);
+      document.getElementById('kpi-outstanding-delta').textContent = stats.outstanding > 0 ? 'follow-up due' : 'all clear ✓';
+      document.getElementById('kpi-quotes').textContent        = stats.openQuotes;
+      document.getElementById('kpi-quotes-delta').textContent  = stats.openQuotes > 0 ? 'awaiting approval' : 'none pending';
+
+      // ── Greeting sub ──
+      const now = new Date();
+      const dayStr = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+      document.getElementById('greeting-sub').textContent =
+        `${dayStr}  ·  ${stats.activeJobs} jobs active today  ·  ${stats.openQuotes} quotes awaiting approval`;
+
+      // ── Active Jobs List ──
+      renderJobList(jobs);
+
+    } catch (err) {
+      console.error('Dashboard load error:', err);
+      document.getElementById('greeting-sub').textContent = 'Could not load data — check API connection.';
+    }
+  }
+
+  function renderJobList(jobs) {
+    const list = document.getElementById('job-list');
+    if (!jobs.length) {
+      list.innerHTML = '<div style="padding:24px 20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs yet — create your first job to get started.</div>';
+      return;
+    }
+
+    const statusMap = {
+      'active':      { dot: 'dot-green', tag: 'tag-active',    label: 'In Progress' },
+      'in-progress': { dot: 'dot-green', tag: 'tag-active',    label: 'In Progress' },
+      'scheduled':   { dot: 'dot-blue',  tag: 'tag-scheduled', label: 'Scheduled'   },
+      'pending':     { dot: 'dot-amber', tag: 'tag-pending',   label: 'Quote Sent'  },
+      'complete':    { dot: 'dot-gray',  tag: 'tag-complete',  label: 'Complete'    },
+    };
+
+    list.innerHTML = jobs.slice(0, 8).map(job => {
+      const s   = statusMap[job.status] || statusMap['scheduled'];
+      const sub = [job.service, job.crew, formatDate(job.date || job.createdAt)]
+        .filter(Boolean).join(' · ');
+      const amt = job.amount
+        ? (typeof job.amount === 'number' ? fmtCurrency(job.amount) : job.amount)
+        : '—';
+      return `
+        <div class="job-row" data-status="${job.status}">
+          <div class="status-dot ${s.dot}"></div>
+          <div class="job-info">
+            <div class="job-name">${job.customerName || ''} — ${job.title || ''}</div>
+            <div class="job-sub">${sub}</div>
+          </div>
+          <span class="job-tag ${s.tag}">${s.label}</span>
+          <div class="job-amount">${amt}</div>
+        </div>`;
+    }).join('');
+  }
+</script>
+
+<!-- Sidebar re-open button -->
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+</body>
+</html>
