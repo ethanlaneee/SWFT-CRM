@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT — Invoices</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#0a0a0a; --surface:#111111; --surface2:#181818;
+    --border:#1f1f1f; --border2:#2c2c2c;
+    --green:#c8f135; --white:#f0f0f0; --gray:#7a7a7a; --gray2:#444444;
+    --blue:#4d9fff; --amber:#f5a623; --red:#ff5252;
+    --sidebar-w:228px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(–sidebar-w);min-height:100vh;background:var(–surface);border-right:1px solid var(–border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:3px;color:var(–white);line-height:1;}
+.logo-mark em{color:var(–green);font-style:normal;}
+.logo-sub{font-size:9.5px;color:var(–gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(–border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(–surface2);color:var(–white);}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9px;letter-spacing:2.5px;color:var(–gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(–gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(–surface2);color:var(–white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(–green);font-weight:500;}
+.nav-item.active::before{content:’’;position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(–green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.nav-badge{margin-left:auto;background:var(–green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:‘JetBrains Mono’,monospace;}
+.nav-divider{height:1px;background:var(–border);margin:8px 12px;}
+.sidebar-footer{border-top:1px solid var(–border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(–surface2);}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(–green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(–white);}
+.user-role{font-size:10.5px;color:var(–gray2);margin-top:1px;}
+
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:300;width:32px;height:32px;border-radius:8px;background:var(–surface2);border:1px solid var(–border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(–border2);color:var(–white);}
+
+/* ── MAIN ── */
+.main{margin-left:var(–sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
+
+/* ── TOPBAR ── */
+.topbar{height:60px;border-bottom:1px solid var(–border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);z-index:100;}
+.topbar-page{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:2.5px;color:var(–white);}
+.topbar-slash{color:var(–border2);font-family:‘JetBrains Mono’,monospace;font-size:16px;}
+.topbar-sub{font-size:12px;color:var(–gray);font-style:italic;font-weight:300;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.ai-pill{display:flex;align-items:center;gap:7px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;padding:5px 13px;font-size:11.5px;font-weight:500;color:var(–green);cursor:pointer;}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(–green);animation:glow 2.2s ease-in-out infinite;}
+@keyframes glow{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(200,241,53,0.5);}50%{opacity:0.6;box-shadow:0 0 0 4px rgba(200,241,53,0);}}
+.icon-btn{width:34px;height:34px;border-radius:8px;background:transparent;border:1px solid var(–border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–gray);transition:all 0.14s;}
+.icon-btn:hover{background:var(–surface2);color:var(–white);}
+.btn-primary{display:flex;align-items:center;gap:7px;background:var(–green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s;}
+.btn-primary:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 4px 18px rgba(200,241,53,0.22);}
+
+/* ── PAGE BODY ── */
+.page-body{flex:1;padding:28px 28px 40px;display:flex;flex-direction:column;gap:18px;}
+
+/* ── SUMMARY CARDS ── */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.sum-card{background:var(–surface);border:1px solid var(–border);border-radius:13px;padding:18px 20px;position:relative;overflow:hidden;animation:fadeUp 0.4s ease both;}
+.sum-card:nth-child(1){animation-delay:.04s;} .sum-card:nth-child(2){animation-delay:.09s;} .sum-card:nth-child(3){animation-delay:.14s;} .sum-card:nth-child(4){animation-delay:.19s;}
+.sum-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:var(–c);border-radius:13px 13px 0 0;}
+.sum-card.c-green{–c:var(–green);} .sum-card.c-amber{–c:var(–amber);} .sum-card.c-red{–c:var(–red);} .sum-card.c-blue{–c:var(–blue);}
+.sum-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(–gray);}
+.sum-value{font-family:‘Bebas Neue’,sans-serif;font-size:34px;letter-spacing:1px;color:var(–white);line-height:1;margin-top:6px;}
+.sum-sub{font-size:11px;color:var(–gray2);margin-top:4px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:10px;}
+.search-wrap{display:flex;align-items:center;gap:10px;background:var(–surface);border:1px solid var(–border2);border-radius:10px;padding:9px 14px;flex:1;max-width:320px;transition:border-color 0.15s;}
+.search-wrap:focus-within{border-color:var(–green);}
+.search-input{background:transparent;border:none;outline:none;color:var(–white);font-family:‘DM Sans’,sans-serif;font-size:13px;flex:1;}
+.search-input::placeholder{color:var(–gray2);}
+.filter-group{display:flex;gap:4px;}
+.ftab{font-size:11.5px;font-weight:500;padding:7px 13px;border-radius:8px;cursor:pointer;border:1px solid var(–border2);color:var(–gray);transition:all 0.14s;user-select:none;}
+.ftab:hover{color:var(–white);border-color:var(–gray2);}
+.ftab.active{background:rgba(200,241,53,0.1);color:var(–green);border-color:rgba(200,241,53,0.25);}
+
+/* ── TABLE ── */
+.table-wrap{background:var(–surface);border:1px solid var(–border);border-radius:14px;overflow:hidden;}
+.table-head{display:grid;grid-template-columns:1fr 1.6fr 1.1fr 1.1fr 1fr 1fr 80px;padding:11px 20px;border-bottom:1px solid var(–border);background:var(–surface2);}
+.th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(–gray2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;transition:color 0.14s;}
+.th:hover{color:var(–gray);}
+.th.sort-active{color:var(–green);}
+
+.inv-row{display:grid;grid-template-columns:1fr 1.6fr 1.1fr 1.1fr 1fr 1fr 80px;padding:13px 20px;border-bottom:1px solid var(–border);align-items:center;cursor:pointer;transition:background 0.12s;animation:fadeUp 0.35s ease both;}
+.inv-row:last-child{border-bottom:none;}
+.inv-row:hover{background:var(–surface2);}
+.inv-row:nth-child(1){animation-delay:.05s;} .inv-row:nth-child(2){animation-delay:.10s;} .inv-row:nth-child(3){animation-delay:.15s;} .inv-row:nth-child(4){animation-delay:.20s;} .inv-row:nth-child(5){animation-delay:.25s;} .inv-row:nth-child(6){animation-delay:.30s;} .inv-row:nth-child(7){animation-delay:.35s;}
+
+.inv-num{font-family:‘JetBrains Mono’,monospace;font-size:12px;color:var(–gray);font-weight:500;}
+.inv-customer{font-size:13px;font-weight:500;color:var(–white);}
+.inv-job{font-size:11px;color:var(–gray);margin-top:2px;}
+.inv-date{font-family:‘JetBrains Mono’,monospace;font-size:12px;color:var(–gray);}
+.inv-due{font-family:‘JetBrains Mono’,monospace;font-size:12px;}
+.due-ok{color:var(–gray);}
+.due-soon{color:var(–amber);}
+.due-over{color:var(–red);}
+.inv-amount{font-family:‘JetBrains Mono’,monospace;font-size:13px;font-weight:500;color:var(–white);}
+.inv-balance{font-family:‘JetBrains Mono’,monospace;font-size:12px;}
+.bal-zero{color:var(–gray2);}
+.bal-part{color:var(–amber);}
+.bal-full{color:var(–red);}
+
+.status-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;letter-spacing:0.4px;white-space:nowrap;}
+.s-paid    {background:rgba(200,241,53,0.1); color:var(–green);}
+.s-partial {background:rgba(245,166,35,0.1); color:var(–amber);}
+.s-due     {background:rgba(255,82,82,0.1);  color:var(–red);}
+.s-draft   {background:rgba(100,100,100,0.12);color:var(–gray);}
+.s-sent    {background:rgba(77,159,255,0.1);  color:var(–blue);}
+
+.row-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(–border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–gray2);transition:all 0.14s;}
+.row-btn:hover{background:var(–surface2);color:var(–green);border-color:var(–green);}
+
+/* ── DRAWER ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:300;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.drawer-overlay.open{opacity:1;pointer-events:all;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:480px;background:var(–surface);border-left:1px solid var(–border2);z-index:400;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.22,1,0.36,1);overflow:hidden;}
+.drawer.open{transform:translateX(0);}
+
+.d-header{padding:20px 22px 16px;border-bottom:1px solid var(–border);}
+.d-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.d-close{margin-left:auto;width:28px;height:28px;border-radius:7px;border:1px solid var(–border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(–gray);transition:all 0.14s;}
+.d-close:hover{background:var(–surface2);color:var(–white);}
+.d-inv-num{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:var(–gray2);margin-bottom:4px;}
+.d-title{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:1.5px;color:var(–white);line-height:1;}
+.d-customer{font-size:12.5px;color:var(–gray);margin-top:4px;}
+.d-customer span{color:var(–green);}
+.d-status-row{display:flex;align-items:center;gap:8px;}
+
+.d-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(–border);}
+.dstat{padding:13px 15px;border-right:1px solid var(–border);}
+.dstat:last-child{border-right:none;}
+.dstat-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(–gray2);}
+.dstat-value{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:1px;color:var(–white);margin-top:3px;line-height:1;}
+.dstat-value.green{color:var(–green);} .dstat-value.amber{color:var(–amber);} .dstat-value.red{color:var(–red);}
+
+.d-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;}
+.section-title{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(–gray2);margin-bottom:8px;}
+
+/* Line items */
+.line-items{background:var(–surface2);border:1px solid var(–border);border-radius:11px;overflow:hidden;}
+.li-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 14px;border-bottom:1px solid var(–border);background:rgba(255,255,255,0.02);}
+.li-th{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(–gray2);}
+.li-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:11px 14px;border-bottom:1px solid var(–border);}
+.li-row:last-child{border-bottom:none;}
+.li-desc{font-size:12.5px;color:var(–white);}
+.li-sub{font-size:10.5px;color:var(–gray);margin-top:2px;}
+.li-val{font-family:‘JetBrains Mono’,monospace;font-size:12px;color:var(–gray);}
+.li-total{font-family:‘JetBrains Mono’,monospace;font-size:12.5px;color:var(–white);font-weight:500;}
+
+/* Payment summary */
+.pay-summary{background:var(–surface2);border:1px solid var(–border);border-radius:11px;overflow:hidden;}
+.pay-row{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(–border);}
+.pay-row:last-child{border-bottom:none;}
+.pay-label{font-size:12.5px;color:var(–gray);}
+.pay-val{font-family:‘JetBrains Mono’,monospace;font-size:13px;font-weight:500;color:var(–white);}
+.pay-val.green{color:var(–green);} .pay-val.amber{color:var(–amber);} .pay-val.red{color:var(–red);}
+
+/* Payment history */
+.payment-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(–surface2);border:1px solid var(–border);border-radius:9px;}
+.pay-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.pay-info{flex:1;}
+.pay-desc{font-size:12.5px;color:var(–white);font-weight:500;}
+.pay-meta{font-size:11px;color:var(–gray);margin-top:2px;}
+.pay-amount{font-family:‘JetBrains Mono’,monospace;font-size:13px;font-weight:500;color:var(–green);}
+
+/* Send button */
+.send-invoice-btn{width:100%;padding:11px;background:var(–green);color:#0a0a0a;font-weight:700;font-size:13px;border:none;border-radius:10px;cursor:pointer;font-family:‘DM Sans’,sans-serif;transition:background 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.send-invoice-btn:hover{background:#d5ff40;}
+
+.d-footer{padding:14px 20px;border-top:1px solid var(–border);display:flex;gap:8px;}
+.dfooter-btn{flex:1;padding:9px;border-radius:9px;border:1px solid var(–border2);background:transparent;color:var(–gray);font-size:12px;font-family:‘DM Sans’,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.14s;}
+.dfooter-btn:hover{background:var(–surface2);color:var(–white);}
+.dfooter-btn.primary{background:var(–green);color:#0a0a0a;font-weight:700;border-color:var(–green);}
+.dfooter-btn.primary:hover{background:#d5ff40;}
+.dfooter-btn.danger{color:var(–red);border-color:rgba(255,82,82,0.15);}
+.dfooter-btn.danger:hover{background:rgba(255,82,82,0.07);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(–border2);border-radius:2px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(–surface2);border:1px solid var(–border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(–white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(–green);flex-shrink:0;}
+
+/* ── EDIT MODE ── */
+.edit-field{display:flex;flex-direction:column;gap:5px;}
+.edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(–gray2);font-weight:600;}
+.edit-input{background:var(–surface2);border:1px solid var(–border2);border-radius:8px;padding:9px 12px;color:var(–white);font-family:‘DM Sans’,sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.edit-input:focus{border-color:var(–green);}
+.edit-input option{background:var(–surface2);}
+.edit-textarea{resize:none;min-height:60px;line-height:1.5;}
+#i-edit-mode{display:none;flex-direction:column;gap:12px;padding:20px;}
+
+/* ── TOPBAR COLLAPSE OFFSET ── */
+.topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
+.main.expanded .topbar { padding-left: 56px; }
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div>
+      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-sub">simple. smart. swft.</div>
+    </div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>Dashboard</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/></svg>Customers <span class="nav-badge">14</span></div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>Jobs <span class="nav-badge">6</span></div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>Quotes</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>Schedule</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>Invoices <span class="nav-badge">3</span></div>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Growth</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Pipeline</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>Campaigns</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8"/></svg>Reviews</div>
+    <div class="nav-divider"></div>
+    <div class="nav-label">AI</div>
+    <div class="nav-item"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="1.8"/></svg>AI Agents</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-tile">
+      <div class="s-avatar">JR</div>
+      <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+
+<div class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-page">INVOICES</div>
+    <span class="topbar-slash">/</span>
+    <div class="topbar-sub">3 outstanding</div>
+    <div class="topbar-right">
+      <div class="ai-pill"><div class="pulse"></div>AI Active</div>
+      <div class="icon-btn" onclick="showToast('Notifications — 2 unread')"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg></div>
+      <button class="btn-primary" onclick="showToast('New Invoice — opening invoice builder')">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
+        New Invoice
+      </button>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+```
+<!-- Summary cards -->
+<div class="summary-row">
+  <div class="sum-card c-green">
+    <div class="sum-label">Collected MTD</div>
+    <div class="sum-value">$21,850</div>
+    <div class="sum-sub">7 invoices paid</div>
+  </div>
+  <div class="sum-card c-amber">
+    <div class="sum-label">Outstanding</div>
+    <div class="sum-value">$14,375</div>
+    <div class="sum-sub">3 invoices due</div>
+  </div>
+  <div class="sum-card c-red">
+    <div class="sum-label">Overdue</div>
+    <div class="sum-value">$2,600</div>
+    <div class="sum-sub">1 invoice · 7 days late</div>
+  </div>
+  <div class="sum-card c-blue">
+    <div class="sum-label">Total Invoiced MTD</div>
+    <div class="sum-value">$36,225</div>
+    <div class="sum-sub">10 invoices this month</div>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.8"/></svg>
+    <input class="search-input" placeholder="Search invoices..." oninput="filterInvoices(this.value)"/>
+  </div>
+  <div class="filter-group">
+    <div class="ftab active" onclick="setFilter(this,'all')">All</div>
+    <div class="ftab" onclick="setFilter(this,'due')">Due</div>
+    <div class="ftab" onclick="setFilter(this,'partial')">Partial</div>
+    <div class="ftab" onclick="setFilter(this,'paid')">Paid</div>
+    <div class="ftab" onclick="setFilter(this,'draft')">Draft</div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <div class="table-head">
+    <div class="th sort-active">Invoice <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg></div>
+    <div class="th">Customer / Job</div>
+    <div class="th">Issued</div>
+    <div class="th">Due Date</div>
+    <div class="th">Amount</div>
+    <div class="th">Status</div>
+    <div class="th"></div>
+  </div>
+  <div id="table-body">
+
+    <div class="inv-row" data-status="due" onclick="openDrawer('henderson')">
+      <div class="inv-num">#INV-1043</div>
+      <div><div class="inv-customer">Tom Henderson</div><div class="inv-job">Backyard Patio — Stamped</div></div>
+      <div class="inv-date">Mar 27</div>
+      <div class="inv-due due-soon">Apr 3</div>
+      <div><div class="inv-amount">$7,200</div><div class="inv-balance bal-part">$3,600 due</div></div>
+      <div><span class="status-pill s-partial">Partial</span></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+    </div>
+
+    <div class="inv-row" data-status="due" onclick="openDrawer('ortiz')">
+      <div class="inv-num">#INV-1044</div>
+      <div><div class="inv-customer">Maria Ortiz</div><div class="inv-job">Pool Deck — Exposed Agg.</div></div>
+      <div class="inv-date">Mar 27</div>
+      <div class="inv-due due-soon">Apr 3</div>
+      <div><div class="inv-amount">$5,400</div><div class="inv-balance bal-part">$2,700 due</div></div>
+      <div><span class="status-pill s-partial">Partial</span></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+    </div>
+
+    <div class="inv-row" data-status="due" onclick="openDrawer('chen')">
+      <div class="inv-num">#INV-1038</div>
+      <div><div class="inv-customer">Linda Chen</div><div class="inv-job">Garage Floor — Epoxy</div></div>
+      <div class="inv-date">Mar 25</div>
+      <div class="inv-due due-over">Mar 27 ⚠</div>
+      <div><div class="inv-amount">$2,600</div><div class="inv-balance bal-full">$2,600 due</div></div>
+      <div><span class="status-pill s-due">Overdue</span></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+    </div>
+
+    <div class="inv-row" data-status="paid" onclick="openDrawer('brown')">
+      <div class="inv-num">#INV-1041</div>
+      <div><div class="inv-customer">David Brown</div><div class="inv-job">Driveway — Broom Finish</div></div>
+      <div class="inv-date">Mar 22</div>
+      <div class="inv-due due-ok">Mar 29</div>
+      <div><div class="inv-amount">$4,100</div><div class="inv-balance bal-zero">Paid in full</div></div>
+      <div><span class="status-pill s-paid">Paid</span></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+    </div>
+
+    <div class="inv-row" data-status="paid" onclick="openDrawer('patel')">
+      <div class="inv-num">#INV-1036</div>
+      <div><div class="inv-customer">Raj Patel</div><div class="inv-job">Driveway — Broom Finish</div></div>
+      <div class="inv-date">Mar 15</div>
+      <div class="inv-due due-ok">Mar 22</div>
+      <div><div class="inv-amount">$4,200</div><div class="inv-balance bal-zero">Paid in full</div></div>
+      <div><span class="status-pill s-paid">Paid</span></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+    </div>
+
+    <div class="inv-row" data-status="paid" onclick="openDrawer('kim')">
+      <div class="inv-num">#INV-1037</div>
+      <div><div class="inv-customer">James Kim</div><div class="inv-job">Pool Deck — Exposed Agg.</div></div>
+      <div class="inv-date">Mar 16</div>
+      <div class="inv-due due-ok">Mar 23</div>
+      <div><div class="inv-amount">$3,800</div><div class="inv-balance bal-zero">Paid in full</div></div>
+      <div><span class="status-pill s-paid">Paid</span></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+    </div>
+
+    <div class="inv-row" data-status="draft" onclick="openDrawer('martinez')">
+      <div class="inv-num">#INV-1042</div>
+      <div><div class="inv-customer">Rosa Martinez</div><div class="inv-job">Driveway — Stamped (Quote)</div></div>
+      <div class="inv-date">—</div>
+      <div class="inv-due due-ok">—</div>
+      <div><div class="inv-amount">$4,800</div><div class="inv-balance bal-zero">Not sent</div></div>
+      <div><span class="status-pill s-draft">Draft</span></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+    </div>
+
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- OVERLAY -->
+
+<div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<!-- INVOICE DRAWER -->
+
+<div class="drawer" id="drawer">
+  <div class="d-header">
+    <div class="d-top">
+      <div>
+        <div class="d-inv-num" id="d-num">#INV-1043 · Issued Mar 27, 2026</div>
+        <div class="d-title" id="d-title">Tom Henderson</div>
+        <div class="d-customer">Job: <span id="d-job">Backyard Patio — Stamped Concrete</span></div>
+      </div>
+      <div class="d-close" onclick="closeDrawer()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+      </div>
+    </div>
+    <div class="d-status-row">
+      <span class="status-pill" id="d-status-pill" style="background:rgba(245,166,35,0.1);color:#f5a623;">Partial</span>
+    </div>
+  </div>
+
+  <div class="d-stats">
+    <div class="dstat"><div class="dstat-label">Total</div><div class="dstat-value" id="d-total">$7,200</div></div>
+    <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-value green" id="d-paid">$3,600</div></div>
+    <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-value amber" id="d-balance">$3,600</div></div>
+    <div class="dstat"><div class="dstat-label">Due</div><div class="dstat-value" id="d-due" style="font-size:14px;margin-top:5px;">Apr 3</div></div>
+  </div>
+
+  <div id="i-view-mode">
+  <div class="d-body">
+
+```
+<div class="section-title">Line Items</div>
+<div class="line-items" id="d-line-items">
+  <div class="li-head">
+    <div class="li-th">Description</div>
+    <div class="li-th">Qty</div>
+    <div class="li-th">Rate</div>
+    <div class="li-th">Total</div>
+  </div>
+  <div class="li-row">
+    <div><div class="li-desc">Stamped Concrete — Cobblestone</div><div class="li-sub">480 sqft · 4,000 PSI · Natural gray</div></div>
+    <div class="li-val">480 sqft</div>
+    <div class="li-val">$13.00</div>
+    <div class="li-total">$6,240</div>
+  </div>
+  <div class="li-row">
+    <div><div class="li-desc">Color Sealer Application</div><div class="li-sub">Same-day cure seal</div></div>
+    <div class="li-val">480 sqft</div>
+    <div class="li-val">$2.00</div>
+    <div class="li-total">$960</div>
+  </div>
+</div>
+
+<div class="section-title">Payment Summary</div>
+<div class="pay-summary" id="d-pay-summary">
+  <div class="pay-row"><span class="pay-label">Subtotal</span><span class="pay-val">$7,200.00</span></div>
+  <div class="pay-row"><span class="pay-label">Tax (0%)</span><span class="pay-val">$0.00</span></div>
+  <div class="pay-row"><span class="pay-label">Total</span><span class="pay-val">$7,200.00</span></div>
+  <div class="pay-row"><span class="pay-label">Deposit Paid (50%)</span><span class="pay-val green">– $3,600.00</span></div>
+  <div class="pay-row" style="background:rgba(245,166,35,0.04);"><span class="pay-label" style="font-weight:600;color:var(--white);">Balance Due</span><span class="pay-val amber" style="font-size:15px;">$3,600.00</span></div>
+</div>
+
+<div class="section-title">Payment History</div>
+<div id="d-payments" style="display:flex;flex-direction:column;gap:8px;">
+  <div class="payment-item">
+    <div class="pay-icon" style="background:rgba(200,241,53,0.1);">💳</div>
+    <div class="pay-info">
+      <div class="pay-desc">Deposit — Card payment</div>
+      <div class="pay-meta">Mar 24, 2026 · Visa ···· 4291</div>
+    </div>
+    <div class="pay-amount">$3,600.00</div>
+  </div>
+</div>
+
+<button class="send-invoice-btn" id="d-send-btn">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
+  Send Invoice for Balance — $3,600.00
+</button>
+```
+
+  </div>
+  </div><!-- /i-view-mode -->
+
+  <!-- EDIT MODE -->
+
+  <div id="i-edit-mode">
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 0;">Edit Invoice <span style="font-size:10px;color:var(--gray2);letter-spacing:0;text-transform:none;font-family:'DM Sans',sans-serif;">Saves on Save button</span></div>
+    <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;">
+      <div class="edit-field"><label class="edit-label">Customer</label><input class="edit-input" id="ei-customer" type="text"/></div>
+      <div class="edit-field"><label class="edit-label">Job / Description</label><input class="edit-input" id="ei-job" type="text"/></div>
+      <div class="edit-row-2">
+        <div class="edit-field"><label class="edit-label">Issue Date</label><input class="edit-input" id="ei-issued" type="text" placeholder="e.g. Mar 27"/></div>
+        <div class="edit-field"><label class="edit-label">Due Date</label><input class="edit-input" id="ei-due" type="text" placeholder="e.g. Apr 3"/></div>
+      </div>
+      <div class="edit-row-2">
+        <div class="edit-field"><label class="edit-label">Total Amount ($)</label><input class="edit-input" id="ei-total" type="text"/></div>
+        <div class="edit-field"><label class="edit-label">Amount Paid ($)</label><input class="edit-input" id="ei-paid" type="text"/></div>
+      </div>
+      <div class="edit-field"><label class="edit-label">Status</label><select class="edit-input" id="ei-status"><option>Partial</option><option>Due</option><option>Overdue</option><option>Paid</option><option>Draft</option></select></div>
+      <div class="edit-field"><label class="edit-label">Notes</label><textarea class="edit-input edit-textarea" id="ei-notes" placeholder="Add any invoice notes..."></textarea></div>
+    </div>
+  </div>
+
+  <div class="d-footer">
+    <button class="dfooter-btn" onclick="showToast('PDF downloaded ✓')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.8"/><polyline points="7,10 12,15 17,10" stroke-width="1.8"/><line x1="12" y1="15" x2="12" y2="3" stroke-width="1.8"/></svg>
+      Download PDF
+    </button>
+    <button class="dfooter-btn" onclick="enterInvoiceEdit()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
+      Edit
+    </button>
+    <button class="dfooter-btn primary" onclick="showToast('Invoice marked as paid ✓')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Mark Paid
+    </button>
+  </div>
+</div>
+
+<!-- Floating re-open btn -->
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<script>
+  const invoices = {
+    henderson:{num:'#INV-1043 · Issued Mar 27, 2026',title:'Tom Henderson',job:'Backyard Patio — Stamped Concrete',statusText:'Partial',statusStyle:'background:rgba(245,166,35,0.1);color:#f5a623;',total:'$7,200',paid:'$3,600',balance:'$3,600',balClass:'amber',due:'Apr 3',sendLabel:'Send Invoice for Balance — $3,600.00',lineItems:`<div class="li-head"><div class="li-th">Description</div><div class="li-th">Qty</div><div class="li-th">Rate</div><div class="li-th">Total</div></div><div class="li-row"><div><div class="li-desc">Stamped Concrete — Cobblestone</div><div class="li-sub">480 sqft · 4,000 PSI · Natural gray</div></div><div class="li-val">480 sqft</div><div class="li-val">$13.00</div><div class="li-total">$6,240</div></div><div class="li-row"><div><div class="li-desc">Color Sealer Application</div><div class="li-sub">Same-day cure seal</div></div><div class="li-val">480 sqft</div><div class="li-val">$2.00</div><div class="li-total">$960</div></div>`,paySummary:`<div class="pay-row"><span class="pay-label">Subtotal</span><span class="pay-val">$7,200.00</span></div><div class="pay-row"><span class="pay-label">Deposit Paid (50%)</span><span class="pay-val green">– $3,600.00</span></div><div class="pay-row" style="background:rgba(245,166,35,0.04);"><span class="pay-label" style="font-weight:600;color:var(--white);">Balance Due</span><span class="pay-val amber" style="font-size:15px;">$3,600.00</span></div>`,payments:`<div class="payment-item"><div class="pay-icon" style="background:rgba(200,241,53,0.1);">💳</div><div class="pay-info"><div class="pay-desc">Deposit — Card payment</div><div class="pay-meta">Mar 24, 2026 · Visa ···· 4291</div></div><div class="pay-amount">$3,600.00</div></div>`},
+    ortiz:{num:'#INV-1044 · Issued Mar 27, 2026',title:'Maria Ortiz',job:'Pool Deck — Exposed Aggregate',statusText:'Partial',statusStyle:'background:rgba(245,166,35,0.1);color:#f5a623;',total:'$5,400',paid:'$2,700',balance:'$2,700',balClass:'amber',due:'Apr 3',sendLabel:'Send Invoice for Balance — $2,700.00',lineItems:`<div class="li-head"><div class="li-th">Description</div><div class="li-th">Qty</div><div class="li-th">Rate</div><div class="li-th">Total</div></div><div class="li-row"><div><div class="li-desc">Exposed Aggregate — River Rock Mix</div><div class="li-sub">320 sqft · 3,500 PSI</div></div><div class="li-val">320 sqft</div><div class="li-val">$16.88</div><div class="li-total">$5,400</div></div>`,paySummary:`<div class="pay-row"><span class="pay-label">Subtotal</span><span class="pay-val">$5,400.00</span></div><div class="pay-row"><span class="pay-label">Deposit Paid (50%)</span><span class="pay-val green">– $2,700.00</span></div><div class="pay-row" style="background:rgba(245,166,35,0.04);"><span class="pay-label" style="font-weight:600;color:var(--white);">Balance Due</span><span class="pay-val amber" style="font-size:15px;">$2,700.00</span></div>`,payments:`<div class="payment-item"><div class="pay-icon" style="background:rgba(200,241,53,0.1);">💳</div><div class="pay-info"><div class="pay-desc">Deposit — Card payment</div><div class="pay-meta">Mar 25, 2026 · Visa ···· 8834</div></div><div class="pay-amount">$2,700.00</div></div>`},
+    chen:{num:'#INV-1038 · Issued Mar 25, 2026',title:'Linda Chen',job:'Garage Floor — Epoxy Coating',statusText:'Overdue',statusStyle:'background:rgba(255,82,82,0.1);color:#ff5252;',total:'$2,600',paid:'$0',balance:'$2,600',balClass:'red',due:'Mar 27 ⚠',sendLabel:'Send Reminder — $2,600.00 Overdue',lineItems:`<div class="li-head"><div class="li-th">Description</div><div class="li-th">Qty</div><div class="li-th">Rate</div><div class="li-th">Total</div></div><div class="li-row"><div><div class="li-desc">Epoxy Floor Coating — Charcoal</div><div class="li-sub">440 sqft · 2-part epoxy · Metallic flake</div></div><div class="li-val">440 sqft</div><div class="li-val">$5.91</div><div class="li-total">$2,600</div></div>`,paySummary:`<div class="pay-row"><span class="pay-label">Total</span><span class="pay-val">$2,600.00</span></div><div class="pay-row" style="background:rgba(255,82,82,0.04);"><span class="pay-label" style="font-weight:600;color:var(--white);">Overdue Balance</span><span class="pay-val red" style="font-size:15px;">$2,600.00</span></div>`,payments:`<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No payments received yet.</div>`},
+    brown:{num:'#INV-1041 · Issued Mar 22, 2026',title:'David Brown',job:'Driveway — Broom Finish',statusText:'Paid',statusStyle:'background:rgba(200,241,53,0.1);color:#c8f135;',total:'$4,100',paid:'$4,100',balance:'$0',balClass:'green',due:'Paid Mar 28',sendLabel:'Invoice Already Paid',lineItems:`<div class="li-head"><div class="li-th">Description</div><div class="li-th">Qty</div><div class="li-th">Rate</div><div class="li-th">Total</div></div><div class="li-row"><div><div class="li-desc">Broom Finish Driveway</div><div class="li-sub">580 sqft · 4,000 PSI · Standard gray</div></div><div class="li-val">580 sqft</div><div class="li-val">$7.07</div><div class="li-total">$4,100</div></div>`,paySummary:`<div class="pay-row"><span class="pay-label">Total</span><span class="pay-val">$4,100.00</span></div><div class="pay-row" style="background:rgba(200,241,53,0.03);"><span class="pay-label" style="font-weight:600;color:var(--white);">Paid in Full ✓</span><span class="pay-val green" style="font-size:15px;">$4,100.00</span></div>`,payments:`<div class="payment-item"><div class="pay-icon" style="background:rgba(200,241,53,0.1);">💳</div><div class="pay-info"><div class="pay-desc">Full payment — ACH Transfer</div><div class="pay-meta">Mar 28, 2026 · Bank ···· 7712</div></div><div class="pay-amount">$4,100.00</div></div>`},
+    patel:{num:'#INV-1036 · Issued Mar 15, 2026',title:'Raj Patel',job:'Driveway — Broom Finish',statusText:'Paid',statusStyle:'background:rgba(200,241,53,0.1);color:#c8f135;',total:'$4,200',paid:'$4,200',balance:'$0',balClass:'green',due:'Paid Mar 21',sendLabel:'Invoice Already Paid',lineItems:`<div class="li-head"><div class="li-th">Description</div><div class="li-th">Qty</div><div class="li-th">Rate</div><div class="li-th">Total</div></div><div class="li-row"><div><div class="li-desc">Broom Finish Driveway</div><div class="li-sub">580 sqft · 4,000 PSI</div></div><div class="li-val">580 sqft</div><div class="li-val">$7.24</div><div class="li-total">$4,200</div></div>`,paySummary:`<div class="pay-row"><span class="pay-label">Total</span><span class="pay-val">$4,200.00</span></div><div class="pay-row" style="background:rgba(200,241,53,0.03);"><span class="pay-label" style="font-weight:600;color:var(--white);">Paid in Full ✓</span><span class="pay-val green" style="font-size:15px;">$4,200.00</span></div>`,payments:`<div class="payment-item"><div class="pay-icon" style="background:rgba(200,241,53,0.1);">💳</div><div class="pay-info"><div class="pay-desc">Full payment — Card</div><div class="pay-meta">Mar 21, 2026 · Visa ···· 2201</div></div><div class="pay-amount">$4,200.00</div></div>`},
+    kim:{num:'#INV-1037 · Issued Mar 16, 2026',title:'James Kim',job:'Pool Deck — Exposed Aggregate',statusText:'Paid',statusStyle:'background:rgba(200,241,53,0.1);color:#c8f135;',total:'$3,800',paid:'$3,800',balance:'$0',balClass:'green',due:'Paid Mar 22',sendLabel:'Invoice Already Paid',lineItems:`<div class="li-head"><div class="li-th">Description</div><div class="li-th">Qty</div><div class="li-th">Rate</div><div class="li-th">Total</div></div><div class="li-row"><div><div class="li-desc">Exposed Aggregate Pool Deck</div><div class="li-sub">290 sqft · River rock mix</div></div><div class="li-val">290 sqft</div><div class="li-val">$13.10</div><div class="li-total">$3,800</div></div>`,paySummary:`<div class="pay-row"><span class="pay-label">Total</span><span class="pay-val">$3,800.00</span></div><div class="pay-row" style="background:rgba(200,241,53,0.03);"><span class="pay-label" style="font-weight:600;color:var(--white);">Paid in Full ✓</span><span class="pay-val green" style="font-size:15px;">$3,800.00</span></div>`,payments:`<div class="payment-item"><div class="pay-icon" style="background:rgba(200,241,53,0.1);">💳</div><div class="pay-info"><div class="pay-desc">Full payment — Card</div><div class="pay-meta">Mar 22, 2026 · Mastercard ···· 5519</div></div><div class="pay-amount">$3,800.00</div></div>`},
+    martinez:{num:'#INV-1042 · Draft',title:'Rosa Martinez',job:'Driveway — Stamped Concrete (Quote)',statusText:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',total:'$4,800',paid:'$0',balance:'$4,800',balClass:'amber',due:'Not sent',sendLabel:'Send Invoice — $4,800.00',lineItems:`<div class="li-head"><div class="li-th">Description</div><div class="li-th">Qty</div><div class="li-th">Rate</div><div class="li-th">Total</div></div><div class="li-row"><div><div class="li-desc">Stamped Concrete Driveway</div><div class="li-sub">520 sqft · Ashlar slate pattern · Charcoal tint</div></div><div class="li-val">520 sqft</div><div class="li-val">$9.23</div><div class="li-total">$4,800</div></div>`,paySummary:`<div class="pay-row"><span class="pay-label">Total</span><span class="pay-val">$4,800.00</span></div><div class="pay-row"><span class="pay-label">Deposit (50% on send)</span><span class="pay-val amber">$2,400.00</span></div>`,payments:`<div style="font-size:12px;color:var(--gray2);padding:8px 0;">Invoice not yet sent.</div>`},
+  };
+
+  let _currentInvoice = null;
+  function openDrawer(id) {
+    const inv = invoices[id]; if(!inv) return;
+    _currentInvoice = inv;
+    document.getElementById('d-num').textContent          = inv.num;
+    document.getElementById('d-title').textContent        = inv.title;
+    document.getElementById('d-job').textContent          = inv.job;
+    document.getElementById('d-status-pill').textContent  = inv.statusText;
+    document.getElementById('d-status-pill').style.cssText= inv.statusStyle;
+    document.getElementById('d-total').textContent        = inv.total;
+    document.getElementById('d-paid').textContent         = inv.paid;
+    document.getElementById('d-balance').textContent      = inv.balance;
+    document.getElementById('d-balance').className        = 'dstat-value ' + inv.balClass;
+    document.getElementById('d-due').textContent          = inv.due;
+    document.getElementById('d-line-items').innerHTML     = inv.lineItems;
+    document.getElementById('d-pay-summary').innerHTML    = inv.paySummary;
+    document.getElementById('d-payments').innerHTML       = inv.payments;
+    document.getElementById('d-send-btn').innerHTML       = `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>${inv.sendLabel}`;
+    if(document.getElementById('i-edit-mode')) document.getElementById('i-edit-mode').style.display='none';
+    if(document.getElementById('i-view-mode')) document.getElementById('i-view-mode').style.display='block';
+    if(document.getElementById('i-footer-edit')) document.getElementById('i-footer-edit').style.display='none';
+    if(document.getElementById('i-footer-view')) document.getElementById('i-footer-view').style.display='flex';
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('drawer').classList.add('open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('drawer').classList.remove('open');
+  }
+
+  function setFilter(el, status) {
+    document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.inv-row').forEach(row => {
+      row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
+    });
+  }
+
+  function filterInvoices(q) {
+    const query = q.toLowerCase();
+    document.querySelectorAll('.inv-row').forEach(row => {
+      const text = row.querySelector('.inv-customer').textContent.toLowerCase()
+                 + row.querySelector('.inv-num').textContent.toLowerCase();
+      row.style.display = text.includes(query) ? 'grid' : 'none';
+    });
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
+  }
+
+  let _toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+
+  function enterInvoiceEdit() {
+    const inv = _currentInvoice; if(!inv) return;
+    document.getElementById('ei-customer').value = inv.title || '';
+    document.getElementById('ei-job').value      = inv.job || '';
+    document.getElementById('ei-issued').value   = (inv.num || '').split('·')[1]?.trim() || '';
+    document.getElementById('ei-due').value      = inv.due || '';
+    document.getElementById('ei-total').value    = (inv.total || '').replace('$','').replace(',','');
+    document.getElementById('ei-paid').value     = (inv.paid || '').replace('$','').replace(',','');
+    document.getElementById('ei-notes').value    = '';
+    const statEl = document.getElementById('ei-status');
+    for(let i=0;i<statEl.options.length;i++){
+      if(statEl.options[i].value===inv.statusText){statEl.selectedIndex=i;break;}
+    }
+    document.getElementById('i-view-mode').style.display  = 'none';
+    document.getElementById('i-edit-mode').style.display  = 'flex';
+    document.getElementById('i-footer-view').style.display= 'none';
+    document.getElementById('i-footer-edit').style.display= 'flex';
+  }
+
+  function cancelInvoiceEdit() {
+    document.getElementById('i-edit-mode').style.display  = 'none';
+    document.getElementById('i-view-mode').style.display  = 'block';
+    document.getElementById('i-footer-edit').style.display= 'none';
+    document.getElementById('i-footer-view').style.display= 'flex';
+    showToast('Changes discarded');
+  }
+
+  function saveInvoiceEdit() {
+    const customer = document.getElementById('ei-customer').value.trim();
+    const job      = document.getElementById('ei-job').value.trim();
+    const issued   = document.getElementById('ei-issued').value.trim();
+    const due      = document.getElementById('ei-due').value.trim();
+    const total    = document.getElementById('ei-total').value.trim();
+    const paid     = document.getElementById('ei-paid').value.trim();
+    const status   = document.getElementById('ei-status').value;
+
+    const fmtTotal = total.startsWith('$') ? total : '$' + total;
+    const fmtPaid  = paid.startsWith('$')  ? paid  : '$' + paid;
+    const balance  = (parseFloat(total.replace(/[^0-9.]/g,''))||0) - (parseFloat(paid.replace(/[^0-9.]/g,''))||0);
+    const fmtBal   = '$' + balance.toFixed(2);
+
+    const statusStyles = {
+      'Partial':  'background:rgba(245,166,35,0.1);color:#f5a623;',
+      'Due':      'background:rgba(255,82,82,0.1);color:#ff5252;',
+      'Overdue':  'background:rgba(255,82,82,0.1);color:#ff5252;',
+      'Paid':     'background:rgba(200,241,53,0.1);color:#c8f135;',
+      'Draft':    'background:rgba(100,100,100,0.12);color:#7a7a7a;',
+    };
+
+    // Persist to data
+    if (_currentInvoice) {
+      _currentInvoice.title      = customer;
+      _currentInvoice.job        = job;
+      _currentInvoice.due        = due;
+      _currentInvoice.total      = fmtTotal;
+      _currentInvoice.paid       = fmtPaid;
+      _currentInvoice.balance    = fmtBal;
+      _currentInvoice.statusText = status;
+      _currentInvoice.statusStyle= statusStyles[status] || statusStyles['Draft'];
+    }
+
+    // Update header
+    document.getElementById('d-title').textContent          = customer;
+    document.getElementById('d-job').textContent            = job;
+    document.getElementById('d-total').textContent          = fmtTotal;
+    document.getElementById('d-paid').textContent           = fmtPaid;
+    document.getElementById('d-balance').textContent        = fmtBal;
+    document.getElementById('d-due').textContent            = due;
+    const pill = document.getElementById('d-status-pill');
+    pill.textContent   = status;
+    pill.style.cssText = statusStyles[status] || statusStyles['Draft'];
+
+    document.getElementById('i-edit-mode').style.display  = 'none';
+    document.getElementById('i-view-mode').style.display  = 'block';
+    document.getElementById('i-footer-edit').style.display= 'none';
+    document.getElementById('i-footer-view').style.display= 'flex';
+    showToast('Invoice saved ✓');
+  }
+
+</script>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- ── FIREBASE AUTH GUARD ── -->
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  document.body.style.visibility = "hidden";
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "swft-login.html";
+    } else {
+      document.body.style.visibility = "visible";
+      window.__swftUser = user;
+    }
+  });
+</script>
+
+</body>
+</html>
