@@ -575,6 +575,8 @@ Google review would mean a lot to us 🙏
 
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
+    document.querySelector('.main').classList.toggle('expanded');
   }
 
   let _toastTimer;

@@ -1085,6 +1085,8 @@ row.style.display = name.includes(query) ? ‘grid’ : ‘none’;
 }
 function toggleSidebar(){
   document.querySelector(‘.sidebar’).classList.toggle(‘collapsed’);
+  document.getElementById(‘sidebar-toggle’).classList.toggle(‘visible’);
+  document.querySelector(‘.main’).classList.toggle(‘expanded’);
 }
 
 let toastTimer;
