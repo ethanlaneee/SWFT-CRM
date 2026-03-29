@@ -787,6 +787,8 @@
 
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
   }
 
   let _toastTimer;
