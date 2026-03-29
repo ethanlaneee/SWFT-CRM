@@ -636,7 +636,8 @@
     const inv = _currentInvoice; if(!inv) return;
     document.getElementById('ei-customer').value = inv.title || '';
     document.getElementById('ei-job').value      = inv.job || '';
-    document.getElementById('ei-issued').value   = (inv.num || '').split('·')[1]?.trim() || '';
+    const numParts = (inv.num || '').split('·');
+    document.getElementById('ei-issued').value   = numParts.length > 1 ? numParts[1].trim() : '';
     document.getElementById('ei-due').value      = inv.due || '';
     document.getElementById('ei-total').value    = (inv.total || '').replace('$','').replace(',','');
     document.getElementById('ei-paid').value     = (inv.paid || '').replace('$','').replace(',','');

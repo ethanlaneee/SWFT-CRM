@@ -492,16 +492,22 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     if (!firstName) firstName = 'Jake';
 
     // Update greeting
-    const greetEl = document.getElementById('greeting-name');
-    if (greetEl) greetEl.textContent = firstName.toUpperCase() + '.';
     const h2 = document.querySelector('.greeting h2');
     if (h2) h2.innerHTML = `${getGreeting()}, <em id="greeting-name">${firstName.toUpperCase()}.</em>`;
 
-    // Update greeting sub
+    // Update greeting sub with live data
     const now = new Date();
     const dayStr = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
     const subEl = document.getElementById('greeting-sub');
-    if (subEl) subEl.textContent = `${dayStr} · 3 jobs active today · 2 quotes awaiting approval`;
+    if (subEl) subEl.textContent = dayStr;
+    try {
+      const stats = await API.dashboard.stats();
+      const jobCount = stats.activeJobs ?? 0;
+      const quoteCount = stats.pendingQuotes ?? 0;
+      if (subEl) subEl.textContent = `${dayStr} · ${jobCount} job${jobCount!==1?'s':''} active today · ${quoteCount} quote${quoteCount!==1?'s':''} awaiting approval`;
+    } catch(e) {
+      if (subEl) subEl.textContent = dayStr;
+    }
 
   });
 </script>

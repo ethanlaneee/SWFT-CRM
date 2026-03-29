@@ -766,12 +766,12 @@
     document.getElementById('d-service').textContent  = j.service;
     document.getElementById('d-crew-detail').textContent = j.crew.replace(/<[^>]+>/g,'').trim();
     document.getElementById('d-wx').innerHTML = `
-      <div class="wx-big">${j.wx}</div>
+      <div class="wx-big">${esc(j.wx)}</div>
       <div class="wx-info">
-        <div class="wx-desc">${j.wxDesc}</div>
-        <div class="wx-note">${j.wxNote}</div>
+        <div class="wx-desc">${esc(j.wxDesc)}</div>
+        <div class="wx-note">${esc(j.wxNote)}</div>
       </div>
-      <span class="wx-badge ${j.wxBadge}">${j.wxText}</span>`;
+      <span class="wx-badge ${esc(j.wxBadge)}">${esc(j.wxText)}</span>`;
     document.getElementById('d-edit').style.display='none';
     document.getElementById('d-view').style.display='flex';
     document.getElementById('footer-edit').style.display='none';
@@ -788,6 +788,8 @@
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
   }
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   let _toastTimer;
   function showToast(msg) {
@@ -806,18 +808,18 @@
     // Populate edit fields from current job data
     document.getElementById('e-title').value    = j.title || '';
     document.getElementById('e-customer').value = j.customer || '';
-    const dateParts = j.date.split(' · ');
+    const dateParts = (j.date || '').split(' · ');
     document.getElementById('e-date').value     = dateParts[0] || '';
     document.getElementById('e-time').value     = dateParts[1] || '';
     document.getElementById('e-address').value  = j.address || '';
     document.getElementById('e-sqft').value     = j.sqft || '';
     document.getElementById('e-dur').value      = j.dur || '';
-    document.getElementById('e-amount').value   = j.amount.replace('$','') || '';
+    document.getElementById('e-amount').value   = (j.amount || '').replace('$','');
     document.getElementById('e-notes').value    = '';
 
     // Match service select
     const svcEl = document.getElementById('e-service');
-    const svcVal = j.service.split(' — ')[0].trim();
+    const svcVal = (j.service || '').split(' — ')[0].trim();
     for (let i = 0; i < svcEl.options.length; i++) {
       if (svcEl.options[i].value === svcVal) { svcEl.selectedIndex = i; break; }
     }

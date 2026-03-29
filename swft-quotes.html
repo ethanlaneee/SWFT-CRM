@@ -600,14 +600,16 @@ function openNewQuote() {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function renderLineItems(lines) {
   const body = document.getElementById('li-body');
   body.innerHTML = lines.map((l,i) => `
     <div class="li-row">
-      <div><div class="li-desc">${l.desc}</div><div class="li-sub-text">${l.sub||''}</div></div>
-      <div class="li-val">${l.qty}</div>
-      <div class="li-val">${l.rate}</div>
-      <div class="li-total">${l.total}</div>
+      <div><div class="li-desc">${esc(l.desc)}</div><div class="li-sub-text">${esc(l.sub||'')}</div></div>
+      <div class="li-val">${esc(l.qty)}</div>
+      <div class="li-val">${esc(l.rate)}</div>
+      <div class="li-total">${esc(l.total)}</div>
       <button class="li-del" onclick="removeLineItem(${i})">✕</button>
     </div>`).join('');
   const sub = lines.reduce((s,l)=>s+(parseFloat((l.total||'').replace(/[$,]/g,''))||0),0);
@@ -740,13 +742,13 @@ function filterQuotes(q){
   });
 }
 
-let _tt;
+let _toastTimer;
 function showToast(msg){
   const t=document.getElementById('toast');
   document.getElementById('toast-msg').textContent=msg;
   t.classList.add('show');
-  clearTimeout(_tt);
-  _tt=setTimeout(()=>t.classList.remove('show'),2500);
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
 }
 
 function toggleSidebar(){
