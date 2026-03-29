@@ -181,7 +181,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 /* TOAST */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(–surface2);border:1px solid var(–border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(–white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast-dot{width:7px;height:7px;border-radius:50%;background:var(–green);flex-shrink:0;}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
 /* ── NEW JOB MODAL ── */
 .nj-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;}
@@ -426,9 +426,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     });
   }
   function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main').classList.toggle('expanded');
-    document.getElementById('sidebar-toggle').classList.toggle('visible');
+    document.querySelector('.sidebar').classList.toggle('collapsed');
   }
   let _toastTimer;
   function showToast(msg) {
@@ -496,13 +494,125 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     const subEl = document.getElementById('greeting-sub');
     if (subEl) subEl.textContent = `${dayStr} · 3 jobs active today · 2 quotes awaiting approval`;
 
-    // Update user tile
-    const nameEl = document.getElementById('user-name');
-    if (nameEl) nameEl.textContent = user.displayName || firstName;
-    const avatarEl = document.getElementById('user-avatar');
-    if (avatarEl) avatarEl.textContent = firstName.charAt(0).toUpperCase() + (user.displayName?.split(' ')[1]?.charAt(0) || '');
-  });
+    try {
+      // Load stats + jobs in parallel
+      const [stats, jobs] = await Promise.all([
+        API.dashboard.stats(),
+        API.jobs.list()
+      ]);
+
+      // ── KPI Cards ──
+      const month = new Date().toLocaleString('en-US', { month: 'long' });
+      document.getElementById('kpi-rev-label').textContent  = `Revenue — ${month}`;
+      document.getElementById('kpi-rev').textContent        = fmtCurrency(stats.revenueMTD);
+      document.getElementById('kpi-rev-delta').textContent  = `${stats.activeJobs} active`;
+      document.getElementById('kpi-jobs').textContent       = stats.activeJobs + stats.scheduledJobs;
+      document.getElementById('kpi-jobs-delta').textContent = `${stats.activeJobs} active · ${stats.scheduledJobs} scheduled`;
+      document.getElementById('kpi-outstanding').textContent    = fmtCurrency(stats.outstanding);
+      document.getElementById('kpi-outstanding-delta').textContent = stats.outstanding > 0 ? 'follow-up due' : 'all clear ✓';
+      document.getElementById('kpi-quotes').textContent        = stats.openQuotes;
+      document.getElementById('kpi-quotes-delta').textContent  = stats.openQuotes > 0 ? 'awaiting approval' : 'none pending';
+
+      // ── Greeting sub ──
+      const now = new Date();
+      const dayStr = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+      document.getElementById('greeting-sub').textContent =
+        `${dayStr}  ·  ${stats.activeJobs} jobs active today  ·  ${stats.openQuotes} quotes awaiting approval`;
+
+      // ── Active Jobs List ──
+      renderJobList(jobs);
+
+    } catch (err) {
+      console.error('Dashboard load error:', err);
+      document.getElementById('greeting-sub').textContent = 'Could not load data — check API connection.';
+    }
+  }
+
+  function renderJobList(jobs) {
+    const list = document.getElementById('job-list');
+    if (!jobs.length) {
+      list.innerHTML = '<div style="padding:24px 20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs yet — create your first job to get started.</div>';
+      return;
+    }
+
+    const statusMap = {
+      'active':      { dot: 'dot-green', tag: 'tag-active',    label: 'In Progress' },
+      'in-progress': { dot: 'dot-green', tag: 'tag-active',    label: 'In Progress' },
+      'scheduled':   { dot: 'dot-blue',  tag: 'tag-scheduled', label: 'Scheduled'   },
+      'pending':     { dot: 'dot-amber', tag: 'tag-pending',   label: 'Quote Sent'  },
+      'complete':    { dot: 'dot-gray',  tag: 'tag-complete',  label: 'Complete'    },
+    };
+
+    list.innerHTML = jobs.slice(0, 8).map(job => {
+      const s   = statusMap[job.status] || statusMap['scheduled'];
+      const sub = [job.service, job.crew, formatDate(job.date || job.createdAt)]
+        .filter(Boolean).join(' · ');
+      const amt = job.amount
+        ? (typeof job.amount === 'number' ? fmtCurrency(job.amount) : job.amount)
+        : '—';
+      return `
+        <div class="job-row" data-status="${job.status}">
+          <div class="status-dot ${s.dot}"></div>
+          <div class="job-info">
+            <div class="job-name">${job.customerName || ''} — ${job.title || ''}</div>
+            <div class="job-sub">${sub}</div>
+          </div>
+          <span class="job-tag ${s.tag}">${s.label}</span>
+          <div class="job-amount">${amt}</div>
+        </div>`;
+    }).join('');
+  }
 </script>
+
+<!-- Sidebar re-open button -->
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<!-- NEW JOB MODAL -->
+<div class="nj-overlay" id="nj-overlay" onclick="closeNewJobModal()"></div>
+<div class="nj-modal" id="nj-modal">
+  <div class="nj-header">
+    <div class="nj-title">NEW JOB</div>
+    <div class="nj-close" onclick="closeNewJobModal()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+    </div>
+  </div>
+  <div class="nj-body">
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Job Title</label><input class="nj-input" id="nj-title" type="text" placeholder="e.g. Backyard Patio"/></div>
+      <div class="nj-field"><label class="nj-label">Customer</label><input class="nj-input" id="nj-customer" type="text" placeholder="e.g. Tom Henderson"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="nj-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="nj-date" type="text" placeholder="e.g. March 29, 2026"/></div>
+      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="nj-time" type="text" placeholder="e.g. 7:00 AM"/></div>
+    </div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Service Type</label>
+        <select class="nj-input" id="nj-service"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option></select>
+      </div>
+      <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="nj-sqft" type="text" placeholder="e.g. 480"/></div>
+    </div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Crew</label>
+        <select class="nj-input" id="nj-crew"><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option>Jake Reynolds</option><option>Unassigned</option></select>
+      </div>
+      <div class="nj-field"><label class="nj-label">Amount ($)</label><input class="nj-input" id="nj-amount" type="text" placeholder="e.g. 7200"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Notes</label><textarea class="nj-input nj-textarea" id="nj-notes" placeholder="Mix details, special instructions..."></textarea></div>
+  </div>
+  <div class="nj-footer">
+    <button class="nj-btn" onclick="closeNewJobModal()">Cancel</button>
+    <button class="nj-btn primary" onclick="saveNewJob()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Create Job
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
 </body>
 </html>
