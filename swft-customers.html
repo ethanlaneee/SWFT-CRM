@@ -1005,7 +1005,7 @@ if (!c) return;
 document.getElementById(‘d-avatar’).textContent    = c.initials;
 document.getElementById(‘d-avatar’).style.background = c.color;
 document.getElementById(‘d-name’).textContent      = c.name;
-document.getElementById(‘d-meta’).innerHTML        = c.meta;
+document.getElementById(‘d-meta’).textContent      = c.meta;
 document.getElementById(‘d-spend’).textContent     = c.spend;
 document.getElementById(‘d-jobs’).textContent      = c.jobs;
 document.getElementById(‘d-last’).textContent      = c.last;
@@ -1027,7 +1027,7 @@ _currentCustomer = {name:'', phone:'', email:'', address:'', since:'Mar 2026', s
 document.getElementById('d-avatar').textContent = _currentCustomer.initials;
 document.getElementById('d-avatar').style.background = _currentCustomer.color;
 document.getElementById('d-name').textContent = 'New Customer';
-document.getElementById('d-meta').innerHTML = '';
+document.getElementById('d-meta').textContent = '';
 document.getElementById('d-spend').textContent = '$0';
 document.getElementById('d-jobs').textContent = '0';
 document.getElementById('d-last').textContent = '—';
@@ -1151,7 +1151,7 @@ if (_currentCustomer) {
   _currentCustomer.email   = email;
   _currentCustomer.address = address;
   _currentCustomer.since   = since;
-  _currentCustomer.meta    = phone + ' &nbsp;·&nbsp; <a href="#">' + address + '</a>';
+  _currentCustomer.meta    = phone + ' · ' + address;
 }
 
 // Update view panel
@@ -1160,7 +1160,7 @@ document.getElementById('d-phone').textContent   = phone;
 document.getElementById('d-email').textContent   = email;
 document.getElementById('d-address').textContent = address;
 document.getElementById('d-since').textContent   = since;
-document.getElementById('d-meta').innerHTML      = phone + ' &nbsp;·&nbsp; <a href="#">' + address + '</a>';
+document.getElementById('d-meta').textContent    = phone + ' · ' + address;
 
 document.getElementById('c-edit-mode').style.display = 'none';
 document.getElementById('c-view-mode').style.display = 'block';
