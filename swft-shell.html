@@ -942,38 +942,6 @@ letter-spacing: 0.3px;
 .topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
 .main.expanded .topbar { padding-left: 56px; }
 
-/* ─── MOBILE RESPONSIVE ─── */
-@media (max-width: 768px) {
-.sidebar {
-width: 280px;
-transform: translateX(-100%);
-transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
-background: #111111;
-pointer-events: none;
-}
-.sidebar.mobile-open {
-transform: translateX(0);
-box-shadow: 4px 0 24px rgba(0,0,0,0.6);
-pointer-events: all;
-}
-.main { margin-left: 0 !important; }
-.topbar { padding: 0 16px; padding-left: 56px; }
-.topbar-sub, .topbar-slash { display: none; }
-.page-body { padding: 16px; gap: 12px; }
-.kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-.kpi-value { font-size: 28px; }
-.kpi-bg-icon { font-size: 28px; }
-.two-col { grid-template-columns: 1fr; }
-.chart-stats { flex-wrap: wrap; gap: 14px; }
-.sidebar-toggle { opacity: 1 !important; pointer-events: all !important; z-index: 9999 !important; }
-.topbar { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: #0a0a0a !important; }
-.mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 199; backdrop-filter: blur(2px); }
-.mobile-overlay.open { display: block; }
-.ai-pill { padding: 5px 9px; font-size: 0; }
-.ai-pill .pulse { margin: 0; }
-.btn-primary { font-size: 0; padding: 8px; }
-.btn-primary svg { font-size: initial; }
-}
 
 /* ── NEW JOB MODAL ── */
 .nj-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;}
@@ -1535,26 +1503,7 @@ pointer-events: all;
   };
 
   function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const main    = document.querySelector('.main');
-    const toggle  = document.getElementById('sidebar-toggle');
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      sidebar.classList.toggle('mobile-open');
-      let overlay = document.getElementById('mobile-overlay');
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'mobile-overlay';
-        overlay.className = 'mobile-overlay';
-        overlay.onclick = toggleSidebar;
-        document.body.appendChild(overlay);
-      }
-      overlay.classList.toggle('open', sidebar.classList.contains('mobile-open'));
-    } else {
-      sidebar.classList.toggle('collapsed');
-      main.classList.toggle('expanded');
-      toggle.classList.toggle('visible');
-    }
+    document.querySelector('.sidebar').classList.toggle('collapsed');
   }
 
   function setActive(el) {
@@ -1797,12 +1746,6 @@ pointer-events: all;
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
-<script>
-  // Auto-collapse sidebar on mobile
-  if (window.innerWidth <= 768) {
-    document.querySelector('.sidebar').classList.remove('mobile-open');
-  }
-</script>
 
 </body>
 </html>
