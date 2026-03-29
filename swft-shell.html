@@ -74,7 +74,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .kpi-card:nth-child(1){animation-delay:0.05s;}.kpi-card:nth-child(2){animation-delay:0.12s;}.kpi-card:nth-child(3){animation-delay:0.19s;}.kpi-card:nth-child(4){animation-delay:0.26s;}
 .kpi-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 12px 32px rgba(0,0,0,0.35);}
 .kpi-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:14px 14px 0 0;}
-.kpi-card.c-green{–accent:var(--green);}.kpi-card.c-blue{–accent:#4d9fff;}.kpi-card.c-amber{–accent:#f5a623;}.kpi-card.c-red{–accent:#ff5252;}
+.kpi-card.c-green{--accent:var(--green);}.kpi-card.c-blue{--accent:#4d9fff;}.kpi-card.c-amber{--accent:#f5a623;}.kpi-card.c-red{--accent:#ff5252;}
 .kpi-label{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--gray);font-weight:500;}
 .kpi-value{font-family:‘Bebas Neue’,sans-serif;font-size:42px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:8px;}
 .kpi-footer{display:flex;align-items:center;gap:7px;margin-top:10px;}
@@ -290,7 +290,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
       <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg><div class="badge-dot"></div></div>
-      <button class="btn-primary" onclick="showToast('New Job — coming soon')">
+      <button class="btn-primary" onclick="openNewJobModal()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
         New Job
       </button>
@@ -303,7 +303,6 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       <p id="greeting-sub">Loading your data...</p>
     </div>
 
-```
 <div class="kpi-grid">
   <div class="kpi-card c-green">
     <div class="kpi-label" id="kpi-rev-label">Revenue — March</div>
@@ -406,8 +405,6 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   <div class="activity-item"><div class="activity-icon" style="background:rgba(200,241,53,0.08);">⭐</div><div class="activity-body"><div class="activity-text"><strong>New 5-star review</strong> from Chen — "Professional, fast, and clean work."</div><div class="activity-footer"><span class="activity-time">Yesterday, 4:12 PM</span><span class="activity-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">Review</span></div></div></div>
   <div class="activity-item"><div class="activity-icon" style="background:rgba(100,100,100,0.1);">✅</div><div class="activity-body"><div class="activity-text"><strong>Job completed</strong> — Chen Garage Floor · Invoice #1038 sent · $2,600</div><div class="activity-footer"><span class="activity-time">Mar 25, 5:30 PM</span><span class="activity-tag" style="background:rgba(100,100,100,0.12);color:var(--gray);">Job</span></div></div></div>
 </div>
-```
-
   </div>
 </div>
 
@@ -427,6 +424,18 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   }
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('collapsed');
+  }
+  function openNewJobModal() {
+    document.getElementById('nj-overlay').classList.add('open');
+    document.getElementById('nj-modal').classList.add('open');
+  }
+  function closeNewJobModal() {
+    document.getElementById('nj-overlay').classList.remove('open');
+    document.getElementById('nj-modal').classList.remove('open');
+  }
+  function saveNewJob() {
+    closeNewJobModal();
+    showToast('Job created successfully');
   }
   let _toastTimer;
   function showToast(msg) {
@@ -494,74 +503,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     const subEl = document.getElementById('greeting-sub');
     if (subEl) subEl.textContent = `${dayStr} · 3 jobs active today · 2 quotes awaiting approval`;
 
-    try {
-      // Load stats + jobs in parallel
-      const [stats, jobs] = await Promise.all([
-        API.dashboard.stats(),
-        API.jobs.list()
-      ]);
-
-      // ── KPI Cards ──
-      const month = new Date().toLocaleString('en-US', { month: 'long' });
-      document.getElementById('kpi-rev-label').textContent  = `Revenue — ${month}`;
-      document.getElementById('kpi-rev').textContent        = fmtCurrency(stats.revenueMTD);
-      document.getElementById('kpi-rev-delta').textContent  = `${stats.activeJobs} active`;
-      document.getElementById('kpi-jobs').textContent       = stats.activeJobs + stats.scheduledJobs;
-      document.getElementById('kpi-jobs-delta').textContent = `${stats.activeJobs} active · ${stats.scheduledJobs} scheduled`;
-      document.getElementById('kpi-outstanding').textContent    = fmtCurrency(stats.outstanding);
-      document.getElementById('kpi-outstanding-delta').textContent = stats.outstanding > 0 ? 'follow-up due' : 'all clear ✓';
-      document.getElementById('kpi-quotes').textContent        = stats.openQuotes;
-      document.getElementById('kpi-quotes-delta').textContent  = stats.openQuotes > 0 ? 'awaiting approval' : 'none pending';
-
-      // ── Greeting sub ──
-      const now = new Date();
-      const dayStr = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
-      document.getElementById('greeting-sub').textContent =
-        `${dayStr}  ·  ${stats.activeJobs} jobs active today  ·  ${stats.openQuotes} quotes awaiting approval`;
-
-      // ── Active Jobs List ──
-      renderJobList(jobs);
-
-    } catch (err) {
-      console.error('Dashboard load error:', err);
-      document.getElementById('greeting-sub').textContent = 'Could not load data — check API connection.';
-    }
-  }
-
-  function renderJobList(jobs) {
-    const list = document.getElementById('job-list');
-    if (!jobs.length) {
-      list.innerHTML = '<div style="padding:24px 20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs yet — create your first job to get started.</div>';
-      return;
-    }
-
-    const statusMap = {
-      'active':      { dot: 'dot-green', tag: 'tag-active',    label: 'In Progress' },
-      'in-progress': { dot: 'dot-green', tag: 'tag-active',    label: 'In Progress' },
-      'scheduled':   { dot: 'dot-blue',  tag: 'tag-scheduled', label: 'Scheduled'   },
-      'pending':     { dot: 'dot-amber', tag: 'tag-pending',   label: 'Quote Sent'  },
-      'complete':    { dot: 'dot-gray',  tag: 'tag-complete',  label: 'Complete'    },
-    };
-
-    list.innerHTML = jobs.slice(0, 8).map(job => {
-      const s   = statusMap[job.status] || statusMap['scheduled'];
-      const sub = [job.service, job.crew, formatDate(job.date || job.createdAt)]
-        .filter(Boolean).join(' · ');
-      const amt = job.amount
-        ? (typeof job.amount === 'number' ? fmtCurrency(job.amount) : job.amount)
-        : '—';
-      return `
-        <div class="job-row" data-status="${job.status}">
-          <div class="status-dot ${s.dot}"></div>
-          <div class="job-info">
-            <div class="job-name">${job.customerName || ''} — ${job.title || ''}</div>
-            <div class="job-sub">${sub}</div>
-          </div>
-          <span class="job-tag ${s.tag}">${s.label}</span>
-          <div class="job-amount">${amt}</div>
-        </div>`;
-    }).join('');
-  }
+  });
 </script>
 
 <!-- Sidebar re-open button -->
