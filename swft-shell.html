@@ -305,73 +305,6 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       <p id="greeting-sub">Loading your data...</p>
     </div>
 
-<div class="kpi-grid">
-  <div class="kpi-card c-green">
-    <div class="kpi-label" id="kpi-rev-label">Revenue — March</div>
-    <div class="kpi-value" id="kpi-rev">$28,450</div>
-    <div class="kpi-footer"><span class="kpi-delta up">↑ 18%</span><span class="kpi-period">vs last month</span></div>
-    <div class="kpi-bg-icon">💰</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,35 15,28 30,30 45,18 60,22 75,10 90,6" fill="none" stroke="#c8f135" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="kpi-card c-blue">
-    <div class="kpi-label">Jobs This Month</div>
-    <div class="kpi-value" id="kpi-jobs">24</div>
-    <div class="kpi-footer"><span class="kpi-delta up">↑ 4</span><span class="kpi-period">vs last month</span></div>
-    <div class="kpi-bg-icon">🔨</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,32 15,26 30,28 45,20 60,16 75,14 90,8" fill="none" stroke="#4d9fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="kpi-card c-amber">
-    <div class="kpi-label">Outstanding Invoices</div>
-    <div class="kpi-value" id="kpi-outstanding">$6,200</div>
-    <div class="kpi-footer"><span class="kpi-delta warn">3 unpaid</span><span class="kpi-period">follow-up due</span></div>
-    <div class="kpi-bg-icon">📄</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,10 15,16 30,12 45,20 60,18 75,26 90,30" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="kpi-card c-red">
-    <div class="kpi-label">Open Quotes</div>
-    <div class="kpi-value" id="kpi-quotes">9</div>
-    <div class="kpi-footer"><span class="kpi-delta up">↑ 3</span><span class="kpi-period">awaiting approval</span></div>
-    <div class="kpi-bg-icon">📥</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,30 15,26 30,22 45,24 60,14 75,12 90,8" fill="none" stroke="#ff5252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">ACTIVE JOBS</div>
-      <a class="panel-link" onclick="window.location.href='swft-jobs.html'">View all →</a>
-    </div>
-    <div class="job-filters">
-      <div class="filter-tab active" onclick="filterJobs(this,'all')">All</div>
-      <div class="filter-tab" onclick="filterJobs(this,'active')">In Progress</div>
-      <div class="filter-tab" onclick="filterJobs(this,'scheduled')">Scheduled</div>
-      <div class="filter-tab" onclick="filterJobs(this,'pending')">Pending</div>
-      <div class="filter-tab" onclick="filterJobs(this,'complete')">Complete</div>
-    </div>
-    <div id="job-list">
-      <div class="job-row" data-status="active"><div class="status-dot dot-green"></div><div class="job-info"><div class="job-name">Henderson — Backyard Patio</div><div class="job-sub">Stamped concrete · Crew A · Today</div></div><span class="job-tag tag-active">In Progress</span><div class="job-amount">$7,200</div></div>
-      <div class="job-row" data-status="active"><div class="status-dot dot-green"></div><div class="job-info"><div class="job-name">Ortiz — Pool Deck</div><div class="job-sub">Exposed aggregate · Crew B · Today</div></div><span class="job-tag tag-active">In Progress</span><div class="job-amount">$5,400</div></div>
-      <div class="job-row" data-status="scheduled"><div class="status-dot dot-blue"></div><div class="job-info"><div class="job-name">Kim — Driveway Resurface</div><div class="job-sub">Broom finish · Crew A · Mar 29</div></div><span class="job-tag tag-scheduled">Scheduled</span><div class="job-amount">$3,100</div></div>
-      <div class="job-row" data-status="pending"><div class="status-dot dot-amber"></div><div class="job-info"><div class="job-name">Martinez — Driveway</div><div class="job-sub">Stamped · Awaiting deposit</div></div><span class="job-tag tag-pending">Quote Sent</span><div class="job-amount">$4,800</div></div>
-      <div class="job-row" data-status="scheduled"><div class="status-dot dot-blue"></div><div class="job-info"><div class="job-name">Nguyen — Front Walkway</div><div class="job-sub">Exposed aggregate · Crew B · Apr 1</div></div><span class="job-tag tag-scheduled">Scheduled</span><div class="job-amount">$2,250</div></div>
-      <div class="job-row" data-status="complete"><div class="status-dot dot-gray"></div><div class="job-info"><div class="job-name">Chen — Garage Floor</div><div class="job-sub">Epoxy coat · Completed Mar 25</div></div><span class="job-tag tag-complete">Complete</span><div class="job-amount">$2,600</div></div>
-    </div>
-  </div>
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">TODAY'S SCHEDULE</div>
-      <a class="panel-link" onclick="window.location.href='swft-schedule.html'">Full calendar →</a>
-    </div>
-    <div class="weather-strip"><span class="weather-icon">⛅</span><span class="weather-text"><strong>72°F</strong> &nbsp;Partly cloudy — good pour conditions</span><span class="weather-badge">✓ Clear</span></div>
-    <div class="schedule-row now"><div class="sched-time">7:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson — Backyard Patio</div><div class="sched-meta"><span class="sched-chip">Crew A</span><span class="sched-chip">Marcus · Devon · Luis</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">~6 hrs</div></div>
-    <div class="schedule-row now"><div class="sched-time">8:30<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Ortiz — Pool Deck</div><div class="sched-meta"><span class="sched-chip">Crew B</span><span class="sched-chip">Ray · Tomas</span><span class="sched-addr">88 Lakeview Ct</span></div></div><div class="sched-dur">~5 hrs</div></div>
-    <div class="schedule-row"><div class="sched-time">11:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Site Estimate — Pham Driveway</div><div class="sched-meta"><span class="sched-chip">Jake Reynolds</span><span class="sched-addr">2422 Oak St</span></div></div><div class="sched-dur">~1 hr</div></div>
-    <div class="schedule-row"><div class="sched-time">2:00<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:#f5a623;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Follow-up Call — Garcia</div><div class="sched-meta"><span class="sched-chip">AI Scheduled</span><span class="sched-addr">Quote #1039 · $3,400</span></div></div><div class="sched-dur">15 min</div></div>
-    <div class="schedule-row"><div class="sched-time">4:30<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--gray2);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson Final Walkthrough</div><div class="sched-meta"><span class="sched-chip">Inspection</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">30 min</div></div>
-  </div>
-</div>
-
 <div class="panel">
   <div class="panel-header"><div class="panel-title">MONTHLY REVENUE</div><a class="panel-link">Full report →</a></div>
   <div class="chart-body">
@@ -397,6 +330,19 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       <div class="chart-goal">Monthly goal &nbsp;<div class="goal-bar-track"><div class="goal-bar-fill"></div></div>&nbsp;<strong>$28,450</strong> / $40,000</div>
     </div>
   </div>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">TODAY'S SCHEDULE</div>
+    <a class="panel-link" onclick="window.location.href='swft-schedule.html'">Full calendar →</a>
+  </div>
+  <div class="weather-strip"><span class="weather-icon">⛅</span><span class="weather-text"><strong>72°F</strong> &nbsp;Partly cloudy — good pour conditions</span><span class="weather-badge">✓ Clear</span></div>
+  <div class="schedule-row now"><div class="sched-time">7:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson — Backyard Patio</div><div class="sched-meta"><span class="sched-chip">Crew A</span><span class="sched-chip">Marcus · Devon · Luis</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">~6 hrs</div></div>
+  <div class="schedule-row now"><div class="sched-time">8:30<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Ortiz — Pool Deck</div><div class="sched-meta"><span class="sched-chip">Crew B</span><span class="sched-chip">Ray · Tomas</span><span class="sched-addr">88 Lakeview Ct</span></div></div><div class="sched-dur">~5 hrs</div></div>
+  <div class="schedule-row"><div class="sched-time">11:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Site Estimate — Pham Driveway</div><div class="sched-meta"><span class="sched-chip">Jake Reynolds</span><span class="sched-addr">2422 Oak St</span></div></div><div class="sched-dur">~1 hr</div></div>
+  <div class="schedule-row"><div class="sched-time">2:00<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:#f5a623;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Follow-up Call — Garcia</div><div class="sched-meta"><span class="sched-chip">AI Scheduled</span><span class="sched-addr">Quote #1039 · $3,400</span></div></div><div class="sched-dur">15 min</div></div>
+  <div class="schedule-row"><div class="sched-time">4:30<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--gray2);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson Final Walkthrough</div><div class="sched-meta"><span class="sched-chip">Inspection</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">30 min</div></div>
 </div>
 
 <div class="panel">
