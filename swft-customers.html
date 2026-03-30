@@ -30,7 +30,7 @@ body {
 visibility: hidden;
 background: var(--bg);
 color: var(--white);
-font-family: ‘DM Sans’, sans-serif;
+font-family: 'DM Sans', sans-serif;
 min-height: 100vh;
 display: flex;
 }
@@ -54,7 +54,7 @@ transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
 .sidebar-toggle:hover { background:var(--surface2); color:var(--white); }
 
 .logo-wrap { padding: 26px 22px 22px; border-bottom: 1px solid var(--border); display:flex; align-items:center; }
-.logo-mark { font-family:‘Bebas Neue’,sans-serif; font-size:30px; letter-spacing:3px; color:var(--white); line-height:1; }
+.logo-mark { font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:3px; color:var(--white); line-height:1; }
 .logo-mark em { color:var(--green); font-style:normal; }
 .logo-sub { font-size:9.5px; color:var(--gray2); letter-spacing:1.8px; margin-top:3px; font-weight:300; }
 
@@ -71,12 +71,12 @@ position:relative; user-select:none;
 .nav-item:hover { background:var(--surface2); color:var(--white); }
 .nav-item.active { background:rgba(200,241,53,0.07); color:var(--green); font-weight:500; }
 .nav-item.active::before {
-content:’’; position:absolute; left:0; top:50%; transform:translateY(-50%);
+content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
 width:3px; height:18px; background:var(--green); border-radius:0 3px 3px 0;
 }
 .nav-icon { width:15px; height:15px; flex-shrink:0; opacity:0.8; }
 .nav-item.active .nav-icon { opacity:1; }
-.nav-badge { margin-left:auto; background:var(--green); color:#0a0a0a; font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:20px; font-family:‘JetBrains Mono’,monospace; }
+.nav-badge { margin-left:auto; background:var(--green); color:#0a0a0a; font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:20px; font-family:'JetBrains Mono',monospace; }
 .nav-divider { height:1px; background:var(--border); margin:8px 12px; }
 
 .sidebar-footer { border-top:1px solid var(--border); padding:12px 10px; }
@@ -100,8 +100,8 @@ z-index:100;
 animation: fadeDown 0.3s ease 0.15s both;
 }
 @keyframes fadeDown { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
-.topbar-page { font-family:‘Bebas Neue’,sans-serif; font-size:20px; letter-spacing:2.5px; color:var(--white); }
-.topbar-slash { color:var(--border2); font-family:‘JetBrains Mono’,monospace; font-size:16px; }
+.topbar-page { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2.5px; color:var(--white); }
+.topbar-slash { color:var(--border2); font-family:'JetBrains Mono',monospace; font-size:16px; }
 .topbar-sub { font-size:12px; color:var(--gray); font-style:italic; font-weight:300; }
 .topbar-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
 
@@ -133,7 +133,7 @@ transition:border-color 0.15s;
 }
 .search-wrap:focus-within { border-color:var(--green); }
 .search-wrap svg { color:var(--gray2); flex-shrink:0; }
-.search-input { background:transparent; border:none; outline:none; color:var(--white); font-family:‘DM Sans’,sans-serif; font-size:13px; flex:1; }
+.search-input { background:transparent; border:none; outline:none; color:var(--white); font-family:'DM Sans',sans-serif; font-size:13px; flex:1; }
 .search-input::placeholder { color:var(--gray2); }
 
 .filter-group { display:flex; gap:4px; }
@@ -141,7 +141,7 @@ transition:border-color 0.15s;
 .ftab:hover { color:var(--white); border-color:var(--gray2); }
 .ftab.active { background:rgba(200,241,53,0.1); color:var(--green); border-color:rgba(200,241,53,0.25); }
 
-.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:‘DM Sans’,sans-serif; cursor:pointer; transition:all 0.14s; margin-left:auto; }
+.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all 0.14s; margin-left:auto; }
 .sort-btn:hover { color:var(--white); border-color:var(--gray2); }
 
 /* ── CUSTOMER TABLE ── */
@@ -197,11 +197,11 @@ flex-shrink:0;
 .cust-name { font-size:13.5px; font-weight:500; color:var(--white); }
 .cust-addr { font-size:11px; color:var(--gray); margin-top:1px; }
 
-.cust-phone { font-size:12.5px; color:var(--gray); font-family:‘JetBrains Mono’,monospace; }
+.cust-phone { font-size:12.5px; color:var(--gray); font-family:'JetBrains Mono',monospace; }
 
-.cust-spend { font-family:‘JetBrains Mono’,monospace; font-size:13px; font-weight:500; color:var(--white); }
+.cust-spend { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:500; color:var(--white); }
 
-.cust-jobs { font-family:‘JetBrains Mono’,monospace; font-size:13px; color:var(--gray); }
+.cust-jobs { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--gray); }
 
 .cust-status span {
 font-size:10px; font-weight:600; padding:3px 9px; border-radius:6px; letter-spacing:0.4px;
@@ -258,7 +258,7 @@ width:46px; height:46px; border-radius:50%;
 display:flex; align-items:center; justify-content:center;
 font-size:16px; font-weight:700; color:#0a0a0a; flex-shrink:0;
 }
-.drawer-name { font-family:‘Bebas Neue’,sans-serif; font-size:22px; letter-spacing:1.5px; color:var(--white); line-height:1; }
+.drawer-name { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1.5px; color:var(--white); line-height:1; }
 .drawer-meta { font-size:12px; color:var(--gray); margin-top:4px; }
 .drawer-meta a { color:var(--green); text-decoration:none; }
 
@@ -273,7 +273,7 @@ border-right:1px solid var(--border);
 }
 .dstat:last-child { border-right:none; }
 .dstat-label { font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gray2); }
-.dstat-value { font-family:‘Bebas Neue’,sans-serif; font-size:22px; letter-spacing:1px; color:var(--white); margin-top:3px; line-height:1; }
+.dstat-value { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; color:var(--white); margin-top:3px; line-height:1; }
 .dstat-value.green { color:var(--green); }
 
 /* Drawer tabs */
@@ -315,7 +315,7 @@ border:1px solid var(--border); border-radius:10px;
 .hist-info { flex:1; }
 .hist-name { font-size:13px; font-weight:500; color:var(--white); }
 .hist-meta { font-size:11px; color:var(--gray); margin-top:2px; }
-.hist-amount { font-family:‘JetBrains Mono’,monospace; font-size:12.5px; font-weight:500; color:var(--white); }
+.hist-amount { font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500; color:var(--white); }
 
 /* Invoices */
 .invoice-item {
@@ -323,9 +323,9 @@ display:flex; align-items:center; gap:12px;
 padding:11px 14px; background:var(--surface2);
 border:1px solid var(--border); border-radius:10px;
 }
-.inv-num { font-family:‘JetBrains Mono’,monospace; font-size:11px; color:var(--gray2); width:52px; flex-shrink:0; }
+.inv-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gray2); width:52px; flex-shrink:0; }
 .inv-desc { flex:1; font-size:12.5px; color:var(--white); }
-.inv-amount { font-family:‘JetBrains Mono’,monospace; font-size:12.5px; color:var(--white); font-weight:500; }
+.inv-amount { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--white); font-weight:500; }
 .inv-badge { font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:5px; }
 .inv-paid { background:rgba(200,241,53,0.1); color:var(--green); }
 .inv-open { background:rgba(245,166,35,0.1); color:var(--amber); }
@@ -334,7 +334,7 @@ border:1px solid var(--border); border-radius:10px;
 .note-item { padding:12px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; }
 .note-text { font-size:12.5px; color:#c8c8c8; line-height:1.5; }
 .note-footer { display:flex; align-items:center; gap:8px; margin-top:6px; }
-.note-date { font-family:‘JetBrains Mono’,monospace; font-size:10px; color:var(--gray2); }
+.note-date { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--gray2); }
 .note-tag { font-size:9.5px; font-weight:600; padding:1px 7px; border-radius:4px; }
 
 .tags-row { display:flex; gap:6px; flex-wrap:wrap; }
@@ -348,7 +348,7 @@ border:1px solid var(--border2); border-radius:10px;
 transition:border-color 0.15s;
 }
 .note-input-wrap:focus-within { border-color:var(--green); }
-.note-textarea { flex:1; background:transparent; border:none; outline:none; color:var(--white); font-family:‘DM Sans’,sans-serif; font-size:12.5px; resize:none; min-height:36px; }
+.note-textarea { flex:1; background:transparent; border:none; outline:none; color:var(--white); font-family:'DM Sans',sans-serif; font-size:12.5px; resize:none; min-height:36px; }
 .note-textarea::placeholder { color:var(--gray2); }
 .note-submit { background:var(--green); color:#0a0a0a; border:none; border-radius:7px; padding:6px 12px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:background 0.15s; }
 .note-submit:hover { background:#d5ff40; }
@@ -361,7 +361,7 @@ display:flex; gap:8px;
 }
 .dfooter-btn {
 flex:1; padding:9px; border-radius:9px; border:1px solid var(--border2);
-background:transparent; color:var(--gray); font-size:12px; font-family:‘DM Sans’,sans-serif;
+background:transparent; color:var(--gray); font-size:12px; font-family:'DM Sans',sans-serif;
 cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;
 transition:all 0.14s;
 }
@@ -411,14 +411,14 @@ flex-shrink: 0;
 .edit-field{display:flex;flex-direction:column;gap:5px;}
 .edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
-.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:‘DM Sans’,sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .edit-input:focus{border-color:var(--green);}
 .edit-input option{background:var(--surface2);}
 .edit-textarea{resize:none;min-height:60px;line-height:1.5;}
 
 /* ── SORT DROPDOWN ── */
 .sort-wrap { position: relative; }
-.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:‘DM Sans’,sans-serif; cursor:pointer; transition:all 0.14s; }
+.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all 0.14s; }
 .sort-btn:hover, .sort-btn.open { color:var(--white); border-color:var(--gray2); background:var(--surface2); }
 .sort-btn .sort-label { font-size:11px; color:var(--green); font-weight:600; margin-left:2px; }
 .sort-menu {
@@ -936,68 +936,68 @@ user-select:none;
 
 const customers = {
 henderson: {
-initials:‘TH’, color:’#c8f135’, name:‘Tom Henderson’,
-meta:’(512) 884-2291  ·  <a href="#">411 Birchwood Dr, Austin TX</a>’,
-spend:’$14,800’, jobs:‘4’, last:‘Mar 27’,
-phone:’(512) 884-2291’, email:‘tom.henderson@email.com’, address:‘411 Birchwood Dr, Austin TX 78745’, since:‘January 2024’
+initials:'TH', color:'#c8f135', name:'Tom Henderson',
+meta:'(512) 884-2291  ·  <a href="#">411 Birchwood Dr, Austin TX</a>',
+spend:'$14,800', jobs:'4', last:'Mar 27',
+phone:'(512) 884-2291', email:'tom.henderson@email.com', address:'411 Birchwood Dr, Austin TX 78745', since:'January 2024'
 },
 ortiz: {
-initials:‘MO’, color:’#4d9fff’, name:‘Maria Ortiz’,
-meta:’(512) 774-0183  ·  <a href="#">88 Lakeview Ct, Austin TX</a>’,
-spend:’$9,200’, jobs:‘2’, last:‘Mar 27’,
-phone:’(512) 774-0183’, email:‘maria.ortiz@email.com’, address:‘88 Lakeview Ct, Austin TX 78704’, since:‘March 2025’
+initials:'MO', color:'#4d9fff', name:'Maria Ortiz',
+meta:'(512) 774-0183  ·  <a href="#">88 Lakeview Ct, Austin TX</a>',
+spend:'$9,200', jobs:'2', last:'Mar 27',
+phone:'(512) 774-0183', email:'maria.ortiz@email.com', address:'88 Lakeview Ct, Austin TX 78704', since:'March 2025'
 },
 martinez: {
-initials:‘RM’, color:’#f5a623’, name:‘Rosa Martinez’,
-meta:’(512) 334-9902  ·  <a href="#">2210 Elm St, Round Rock TX</a>’,
-spend:’$0’, jobs:‘0’, last:’—’,
-phone:’(512) 334-9902’, email:‘rosa.martinez@email.com’, address:‘2210 Elm St, Round Rock TX 78664’, since:‘March 2026’
+initials:'RM', color:'#f5a623', name:'Rosa Martinez',
+meta:'(512) 334-9902  ·  <a href="#">2210 Elm St, Round Rock TX</a>',
+spend:'$0', jobs:'0', last:'—',
+phone:'(512) 334-9902', email:'rosa.martinez@email.com', address:'2210 Elm St, Round Rock TX 78664', since:'March 2026'
 },
 kim: {
-initials:‘JK’, color:’#b388ff’, name:‘James Kim’,
-meta:’(512) 991-4450  ·  <a href="#">77 Cedar Ridge, Austin TX</a>’,
-spend:’$6,200’, jobs:‘2’, last:‘Feb 10’,
-phone:’(512) 991-4450’, email:‘james.kim@email.com’, address:‘77 Cedar Ridge, Austin TX 78750’, since:‘February 2025’
+initials:'JK', color:'#b388ff', name:'James Kim',
+meta:'(512) 991-4450  ·  <a href="#">77 Cedar Ridge, Austin TX</a>',
+spend:'$6,200', jobs:'2', last:'Feb 10',
+phone:'(512) 991-4450', email:'james.kim@email.com', address:'77 Cedar Ridge, Austin TX 78750', since:'February 2025'
 },
 chen: {
-initials:‘LC’, color:’#ff7b7b’, name:‘Linda Chen’,
-meta:’(512) 220-5577  ·  <a href="#">903 Maple Ave, Cedar Park TX</a>’,
-spend:’$4,100’, jobs:‘2’, last:‘Mar 25’,
-phone:’(512) 220-5577’, email:‘linda.chen@email.com’, address:‘903 Maple Ave, Cedar Park TX 78613’, since:‘June 2024’
+initials:'LC', color:'#ff7b7b', name:'Linda Chen',
+meta:'(512) 220-5577  ·  <a href="#">903 Maple Ave, Cedar Park TX</a>',
+spend:'$4,100', jobs:'2', last:'Mar 25',
+phone:'(512) 220-5577', email:'linda.chen@email.com', address:'903 Maple Ave, Cedar Park TX 78613', since:'June 2024'
 },
 nguyen: {
-initials:‘DN’, color:’#4dd0c4’, name:‘David Nguyen’,
-meta:’(512) 667-8821  ·  <a href="#">2422 Oak St, Austin TX</a>’,
-spend:’$0’, jobs:‘0’, last:’—’,
-phone:’(512) 667-8821’, email:‘d.nguyen@email.com’, address:‘2422 Oak St, Austin TX 78745’, since:‘March 2026’
+initials:'DN', color:'#4dd0c4', name:'David Nguyen',
+meta:'(512) 667-8821  ·  <a href="#">2422 Oak St, Austin TX</a>',
+spend:'$0', jobs:'0', last:'—',
+phone:'(512) 667-8821', email:'d.nguyen@email.com', address:'2422 Oak St, Austin TX 78745', since:'March 2026'
 }
 };
 
 let _currentCustomer = null;
 function openDrawer(id) {
-if (id === ‘new’) { closeDrawer(); return; }
-document.querySelector(‘.drawer-tabs’).style.display = ‘’;
-document.querySelector(‘.drawer-stats’).style.display = ‘’;
+if (id === 'new') { closeDrawer(); return; }
+document.querySelector('.drawer-tabs').style.display = '';
+document.querySelector('.drawer-stats').style.display = '';
 const c = customers[id];
 if (!c) return;
-document.getElementById(‘d-avatar’).textContent    = c.initials;
-document.getElementById(‘d-avatar’).style.background = c.color;
-document.getElementById(‘d-name’).textContent      = c.name;
-document.getElementById(‘d-meta’).innerHTML        = c.meta;
-document.getElementById(‘d-spend’).textContent     = c.spend;
-document.getElementById(‘d-jobs’).textContent      = c.jobs;
-document.getElementById(‘d-last’).textContent      = c.last;
+document.getElementById('d-avatar').textContent    = c.initials;
+document.getElementById('d-avatar').style.background = c.color;
+document.getElementById('d-name').textContent      = c.name;
+document.getElementById('d-meta').innerHTML        = c.meta;
+document.getElementById('d-spend').textContent     = c.spend;
+document.getElementById('d-jobs').textContent      = c.jobs;
+document.getElementById('d-last').textContent      = c.last;
 _currentCustomer = c;
-document.getElementById(‘d-phone’).textContent     = c.phone;
-document.getElementById(‘d-email’).textContent     = c.email;
-document.getElementById(‘d-address’).textContent   = c.address;
-switchTab(document.querySelector(’.dtab’), ‘contact’);
-document.getElementById(‘c-edit-mode’).style.display=‘none’;
-document.getElementById(‘c-view-mode’).style.display=‘block’;
-document.getElementById(‘c-footer-edit’).style.display=‘none’;
-document.getElementById(‘c-footer-view’).style.display=‘flex’;
-document.getElementById(‘overlay’).classList.add(‘open’);
-document.getElementById(‘drawer’).classList.add(‘open’);
+document.getElementById('d-phone').textContent     = c.phone;
+document.getElementById('d-email').textContent     = c.email;
+document.getElementById('d-address').textContent   = c.address;
+switchTab(document.querySelector('.dtab'), 'contact');
+document.getElementById('c-edit-mode').style.display='none';
+document.getElementById('c-view-mode').style.display='block';
+document.getElementById('c-footer-edit').style.display='none';
+document.getElementById('c-footer-view').style.display='flex';
+document.getElementById('overlay').classList.add('open');
+document.getElementById('drawer').classList.add('open');
 }
 
 function openNewCustomer() {
@@ -1025,104 +1025,104 @@ document.getElementById('c-view-mode').style.display = 'none';
 document.getElementById('c-edit-mode').style.display = 'flex';
 document.getElementById('c-footer-view').style.display = 'none';
 document.getElementById('c-footer-edit').style.display = 'flex';
-document.querySelector(‘.drawer-tabs’).style.display = ‘none’;
-document.querySelector(‘.drawer-stats’).style.display = ‘none’;
-document.getElementById(‘overlay’).classList.add(‘open’);
-document.getElementById(‘drawer’).classList.add(‘open’, ‘center-modal’);
+document.querySelector('.drawer-tabs').style.display = 'none';
+document.querySelector('.drawer-stats').style.display = 'none';
+document.getElementById('overlay').classList.add('open');
+document.getElementById('drawer').classList.add('open', 'center-modal');
 }
 
 function closeDrawer() {
-document.getElementById(‘overlay’).classList.remove(‘open’);
-document.getElementById(‘drawer’).classList.remove(‘open’, ‘center-modal’);
-document.querySelector(‘.drawer-tabs’).style.display = ‘’;
-document.querySelector(‘.drawer-stats’).style.display = ‘’;
+document.getElementById('overlay').classList.remove('open');
+document.getElementById('drawer').classList.remove('open', 'center-modal');
+document.querySelector('.drawer-tabs').style.display = '';
+document.querySelector('.drawer-stats').style.display = '';
 }
 
 function switchTab(el, tab) {
-document.querySelectorAll(’.dtab’).forEach(t => t.classList.remove(‘active’));
-el.classList.add(‘active’);
-[‘contact’,‘jobs’,‘invoices’,‘notes’].forEach(t => {
-document.getElementById(‘tab-’ + t).style.display = (t === tab) ? ‘block’ : ‘none’;
+document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+el.classList.add('active');
+['contact','jobs','invoices','notes'].forEach(t => {
+document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
 });
 }
 
 function setFilter(el, status) {
-document.querySelectorAll(’.ftab’).forEach(t => t.classList.remove(‘active’));
-el.classList.add(‘active’);
-document.querySelectorAll(’.cust-row’).forEach(row => {
-row.style.display = (status === ‘all’ || row.dataset.status === status) ? ‘grid’ : ‘none’;
+document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+el.classList.add('active');
+document.querySelectorAll('.cust-row').forEach(row => {
+row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
 });
 }
 
 function filterTable(q) {
 const query = q.toLowerCase();
-document.querySelectorAll(’.cust-row’).forEach(row => {
-const name = row.querySelector(’.cust-name’).textContent.toLowerCase();
-row.style.display = name.includes(query) ? ‘grid’ : ‘none’;
+document.querySelectorAll('.cust-row').forEach(row => {
+const name = row.querySelector('.cust-name').textContent.toLowerCase();
+row.style.display = name.includes(query) ? 'grid' : 'none';
 });
 }
 function toggleSidebar(){
-  document.querySelector(‘.sidebar’).classList.toggle(‘collapsed’);
-  document.getElementById(‘main’).classList.toggle(‘expanded’);
-  document.getElementById(‘sidebar-toggle’).classList.toggle(‘visible’);
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('expanded');
+  document.getElementById('sidebar-toggle').classList.toggle('visible');
 }
 
 let toastTimer;
 function showToast(msg) {
-const toast = document.getElementById(‘toast’);
-const label = document.getElementById(‘toast-msg’);
+const toast = document.getElementById('toast');
+const label = document.getElementById('toast-msg');
 label.textContent = msg;
-toast.classList.add(‘show’);
+toast.classList.add('show');
 clearTimeout(toastTimer);
-toastTimer = setTimeout(() => toast.classList.remove(‘show’), 2500);
+toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
 function callCustomer() {
-const phone = document.getElementById(‘d-phone’).textContent;
-showToast(‘Calling ’ + phone + ‘…’);
-setTimeout(() => window.location.href = ‘tel:’ + phone.replace(/[^0-9]/g,’’), 400);
+const phone = document.getElementById('d-phone').textContent;
+showToast('Calling ' + phone + '…');
+setTimeout(() => window.location.href = 'tel:' + phone.replace(/[^0-9]/g,''), 400);
 }
 
 function textCustomer() {
-const phone = document.getElementById(‘d-phone’).textContent;
-showToast(‘Opening SMS to ’ + phone);
-setTimeout(() => window.location.href = ‘sms:’ + phone.replace(/[^0-9]/g,’’), 400);
+const phone = document.getElementById('d-phone').textContent;
+showToast('Opening SMS to ' + phone);
+setTimeout(() => window.location.href = 'sms:' + phone.replace(/[^0-9]/g,''), 400);
 }
 
 function enterCustomerEdit() {
 const c = _currentCustomer; if(!c) return;
-switchTab(document.querySelector(’.dtab’), ‘contact’);
-const nameParts = c.name.split(’ ‘);
-document.getElementById(‘e-fname’).value   = nameParts[0] || ‘’;
-document.getElementById(‘e-lname’).value   = nameParts.slice(1).join(’ ’) || ‘’;
-document.getElementById(‘e-phone’).value   = c.phone || ‘’;
-document.getElementById(‘e-email’).value   = c.email || ‘’;
-document.getElementById(‘e-address’).value = c.address || ‘’;
-document.getElementById(‘e-since’).value   = c.since || ‘’;
-document.getElementById(‘e-note’).value    = ‘’;
-document.getElementById(‘c-view-mode’).style.display = ‘none’;
-document.getElementById(‘c-edit-mode’).style.display = ‘flex’;
-document.getElementById(‘c-footer-view’).style.display = ‘none’;
-document.getElementById(‘c-footer-edit’).style.display = ‘flex’;
+switchTab(document.querySelector('.dtab'), 'contact');
+const nameParts = c.name.split(' ');
+document.getElementById('e-fname').value   = nameParts[0] || '';
+document.getElementById('e-lname').value   = nameParts.slice(1).join(' ') || '';
+document.getElementById('e-phone').value   = c.phone || '';
+document.getElementById('e-email').value   = c.email || '';
+document.getElementById('e-address').value = c.address || '';
+document.getElementById('e-since').value   = c.since || '';
+document.getElementById('e-note').value    = '';
+document.getElementById('c-view-mode').style.display = 'none';
+document.getElementById('c-edit-mode').style.display = 'flex';
+document.getElementById('c-footer-view').style.display = 'none';
+document.getElementById('c-footer-edit').style.display = 'flex';
 }
 
 function cancelCustomerEdit() {
-if (_currentCustomer && _currentCustomer.name === ‘’) { closeDrawer(); return; }
-document.getElementById(‘c-edit-mode’).style.display = ‘none’;
-document.getElementById(‘c-view-mode’).style.display = ‘block’;
-document.getElementById(‘c-footer-edit’).style.display = ‘none’;
-document.getElementById(‘c-footer-view’).style.display = ‘flex’;
-showToast(‘Changes discarded’);
+if (_currentCustomer && _currentCustomer.name === '') { closeDrawer(); return; }
+document.getElementById('c-edit-mode').style.display = 'none';
+document.getElementById('c-view-mode').style.display = 'block';
+document.getElementById('c-footer-edit').style.display = 'none';
+document.getElementById('c-footer-view').style.display = 'flex';
+showToast('Changes discarded');
 }
 
 function saveCustomerEdit() {
-const fname   = document.getElementById(‘e-fname’).value.trim();
-const lname   = document.getElementById(‘e-lname’).value.trim();
-const phone   = document.getElementById(‘e-phone’).value.trim();
-const email   = document.getElementById(‘e-email’).value.trim();
-const address = document.getElementById(‘e-address’).value.trim();
-const since   = document.getElementById(‘e-since’).value.trim();
-const fullName = (fname + ’ ’ + lname).trim();
+const fname   = document.getElementById('e-fname').value.trim();
+const lname   = document.getElementById('e-lname').value.trim();
+const phone   = document.getElementById('e-phone').value.trim();
+const email   = document.getElementById('e-email').value.trim();
+const address = document.getElementById('e-address').value.trim();
+const since   = document.getElementById('e-since').value.trim();
+const fullName = (fname + ' ' + lname).trim();
 
 // Persist to customer data
 if (_currentCustomer) {
@@ -1153,41 +1153,41 @@ if (_currentCustomer && _currentCustomer.initials === '?') { closeDrawer(); retu
 
 // ── SORT ──
 const sortLabels = {
-‘name-az’:   ‘Name A--Z’,
-‘name-za’:   ‘Name Z--A’,
-‘spend-hi’:  ‘Spend ↓’,
-‘spend-lo’:  ‘Spend ↑’,
-‘jobs-hi’:   ‘Jobs ↓’,
-‘jobs-lo’:   ‘Jobs ↑’,
-‘status’:    ‘Status’,
+'name-az':   'Name A--Z',
+'name-za':   'Name Z--A',
+'spend-hi':  'Spend ↓',
+'spend-lo':  'Spend ↑',
+'jobs-hi':   'Jobs ↓',
+'jobs-lo':   'Jobs ↑',
+'status':    'Status',
 };
 
 function toggleSortMenu() {
-const menu = document.getElementById(‘sort-menu’);
-const btn  = document.getElementById(‘sort-btn’);
-const open = menu.classList.toggle(‘open’);
-btn.classList.toggle(‘open’, open);
+const menu = document.getElementById('sort-menu');
+const btn  = document.getElementById('sort-btn');
+const open = menu.classList.toggle('open');
+btn.classList.toggle('open', open);
 if (open) {
 // close on outside click
-setTimeout(() => document.addEventListener(‘click’, closeSortOnOutside), 10);
+setTimeout(() => document.addEventListener('click', closeSortOnOutside), 10);
 }
 }
 
 function closeSortOnOutside(e) {
-const wrap = document.querySelector(’.sort-wrap’);
+const wrap = document.querySelector('.sort-wrap');
 if (!wrap.contains(e.target)) {
-document.getElementById(‘sort-menu’).classList.remove(‘open’);
-document.getElementById(‘sort-btn’).classList.remove(‘open’);
-document.removeEventListener(‘click’, closeSortOnOutside);
+document.getElementById('sort-menu').classList.remove('open');
+document.getElementById('sort-btn').classList.remove('open');
+document.removeEventListener('click', closeSortOnOutside);
 }
 }
 
 function applySort(key) {
 // Update active option
-document.querySelectorAll(’.sort-option’).forEach(o => o.classList.remove(‘active’));
-const activeEl = document.getElementById(‘so-’ + key);
-if (activeEl) activeEl.classList.add(‘active’);
-document.getElementById(‘sort-label’).textContent = sortLabels[key] || key;
+document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+const activeEl = document.getElementById('so-' + key);
+if (activeEl) activeEl.classList.add('active');
+document.getElementById('sort-label').textContent = sortLabels[key] || key;
 
 // Close menu
 document.getElementById('sort-menu').classList.remove('open');
