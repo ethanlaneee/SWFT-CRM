@@ -817,6 +817,18 @@
       row.style.display = text.includes(query) ? 'grid' : 'none';
     });
   }
+  function deleteJob() {
+    if (!_currentJob) return;
+    if (!confirm('Delete ' + (_currentJob.title || 'this job') + '?')) return;
+    const title = _currentJob.title;
+    document.querySelectorAll('.job-row').forEach(row => {
+      const rowTitle = row.querySelector('.job-title');
+      if (rowTitle && rowTitle.textContent === title) row.remove();
+    });
+    closeDrawer();
+    showToast(title + ' deleted');
+  }
+
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
     document.getElementById('main').classList.toggle('expanded');
