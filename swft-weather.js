@@ -57,7 +57,7 @@
   async function fetchWeather() {
     try {
       const loc = await getLocation();
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=fahrenheit&timezone=auto&forecast_days=16`;
       const res = await fetch(url);
       const data = await res.json();
       return data;
@@ -97,7 +97,8 @@
     const todayDay = today.getDate();
 
     let html = "";
-    for (let i = 0; i < Math.min(7, data.daily.time.length); i++) {
+    const dayCount = Math.min(16, data.daily.time.length);
+    for (let i = 0; i < dayCount; i++) {
       const date = new Date(data.daily.time[i] + "T12:00:00");
       const dayName = days[date.getDay()];
       const dayNum = date.getDate();
