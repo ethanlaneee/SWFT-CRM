@@ -286,11 +286,13 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     <a class="panel-link" onclick="window.location.href='swft-schedule.html'">Full calendar →</a>
   </div>
   <div class="weather-strip"><span class="weather-icon">⛅</span><span class="weather-text"><strong>72°F</strong> &nbsp;Partly cloudy — good pour conditions</span><span class="weather-badge">✓ Clear</span></div>
+  <div id="schedule-list">
   <div class="schedule-row now"><div class="sched-time">7:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson — Backyard Patio</div><div class="sched-meta"><span class="sched-chip">Crew A</span><span class="sched-chip">Marcus · Devon · Luis</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">~6 hrs</div></div>
   <div class="schedule-row now"><div class="sched-time">8:30<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Ortiz — Pool Deck</div><div class="sched-meta"><span class="sched-chip">Crew B</span><span class="sched-chip">Ray · Tomas</span><span class="sched-addr">88 Lakeview Ct</span></div></div><div class="sched-dur">~5 hrs</div></div>
   <div class="schedule-row"><div class="sched-time">11:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Site Estimate — Pham Driveway</div><div class="sched-meta"><span class="sched-chip">Jake Reynolds</span><span class="sched-addr">2422 Oak St</span></div></div><div class="sched-dur">~1 hr</div></div>
   <div class="schedule-row"><div class="sched-time">2:00<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:#f5a623;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Follow-up Call — Garcia</div><div class="sched-meta"><span class="sched-chip">AI Scheduled</span><span class="sched-addr">Quote #1039 · $3,400</span></div></div><div class="sched-dur">15 min</div></div>
   <div class="schedule-row"><div class="sched-time">4:30<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--gray2);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson Final Walkthrough</div><div class="sched-meta"><span class="sched-chip">Inspection</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">30 min</div></div>
+  </div>
 </div>
 
 <div class="panel">
@@ -367,16 +369,54 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       service = document.getElementById('nj-custom-service').value.trim() || 'Custom Job';
     }
     const title = customer + ' - ' + service;
+    const address = document.getElementById('nj-address').value.trim();
+    const dateVal = document.getElementById('nj-date').value;
+    const timeVal = document.getElementById('nj-time').value;
+    const crewEl = document.getElementById('nj-crew');
+    let crew = crewEl.value;
+    if (crew === 'Other') {
+      crew = document.getElementById('nj-custom-crew').value.trim() || 'TBD';
+    }
+
+    // Format time for display
+    let timeDisplay = '';
+    if (timeVal) {
+      const [h, m] = timeVal.split(':');
+      const hr = parseInt(h);
+      const ampm = hr >= 12 ? 'PM' : 'AM';
+      const hr12 = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
+      timeDisplay = hr12 + ':' + m + '<br>' + ampm;
+    } else {
+      timeDisplay = 'TBD';
+    }
+
+    // Add to schedule on dashboard
+    const schedList = document.getElementById('schedule-list');
+    if (schedList) {
+      const row = document.createElement('div');
+      row.className = 'schedule-row';
+      row.style.animation = 'fadeUp 0.35s ease both';
+      row.innerHTML = '<div class="sched-time">' + timeDisplay + '</div>' +
+        '<div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div>' +
+        '<div class="sched-body"><div class="sched-title">' + title + '</div>' +
+        '<div class="sched-meta"><span class="sched-chip">' + crew + '</span>' +
+        (address ? '<span class="sched-addr">' + address + '</span>' : '') +
+        '</div></div><div class="sched-dur">New</div>';
+      schedList.appendChild(row);
+    }
+
     closeNewJobModal();
     showToast(title + ' created ✓');
     // Clear form for next use
-    ['nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount','nj-custom-service'].forEach(id => {
+    ['nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount','nj-custom-service','nj-custom-crew'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
     if (document.getElementById('nj-notes')) document.getElementById('nj-notes').value = '';
     document.getElementById('nj-custom-service').style.display = 'none';
+    document.getElementById('nj-custom-crew').style.display = 'none';
     serviceEl.selectedIndex = 0;
+    crewEl.selectedIndex = 0;
   }
   let _toastTimer;
   function showToast(msg) {
