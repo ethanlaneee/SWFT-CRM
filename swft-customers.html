@@ -531,7 +531,7 @@ user-select:none;
       </div>
       <div class="cust-phone">(512) 884-2291</div>
       <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
+      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="cust-row" data-status="active" onclick="openDrawer('ortiz')">
@@ -544,7 +544,7 @@ user-select:none;
       </div>
       <div class="cust-phone">(512) 774-0183</div>
       <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
+      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="cust-row" data-status="quoted" onclick="openDrawer('martinez')">
@@ -557,7 +557,7 @@ user-select:none;
       </div>
       <div class="cust-phone">(512) 334-9902</div>
       <div class="cust-status"><span class="status-quoted">Quoted</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
+      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="cust-row" data-status="active" onclick="openDrawer('kim')">
@@ -570,7 +570,7 @@ user-select:none;
       </div>
       <div class="cust-phone">(512) 991-4450</div>
       <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
+      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="cust-row" data-status="inactive" onclick="openDrawer('chen')">
@@ -583,7 +583,7 @@ user-select:none;
       </div>
       <div class="cust-phone">(512) 220-5577</div>
       <div class="cust-status"><span class="status-inactive">Inactive</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
+      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="cust-row" data-status="quoted" onclick="openDrawer('nguyen')">
@@ -596,7 +596,7 @@ user-select:none;
       </div>
       <div class="cust-phone">(512) 667-8821</div>
       <div class="cust-status"><span class="status-quoted">Quoted</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
+      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
   </div>
@@ -1104,7 +1104,7 @@ if (_currentCustomer && _currentCustomer.initials === '?') {
   row.dataset.status = 'active';
   row.style.animation = 'fadeUp 0.35s ease both';
   row.onclick = function(){ openDrawer(id); };
-  row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:'+color+';">'+initials.toUpperCase()+'</div><div><div class="cust-name">'+fullName+'</div><div class="cust-addr">'+address+'</div></div></div><div class="cust-phone">'+phone+'</div><div class="cust-status"><span class="status-active">Active</span></div><div class="cust-action"><div class="row-btn">→</div></div>';
+  row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:'+color+';">'+initials.toUpperCase()+'</div><div><div class="cust-name">'+fullName+'</div><div class="cust-addr">'+address+'</div></div></div><div class="cust-phone">'+phone+'</div><div class="cust-status"><span class="status-active">Active</span></div><div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>';
   tbody.insertBefore(row, tbody.firstChild);
   closeDrawer();
   showToast(fullName + ' added ✓');
@@ -1117,6 +1117,16 @@ document.getElementById('c-footer-edit').style.display = 'none';
 document.getElementById('c-footer-view').style.display = 'flex';
 showToast('Customer saved ✓');
 
+}
+
+function deleteCustRow(el) {
+  const row = el.closest('.cust-row');
+  if (!row) return;
+  const nameEl = row.querySelector('.cust-name');
+  const name = nameEl ? nameEl.textContent : 'this customer';
+  if (!confirm('Delete ' + name + '?')) return;
+  row.remove();
+  showToast(name + ' deleted');
 }
 
 function deleteCustomer() {

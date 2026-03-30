@@ -395,7 +395,7 @@
         <div class="pay-status pay-deposit">Deposit paid</div>
       </div>
       <div><span class="status-tag tag-inprog">In Progress</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="job-row" data-status="active" onclick="openDrawer('ortiz')">
@@ -415,7 +415,7 @@
         <div class="pay-status pay-deposit">Deposit paid</div>
       </div>
       <div><span class="status-tag tag-inprog">In Progress</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="job-row" data-status="scheduled" onclick="openDrawer('kim')">
@@ -435,7 +435,7 @@
         <div class="pay-status pay-deposit">Deposit paid</div>
       </div>
       <div><span class="status-tag tag-sched">Scheduled</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="job-row" data-status="pending" onclick="openDrawer('martinez')">
@@ -455,7 +455,7 @@
         <div class="pay-status pay-due">Awaiting deposit</div>
       </div>
       <div><span class="status-tag tag-pending">Quote Sent</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="job-row" data-status="scheduled" onclick="openDrawer('nguyen')">
@@ -475,7 +475,7 @@
         <div class="pay-status pay-deposit">Deposit paid</div>
       </div>
       <div><span class="status-tag tag-sched">Scheduled</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
     <div class="job-row" data-status="complete" onclick="openDrawer('chen')">
@@ -495,7 +495,7 @@
         <div class="pay-status pay-due">Invoice due</div>
       </div>
       <div><span class="status-tag tag-complete">Complete</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
     </div>
 
   </div>
@@ -817,6 +817,16 @@
       row.style.display = text.includes(query) ? 'grid' : 'none';
     });
   }
+  function deleteJobRow(el) {
+    const row = el.closest('.job-row');
+    if (!row) return;
+    const title = row.querySelector('.job-title');
+    const name = title ? title.textContent : 'this job';
+    if (!confirm('Delete ' + name + '?')) return;
+    row.remove();
+    showToast(name + ' deleted');
+  }
+
   function deleteJob() {
     if (!_currentJob) return;
     if (!confirm('Delete ' + (_currentJob.title || 'this job') + '?')) return;
@@ -1026,7 +1036,7 @@
       row.dataset.status = statusKey[status] || 'scheduled';
       row.style.animation = 'fadeUp 0.35s ease both';
       row.onclick = function(){ openDrawer(id); };
-      row.innerHTML = '<div class="job-id-cell"><div class="status-pip '+(pipClass[status]||'pip-blue')+'"></div><div><div class="job-title">'+title+'</div><div class="job-id">#JOB-'+Math.floor(1050+Math.random()*100)+' &nbsp;·&nbsp; '+date+'</div></div></div><div><div class="job-customer">'+customer+'</div><div class="job-addr">'+address+'</div></div><div><div class="job-amount">'+fmtAmt+'</div></div><div><span class="status-tag '+(tagClass[status]||'tag-sched')+'">'+status+'</span></div><div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>';
+      row.innerHTML = '<div class="job-id-cell"><div class="status-pip '+(pipClass[status]||'pip-blue')+'"></div><div><div class="job-title">'+title+'</div><div class="job-id">#JOB-'+Math.floor(1050+Math.random()*100)+' &nbsp;·&nbsp; '+date+'</div></div></div><div><div class="job-customer">'+customer+'</div><div class="job-addr">'+address+'</div></div><div><div class="job-amount">'+fmtAmt+'</div></div><div><span class="status-tag '+(tagClass[status]||'tag-sched')+'">'+status+'</span></div><div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>';
       tbody.insertBefore(row, tbody.firstChild);
       closeDrawer();
       showToast(title + ' created ✓');
