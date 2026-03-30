@@ -56,7 +56,7 @@
     .account-field { display: flex; flex-direction: column; gap: 5px; }
     .account-label {
       font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
-      color: #444; font-weight: 600; font-family: 'DM Sans', sans-serif;
+      color: #f0f0f0; font-weight: 600; font-family: 'DM Sans', sans-serif;
     }
     .account-input {
       background: #181818; border: 1px solid #2c2c2c; border-radius: 8px;
@@ -68,7 +68,7 @@
 
     .account-section-title {
       font-size: 9.5px; letter-spacing: 2px; text-transform: uppercase;
-      color: #444; margin-top: 8px; padding-top: 16px;
+      color: #f0f0f0; margin-top: 8px; padding-top: 16px;
       border-top: 1px solid #1f1f1f;
     }
 
