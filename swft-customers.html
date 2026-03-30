@@ -1124,14 +1124,14 @@ function deleteCustRow(el) {
   if (!row) return;
   const nameEl = row.querySelector('.cust-name');
   const name = nameEl ? nameEl.textContent : 'this customer';
-  if (!confirm('Delete ' + name + '?')) return;
+  if (!confirm('Are you sure you want to delete this customer: ' + name + '?')) return;
   row.remove();
   showToast(name + ' deleted');
 }
 
 function deleteCustomer() {
   if (!_currentCustomer) return;
-  if (!confirm('Delete ' + (_currentCustomer.name || 'this customer') + '?')) return;
+  if (!confirm('Are you sure you want to delete this customer: ' + (_currentCustomer.name || 'this customer') + '?')) return;
   const name = _currentCustomer.name;
   document.querySelectorAll('.cust-row').forEach(row => {
     const rowName = row.querySelector('.cust-name');

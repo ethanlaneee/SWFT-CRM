@@ -822,14 +822,14 @@
     if (!row) return;
     const title = row.querySelector('.job-title');
     const name = title ? title.textContent : 'this job';
-    if (!confirm('Delete ' + name + '?')) return;
+    if (!confirm('Are you sure you want to delete this job: ' + name + '?')) return;
     row.remove();
     showToast(name + ' deleted');
   }
 
   function deleteJob() {
     if (!_currentJob) return;
-    if (!confirm('Delete ' + (_currentJob.title || 'this job') + '?')) return;
+    if (!confirm('Are you sure you want to delete this job: ' + (_currentJob.title || 'this job') + '?')) return;
     const title = _currentJob.title;
     document.querySelectorAll('.job-row').forEach(row => {
       const rowTitle = row.querySelector('.job-title');
