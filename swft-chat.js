@@ -413,7 +413,8 @@
     }
     const el = document.createElement("div");
     el.className = `swft-chat-msg ${role}`;
-    el.textContent = text;
+    // Strip markdown formatting for clean display
+    el.textContent = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^[-•]\s/gm, "").replace(/^#+\s/gm, "");
     messagesContainer.insertBefore(el, typingEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     return el;
