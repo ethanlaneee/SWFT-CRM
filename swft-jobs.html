@@ -589,11 +589,11 @@
     <div class="edit-row-2">
       <div class="edit-field">
         <label class="edit-label">Date</label>
-        <input class="edit-input" id="e-date" type="text" placeholder="e.g. March 27, 2026"/>
+        <input class="edit-input" id="e-date" type="date"/>
       </div>
       <div class="edit-field">
         <label class="edit-label">Start Time</label>
-        <input class="edit-input" id="e-time" type="text" placeholder="e.g. 7:00 AM"/>
+        <input class="edit-input" id="e-time" type="time"/>
       </div>
     </div>
     <div class="edit-field">
@@ -622,13 +622,15 @@
     <div class="edit-row-2">
       <div class="edit-field">
         <label class="edit-label">Crew</label>
-        <select class="edit-input" id="e-crew">
+        <select class="edit-input" id="e-crew" onchange="if(this.value==='Other'){document.getElementById('e-custom-crew').style.display='block';}else{document.getElementById('e-custom-crew').style.display='none';}">
           <option>Crew A</option>
           <option>Crew B</option>
           <option>Crew A + B</option>
           <option>Jake Reynolds</option>
           <option>Unassigned</option>
+          <option>Other</option>
         </select>
+        <input class="edit-input" id="e-custom-crew" type="text" placeholder="Enter crew name..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="edit-field">
         <label class="edit-label">Duration</label>

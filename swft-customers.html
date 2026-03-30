@@ -715,12 +715,14 @@ user-select:none;
     <div class="edit-row-2">
       <div class="edit-field">
         <label class="edit-label">Property Type</label>
-        <select class="edit-input" id="e-proptype">
+        <select class="edit-input" id="e-proptype" onchange="if(this.value==='Other'){document.getElementById('e-custom-proptype').style.display='block';}else{document.getElementById('e-custom-proptype').style.display='none';}">
           <option>Single family</option>
           <option>Multi-family</option>
           <option>Commercial</option>
           <option>HOA / Community</option>
+          <option>Other</option>
         </select>
+        <input class="edit-input" id="e-custom-proptype" type="text" placeholder="Enter property type..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="edit-field">
         <label class="edit-label">Customer Since</label>

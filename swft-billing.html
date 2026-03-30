@@ -608,7 +608,7 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
       <div class="edit-field"><label class="edit-label">Job Description</label><input class="edit-input" id="e-job" type="text"/></div>
       <div class="edit-field"><label class="edit-label">Property Address</label><input class="edit-input" id="e-address" type="text"/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="edit-field"><label class="edit-label">Service Type</label><select class="edit-input" id="e-service"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option></select></div>
+        <div class="edit-field"><label class="edit-label">Service Type</label><select class="edit-input" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service-b').style.display='block';}else{document.getElementById('e-custom-service-b').style.display='none';}"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Other</option></select><input class="edit-input" id="e-custom-service-b" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/></div>
         <div class="edit-field"><label class="edit-label">Sqft</label><input class="edit-input" id="e-sqft" type="text"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
