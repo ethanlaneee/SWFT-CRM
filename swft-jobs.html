@@ -583,10 +583,6 @@
       <span style="font-size:10px;color:var(--gray2);letter-spacing:0;text-transform:none;font-family:'DM Sans',sans-serif;">Changes saved on Save</span>
     </div>
     <div class="edit-field">
-      <label class="edit-label">Job Title</label>
-      <input class="edit-input" id="e-title" type="text"/>
-    </div>
-    <div class="edit-field">
       <label class="edit-label">Customer</label>
       <input class="edit-input" id="e-customer" type="text"/>
     </div>
@@ -607,14 +603,16 @@
     <div class="edit-row-2">
       <div class="edit-field">
         <label class="edit-label">Service Type</label>
-        <select class="edit-input" id="e-service">
+        <select class="edit-input" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service').style.display='block';}else{document.getElementById('e-custom-service').style.display='none';}">
           <option>Stamped Concrete</option>
           <option>Broom Finish</option>
           <option>Exposed Aggregate</option>
           <option>Epoxy Coating</option>
           <option>Sealing</option>
           <option>Site Estimate</option>
+          <option>Other</option>
         </select>
+        <input class="edit-input" id="e-custom-service" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="edit-field">
         <label class="edit-label">Sqft</label>
@@ -850,7 +848,7 @@
     // Switch to details tab first
     switchTab(document.querySelector('.dtab'), 'details');
 
-    document.getElementById('e-title').value    = j.title || '';
+    // title is auto-generated from customer + service
     document.getElementById('e-customer').value = j.customer || '';
     const dateParts = (j.date || '').split(' — ');
     document.getElementById('e-date').value     = dateParts[0] || '';
@@ -912,7 +910,7 @@
     document.getElementById('footer-edit').style.display   = 'flex';
 
     // Clear all edit fields
-    document.getElementById('e-title').value        = '';
+    // title auto-generated
     document.getElementById('e-customer').value     = '';
     document.getElementById('e-date').value         = '';
     document.getElementById('e-time').value         = '';
@@ -944,12 +942,15 @@
   }
 
   function saveEdit() {
-    const title    = document.getElementById('e-title').value.trim();
     const customer = document.getElementById('e-customer').value.trim();
     const date     = document.getElementById('e-date').value.trim();
     const time     = document.getElementById('e-time').value.trim();
     const address  = document.getElementById('e-address-edit').value.trim();
-    const service  = document.getElementById('e-service').value;
+    let service    = document.getElementById('e-service').value;
+    if (service === 'Other') {
+      service = document.getElementById('e-custom-service').value.trim() || 'Custom Job';
+    }
+    const title    = customer ? customer + ' - ' + service : service;
     const sqft     = document.getElementById('e-sqft').value.trim();
     const crew     = document.getElementById('e-crew').value;
     const dur      = document.getElementById('e-dur').value.trim();

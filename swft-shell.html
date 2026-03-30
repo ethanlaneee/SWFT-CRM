@@ -359,17 +359,24 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     document.getElementById('nj-modal').classList.remove('open');
   }
   function saveNewJob() {
-    const title = document.getElementById('nj-title').value.trim();
     const customer = document.getElementById('nj-customer').value.trim();
-    if (!title) { showToast('Please enter a job title'); return; }
+    if (!customer) { showToast('Please enter a customer name'); return; }
+    const serviceEl = document.getElementById('nj-service');
+    let service = serviceEl.value;
+    if (service === 'Other') {
+      service = document.getElementById('nj-custom-service').value.trim() || 'Custom Job';
+    }
+    const title = customer + ' - ' + service;
     closeNewJobModal();
-    showToast(title + (customer ? ' for ' + customer : '') + ' created ✓');
+    showToast(title + ' created ✓');
     // Clear form for next use
-    ['nj-title','nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount'].forEach(id => {
+    ['nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount','nj-custom-service'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
     if (document.getElementById('nj-notes')) document.getElementById('nj-notes').value = '';
+    document.getElementById('nj-custom-service').style.display = 'none';
+    serviceEl.selectedIndex = 0;
   }
   let _toastTimer;
   function showToast(msg) {
@@ -454,10 +461,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </div>
   <div class="nj-body">
-    <div class="nj-row">
-      <div class="nj-field"><label class="nj-label">Job Title</label><input class="nj-input" id="nj-title" type="text" placeholder="e.g. Backyard Patio"/></div>
-      <div class="nj-field"><label class="nj-label">Customer</label><input class="nj-input" id="nj-customer" type="text" placeholder="e.g. Tom Henderson"/></div>
-    </div>
+    <div class="nj-field"><label class="nj-label">Customer</label><input class="nj-input" id="nj-customer" type="text" placeholder="e.g. Tom Henderson"/></div>
     <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="nj-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="nj-date" type="text" placeholder="e.g. March 29, 2026"/></div>
@@ -465,7 +469,10 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Service Type</label>
-        <select class="nj-input" id="nj-service"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option></select>
+        <select class="nj-input" id="nj-service" onchange="if(this.value==='Other'){document.getElementById('nj-custom-service').style.display='block';}else{document.getElementById('nj-custom-service').style.display='none';}">
+          <option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option><option>Other</option>
+        </select>
+        <input class="nj-input" id="nj-custom-service" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="nj-sqft" type="text" placeholder="e.g. 480"/></div>
     </div>
