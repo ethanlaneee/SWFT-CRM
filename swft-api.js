@@ -11,7 +11,7 @@
 //   await API.jobs.update(id, { status: 'complete' });
 // ════════════════════════════════════════════════
 
-const API_BASE = "http://localhost:3000"; // Change to your deployed URL in production
+const API_BASE = ""; // Uses same origin (works for both localhost and deployed)
 
 // ── Get the Firebase ID token for the current user ──
 // Requires Firebase SDK to be loaded on the page

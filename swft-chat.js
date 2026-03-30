@@ -5,7 +5,7 @@
 // ════════════════════════════════════════════════
 
 (function () {
-  const API_BASE = "http://localhost:3000";
+  const API_BASE = ""; // Uses same origin
 
   // ── Inject styles ──
   const style = document.createElement("style");

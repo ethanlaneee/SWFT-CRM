@@ -23,6 +23,9 @@ app.use("/api/invoices", auth, require("./routes/invoices"));
 app.use("/api/schedule", auth, require("./routes/schedule"));
 app.use("/api/ai", auth, require("./routes/ai"));
 
+// ── Root redirect ──
+app.get("/", (req, res) => res.redirect("/swft-login.html"));
+
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
