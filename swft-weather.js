@@ -54,10 +54,21 @@
     });
   }
 
+  function isCanada(lat, lon) {
+    // Canada is roughly above 49°N (except some southern Ontario/Quebec dips)
+    // Also check longitude is in North America range (-50 to -141)
+    return lat >= 48.5 && lon >= -141 && lon <= -50;
+  }
+
+  let _unit = "°F";
+
   async function fetchWeather() {
     try {
       const loc = await getLocation();
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=fahrenheit&timezone=auto&forecast_days=16`;
+      const useCelsius = isCanada(loc.lat, loc.lon);
+      _unit = useCelsius ? "°C" : "°F";
+      const tempUnit = useCelsius ? "celsius" : "fahrenheit";
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=${tempUnit}&timezone=auto&forecast_days=16`;
       const res = await fetch(url);
       const data = await res.json();
       return data;
@@ -80,7 +91,7 @@
 
     strip.innerHTML =
       '<span class="weather-icon">' + icon + '</span>' +
-      '<span class="weather-text"><strong>' + temp + '°F</strong> &nbsp;' + desc + ' — ' + cond.text + '</span>' +
+      '<span class="weather-text"><strong>' + temp + _unit + '</strong> &nbsp;' + desc + ' — ' + cond.text + '</span>' +
       '<span class="weather-badge" style="' + (cond.warn ? 'color:#f5a623;background:rgba(245,166,35,0.1);' : '') + '">' + cond.badge + '</span>';
   }
 
@@ -115,7 +126,7 @@
         '<div class="wx-label">' + dayName + '</div>' +
         '<div class="wx-day-num">' + dayNum + '</div>' +
         '<div class="wx-icon">' + getIcon(code) + '</div>' +
-        '<div class="wx-temp">' + high + '°</div>' +
+        '<div class="wx-temp">' + high + _unit + '</div>' +
         '</div>';
     }
     strip.innerHTML = html;
