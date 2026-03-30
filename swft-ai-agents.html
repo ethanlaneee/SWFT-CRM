@@ -22,7 +22,7 @@
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
 .logo-mark em{color:var(--green);font-style:normal;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
@@ -32,10 +32,10 @@
 .nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
 .nav-item:hover{background:var(--surface2);color:var(--white);}
 .nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
-.nav-item.active::before{content:’’;position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
 .nav-item.active .nav-icon{opacity:1;}
-.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:‘JetBrains Mono’,monospace;}
+.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
 .nav-divider{height:1px;background:var(--border);margin:8px 12px;}
 .sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
 .user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
@@ -54,8 +54,8 @@
 /* ── TOPBAR ── */
 .topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;animation:fadeDown 0.3s ease 0.15s both;}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.topbar-page{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
-.topbar-slash{color:var(--border2);font-family:‘JetBrains Mono’,monospace;font-size:16px;}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
 .topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .ai-pill{display:flex;align-items:center;gap:7px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;padding:5px 13px;font-size:11.5px;font-weight:500;color:var(--green);cursor:pointer;}
@@ -68,11 +68,11 @@
 /* ── HERO STRIP ── */
 .hero-strip{background:linear-gradient(135deg,rgba(200,241,53,0.06) 0%,rgba(200,241,53,0.02) 100%);border:1px solid rgba(200,241,53,0.14);border-radius:14px;padding:20px 26px;display:flex;align-items:center;gap:18px;}
 .hero-icon{font-size:36px;flex-shrink:0;}
-.hero-text h2{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);}
+.hero-text h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);}
 .hero-text p{font-size:13px;color:var(--gray);margin-top:4px;line-height:1.5;}
 .hero-stats{margin-left:auto;display:flex;gap:28px;flex-shrink:0;}
 .hstat{text-align:right;}
-.hstat-val{font-family:‘Bebas Neue’,sans-serif;font-size:26px;letter-spacing:1px;color:var(--green);}
+.hstat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:var(--green);}
 .hstat-label{font-size:10px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
 
 /* ── AGENT CARD ── */
@@ -90,7 +90,7 @@
 .agent-icon-wrap{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
 
 .agent-info{flex:1;min-width:0;}
-.agent-name{font-family:‘Bebas Neue’,sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--white);transition:color 0.14s;}
+.agent-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--white);transition:color 0.14s;}
 .agent-desc{font-size:12px;color:var(--gray);margin-top:3px;}
 
 .agent-meta{display:flex;align-items:center;gap:10px;flex-shrink:0;}
@@ -100,10 +100,10 @@
 .toggle-label{font-size:11px;color:var(--gray);}
 .toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
 .toggle.on{background:var(--green);}
-.toggle::after{content:’’;position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
 .toggle.on::after{transform:translateX(16px);}
 
-.activity-badge{font-family:‘JetBrains Mono’,monospace;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(200,241,53,0.1);color:var(--green);}
+.activity-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(200,241,53,0.1);color:var(--green);}
 .activity-badge.amber{background:rgba(245,166,35,0.1);color:var(--amber);}
 
 .expand-chevron{color:var(--gray2);transition:transform 0.25s;flex-shrink:0;}
@@ -112,7 +112,7 @@
 /* Stat row inside header */
 .agent-stats{display:flex;gap:20px;padding:0 22px 16px;border-bottom:1px solid var(--border);}
 .astat{display:flex;flex-direction:column;}
-.astat-val{font-family:‘JetBrains Mono’,monospace;font-size:14px;font-weight:500;color:var(--white);}
+.astat-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;color:var(--white);}
 .astat-label{font-size:10px;color:var(--gray2);letter-spacing:0.5px;margin-top:2px;}
 
 /* Expandable detail panel */
@@ -145,7 +145,7 @@
 .log-body{flex:1;}
 .log-text{font-size:12.5px;color:#c8c8c8;line-height:1.4;}
 .log-text strong{color:var(--white);}
-.log-time{font-family:‘JetBrains Mono’,monospace;font-size:10px;color:var(--gray2);margin-top:3px;}
+.log-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);margin-top:3px;}
 
 /* Performance bar */
 .perf-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
@@ -153,10 +153,10 @@
 .perf-label{font-size:12px;color:var(--gray);flex:1;}
 .perf-bar-track{width:100px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0;}
 .perf-bar-fill{height:100%;border-radius:2px;background:var(--green);}
-.perf-pct{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:var(--white);width:36px;text-align:right;flex-shrink:0;}
+.perf-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--white);width:36px;text-align:right;flex-shrink:0;}
 
 /* Prompt/script preview */
-.prompt-box{background:#0d0d0d;border:1px solid var(--border2);border-radius:9px;padding:14px;font-family:‘JetBrains Mono’,monospace;font-size:11.5px;color:#8aab1f;line-height:1.6;}
+.prompt-box{background:#0d0d0d;border:1px solid var(--border2);border-radius:9px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8aab1f;line-height:1.6;}
 .prompt-box .comment{color:var(--gray2);}
 
 ::-webkit-scrollbar{width:4px;}
