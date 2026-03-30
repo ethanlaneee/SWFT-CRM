@@ -112,6 +112,12 @@ const API = {
     clearHistory: ()        => apiFetch("/api/ai/history", { method: "DELETE" }),
   },
 
+  // ── Email ──
+  email: {
+    send:      (data) => apiFetch("/api/email/send", { method: "POST", body: JSON.stringify(data) }),
+    configure: (data) => apiFetch("/api/email/configure", { method: "POST", body: JSON.stringify(data) }),
+  },
+
 };
 
 // ── Auth guard — call on every protected page ──
