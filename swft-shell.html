@@ -57,8 +57,9 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .btn-primary:hover{background:#d5ff40;transform:translateY(-1px);}
 
 /* SIDEBAR TOGGLE */
-.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:300;width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 
 /* PAGE */
 .page-body{flex:1;padding:32px;display:flex;flex-direction:column;gap:14px;}
@@ -77,7 +78,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .kpi-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:14px 14px 0 0;}
 .kpi-card.c-green{--accent:var(--green);}.kpi-card.c-blue{--accent:#4d9fff;}.kpi-card.c-amber{--accent:#f5a623;}.kpi-card.c-red{--accent:#ff5252;}
 .kpi-label{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--gray);font-weight:500;}
-.kpi-value{font-family:‘Bebas Neue’,sans-serif;font-size:42px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:8px;}
+.kpi-value{font-family:’Bebas Neue’,sans-serif;font-size:30px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:8px;}
 .kpi-footer{display:flex;align-items:center;gap:7px;margin-top:10px;}
 .kpi-delta{font-family:‘JetBrains Mono’,monospace;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;}
 .kpi-delta.up{color:var(--green);background:rgba(200,241,53,0.1);}
@@ -484,15 +485,19 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     }
     document.body.style.visibility = 'visible';
 
-    // Get name
+    // Get name from Firebase Auth profile, then Firestore, then email
     let firstName = user.displayName?.split(' ')[0];
     if (!firstName) {
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
-        if (snap.exists()) firstName = snap.data().firstName;
+        if (snap.exists()) {
+          const data = snap.data();
+          firstName = data.firstName || data.name?.split(' ')[0];
+        }
       } catch(e) {}
     }
-    if (!firstName) firstName = 'Jake';
+    if (!firstName && user.email) firstName = user.email.split('@')[0];
+    if (!firstName) firstName = 'Boss';
 
     // Update greeting
     const greetEl = document.getElementById('greeting-name');
