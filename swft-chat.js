@@ -389,10 +389,20 @@
 
   // ── Get auth token ──
   async function getToken() {
-    const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-    const user = getAuth().currentUser;
-    if (!user) throw new Error("Not authenticated");
-    return user.getIdToken();
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const auth = getAuth();
+    // Wait for auth to be ready if user isn't loaded yet
+    if (!auth.currentUser) {
+      await new Promise((resolve, reject) => {
+        const { onAuthStateChanged } = auth.constructor;
+        const unsub = auth.onAuthStateChanged(u => {
+          unsub();
+          if (u) resolve(u);
+          else reject(new Error("Not authenticated"));
+        });
+      });
+    }
+    return auth.currentUser.getIdToken();
   }
 
   // ── Add message bubble ──

@@ -16,7 +16,7 @@ const API_BASE = ""; // Uses same origin (works for both localhost and deployed)
 // ── Get the Firebase ID token for the current user ──
 // Requires Firebase SDK to be loaded on the page
 async function getAuthToken() {
-  const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+  const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
   const user = getAuth().currentUser;
   if (!user) {
     window.location.href = "swft-login.html";
@@ -117,7 +117,7 @@ const API = {
 // ── Auth guard — call on every protected page ──
 // Redirects to login if not signed in
 async function requireAuth() {
-  const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+  const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
   return new Promise((resolve) => {
     onAuthStateChanged(getAuth(), (user) => {
       if (!user) window.location.href = "swft-login.html";
