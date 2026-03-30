@@ -106,6 +106,12 @@ const API = {
     delete: (id)       => apiFetch(`/api/schedule/${id}`,   { method: "DELETE" }),
   },
 
+  // ── AI Agent ──
+  ai: {
+    chat:         (message) => apiFetch("/api/ai/chat", { method: "POST", body: JSON.stringify({ message }) }),
+    clearHistory: ()        => apiFetch("/api/ai/history", { method: "DELETE" }),
+  },
+
 };
 
 // ── Auth guard — call on every protected page ──

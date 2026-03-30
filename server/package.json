@@ -1,0 +1,17 @@
+{
+  "name": "swft-server",
+  "version": "1.0.0",
+  "description": "SWFT CRM backend - AI-powered CRM for home service businesses",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.0.3"
+  }
+}
