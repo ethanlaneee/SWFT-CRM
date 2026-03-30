@@ -1,4 +1,5 @@
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const { auth } = require("./middleware/auth");
@@ -8,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// ── Serve frontend files ──
+app.use(express.static(path.join(__dirname, "..")));
 
 // ── Routes ──
 app.use("/api/dashboard", auth, require("./routes/dashboard"));
