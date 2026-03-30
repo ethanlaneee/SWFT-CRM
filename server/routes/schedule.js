@@ -6,8 +6,10 @@ const col = () => db.collection("schedule");
 // List schedule entries
 router.get("/", async (req, res, next) => {
   try {
-    const snap = await col().where("userId", "==", req.uid).orderBy("date", "asc").get();
-    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const snap = await col().where("userId", "==", req.uid).get();
+    const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    results.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    res.json(results);
   } catch (err) { next(err); }
 });
 

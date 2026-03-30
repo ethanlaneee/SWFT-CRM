@@ -6,10 +6,11 @@ const col = () => db.collection("jobs");
 // List jobs
 router.get("/", async (req, res, next) => {
   try {
-    let query = col().where("userId", "==", req.uid);
-    if (req.query.status) query = query.where("status", "==", req.query.status);
-    const snap = await query.orderBy("createdAt", "desc").get();
-    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const snap = await col().where("userId", "==", req.uid).get();
+    let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (req.query.status) results = results.filter(r => r.status === req.query.status);
+    results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    res.json(results);
   } catch (err) { next(err); }
 });
 

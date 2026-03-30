@@ -6,8 +6,9 @@ const col = () => db.collection("customers");
 // List customers for the current user
 router.get("/", async (req, res, next) => {
   try {
-    const snap = await col().where("userId", "==", req.uid).orderBy("createdAt", "desc").get();
+    const snap = await col().where("userId", "==", req.uid).get();
     const customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    customers.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     res.json(customers);
   } catch (err) { next(err); }
 });

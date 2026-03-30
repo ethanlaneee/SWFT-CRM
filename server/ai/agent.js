@@ -63,10 +63,11 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "list_quotes": {
-      let query = db.collection("quotes").where("userId", "==", uid);
-      if (input.status) query = query.where("status", "==", input.status);
-      const snap = await query.orderBy("createdAt", "desc").limit(20).get();
-      return { quotes: snap.docs.map(d => ({ id: d.id, ...d.data() })) };
+      const snap = await db.collection("quotes").where("userId", "==", uid).get();
+      let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (input.status) results = results.filter(r => r.status === input.status);
+      results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return { quotes: results.slice(0, 20) };
     }
 
     case "send_quote": {
@@ -96,10 +97,11 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "list_invoices": {
-      let query = db.collection("invoices").where("userId", "==", uid);
-      if (input.status) query = query.where("status", "==", input.status);
-      const snap = await query.orderBy("createdAt", "desc").limit(20).get();
-      return { invoices: snap.docs.map(d => ({ id: d.id, ...d.data() })) };
+      const snap = await db.collection("invoices").where("userId", "==", uid).get();
+      let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (input.status) results = results.filter(r => r.status === input.status);
+      results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return { invoices: results.slice(0, 20) };
     }
 
     case "create_job": {
@@ -122,10 +124,11 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "list_jobs": {
-      let query = db.collection("jobs").where("userId", "==", uid);
-      if (input.status) query = query.where("status", "==", input.status);
-      const snap = await query.orderBy("createdAt", "desc").limit(20).get();
-      return { jobs: snap.docs.map(d => ({ id: d.id, ...d.data() })) };
+      const snap = await db.collection("jobs").where("userId", "==", uid).get();
+      let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (input.status) results = results.filter(r => r.status === input.status);
+      results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return { jobs: results.slice(0, 20) };
     }
 
     case "update_job": {
