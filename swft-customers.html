@@ -55,7 +55,7 @@ transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
 .sidebar-toggle.visible { opacity:1; pointer-events:all; }
 .sidebar-toggle:hover { background:var(--surface2); color:var(--white); }
 
-.logo-wrap { padding: 26px 22px 22px; border-bottom: 1px solid var(--border); display:flex; align-items:center; }
+.logo-wrap { padding: 26px 22px 22px; border-bottom: 1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
 .logo-mark { font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:3px; color:var(--white); line-height:1; }
 .logo-mark em { color:var(--green); font-style:normal; }
 .logo-sub { font-size:9.5px; color:var(--gray2); letter-spacing:1.8px; margin-top:3px; font-weight:300; }
@@ -457,7 +457,7 @@ user-select:none;
 <!-- SIDEBAR -->
 
 <aside class="sidebar" id="sidebar">
-  <div class="logo-wrap" style="justify-content:space-between;">
+  <div class="logo-wrap">
     <div>
       <div class="logo-mark">SWFT<em>.</em></div>
       <div class="logo-sub">simple. smart. swft.</div>

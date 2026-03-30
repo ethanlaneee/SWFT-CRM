@@ -28,7 +28,7 @@
 .sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
 .sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
-.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .logo-mark{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
 .logo-mark em{color:var(--green);font-style:normal;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
@@ -264,7 +264,7 @@
 <!-- SIDEBAR -->
 
 <aside class="sidebar" id="sidebar">
-  <div class="logo-wrap" style="justify-content:space-between;">
+  <div class="logo-wrap">
     <div>
       <div class="logo-mark">SWFT<em>.</em></div>
       <div class="logo-sub">simple. smart. swft.</div>
