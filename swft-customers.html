@@ -1081,8 +1081,35 @@ document.getElementById('c-edit-mode').style.display = 'none';
 document.getElementById('c-view-mode').style.display = 'block';
 document.getElementById('c-footer-edit').style.display = 'none';
 document.getElementById('c-footer-view').style.display = 'flex';
+// If this is a new customer, add a row to the table
+if (_currentCustomer && _currentCustomer.initials === '?') {
+  if (!fullName) { showToast('Please enter a name'); return; }
+  const initials = (fname[0]||'')+(lname[0]||'');
+  const colors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
+  const color = colors[Math.floor(Math.random()*colors.length)];
+  const id = 'new_' + Date.now();
+  _currentCustomer.initials = initials.toUpperCase();
+  _currentCustomer.color = color;
+  customers[id] = Object.assign({}, _currentCustomer);
+
+  const tbody = document.getElementById('table-body');
+  const row = document.createElement('div');
+  row.className = 'cust-row';
+  row.dataset.status = 'active';
+  row.style.animation = 'fadeUp 0.35s ease both';
+  row.onclick = function(){ openDrawer(id); };
+  row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:'+color+';">'+initials.toUpperCase()+'</div><div><div class="cust-name">'+fullName+'</div><div class="cust-addr">'+address+'</div></div></div><div class="cust-phone">'+phone+'</div><div class="cust-status"><span class="status-active">Active</span></div><div class="cust-action"><div class="row-btn">→</div></div>';
+  tbody.insertBefore(row, tbody.firstChild);
+  closeDrawer();
+  showToast(fullName + ' added ✓');
+  return;
+}
+
+document.getElementById('c-edit-mode').style.display = 'none';
+document.getElementById('c-view-mode').style.display = 'block';
+document.getElementById('c-footer-edit').style.display = 'none';
+document.getElementById('c-footer-view').style.display = 'flex';
 showToast('Customer saved ✓');
-if (_currentCustomer && _currentCustomer.initials === '?') { closeDrawer(); return; }
 
 }
 

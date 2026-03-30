@@ -359,8 +359,17 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     document.getElementById('nj-modal').classList.remove('open');
   }
   function saveNewJob() {
+    const title = document.getElementById('nj-title').value.trim();
+    const customer = document.getElementById('nj-customer').value.trim();
+    if (!title) { showToast('Please enter a job title'); return; }
     closeNewJobModal();
-    showToast('Job created successfully');
+    showToast(title + (customer ? ' for ' + customer : '') + ' created ✓');
+    // Clear form for next use
+    ['nj-title','nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    if (document.getElementById('nj-notes')) document.getElementById('nj-notes').value = '';
   }
   let _toastTimer;
   function showToast(msg) {

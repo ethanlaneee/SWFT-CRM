@@ -995,8 +995,30 @@
     document.getElementById('d-view-mode').style.display = 'block';
     document.getElementById('footer-edit').style.display = 'none';
     document.getElementById('footer-view').style.display = 'flex';
+    // If new job, add row to the table
+    if (_currentJob && _currentJob.id === 'J-NEW') {
+      if (!title) { showToast('Please enter a job title'); return; }
+      const pipClass = {'In Progress':'pip-green','Scheduled':'pip-blue','Quote Sent':'pip-amber','Complete':'pip-gray'};
+      const tagClass = {'In Progress':'tag-inprog','Scheduled':'tag-sched','Quote Sent':'tag-pending','Complete':'tag-complete'};
+      const statusKey = {'In Progress':'active','Scheduled':'scheduled','Quote Sent':'pending','Complete':'complete'};
+      const id = 'new_' + Date.now();
+      _currentJob.id = id;
+      jobs[id] = Object.assign({}, _currentJob);
+
+      const tbody = document.getElementById('job-list');
+      const row = document.createElement('div');
+      row.className = 'job-row';
+      row.dataset.status = statusKey[status] || 'scheduled';
+      row.style.animation = 'fadeUp 0.35s ease both';
+      row.onclick = function(){ openDrawer(id); };
+      row.innerHTML = '<div class="job-id-cell"><div class="status-pip '+(pipClass[status]||'pip-blue')+'"></div><div><div class="job-title">'+title+'</div><div class="job-id">#JOB-'+Math.floor(1050+Math.random()*100)+' &nbsp;·&nbsp; '+date+'</div></div></div><div><div class="job-customer">'+customer+'</div><div class="job-addr">'+address+'</div></div><div><div class="job-amount">'+fmtAmt+'</div></div><div><span class="status-tag '+(tagClass[status]||'tag-sched')+'">'+status+'</span></div><div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>';
+      tbody.insertBefore(row, tbody.firstChild);
+      closeDrawer();
+      showToast(title + ' created ✓');
+      return;
+    }
+
     showToast('Job saved ✓');
-    if (_currentJob && _currentJob.id === 'J-NEW') { closeDrawer(); return; }
   }
 
 </script>
