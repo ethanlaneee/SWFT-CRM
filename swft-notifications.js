@@ -87,14 +87,7 @@
   document.head.appendChild(style);
 
   // Default notifications (sample data)
-  const notifications = [
-    { icon: "🤖", bg: "rgba(200,241,53,0.1)", text: "<strong>AI Receptionist</strong> booked an estimate for Nguyen — driveway resurface", time: "9 min ago", unread: true },
-    { icon: "💳", bg: "rgba(77,159,255,0.1)", text: "<strong>Deposit received</strong> — Kim Driveway Resurface · $775 via card", time: "42 min ago", unread: true },
-    { icon: "📋", bg: "rgba(245,166,35,0.1)", text: "<strong>Quote #1042 sent</strong> to Martinez — $4,800 stamped driveway", time: "2 hrs ago", unread: false },
-    { icon: "⭐", bg: "rgba(200,241,53,0.08)", text: "<strong>New 5-star review</strong> from Chen — \"Professional, fast, and clean work.\"", time: "Yesterday", unread: false },
-    { icon: "✅", bg: "rgba(100,100,100,0.1)", text: "<strong>Job completed</strong> — Chen Garage Floor · Invoice #1038 sent · $2,600", time: "Mar 25", unread: false },
-    { icon: "🔔", bg: "rgba(245,166,35,0.1)", text: "<strong>Invoice overdue</strong> — Chen Garage Floor · $2,600 past due", time: "Mar 28", unread: false },
-  ];
+  const notifications = [];
 
   // Build dropdown
   const dropdown = document.createElement("div");
@@ -181,4 +174,31 @@
   } else {
     wireIconBtns();
   }
+
+  // Public function to add real notifications from AI actions, automations, etc.
+  window.swftNotify = function(text, icon, bg) {
+    notifications.unshift({
+      icon: icon || '🔔',
+      bg: bg || 'rgba(200,241,53,0.1)',
+      text: text,
+      time: 'Just now',
+      unread: true
+    });
+    renderNotifications();
+    // Show badge dot
+    document.querySelectorAll('.badge-dot').forEach(function(d) { d.style.display = ''; });
+    // Save to localStorage
+    localStorage.setItem('swft_notifs', JSON.stringify(notifications.slice(0, 20)));
+  };
+
+  // Load saved notifications from localStorage
+  var saved = localStorage.getItem('swft_notifs');
+  if (saved) {
+    try {
+      var parsed = JSON.parse(saved);
+      parsed.forEach(function(n) { notifications.push(n); });
+    } catch(e) {}
+  }
+  renderNotifications();
+
 })();

@@ -272,6 +272,25 @@
     .swft-chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
     .swft-chat-send svg { width: 18px; height: 18px; fill: #0a0a0a; }
 
+    .swft-chat-mic {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #181818;
+      border: 1px solid #2c2c2c;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .swft-chat-mic:hover { border-color: #c8f135; }
+    .swft-chat-mic.recording { background: #ff5252; border-color: #ff5252; }
+    .swft-chat-mic svg { width: 16px; height: 16px; stroke: #7a7a7a; fill: none; }
+    .swft-chat-mic.recording svg { stroke: #fff; }
+
+
     /* When panel is open, shift FAB left so it doesn't block send */
     .swft-chat-fab.open {
       right: 340px;
@@ -323,6 +342,9 @@
     </div>
     <div class="swft-chat-input-area">
       <input class="swft-chat-input" placeholder="Ask SWFT anything..." />
+      <button class="swft-chat-mic" id="swft-chat-mic" title="Voice input">
+        <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
       <button class="swft-chat-send" disabled>
         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
@@ -494,6 +516,24 @@
         detail: { actions: data.actions || [] },
       }));
 
+      // Push notifications for AI actions
+      if (data.actions && data.actions.length > 0 && typeof swftNotify === 'function') {
+        data.actions.forEach(function(a) {
+          var labels = {
+            create_customer: 'Customer created',
+            search_customers: 'Customer search',
+            update_customer: 'Customer updated',
+            create_quote: 'Quote created',
+            create_invoice: 'Invoice created',
+            create_job: 'Job created',
+            schedule_job: 'Job scheduled',
+            get_dashboard_stats: 'Dashboard stats pulled'
+          };
+          var label = labels[a.tool] || a.tool;
+          swftNotify('<strong>SWFT AI</strong> ' + label, '🤖', 'rgba(200,241,53,0.1)');
+        });
+      }
+
     } catch (err) {
       addMessage("assistant", `Something went wrong: ${err.message}`);
     } finally {
@@ -501,5 +541,69 @@
       isSending = false;
       sendBtn.disabled = !input.value.trim();
     }
+  }
+
+  // ── Voice Recognition for Chat Bubble ──
+  let _chatRecognition = null;
+  let _chatListening = false;
+  const micBtn = document.getElementById('swft-chat-mic');
+
+  if (micBtn) {
+    micBtn.addEventListener('click', function() {
+      if (_chatListening) {
+        if (_chatRecognition) _chatRecognition.stop();
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        if (typeof showToast === 'function') showToast('Voice not supported in this browser');
+        return;
+      }
+
+      _chatRecognition = new SpeechRecognition();
+      _chatRecognition.lang = 'en-US';
+      _chatRecognition.interimResults = true;
+      _chatRecognition.continuous = false;
+      _chatRecognition.maxAlternatives = 1;
+
+      _chatRecognition.onstart = function() {
+        _chatListening = true;
+        micBtn.classList.add('recording');
+      };
+
+      _chatRecognition.onresult = function(e) {
+        let transcript = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          transcript += e.results[i][0].transcript;
+        }
+        input.value = transcript;
+        sendBtn.disabled = !transcript.trim();
+      };
+
+      _chatRecognition.onend = function() {
+        _chatListening = false;
+        micBtn.classList.remove('recording');
+        // Auto-send if we got text
+        if (input.value.trim() && !isSending) {
+          sendMessage(input.value.trim());
+        }
+      };
+
+      _chatRecognition.onerror = function(e) {
+        _chatListening = false;
+        micBtn.classList.remove('recording');
+        // Only show error for real problems, not just no-speech
+        if (e.error === 'not-allowed') {
+          if (typeof showToast === 'function') showToast('Microphone blocked - check browser settings');
+        } else if (e.error === 'network') {
+          if (typeof showToast === 'function') showToast('Voice needs internet connection');
+        } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+          if (typeof showToast === 'function') showToast('Voice error: ' + e.error);
+        }
+      };
+
+      _chatRecognition.start();
+    });
   }
 })();

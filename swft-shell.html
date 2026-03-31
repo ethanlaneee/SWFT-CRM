@@ -542,68 +542,65 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   let _isListening = false;
 
   function toggleVoice() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      showToast('Voice not supported — try Chrome or Safari');
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('Voice not supported - try Chrome');
       return;
     }
     if (_isListening) {
-      _recognition.stop();
+      if (_recognition) _recognition.stop();
       return;
     }
 
-    // Request microphone permission first
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-      // Got permission, stop the stream (we just needed the permission)
-      stream.getTracks().forEach(function(t) { t.stop(); });
+    _recognition = new SpeechRecognition();
+    _recognition.lang = 'en-US';
+    _recognition.interimResults = true;
+    _recognition.continuous = false;
+    _recognition.maxAlternatives = 1;
 
-      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      _recognition = new SpeechRecognition();
-      _recognition.lang = 'en-US';
-      _recognition.interimResults = true;
-      _recognition.continuous = false;
+    var micBtn = document.getElementById('mic-btn');
 
-      var micBtn = document.getElementById('mic-btn');
-      _recognition.onstart = function() {
-        _isListening = true;
-        micBtn.style.background = 'var(--red)';
-        micBtn.style.borderColor = 'var(--red)';
-        showToast('Listening...');
-      };
-      _recognition.onresult = function(e) {
-        var transcript = '';
-        for (var i = e.resultIndex; i < e.results.length; i++) {
-          transcript += e.results[i][0].transcript;
-        }
-        document.getElementById('dash-chat-input').value = transcript;
-      };
-      _recognition.onend = function() {
-        _isListening = false;
-        micBtn.style.background = 'var(--surface2)';
-        micBtn.style.borderColor = 'var(--border2)';
-        var input = document.getElementById('dash-chat-input');
-        if (input.value.trim()) {
-          dashSend(input.value.trim());
-          input.value = '';
-        }
-      };
-      _recognition.onerror = function(e) {
-        _isListening = false;
-        micBtn.style.background = 'var(--surface2)';
-        micBtn.style.borderColor = 'var(--border2)';
-        if (e.error === 'no-speech') {
-          showToast('No speech detected — try again');
-        } else if (e.error === 'not-allowed') {
-          showToast('Microphone blocked — check browser settings');
-        } else if (e.error === 'network') {
-          showToast('Network error — voice needs internet');
-        } else {
-          showToast('Voice error: ' + e.error);
-        }
-      };
+    _recognition.onstart = function() {
+      _isListening = true;
+      if (micBtn) { micBtn.style.background = '#ff5252'; micBtn.style.borderColor = '#ff5252'; }
+      showToast('Listening...');
+    };
+
+    _recognition.onresult = function(e) {
+      var transcript = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      document.getElementById('dash-chat-input').value = transcript;
+    };
+
+    _recognition.onend = function() {
+      _isListening = false;
+      if (micBtn) { micBtn.style.background = 'var(--surface2)'; micBtn.style.borderColor = 'var(--border2)'; }
+      var input = document.getElementById('dash-chat-input');
+      if (input && input.value.trim()) {
+        dashSend(input.value.trim());
+        input.value = '';
+      }
+    };
+
+    _recognition.onerror = function(e) {
+      _isListening = false;
+      if (micBtn) { micBtn.style.background = 'var(--surface2)'; micBtn.style.borderColor = 'var(--border2)'; }
+      if (e.error === 'not-allowed') {
+        showToast('Microphone blocked - enable in browser settings');
+      } else if (e.error === 'network') {
+        showToast('Voice needs internet');
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        showToast('Voice error: ' + e.error);
+      }
+    };
+
+    try {
       _recognition.start();
-    }).catch(function(err) {
-      showToast('Microphone access denied — enable it in your browser settings');
-    });
+    } catch(e) {
+      showToast('Could not start voice - try again');
+    }
   }
 
   let _toastTimer;
