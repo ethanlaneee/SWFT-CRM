@@ -108,8 +108,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       Settings
     </div>
     <div class="user-tile">
-      <div class="s-avatar">JR</div>
-      <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
+      <div class="s-avatar"></div>
+      <div><div class="user-name"></div><div class="user-role">—</div></div>
     </div>
   </div>
 </aside>
@@ -216,10 +216,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <select class="settings-select" id="s-weather-unit" onchange="saveSettings('prefs')">
         <option value="auto">Auto-detect</option><option value="fahrenheit">Fahrenheit (°F)</option><option value="celsius">Celsius (°C)</option>
       </select>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">AI Agent Active</div><div class="settings-row-desc">Enable SWFT AI assistant on all pages</div></div>
-      <div class="settings-toggle on" onclick="this.classList.toggle('on');showToast(this.classList.contains('on')?'AI enabled':'AI disabled')"></div>
     </div>
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Notifications</div><div class="settings-row-desc">Show notification badge and dropdown</div></div>

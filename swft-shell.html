@@ -256,10 +256,10 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   </nav>
   <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings.html'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
-      <div class="avatar" id="user-avatar">JR</div>
+      <div class="avatar" id="user-avatar"></div>
       <div>
-        <div class="user-name" id="user-name">Jake Reynolds</div>
-        <div class="user-role">Owner</div>
+        <div class="user-name" id="user-name"></div>
+        <div class="user-role">—</div>
       </div>
     </div>
   </div>
@@ -671,7 +671,16 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     const now = new Date();
     const dayStr = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
     const subEl = document.getElementById('greeting-sub');
-    if (subEl) subEl.textContent = `${dayStr} · 3 jobs active today · 2 quotes awaiting approval`;
+    if (subEl) // Load real stats
+    try {
+      var stats = await API.dashboard.stats();
+      var jobsToday = stats.activeJobs || 0;
+      var openQuotes = stats.activeQuotes || 0;
+      subEl.textContent = dayStr + ' · ' + jobsToday + ' jobs active · ' + openQuotes + ' quotes open';
+    } catch(e) {
+      subEl.textContent = dayStr;
+    }
+    // OLD: subEl.textContent = `${dayStr} · real data loaded above`; // disabled
 
   });
 </script>
@@ -703,7 +712,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Crew</label>
-        <select class="nj-input" id="nj-crew" onchange="if(this.value==='Other'){document.getElementById('nj-custom-crew').style.display='block';}else{document.getElementById('nj-custom-crew').style.display='none';}"><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option>Jake Reynolds</option><option>Unassigned</option><option>Other</option></select>
+        <select class="nj-input" id="nj-crew" onchange="if(this.value==='Other'){document.getElementById('nj-custom-crew').style.display='block';}else{document.getElementById('nj-custom-crew').style.display='none';}"><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option></option><option>Unassigned</option><option>Other</option></select>
         <input class="nj-input" id="nj-custom-crew" type="text" placeholder="Enter crew name..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="nj-field"><label class="nj-label">Amount ($)</label><input class="nj-input" id="nj-amount" type="text" placeholder="e.g. 7200"/></div>

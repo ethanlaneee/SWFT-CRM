@@ -282,8 +282,8 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
   </nav>
   <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings.html'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
-      <div class="s-avatar">JR</div>
-      <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
+      <div class="s-avatar"></div>
+      <div><div class="user-name"></div><div class="user-role">—</div></div>
     </div>
   </div>
 </aside>
@@ -323,10 +323,10 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
 
 <!-- Stats -->
 <div class="stat-row">
-  <div class="stat-card c-blue"><div class="stat-label">Quotes Sent MTD</div><div class="stat-value" id="q-stat-sent">0</div><div class="stat-sub">$58,400 total value</div></div>
-  <div class="stat-card c-green"><div class="stat-label">Approved</div><div class="stat-value" id="q-stat-approved">0</div><div class="stat-sub">$34,100 · 58% close rate</div></div>
-  <div class="stat-card c-amber"><div class="stat-label">Awaiting Response</div><div class="stat-value" id="q-stat-waiting">0</div><div class="stat-sub">$18,300 pipeline</div></div>
-  <div class="stat-card c-red"><div class="stat-label">Declined / Expired</div><div class="stat-value" id="q-stat-declined">0</div><div class="stat-sub">$6,000 lost</div></div>
+  <div class="stat-card c-blue"><div class="stat-label">Quotes Sent MTD</div><div class="stat-value" id="q-stat-sent">0</div><div class="stat-sub" id="q-stat-sent-sub">$0 total value</div></div>
+  <div class="stat-card c-green"><div class="stat-label">Approved</div><div class="stat-value" id="q-stat-approved">0</div><div class="stat-sub" id="q-stat-approved-sub">$0 close rate</div></div>
+  <div class="stat-card c-amber"><div class="stat-label">Awaiting Response</div><div class="stat-value" id="q-stat-waiting">0</div><div class="stat-sub" id="q-stat-waiting-sub">$0 pipeline</div></div>
+  <div class="stat-card c-red"><div class="stat-label">Declined / Expired</div><div class="stat-value" id="q-stat-declined">0</div><div class="stat-sub" id="q-stat-declined-sub">$0 lost</div></div>
 </div>
 
 <!-- Toolbar -->
@@ -364,10 +364,10 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
 <div id="invoices-view" style="display:none;flex-direction:column;gap:18px;">
 
 <div class="stat-row">
-  <div class="stat-card c-green"><div class="stat-label">Collected MTD</div><div class="stat-value">$18,400</div><div class="stat-sub">3 invoices paid</div></div>
-  <div class="stat-card c-amber"><div class="stat-label">Outstanding</div><div class="stat-value">$6,300</div><div class="stat-sub">2 partial payments</div></div>
-  <div class="stat-card c-red"><div class="stat-label">Overdue</div><div class="stat-value">$2,600</div><div class="stat-sub">1 invoice past due</div></div>
-  <div class="stat-card c-blue"><div class="stat-label">Total Invoiced</div><div class="stat-value">$27,300</div><div class="stat-sub">7 invoices this month</div></div>
+  <div class="stat-card c-green"><div class="stat-label">Collected MTD</div><div class="stat-value" id="inv-stat-collected">$0</div><div class="stat-sub" id="inv-stat-collected-sub">0 invoices paid</div></div>
+  <div class="stat-card c-amber"><div class="stat-label">Outstanding</div><div class="stat-value" id="inv-stat-outstanding">$0</div><div class="stat-sub" id="inv-stat-outstanding-sub">0 partial</div></div>
+  <div class="stat-card c-red"><div class="stat-label">Overdue</div><div class="stat-value" id="inv-stat-overdue">$0</div><div class="stat-sub" id="inv-stat-overdue-sub">0 past due</div></div>
+  <div class="stat-card c-blue"><div class="stat-label">Total Invoiced</div><div class="stat-value" id="inv-stat-total">$0</div><div class="stat-sub" id="inv-stat-total-sub">0 invoices</div></div>
 </div>
 
 <div class="toolbar">
@@ -588,6 +588,17 @@ async function loadQuotes() {
       maxNum++;
     });
     window._nextQuoteNum = maxNum + 1;
+    // Update quote stats
+    var sent = quotes.filter(function(q){return q.status==='sent';}).length;
+    var approved = quotes.filter(function(q){return q.status==='approved';}).length;
+    var waiting = quotes.filter(function(q){return q.status==='sent'||q.status==='draft';}).length;
+    var declined = quotes.filter(function(q){return q.status==='declined';}).length;
+    var totalVal = quotes.reduce(function(s,q){return s+(q.total||0);},0);
+    if(document.getElementById('q-stat-sent'))document.getElementById('q-stat-sent').textContent=sent;
+    if(document.getElementById('q-stat-approved'))document.getElementById('q-stat-approved').textContent=approved;
+    if(document.getElementById('q-stat-waiting'))document.getElementById('q-stat-waiting').textContent=waiting;
+    if(document.getElementById('q-stat-declined'))document.getElementById('q-stat-declined').textContent=declined;
+    if(document.getElementById('q-stat-sent-sub'))document.getElementById('q-stat-sent-sub').textContent='$'+totalVal.toLocaleString()+' total value';
   } catch(e) { console.error('loadQuotes error:', e); }
 }
 
@@ -620,6 +631,22 @@ async function loadInvoices() {
       tbody.appendChild(row);
     });
   window._nextInvNum = invoices.length + 1;
+    // Update invoice stats
+    var paid = invoices.filter(function(i){return i.status==='paid';});
+    var paidTotal = paid.reduce(function(s,i){return s+(i.total||0);},0);
+    var open = invoices.filter(function(i){return i.status==='open';});
+    var openTotal = open.reduce(function(s,i){return s+(i.total||0);},0);
+    var overdue = invoices.filter(function(i){return i.status==='overdue';});
+    var overdueTotal = overdue.reduce(function(s,i){return s+(i.total||0);},0);
+    var allTotal = invoices.reduce(function(s,i){return s+(i.total||0);},0);
+    if(document.getElementById('inv-stat-collected'))document.getElementById('inv-stat-collected').textContent='$'+paidTotal.toLocaleString();
+    if(document.getElementById('inv-stat-collected-sub'))document.getElementById('inv-stat-collected-sub').textContent=paid.length+' invoices paid';
+    if(document.getElementById('inv-stat-outstanding'))document.getElementById('inv-stat-outstanding').textContent='$'+openTotal.toLocaleString();
+    if(document.getElementById('inv-stat-outstanding-sub'))document.getElementById('inv-stat-outstanding-sub').textContent=open.length+' outstanding';
+    if(document.getElementById('inv-stat-overdue'))document.getElementById('inv-stat-overdue').textContent='$'+overdueTotal.toLocaleString();
+    if(document.getElementById('inv-stat-overdue-sub'))document.getElementById('inv-stat-overdue-sub').textContent=overdue.length+' past due';
+    if(document.getElementById('inv-stat-total'))document.getElementById('inv-stat-total').textContent='$'+allTotal.toLocaleString();
+    if(document.getElementById('inv-stat-total-sub'))document.getElementById('inv-stat-total-sub').textContent=invoices.length+' invoices';
   } catch(e) { console.error('loadInvoices error:', e); }
 }
 
