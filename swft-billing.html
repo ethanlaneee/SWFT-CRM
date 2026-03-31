@@ -581,6 +581,13 @@ async function loadQuotes() {
         '<div class="row-btn">→</div></div>';
       tbody.appendChild(row);
     });
+  // Calculate next quote number (always count up)
+    var maxNum = 0;
+    quotes.forEach(function(q) {
+      // Extract number from notes or count
+      maxNum++;
+    });
+    window._nextQuoteNum = maxNum + 1;
   } catch(e) { console.error('loadQuotes error:', e); }
 }
 
@@ -612,6 +619,7 @@ async function loadInvoices() {
         '<div class="row-btn">→</div></div>';
       tbody.appendChild(row);
     });
+  window._nextInvNum = invoices.length + 1;
   } catch(e) { console.error('loadInvoices error:', e); }
 }
 
@@ -736,7 +744,7 @@ function autofillBillingCustomer(name) {
 
 function openNewQuote() {
   loadBillingCustomers();
-  _q = {num:'#Q-' + (1050 + Object.keys(window._quotes||{}).length),created:'Mar 27, 2026',customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
+  _q = {num:'#Q-' + (window._nextQuoteNum || 1),created:'Mar 27, 2026',customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
   document.getElementById('m-num').textContent      = '#Q-1050 · Draft';
   document.getElementById('m-title').textContent    = 'New Quote';
   document.getElementById('m-job').textContent      = '—';
@@ -823,6 +831,7 @@ async function sendQuote(){
       await API.invoices.create(data);
       closeModal();
       loadInvoices();
+      window._nextInvNum = (window._nextInvNum || 1) + 1;
       switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
       showToast('Invoice created from quote — line items cloned');
     } catch(e) { showToast('Error: ' + e.message); }
@@ -938,6 +947,7 @@ async function saveEdit(){
       await API.quotes.create(data);
     }
     loadQuotes();
+    window._nextQuoteNum = (window._nextQuoteNum || 1) + 1;
   } catch(e) { console.error('Save error:', e); }
 
   // Handle invoice creation
@@ -947,6 +957,7 @@ async function saveEdit(){
       var invTotal = invItems.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0);},0);
       await API.invoices.create({ customerName: _q.customer, items: invItems, total: invTotal, notes: _q.job, status: 'open' });
       loadInvoices();
+      window._nextInvNum = (window._nextInvNum || 1) + 1;
       switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
     } catch(e) { console.error('Invoice save error:', e); }
   }
@@ -1042,7 +1053,7 @@ function toggleSidebar(){
 // ── NEW INVOICE ──
 function openNewInvoice() {
   // Reuse the quote modal for invoices
-  _q = {num:'#INV-' + (++_invCounter),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'—',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],isInvoice:true};
+  _q = {num:'#INV-' + (window._nextInvNum || 1),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'—',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],isInvoice:true};
   document.getElementById('m-num').textContent = _q.num + ' · Draft';
   document.getElementById('m-title').textContent = 'New Invoice';
   document.getElementById('m-job').textContent = '—';
