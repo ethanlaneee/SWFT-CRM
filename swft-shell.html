@@ -415,6 +415,13 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 
     closeNewJobModal();
     showToast(title + ' created ✓');
+    // Offer calendar sync
+    setTimeout(function() {
+      const job = { title: title, date: dateVal, time: timeVal, address: address, service: service };
+      if (dateVal && confirm('Add "' + title + '" to your calendar?')) {
+        addToGoogleCalendar(job);
+      }
+    }, 800);
     // Clear form for next use
     ['nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount','nj-custom-service','nj-custom-crew'].forEach(id => {
       const el = document.getElementById(id);
@@ -544,6 +551,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-weather.js"></script>
+<script src="swft-calendar-sync.js"></script>
 <script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
