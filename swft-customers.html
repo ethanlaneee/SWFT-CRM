@@ -719,8 +719,61 @@ user-select:none;
 
 <script>
 
-const customers = {
-henderson: {
+window._customers = {};
+let _currentCustomer = null;
+const _avatarColors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
+
+function getInitials(name) {
+  if (!name) return '?';
+  var parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0][0] || '?').toUpperCase();
+}
+
+async function loadCustomers() {
+  try {
+    var list = await API.customers.list();
+    var tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+    window._customers = {};
+    list.forEach(function(c, idx) {
+      window._customers[c.id] = c;
+      var initials = getInitials(c.name);
+      var color = _avatarColors[idx % _avatarColors.length];
+      c._initials = initials;
+      c._color = color;
+      var row = document.createElement('div');
+      row.className = 'cust-row';
+      row.dataset.status = 'active';
+      row.setAttribute('onclick', "openDrawer('" + c.id + "')");
+      row.innerHTML = '<div class="cust-name-cell">' +
+        '<div class="cust-avatar" style="background:' + color + ';">' + initials + '</div>' +
+        '<div>' +
+          '<div class="cust-name">' + (c.name || '') + '</div>' +
+          '<div class="cust-addr">' + (c.address || '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cust-phone">' + (c.phone || '') + '</div>' +
+      '<div class="cust-status"><span class="status-active">Active</span></div>' +
+      '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;">' +
+        '<div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this,\'' + c.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">\u00d7</div>' +
+        '<div class="row-btn">\u2192</div>' +
+      '</div>';
+      tbody.appendChild(row);
+    });
+    var countEl = document.querySelector('.topbar-sub');
+    if (countEl) countEl.textContent = list.length + ' contacts';
+  } catch (err) {
+    console.error('Failed to load customers:', err);
+    showToast('Error loading customers');
+  }
+}
+
+// __ REPLACED_MARKER_START __
+// The old hardcoded customers object has been removed.
+// Customer data is now loaded from API.customers.list()
+// __ REPLACED_MARKER_END __
+const _REPLACED_OLD_CUSTOMERS = {
 initials:'TH', color:'#c8f135', name:'Tom Henderson',
 meta:'(512) 884-2291  ·  <a href="#">411 Birchwood Dr, Austin TX</a>',
 spend:'$14,800', jobs:'4', last:'Mar 27',
