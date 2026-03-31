@@ -739,105 +739,25 @@ user-select:none;
 
 <div id="tab-jobs" style="display:none;">
   <div class="drawer-section-title">Job History</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--green);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Backyard Patio — Stamped Concrete</div>
-        <div class="hist-meta">Mar 27, 2026 &nbsp;·&nbsp; Crew A &nbsp;·&nbsp; 480 sqft</div>
-      </div>
-      <div class="hist-amount">$7,200</div>
-    </div>
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--gray2);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Driveway — Broom Finish</div>
-        <div class="hist-meta">Aug 14, 2025 &nbsp;·&nbsp; Crew B &nbsp;·&nbsp; 640 sqft</div>
-      </div>
-      <div class="hist-amount">$4,100</div>
-    </div>
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--gray2);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Front Walkway — Exposed Aggregate</div>
-        <div class="hist-meta">Mar 3, 2025 &nbsp;·&nbsp; Crew A &nbsp;·&nbsp; 120 sqft</div>
-      </div>
-      <div class="hist-amount">$2,100</div>
-    </div>
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--gray2);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Side Yard — Broom Finish</div>
-        <div class="hist-meta">Jan 18, 2024 &nbsp;·&nbsp; Crew A &nbsp;·&nbsp; 200 sqft</div>
-      </div>
-      <div class="hist-amount">$1,400</div>
-    </div>
-  </div>
+  <div id="cust-job-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+</div>
 </div>
 
 <div id="tab-invoices" style="display:none;">
   <div class="drawer-section-title">Invoices & Quotes</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="invoice-item">
-      <div class="inv-num">#1043</div>
-      <div class="inv-desc">Backyard Patio — Stamped</div>
-      <div class="inv-amount">$7,200</div>
-      <span class="inv-badge inv-open">Due</span>
-    </div>
-    <div class="invoice-item">
-      <div class="inv-num">#0998</div>
-      <div class="inv-desc">Driveway — Broom Finish</div>
-      <div class="inv-amount">$4,100</div>
-      <span class="inv-badge inv-paid">Paid</span>
-    </div>
-    <div class="invoice-item">
-      <div class="inv-num">#0941</div>
-      <div class="inv-desc">Front Walkway</div>
-      <div class="inv-amount">$2,100</div>
-      <span class="inv-badge inv-paid">Paid</span>
-    </div>
-    <div class="invoice-item">
-      <div class="inv-num">#0887</div>
-      <div class="inv-desc">Side Yard</div>
-      <div class="inv-amount">$1,400</div>
-      <span class="inv-badge inv-paid">Paid</span>
-    </div>
-  </div>
+  <div id="cust-inv-list" style="display:flex;flex-direction:column;gap:8px;"></div>
 </div>
 
 <div id="tab-notes" style="display:none;">
   <div class="drawer-section-title">Tags</div>
-  <div class="tags-row" style="margin-bottom:16px;">
-    <span class="cust-tag">Repeat Customer</span>
-    <span class="cust-tag">Referral Source</span>
-    <span class="cust-tag">High Value</span>
-    <span class="cust-tag">Sealing Due — Fall</span>
-  </div>
-
+  <div id="cust-tags" class="tags-row" style="margin-bottom:16px;"></div>
   <div class="drawer-section-title">Notes</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="note-item">
-      <div class="note-text">Prefers text over calls. Referred us to the Nguyens next door — make sure to mention this when following up.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 26, 2026</span>
-        <span class="note-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">Owner</span>
-      </div>
-    </div>
-    <div class="note-item">
-      <div class="note-text">Patio job: customer wants a sealing follow-up quote in the fall (Sep/Oct). Flag for AI campaign.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 27, 2026</span>
-        <span class="note-tag" style="background:rgba(77,159,255,0.1);color:var(--blue);">Job Note</span>
-      </div>
-    </div>
-    <div class="note-input-wrap">
-      <textarea class="note-textarea" placeholder="Add a note..."></textarea>
-      <button class="note-submit">Save</button>
-    </div>
+  <div id="cust-notes" style="display:flex;flex-direction:column;gap:8px;"></div>
+  <div class="note-input-wrap">
+    <textarea class="note-textarea" id="new-note-text" placeholder="Add a note..."></textarea>
+    <button class="note-submit" onclick="addNote()">Save</button>
   </div>
 </div>
-
-  </div>
 
   <!-- VIEW footer -->
 
@@ -890,31 +810,36 @@ ortiz: {
 initials:'MO', color:'#4d9fff', name:'Maria Ortiz',
 meta:'(512) 774-0183  ·  <a href="#">88 Lakeview Ct, Austin TX</a>',
 spend:'$9,200', jobs:'2', last:'Mar 27',
-phone:'(512) 774-0183', email:'maria.ortiz@email.com', address:'88 Lakeview Ct, Austin TX 78704', since:'March 2025'
+phone:'(512) 774-0183', email:'maria.ortiz@email.com', address:'88 Lakeview Ct, Austin TX 78704', since:'March 2025',
+jobHistory:[],invoiceHistory:[],tags:[],notes:[]
 },
 martinez: {
 initials:'RM', color:'#f5a623', name:'Rosa Martinez',
 meta:'(512) 334-9902  ·  <a href="#">2210 Elm St, Round Rock TX</a>',
 spend:'$0', jobs:'0', last:'—',
-phone:'(512) 334-9902', email:'rosa.martinez@email.com', address:'2210 Elm St, Round Rock TX 78664', since:'March 2026'
+phone:'(512) 334-9902', email:'rosa.martinez@email.com', address:'2210 Elm St, Round Rock TX 78664', since:'March 2026',
+jobHistory:[],invoiceHistory:[],tags:[],notes:[]
 },
 kim: {
 initials:'JK', color:'#b388ff', name:'James Kim',
 meta:'(512) 991-4450  ·  <a href="#">77 Cedar Ridge, Austin TX</a>',
 spend:'$6,200', jobs:'2', last:'Feb 10',
-phone:'(512) 991-4450', email:'james.kim@email.com', address:'77 Cedar Ridge, Austin TX 78750', since:'February 2025'
+phone:'(512) 991-4450', email:'james.kim@email.com', address:'77 Cedar Ridge, Austin TX 78750', since:'February 2025',
+jobHistory:[],invoiceHistory:[],tags:[],notes:[]
 },
 chen: {
 initials:'LC', color:'#ff7b7b', name:'Linda Chen',
 meta:'(512) 220-5577  ·  <a href="#">903 Maple Ave, Cedar Park TX</a>',
 spend:'$4,100', jobs:'2', last:'Mar 25',
-phone:'(512) 220-5577', email:'linda.chen@email.com', address:'903 Maple Ave, Cedar Park TX 78613', since:'June 2024'
+phone:'(512) 220-5577', email:'linda.chen@email.com', address:'903 Maple Ave, Cedar Park TX 78613', since:'June 2024',
+jobHistory:[],invoiceHistory:[],tags:[],notes:[]
 },
 nguyen: {
 initials:'DN', color:'#4dd0c4', name:'David Nguyen',
 meta:'(512) 667-8821  ·  <a href="#">2422 Oak St, Austin TX</a>',
 spend:'$0', jobs:'0', last:'—',
-phone:'(512) 667-8821', email:'d.nguyen@email.com', address:'2422 Oak St, Austin TX 78745', since:'March 2026'
+phone:'(512) 667-8821', email:'d.nguyen@email.com', address:'2422 Oak St, Austin TX 78745', since:'March 2026',
+jobHistory:[],invoiceHistory:[],tags:[],notes:[]
 }
 };
 
@@ -941,12 +866,13 @@ document.getElementById('c-edit-mode').style.display='none';
 document.getElementById('c-view-mode').style.display='block';
 document.getElementById('c-footer-edit').style.display='none';
 document.getElementById('c-footer-view').style.display='flex';
+renderCustomerTabs(c);
 document.getElementById('overlay').classList.add('open');
 document.getElementById('drawer').classList.add('open');
 }
 
 function openNewCustomer() {
-_currentCustomer = {name:'', phone:'', email:'', address:'', since:'Mar 2026', status:'Active', statusClass:'status-active', spend:'$0', jobs:'0', color:'var(--green)', initials:'?'};
+_currentCustomer = {name:'', phone:'', email:'', address:'', since:'Mar 2026', status:'Active', statusClass:'status-active', spend:'$0', jobs:'0', color:'var(--green)', initials:'?', jobHistory:[], invoiceHistory:[], tags:[], notes:[]};
 document.getElementById('d-avatar').textContent = _currentCustomer.initials;
 document.getElementById('d-avatar').style.background = _currentCustomer.color;
 document.getElementById('d-name').textContent = 'New Customer';
@@ -1006,6 +932,85 @@ const name = row.querySelector('.cust-name').textContent.toLowerCase();
 row.style.display = name.includes(query) ? 'grid' : 'none';
 });
 }
+
+function renderCustomerTabs(cust) {
+  // Job History
+  const jobList = document.getElementById('cust-job-list');
+  if (jobList) {
+    if (!cust.jobHistory || cust.jobHistory.length === 0) {
+      jobList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No job history yet</div>';
+    } else {
+      jobList.innerHTML = cust.jobHistory.map(function(j) {
+        return '<div class="job-hist-item"><div class="hist-dot" style="background:' + (j.color || 'var(--gray2)') + ';"></div><div class="hist-info"><div class="hist-name">' + j.name + '</div><div class="hist-meta">' + j.meta + '</div></div><div class="hist-amount">' + j.amount + '</div></div>';
+      }).join('');
+    }
+  }
+
+  // Invoices
+  const invList = document.getElementById('cust-inv-list');
+  if (invList) {
+    if (!cust.invoiceHistory || cust.invoiceHistory.length === 0) {
+      invList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No invoices yet</div>';
+    } else {
+      invList.innerHTML = cust.invoiceHistory.map(function(inv) {
+        var badge = inv.status === 'Paid' ? 'inv-paid' : 'inv-open';
+        return '<div class="invoice-item"><div class="inv-num">' + inv.num + '</div><div class="inv-desc">' + inv.desc + '</div><div class="inv-amount">' + inv.amount + '</div><span class="inv-badge ' + badge + '">' + inv.status + '</span></div>';
+      }).join('');
+    }
+  }
+
+  // Tags
+  var tagsEl = document.getElementById('cust-tags');
+  if (tagsEl) {
+    if (!cust.tags || cust.tags.length === 0) {
+      tagsEl.innerHTML = '<span style="font-size:12px;color:var(--gray2);">No tags</span>';
+    } else {
+      tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + t + '</span>'; }).join('');
+    }
+  }
+
+  // Notes
+  var notesEl = document.getElementById('cust-notes');
+  if (notesEl) {
+    if (!cust.notes || cust.notes.length === 0) {
+      notesEl.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No notes yet</div>';
+    } else {
+      notesEl.innerHTML = cust.notes.map(function(n, i) {
+        var tagStyle = n.tagColor === 'green' ? 'background:rgba(200,241,53,0.1);color:var(--green);' : 'background:rgba(77,159,255,0.1);color:var(--blue);';
+        return '<div class="note-item"><div class="note-text">' + n.text + '</div><div class="note-footer"><span class="note-date">' + n.date + '</span><span class="note-tag" style="' + tagStyle + '">' + (n.tag || 'Note') + '</span><span style="margin-left:auto;display:flex;gap:6px;"><span onclick="editNote(' + i + ')" style="cursor:pointer;font-size:12px;color:var(--gray);transition:color 0.15s;" onmouseover="this.style.color=\'var(--green)\'" onmouseout="this.style.color=\'var(--gray)\'">&#9998;</span><span onclick="deleteNote(' + i + ')" style="cursor:pointer;font-size:12px;color:var(--gray);transition:color 0.15s;" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--gray)\'">&#128465;</span></span></div></div>';
+      }).join('');
+    }
+  }
+}
+
+function addNote() {
+  var text = document.getElementById('new-note-text').value.trim();
+  if (!text || !_currentCustomer) return;
+  var note = { text: text, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}), tag: 'Note', tagColor: 'green' };
+  if (!_currentCustomer.notes) _currentCustomer.notes = [];
+  _currentCustomer.notes.push(note);
+  document.getElementById('new-note-text').value = '';
+  renderCustomerTabs(_currentCustomer);
+  showToast('Note added');
+}
+
+function editNote(i) {
+  if (!_currentCustomer || !_currentCustomer.notes || !_currentCustomer.notes[i]) return;
+  var newText = prompt('Edit note:', _currentCustomer.notes[i].text);
+  if (newText !== null) {
+    _currentCustomer.notes[i].text = newText;
+    renderCustomerTabs(_currentCustomer);
+    showToast('Note updated');
+  }
+}
+
+function deleteNote(i) {
+  if (!_currentCustomer || !_currentCustomer.notes) return;
+  _currentCustomer.notes.splice(i, 1);
+  renderCustomerTabs(_currentCustomer);
+  showToast('Note deleted');
+}
+
 function toggleContactMenu() {
   const menu = document.getElementById('contact-menu');
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
