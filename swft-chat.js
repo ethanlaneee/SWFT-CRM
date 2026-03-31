@@ -13,10 +13,10 @@
     /* ── Chat FAB ── */
     .swft-chat-fab {
       position: fixed;
-      bottom: 28px;
-      right: 28px;
-      width: 60px;
-      height: 60px;
+      bottom: 80px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       background: #c8f135;
       border: none;

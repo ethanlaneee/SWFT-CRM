@@ -668,6 +668,7 @@ const quotes = {
 };
 
 let _q = null;
+let _invCounter = 1050;
 
 function openModal(id) {
   const q = quotes[id]; if(!q) return;
@@ -899,9 +900,9 @@ function switchTab(el,tab){
 }
 
 function setFilter(el,status){
-  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.parentElement.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  document.querySelectorAll('.q-row').forEach(r=>{
+  document.querySelectorAll('#quotes-view .q-row').forEach(r=>{
     r.style.display=(status==='all'||r.dataset.status===status)?'grid':'none';
   });
 }
@@ -968,7 +969,7 @@ function toggleSidebar(){
 // ── NEW INVOICE ──
 function openNewInvoice() {
   // Reuse the quote modal for invoices
-  _q = {num:'#INV-' + Math.floor(1050+Math.random()*100),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'—',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],isInvoice:true};
+  _q = {num:'#INV-' + (++_invCounter),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'—',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],isInvoice:true};
   document.getElementById('m-num').textContent = _q.num + ' · Draft';
   document.getElementById('m-title').textContent = 'New Invoice';
   document.getElementById('m-job').textContent = '—';
@@ -1005,7 +1006,7 @@ function switchView(view, btn) {
 function setInvFilter(el, status) {
   el.parentElement.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  document.querySelectorAll('.inv-row').forEach(row => {
+  document.querySelectorAll('#invoices-view .inv-row').forEach(row => {
     row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
   });
 }
