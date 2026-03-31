@@ -36,7 +36,9 @@ router.put("/", async (req, res, next) => {
       // Preferences
       "weatherUnit",
       // Gmail
-      "gmailAddress", "gmailAppPassword"
+      "gmailAddress", "gmailAppPassword",
+      // Logo
+      "companyLogo"
     ];
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];

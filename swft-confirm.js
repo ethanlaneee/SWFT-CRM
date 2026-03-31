@@ -186,6 +186,7 @@
         body{font-family:'DM Sans',sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}
         .pdf-company{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;}
         .pdf-company em{color:#8ab800;font-style:normal;}
+        img{max-height:50px;max-width:180px;object-fit:contain;}
         .pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}
         .pdf-type{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #8ab800;margin-bottom:16px;}
         .pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}
@@ -211,8 +212,8 @@
     const total = (data.lines || []).reduce((s, l) => s + (parseFloat((l.total || "").replace(/[$,]/g, "")) || 0), 0);
 
     const html = `
-      <div class="pdf-company">SWFT<em>.</em></div>
-      <div class="pdf-tagline">simple. smart. swft.</div>
+      ${(window._swftSettings && window._swftSettings.companyLogo) ? '<img src="' + window._swftSettings.companyLogo + '" style="max-height:50px;max-width:180px;object-fit:contain;margin-bottom:8px;"/>' : '<div class="pdf-company">' + ((window._swftSettings && window._swftSettings.company) || 'SWFT') + '<em>.</em></div>'}
+      <div class="pdf-tagline">${(window._swftSettings && window._swftSettings.company) ? (window._swftSettings.phone || '') + ' &nbsp; ' + (window._swftSettings.address || '') : 'simple. smart. swft.'}</div>
       <div class="pdf-type">${type === "invoice" ? "INVOICE" : "QUOTE"} ${data.num || ""}</div>
       <div class="pdf-row"><span class="label">Customer</span><span class="value">${data.customer || "—"}</span></div>
       <div class="pdf-row"><span class="label">Job</span><span class="value">${data.job || "—"}</span></div>

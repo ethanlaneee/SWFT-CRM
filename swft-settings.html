@@ -136,7 +136,25 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="settings-field"><label>Email</label><input class="settings-input" id="s-email" style="width:100%;" placeholder="hello@swftconcrete.com"/></div>
       <div class="settings-field"><label>Website</label><input class="settings-input" id="s-website" style="width:100%;" placeholder="www.swftconcrete.com"/></div>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+    <div style="margin-top:8px;">
+      <label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#f0f0f0;font-weight:600;display:block;margin-bottom:6px;">Company Logo</label>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div id="logo-preview" style="width:64px;height:64px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+          <span id="logo-placeholder" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--green);">SWFT</span>
+          <img id="logo-img" style="width:100%;height:100%;object-fit:contain;display:none;"/>
+        </div>
+        <div>
+          <label style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;cursor:pointer;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;transition:all 0.14s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--gray)'">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.8"/><polyline points="17,8 12,3 7,8" stroke-width="1.8"/><line x1="12" y1="3" x2="12" y2="15" stroke-width="1.8"/></svg>
+            Upload Logo
+            <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this.files[0])"/>
+          </label>
+          <button onclick="removeLogo()" style="margin-left:8px;padding:7px 12px;background:transparent;border:1px solid rgba(255,82,82,0.3);border-radius:8px;color:#ff5252;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">Remove</button>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px;">Appears on quotes and invoices. Max 500KB.</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
       <button class="settings-btn primary" onclick="saveSettings('company')">Save Company Info</button>
     </div>
   </div>
@@ -264,6 +282,41 @@ async function getToken() {
   return auth.currentUser.getIdToken();
 }
 
+let _companyLogo = null;
+
+function handleLogoUpload(file) {
+  if (!file) return;
+  if (file.size > 500000) {
+    showToast('Logo too large — max 500KB');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _companyLogo = e.target.result;
+    document.getElementById('logo-img').src = _companyLogo;
+    document.getElementById('logo-img').style.display = 'block';
+    document.getElementById('logo-placeholder').style.display = 'none';
+    showToast('Logo uploaded — click Save to keep it');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo() {
+  _companyLogo = null;
+  document.getElementById('logo-img').style.display = 'none';
+  document.getElementById('logo-placeholder').style.display = '';
+  showToast('Logo removed — click Save to apply');
+}
+
+function showLogo(dataUrl) {
+  if (dataUrl) {
+    _companyLogo = dataUrl;
+    document.getElementById('logo-img').src = dataUrl;
+    document.getElementById('logo-img').style.display = 'block';
+    document.getElementById('logo-placeholder').style.display = 'none';
+  }
+}
+
 async function saveSettings(section) {
   try {
     const token = await getToken();
@@ -274,6 +327,7 @@ async function saveSettings(section) {
       data.address = document.getElementById('s-address').value.trim();
       data.email = document.getElementById('s-email').value.trim();
       data.website = document.getElementById('s-website').value.trim();
+      if (_companyLogo !== null) data.companyLogo = _companyLogo || '';
     } else if (section === 'defaults') {
       data.taxRate = document.getElementById('s-tax').value.trim();
       data.paymentTerms = document.getElementById('s-terms').value;
@@ -308,6 +362,7 @@ async function loadSettings() {
     if (data.serviceTypes) document.getElementById('s-services').value = data.serviceTypes;
     if (data.crewNames) document.getElementById('s-crews').value = data.crewNames;
     if (data.weatherUnit) document.getElementById('s-weather-unit').value = data.weatherUnit;
+    if (data.companyLogo) showLogo(data.companyLogo);
   } catch (e) {}
 }
 
