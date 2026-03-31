@@ -129,6 +129,12 @@
       )
       .join("");
   }
+  // Check if all were previously marked as read
+  const readAt = localStorage.getItem('swft_notifs_read_at');
+  if (readAt) {
+    notifications.forEach(n => n.unread = false);
+    document.querySelectorAll('.badge-dot').forEach(d => d.style.display = 'none');
+  }
   renderNotifications();
 
   // Toggle
@@ -163,9 +169,9 @@
 
   // Mark all read
   window.markAllRead = function () {
+    localStorage.setItem('swft_notifs_read_at', Date.now().toString());
     notifications.forEach((n) => (n.unread = false));
     renderNotifications();
-    // Remove badge dots
     document.querySelectorAll(".badge-dot").forEach((d) => (d.style.display = "none"));
   };
 

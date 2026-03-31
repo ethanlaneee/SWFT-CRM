@@ -1082,6 +1082,15 @@
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
+      // Auto-open new job if ?customer= param
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('customer')) {
+        setTimeout(function(){
+          openNewJob();
+          var custInput = document.getElementById('e-customer');
+          if (custInput) custInput.value = params.get('customer');
+        }, 400);
+      }
     }
   });
 </script>

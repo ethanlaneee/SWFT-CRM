@@ -433,6 +433,54 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     serviceEl.selectedIndex = 0;
     crewEl.selectedIndex = 0;
   }
+  // ── DASHBOARD AI CHAT ──
+  let _dashSending = false;
+
+  async function getDashToken() {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      await new Promise(r => { const u = auth.onAuthStateChanged(user => { u(); r(user); }); });
+    }
+    return auth.currentUser.getIdToken();
+  }
+
+  function addDashMsg(role, text) {
+    const welcome = document.getElementById('dash-chat-welcome');
+    if (welcome) welcome.style.display = 'none';
+    const container = document.getElementById('dash-chat-messages');
+    const typing = document.getElementById('dash-chat-typing');
+    const el = document.createElement('div');
+    el.className = 'dash-msg ' + role;
+    el.textContent = text.replace(/\*\*/g,'').replace(/\*/g,'');
+    container.insertBefore(el, typing);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function dashSend(text) {
+    if (_dashSending || !text) return;
+    _dashSending = true;
+    addDashMsg('user', text);
+    const typing = document.getElementById('dash-chat-typing');
+    typing.style.display = 'flex';
+    try {
+      const token = await getDashToken();
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI error');
+      addDashMsg('assistant', data.message);
+    } catch (err) {
+      addDashMsg('assistant', 'Something went wrong: ' + err.message);
+    } finally {
+      typing.style.display = 'none';
+      _dashSending = false;
+    }
+  }
+
   let _toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
