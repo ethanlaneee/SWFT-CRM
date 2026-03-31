@@ -16,10 +16,10 @@
     /* ── Chat FAB ── */
     .swft-chat-fab {
       position: fixed;
-      bottom: 80px;
+      bottom: 20px;
       right: 20px;
-      width: 50px;
-      height: 50px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: #c8f135;
       border: none;
@@ -36,8 +36,8 @@
       box-shadow: 0 6px 32px rgba(200, 241, 53, 0.45);
     }
     .swft-chat-fab svg {
-      width: 28px;
-      height: 28px;
+      width: 22px;
+      height: 22px;
       fill: #0a0a0a;
     }
     .swft-chat-fab.open svg.icon-chat { display: none; }
@@ -46,10 +46,10 @@
     /* ── Chat Panel ── */
     .swft-chat-panel {
       position: fixed;
-      bottom: 100px;
-      right: 28px;
-      width: 400px;
-      max-height: 600px;
+      bottom: 72px;
+      right: 16px;
+      width: 360px;
+      max-height: 500px;
       background: #111111;
       border: 1px solid #222;
       border-radius: 16px;
