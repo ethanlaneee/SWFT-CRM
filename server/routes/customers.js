@@ -59,15 +59,51 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Delete customer
+// Delete customer (cascading: also deletes their jobs, quotes, invoices)
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
     if (!doc.exists || doc.data().userId !== req.uid) {
       return res.status(404).json({ error: "Customer not found" });
     }
-    await col().doc(req.params.id).delete();
-    res.json({ success: true });
+
+    const customerId = req.params.id;
+    const customerName = doc.data().name || "";
+
+    // Delete all jobs for this customer
+    const jobsSnap = await db.collection("jobs").where("userId", "==", req.uid).get();
+    const jobDeletes = [];
+    jobsSnap.docs.forEach(d => {
+      if (d.data().customerId === customerId || d.data().customerName === customerName) {
+        jobDeletes.push(db.collection("jobs").doc(d.id).delete());
+      }
+    });
+
+    // Delete all quotes for this customer
+    const quotesSnap = await db.collection("quotes").where("userId", "==", req.uid).get();
+    const quoteDeletes = [];
+    quotesSnap.docs.forEach(d => {
+      if (d.data().customerId === customerId || d.data().customerName === customerName) {
+        quoteDeletes.push(db.collection("quotes").doc(d.id).delete());
+      }
+    });
+
+    // Delete all invoices for this customer
+    const invoicesSnap = await db.collection("invoices").where("userId", "==", req.uid).get();
+    const invoiceDeletes = [];
+    invoicesSnap.docs.forEach(d => {
+      if (d.data().customerId === customerId || d.data().customerName === customerName) {
+        invoiceDeletes.push(db.collection("invoices").doc(d.id).delete());
+      }
+    });
+
+    // Execute all deletes
+    await Promise.all([...jobDeletes, ...quoteDeletes, ...invoiceDeletes]);
+
+    // Delete the customer
+    await col().doc(customerId).delete();
+
+    res.json({ success: true, deleted: { jobs: jobDeletes.length, quotes: quoteDeletes.length, invoices: invoiceDeletes.length } });
   } catch (err) { next(err); }
 });
 

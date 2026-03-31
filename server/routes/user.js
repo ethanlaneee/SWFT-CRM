@@ -26,7 +26,19 @@ router.get("/", async (req, res, next) => {
 router.put("/", async (req, res, next) => {
   try {
     const updates = {};
-    for (const key of ["name", "email", "company", "phone"]) {
+    const allowedFields = [
+      // Profile
+      "name", "firstName", "lastName", "email", "company", "phone",
+      // Company
+      "address", "website",
+      // Defaults
+      "taxRate", "paymentTerms", "serviceTypes", "crewNames",
+      // Preferences
+      "weatherUnit",
+      // Gmail
+      "gmailAddress", "gmailAppPassword"
+    ];
+    for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     updates.updatedAt = Date.now();
