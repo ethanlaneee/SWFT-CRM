@@ -559,30 +559,12 @@
       <input type="file" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(this.files)"/>
     </label>
   </div>
-    <div class="photo-tile"><div class="photo-bg" style="background:#161616;">🏚️</div><div class="photo-label">Before — close</div></div>
-    <div class="photo-add">
-      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2" stroke-linecap="round"/></svg>
-      Add photo
-    </div>
-  </div>
-  <div class="section-title">After Photos</div>
-  <div class="photo-grid">
-    <div class="photo-tile"><div class="photo-bg" style="background:#141a0a;">🪨</div><div class="photo-label">After — stamped finish</div></div>
-    <div class="photo-add">
-      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2" stroke-linecap="round"/></svg>
-      Add photo
-    </div>
-  </div>
-</div>
 
 <!-- PAYMENT -->
 <div id="tab-payment" style="display:none;">
   <div class="section-title">Payment Breakdown</div>
-  <div class="pay-block">
-    <div class="pay-row"><span class="pay-label">Total Job Value</span><span class="pay-val">$7,200.00</span></div>
-    <div class="pay-row"><span class="pay-label">Deposit (50%)</span><span class="pay-val green">$3,600.00 ✓ Paid</span></div>
-    <div class="pay-row"><span class="pay-label">Balance Due</span><span class="pay-val amber">$3,600.00</span></div>
-    <div class="pay-row"><span class="pay-label">Due Date</span><span class="pay-val">On completion</span></div>
+  <div class="pay-block" id="pay-block">
+    <div style="font-size:12px;color:var(--gray2);padding:8px 0;">Payment info will appear here once a quote or invoice is created for this job.</div>
   </div>
   <div style="margin-top:12px;">
     <button onclick="showToast('Invoice sent for balance ✓')" style="width:100%;padding:11px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;border:none;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">
