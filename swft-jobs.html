@@ -326,23 +326,23 @@
 <div class="stat-strip">
   <div class="stat-card c-green">
     <div class="stat-label">In Progress</div>
-    <div class="stat-value">2</div>
+    <div class="stat-value" id="stat-active">0</div>
     <div class="stat-sub">On-site today</div>
   </div>
   <div class="stat-card c-blue">
     <div class="stat-label">Scheduled</div>
-    <div class="stat-value">3</div>
+    <div class="stat-value" id="stat-scheduled">0</div>
     <div class="stat-sub">Next 14 days</div>
   </div>
   <div class="stat-card c-amber">
-    <div class="stat-label">Awaiting Deposit</div>
-    <div class="stat-value">1</div>
-    <div class="stat-sub">$4,800 held up</div>
+    <div class="stat-label">Pending</div>
+    <div class="stat-value" id="stat-pending">0</div>
+    <div class="stat-sub">Awaiting action</div>
   </div>
   <div class="stat-card c-red">
-    <div class="stat-label">Completed MTD</div>
-    <div class="stat-value">5</div>
-    <div class="stat-sub">$18,400 invoiced</div>
+    <div class="stat-label">Completed</div>
+    <div class="stat-value" id="stat-complete">0</div>
+    <div class="stat-sub" id="stat-complete-sub">$0 invoiced</div>
   </div>
 </div>
 
@@ -375,127 +375,6 @@
     <div class="th"></div>
   </div>
   <div class="table-body" id="table-body">
-
-    <div class="job-row" data-status="active" onclick="openDrawer('henderson')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-green"></div>
-        <div>
-          <div class="job-title">Backyard Patio</div>
-          <div class="job-id">#JOB-1043 &nbsp;·&nbsp; Mar 27</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Tom Henderson</div>
-        <div class="job-addr">411 Birchwood Dr</div>
-      </div>
-      <div>
-        <div class="job-amount">$7,200</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-inprog">In Progress</span></div>
-      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="active" onclick="openDrawer('ortiz')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-green"></div>
-        <div>
-          <div class="job-title">Pool Deck</div>
-          <div class="job-id">#JOB-1044 &nbsp;·&nbsp; Mar 27</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Maria Ortiz</div>
-        <div class="job-addr">88 Lakeview Ct</div>
-      </div>
-      <div>
-        <div class="job-amount">$5,400</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-inprog">In Progress</span></div>
-      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="scheduled" onclick="openDrawer('kim')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-blue"></div>
-        <div>
-          <div class="job-title">Driveway Resurface</div>
-          <div class="job-id">#JOB-1045 &nbsp;·&nbsp; Mar 29</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">James Kim</div>
-        <div class="job-addr">77 Cedar Ridge</div>
-      </div>
-      <div>
-        <div class="job-amount">$3,100</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-sched">Scheduled</span></div>
-      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="pending" onclick="openDrawer('martinez')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-amber"></div>
-        <div>
-          <div class="job-title">Driveway — Stamped</div>
-          <div class="job-id">#JOB-1042 &nbsp;·&nbsp; TBD</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Rosa Martinez</div>
-        <div class="job-addr">2210 Elm St</div>
-      </div>
-      <div>
-        <div class="job-amount">$4,800</div>
-        <div class="pay-status pay-due">Awaiting deposit</div>
-      </div>
-      <div><span class="status-tag tag-pending">Quote Sent</span></div>
-      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="scheduled" onclick="openDrawer('nguyen')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-blue"></div>
-        <div>
-          <div class="job-title">Front Walkway</div>
-          <div class="job-id">#JOB-1046 &nbsp;·&nbsp; Apr 1</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">David Nguyen</div>
-        <div class="job-addr">2422 Oak St</div>
-      </div>
-      <div>
-        <div class="job-amount">$2,250</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-sched">Scheduled</span></div>
-      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="complete" onclick="openDrawer('chen')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-gray"></div>
-        <div>
-          <div class="job-title">Garage Floor Epoxy</div>
-          <div class="job-id">#JOB-1038 &nbsp;·&nbsp; Mar 25</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Linda Chen</div>
-        <div class="job-addr">903 Maple Ave</div>
-      </div>
-      <div>
-        <div class="job-amount">$2,600</div>
-        <div class="pay-status pay-due">Invoice due</div>
-      </div>
-      <div><span class="status-tag tag-complete">Complete</span></div>
-      <div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
   </div>
 </div>
 
@@ -1097,6 +976,7 @@
 
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-calendar-sync.js"></script>
+<script src="swft-api.js"></script>
 <script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>

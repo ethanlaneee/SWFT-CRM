@@ -520,87 +520,7 @@ user-select:none;
     <div class="th">Status</div>
     <div class="th"></div>
   </div>
-  <div class="table-body" id="table-body">
-
-    <div class="cust-row" data-status="active" onclick="openDrawer('henderson')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#c8f135;">TH</div>
-        <div>
-          <div class="cust-name">Tom Henderson</div>
-          <div class="cust-addr">411 Birchwood Dr, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 884-2291</div>
-      <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="active" onclick="openDrawer('ortiz')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#4d9fff;">MO</div>
-        <div>
-          <div class="cust-name">Maria Ortiz</div>
-          <div class="cust-addr">88 Lakeview Ct, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 774-0183</div>
-      <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="quoted" onclick="openDrawer('martinez')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#f5a623;">RM</div>
-        <div>
-          <div class="cust-name">Rosa Martinez</div>
-          <div class="cust-addr">2210 Elm St, Round Rock TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 334-9902</div>
-      <div class="cust-status"><span class="status-quoted">Quoted</span></div>
-      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="active" onclick="openDrawer('kim')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#b388ff;">JK</div>
-        <div>
-          <div class="cust-name">James Kim</div>
-          <div class="cust-addr">77 Cedar Ridge, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 991-4450</div>
-      <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="inactive" onclick="openDrawer('chen')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#ff7b7b;">LC</div>
-        <div>
-          <div class="cust-name">Linda Chen</div>
-          <div class="cust-addr">903 Maple Ave, Cedar Park TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 220-5577</div>
-      <div class="cust-status"><span class="status-inactive">Inactive</span></div>
-      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="quoted" onclick="openDrawer('nguyen')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#4dd0c4;">DN</div>
-        <div>
-          <div class="cust-name">David Nguyen</div>
-          <div class="cust-addr">2422 Oak St, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 667-8821</div>
-      <div class="cust-status"><span class="status-quoted">Quoted</span></div>
-      <div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>
-    </div>
-
-  </div>
+  <div class="table-body" id="table-body"></div>
 </div>
 
   </div><!-- /page-body -->
@@ -1299,6 +1219,7 @@ showToast('Sorted by ' + sortLabels[key]);
 </script>
 
 <script type="module" src="swft-user-sync.js"></script>
+<script src="swft-api.js"></script>
 <script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
