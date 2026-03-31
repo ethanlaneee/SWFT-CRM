@@ -624,42 +624,142 @@
 </div>
 
 <script>
-  const jobs = {
-    henderson:{id:'#JOB-1043 · Mar 27, 2026',title:'Backyard Patio',customer:'Tom Henderson',statusTag:'In Progress',statusClass:'tag-inprog',crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Devon R.</span><span class="crew-pill">Luis M.</span>',amount:'$7,200',sqft:'480',service:'Stamped',pay:'Deposit',address:'411 Birchwood Dr, Austin TX 78745',date:'March 27, 2026 — 7:00 AM',duration:'~6 hours',finish:'4,000 PSI · Stamped cobblestone · Natural gray'},
-    ortiz:{id:'#JOB-1044 · Mar 27, 2026',title:'Pool Deck',customer:'Maria Ortiz',statusTag:'In Progress',statusClass:'tag-inprog',crew:'<span class="crew-pill">Ray S.</span><span class="crew-pill">Tomas V.</span>',amount:'$5,400',sqft:'320',service:'Exposed Agg.',pay:'Deposit',address:'88 Lakeview Ct, Austin TX 78704',date:'March 27, 2026 — 8:30 AM',duration:'~5 hours',finish:'3,500 PSI · Exposed aggregate · River rock mix'},
-    kim:{id:'#JOB-1045 · Mar 29, 2026',title:'Driveway Resurface',customer:'James Kim',statusTag:'Scheduled',statusClass:'tag-sched',crew:'<span class="crew-pill">Crew A</span>',amount:'$3,100',sqft:'640',service:'Broom Finish',pay:'Deposit',address:'77 Cedar Ridge, Austin TX 78750',date:'March 29, 2026 — 7:00 AM',duration:'~5 hours',finish:'4,000 PSI · Broom finish · Standard gray'},
-    martinez:{id:'#JOB-1042 · TBD',title:'Driveway — Stamped',customer:'Rosa Martinez',statusTag:'Quote Sent',statusClass:'tag-pending',crew:'<span class="crew-pill">Unassigned</span>',amount:'$4,800',sqft:'520',service:'Stamped',pay:'Awaiting',address:'2210 Elm St, Round Rock TX 78664',date:'TBD — Awaiting deposit',duration:'~5 hours',finish:'4,000 PSI · Stamped ashlar slate · Charcoal tint'},
-    nguyen:{id:'#JOB-1046 · Apr 1, 2026',title:'Front Walkway',customer:'David Nguyen',statusTag:'Scheduled',statusClass:'tag-sched',crew:'<span class="crew-pill">Crew B</span>',amount:'$2,250',sqft:'140',service:'Exposed Agg.',pay:'Deposit',address:'2422 Oak St, Austin TX 78745',date:'April 1, 2026 — 9:00 AM',duration:'~3 hours',finish:'3,500 PSI · Exposed aggregate · Pea gravel mix'},
-    chen:{id:'#JOB-1038 · Mar 25, 2026',title:'Garage Floor Epoxy',customer:'Linda Chen',statusTag:'Complete',statusClass:'tag-complete',crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Luis M.</span>',amount:'$2,600',sqft:'440',service:'Epoxy',pay:'Invoice Due',address:'903 Maple Ave, Cedar Park TX 78613',date:'March 25, 2026 — 8:00 AM',duration:'~4 hours',finish:'2-part epoxy · Charcoal base · Metallic flake'}
+  window._jobs = {};
+  let _currentJob = null;
+  let _currentJobId = null;
+
+  /* ── Status helpers ── */
+  const STATUS_MAP = {
+    'scheduled': { pip: 'pip-blue',  tag: 'tag-sched',    label: 'Scheduled' },
+    'active':    { pip: 'pip-green', tag: 'tag-inprog',   label: 'In Progress' },
+    'pending':   { pip: 'pip-amber', tag: 'tag-pending',  label: 'Quote Sent' },
+    'complete':  { pip: 'pip-gray',  tag: 'tag-complete', label: 'Complete' }
   };
 
-  let _currentJob = null;
+  const LABEL_TO_STATUS = {
+    'In Progress': 'active',
+    'Scheduled':   'scheduled',
+    'Quote Sent':  'pending',
+    'Complete':    'complete'
+  };
+
+  function fmtCost(v) {
+    const n = parseFloat(v);
+    if (isNaN(n)) return '$0';
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function fmtDate(d) {
+    if (!d) return 'TBD';
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt)) return d;
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch(e) { return d; }
+  }
+
+  function shortAddr(a) {
+    if (!a) return '';
+    const parts = a.split(',');
+    return parts[0] || a;
+  }
+
+  /* ── Load jobs from API ── */
+  async function loadJobs() {
+    try {
+      const list = await API.jobs.list();
+      window._jobs = {};
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      let counts = { active: 0, scheduled: 0, pending: 0, complete: 0 };
+      let completeCost = 0;
+
+      list.forEach(function(job) {
+        window._jobs[job.id] = job;
+        var status = job.status || 'scheduled';
+        var sm = STATUS_MAP[status] || STATUS_MAP['scheduled'];
+        counts[status] = (counts[status] || 0) + 1;
+        if (status === 'complete') {
+          completeCost += parseFloat(job.cost) || 0;
+        }
+
+        var row = document.createElement('div');
+        row.className = 'job-row';
+        row.dataset.status = status;
+        row.setAttribute('onclick', "openDrawer('" + job.id + "')");
+        row.innerHTML =
+          '<div class="job-id-cell">' +
+            '<div class="status-pip ' + sm.pip + '"></div>' +
+            '<div>' +
+              '<div class="job-title">' + (job.title || '') + '</div>' +
+              '<div class="job-id">#JOB-' + (job.id ? job.id.slice(-4) : '0000') + ' &nbsp;&middot;&nbsp; ' + fmtDate(job.scheduledDate) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="job-customer">' + (job.customerName || '') + '</div>' +
+            '<div class="job-addr">' + shortAddr(job.address) + '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="job-amount">' + fmtCost(job.cost) + '</div>' +
+          '</div>' +
+          '<div><span class="status-tag ' + sm.tag + '">' + sm.label + '</span></div>' +
+          '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
+            '<div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this,\'' + job.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div>' +
+            '<div class="row-btn">→</div>' +
+          '</div>';
+        tbody.appendChild(row);
+      });
+
+      // Update stat cards
+      var el;
+      el = document.getElementById('stat-active');    if (el) el.textContent = counts.active;
+      el = document.getElementById('stat-scheduled');  if (el) el.textContent = counts.scheduled;
+      el = document.getElementById('stat-pending');    if (el) el.textContent = counts.pending;
+      el = document.getElementById('stat-complete');   if (el) el.textContent = counts.complete;
+      el = document.getElementById('stat-complete-sub'); if (el) el.textContent = fmtCost(completeCost) + ' invoiced';
+
+      // Update topbar sub
+      var topSub = document.querySelector('.topbar-sub');
+      if (topSub) topSub.textContent = list.length + ' total jobs';
+
+    } catch(err) {
+      console.error('Failed to load jobs:', err);
+      showToast('Failed to load jobs');
+    }
+  }
+
+  /* ── Open drawer (view mode) ── */
   function openDrawer(id) {
-    const j = jobs[id]; if(!j) return;
+    var j = window._jobs[id];
+    if (!j) return;
     _currentJob = j;
+    _currentJobId = id;
+
+    var sm = STATUS_MAP[j.status] || STATUS_MAP['scheduled'];
+
     document.querySelector('.drawer-tabs').style.display = '';
     document.querySelector('.drawer-stats').style.display = '';
-    document.getElementById('d-id').textContent        = j.id;
-    document.getElementById('d-title').textContent     = j.title;
-    document.getElementById('d-customer').textContent  = j.customer;
-    document.getElementById('d-status-tag').textContent= j.statusTag;
-    document.getElementById('d-status-tag').className  = 'd-status-tag ' + j.statusClass;
-    document.getElementById('d-crew').innerHTML        = j.crew;
-    document.getElementById('d-amount').textContent    = j.amount;
-    document.getElementById('d-sqft').textContent      = j.sqft;
-    document.getElementById('d-service').textContent   = j.service;
-    document.getElementById('d-pay').textContent       = j.pay;
-    document.getElementById('d-address').textContent   = j.address;
-    document.getElementById('d-date').textContent      = j.date;
-    document.getElementById('d-duration').textContent  = j.duration;
-    document.getElementById('d-finish').textContent    = j.finish;
+    document.getElementById('d-id').textContent        = '#JOB-' + (id ? id.slice(-4) : '0000') + ' \u00B7 ' + fmtDate(j.scheduledDate);
+    document.getElementById('d-title').textContent     = j.title || '';
+    document.getElementById('d-customer').textContent  = j.customerName || '';
+    document.getElementById('d-status-tag').textContent= sm.label;
+    document.getElementById('d-status-tag').className  = 'd-status-tag ' + sm.tag;
+    document.getElementById('d-crew').innerHTML        = '';
+    document.getElementById('d-amount').textContent    = fmtCost(j.cost);
+    document.getElementById('d-sqft').textContent      = j.sqft || '—';
+    document.getElementById('d-service').textContent   = j.service || '—';
+    document.getElementById('d-pay').textContent       = j.payStatus || '—';
+    document.getElementById('d-address').textContent   = j.address || '';
+    document.getElementById('d-date').textContent      = j.scheduledDate || 'TBD';
+    document.getElementById('d-duration').textContent  = j.duration || '—';
+    document.getElementById('d-finish').textContent    = j.finish || j.service || '';
+
     switchTab(document.querySelector('.dtab'), 'details');
     document.getElementById('d-edit-mode').style.display='none';
     document.getElementById('d-view-mode').style.display='block';
     document.getElementById('footer-edit').style.display='none';
     document.getElementById('footer-view').style.display='flex';
-    // Switch to details tab by default
-    switchTab(document.querySelector('.dtab'), 'details');
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
   }
@@ -672,51 +772,61 @@
   }
 
   function switchTab(el, tab) {
-    document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dtab').forEach(function(t) { t.classList.remove('active'); });
     el.classList.add('active');
-    ['details','photos','payment','notes'].forEach(t => {
+    ['details','photos','payment','notes'].forEach(function(t) {
       document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
     });
   }
 
   function setFilter(el, status) {
-    document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('active'); });
     el.classList.add('active');
-    document.querySelectorAll('.job-row').forEach(row => {
+    document.querySelectorAll('.job-row').forEach(function(row) {
       row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
     });
   }
 
   function filterJobs(q) {
-    const query = q.toLowerCase();
-    document.querySelectorAll('.job-row').forEach(row => {
-      const text = row.querySelector('.job-title').textContent.toLowerCase()
-                 + row.querySelector('.job-customer').textContent.toLowerCase();
+    var query = q.toLowerCase();
+    document.querySelectorAll('.job-row').forEach(function(row) {
+      var text = row.querySelector('.job-title').textContent.toLowerCase()
+               + row.querySelector('.job-customer').textContent.toLowerCase();
       row.style.display = text.includes(query) ? 'grid' : 'none';
     });
   }
-  async function deleteJobRow(el) {
-    const row = el.closest('.job-row');
+
+  async function deleteJobRow(el, jobId) {
+    var row = el.closest('.job-row');
     if (!row) return;
-    const title = row.querySelector('.job-title');
-    const name = title ? title.textContent : 'this job';
-    const ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong>.', 'DELETE JOB', '🗑️');
+    var titleEl = row.querySelector('.job-title');
+    var name = titleEl ? titleEl.textContent : 'this job';
+    var ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong>.', 'DELETE JOB', '🗑️');
     if (!ok) return;
-    row.remove();
-    showToast(name + ' deleted');
+    try {
+      await API.jobs.delete(jobId);
+      await loadJobs();
+      showToast(name + ' deleted');
+    } catch(err) {
+      console.error('Failed to delete job:', err);
+      showToast('Failed to delete job');
+    }
   }
 
   async function deleteJob() {
-    if (!_currentJob) return;
-    const ok = await swftConfirm('This will permanently delete <strong>' + (_currentJob.title || 'this job') + '</strong>.', 'DELETE JOB', '🗑️');
+    if (!_currentJob || !_currentJobId) return;
+    var ok = await swftConfirm('This will permanently delete <strong>' + (_currentJob.title || 'this job') + '</strong>.', 'DELETE JOB', '🗑️');
     if (!ok) return;
-    const title = _currentJob.title;
-    document.querySelectorAll('.job-row').forEach(row => {
-      const rowTitle = row.querySelector('.job-title');
-      if (rowTitle && rowTitle.textContent === title) row.remove();
-    });
-    closeDrawer();
-    showToast(title + ' deleted');
+    var title = _currentJob.title;
+    try {
+      await API.jobs.delete(_currentJobId);
+      closeDrawer();
+      await loadJobs();
+      showToast(title + ' deleted');
+    } catch(err) {
+      console.error('Failed to delete job:', err);
+      showToast('Failed to delete job');
+    }
   }
 
   function toggleSidebar(){
@@ -725,44 +835,44 @@
     document.getElementById('sidebar-toggle').classList.toggle('visible');
   }
 
-  let _toastTimer;
+  var _toastTimer;
   function showToast(msg) {
-    const t = document.getElementById('toast');
+    var t = document.getElementById('toast');
     document.getElementById('toast-msg').textContent = msg;
     t.classList.add('show');
     clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+    _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
   }
 
-
   function enterEditMode() {
-    const j = _currentJob; if(!j) return;
-    // Switch to details tab first
+    var j = _currentJob; if(!j) return;
     switchTab(document.querySelector('.dtab'), 'details');
 
-    // title is auto-generated from customer + service
-    document.getElementById('e-customer').value = j.customer || '';
-    const dateParts = (j.date || '').split(' — ');
-    document.getElementById('e-date').value     = dateParts[0] || '';
-    document.getElementById('e-time').value     = dateParts[1] || '';
+    document.getElementById('e-customer').value = j.customerName || '';
+    document.getElementById('e-date').value     = j.scheduledDate || '';
+    document.getElementById('e-time').value     = j.scheduledTime || '';
     document.getElementById('e-address-edit').value = j.address || '';
     document.getElementById('e-sqft').value     = j.sqft || '';
     document.getElementById('e-dur').value      = j.duration || '';
     document.getElementById('e-finish').value   = j.finish || '';
-    const rawAmt = (j.amount || '').replace('$','').replace(',','');
+    var rawAmt = String(j.cost || '0');
     document.getElementById('e-amount').value   = rawAmt;
 
     // Set service dropdown
-    const svcEl = document.getElementById('e-service');
-    for (let i = 0; i < svcEl.options.length; i++) {
-      if ((j.finish || '').toLowerCase().includes(svcEl.options[i].value.toLowerCase().split(' ')[0])) {
-        svcEl.selectedIndex = i; break;
+    var svcEl = document.getElementById('e-service');
+    var svcMatch = false;
+    for (var i = 0; i < svcEl.options.length; i++) {
+      if (svcEl.options[i].value === j.service || (j.service && svcEl.options[i].value.toLowerCase().indexOf(j.service.toLowerCase()) !== -1)) {
+        svcEl.selectedIndex = i; svcMatch = true; break;
       }
     }
+    if (!svcMatch) svcEl.selectedIndex = 0;
+
     // Set status dropdown
-    const statEl = document.getElementById('e-status');
-    for (let i = 0; i < statEl.options.length; i++) {
-      if (statEl.options[i].value === j.status) { statEl.selectedIndex = i; break; }
+    var sm = STATUS_MAP[j.status] || STATUS_MAP['scheduled'];
+    var statEl = document.getElementById('e-status');
+    for (var i2 = 0; i2 < statEl.options.length; i2++) {
+      if (statEl.options[i2].value === sm.label) { statEl.selectedIndex = i2; break; }
     }
 
     document.getElementById('d-view-mode').style.display = 'none';
@@ -772,37 +882,32 @@
   }
 
   function openNewJob() {
-    _currentJob = {id:'J-NEW', title:'', customer:'', statusTag:'Scheduled', statusClass:'tag-scheduled', crew:['Crew A'], amount:'$0', sqft:'—', service:'—', pay:'Due on completion', address:'', date:'', duration:'', finish:''};
+    _currentJob = { _isNew: true };
+    _currentJobId = null;
 
-    // Update drawer header
     document.getElementById('d-title').textContent      = 'New Job';
     document.getElementById('d-customer').textContent   = '';
     document.getElementById('d-id').textContent         = '';
     document.getElementById('d-status-tag').textContent = 'Scheduled';
-    document.getElementById('d-status-tag').className   = 'd-status-tag tag-scheduled';
-    document.getElementById('d-crew').innerHTML         = 'Crew A';
+    document.getElementById('d-status-tag').className   = 'd-status-tag tag-sched';
+    document.getElementById('d-crew').innerHTML         = '';
 
-    // Reset stats to defaults
     document.getElementById('d-amount').textContent     = '$0';
     document.getElementById('d-sqft').textContent       = '—';
     document.getElementById('d-service').textContent    = '—';
-    document.getElementById('d-pay').textContent        = 'Due on completion';
+    document.getElementById('d-pay').textContent        = '—';
     document.getElementById('d-address').textContent    = '';
     document.getElementById('d-date').textContent       = '';
     document.getElementById('d-duration').textContent   = '';
     document.getElementById('d-finish').textContent     = '';
 
-    // Reset to Details tab
     switchTab(document.querySelector('.dtab'), 'details');
 
-    // Show edit mode directly
     document.getElementById('d-view-mode').style.display  = 'none';
     document.getElementById('d-edit-mode').style.display   = 'flex';
     document.getElementById('footer-view').style.display   = 'none';
     document.getElementById('footer-edit').style.display   = 'flex';
 
-    // Clear all edit fields
-    // title auto-generated
     document.getElementById('e-customer').value     = '';
     document.getElementById('e-date').value         = '';
     document.getElementById('e-time').value         = '';
@@ -815,17 +920,15 @@
     document.getElementById('e-status').selectedIndex = 0;
     document.getElementById('e-finish').value       = '';
 
-    // Hide tabs and stats for clean new-job form
     document.querySelector('.drawer-tabs').style.display = 'none';
     document.querySelector('.drawer-stats').style.display = 'none';
 
-    // Open as centered modal
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open', 'center-modal');
   }
 
   function cancelEdit() {
-    if (_currentJob && _currentJob.id === 'J-NEW') { closeDrawer(); return; }
+    if (_currentJob && _currentJob._isNew) { closeDrawer(); return; }
     document.getElementById('d-edit-mode').style.display = 'none';
     document.getElementById('d-view-mode').style.display = 'block';
     document.getElementById('footer-edit').style.display = 'none';
@@ -833,97 +936,60 @@
     showToast('Changes discarded');
   }
 
-  function saveEdit() {
-    const customer = document.getElementById('e-customer').value.trim();
-    const date     = document.getElementById('e-date').value.trim();
-    const time     = document.getElementById('e-time').value.trim();
-    const address  = document.getElementById('e-address-edit').value.trim();
-    let service    = document.getElementById('e-service').value;
+  async function saveEdit() {
+    var customer = document.getElementById('e-customer').value.trim();
+    var date     = document.getElementById('e-date').value.trim();
+    var time     = document.getElementById('e-time').value.trim();
+    var address  = document.getElementById('e-address-edit').value.trim();
+    var service  = document.getElementById('e-service').value;
     if (service === 'Other') {
       service = document.getElementById('e-custom-service').value.trim() || 'Custom Job';
     }
-    const title    = customer ? customer + ' - ' + service : service;
-    const sqft     = document.getElementById('e-sqft').value.trim();
-    const crew     = document.getElementById('e-crew').value;
-    const dur      = document.getElementById('e-dur').value.trim();
-    const rawAmt   = document.getElementById('e-amount').value.trim();
-    const status   = document.getElementById('e-status').value;
-    const finish   = document.getElementById('e-finish').value.trim();
-    const fmtAmt   = rawAmt.startsWith('$') ? rawAmt : '$' + rawAmt;
-    const fullDate = date + (time ? ' — ' + time : '');
+    var title    = customer ? customer + ' - ' + service : service;
+    var sqft     = document.getElementById('e-sqft').value.trim();
+    var crew     = document.getElementById('e-crew').value;
+    var dur      = document.getElementById('e-dur').value.trim();
+    var rawAmt   = document.getElementById('e-amount').value.trim().replace('$','').replace(/,/g,'');
+    var statusLabel = document.getElementById('e-status').value;
+    var finish   = document.getElementById('e-finish').value.trim();
+    var status   = LABEL_TO_STATUS[statusLabel] || 'scheduled';
+    var cost     = parseFloat(rawAmt) || 0;
 
-    const tagStyles = {
-      'In Progress':'background:rgba(200,241,53,0.1);color:#c8f135;',
-      'Scheduled':  'background:rgba(77,159,255,0.1);color:#4d9fff;',
-      'Quote Sent': 'background:rgba(245,166,35,0.1);color:#f5a623;',
-      'Complete':   'background:rgba(100,100,100,0.12);color:#7a7a7a;',
+    var data = {
+      title: title,
+      customerName: customer,
+      service: service,
+      status: status,
+      scheduledDate: date,
+      scheduledTime: time,
+      cost: cost,
+      address: address,
+      sqft: sqft,
+      duration: dur,
+      finish: finish || service,
+      crew: crew
     };
 
-    // Persist to data object
-    if (_currentJob) {
-      _currentJob.title    = title;
-      _currentJob.customer = customer;
-      _currentJob.date     = fullDate;
-      _currentJob.address  = address;
-      _currentJob.finish   = finish || service;
-      _currentJob.sqft     = sqft;
-      _currentJob.duration = dur;
-      _currentJob.amount   = fmtAmt;
-      _currentJob.status   = status;
+    try {
+      if (_currentJob && _currentJob._isNew) {
+        if (!title || title === service) {
+          showToast('Please enter a customer name');
+          return;
+        }
+        await API.jobs.create(data);
+        closeDrawer();
+        await loadJobs();
+        showToast(title + ' created');
+      } else if (_currentJobId) {
+        await API.jobs.update(_currentJobId, data);
+        closeDrawer();
+        await loadJobs();
+        showToast('Job saved');
+      }
+    } catch(err) {
+      console.error('Failed to save job:', err);
+      showToast('Failed to save job');
     }
-
-    // Update view panel
-    document.getElementById('d-title').textContent    = title;
-    document.getElementById('d-customer').textContent = customer;
-    document.getElementById('d-date').textContent      = fullDate;
-    document.getElementById('d-address').textContent   = address;
-    document.getElementById('d-finish').textContent    = finish || service;
-    document.getElementById('d-duration').textContent  = dur;
-
-    // Update header stats
-    const amtEl = document.getElementById('d-amount');
-    if (amtEl) amtEl.textContent = fmtAmt;
-    const sqftEl = document.getElementById('d-sqft');
-    if (sqftEl) sqftEl.textContent = sqft;
-
-    // Status badge in header
-    const statusBadges = document.querySelectorAll('.status-tag');
-    statusBadges.forEach(b => {
-      b.textContent   = status;
-      b.className     = 'status-tag ' + (tagStyles[status] ? {
-        'In Progress':'tag-inprog','Scheduled':'tag-sched','Quote Sent':'tag-pending','Complete':'tag-complete'
-      }[status] : 'tag-sched');
-    });
-
-    // Switch back to view
-    document.getElementById('d-edit-mode').style.display = 'none';
-    document.getElementById('d-view-mode').style.display = 'block';
-    document.getElementById('footer-edit').style.display = 'none';
-    document.getElementById('footer-view').style.display = 'flex';
-    // If new job, add row to the table
-    if (_currentJob && _currentJob.id === 'J-NEW') {
-      if (!title) { showToast('Please enter a job title'); return; }
-      const pipClass = {'In Progress':'pip-green','Scheduled':'pip-blue','Quote Sent':'pip-amber','Complete':'pip-gray'};
-      const tagClass = {'In Progress':'tag-inprog','Scheduled':'tag-sched','Quote Sent':'tag-pending','Complete':'tag-complete'};
-      const statusKey = {'In Progress':'active','Scheduled':'scheduled','Quote Sent':'pending','Complete':'complete'};
-      const id = 'new_' + Date.now();
-      _currentJob.id = id;
-      jobs[id] = Object.assign({}, _currentJob);
-
-      const tbody = document.getElementById('job-list');
-      const row = document.createElement('div');
-      row.className = 'job-row';
-      row.dataset.status = statusKey[status] || 'scheduled';
-      row.style.animation = 'fadeUp 0.35s ease both';
-      row.onclick = function(){ openDrawer(id); };
-      row.innerHTML = '<div class="job-id-cell"><div class="status-pip '+(pipClass[status]||'pip-blue')+'"></div><div><div class="job-title">'+title+'</div><div class="job-id">#JOB-'+Math.floor(1050+Math.random()*100)+' &nbsp;·&nbsp; '+date+'</div></div></div><div><div class="job-customer">'+customer+'</div><div class="job-addr">'+address+'</div></div><div><div class="job-amount">'+fmtAmt+'</div></div><div><span class="status-tag '+(tagClass[status]||'tag-sched')+'">'+status+'</span></div><div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>';
-      tbody.insertBefore(row, tbody.firstChild);
-      closeDrawer();
-      showToast(title + ' created ✓');
-      return;
-    }
-
-    showToast('Job saved ✓');
   }
 
 </script>
@@ -955,12 +1021,14 @@
 
   document.body.style.visibility = "hidden";
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = "swft-login.html";
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
+      // Load jobs from API
+      await loadJobs();
       // Auto-open new job if ?customer= param
       var params = new URLSearchParams(window.location.search);
       if (params.get('customer')) {
