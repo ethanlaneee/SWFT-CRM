@@ -111,7 +111,17 @@
 .cal-cell.today{background:rgba(200,241,53,0.03);}
 .cal-cell.today .day-num{color:var(--green);background:rgba(200,241,53,0.12);border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
 
-.day-num{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gray2);margin-bottom:2px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.day-num{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gray2);margin-bottom:2px;width:auto;height:22px;display:flex;align-items:center;gap:0;}
+.day-wx{font-size:9px;color:var(--gray);font-family:'JetBrains Mono',monospace;margin-left:4px;}
+
+/* ── MONTH PICKER ── */
+.month-picker{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;z-index:50;gap:6px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+.month-picker.open{display:flex;}
+.month-picker select{background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;cursor:pointer;}
+.month-picker select option{background:var(--surface2);}
+.month-picker button{background:var(--green);color:#0a0a0a;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.14s;}
+.month-picker button:hover{background:#d5ff40;}
+.cal-month-wrap{position:relative;cursor:pointer;}
 
 /* ── JOB BLOCKS ── */
 .job-block{border-radius:6px;padding:4px 7px;cursor:pointer;transition:filter 0.12s, transform 0.12s;font-size:10.5px;line-height:1.3;position:relative;overflow:hidden;}
@@ -234,7 +244,7 @@
       Schedule
     </div>
   </nav>
-  <div class="sidebar-footer">
+  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href="swft-settings.html"" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
       <div class="avatar">JR</div>
       <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
@@ -265,14 +275,28 @@
 
 <!-- Cal controls -->
 <div class="cal-header">
-  <div class="cal-nav-btn" onclick="showToast('Previous month')">
+  <div class="cal-nav-btn" onclick="prevMonth()">
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6" stroke-width="2" stroke-linecap="round"/></svg>
   </div>
-  <div class="cal-month">MARCH <em>2026</em></div>
-  <div class="cal-nav-btn" onclick="showToast('Next month')">
+  <div class="cal-month-wrap" onclick="toggleMonthPicker()">
+    <div class="cal-month" id="cal-month-title">MARCH <em>2026</em></div>
+    <div class="month-picker" id="month-picker">
+      <select id="pick-month">
+        <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+        <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+        <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+        <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+      </select>
+      <select id="pick-year">
+        <option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option>
+      </select>
+      <button onclick="applyMonthPick(event)">Go</button>
+    </div>
+  </div>
+  <div class="cal-nav-btn" onclick="nextMonth()">
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" stroke-width="2" stroke-linecap="round"/></svg>
   </div>
-  <button class="cal-today-btn" onclick="showToast('Jumped to today — Mar 27')">Today</button>
+  <button class="cal-today-btn" onclick="goToday()">Today</button>
   <div class="view-toggle">
     <div class="view-tab active">Month</div>
   </div>
@@ -335,188 +359,7 @@
     <div class="cal-dow">Fri</div>
     <div class="cal-dow">Sat</div>
   </div>
-  <div class="cal-grid">
-
-    <!-- Row 1: Mar 1--7 (Mar 1 = Sun) -->
-    <div class="cal-cell">
-      <div class="day-num">1</div>
-      <div class="job-block green" onclick="openDrawer('garage')">
-        <div class="jb-title">Garcia — Garage</div>
-        <div class="jb-crew">Crew B · 902 Pine St</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">2</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">3</div>
-      <div class="job-block blue" onclick="openDrawer('walkway')">
-        <div class="jb-title">Torres — Walkway</div>
-        <div class="jb-crew">Crew A · 54 Elm Ave</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">4</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">5</div>
-      <div class="job-block amber" onclick="openDrawer('patio_smith')">
-        <div class="jb-title">Smith — Patio</div>
-        <div class="jb-crew">Crew A · 18 Oakwood</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">6</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">7</div>
-    </div>
-
-    <!-- Row 2: Mar 8--14 -->
-    <div class="cal-cell">
-      <div class="day-num">8</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">9</div>
-      <div class="job-block green" onclick="openDrawer('driveway_patel')">
-        <div class="jb-title">Patel — Driveway</div>
-        <div class="jb-crew">Crew B · 331 Maple</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">10</div>
-      <div class="job-block purple" onclick="openDrawer('pool_kim')">
-        <div class="jb-title">Kim — Pool Deck</div>
-        <div class="jb-crew">Crew A · 77 Cedar Rdg</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">11</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">12</div>
-      <div class="job-block blue" onclick="openDrawer('reseal_jones')">
-        <div class="jb-title">Jones — Reseal</div>
-        <div class="jb-crew">Crew B · 209 Birch</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">13</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">14</div>
-    </div>
-
-    <!-- Row 3: Mar 15--21 -->
-    <div class="cal-cell">
-      <div class="day-num">15</div>
-      <div class="job-block green" onclick="openDrawer('driveway_brown')">
-        <div class="jb-title">Brown — Driveway</div>
-        <div class="jb-crew">Crew A · 710 Oak St</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">16</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">17</div>
-      <div class="job-block amber" onclick="openDrawer('sidewalk_lee')">
-        <div class="jb-title">Lee — Sidewalk</div>
-        <div class="jb-crew">Crew B · 45 Willow</div>
-      </div>
-      <div class="job-block blue" onclick="openDrawer('epoxy_white')">
-        <div class="jb-title">White — Epoxy</div>
-        <div class="jb-crew">Crew A · 88 Ash Ln</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">18</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">19</div>
-      <div class="job-block green" onclick="openDrawer('patio_nguyen_2')">
-        <div class="jb-title">Nguyen — Patio</div>
-        <div class="jb-crew">Crew A · 119 River</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">20</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">21</div>
-    </div>
-
-    <!-- Row 4: Mar 22--28 -->
-    <div class="cal-cell">
-      <div class="day-num">22</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">23</div>
-      <div class="job-block purple" onclick="openDrawer('chen_garage')">
-        <div class="jb-title">Chen — Garage Flr</div>
-        <div class="jb-crew">Crew A · 903 Maple</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">24</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">25</div>
-      <div class="job-block gray" onclick="openDrawer('chen_complete')">
-        <div class="jb-title">Chen — Garage Flr ✓</div>
-        <div class="jb-crew">Crew A · Complete</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">26</div>
-    </div>
-    <div class="cal-cell today">
-      <div class="day-num">27</div>
-      <div class="job-block green" onclick="openDrawer('henderson')">
-        <div class="jb-title">Henderson — Patio</div>
-        <div class="jb-crew">Crew A · 411 Birchwood</div>
-      </div>
-      <div class="job-block green" onclick="openDrawer('ortiz')">
-        <div class="jb-title">Ortiz — Pool Deck</div>
-        <div class="jb-crew">Crew B · 88 Lakeview</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">28</div>
-      <!-- Rain day — no jobs scheduled -->
-      <div style="font-size:10px;color:var(--amber);padding:2px 4px;opacity:0.7;">🌧️ Rain — no pours</div>
-    </div>
-
-    <!-- Row 5: Mar 29 -- Apr 4 -->
-    <div class="cal-cell">
-      <div class="day-num">29</div>
-      <div class="job-block blue" onclick="openDrawer('kim_drive')">
-        <div class="jb-title">Kim — Driveway</div>
-        <div class="jb-crew">Crew A · 77 Cedar Rdg</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">30</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">31</div>
-      <div class="job-block amber" onclick="openDrawer('estimate_pham')">
-        <div class="jb-title">Estimate — Pham</div>
-        <div class="jb-crew">Jake · 2422 Oak St</div>
-      </div>
-    </div>
-    <div class="cal-cell other-month">
-      <div class="day-num">1</div>
-      <div class="job-block blue" onclick="openDrawer('nguyen_walk')">
-        <div class="jb-title">Nguyen — Walkway</div>
-        <div class="jb-crew">Crew B · 2422 Oak</div>
-      </div>
-    </div>
-    <div class="cal-cell other-month"><div class="day-num">2</div></div>
-    <div class="cal-cell other-month"><div class="day-num">3</div></div>
-    <div class="cal-cell other-month"><div class="day-num">4</div></div>
-
-  </div>
+  <div class="cal-grid" id="cal-grid"></div>
 </div>
 
   </div>
@@ -712,6 +555,191 @@
 </div>
 
 <script>
+  /* ── Calendar Jobs Data ── */
+  const calendarJobs = [
+    { date: '2026-03-01', title: 'Garcia — Garage', crew: 'Crew B', address: '902 Pine St', color: 'green', drawerId: 'garage' },
+    { date: '2026-03-03', title: 'Torres — Walkway', crew: 'Crew A', address: '54 Elm Ave', color: 'blue', drawerId: 'walkway' },
+    { date: '2026-03-05', title: 'Smith — Patio', crew: 'Crew A', address: '18 Oakwood', color: 'amber', drawerId: 'patio_smith' },
+    { date: '2026-03-09', title: 'Patel — Driveway', crew: 'Crew B', address: '331 Maple', color: 'green', drawerId: 'driveway_patel' },
+    { date: '2026-03-10', title: 'Kim — Pool Deck', crew: 'Crew A', address: '77 Cedar Rdg', color: 'purple', drawerId: 'pool_kim' },
+    { date: '2026-03-12', title: 'Jones — Reseal', crew: 'Crew B', address: '209 Birch', color: 'blue', drawerId: 'reseal_jones' },
+    { date: '2026-03-15', title: 'Brown — Driveway', crew: 'Crew A', address: '710 Oak St', color: 'green', drawerId: 'driveway_brown' },
+    { date: '2026-03-17', title: 'Lee — Sidewalk', crew: 'Crew B', address: '45 Willow', color: 'amber', drawerId: 'sidewalk_lee' },
+    { date: '2026-03-17', title: 'White — Epoxy', crew: 'Crew A', address: '88 Ash Ln', color: 'blue', drawerId: 'epoxy_white' },
+    { date: '2026-03-19', title: 'Nguyen — Patio', crew: 'Crew A', address: '119 River', color: 'green', drawerId: 'patio_nguyen_2' },
+    { date: '2026-03-23', title: 'Chen — Garage Flr', crew: 'Crew A', address: '903 Maple', color: 'purple', drawerId: 'chen_garage' },
+    { date: '2026-03-25', title: 'Chen — Garage Flr ✓', crew: 'Crew A', address: 'Complete', color: 'gray', drawerId: 'chen_complete' },
+    { date: '2026-03-27', title: 'Henderson — Patio', crew: 'Crew A', address: '411 Birchwood', color: 'green', drawerId: 'henderson' },
+    { date: '2026-03-27', title: 'Ortiz — Pool Deck', crew: 'Crew B', address: '88 Lakeview', color: 'green', drawerId: 'ortiz' },
+    { date: '2026-03-29', title: 'Kim — Driveway', crew: 'Crew A', address: '77 Cedar Rdg', color: 'blue', drawerId: 'kim_drive' },
+    { date: '2026-03-31', title: 'Estimate — Pham', crew: 'Jake', address: '2422 Oak St', color: 'amber', drawerId: 'estimate_pham' },
+    { date: '2026-04-01', title: 'Nguyen — Walkway', crew: 'Crew B', address: '2422 Oak', color: 'blue', drawerId: 'nguyen_walk' }
+  ];
+
+  /* ── Calendar State ── */
+  let calYear = new Date().getFullYear();
+  let calMonth = new Date().getMonth();
+
+  const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function renderCalendar(year, month) {
+    const grid = document.getElementById('cal-grid');
+    if (!grid) return;
+
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    // Update header
+    const titleEl = document.getElementById('cal-month-title');
+    if (titleEl) titleEl.innerHTML = MONTH_NAMES[month] + ' <em>' + year + '</em>';
+
+    // Update topbar subtitle
+    const topSub = document.querySelector('.topbar-sub');
+    if (topSub) topSub.textContent = MONTH_NAMES_SHORT[month] + ' ' + year;
+
+    // Weather data lookup
+    const wxData = window._swftWeatherData;
+    let wxMap = {};
+    if (wxData && wxData.daily && wxData.daily.time) {
+      for (let i = 0; i < wxData.daily.time.length; i++) {
+        const high = Math.round(wxData.daily.temperature_2m_max[i]);
+        wxMap[wxData.daily.time[i]] = high;
+      }
+    }
+
+    // Build cells
+    let html = '';
+
+    // Previous month trailing days
+    for (let i = 0; i < firstDay; i++) {
+      const d = prevMonthDays - firstDay + 1 + i;
+      html += '<div class="cal-cell other-month"><div class="day-num">' + d + '</div></div>';
+    }
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      const isToday = dateStr === todayStr;
+      let cls = 'cal-cell';
+      if (isToday) cls += ' today';
+
+      // Weather temp for this day
+      let wxHtml = '';
+      if (wxMap[dateStr] !== undefined) {
+        wxHtml = ' <span class="day-wx">' + wxMap[dateStr] + '°</span>';
+      }
+
+      html += '<div class="' + cls + '">';
+      html += '<div class="day-num">' + d + wxHtml + '</div>';
+
+      // Find jobs for this day
+      const dayJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
+      for (let ji = 0; ji < dayJobs.length; ji++) {
+        const job = dayJobs[ji];
+        html += '<div class="job-block ' + job.color + '" onclick="openDrawer(\'' + job.drawerId + '\')">';
+        html += '<div class="jb-title">' + job.title + '</div>';
+        html += '<div class="jb-crew">' + job.crew + ' · ' + job.address + '</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+    }
+
+    // Next month leading days to fill out the grid
+    const totalCells = firstDay + daysInMonth;
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remaining; i++) {
+      const dateStr = (month === 11 ? (year + 1) : year) + '-' + String(month === 11 ? 1 : month + 2).padStart(2, '0') + '-' + String(i).padStart(2, '0');
+      let nextHtml = '';
+
+      // Check for jobs in next month overflow
+      const nextJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
+      for (let ji = 0; ji < nextJobs.length; ji++) {
+        const job = nextJobs[ji];
+        nextHtml += '<div class="job-block ' + job.color + '" onclick="openDrawer(\'' + job.drawerId + '\')">';
+        nextHtml += '<div class="jb-title">' + job.title + '</div>';
+        nextHtml += '<div class="jb-crew">' + job.crew + ' · ' + job.address + '</div>';
+        nextHtml += '</div>';
+      }
+
+      html += '<div class="cal-cell other-month"><div class="day-num">' + i + '</div>' + nextHtml + '</div>';
+    }
+
+    grid.innerHTML = html;
+  }
+
+  function prevMonth() {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar(calYear, calMonth);
+  }
+
+  function nextMonth() {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar(calYear, calMonth);
+  }
+
+  function goToday() {
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    renderCalendar(calYear, calMonth);
+    showToast('Jumped to today');
+  }
+
+  function toggleMonthPicker(e) {
+    const picker = document.getElementById('month-picker');
+    const isOpen = picker.classList.contains('open');
+    if (isOpen) {
+      picker.classList.remove('open');
+    } else {
+      document.getElementById('pick-month').value = calMonth;
+      document.getElementById('pick-year').value = calYear;
+      picker.classList.add('open');
+    }
+  }
+
+  function applyMonthPick(e) {
+    if (e) { e.stopPropagation(); }
+    calMonth = parseInt(document.getElementById('pick-month').value);
+    calYear = parseInt(document.getElementById('pick-year').value);
+    document.getElementById('month-picker').classList.remove('open');
+    renderCalendar(calYear, calMonth);
+  }
+
+  // Close month picker when clicking outside
+  document.addEventListener('click', function(e) {
+    const picker = document.getElementById('month-picker');
+    const wrap = document.querySelector('.cal-month-wrap');
+    if (picker && wrap && !wrap.contains(e.target)) {
+      picker.classList.remove('open');
+    }
+  });
+
+  // Stop clicks inside picker from toggling it
+  document.addEventListener('DOMContentLoaded', function() {
+    var picker = document.getElementById('month-picker');
+    if (picker) picker.addEventListener('click', function(e) { e.stopPropagation(); });
+  });
+
+  // Initialize calendar
+  renderCalendar(calYear, calMonth);
+
+  // Re-render when weather data arrives (to show temps on cells)
+  (function pollWeather() {
+    if (window._swftWeatherData) {
+      renderCalendar(calYear, calMonth);
+    } else {
+      setTimeout(pollWeather, 500);
+    }
+  })();
+
   const jobs = {
     henderson:    {date:'Mar 27, 2026 · 7:00 AM',  title:'Henderson — Backyard Patio', customer:'Tom Henderson',    tag:'In Progress', tagStyle:'background:rgba(200,241,53,0.1);color:#c8f135;', crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Devon R.</span><span class="crew-pill">Luis M.</span>', amount:'$7,200', sqft:'480', dur:'~6 hrs', num:'#1043', address:'411 Birchwood Dr, Austin TX', service:'Stamped — Cobblestone, Natural Gray',      wx:'⛅', wxDesc:'72°F — Partly Cloudy',   wxNote:'Low humidity · No precipitation',        wxBadge:'wx-ok', wxText:'✓ Good'},
     ortiz:        {date:'Mar 27, 2026 · 8:30 AM',  title:'Ortiz — Pool Deck',          customer:'Maria Ortiz',     tag:'In Progress', tagStyle:'background:rgba(200,241,53,0.1);color:#c8f135;', crew:'<span class="crew-pill">Ray S.</span><span class="crew-pill">Tomas V.</span>',                                           amount:'$5,400', sqft:'320', dur:'~5 hrs', num:'#1044', address:'88 Lakeview Ct, Austin TX',    service:'Exposed Aggregate — River Rock Mix',  wx:'⛅', wxDesc:'72°F — Partly Cloudy',   wxNote:'Low humidity · No precipitation',        wxBadge:'wx-ok', wxText:'✓ Good'},
@@ -724,6 +752,12 @@
     patio_smith:  {date:'Mar 5, 2026 · 7:00 AM',   title:'Smith — Backyard Patio',     customer:'Greg Smith',      tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$6,100', sqft:'460', dur:'~6 hrs', num:'#1035', address:'18 Oakwood Dr, Austin TX',     service:'Stamped — Herringbone Pattern',       wx:'☀️', wxDesc:'75°F — Clear',          wxNote:'Ideal pour conditions',                  wxBadge:'wx-ok', wxText:'✓ Excellent'},
     driveway_patel:{date:'Mar 9, 2026 · 7:00 AM',  title:'Patel — Driveway',           customer:'Raj Patel',       tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew B</span>',                                                                               amount:'$4,200', sqft:'580', dur:'~5 hrs', num:'#1036', address:'331 Maple Blvd, Round Rock TX', service:'Broom Finish — Standard Gray',        wx:'🌤️',wxDesc:'70°F — Partly Cloudy',   wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
     pool_kim:     {date:'Mar 10, 2026 · 8:00 AM',  title:'Kim — Pool Deck',            customer:'James Kim',       tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$3,800', sqft:'290', dur:'~4 hrs', num:'#1037', address:'77 Cedar Ridge, Austin TX',    service:'Exposed Aggregate — River Rock',      wx:'☀️', wxDesc:'73°F — Sunny',          wxNote:'Excellent conditions',                   wxBadge:'wx-ok', wxText:'✓ Excellent'},
+    reseal_jones: {date:'Mar 12, 2026 · 8:00 AM',  title:'Jones — Driveway Reseal',    customer:'Mike Jones',      tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew B</span>',                                                                               amount:'$1,400', sqft:'600', dur:'~3 hrs', num:'#1038', address:'209 Birch St, Austin TX',      service:'Sealing — Clear Coat',                wx:'☀️', wxDesc:'74°F — Clear',          wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
+    driveway_brown:{date:'Mar 15, 2026 · 7:00 AM', title:'Brown — Driveway',           customer:'Sarah Brown',     tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$4,500', sqft:'550', dur:'~5 hrs', num:'#1039', address:'710 Oak St, Austin TX',        service:'Broom Finish — Standard Gray',        wx:'☀️', wxDesc:'75°F — Clear',          wxNote:'Excellent pour conditions',               wxBadge:'wx-ok', wxText:'✓ Excellent'},
+    sidewalk_lee: {date:'Mar 17, 2026 · 7:30 AM',  title:'Lee — Sidewalk Repair',      customer:'Kevin Lee',       tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew B</span>',                                                                               amount:'$2,100', sqft:'180', dur:'~3 hrs', num:'#1040', address:'45 Willow Ln, Austin TX',      service:'Broom Finish — Standard Gray',        wx:'🌤️',wxDesc:'72°F — Partly Cloudy',   wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
+    epoxy_white:  {date:'Mar 17, 2026 · 8:00 AM',  title:'White — Epoxy Coating',      customer:'Dan White',       tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$2,900', sqft:'400', dur:'~4 hrs', num:'#1041', address:'88 Ash Ln, Austin TX',         service:'Epoxy Coating — Charcoal Base',       wx:'🌤️',wxDesc:'72°F — Partly Cloudy',   wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
+    patio_nguyen_2:{date:'Mar 19, 2026 · 7:00 AM', title:'Nguyen — Backyard Patio',    customer:'David Nguyen',    tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$5,800', sqft:'420', dur:'~6 hrs', num:'#1042', address:'119 River Rd, Austin TX',      service:'Stamped — Ashlar Slate, Tan',         wx:'☀️', wxDesc:'76°F — Clear',          wxNote:'Excellent conditions',                   wxBadge:'wx-ok', wxText:'✓ Excellent'},
+    chen_garage:  {date:'Mar 23, 2026 · 8:00 AM',  title:'Chen — Garage Floor',        customer:'Linda Chen',      tag:'In Progress', tagStyle:'background:rgba(200,241,53,0.1);color:#c8f135;',   crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Luis M.</span>',                                       amount:'$2,600', sqft:'440', dur:'~4 hrs', num:'#1038', address:'903 Maple Ave, Cedar Park TX', service:'Epoxy Coating — Metallic Flake',      wx:'☀️', wxDesc:'74°F — Clear',          wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
   };
 
   let _currentJob = null;
