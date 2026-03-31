@@ -363,7 +363,34 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     document.getElementById('main').classList.toggle('expanded');
     document.getElementById('sidebar-toggle').classList.toggle('visible');
   }
+
+  async function loadDashCustomers() {
+    try {
+      var customers = await API.customers.list();
+      var select = document.getElementById('nj-customer');
+      if (!select) return;
+      select.innerHTML = '<option value="">Select a customer...</option>';
+      customers.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name || 'Unnamed';
+        opt.dataset.address = c.address || '';
+        select.appendChild(opt);
+      });
+      window._dashCustList = customers;
+    } catch(e) {}
+  }
+
+  function njAutofill(custId) {
+    if (!custId || !window._dashCustList) return;
+    var cust = window._dashCustList.find(function(c) { return c.id === custId; });
+    if (!cust) return;
+    var addr = document.getElementById('nj-address');
+    if (addr && !addr.value) addr.value = cust.address || '';
+  }
+
   function openNewJobModal() {
+    loadDashCustomers();
     document.getElementById('nj-overlay').classList.add('open');
     document.getElementById('nj-modal').classList.add('open');
   }
@@ -372,8 +399,10 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     document.getElementById('nj-modal').classList.remove('open');
   }
   function saveNewJob() {
-    const customer = document.getElementById('nj-customer').value.trim();
-    if (!customer) { showToast('Please enter a customer name'); return; }
+    const custSelect = document.getElementById('nj-customer');
+    const custId = custSelect.value;
+    const customer = custSelect.options[custSelect.selectedIndex] ? custSelect.options[custSelect.selectedIndex].textContent : '';
+    if (!customer || customer === 'Select a customer...') { showToast('Please select a customer'); return; }
     const serviceEl = document.getElementById('nj-service');
     let service = serviceEl.value;
     if (service === 'Other') {
@@ -647,7 +676,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </div>
   <div class="nj-body">
-    <div class="nj-field"><label class="nj-label">Customer</label><input class="nj-input" id="nj-customer" type="text" placeholder="e.g. Tom Henderson"/><a href="swft-customers.html?new=1" target="_blank" style="font-size:11px;color:var(--green);margin-top:3px;display:inline-block;">New customer? Add one here</a></div>
+    <div class="nj-field"><label class="nj-label">Customer</label><select class="nj-input" id="nj-customer" onchange="njAutofill(this.value)"><option value="">Select a customer...</option></select><a href="swft-customers.html?new=1" target="_blank" style="font-size:11px;color:var(--green);margin-top:3px;display:inline-block;">+ Add new customer</a></div>
     <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="nj-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="nj-date" type="date"/></div>

@@ -421,6 +421,8 @@
     <div class="dtab" onclick="switchTab(this,'photos')">Photos</div>
     <div class="dtab" onclick="switchTab(this,'payment')">Payment</div>
     <div class="dtab" onclick="switchTab(this,'notes')">Notes</div>
+      <div class="dtab" onclick="switchTab(this,'job-quotes')">Quotes</div>
+      <div class="dtab" onclick="switchTab(this,'job-invoices')">Invoices</div>
   </div>
 
   <div class="drawer-content">
@@ -454,6 +456,16 @@
   </div>
 
   <!-- DETAILS EDIT -->
+  <div id="tab-job-quotes" style="display:none;">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Quotes <button onclick="window.location.href='swft-billing.html'" style="font-size:11px;color:var(--green);background:none;border:1px solid var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;">+ New Quote</button></div>
+    <div id="job-quotes-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <div id="tab-job-invoices" style="display:none;">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Invoices <button onclick="window.location.href='swft-billing.html'" style="font-size:11px;color:var(--green);background:none;border:1px solid var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;">+ New Invoice</button></div>
+    <div id="job-invoices-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
   <div id="d-edit-mode" style="display:none;flex-direction:column;gap:12px;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
       Edit Job
@@ -461,8 +473,8 @@
     </div>
     <div class="edit-field">
       <label class="edit-label">Customer</label>
-      <input class="edit-input" id="e-customer" type="text"/>
-      <a href="swft-customers.html?new=1" target="_blank" style="font-size:11px;color:var(--green);margin-top:3px;display:inline-block;">New customer? Add one here</a>
+      <select class="edit-input" id="e-customer" onchange="autofillFromCustomer(this.value)"><option value="">Select a customer...</option></select>
+      <a href="swft-customers.html?new=1" target="_blank" style="font-size:11px;color:var(--green);margin-top:3px;display:inline-block;">+ Add new customer</a>
     </div>
     <div class="edit-row-2">
       <div class="edit-field">
@@ -539,9 +551,14 @@
 
 <!-- PHOTOS -->
 <div id="tab-photos" style="display:none;">
-  <div class="section-title">Before Photos</div>
-  <div class="photo-grid" style="margin-bottom:14px;">
-    <div class="photo-tile"><div class="photo-bg" style="background:#1a1a1a;">🏡</div><div class="photo-label">Before — wide</div></div>
+    <div class="section-title">Job Photos</div>
+    <div id="photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;"></div>
+    <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--surface2);border:2px dashed var(--border2);border-radius:10px;cursor:pointer;color:var(--gray);font-size:13px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--gray)'">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.8"/><polyline points="17,8 12,3 7,8" stroke-width="1.8"/><line x1="12" y1="3" x2="12" y2="15" stroke-width="1.8"/></svg>
+      Upload Photo
+      <input type="file" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(this.files)"/>
+    </label>
+  </div>
     <div class="photo-tile"><div class="photo-bg" style="background:#161616;">🏚️</div><div class="photo-label">Before — close</div></div>
     <div class="photo-add">
       <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2" stroke-linecap="round"/></svg>
@@ -730,6 +747,35 @@
   }
 
   /* ── Open drawer (view mode) ── */
+
+  async function loadCustomerDropdown() {
+    try {
+      var customers = await API.customers.list();
+      var select = document.getElementById('e-customer');
+      if (!select) return;
+      // Keep the first option
+      select.innerHTML = '<option value="">Select a customer...</option>';
+      customers.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name || 'Unnamed';
+        opt.dataset.address = c.address || '';
+        opt.dataset.phone = c.phone || '';
+        opt.dataset.name = c.name || '';
+        select.appendChild(opt);
+      });
+      window._customerList = customers;
+    } catch(e) { console.error('loadCustomerDropdown:', e); }
+  }
+
+  function autofillFromCustomer(custId) {
+    if (!custId || !window._customerList) return;
+    var cust = window._customerList.find(function(c) { return c.id === custId; });
+    if (!cust) return;
+    var addr = document.getElementById('e-address-edit');
+    if (addr && !addr.value) addr.value = cust.address || '';
+  }
+
   function openDrawer(id) {
     var j = window._jobs[id];
     if (!j) return;
@@ -760,6 +806,7 @@
     document.getElementById('d-view-mode').style.display='block';
     document.getElementById('footer-edit').style.display='none';
     document.getElementById('footer-view').style.display='flex';
+    loadJobBilling(id);
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
   }
@@ -774,7 +821,7 @@
   function switchTab(el, tab) {
     document.querySelectorAll('.dtab').forEach(function(t) { t.classList.remove('active'); });
     el.classList.add('active');
-    ['details','photos','payment','notes'].forEach(function(t) {
+    ['details','photos','payment','notes','job-quotes','job-invoices'].forEach(function(t) {
       document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
     });
   }
@@ -829,6 +876,60 @@
     }
   }
 
+
+
+  async function loadJobBilling(jobId) {
+    // Load quotes for this job
+    try {
+      var quotes = await API.quotes.list();
+      var qList = document.getElementById('job-quotes-list');
+      if (qList) {
+        var jobQuotes = quotes.filter(function(q) { return q.customerId === jobId || q.customerName === (window._jobs[jobId]||{}).customerName; });
+        if (jobQuotes.length === 0) {
+          qList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No quotes for this job yet</div>';
+        } else {
+          qList.innerHTML = jobQuotes.map(function(q) {
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;"><div><div style="font-size:13px;color:var(--white);font-weight:500;">$' + (q.total||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px;">' + (q.status||'draft') + '</div></div><a href="swft-billing.html" style="font-size:11px;color:var(--green);">View &rarr;</a></div>';
+          }).join('');
+        }
+      }
+    } catch(e) {}
+
+    // Load invoices
+    try {
+      var invoices = await API.invoices.list();
+      var iList = document.getElementById('job-invoices-list');
+      if (iList) {
+        var jobInvoices = invoices.filter(function(inv) { return inv.customerId === jobId || inv.customerName === (window._jobs[jobId]||{}).customerName; });
+        if (jobInvoices.length === 0) {
+          iList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No invoices for this job yet</div>';
+        } else {
+          iList.innerHTML = jobInvoices.map(function(inv) {
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;"><div><div style="font-size:13px;color:var(--white);font-weight:500;">$' + (inv.total||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px;">' + (inv.status||'open') + '</div></div><a href="swft-billing.html" style="font-size:11px;color:var(--green);">View &rarr;</a></div>';
+          }).join('');
+        }
+      }
+    } catch(e) {}
+  }
+
+  function handlePhotoUpload(files) {
+    var grid = document.getElementById('photo-grid');
+    if (!grid) return;
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var div = document.createElement('div');
+        div.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;';
+        div.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;"/>' +
+          '<div onclick="this.parentElement.remove();showToast(\'Photo removed\')" style="position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px;">x</div>';
+        grid.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    }
+    showToast(files.length + ' photo(s) added');
+  }
+
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
     document.getElementById('main').classList.toggle('expanded');
@@ -881,7 +982,8 @@
     document.getElementById('footer-edit').style.display = 'flex';
   }
 
-  function openNewJob() {
+  async function openNewJob() {
+    await loadCustomerDropdown();
     _currentJob = { _isNew: true };
     _currentJobId = null;
 
@@ -937,7 +1039,10 @@
   }
 
   async function saveEdit() {
-    var customer = document.getElementById('e-customer').value.trim();
+    var custSelect = document.getElementById('e-customer');
+    var custId = custSelect.value;
+    var customer = custSelect.options[custSelect.selectedIndex] ? custSelect.options[custSelect.selectedIndex].textContent : '';
+    if (customer === 'Select a customer...') customer = '';
     var date     = document.getElementById('e-date').value.trim();
     var time     = document.getElementById('e-time').value.trim();
     var address  = document.getElementById('e-address-edit').value.trim();
@@ -957,7 +1062,7 @@
 
     var data = {
       title: title,
-      customerName: customer,
+      customerName: customer, customerId: custId,
       service: service,
       status: status,
       scheduledDate: date,
