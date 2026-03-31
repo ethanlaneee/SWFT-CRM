@@ -849,10 +849,24 @@ function setFilter(el, status) {
 }
 
 function filterTable(q) {
-  const query = q.toLowerCase();
-  document.querySelectorAll('.cust-row').forEach(row => {
-    const name = row.querySelector('.cust-name').textContent.toLowerCase();
-    row.style.display = name.includes(query) ? 'grid' : 'none';
+  var query = q.toLowerCase();
+  document.querySelectorAll('.cust-row').forEach(function(row) {
+    var name = (row.querySelector('.cust-name') || {}).textContent || '';
+    var phone = (row.querySelector('.cust-phone') || {}).textContent || '';
+    var addr = (row.querySelector('.cust-addr') || {}).textContent || '';
+    var email = '';
+    var id = '';
+    // Get email and ID from stored customer data
+    if (row.onclick) {
+      var fn = row.onclick.toString();
+      var match = fn.match(/'([^']+)'/);
+      if (match && window._customers && window._customers[match[1]]) {
+        email = window._customers[match[1]].email || '';
+        id = match[1];
+      }
+    }
+    var searchable = (name + ' ' + phone + ' ' + addr + ' ' + email + ' ' + id).toLowerCase();
+    row.style.display = searchable.includes(query) ? 'grid' : 'none';
   });
 }
 
