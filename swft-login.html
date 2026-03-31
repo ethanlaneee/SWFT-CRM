@@ -153,8 +153,9 @@ display:none;
 .pwd-toggle{
 position:absolute;right:12px;top:50%;transform:translateY(-50%);
 cursor:pointer;color:var(--gray2);transition:color 0.14s;
-background:none;border:none;padding:2px;
+background:none;border:none;padding:6px;z-index:2;
 }
+.pwd-toggle svg{pointer-events:auto !important;position:static !important;transform:none !important;left:auto !important;}
 .pwd-toggle:hover{color:var(--gray);}
 
 /* ── SUBMIT BTN ── */
