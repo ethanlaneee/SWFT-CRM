@@ -755,7 +755,7 @@ function openModalById(id) {
 
 
 function openModal(id) {
-  const q = quotes[id]; if(!q) return;
+  const q = window._quotes[id]; if(!q) return;
   _q = q;
   document.getElementById('m-num').textContent       = q.num + ' · Created ' + q.created;
   document.getElementById('m-title').textContent     = q.customer;
@@ -795,7 +795,7 @@ function handleOverlayClick(e) {
 }
 
 function openNewQuote() {
-  _q = {num:'#Q-1050',created:'Mar 27, 2026',customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
+  _q = {num:'#Q-' + (1050 + Object.keys(window._quotes||{}).length),created:'Mar 27, 2026',customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
   document.getElementById('m-num').textContent      = '#Q-1050 · Draft';
   document.getElementById('m-title').textContent    = 'New Quote';
   document.getElementById('m-job').textContent      = '—';
@@ -865,14 +865,37 @@ function removeLineItem(i){
   showToast('Line item removed');
 }
 
-function sendQuote(){
-  if(!_q)return;
-  if(_q.status==='Approved'){showToast('Converting to invoice...');return;}
-  _q.status='Sent';_q.statusStyle='background:rgba(77,159,255,0.12);color:#4d9fff;';
-  document.getElementById('m-status-pill').textContent=_q.status;
-  document.getElementById('m-status-pill').style.cssText=_q.statusStyle;
-  document.getElementById('send-btn').innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Resend Quote';
-  showToast('Quote sent to '+_q.customer+' ✓');
+async function sendQuote(){
+  if(!_q) return;
+  if(_q.status === 'Approved' || _q.status === 'approved') {
+    // Convert to Invoice — clone line items
+    try {
+      var data = {
+        customerId: _q.customerId || '',
+        customerName: _q.customer || '',
+        quoteId: _q.id || '',
+        items: _q.lines || [],
+        total: (_q.lines||[]).reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[\$,]/g,''))||0);},0),
+        notes: _q.job || '',
+        status: 'open'
+      };
+      await API.invoices.create(data);
+      closeModal();
+      loadInvoices();
+      switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
+      showToast('Invoice created from quote — line items cloned');
+    } catch(e) { showToast('Error: ' + e.message); }
+    return;
+  }
+  // Send quote
+  try {
+    if(_q.id) {
+      await API.quotes.update(_q.id, { status: 'sent', sentAt: Date.now() });
+    }
+    closeModal();
+    loadQuotes();
+    showToast('Quote sent');
+  } catch(e) { showToast('Error: ' + e.message); }
 }
 
 function populateEditForm(){
@@ -966,7 +989,7 @@ async function saveEdit(){
   try {
     var items = _q.lines || [];
     var total = items.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0);},0);
-    var data = { customerName: _q.customer, items: items, total: total, notes: _q.job, status: _q.status || 'draft' };
+    var data = { customerName: _q.customer, items: items, total: total, notes: _q.job, status: _q.status || 'draft', sentAt: _q.status === 'sent' ? Date.now() : null, expiresAt: _q.status === 'sent' ? Date.now() + (14 * 24 * 60 * 60 * 1000) : null };
     if (_q.id && !_q.id.startsWith('new_')) {
       await API.quotes.update(_q.id, data);
     } else {
