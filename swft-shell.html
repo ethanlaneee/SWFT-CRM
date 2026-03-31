@@ -393,7 +393,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     document.getElementById('nj-overlay').classList.remove('open');
     document.getElementById('nj-modal').classList.remove('open');
   }
-  function saveNewJob() {
+  async function saveNewJob() {
     const custSelect = document.getElementById('nj-customer');
     const custId = custSelect.value;
     const customer = custSelect.options[custSelect.selectedIndex] ? custSelect.options[custSelect.selectedIndex].textContent : '';

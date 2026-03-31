@@ -962,6 +962,16 @@
     } catch(e) {}
   }
 
+  async function markJobComplete() {
+    if (!_currentJob || !_currentJob.id) return;
+    try {
+      await API.jobs.update(_currentJob.id, { status: 'complete' });
+      closeDrawer();
+      loadJobs();
+      showToast('Job marked complete');
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
   function handlePhotoUpload(files) {
     var grid = document.getElementById('photo-grid');
     if (!grid) return;
