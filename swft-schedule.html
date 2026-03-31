@@ -104,7 +104,7 @@
 .cal-dow{padding:9px 0;text-align:center;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
 
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(108px,auto);}
-.cal-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 8px 6px;display:flex;flex-direction:column;gap:4px;cursor:default;transition:background 0.12s;min-height:108px;}
+.cal-cell{position:relative;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 8px 6px;display:flex;flex-direction:column;gap:4px;cursor:default;transition:background 0.12s;min-height:108px;}
 .cal-cell:hover{background:rgba(255,255,255,0.015);}
 .cal-cell:nth-child(7n){border-right:none;}
 .cal-cell.other-month{opacity:0.3;}
@@ -112,7 +112,7 @@
 .cal-cell.today .day-num{color:var(--green);background:rgba(200,241,53,0.12);border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
 
 .day-num{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gray2);margin-bottom:2px;width:auto;height:22px;display:flex;align-items:center;gap:0;}
-.day-wx{font-size:9px;color:var(--gray);font-family:'JetBrains Mono',monospace;margin-left:4px;}
+.day-wx{font-size:9px;color:var(--gray);font-family:'JetBrains Mono',monospace;position:absolute;top:4px;right:6px;}
 
 /* ── MONTH PICKER ── */
 .month-picker{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;z-index:50;gap:6px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
@@ -244,7 +244,7 @@
       Schedule
     </div>
   </nav>
-  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href="swft-settings.html"" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
+  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings.html'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
       <div class="avatar">JR</div>
       <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
@@ -302,7 +302,8 @@
   </div>
 </div>
 
-<!-- 7-day weather strip (Mon Mar 23 -- Sun Mar 29) -->
+<!-- Weather strip hidden - weather shown on calendar cells
+<div style="display:none;"><!-- 7-day weather strip (Mon Mar 23 -- Sun Mar 29) -->
 <div class="weather-strip">
   <div class="weather-day">
     <div class="wx-label">Mon</div>
@@ -346,6 +347,7 @@
     <div class="wx-icon">🌤️</div>
     <div class="wx-temp">68°</div>
   </div>
+</div>
 </div>
 
 <!-- Calendar grid -->
@@ -602,13 +604,19 @@
     const topSub = document.querySelector('.topbar-sub');
     if (topSub) topSub.textContent = MONTH_NAMES_SHORT[month] + ' ' + year;
 
+    // Weather icons
+    const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};
+
     // Weather data lookup
     const wxData = window._swftWeatherData;
     let wxMap = {};
+    let wxCodeMap = {};
     if (wxData && wxData.daily && wxData.daily.time) {
       for (let i = 0; i < wxData.daily.time.length; i++) {
         const high = Math.round(wxData.daily.temperature_2m_max[i]);
         wxMap[wxData.daily.time[i]] = high;
+        var code = wxData.daily.weathercode ? wxData.daily.weathercode[i] : 0;
+        wxCodeMap[wxData.daily.time[i]] = code;
       }
     }
 
@@ -631,11 +639,13 @@
       // Weather temp for this day
       let wxHtml = '';
       if (wxMap[dateStr] !== undefined) {
-        wxHtml = ' <span class="day-wx">' + wxMap[dateStr] + '°</span>';
+        var wxCode = wxCodeMap[dateStr] || 0;
+        var wxIcon = WMO_ICONS[wxCode] || '';
+        wxHtml = '<span class="day-wx">' + wxIcon + ' ' + wxMap[dateStr] + '°</span>';
       }
 
       html += '<div class="' + cls + '">';
-      html += '<div class="day-num">' + d + wxHtml + '</div>';
+      html += '<div class="day-num">' + d + '</div>' + wxHtml;
 
       // Find jobs for this day
       const dayJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
