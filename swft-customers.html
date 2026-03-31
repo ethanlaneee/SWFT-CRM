@@ -635,17 +635,6 @@ user-select:none;
     </div>
     <div class="edit-row-2">
       <div class="edit-field">
-        <label class="edit-label">Property Type</label>
-        <select class="edit-input" id="e-proptype" onchange="if(this.value==='Other'){document.getElementById('e-custom-proptype').style.display='block';}else{document.getElementById('e-custom-proptype').style.display='none';}">
-          <option>Single family</option>
-          <option>Multi-family</option>
-          <option>Commercial</option>
-          <option>HOA / Community</option>
-          <option>Other</option>
-        </select>
-        <input class="edit-input" id="e-custom-proptype" type="text" placeholder="Enter property type..." style="display:none;margin-top:6px;"/>
-      </div>
-      <div class="edit-field">
         <label class="edit-label">Customer Since</label>
         <input class="edit-input" id="e-since" type="text" placeholder="e.g. January 2024"/>
       </div>
@@ -717,9 +706,52 @@ user-select:none;
 
 </div>
 
+
 <script>
 
 window._customers = {};
+
+async function loadCustomers() {
+  try {
+    const list = await API.customers.list();
+    window._customers = {};
+    const tbody = document.getElementById('table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const colors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
+    if (list.length === 0) {
+      tbody.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No customers yet. Click Add Customer to get started.</div>';
+      return;
+    }
+    list.forEach(function(cust, idx) {
+      window._customers[cust.id] = cust;
+      var names = (cust.name||'').split(' ');
+      var initials = ((names[0]||'?')[0] + (names[1]||'')[0]).toUpperCase();
+      var color = colors[idx % colors.length];
+      var row = document.createElement('div');
+      row.className = 'cust-row';
+      row.dataset.status = 'active';
+      row.onclick = function(){ openDrawer(cust.id); };
+      row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + initials + '</div><div><div class="cust-name">' + (cust.name||'') + '</div><div class="cust-addr">' + (cust.address||'') + '</div></div></div>' +
+        '<div class="cust-phone">' + (cust.phone||'') + '</div>' +
+        '<div class="cust-status"><span class="status-active">Active</span></div>' +
+        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">x</div><div class="row-btn">→</div></div>';
+      tbody.appendChild(row);
+    });
+  } catch(e) { console.error('loadCustomers error:', e); }
+}
+
+async function deleteCustById(id) {
+  try {
+    var ok = await swftConfirm('Delete this customer permanently?', 'DELETE CUSTOMER', '🗑️');
+    if (!ok) return;
+    await API.customers.delete(id);
+    loadCustomers();
+    showToast('Customer deleted');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+
 let _currentCustomer = null;
 const _avatarColors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
 
@@ -730,180 +762,98 @@ function getInitials(name) {
   return (parts[0][0] || '?').toUpperCase();
 }
 
-async function loadCustomers() {
-  try {
-    var list = await API.customers.list();
-    var tbody = document.getElementById('table-body');
-    tbody.innerHTML = '';
-    window._customers = {};
-    list.forEach(function(c, idx) {
-      window._customers[c.id] = c;
-      var initials = getInitials(c.name);
-      var color = _avatarColors[idx % _avatarColors.length];
-      c._initials = initials;
-      c._color = color;
-      var row = document.createElement('div');
-      row.className = 'cust-row';
-      row.dataset.status = 'active';
-      row.setAttribute('onclick', "openDrawer('" + c.id + "')");
-      row.innerHTML = '<div class="cust-name-cell">' +
-        '<div class="cust-avatar" style="background:' + color + ';">' + initials + '</div>' +
-        '<div>' +
-          '<div class="cust-name">' + (c.name || '') + '</div>' +
-          '<div class="cust-addr">' + (c.address || '') + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="cust-phone">' + (c.phone || '') + '</div>' +
-      '<div class="cust-status"><span class="status-active">Active</span></div>' +
-      '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;">' +
-        '<div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this,\'' + c.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">\u00d7</div>' +
-        '<div class="row-btn">\u2192</div>' +
-      '</div>';
-      tbody.appendChild(row);
-    });
-    var countEl = document.querySelector('.topbar-sub');
-    if (countEl) countEl.textContent = list.length + ' contacts';
-  } catch (err) {
-    console.error('Failed to load customers:', err);
-    showToast('Error loading customers');
-  }
-}
 
-// __ REPLACED_MARKER_START __
-// The old hardcoded customers object has been removed.
-// Customer data is now loaded from API.customers.list()
-// __ REPLACED_MARKER_END __
-const _REPLACED_OLD_CUSTOMERS = {
-initials:'TH', color:'#c8f135', name:'Tom Henderson',
-meta:'(512) 884-2291  ·  <a href="#">411 Birchwood Dr, Austin TX</a>',
-spend:'$14,800', jobs:'4', last:'Mar 27',
-phone:'(512) 884-2291', email:'tom.henderson@email.com', address:'411 Birchwood Dr, Austin TX 78745', since:'January 2024'
-},
-ortiz: {
-initials:'MO', color:'#4d9fff', name:'Maria Ortiz',
-meta:'(512) 774-0183  ·  <a href="#">88 Lakeview Ct, Austin TX</a>',
-spend:'$9,200', jobs:'2', last:'Mar 27',
-phone:'(512) 774-0183', email:'maria.ortiz@email.com', address:'88 Lakeview Ct, Austin TX 78704', since:'March 2025',
-jobHistory:[],invoiceHistory:[],tags:[],notes:[]
-},
-martinez: {
-initials:'RM', color:'#f5a623', name:'Rosa Martinez',
-meta:'(512) 334-9902  ·  <a href="#">2210 Elm St, Round Rock TX</a>',
-spend:'$0', jobs:'0', last:'—',
-phone:'(512) 334-9902', email:'rosa.martinez@email.com', address:'2210 Elm St, Round Rock TX 78664', since:'March 2026',
-jobHistory:[],invoiceHistory:[],tags:[],notes:[]
-},
-kim: {
-initials:'JK', color:'#b388ff', name:'James Kim',
-meta:'(512) 991-4450  ·  <a href="#">77 Cedar Ridge, Austin TX</a>',
-spend:'$6,200', jobs:'2', last:'Feb 10',
-phone:'(512) 991-4450', email:'james.kim@email.com', address:'77 Cedar Ridge, Austin TX 78750', since:'February 2025',
-jobHistory:[],invoiceHistory:[],tags:[],notes:[]
-},
-chen: {
-initials:'LC', color:'#ff7b7b', name:'Linda Chen',
-meta:'(512) 220-5577  ·  <a href="#">903 Maple Ave, Cedar Park TX</a>',
-spend:'$4,100', jobs:'2', last:'Mar 25',
-phone:'(512) 220-5577', email:'linda.chen@email.com', address:'903 Maple Ave, Cedar Park TX 78613', since:'June 2024',
-jobHistory:[],invoiceHistory:[],tags:[],notes:[]
-},
-nguyen: {
-initials:'DN', color:'#4dd0c4', name:'David Nguyen',
-meta:'(512) 667-8821  ·  <a href="#">2422 Oak St, Austin TX</a>',
-spend:'$0', jobs:'0', last:'—',
-phone:'(512) 667-8821', email:'d.nguyen@email.com', address:'2422 Oak St, Austin TX 78745', since:'March 2026',
-jobHistory:[],invoiceHistory:[],tags:[],notes:[]
-}
-};
 
-let _currentCustomer = null;
 function openDrawer(id) {
-if (id === 'new') { closeDrawer(); return; }
-document.querySelector('.drawer-tabs').style.display = '';
-document.querySelector('.drawer-stats').style.display = '';
-const c = customers[id];
-if (!c) return;
-document.getElementById('d-avatar').textContent    = c.initials;
-document.getElementById('d-avatar').style.background = c.color;
-document.getElementById('d-name').textContent      = c.name;
-document.getElementById('d-meta').innerHTML        = c.meta;
-document.getElementById('d-spend').textContent     = c.spend;
-document.getElementById('d-jobs').textContent      = c.jobs;
-document.getElementById('d-last').textContent      = c.last;
-_currentCustomer = c;
-document.getElementById('d-phone').textContent     = c.phone;
-document.getElementById('d-email').textContent     = c.email;
-document.getElementById('d-address').textContent   = c.address;
-switchTab(document.querySelector('.dtab'), 'contact');
-document.getElementById('c-edit-mode').style.display='none';
-document.getElementById('c-view-mode').style.display='block';
-document.getElementById('c-footer-edit').style.display='none';
-document.getElementById('c-footer-view').style.display='flex';
-renderCustomerTabs(c);
-document.getElementById('overlay').classList.add('open');
-document.getElementById('drawer').classList.add('open');
+  if (id === 'new') { closeDrawer(); return; }
+  document.querySelector('.drawer-tabs').style.display = '';
+  document.querySelector('.drawer-stats').style.display = '';
+  var c = window._customers[id];
+  if (!c) return;
+  var initials = c._initials || getInitials(c.name);
+  var color = c._color || _avatarColors[0];
+  document.getElementById('d-avatar').textContent    = initials;
+  document.getElementById('d-avatar').style.background = color;
+  document.getElementById('d-name').textContent      = c.name || '';
+  document.getElementById('d-meta').innerHTML        = (c.phone || '') + ' &nbsp;&middot;&nbsp; <a href="#">' + (c.address || '') + '</a>';
+  document.getElementById('d-spend').textContent     = c.spend || '$0';
+  document.getElementById('d-jobs').textContent      = c.jobs || '0';
+  document.getElementById('d-last').textContent      = c.last || '\u2014';
+  _currentCustomer = c;
+  document.getElementById('d-phone').textContent     = c.phone || '';
+  document.getElementById('d-email').textContent     = c.email || '';
+  document.getElementById('d-address').textContent   = c.address || '';
+  document.getElementById('d-since').textContent     = c.since || c.createdAt || '';
+  switchTab(document.querySelector('.dtab'), 'contact');
+  document.getElementById('c-edit-mode').style.display='none';
+  document.getElementById('c-view-mode').style.display='block';
+  document.getElementById('c-footer-edit').style.display='none';
+  document.getElementById('c-footer-view').style.display='flex';
+  renderCustomerTabs(c);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
 }
 
 function openNewCustomer() {
-_currentCustomer = {name:'', phone:'', email:'', address:'', since:'Mar 2026', status:'Active', statusClass:'status-active', spend:'$0', jobs:'0', color:'var(--green)', initials:'?', jobHistory:[], invoiceHistory:[], tags:[], notes:[]};
-document.getElementById('d-avatar').textContent = _currentCustomer.initials;
-document.getElementById('d-avatar').style.background = _currentCustomer.color;
-document.getElementById('d-name').textContent = 'New Customer';
-document.getElementById('d-meta').innerHTML = '';
-document.getElementById('d-spend').textContent = '$0';
-document.getElementById('d-jobs').textContent = '0';
-document.getElementById('d-last').textContent = '—';
-document.getElementById('d-phone').textContent = '';
-document.getElementById('d-email').textContent = '';
-document.getElementById('d-address').textContent = '';
-switchTab(document.querySelector('.dtab'), 'contact');
-document.getElementById('e-fname').value = '';
-document.getElementById('e-lname').value = '';
-document.getElementById('e-phone').value = '';
-document.getElementById('e-email').value = '';
-document.getElementById('e-address').value = '';
-document.getElementById('e-proptype').value = '';
-document.getElementById('e-since').value = 'Mar 2026';
-document.getElementById('e-note').value = '';
-document.getElementById('c-view-mode').style.display = 'none';
-document.getElementById('c-edit-mode').style.display = 'flex';
-document.getElementById('c-footer-view').style.display = 'none';
-document.getElementById('c-footer-edit').style.display = 'flex';
-document.querySelector('.drawer-tabs').style.display = 'none';
-document.querySelector('.drawer-stats').style.display = 'none';
-document.getElementById('overlay').classList.add('open');
-document.getElementById('drawer').classList.add('open', 'center-modal');
+  _currentCustomer = {id: null, name:'', phone:'', email:'', address:'', notes:[], tags:[], since:'Mar 2026', spend:'$0', jobs:'0', _color:'var(--green)', _initials:'?', jobHistory:[], invoiceHistory:[]};
+  document.getElementById('d-avatar').textContent = '?';
+  document.getElementById('d-avatar').style.background = 'var(--green)';
+  document.getElementById('d-name').textContent = 'New Customer';
+  document.getElementById('d-meta').innerHTML = '';
+  document.getElementById('d-spend').textContent = '$0';
+  document.getElementById('d-jobs').textContent = '0';
+  document.getElementById('d-last').textContent = '\u2014';
+  document.getElementById('d-phone').textContent = '';
+  document.getElementById('d-email').textContent = '';
+  document.getElementById('d-address').textContent = '';
+  switchTab(document.querySelector('.dtab'), 'contact');
+  document.getElementById('e-fname').value = '';
+  document.getElementById('e-lname').value = '';
+  document.getElementById('e-phone').value = '';
+  document.getElementById('e-email').value = '';
+  document.getElementById('e-address').value = '';
+  document.getElementById('e-proptype').value = '';
+  document.getElementById('e-since').value = 'Mar 2026';
+  document.getElementById('e-note').value = '';
+  document.getElementById('c-view-mode').style.display = 'none';
+  document.getElementById('c-edit-mode').style.display = 'flex';
+  document.getElementById('c-footer-view').style.display = 'none';
+  document.getElementById('c-footer-edit').style.display = 'flex';
+  document.querySelector('.drawer-tabs').style.display = 'none';
+  document.querySelector('.drawer-stats').style.display = 'none';
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open', 'center-modal');
 }
 
 function closeDrawer() {
-document.getElementById('overlay').classList.remove('open');
-document.getElementById('drawer').classList.remove('open', 'center-modal');
-document.querySelector('.drawer-tabs').style.display = '';
-document.querySelector('.drawer-stats').style.display = '';
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open', 'center-modal');
+  document.querySelector('.drawer-tabs').style.display = '';
+  document.querySelector('.drawer-stats').style.display = '';
 }
 
 function switchTab(el, tab) {
-document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
-el.classList.add('active');
-['contact','jobs','invoices','notes'].forEach(t => {
-document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
-});
+  document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['contact','jobs','invoices','notes'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
+  });
 }
 
 function setFilter(el, status) {
-document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
-el.classList.add('active');
-document.querySelectorAll('.cust-row').forEach(row => {
-row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
-});
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.cust-row').forEach(row => {
+    row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
+  });
 }
 
 function filterTable(q) {
-const query = q.toLowerCase();
-document.querySelectorAll('.cust-row').forEach(row => {
-const name = row.querySelector('.cust-name').textContent.toLowerCase();
-row.style.display = name.includes(query) ? 'grid' : 'none';
-});
+  const query = q.toLowerCase();
+  document.querySelectorAll('.cust-row').forEach(row => {
+    const name = row.querySelector('.cust-name').textContent.toLowerCase();
+    row.style.display = name.includes(query) ? 'grid' : 'none';
+  });
 }
 
 function renderCustomerTabs(cust) {
@@ -956,32 +906,56 @@ function renderCustomerTabs(cust) {
   }
 }
 
-function addNote() {
+async function addNote() {
   var text = document.getElementById('new-note-text').value.trim();
   if (!text || !_currentCustomer) return;
   var note = { text: text, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}), tag: 'Note', tagColor: 'green' };
   if (!_currentCustomer.notes) _currentCustomer.notes = [];
   _currentCustomer.notes.push(note);
   document.getElementById('new-note-text').value = '';
-  renderCustomerTabs(_currentCustomer);
-  showToast('Note added');
+  try {
+    if (_currentCustomer.id) {
+      await API.customers.update(_currentCustomer.id, { notes: _currentCustomer.notes });
+    }
+    renderCustomerTabs(_currentCustomer);
+    showToast('Note added');
+  } catch (err) {
+    console.error('Failed to save note:', err);
+    showToast('Error saving note');
+  }
 }
 
-function editNote(i) {
+async function editNote(i) {
   if (!_currentCustomer || !_currentCustomer.notes || !_currentCustomer.notes[i]) return;
   var newText = prompt('Edit note:', _currentCustomer.notes[i].text);
   if (newText !== null) {
     _currentCustomer.notes[i].text = newText;
-    renderCustomerTabs(_currentCustomer);
-    showToast('Note updated');
+    try {
+      if (_currentCustomer.id) {
+        await API.customers.update(_currentCustomer.id, { notes: _currentCustomer.notes });
+      }
+      renderCustomerTabs(_currentCustomer);
+      showToast('Note updated');
+    } catch (err) {
+      console.error('Failed to update note:', err);
+      showToast('Error updating note');
+    }
   }
 }
 
-function deleteNote(i) {
+async function deleteNote(i) {
   if (!_currentCustomer || !_currentCustomer.notes) return;
   _currentCustomer.notes.splice(i, 1);
-  renderCustomerTabs(_currentCustomer);
-  showToast('Note deleted');
+  try {
+    if (_currentCustomer.id) {
+      await API.customers.update(_currentCustomer.id, { notes: _currentCustomer.notes });
+    }
+    renderCustomerTabs(_currentCustomer);
+    showToast('Note deleted');
+  } catch (err) {
+    console.error('Failed to delete note:', err);
+    showToast('Error deleting note');
+  }
 }
 
 function addJobForCustomer() {
@@ -1015,219 +989,214 @@ function toggleSidebar(){
 
 let toastTimer;
 function showToast(msg) {
-const toast = document.getElementById('toast');
-const label = document.getElementById('toast-msg');
-label.textContent = msg;
-toast.classList.add('show');
-clearTimeout(toastTimer);
-toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+  const toast = document.getElementById('toast');
+  const label = document.getElementById('toast-msg');
+  label.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
 function callCustomer() {
-const phone = document.getElementById('d-phone').textContent;
-showToast('Calling ' + phone + '…');
-setTimeout(() => window.location.href = 'tel:' + phone.replace(/[^0-9]/g,''), 400);
+  const phone = document.getElementById('d-phone').textContent;
+  showToast('Calling ' + phone + '\u2026');
+  setTimeout(() => window.location.href = 'tel:' + phone.replace(/[^0-9]/g,''), 400);
 }
 
 function textCustomer() {
-const phone = document.getElementById('d-phone').textContent;
-showToast('Opening SMS to ' + phone);
-setTimeout(() => window.location.href = 'sms:' + phone.replace(/[^0-9]/g,''), 400);
+  const phone = document.getElementById('d-phone').textContent;
+  showToast('Opening SMS to ' + phone);
+  setTimeout(() => window.location.href = 'sms:' + phone.replace(/[^0-9]/g,''), 400);
 }
 
 function enterCustomerEdit() {
-const c = _currentCustomer; if(!c) return;
-switchTab(document.querySelector('.dtab'), 'contact');
-const nameParts = c.name.split(' ');
-document.getElementById('e-fname').value   = nameParts[0] || '';
-document.getElementById('e-lname').value   = nameParts.slice(1).join(' ') || '';
-document.getElementById('e-phone').value   = c.phone || '';
-document.getElementById('e-email').value   = c.email || '';
-document.getElementById('e-address').value = c.address || '';
-document.getElementById('e-since').value   = c.since || '';
-document.getElementById('e-note').value    = '';
-document.getElementById('c-view-mode').style.display = 'none';
-document.getElementById('c-edit-mode').style.display = 'flex';
-document.getElementById('c-footer-view').style.display = 'none';
-document.getElementById('c-footer-edit').style.display = 'flex';
+  const c = _currentCustomer; if(!c) return;
+  switchTab(document.querySelector('.dtab'), 'contact');
+  const nameParts = (c.name || '').split(' ');
+  document.getElementById('e-fname').value   = nameParts[0] || '';
+  document.getElementById('e-lname').value   = nameParts.slice(1).join(' ') || '';
+  document.getElementById('e-phone').value   = c.phone || '';
+  document.getElementById('e-email').value   = c.email || '';
+  document.getElementById('e-address').value = c.address || '';
+  document.getElementById('e-since').value   = c.since || '';
+  document.getElementById('e-note').value    = '';
+  document.getElementById('c-view-mode').style.display = 'none';
+  document.getElementById('c-edit-mode').style.display = 'flex';
+  document.getElementById('c-footer-view').style.display = 'none';
+  document.getElementById('c-footer-edit').style.display = 'flex';
 }
 
 function cancelCustomerEdit() {
-if (_currentCustomer && _currentCustomer.name === '') { closeDrawer(); return; }
-document.getElementById('c-edit-mode').style.display = 'none';
-document.getElementById('c-view-mode').style.display = 'block';
-document.getElementById('c-footer-edit').style.display = 'none';
-document.getElementById('c-footer-view').style.display = 'flex';
-showToast('Changes discarded');
+  if (_currentCustomer && _currentCustomer.id === null) { closeDrawer(); return; }
+  document.getElementById('c-edit-mode').style.display = 'none';
+  document.getElementById('c-view-mode').style.display = 'block';
+  document.getElementById('c-footer-edit').style.display = 'none';
+  document.getElementById('c-footer-view').style.display = 'flex';
+  showToast('Changes discarded');
 }
 
-function saveCustomerEdit() {
-const fname   = document.getElementById('e-fname').value.trim();
-const lname   = document.getElementById('e-lname').value.trim();
-const phone   = document.getElementById('e-phone').value.trim();
-const email   = document.getElementById('e-email').value.trim();
-const address = document.getElementById('e-address').value.trim();
-const since   = document.getElementById('e-since').value.trim();
-const fullName = (fname + ' ' + lname).trim();
+async function saveCustomerEdit() {
+  const fname   = document.getElementById('e-fname').value.trim();
+  const lname   = document.getElementById('e-lname').value.trim();
+  const phone   = document.getElementById('e-phone').value.trim();
+  const email   = document.getElementById('e-email').value.trim();
+  const address = document.getElementById('e-address').value.trim();
+  const since   = document.getElementById('e-since').value.trim();
+  const fullName = (fname + ' ' + lname).trim();
 
-// Persist to customer data
-if (_currentCustomer) {
-  _currentCustomer.name    = fullName;
-  _currentCustomer.phone   = phone;
-  _currentCustomer.email   = email;
-  _currentCustomer.address = address;
-  _currentCustomer.since   = since;
-  _currentCustomer.meta    = phone + ' &nbsp;·&nbsp; <a href="#">' + address + '</a>';
-}
-
-// Update view panel
-document.getElementById('d-name').textContent    = fullName;
-document.getElementById('d-phone').textContent   = phone;
-document.getElementById('d-email').textContent   = email;
-document.getElementById('d-address').textContent = address;
-document.getElementById('d-since').textContent   = since;
-document.getElementById('d-meta').innerHTML      = phone + ' &nbsp;·&nbsp; <a href="#">' + address + '</a>';
-
-document.getElementById('c-edit-mode').style.display = 'none';
-document.getElementById('c-view-mode').style.display = 'block';
-document.getElementById('c-footer-edit').style.display = 'none';
-document.getElementById('c-footer-view').style.display = 'flex';
-// If this is a new customer, add a row to the table
-if (_currentCustomer && _currentCustomer.initials === '?') {
   if (!fullName) { showToast('Please enter a name'); return; }
-  const initials = (fname[0]||'')+(lname[0]||'');
-  const colors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
-  const color = colors[Math.floor(Math.random()*colors.length)];
-  const id = 'new_' + Date.now();
-  _currentCustomer.initials = initials.toUpperCase();
-  _currentCustomer.color = color;
-  customers[id] = Object.assign({}, _currentCustomer);
 
-  const tbody = document.getElementById('table-body');
-  const row = document.createElement('div');
-  row.className = 'cust-row';
-  row.dataset.status = 'active';
-  row.style.animation = 'fadeUp 0.35s ease both';
-  row.onclick = function(){ openDrawer(id); };
-  row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:'+color+';">'+initials.toUpperCase()+'</div><div><div class="cust-name">'+fullName+'</div><div class="cust-addr">'+address+'</div></div></div><div class="cust-phone">'+phone+'</div><div class="cust-status"><span class="status-active">Active</span></div><div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustRow(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>';
-  tbody.insertBefore(row, tbody.firstChild);
-  closeDrawer();
-  showToast(fullName + ' added ✓');
-  return;
+  try {
+    if (_currentCustomer && _currentCustomer.id === null) {
+      // Create new customer
+      var noteText = document.getElementById('e-note').value.trim();
+      var notes = [];
+      if (noteText) {
+        notes.push({ text: noteText, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}), tag: 'Note', tagColor: 'green' });
+      }
+      var tags = _currentCustomer.tags || [];
+      await API.customers.create({ name: fullName, phone: phone, email: email, address: address, notes: notes, tags: tags });
+      await loadCustomers();
+      closeDrawer();
+      showToast(fullName + ' added');
+    } else if (_currentCustomer && _currentCustomer.id) {
+      // Update existing customer
+      await API.customers.update(_currentCustomer.id, { name: fullName, phone: phone, email: email, address: address });
+      await loadCustomers();
+      // Update view panel
+      document.getElementById('d-name').textContent    = fullName;
+      document.getElementById('d-phone').textContent   = phone;
+      document.getElementById('d-email').textContent   = email;
+      document.getElementById('d-address').textContent = address;
+      document.getElementById('d-since').textContent   = since;
+      document.getElementById('d-meta').innerHTML      = phone + ' &nbsp;&middot;&nbsp; <a href="#">' + address + '</a>';
+      _currentCustomer.name = fullName;
+      _currentCustomer.phone = phone;
+      _currentCustomer.email = email;
+      _currentCustomer.address = address;
+      document.getElementById('c-edit-mode').style.display = 'none';
+      document.getElementById('c-view-mode').style.display = 'block';
+      document.getElementById('c-footer-edit').style.display = 'none';
+      document.getElementById('c-footer-view').style.display = 'flex';
+      // Save to API
+  try {
+    var data = { name: fullName, phone: phone, email: email, address: address, notes: _currentCustomer.notes || '' };
+    if (_currentCustomer.id && !_currentCustomer.id.startsWith('new_')) {
+      await API.customers.update(_currentCustomer.id, data);
+    } else {
+      await API.customers.create(data);
+    }
+    closeDrawer();
+    loadCustomers();
+  } catch(e) { showToast('Error: ' + e.message); return; }
+  showToast('Customer saved');
+    }
+  } catch (err) {
+    console.error('Failed to save customer:', err);
+    showToast('Error saving customer');
+  }
 }
 
-document.getElementById('c-edit-mode').style.display = 'none';
-document.getElementById('c-view-mode').style.display = 'block';
-document.getElementById('c-footer-edit').style.display = 'none';
-document.getElementById('c-footer-view').style.display = 'flex';
-showToast('Customer saved ✓');
-
-}
-
-async function deleteCustRow(el) {
+async function deleteCustRow(el, id) {
   const row = el.closest('.cust-row');
   if (!row) return;
   const nameEl = row.querySelector('.cust-name');
   const name = nameEl ? nameEl.textContent : 'this customer';
-  const ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong> from your customers.', 'DELETE CUSTOMER', '🗑️');
+  const ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong> from your customers.', 'DELETE CUSTOMER', '\ud83d\uddd1\ufe0f');
   if (!ok) return;
-  row.remove();
-  showToast(name + ' deleted');
+  try {
+    if (id) await API.customers.delete(id);
+    await loadCustomers();
+    showToast(name + ' deleted');
+  } catch (err) {
+    console.error('Failed to delete customer:', err);
+    showToast('Error deleting customer');
+  }
 }
 
 async function deleteCustomer() {
   if (!_currentCustomer) return;
-  const ok = await swftConfirm('This will permanently delete <strong>' + (_currentCustomer.name || 'this customer') + '</strong> and all their data.', 'DELETE CUSTOMER', '🗑️');
+  if (!_currentCustomer.id) { closeDrawer(); return; }
+  const ok = await swftConfirm('This will permanently delete <strong>' + (_currentCustomer.name || 'this customer') + '</strong> and all their data.', 'DELETE CUSTOMER', '\ud83d\uddd1\ufe0f');
   if (!ok) return;
   const name = _currentCustomer.name;
-  document.querySelectorAll('.cust-row').forEach(row => {
-    const rowName = row.querySelector('.cust-name');
-    if (rowName && rowName.textContent === name) row.remove();
-  });
-  closeDrawer();
-  showToast(name + ' deleted');
+  try {
+    if (_currentCustomer.id) await API.customers.delete(_currentCustomer.id);
+    await loadCustomers();
+    closeDrawer();
+    showToast(name + ' deleted');
+  } catch (err) {
+    console.error('Failed to delete customer:', err);
+    showToast('Error deleting customer');
+  }
 }
 
-// ── SORT ──
+// -- SORT --
 const sortLabels = {
-'name-az':   'Name A--Z',
-'name-za':   'Name Z--A',
-'spend-hi':  'Spend ↓',
-'spend-lo':  'Spend ↑',
-'jobs-hi':   'Jobs ↓',
-'jobs-lo':   'Jobs ↑',
-'status':    'Status',
+  'name-az':   'Name A--Z',
+  'name-za':   'Name Z--A',
+  'spend-hi':  'Spend \u2193',
+  'spend-lo':  'Spend \u2191',
+  'jobs-hi':   'Jobs \u2193',
+  'jobs-lo':   'Jobs \u2191',
+  'status':    'Status',
 };
 
 function toggleSortMenu() {
-const menu = document.getElementById('sort-menu');
-const btn  = document.getElementById('sort-btn');
-const open = menu.classList.toggle('open');
-btn.classList.toggle('open', open);
-if (open) {
-// close on outside click
-setTimeout(() => document.addEventListener('click', closeSortOnOutside), 10);
-}
+  const menu = document.getElementById('sort-menu');
+  const btn  = document.getElementById('sort-btn');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) {
+    setTimeout(() => document.addEventListener('click', closeSortOnOutside), 10);
+  }
 }
 
 function closeSortOnOutside(e) {
-const wrap = document.querySelector('.sort-wrap');
-if (!wrap.contains(e.target)) {
-document.getElementById('sort-menu').classList.remove('open');
-document.getElementById('sort-btn').classList.remove('open');
-document.removeEventListener('click', closeSortOnOutside);
-}
+  const wrap = document.querySelector('.sort-wrap');
+  if (!wrap.contains(e.target)) {
+    document.getElementById('sort-menu').classList.remove('open');
+    document.getElementById('sort-btn').classList.remove('open');
+    document.removeEventListener('click', closeSortOnOutside);
+  }
 }
 
 function applySort(key) {
-// Update active option
-document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
-const activeEl = document.getElementById('so-' + key);
-if (activeEl) activeEl.classList.add('active');
-document.getElementById('sort-label').textContent = sortLabels[key] || key;
+  document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+  const activeEl = document.getElementById('so-' + key);
+  if (activeEl) activeEl.classList.add('active');
+  document.getElementById('sort-label').textContent = sortLabels[key] || key;
 
-// Close menu
-document.getElementById('sort-menu').classList.remove('open');
-document.getElementById('sort-btn').classList.remove('open');
-document.removeEventListener('click', closeSortOnOutside);
+  document.getElementById('sort-menu').classList.remove('open');
+  document.getElementById('sort-btn').classList.remove('open');
+  document.removeEventListener('click', closeSortOnOutside);
 
-// Get all visible rows
-const tbody  = document.getElementById('table-body');
-const rows   = Array.from(tbody.querySelectorAll('.cust-row'));
+  const tbody  = document.getElementById('table-body');
+  const rows   = Array.from(tbody.querySelectorAll('.cust-row'));
 
-const getValue = (row, type) => {
-  switch(type) {
-    case 'name':
-      return row.querySelector('.cust-name').textContent.trim().toLowerCase();
-    case 'spend':
-      return parseFloat(row.querySelector('.cust-spend').textContent.replace(/[$,]/g,'')) || 0;
-    case 'jobs':
-      return parseInt(row.querySelector('.cust-jobs').textContent) || 0;
-    case 'status': {
-      const s = row.dataset.status;
-      return s === 'active' ? 0 : s === 'quoted' ? 1 : 2;
+  const getValue = (row, type) => {
+    switch(type) {
+      case 'name':
+        return row.querySelector('.cust-name').textContent.trim().toLowerCase();
+      case 'status': {
+        const s = row.dataset.status;
+        return s === 'active' ? 0 : s === 'quoted' ? 1 : 2;
+      }
+      default: return 0;
     }
-    default: return 0;
-  }
-};
+  };
 
-rows.sort((a, b) => {
-  switch(key) {
-    case 'name-az':   return getValue(a,'name').localeCompare(getValue(b,'name'));
-    case 'name-za':   return getValue(b,'name').localeCompare(getValue(a,'name'));
-    case 'spend-hi':  return getValue(b,'spend') - getValue(a,'spend');
-    case 'spend-lo':  return getValue(a,'spend') - getValue(b,'spend');
-    case 'jobs-hi':   return getValue(b,'jobs')  - getValue(a,'jobs');
-    case 'jobs-lo':   return getValue(a,'jobs')  - getValue(b,'jobs');
-    case 'status':    return getValue(a,'status')- getValue(b,'status');
-    default: return 0;
-  }
-});
+  rows.sort((a, b) => {
+    switch(key) {
+      case 'name-az':   return getValue(a,'name').localeCompare(getValue(b,'name'));
+      case 'name-za':   return getValue(b,'name').localeCompare(getValue(a,'name'));
+      case 'status':    return getValue(a,'status')- getValue(b,'status');
+      default: return 0;
+    }
+  });
 
-// Re-append in sorted order
-rows.forEach(r => tbody.appendChild(r));
-showToast('Sorted by ' + sortLabels[key]);
-
+  rows.forEach(r => tbody.appendChild(r));
+  showToast('Sorted by ' + sortLabels[key]);
 }
 
 </script>
@@ -1263,6 +1232,8 @@ showToast('Sorted by ' + sortLabels[key]);
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
+      loadCustomers();
+      loadCustomers();
       // Auto-open new customer form if ?new=1
       if (window.location.search.includes('new=1')) {
         setTimeout(function(){ openNewCustomer(); }, 300);
