@@ -491,7 +491,7 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
     <div class="section-title">Edit Quote</div>
     <div style="display:flex;flex-direction:column;gap:12px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="edit-field"><label class="edit-label">Customer</label><select class="edit-input" id="e-customer"><option value="">Select a customer...</option></select></div>
+        <div class="edit-field"><label class="edit-label">Customer</label><select class="edit-input" id="e-customer" onchange="autofillBillingCustomer(this.value)"><option value="">Select a customer...</option></select></div>
         <div class="edit-field"><label class="edit-label">Quote #</label><input class="edit-input" id="e-num" type="text"/></div>
       </div>
       <div class="edit-field"><label class="edit-label">Job Description</label><input class="edit-input" id="e-job" type="text"/></div>
@@ -707,6 +707,7 @@ function handleOverlayClick(e) {
 async function loadBillingCustomers() {
   try {
     var customers = await API.customers.list();
+    window._billingCustomers = customers;
     var select = document.getElementById('e-customer');
     if (!select) return;
     select.innerHTML = '<option value="">Select a customer...</option>';
@@ -714,9 +715,23 @@ async function loadBillingCustomers() {
       var opt = document.createElement('option');
       opt.value = c.name || '';
       opt.textContent = c.name || 'Unnamed';
+      opt.dataset.address = c.address || '';
+      opt.dataset.id = c.id || '';
       select.appendChild(opt);
     });
   } catch(e) {}
+}
+
+function autofillBillingCustomer(name) {
+  if (!name || !window._billingCustomers) return;
+  var cust = window._billingCustomers.find(function(c) { return c.name === name; });
+  if (!cust) return;
+  var addrField = document.getElementById('e-address');
+  if (addrField) addrField.value = cust.address || '';
+  if (_q) {
+    _q.address = cust.address || '';
+    _q.customerId = cust.id || '';
+  }
 }
 
 function openNewQuote() {
