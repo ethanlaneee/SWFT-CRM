@@ -46,10 +46,10 @@
     /* ── Chat Panel ── */
     .swft-chat-panel {
       position: fixed;
-      bottom: 72px;
-      right: 16px;
+      bottom: 74px;
+      right: 20px;
       width: 360px;
-      max-height: 500px;
+      max-height: 480px;
       background: #111111;
       border: 1px solid #222;
       border-radius: 16px;
@@ -272,14 +272,23 @@
     .swft-chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
     .swft-chat-send svg { width: 18px; height: 18px; fill: #0a0a0a; }
 
+    /* When panel is open, shift FAB left so it doesn't block send */
+    .swft-chat-fab.open {
+      right: 340px;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 480px) {
       .swft-chat-panel {
         right: 8px;
         left: 8px;
-        bottom: 80px;
+        bottom: 74px;
         width: auto;
         max-height: calc(100vh - 120px);
+      }
+      .swft-chat-fab.open {
+        right: 20px;
+        bottom: 20px;
       }
     }
   `;
