@@ -151,6 +151,7 @@
         </div>
       </div>
       <div class="account-footer">
+        <button class="account-btn" onclick="logoutAccount()" style="color:#ff5252;border-color:rgba(255,82,82,0.3);">Log Out</button>
         <button class="account-btn" onclick="closeAccountPanel()">Cancel</button>
         <button class="account-btn primary" onclick="saveAccount()">Save Changes</button>
       </div>
@@ -185,9 +186,26 @@
     return auth.currentUser.getIdToken();
   }
 
-  // Open
+  // Open — instant fill from Firebase Auth, then enhance from Firestore
   window.openAccountPanel = async function () {
     overlay.classList.add("open");
+
+    // Step 1: Instant fill from Firebase Auth (no network call)
+    try {
+      const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+      const user = getAuth().currentUser;
+      if (user) {
+        const displayName = user.displayName || "";
+        const parts = displayName.split(" ");
+        document.getElementById("acct-first").value = parts[0] || "";
+        document.getElementById("acct-last").value = parts.slice(1).join(" ") || "";
+        document.getElementById("acct-email").value = user.email || "";
+        const initials = ((parts[0] || "?")[0] + (parts[1] || "")[0]).toUpperCase();
+        document.getElementById("acct-avatar").textContent = initials || "?";
+      }
+    } catch (e) {}
+
+    // Step 2: Enhance from Firestore (has company, phone, gmail)
     try {
       const token = await getToken();
       const res = await fetch(`${API_BASE}/api/me`, {
@@ -195,23 +213,36 @@
       });
       const data = await res.json();
 
-      document.getElementById("acct-first").value = data.name?.split(" ")[0] || data.firstName || "";
-      document.getElementById("acct-last").value = data.name?.split(" ").slice(1).join(" ") || data.lastName || "";
+      if (data.firstName || data.name) {
+        document.getElementById("acct-first").value = data.firstName || data.name?.split(" ")[0] || "";
+        document.getElementById("acct-last").value = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
+      }
       document.getElementById("acct-company").value = data.company || "";
       document.getElementById("acct-phone").value = data.phone || "";
-      document.getElementById("acct-email").value = data.email || "";
+      if (data.email) document.getElementById("acct-email").value = data.email;
       document.getElementById("acct-gmail").value = data.gmailAddress || "";
       document.getElementById("acct-gmail-pw").value = data.gmailAppPassword ? "••••••••••••" : "";
 
-      const first = (data.name?.split(" ")[0] || data.firstName || "?")[0];
-      const last = (data.name?.split(" ")[1] || data.lastName || "")[0] || "";
+      const first = (data.firstName || data.name?.split(" ")[0] || "?")[0];
+      const last = (data.lastName || data.name?.split(" ")[1] || "")[0] || "";
       document.getElementById("acct-avatar").textContent = (first + last).toUpperCase();
-    } catch (e) { /* ignore load errors */ }
+    } catch (e) { /* Firestore fetch failed, Auth data is still shown */ }
   };
 
   // Close
   window.closeAccountPanel = function () {
     overlay.classList.remove("open");
+  };
+
+  // Logout
+  window.logoutAccount = async function () {
+    try {
+      const { getAuth, signOut } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+      await signOut(getAuth());
+      window.location.href = "swft-login.html";
+    } catch (e) {
+      window.location.href = "swft-login.html";
+    }
   };
 
   // Save

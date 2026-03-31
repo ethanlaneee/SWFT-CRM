@@ -42,16 +42,31 @@
   }
 
   async function getLocation() {
-    return new Promise((resolve) => {
+    // Try browser geolocation first
+    const browserLoc = await new Promise((resolve) => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-          () => resolve({ lat: 30.27, lon: -97.74 }) // Default: Austin TX
+          () => resolve(null),
+          { timeout: 5000 }
         );
       } else {
-        resolve({ lat: 30.27, lon: -97.74 });
+        resolve(null);
       }
     });
+    if (browserLoc) return browserLoc;
+
+    // Fallback: IP-based geolocation (no permission needed)
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      if (data.latitude && data.longitude) {
+        return { lat: data.latitude, lon: data.longitude };
+      }
+    } catch (e) {}
+
+    // Last resort: Austin TX
+    return { lat: 30.27, lon: -97.74 };
   }
 
   function isCanada(lat, lon) {
