@@ -328,8 +328,8 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     <a class="panel-link" onclick="window.location.href='swft-schedule.html'">Full calendar &#8594;</a>
   </div>
   <div class="weather-strip"><span class="weather-icon">&#9925;</span><span class="weather-text"><strong>72&#176;F</strong> &nbsp;Partly cloudy</span><span class="weather-badge">&#10003; Clear</span></div>
-  <div id="schedule-list" style="flex:1;overflow-y:auto;">
-  <div class="schedule-row now"><div class="sched-time">7:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson &#8212; Backyard Patio</div><div class="sched-meta"><span class="sched-chip">Crew A</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">~6 hrs</div></div>
+  <div id="schedule-list" style="flex:1;overflow-y:auto;"></div>
+</div><div class="sched-body"><div class="sched-title">Henderson &#8212; Backyard Patio</div><div class="sched-meta"><span class="sched-chip">Crew A</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">~6 hrs</div></div>
   <div class="schedule-row now"><div class="sched-time">8:30<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Ortiz &#8212; Pool Deck</div><div class="sched-meta"><span class="sched-chip">Crew B</span><span class="sched-addr">88 Lakeview Ct</span></div></div><div class="sched-dur">~5 hrs</div></div>
   <div class="schedule-row"><div class="sched-time">11:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Site Estimate &#8212; Pham</div><div class="sched-meta"><span class="sched-chip">Jake Reynolds</span><span class="sched-addr">2422 Oak St</span></div></div><div class="sched-dur">~1 hr</div></div>
   <div class="schedule-row"><div class="sched-time">2:00<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:#f5a623;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Follow-up &#8212; Garcia</div><div class="sched-meta"><span class="sched-chip">AI Scheduled</span></div></div><div class="sched-dur">15 min</div></div>
@@ -481,6 +481,34 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     }
   }
 
+
+  async function loadSchedule() {
+    try {
+      const jobs = await API.jobs.list();
+      const list = document.getElementById('schedule-list');
+      if (!list) return;
+      if (!jobs || jobs.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs scheduled. Create a job to see it here.</div>';
+        return;
+      }
+      list.innerHTML = '';
+      var today = new Date().toISOString().split('T')[0];
+      jobs.forEach(function(j) {
+        var isToday = j.scheduledDate === today;
+        var pipColor = j.status === 'active' ? 'var(--green)' : j.status === 'scheduled' ? '#4d9fff' : j.status === 'pending' ? '#f5a623' : 'var(--gray2)';
+        var row = document.createElement('div');
+        row.className = 'schedule-row' + (isToday ? ' now' : '');
+        var time = j.scheduledDate || 'TBD';
+        row.innerHTML = '<div class="sched-time">' + time.substring(5) + '</div>' +
+          '<div class="sched-timeline"><div class="sched-dot" style="color:' + pipColor + ';"></div><div class="sched-connector"></div></div>' +
+          '<div class="sched-body"><div class="sched-title">' + (j.title || j.customerName + ' - ' + j.service) + '</div>' +
+          '<div class="sched-meta">' + (j.address ? '<span class="sched-addr">' + j.address + '</span>' : '') + '</div></div>' +
+          '<div class="sched-dur">' + (j.status||'') + '</div>';
+        list.appendChild(row);
+      });
+    } catch(e) { console.error('loadSchedule error:', e); }
+  }
+
   let _toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -600,6 +628,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-weather.js"></script>
 <script src="swft-calendar-sync.js"></script>
+<script src="swft-api.js"></script>
 <script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>

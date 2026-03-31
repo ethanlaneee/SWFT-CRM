@@ -323,10 +323,10 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
 
 <!-- Stats -->
 <div class="stat-row">
-  <div class="stat-card c-blue"><div class="stat-label">Quotes Sent MTD</div><div class="stat-value">12</div><div class="stat-sub">$58,400 total value</div></div>
-  <div class="stat-card c-green"><div class="stat-label">Approved</div><div class="stat-value">7</div><div class="stat-sub">$34,100 · 58% close rate</div></div>
-  <div class="stat-card c-amber"><div class="stat-label">Awaiting Response</div><div class="stat-value">3</div><div class="stat-sub">$18,300 pipeline</div></div>
-  <div class="stat-card c-red"><div class="stat-label">Declined / Expired</div><div class="stat-value">2</div><div class="stat-sub">$6,000 lost</div></div>
+  <div class="stat-card c-blue"><div class="stat-label">Quotes Sent MTD</div><div class="stat-value" id="q-stat-sent">0</div><div class="stat-sub">$58,400 total value</div></div>
+  <div class="stat-card c-green"><div class="stat-label">Approved</div><div class="stat-value" id="q-stat-approved">0</div><div class="stat-sub">$34,100 · 58% close rate</div></div>
+  <div class="stat-card c-amber"><div class="stat-label">Awaiting Response</div><div class="stat-value" id="q-stat-waiting">0</div><div class="stat-sub">$18,300 pipeline</div></div>
+  <div class="stat-card c-red"><div class="stat-label">Declined / Expired</div><div class="stat-value" id="q-stat-declined">0</div><div class="stat-sub">$6,000 lost</div></div>
 </div>
 
 <!-- Toolbar -->
@@ -355,10 +355,8 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
     <div class="th">Status</div>
     <div class="th"></div>
   </div>
-  <div id="quotes-body">
-    <div class="q-row" data-status="sent" onclick="openModal('martinez')">
-      <div class="q-num">#Q-1042</div>
-      <div><div class="q-customer">Rosa Martinez</div><div class="q-job">Driveway — Stamped Concrete</div></div>
+  <div id="quotes-body"></div>
+  </div>
       <div class="q-date">Mar 23</div>
       <div class="q-expires exp-soon">Mar 30 ⚠</div>
       <div class="q-total">$4,800</div>
@@ -438,10 +436,8 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
     <div class="th">Status</div>
     <div class="th"></div>
   </div>
-  <div id="invoices-body">
-    <div class="inv-row" data-status="partial" onclick="showToast('Invoice details — click to expand (coming soon)')">
-      <div class="inv-num">#INV-1043</div>
-      <div><div class="inv-customer">Tom Henderson</div><div class="inv-job">Backyard Patio — Stamped</div></div>
+  <div id="invoices-body"></div>
+  </div>
       <div class="inv-total">$7,200</div>
       <div class="inv-date">$3,600</div>
       <div class="inv-balance bal-amber">$3,600</div>
@@ -657,16 +653,106 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
 <script>
-const quotes = {
-  martinez:{num:'#Q-1042',created:'Mar 23, 2026',customer:'Rosa Martinez',job:'Driveway — Stamped Concrete',expires:'Expires Mar 30',total:'$4,800',sqft:'520',service:'Stamped',valid:'30 days',address:'2210 Elm St, Round Rock TX',finish:'Stamped — Ashlar Slate, Charcoal',area:'520 sqft · Measured on-site',start:'Early April 2026',status:'Sent',statusStyle:'background:rgba(77,159,255,0.12);color:#4d9fff;',lines:[{desc:'Stamped Concrete — Ashlar Slate',sub:'4,000 PSI · Charcoal tint',qty:'520 sqft',rate:'$8.50',total:'$4,420'},{desc:'Color Sealer',sub:'Same-day application',qty:'520 sqft',rate:'$0.73',total:'$380'}]},
-  pham:{num:'#Q-1047',created:'Mar 27, 2026',customer:'Linh Pham',job:'Driveway Resurface',expires:'Expires Apr 10',total:'$6,240',sqft:'880',service:'Exposed Agg.',valid:'14 days',address:'2422 Oak St, Austin TX',finish:'Exposed Aggregate — Pea Gravel',area:'880 sqft · AI estimated',start:'Mid April 2026',status:'Sent',statusStyle:'background:rgba(77,159,255,0.12);color:#4d9fff;',lines:[{desc:'Exposed Aggregate Driveway',sub:'Pea gravel · 3,500 PSI',qty:'880 sqft',rate:'$6.50',total:'$5,720'},{desc:'Edge Forming & Demo',sub:'Asphalt removal',qty:'1 job',rate:'$520',total:'$520'}]},
-  flores:{num:'#Q-1048',created:'Mar 27, 2026',customer:'Maria Flores',job:'Backyard Patio',expires:'Expires Apr 10',total:'$7,350',sqft:'560',service:'Stamped',valid:'14 days',address:'77 Magnolia Blvd, Austin TX',finish:'Stamped — Cobblestone, Natural Gray',area:'560 sqft · Measured on-site',start:'Late April 2026',status:'Sent',statusStyle:'background:rgba(77,159,255,0.12);color:#4d9fff;',lines:[{desc:'Stamped Concrete Patio',sub:'Cobblestone · Natural gray',qty:'560 sqft',rate:'$11.50',total:'$6,440'},{desc:'Integral Color Add',sub:'Premium color mix',qty:'560 sqft',rate:'$1.62',total:'$910'}]},
-  nguyen:{num:'#Q-1046',created:'Mar 22, 2026',customer:'David Nguyen',job:'Front Walkway',expires:'Approved Mar 24',total:'$2,250',sqft:'140',service:'Exposed Agg.',valid:'Approved',address:'2422 Oak St, Austin TX',finish:'Exposed Aggregate — River Rock',area:'140 sqft · Measured on-site',start:'Apr 1, 2026',status:'Approved',statusStyle:'background:rgba(200,241,53,0.12);color:#c8f135;',lines:[{desc:'Exposed Aggregate Walkway',sub:'River rock · 3,500 PSI',qty:'140 sqft',rate:'$16.07',total:'$2,250'}]},
-  garcia:{num:'#Q-1049',created:'Mar 27, 2026',customer:'Carlos Garcia',job:'Side Yard — Broom Finish',expires:'Draft — not sent',total:'$3,100',sqft:'480',service:'Broom Finish',valid:'Draft',address:'902 Pine St, Austin TX',finish:'Broom Finish — Standard Gray',area:'480 sqft · Estimated',start:'TBD',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[{desc:'Broom Finish Slab',sub:'4,000 PSI · Standard gray',qty:'480 sqft',rate:'$6.46',total:'$3,100'}]},
-};
+window._quotes = {};
+window._invoicesData = {};
+let _invCounter = 1050;
 
 let _q = null;
-let _invCounter = 1050;
+
+async function loadQuotes() {
+  try {
+    const quotes = await API.quotes.list();
+    window._quotes = {};
+    const tbody = document.getElementById('quotes-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    quotes.forEach(function(q) {
+      window._quotes[q.id] = q;
+      const pillClass = {'draft':'s-draft','sent':'s-sent','approved':'s-approved','declined':'s-declined'};
+      const row = document.createElement('div');
+      row.className = 'q-row';
+      row.dataset.status = q.status || 'draft';
+      row.onclick = function(){ openModalById(q.id); };
+      const total = q.total ? '$' + Number(q.total).toLocaleString() : '$0';
+      const created = q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+      row.innerHTML = '<div class="q-num">' + (q.id.substring(0,8)) + '</div>' +
+        '<div><div class="q-customer">' + (q.customerName||'—') + '</div><div class="q-job">' + (q.notes||'—') + '</div></div>' +
+        '<div class="q-date">' + created + '</div>' +
+        '<div class="q-expires exp-ok">—</div>' +
+        '<div class="q-total">' + total + '</div>' +
+        '<div><span class="status-pill ' + (pillClass[q.status]||'s-draft') + '">' + (q.status||'draft') + '</span></div>' +
+        '<div style="display:flex;justify-content:flex-end;"><div class="row-btn">&rarr;</div></div>';
+      tbody.appendChild(row);
+    });
+  } catch(e) { console.error('loadQuotes error:', e); }
+}
+
+async function loadInvoices() {
+  try {
+    const invoices = await API.invoices.list();
+    window._invoicesData = {};
+    const tbody = document.getElementById('invoices-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    invoices.forEach(function(inv) {
+      window._invoicesData[inv.id] = inv;
+      const row = document.createElement('div');
+      row.className = 'inv-row';
+      row.dataset.status = inv.status || 'open';
+      const total = inv.total ? '$' + Number(inv.total).toLocaleString() : '$0';
+      const paid = inv.paidAmount ? '$' + Number(inv.paidAmount).toLocaleString() : '$0';
+      const balance = (inv.total||0) - (inv.paidAmount||0);
+      const balClass = balance <= 0 ? 'bal-green' : inv.status === 'overdue' ? 'bal-red' : 'bal-amber';
+      const statusStyle = inv.status === 'paid' ? 'background:rgba(200,241,53,0.1);color:#c8f135;' : inv.status === 'overdue' ? 'background:rgba(255,82,82,0.1);color:#ff5252;' : 'background:rgba(245,166,35,0.1);color:#f5a623;';
+      row.innerHTML = '<div class="inv-num">#INV-' + (inv.id.substring(0,6)) + '</div>' +
+        '<div><div class="inv-customer">' + (inv.customerName||'—') + '</div><div class="inv-job">' + (inv.notes||'—') + '</div></div>' +
+        '<div class="inv-total">' + total + '</div>' +
+        '<div class="inv-date">' + paid + '</div>' +
+        '<div class="inv-balance ' + balClass + '">$' + Math.abs(balance).toLocaleString() + '</div>' +
+        '<div><span class="status-pill" style="' + statusStyle + '">' + (inv.status||'open') + '</span></div>' +
+        '<div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteInvRow(this,\'' + inv.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">x</div><div class="row-btn">&rarr;</div></div>';
+      tbody.appendChild(row);
+    });
+  } catch(e) { console.error('loadInvoices error:', e); }
+}
+
+async function deleteInvRow(el, id) {
+  try {
+    const ok = await swftConfirm('Delete this invoice?', 'DELETE INVOICE', '🗑️');
+    if (!ok) return;
+    await API.invoices.delete(id);
+    loadInvoices();
+    showToast('Invoice deleted');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+function openModalById(id) {
+  var q = window._quotes[id];
+  if (!q) return;
+  _q = {
+    id: q.id,
+    num: q.id.substring(0,8),
+    created: q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
+    customer: q.customerName || '',
+    job: q.notes || '',
+    total: '$' + (q.total||0).toLocaleString(),
+    sqft: '',
+    service: '',
+    valid: '30 days',
+    address: '',
+    finish: '',
+    area: '',
+    start: '',
+    status: q.status || 'draft',
+    statusStyle: q.status === 'approved' ? 'background:rgba(200,241,53,0.12);color:#c8f135;' : q.status === 'sent' ? 'background:rgba(77,159,255,0.12);color:#4d9fff;' : 'background:rgba(100,100,100,0.12);color:#7a7a7a;',
+    lines: q.items || [],
+    expires: '—'
+  };
+  openModal_display();
+}
+
+
+
 
 function openModal(id) {
   const q = quotes[id]; if(!q) return;
@@ -809,7 +895,7 @@ function cancelEdit(){
   showToast('Changes discarded');
 }
 
-function saveEdit(){
+async function saveEdit(){
   if(!_q)return;
   _q.customer=document.getElementById('e-customer').value.trim();
   _q.num=document.getElementById('e-num').value.trim();
@@ -876,8 +962,32 @@ function saveEdit(){
     return;
   }
 
+  // Save to API
+  try {
+    var items = _q.lines || [];
+    var total = items.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0);},0);
+    var data = { customerName: _q.customer, items: items, total: total, notes: _q.job, status: _q.status || 'draft' };
+    if (_q.id && !_q.id.startsWith('new_')) {
+      await API.quotes.update(_q.id, data);
+    } else {
+      await API.quotes.create(data);
+    }
+    loadQuotes();
+  } catch(e) { console.error('Save error:', e); }
+
+  // Handle invoice creation
+  if (_q.isInvoice && _q.customer) {
+    try {
+      var invItems = _q.lines || [];
+      var invTotal = invItems.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0);},0);
+      await API.invoices.create({ customerName: _q.customer, items: invItems, total: invTotal, notes: _q.job, status: 'open' });
+      loadInvoices();
+      switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
+    } catch(e) { console.error('Invoice save error:', e); }
+  }
+
   closeModal();
-  showToast(_q.customer ? 'Quote for '+_q.customer+' saved ✓' : 'Quote saved ✓');
+  showToast(_q.customer ? (_q.isInvoice?'Invoice':'Quote')+' for '+_q.customer+' saved ✓' : 'Quote saved ✓');
 }
 
 function switchTab(el,tab){
@@ -928,10 +1038,10 @@ async function deleteQuote() {
   );
   if (!ok) return;
   const customer = _q.customer;
-  document.querySelectorAll('.q-row').forEach(row => {
-    const rowCust = row.querySelector('.q-customer');
-    if (rowCust && rowCust.textContent === customer) row.remove();
-  });
+  if (_q.id) {
+    try { await API.quotes.delete(_q.id); } catch(e) {}
+  }
+  loadQuotes();
   closeModal();
   showToast((_q.isInvoice?'Invoice':'Quote') + ' deleted');
 }
@@ -1046,11 +1156,14 @@ function filterInvoices(q) {
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
+      loadQuotes();
+      loadInvoices();
     }
   });
 </script>
 
 <script type="module" src="swft-user-sync.js"></script>
+<script src="swft-api.js"></script>
 <script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
