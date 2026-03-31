@@ -612,7 +612,7 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
         <div class="edit-field"><label class="edit-label">Sqft</label><input class="edit-input" id="e-sqft" type="text"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="edit-field"><label class="edit-label">Est. Start Date</label><input class="edit-input" id="e-start" type="text"/></div>
+        <div class="edit-field"><label class="edit-label">Est. Start Date</label><input class="edit-input" id="e-start" type="date"/></div>
         <div class="edit-field"><label class="edit-label">Status</label><select class="edit-input" id="e-status"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select></div>
       </div>
       <div class="edit-field"><label class="edit-label">Finish Details</label><input class="edit-input" id="e-finish" type="text"/></div>
@@ -631,9 +631,9 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
     Edit
   </button>
-  <button class="mfooter-btn" onclick="showToast('Quote duplicated ✓')">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="1.8"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="1.8"/></svg>
-    Duplicate
+  <button class="mfooter-btn" onclick="previewCurrentDoc()">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>
+    Preview PDF
   </button>
   <button class="mfooter-btn primary" id="send-btn" onclick="sendQuote()">
     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
@@ -859,6 +859,24 @@ function saveEdit(){
     existingRow.dataset.status = _q.status.toLowerCase();
   }
 
+  // If this is an invoice, add to the invoices table
+  if (_q.isInvoice && _q.customer) {
+    const invBody = document.getElementById('invoices-body');
+    const total = _q.lines ? _q.lines.reduce((s,l)=>s+(parseFloat((l.total||'').replace(/[$,]/g,''))||0),0) : 0;
+    const fmtTotal = '$' + total.toLocaleString('en-US',{minimumFractionDigits:0});
+    const row = document.createElement('div');
+    row.className = 'inv-row';
+    row.dataset.status = 'draft';
+    row.style.animation = 'fadeUp 0.35s ease both';
+    row.innerHTML = '<div class="inv-num">'+_q.num+'</div><div><div class="inv-customer">'+_q.customer+'</div><div class="inv-job">'+(_q.job||'—')+'</div></div><div class="inv-total">'+fmtTotal+'</div><div class="inv-date">$0</div><div class="inv-balance bal-amber">'+fmtTotal+'</div><div><span class="status-pill" style="background:rgba(100,100,100,0.12);color:#7a7a7a;">Draft</span></div><div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteInvoice(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>';
+    invBody.insertBefore(row, invBody.firstChild);
+    // Switch to invoices view
+    switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
+    closeModal();
+    showToast('Invoice for ' + _q.customer + ' created ✓');
+    return;
+  }
+
   closeModal();
   showToast(_q.customer ? 'Quote for '+_q.customer+' saved ✓' : 'Quote saved ✓');
 }
@@ -896,23 +914,38 @@ function filterQuotes(q){
   });
 }
 
-function deleteQuote() {
+function previewCurrentDoc() {
   if (!_q) return;
-  if (!confirm('Are you sure you want to delete this quote for ' + (_q.customer || 'this quote') + '?')) return;
+  const type = _q.isInvoice ? 'invoice' : 'quote';
+  showPdfPreview(type, _q);
+}
+
+async function deleteQuote() {
+  if (!_q) return;
+  const ok = await swftConfirm(
+    'This will permanently delete the ' + (_q.isInvoice?'invoice':'quote') + ' for <strong>' + (_q.customer || 'this item') + '</strong>.',
+    'DELETE ' + (_q.isInvoice?'INVOICE':'QUOTE'),
+    '🗑️'
+  );
+  if (!ok) return;
   const customer = _q.customer;
   document.querySelectorAll('.q-row').forEach(row => {
     const rowCust = row.querySelector('.q-customer');
     if (rowCust && rowCust.textContent === customer) row.remove();
   });
   closeModal();
-  showToast('Quote deleted');
+  showToast((_q.isInvoice?'Invoice':'Quote') + ' deleted');
 }
 
-function deleteInvoice(el) {
+async function deleteInvoice(el) {
   const row = el.closest('.inv-row');
   if (!row) return;
   const name = row.querySelector('.inv-customer').textContent;
-  if (!confirm('Are you sure you want to delete this invoice for ' + name + '?')) return;
+  const ok = await swftConfirm(
+    'This will permanently delete the invoice for <strong>' + name + '</strong>.',
+    'DELETE INVOICE', '🗑️'
+  );
+  if (!ok) return;
   row.remove();
   showToast('Invoice deleted');
 }
@@ -934,22 +967,27 @@ function toggleSidebar(){
 
 // ── NEW INVOICE ──
 function openNewInvoice() {
-  const customer = prompt('Customer name:');
-  if (!customer) return;
-  const job = prompt('Job description:');
-  const total = prompt('Invoice total ($):');
-  if (!total) return;
-  const fmtTotal = '$' + parseFloat(total).toLocaleString('en-US', {minimumFractionDigits: 0});
-  const invNum = '#INV-' + Math.floor(1050 + Math.random() * 100);
-
-  const tbody = document.getElementById('invoices-body');
-  const row = document.createElement('div');
-  row.className = 'inv-row';
-  row.dataset.status = 'draft';
-  row.style.animation = 'fadeUp 0.35s ease both';
-  row.innerHTML = '<div class="inv-num">' + invNum + '</div><div><div class="inv-customer">' + customer + '</div><div class="inv-job">' + (job || '—') + '</div></div><div class="inv-total">' + fmtTotal + '</div><div class="inv-date">$0</div><div class="inv-balance bal-amber">' + fmtTotal + '</div><div><span class="status-pill" style="background:rgba(100,100,100,0.12);color:#7a7a7a;">Draft</span></div><div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>';
-  tbody.insertBefore(row, tbody.firstChild);
-  showToast('Invoice for ' + customer + ' created ✓');
+  // Reuse the quote modal for invoices
+  _q = {num:'#INV-' + Math.floor(1050+Math.random()*100),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'—',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],isInvoice:true};
+  document.getElementById('m-num').textContent = _q.num + ' · Draft';
+  document.getElementById('m-title').textContent = 'New Invoice';
+  document.getElementById('m-job').textContent = '—';
+  document.getElementById('m-status-pill').textContent = 'Draft';
+  document.getElementById('m-status-pill').style.cssText = _q.statusStyle;
+  document.getElementById('m-expires').textContent = 'Not sent';
+  document.getElementById('m-total').textContent = '$0';
+  document.getElementById('m-sqft').textContent = '—';
+  document.getElementById('m-service').textContent = '—';
+  document.getElementById('m-valid').textContent = '—';
+  document.getElementById('m-customer').textContent = '—';
+  document.getElementById('m-address').textContent = '—';
+  document.getElementById('m-area').textContent = '—';
+  document.getElementById('m-finish').textContent = '—';
+  document.getElementById('m-start').textContent = '—';
+  document.getElementById('m-created').textContent = _q.created;
+  renderLineItems([]);
+  switchTab(document.querySelectorAll('.mtab')[3], 'edit');
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 // ── VIEW TOGGLE ──
@@ -1014,6 +1052,7 @@ function filterInvoices(q) {
 </script>
 
 <script type="module" src="swft-user-sync.js"></script>
+<script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
 <script src="swft-chat.js"></script>

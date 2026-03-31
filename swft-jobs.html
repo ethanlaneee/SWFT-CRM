@@ -817,19 +817,21 @@
       row.style.display = text.includes(query) ? 'grid' : 'none';
     });
   }
-  function deleteJobRow(el) {
+  async function deleteJobRow(el) {
     const row = el.closest('.job-row');
     if (!row) return;
     const title = row.querySelector('.job-title');
     const name = title ? title.textContent : 'this job';
-    if (!confirm('Are you sure you want to delete this job: ' + name + '?')) return;
+    const ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong>.', 'DELETE JOB', '🗑️');
+    if (!ok) return;
     row.remove();
     showToast(name + ' deleted');
   }
 
-  function deleteJob() {
+  async function deleteJob() {
     if (!_currentJob) return;
-    if (!confirm('Are you sure you want to delete this job: ' + (_currentJob.title || 'this job') + '?')) return;
+    const ok = await swftConfirm('This will permanently delete <strong>' + (_currentJob.title || 'this job') + '</strong>.', 'DELETE JOB', '🗑️');
+    if (!ok) return;
     const title = _currentJob.title;
     document.querySelectorAll('.job-row').forEach(row => {
       const rowTitle = row.querySelector('.job-title');
@@ -1086,6 +1088,7 @@
 </script>
 
 <script type="module" src="swft-user-sync.js"></script>
+<script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
 <script src="swft-chat.js"></script>

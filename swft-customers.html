@@ -1119,19 +1119,21 @@ showToast('Customer saved ✓');
 
 }
 
-function deleteCustRow(el) {
+async function deleteCustRow(el) {
   const row = el.closest('.cust-row');
   if (!row) return;
   const nameEl = row.querySelector('.cust-name');
   const name = nameEl ? nameEl.textContent : 'this customer';
-  if (!confirm('Are you sure you want to delete this customer: ' + name + '?')) return;
+  const ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong> from your customers.', 'DELETE CUSTOMER', '🗑️');
+  if (!ok) return;
   row.remove();
   showToast(name + ' deleted');
 }
 
-function deleteCustomer() {
+async function deleteCustomer() {
   if (!_currentCustomer) return;
-  if (!confirm('Are you sure you want to delete this customer: ' + (_currentCustomer.name || 'this customer') + '?')) return;
+  const ok = await swftConfirm('This will permanently delete <strong>' + (_currentCustomer.name || 'this customer') + '</strong> and all their data.', 'DELETE CUSTOMER', '🗑️');
+  if (!ok) return;
   const name = _currentCustomer.name;
   document.querySelectorAll('.cust-row').forEach(row => {
     const rowName = row.querySelector('.cust-name');
@@ -1261,6 +1263,7 @@ showToast('Sorted by ' + sortLabels[key]);
 </script>
 
 <script type="module" src="swft-user-sync.js"></script>
+<script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
 <script src="swft-chat.js"></script>
