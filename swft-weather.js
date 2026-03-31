@@ -86,6 +86,7 @@
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=${tempUnit}&timezone=auto&forecast_days=16`;
       const res = await fetch(url);
       const data = await res.json();
+      window._swftWeatherData = data;
       return data;
     } catch (e) {
       console.warn("Weather fetch failed:", e);
