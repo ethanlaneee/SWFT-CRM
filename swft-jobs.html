@@ -511,11 +511,10 @@
       <div class="edit-field">
         <label class="edit-label">Crew</label>
         <select class="edit-input" id="e-crew" onchange="if(this.value==='Other'){document.getElementById('e-custom-crew').style.display='block';}else{document.getElementById('e-custom-crew').style.display='none';}">
+          <option selected>Unassigned</option>
           <option>Crew A</option>
           <option>Crew B</option>
           <option>Crew A + B</option>
-          <option></option>
-          <option>Unassigned</option>
           <option>Other</option>
         </select>
         <input class="edit-input" id="e-custom-crew" type="text" placeholder="Enter crew name..." style="display:none;margin-top:6px;"/>
@@ -985,11 +984,32 @@
     _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
   }
 
-  function enterEditMode() {
+  async function enterEditMode() {
     var j = _currentJob; if(!j) return;
     switchTab(document.querySelector('.dtab'), 'details');
 
-    document.getElementById('e-customer').value = j.customerName || '';
+    // Load customers into dropdown first
+    await loadCustomerDropdown();
+
+    // Set customer - find matching option by name
+    var custSelect = document.getElementById('e-customer');
+    var matched = false;
+    for (var i = 0; i < custSelect.options.length; i++) {
+      if (custSelect.options[i].textContent === (j.customerName || '')) {
+        custSelect.selectedIndex = i;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched && j.customerName) {
+      // Add as option if not in list
+      var opt = document.createElement('option');
+      opt.value = j.customerId || j.customerName;
+      opt.textContent = j.customerName;
+      custSelect.appendChild(opt);
+      custSelect.value = opt.value;
+    }
+
     document.getElementById('e-date').value     = j.scheduledDate || '';
     document.getElementById('e-time').value     = j.scheduledTime || '';
     document.getElementById('e-address-edit').value = j.address || '';

@@ -712,7 +712,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Crew</label>
-        <select class="nj-input" id="nj-crew" onchange="if(this.value==='Other'){document.getElementById('nj-custom-crew').style.display='block';}else{document.getElementById('nj-custom-crew').style.display='none';}"><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option></option><option>Unassigned</option><option>Other</option></select>
+        <select class="nj-input" id="nj-crew" onchange="if(this.value==='Other'){document.getElementById('nj-custom-crew').style.display='block';}else{document.getElementById('nj-custom-crew').style.display='none';}"><option selected>Unassigned</option><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option>Other</option></select>
         <input class="nj-input" id="nj-custom-crew" type="text" placeholder="Enter crew name..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="nj-field"><label class="nj-label">Amount ($)</label><input class="nj-input" id="nj-amount" type="text" placeholder="e.g. 7200"/></div>
