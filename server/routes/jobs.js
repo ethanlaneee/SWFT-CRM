@@ -40,6 +40,10 @@ router.post("/", async (req, res, next) => {
       scheduledDate: req.body.scheduledDate || null,
       cost: req.body.cost || 0,
       address: req.body.address || "",
+      sqft: req.body.sqft || "",
+      duration: req.body.duration || "",
+      finish: req.body.finish || "",
+      crew: req.body.crew || "Unassigned",
       createdAt: Date.now(),
     };
     const ref = await col().add(data);
@@ -55,7 +59,7 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Job not found" });
     }
     const updates = {};
-    for (const key of ["customerId", "customerName", "quoteId", "title", "description", "service", "status", "scheduledDate", "cost", "address"]) {
+    for (const key of ["customerId", "customerName", "quoteId", "title", "description", "service", "status", "scheduledDate", "cost", "address", "sqft", "duration", "finish", "crew"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     updates.updatedAt = Date.now();

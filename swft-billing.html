@@ -482,7 +482,7 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
   <!-- NOTES -->
   <div id="tab-notes" style="display:none;">
     <div class="section-title">Internal Notes</div>
-    <div class="note-box" contenteditable="true" id="m-notes">Customer prefers stamped over broom finish. Mentioned possible pool deck add-on in summer. Follow up after driveway is done.</div>
+    <div class="note-box" contenteditable="true" id="m-notes"></div>
     <div style="margin-top:8px;font-size:11px;color:var(--gray2);">Click to edit · changes auto-save</div>
   </div>
 
@@ -835,7 +835,7 @@ function renderLineItems(lines) {
     <div class="total-row"><span class="total-label">Subtotal</span><span class="total-val">$${sub.toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
     <div class="total-row"><span class="total-label">Tax (0%)</span><span class="total-val">$0.00</span></div>
     <div class="total-row" style="background:rgba(200,241,53,0.03);"><span class="total-label" style="font-weight:600;color:var(--white);">Total</span><span class="total-val green">$${sub.toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
-    <div class="total-row"><span class="total-label">Deposit (50%)</span><span class="total-val" style="color:var(--amber);">$${(sub*.5).toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>`;
+    <div class="total-row" style="display:flex;align-items:center;"><span class="total-label">Deposit (<input id="deposit-pct" type="number" value="50" min="0" max="100" style="width:40px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--white);text-align:center;font-size:12px;padding:2px;font-family:JetBrains Mono,monospace;" onchange="updateDeposit()"/>%)</span><span class="total-val" style="color:var(--amber);" id="deposit-amount">$${(sub*.5).toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>`;
 }
 
 function addLineItem() {
@@ -861,6 +861,16 @@ function addLineItem() {
     document.getElementById('new-total').value=q&&r?'$'+(q*r).toFixed(2):'';
   });
 });
+
+function updateDeposit() {
+  var pct = parseFloat(document.getElementById('deposit-pct').value) || 50;
+  var totalEl = document.querySelector('.total-val.green');
+  if (!totalEl) return;
+  var total = parseFloat(totalEl.textContent.replace(/[$,]/g,'')) || 0;
+  var deposit = total * (pct / 100);
+  var depEl = document.getElementById('deposit-amount');
+  if (depEl) depEl.textContent = '$' + deposit.toLocaleString('en-US', {minimumFractionDigits: 2});
+}
 
 function removeLineItem(i){
   if(_q)_q.lines.splice(i,1);
@@ -924,8 +934,10 @@ function cancelEdit(){
 }
 
 async function saveEdit(){
-  if(!_q)return;
-  _q.customer=document.getElementById('e-customer').value.trim();
+  if(!_q){showToast('Error: no quote data');return;}
+  var custEl = document.getElementById('e-customer');
+  _q.customer = custEl.options[custEl.selectedIndex] ? custEl.options[custEl.selectedIndex].textContent : custEl.value.trim();
+  if (_q.customer === 'Select a customer...') _q.customer = '';
   _q.num=document.getElementById('e-num').value.trim();
   _q.job=document.getElementById('e-job').value.trim();
   _q.address=document.getElementById('e-address').value.trim();
