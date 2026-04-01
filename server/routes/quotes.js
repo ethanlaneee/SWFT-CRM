@@ -51,7 +51,7 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Quote not found" });
     }
     const updates = {};
-    for (const key of ["customerId", "customerName", "items", "total", "notes", "status"]) {
+    for (const key of ["customerId", "customerName", "items", "total", "notes", "status", "address", "service", "sqft", "finish", "scheduledDate", "sentAt", "expiresAt"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     updates.updatedAt = Date.now();

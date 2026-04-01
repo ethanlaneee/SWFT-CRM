@@ -1097,7 +1097,12 @@ async function saveEdit(){
       items: items,
       total: total,
       notes: _q.job || '',
-      status: _q.status || 'draft'
+      status: _q.status || 'draft',
+      address: _q.address || '',
+      service: _q.service || '',
+      sqft: _q.sqft || '',
+      finish: _q.finish || '',
+      scheduledDate: _q.start || ''
     };
 
     if (_q.isInvoice) {
@@ -1118,7 +1123,7 @@ async function saveEdit(){
       } else {
         await API.quotes.create(data);
       }
-      // Auto-create draft invoice with same data
+      // Auto-create draft invoice with ALL quote data
       try {
         await API.invoices.create({
           customerName: data.customerName,
@@ -1127,7 +1132,12 @@ async function saveEdit(){
           total: data.total,
           notes: data.notes,
           status: 'draft',
-          quoteId: _q.id || ''
+          quoteId: _q.id || '',
+          address: _q.address || '',
+          service: _q.service || '',
+          sqft: _q.sqft || '',
+          finish: _q.finish || '',
+          scheduledDate: _q.start || ''
         });
         loadInvoices();
       } catch(e) { console.error('Auto-create invoice error:', e); }

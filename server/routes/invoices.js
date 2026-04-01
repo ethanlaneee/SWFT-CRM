@@ -36,8 +36,13 @@ router.post("/", async (req, res, next) => {
       items: req.body.items || [],
       total: req.body.total || 0,
       notes: req.body.notes || "",
-      status: "open",
+      status: req.body.status || "open",
       dueDate: req.body.dueDate || null,
+      address: req.body.address || "",
+      service: req.body.service || "",
+      sqft: req.body.sqft || "",
+      finish: req.body.finish || "",
+      scheduledDate: req.body.scheduledDate || null,
       createdAt: Date.now(),
     };
     const ref = await col().add(data);
@@ -53,7 +58,7 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Invoice not found" });
     }
     const updates = {};
-    for (const key of ["customerId", "customerName", "quoteId", "items", "total", "notes", "status", "dueDate"]) {
+    for (const key of ["customerId", "customerName", "quoteId", "items", "total", "notes", "status", "dueDate", "address", "service", "sqft", "finish", "scheduledDate"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     updates.updatedAt = Date.now();
