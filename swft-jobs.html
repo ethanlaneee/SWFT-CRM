@@ -862,13 +862,25 @@
   async function createQuoteForJob() {
     if (!_currentJob) return;
     try {
+      var cost = parseFloat(String(_currentJob.cost || '0').replace(/[\$,]/g,'')) || 0;
+      var svc = _currentJob.service || _currentJob.title || 'Service';
+      var lineItems = cost > 0 ? [{
+        desc: svc,
+        sub: (_currentJob.sqft ? _currentJob.sqft + ' sqft' : ''),
+        qty: '1',
+        rate: '$' + cost.toLocaleString(),
+        total: '$' + cost.toLocaleString()
+      }] : [];
       var data = {
         customerId: _currentJob.customerId || '',
         customerName: _currentJob.customerName || _currentJob.customer || '',
-        items: [],
-        total: _currentJob.cost || 0,
+        items: lineItems,
+        total: cost,
         notes: _currentJob.title || '',
-        status: 'draft'
+        status: 'draft',
+        address: _currentJob.address || '',
+        service: _currentJob.service || '',
+        sqft: _currentJob.sqft || ''
       };
       var result = await API.quotes.create(data);
       showToast('Quote created — opening billing page');
@@ -885,7 +897,7 @@
         return q.customerName === (_currentJob.customerName || _currentJob.customer);
       });
       var items = jobQuote ? (jobQuote.items || []) : [];
-      var total = jobQuote ? (jobQuote.total || _currentJob.cost || 0) : (_currentJob.cost || 0);
+      var total = jobQuote ? (parseFloat(String(jobQuote.total||0).replace(/[\$,]/g,''))||0) : (parseFloat(String(_currentJob.cost||0).replace(/[\$,]/g,''))||0);
 
       var data = {
         customerId: _currentJob.customerId || '',

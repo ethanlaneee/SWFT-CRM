@@ -569,7 +569,7 @@ async function loadQuotes() {
       row.className = 'q-row';
       row.dataset.status = q.status || 'draft';
       row.onclick = function(){ openModalById(q.id); };
-      const total = q.total ? '$' + Number(q.total).toLocaleString() : '$0';
+      var rawTotal = q.total; if (typeof rawTotal === 'string') rawTotal = parseFloat(rawTotal.replace(/[\$,]/g,'')) || 0; const total = rawTotal ? '$' + Number(rawTotal).toLocaleString() : '$0';
       const created = q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
       row.innerHTML = '<div class="q-num">' + (q.id.substring(0,8)) + '</div>' +
         '<div><div class="q-customer">' + (q.customerName||'—') + '</div><div class="q-job">' + (q.notes||'—') + '</div></div>' +
@@ -615,7 +615,7 @@ async function loadInvoices() {
       const row = document.createElement('div');
       row.className = 'inv-row';
       row.dataset.status = inv.status || 'open';
-      const total = inv.total ? '$' + Number(inv.total).toLocaleString() : '$0';
+      var rawInvTotal = inv.total; if (typeof rawInvTotal === 'string') rawInvTotal = parseFloat(rawInvTotal.replace(/[\$,]/g,'')) || 0; const total = rawInvTotal ? '$' + Number(rawInvTotal).toLocaleString() : '$0';
       const paid = inv.paidAmount ? '$' + Number(inv.paidAmount).toLocaleString() : '$0';
       const balance = (inv.total||0) - (inv.paidAmount||0);
       const balClass = balance <= 0 ? 'bal-green' : inv.status === 'overdue' ? 'bal-red' : 'bal-amber';
@@ -918,12 +918,26 @@ async function autofillBillingCustomer(name) {
       var finishField = document.getElementById('e-finish');
       if (finishField && !finishField.value) finishField.value = custJob.finish || '';
 
-      // Store job reference
+      // Store job reference and cost
       if (_q) {
         _q.jobId = custJob.id;
         _q.sqft = custJob.sqft || '';
         _q.service = custJob.service || '';
         _q.start = custJob.scheduledDate || '';
+        // If job has a cost and no line items yet, create a default line item
+        if (custJob.cost && (!_q.lines || _q.lines.length === 0)) {
+          var svc = custJob.service || custJob.title || 'Service';
+          _q.lines = [{
+            desc: svc,
+            sub: (custJob.sqft ? custJob.sqft + ' sqft' : ''),
+            qty: '1',
+            rate: '$' + Number(custJob.cost).toLocaleString(),
+            total: '$' + Number(custJob.cost).toLocaleString()
+          }];
+          renderLineItems(_q.lines);
+          // Update total display
+          document.getElementById('m-total').textContent = '$' + Number(custJob.cost).toLocaleString();
+        }
       }
     }
   } catch(e) { console.error('autofill error:', e); }
