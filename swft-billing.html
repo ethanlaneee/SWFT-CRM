@@ -733,19 +733,20 @@ function openModalById(id) {
     num: q.id.substring(0,8),
     created: q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
     customer: q.customerName || '',
+    customerId: q.customerId || '',
     job: q.notes || '',
     total: '$' + (q.total||0).toLocaleString(),
-    sqft: '',
-    service: '',
+    sqft: q.sqft || '',
+    service: q.service || '',
     valid: '30 days',
-    address: '',
-    finish: '',
-    area: '',
-    start: '',
+    address: q.address || '',
+    finish: q.finish || '',
+    area: q.sqft ? q.sqft + ' sqft' : '',
+    start: q.scheduledDate || '',
     status: q.status || 'draft',
     statusStyle: q.status === 'approved' ? 'background:rgba(200,241,53,0.12);color:#c8f135;' : q.status === 'sent' ? 'background:rgba(77,159,255,0.12);color:#4d9fff;' : 'background:rgba(100,100,100,0.12);color:#7a7a7a;',
     lines: q.items || [],
-    expires: '—'
+    expires: q.expiresAt ? new Date(q.expiresAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'
   };
   // Display the modal with _q data
   document.getElementById('m-num').textContent = _q.num + ' · ' + _q.created;
