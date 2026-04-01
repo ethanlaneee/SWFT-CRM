@@ -659,15 +659,16 @@ function openInvoiceModal(inv) {
     num: '#INV-' + (inv.id||'').substring(0,6),
     created: inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
     customer: inv.customerName || '',
+    customerId: inv.customerId || '',
     job: inv.notes || '',
     total: '$' + (inv.total||0).toLocaleString(),
-    sqft: '',
-    service: '',
+    sqft: inv.sqft || '',
+    service: inv.service || '',
     valid: '—',
-    address: '',
-    finish: '',
-    area: '',
-    start: '',
+    address: inv.address || '',
+    finish: inv.finish || '',
+    area: inv.sqft ? inv.sqft + ' sqft' : '',
+    start: inv.scheduledDate || '',
     status: inv.status || 'open',
     statusStyle: inv.status === 'paid' ? 'background:rgba(200,241,53,0.12);color:#c8f135;' : inv.status === 'overdue' ? 'background:rgba(255,82,82,0.12);color:#ff5252;' : 'background:rgba(245,166,35,0.12);color:#f5a623;',
     lines: inv.items || [],
@@ -1088,8 +1089,15 @@ function cancelEdit(){
 async function saveEdit(){
   if(!_q){showToast('Error: no quote data');return;}
   var custEl = document.getElementById('e-customer');
-  _q.customer = custEl.options[custEl.selectedIndex] ? custEl.options[custEl.selectedIndex].textContent : custEl.value.trim();
-  if (_q.customer === 'Select a customer...') _q.customer = '';
+  var dropdownCust = custEl.options[custEl.selectedIndex] ? custEl.options[custEl.selectedIndex].textContent : '';
+  if (dropdownCust && dropdownCust !== 'Select a customer...') {
+    _q.customer = dropdownCust;
+  }
+  // Keep _q.customer from autofill if dropdown wasn't changed
+  if (_q.customer === 'Select a customer...' || !_q.customer) {
+    // Try _q.customer that was set by autofill
+    _q.customer = _q.customer && _q.customer !== 'Select a customer...' ? _q.customer : '';
+  }
   _q.num=document.getElementById('e-num').value.trim() || _q.num || '';
   _q.job=document.getElementById('e-job').value.trim() || _q.job || '';
   _q.address=document.getElementById('e-address').value.trim() || _q.address || '';
@@ -1097,7 +1105,8 @@ async function saveEdit(){
   _q.start=document.getElementById('e-start').value.trim() || _q.start || '';
   _q.finish=document.getElementById('e-finish').value.trim() || _q.finish || '';
   var svcEl = document.getElementById('e-service');
-  _q.service = (svcEl && svcEl.value && svcEl.value !== 'Stamped Concrete') ? svcEl.value : (_q.service || (svcEl ? svcEl.value : ''));
+  if (svcEl && svcEl.value) _q.service = svcEl.value;
+  if (!_q.service) _q.service = '';
   var statEl = document.getElementById('e-status');
   _q.status = statEl ? statEl.value : (_q.status || 'draft');
 
@@ -1131,7 +1140,7 @@ async function saveEdit(){
       loadInvoices();
       switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
       closeModal();
-      showToast('Invoice for ' + _q.customer + ' saved');
+      showToast('Invoice for ' + _q.customer + ' saved — $' + total.toLocaleString());
     } else {
       // Save as quote
       if (_q.id && !_q.id.toString().startsWith('new_') && !_q.id.toString().startsWith('#')) {
@@ -1160,7 +1169,7 @@ async function saveEdit(){
 
       loadQuotes();
       closeModal();
-      showToast('Quote for ' + _q.customer + ' saved');
+      showToast('Quote for ' + _q.customer + ' saved — $' + total.toLocaleString());
     }
   } catch(e) {
     showToast('Save error: ' + e.message);
