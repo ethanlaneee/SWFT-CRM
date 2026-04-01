@@ -1065,7 +1065,6 @@ async function sendQuote(){
 }
 
 function populateEditForm(){
-  loadBillingCustomers();
   if(!_q)return;
   document.getElementById('e-customer').value=_q.customer||'';
   document.getElementById('e-num').value=_q.num||'';
@@ -1090,14 +1089,16 @@ async function saveEdit(){
   var custEl = document.getElementById('e-customer');
   _q.customer = custEl.options[custEl.selectedIndex] ? custEl.options[custEl.selectedIndex].textContent : custEl.value.trim();
   if (_q.customer === 'Select a customer...') _q.customer = '';
-  _q.num=document.getElementById('e-num').value.trim();
-  _q.job=document.getElementById('e-job').value.trim();
-  _q.address=document.getElementById('e-address').value.trim();
-  _q.sqft=document.getElementById('e-sqft').value.trim();
-  _q.start=document.getElementById('e-start').value.trim();
-  _q.finish=document.getElementById('e-finish').value.trim();
-  _q.service=document.getElementById('e-service').value;
-  _q.status=document.getElementById('e-status').value;
+  _q.num=document.getElementById('e-num').value.trim() || _q.num || '';
+  _q.job=document.getElementById('e-job').value.trim() || _q.job || '';
+  _q.address=document.getElementById('e-address').value.trim() || _q.address || '';
+  _q.sqft=document.getElementById('e-sqft').value.trim() || _q.sqft || '';
+  _q.start=document.getElementById('e-start').value.trim() || _q.start || '';
+  _q.finish=document.getElementById('e-finish').value.trim() || _q.finish || '';
+  var svcEl = document.getElementById('e-service');
+  _q.service = (svcEl && svcEl.value && svcEl.value !== 'Stamped Concrete') ? svcEl.value : (_q.service || (svcEl ? svcEl.value : ''));
+  var statEl = document.getElementById('e-status');
+  _q.status = statEl ? statEl.value : (_q.status || 'draft');
 
   if (!_q.customer) { showToast('Please select a customer'); return; }
 
