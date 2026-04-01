@@ -239,7 +239,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     </div>
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Delete Account</div><div class="settings-row-desc">Permanently delete your account and all associated data</div></div>
-      <button class="settings-btn danger" onclick="showToast('Contact support to delete your account')">Delete Account</button>
+      <button class="settings-btn danger" onclick="deleteAccount()">Delete Account</button>
     </div>
   </div>
 </div>
@@ -373,6 +373,35 @@ async function loadSettings() {
     if (data.weatherUnit) document.getElementById('s-weather-unit').value = data.weatherUnit;
     if (data.companyLogo) showLogo(data.companyLogo);
   } catch (e) {}
+}
+
+async function deleteAccount() {
+  var ok = await swftConfirm(
+    'This will <strong>permanently delete</strong> your entire account including all customers, jobs, quotes, invoices, and settings. This cannot be undone.',
+    'DELETE ACCOUNT',
+    '⚠️'
+  );
+  if (!ok) return;
+
+  // Double confirm
+  var typed = prompt('Type DELETE to confirm:');
+  if (typed !== 'DELETE') { showToast('Account deletion cancelled'); return; }
+
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/me/delete-account', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Delete failed');
+
+    // Sign out
+    var { getAuth, signOut } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    await signOut(getAuth());
+    window.location.href = 'swft-login.html';
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
 }
 
 function connectGoogleCalendar() {
