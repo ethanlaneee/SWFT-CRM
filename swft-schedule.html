@@ -104,12 +104,12 @@
 .cal-dow{padding:9px 0;text-align:center;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
 
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(108px,auto);}
-.cal-cell{position:relative;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 8px 6px;display:flex;flex-direction:column;gap:4px;cursor:default;transition:background 0.12s;min-height:108px;}
+.cal-cell{position:relative;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:6px 6px 4px;display:flex;flex-direction:column;gap:2px;cursor:default;transition:background 0.12s;height:80px;overflow:hidden;}
 .cal-cell:hover{background:rgba(255,255,255,0.015);}
 .cal-cell:nth-child(7n){border-right:none;}
 .cal-cell.other-month{opacity:0.3;}
 .cal-cell.today{background:rgba(200,241,53,0.03);}
-.cal-cell.today .day-num{color:var(--green);background:rgba(200,241,53,0.12);border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.cal-cell.today .day-num{color:var(--green);background:rgba(200,241,53,0.12);border-radius:6px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;}
 
 .day-num{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gray2);margin-bottom:2px;width:auto;height:22px;display:flex;align-items:center;gap:0;}
 .day-wx{font-size:9.5px;color:var(--gray);font-family:'JetBrains Mono',monospace;position:absolute;top:4px;right:6px;}
@@ -124,13 +124,25 @@
 .cal-month-wrap{position:relative;cursor:pointer;}
 
 /* ── JOB BLOCKS ── */
-.job-block{border-radius:6px;padding:4px 7px;cursor:pointer;transition:filter 0.12s, transform 0.12s;font-size:10.5px;line-height:1.3;position:relative;overflow:hidden;}
-.job-block:hover{filter:brightness(1.15);transform:translateY(-1px);}
-.job-block.green{background:rgba(200,241,53,0.14);border-left:2px solid var(--green);}
-.job-block.blue{background:rgba(77,159,255,0.14);border-left:2px solid var(--blue);}
-.job-block.amber{background:rgba(245,166,35,0.14);border-left:2px solid var(--amber);}
-.job-block.purple{background:rgba(179,136,255,0.14);border-left:2px solid var(--purple);}
-.job-block.gray{background:rgba(100,100,100,0.1);border-left:2px solid var(--gray2);}
+.job-block{border-radius:4px;padding:2px 6px;cursor:pointer;transition:all 0.12s;font-size:9px;line-height:1.2;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.job-block:hover{filter:brightness(1.2);}
+.job-block.green{background:rgba(200,241,53,0.18);color:var(--green);}
+.job-block.blue{background:rgba(77,159,255,0.18);color:var(--blue);}
+.job-block.amber{background:rgba(245,166,35,0.18);color:var(--amber);}
+.job-block.purple{background:rgba(179,136,255,0.18);color:var(--purple);}
+.job-block.gray{background:rgba(100,100,100,0.15);color:var(--gray);}
+.jb-crew{display:none;}
+
+/* Job popup on calendar */
+.cal-popup{position:fixed;z-index:9000;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;width:280px;box-shadow:0 12px 40px rgba(0,0,0,0.5);display:none;}
+.cal-popup.open{display:block;}
+.cal-popup-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--white);margin-bottom:8px;}
+.cal-popup-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);}
+.cal-popup-row:last-child{border-bottom:none;}
+.cal-popup-label{color:var(--gray);}
+.cal-popup-val{color:var(--white);font-weight:500;}
+.cal-popup-close{position:absolute;top:8px;right:10px;cursor:pointer;color:var(--gray);font-size:14px;}
+.cal-popup-close:hover{color:var(--white);}
 .jb-title{font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .jb-crew{color:var(--gray);font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .more-badge{font-size:10px;color:var(--gray2);padding:2px 4px;cursor:pointer;}
@@ -504,6 +516,12 @@
 
 <!-- Floating re-open button -->
 
+<div class="cal-popup" id="cal-popup">
+  <div class="cal-popup-close" onclick="closeCalPopup()">&times;</div>
+  <div class="cal-popup-title" id="cal-popup-title"></div>
+  <div id="cal-popup-body"></div>
+</div>
+
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
 </div>
@@ -603,10 +621,7 @@
       const dayJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
       for (let ji = 0; ji < dayJobs.length; ji++) {
         const job = dayJobs[ji];
-        html += '<div class="job-block ' + job.color + '" onclick="openDrawer(\'' + job.drawerId + '\')">';
-        html += '<div class="jb-title">' + job.title + '</div>';
-        html += '<div class="jb-crew">' + job.crew + ' · ' + job.address + '</div>';
-        html += '</div>';
+        html += '<div class="job-block ' + job.color + '" onclick="showCalPopup(event,\'' + job.drawerId + '\',' + JSON.stringify(job).replace(/'/g,"\\'") + ')">' + job.title + '</div>';
       }
 
       html += '</div>';
@@ -758,6 +773,37 @@
     document.getElementById('overlay').classList.remove('open');
     document.getElementById('drawer').classList.remove('open', 'center-modal');
   }
+
+  function showCalPopup(e, jobId, job) {
+    var popup = document.getElementById('cal-popup');
+    var title = document.getElementById('cal-popup-title');
+    var body = document.getElementById('cal-popup-body');
+    title.textContent = job.title || 'Job';
+    body.innerHTML = '<div class="cal-popup-row"><span class="cal-popup-label">Date</span><span class="cal-popup-val">' + (job.date||'—') + '</span></div>' +
+      '<div class="cal-popup-row"><span class="cal-popup-label">Crew</span><span class="cal-popup-val">' + (job.crew||'—') + '</span></div>' +
+      '<div class="cal-popup-row"><span class="cal-popup-label">Address</span><span class="cal-popup-val">' + (job.address||'—') + '</span></div>' +
+      '<div class="cal-popup-row"><span class="cal-popup-label">Status</span><span class="cal-popup-val">' + (job.color||'—') + '</span></div>' +
+      '<div style="margin-top:10px;"><a href="swft-jobs.html" style="font-size:11px;color:var(--green);">View in Jobs &rarr;</a></div>';
+    // Position near click
+    var x = e.clientX;
+    var y = e.clientY;
+    popup.style.left = Math.min(x, window.innerWidth - 300) + 'px';
+    popup.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+    popup.classList.add('open');
+    e.stopPropagation();
+  }
+
+  function closeCalPopup() {
+    document.getElementById('cal-popup').classList.remove('open');
+  }
+
+  // Close popup on outside click
+  document.addEventListener('click', function(e) {
+    var popup = document.getElementById('cal-popup');
+    if (popup && !popup.contains(e.target) && !e.target.closest('.job-block')) {
+      popup.classList.remove('open');
+    }
+  });
 
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
