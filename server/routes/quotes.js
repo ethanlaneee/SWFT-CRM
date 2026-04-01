@@ -35,7 +35,14 @@ router.post("/", async (req, res, next) => {
       items: req.body.items || [],
       total: req.body.total || 0,
       notes: req.body.notes || "",
-      status: "draft",
+      status: req.body.status || "draft",
+      address: req.body.address || "",
+      service: req.body.service || "",
+      sqft: req.body.sqft || "",
+      finish: req.body.finish || "",
+      scheduledDate: req.body.scheduledDate || null,
+      sentAt: req.body.sentAt || null,
+      expiresAt: req.body.expiresAt || null,
       createdAt: Date.now(),
     };
     const ref = await col().add(data);
