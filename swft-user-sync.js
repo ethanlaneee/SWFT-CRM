@@ -53,4 +53,8 @@ onAuthStateChanged(auth, async (user) => {
   document.querySelectorAll(".s-avatar, .avatar").forEach((el) => {
     el.textContent = initials;
   });
+  // Show email under the name
+  document.querySelectorAll(".user-role").forEach((el) => {
+    el.textContent = user.email || "";
+  });
 });
