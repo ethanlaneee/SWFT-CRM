@@ -918,27 +918,25 @@
     showToast('Changes discarded');
   }
 
-  function saveEdit() {
-    const title    = document.getElementById('e-title').value.trim();
-    const customer = document.getElementById('e-customer').value.trim();
-    const date     = document.getElementById('e-date').value.trim();
-    const time     = document.getElementById('e-time').value.trim();
-    const address  = document.getElementById('e-address').value.trim();
-    const service  = document.getElementById('e-service').value;
-    const sqft     = document.getElementById('e-sqft').value.trim();
-    const crew     = document.getElementById('e-crew').value;
-    const dur      = document.getElementById('e-dur').value.trim();
-    const amount   = document.getElementById('e-amount').value.trim();
-    const status   = document.getElementById('e-status').value;
-    const fmtAmount = amount.startsWith('$') ? amount : '$' + amount;
-
-    const tagStyles = {
-      'In Progress': 'background:rgba(200,241,53,0.1);color:#c8f135;',
-      'Scheduled':   'background:rgba(77,159,255,0.1);color:#4d9fff;',
-      'Quote Sent':  'background:rgba(245,166,35,0.1);color:#f5a623;',
-      'Estimate':    'background:rgba(245,166,35,0.1);color:#f5a623;',
-      'Complete':    'background:rgba(100,100,100,0.12);color:#7a7a7a;',
+  async function saveEdit() {
+    if (!_currentJobId) return;
+    var data = {
+      customerName: document.getElementById('e-customer').value || '',
+      scheduledDate: document.getElementById('e-date').value || '',
+      service: document.getElementById('e-service').value || '',
+      address: document.getElementById('e-address-edit') ? document.getElementById('e-address-edit').value : '',
+      sqft: document.getElementById('e-sqft') ? document.getElementById('e-sqft').value : '',
+      crew: document.getElementById('e-crew') ? document.getElementById('e-crew').value : ''
     };
+    try {
+      await API.jobs.update(_currentJobId, data);
+      closeDrawer();
+      await loadCalendarJobs();
+      showToast('Job updated');
+    } catch(e) {
+      showToast('Save error: ' + e.message);
+    }
+  };
 
     // Persist edits back into the jobs object so reopening shows saved state
     if (_currentJob) {
@@ -973,13 +971,6 @@
     tagEl.style.cssText = tagStyles[status] || tagStyles['Scheduled'];
 
     // Switch back to view
-    document.getElementById('d-edit').style.display  = 'none';
-    document.getElementById('d-view').style.display  = 'flex';
-    document.getElementById('footer-edit').style.display = 'none';
-    document.getElementById('footer-view').style.display = 'flex';
-    showToast('Job saved ✓');
-    if (_currentJob && _currentJob.num === 'J-NEW') { closeDrawer(); return; }
-  }
 
 </script>
 

@@ -946,90 +946,48 @@ async function saveEdit(){
   _q.finish=document.getElementById('e-finish').value.trim();
   _q.service=document.getElementById('e-service').value;
   _q.status=document.getElementById('e-status').value;
-  const sm={'Draft':'background:rgba(100,100,100,0.12);color:#7a7a7a;','Sent':'background:rgba(77,159,255,0.12);color:#4d9fff;','Approved':'background:rgba(200,241,53,0.12);color:#c8f135;','Declined':'background:rgba(255,82,82,0.12);color:#ff5252;'};
-  _q.statusStyle=sm[_q.status]||sm.Draft;
-  const pillClass={'Draft':'s-draft','Sent':'s-sent','Approved':'s-approved','Declined':'s-declined'};
 
-  // Check if this is a new quote (not already in the table)
-  const qKey = _q.num.replace('#','').replace(/[^A-Z0-9-]/gi,'').toLowerCase();
-  const existingRow = document.querySelector('.q-row[data-key="'+qKey+'"]');
+  if (!_q.customer) { showToast('Please select a customer'); return; }
 
-  if(!existingRow && _q.customer) {
-    // Add new row to the quotes table
-    const tbody = document.getElementById('quotes-body');
-    const row = document.createElement('div');
-    row.className = 'q-row';
-    row.dataset.status = _q.status.toLowerCase();
-    row.dataset.key = qKey;
-    row.style.animation = 'fadeUp 0.35s ease both';
-    row.innerHTML = `
-      <div class="q-num">${_q.num}</div>
-      <div><div class="q-customer">${_q.customer}</div><div class="q-job">${_q.job||'—'}</div></div>
-      <div class="q-date">${_q.created}</div>
-      <div class="q-expires exp-ok">${_q.status==='Draft'?'—':_q.expires||'—'}</div>
-      <div class="q-total">$${_q.lines?_q.lines.reduce((s,l)=>s+(parseFloat((l.total||'').replace(/[$,]/g,''))||0),0).toLocaleString():'0'}</div>
-      <div><span class="status-pill ${pillClass[_q.status]||'s-draft'}">${_q.status}</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>`;
-    // Store quote data for opening later
-    const id = 'new_' + Date.now();
-    quotes[id] = Object.assign({}, _q);
-    row.onclick = function(){ openModal(id); };
-    tbody.insertBefore(row, tbody.firstChild);
-  } else if(existingRow) {
-    // Update existing row
-    existingRow.querySelector('.q-customer').textContent = _q.customer;
-    existingRow.querySelector('.q-job').textContent = _q.job||'—';
-    existingRow.querySelector('.status-pill').textContent = _q.status;
-    existingRow.querySelector('.status-pill').className = 'status-pill '+(pillClass[_q.status]||'s-draft');
-    existingRow.dataset.status = _q.status.toLowerCase();
-  }
+  var items = _q.lines || [];
+  var total = items.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[\$,]/g,''))||0);},0);
 
-  // If this is an invoice, add to the invoices table
-  if (_q.isInvoice && _q.customer) {
-    const invBody = document.getElementById('invoices-body');
-    const total = _q.lines ? _q.lines.reduce((s,l)=>s+(parseFloat((l.total||'').replace(/[$,]/g,''))||0),0) : 0;
-    const fmtTotal = '$' + total.toLocaleString('en-US',{minimumFractionDigits:0});
-    const row = document.createElement('div');
-    row.className = 'inv-row';
-    row.dataset.status = 'draft';
-    row.style.animation = 'fadeUp 0.35s ease both';
-    row.innerHTML = '<div class="inv-num">'+_q.num+'</div><div><div class="inv-customer">'+_q.customer+'</div><div class="inv-job">'+(_q.job||'—')+'</div></div><div class="inv-total">'+fmtTotal+'</div><div class="inv-date">$0</div><div class="inv-balance bal-amber">'+fmtTotal+'</div><div><span class="status-pill" style="background:rgba(100,100,100,0.12);color:#7a7a7a;">Draft</span></div><div style="display:flex;justify-content:flex-end;gap:6px;"><div class="row-btn" onclick="event.stopPropagation();deleteInvoice(this)" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div><div class="row-btn">→</div></div>';
-    invBody.insertBefore(row, invBody.firstChild);
-    // Switch to invoices view
-    switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
-    closeModal();
-    showToast('Invoice for ' + _q.customer + ' created ✓');
-    return;
-  }
-
-  // Save to API
   try {
-    var items = _q.lines || [];
-    var total = items.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0);},0);
-    var data = { customerName: _q.customer, items: items, total: total, notes: _q.job, status: _q.status || 'draft', sentAt: _q.status === 'sent' ? Date.now() : null, expiresAt: _q.status === 'sent' ? Date.now() + (14 * 24 * 60 * 60 * 1000) : null };
-    if (_q.id && !_q.id.startsWith('new_')) {
-      await API.quotes.update(_q.id, data);
-    } else {
-      await API.quotes.create(data);
-    }
-    loadQuotes();
-    window._nextQuoteNum = (window._nextQuoteNum || 1) + 1;
-  } catch(e) { console.error('Save error:', e); }
+    var data = {
+      customerName: _q.customer,
+      customerId: _q.customerId || '',
+      items: items,
+      total: total,
+      notes: _q.job || '',
+      status: _q.status || 'draft'
+    };
 
-  // Handle invoice creation
-  if (_q.isInvoice && _q.customer) {
-    try {
-      var invItems = _q.lines || [];
-      var invTotal = invItems.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0);},0);
-      await API.invoices.create({ customerName: _q.customer, items: invItems, total: invTotal, notes: _q.job, status: 'open' });
+    if (_q.isInvoice) {
+      // Save as invoice
+      if (_q.id && !_q.id.toString().startsWith('new_') && !_q.id.toString().startsWith('#')) {
+        await API.invoices.update(_q.id, data);
+      } else {
+        await API.invoices.create(data);
+      }
       loadInvoices();
-      window._nextInvNum = (window._nextInvNum || 1) + 1;
       switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
-    } catch(e) { console.error('Invoice save error:', e); }
+      closeModal();
+      showToast('Invoice for ' + _q.customer + ' saved');
+    } else {
+      // Save as quote
+      if (_q.id && !_q.id.toString().startsWith('new_') && !_q.id.toString().startsWith('#')) {
+        await API.quotes.update(_q.id, data);
+      } else {
+        await API.quotes.create(data);
+      }
+      loadQuotes();
+      closeModal();
+      showToast('Quote for ' + _q.customer + ' saved');
+    }
+  } catch(e) {
+    showToast('Save error: ' + e.message);
+    console.error('saveEdit error:', e);
   }
-
-  closeModal();
-  showToast(_q.customer ? (_q.isInvoice?'Invoice':'Quote')+' for '+_q.customer+' saved ✓' : 'Quote saved ✓');
 }
 
 function switchTab(el,tab){

@@ -440,8 +440,24 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       schedList.appendChild(row);
     }
 
+    // Save to Firestore
+    try {
+      await API.jobs.create({
+        title: title,
+        customerName: customer,
+        customerId: custId,
+        service: service,
+        address: address,
+        scheduledDate: dateVal,
+        status: 'scheduled',
+        cost: parseFloat(document.getElementById('nj-amount').value) || 0,
+        sqft: document.getElementById('nj-sqft').value.trim() || '',
+        crew: crew
+      });
+    } catch(e) { showToast('Save error: ' + e.message); return; }
+    loadSchedule();
     closeNewJobModal();
-    showToast(title + ' created ✓');
+    showToast(title + ' created');
     // Offer calendar sync
     setTimeout(function() {
       const job = { title: title, date: dateVal, time: timeVal, address: address, service: service };
