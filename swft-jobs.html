@@ -671,7 +671,20 @@
       let counts = { active: 0, scheduled: 0, pending: 0, complete: 0 };
       let completeCost = 0;
 
+      var today = new Date().toISOString().split('T')[0];
+
       list.forEach(function(job) {
+        // Auto-update status based on scheduled date
+        if (job.scheduledDate && job.status !== 'complete') {
+          if (job.scheduledDate <= today && job.status !== 'active') {
+            job.status = 'active';
+            try { API.jobs.update(job.id, { status: 'active' }); } catch(e) {}
+          } else if (job.scheduledDate > today && job.status === 'active') {
+            job.status = 'scheduled';
+            try { API.jobs.update(job.id, { status: 'scheduled' }); } catch(e) {}
+          }
+        }
+
         window._jobs[job.id] = job;
         var status = job.status || 'scheduled';
         var sm = STATUS_MAP[status] || STATUS_MAP['scheduled'];

@@ -757,12 +757,39 @@ async function loadBillingCustomers() {
   } catch(e) {}
 }
 
-function autofillBillingCustomer(name) {
+async function autofillBillingCustomer(name) {
   if (!name || !window._billingCustomers) return;
   var cust = window._billingCustomers.find(function(c) { return c.name === name; });
   if (!cust) return;
+
+  // Fill address
   var addrField = document.getElementById('e-address');
   if (addrField) addrField.value = cust.address || '';
+
+  // Fill SQFT and start date from the customer's most recent job
+  try {
+    var jobs = await API.jobs.list();
+    var custJob = jobs.find(function(j) {
+      return j.customerName === name || j.customerId === cust.id;
+    });
+    if (custJob) {
+      var sqftField = document.getElementById('e-sqft');
+      if (sqftField && !sqftField.value) sqftField.value = custJob.sqft || '';
+      var startField = document.getElementById('e-start');
+      if (startField && !startField.value) startField.value = custJob.scheduledDate || '';
+      // Also fill service type
+      var serviceField = document.getElementById('e-service');
+      if (serviceField && custJob.service) {
+        for (var i = 0; i < serviceField.options.length; i++) {
+          if (serviceField.options[i].value === custJob.service || serviceField.options[i].textContent === custJob.service) {
+            serviceField.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+  } catch(e) {}
+
   if (_q) {
     _q.address = cust.address || '';
     _q.customerId = cust.id || '';
