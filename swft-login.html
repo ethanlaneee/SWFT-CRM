@@ -502,17 +502,18 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // ── SAVE USER TO FIRESTORE ──
   async function saveUserToFirestore(user, extraData = {}) {
     const ref = doc(db, 'users', user.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || '',
-        createdAt: serverTimestamp(),
-        plan: 'free',
-        ...extraData
-      });
-    }
+    // Always merge — don't skip if doc exists
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || '',
+      name: user.displayName || extraData.displayName || '',
+      firstName: extraData.firstName || user.displayName?.split(' ')[0] || '',
+      lastName: extraData.lastName || user.displayName?.split(' ').slice(1).join(' ') || '',
+      company: extraData.businessName || extraData.company || '',
+      updatedAt: serverTimestamp(),
+      ...extraData
+    }, { merge: true });
   }
 
   // ── LOGIN ──
@@ -569,6 +570,8 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
       await saveUserToFirestore(cred.user, {
         firstName: fname,
         lastName: lname,
+        name: `${fname} ${lname}`,
+        company: biz,
         businessName: biz,
         displayName: `${fname} ${lname}`
       });
