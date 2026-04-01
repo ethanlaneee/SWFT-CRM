@@ -251,7 +251,7 @@ transition:all 0.14s; user-select:none; white-space:nowrap;
 
 .drawer-section-title {
 font-size:9.5px; letter-spacing:2px; text-transform:uppercase;
-color:var(--gray2); margin-bottom:8px;
+color:var(--white); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border);
 }
 
 /* Contact info */
@@ -565,10 +565,10 @@ user-select:none;
   <!-- Tabs -->
 
   <div class="drawer-tabs">
-    <div class="dtab active" onclick="switchTab(this,'contact')">Contact</div>
+    <div class="dtab active" onclick="switchTab(this,'contact')">Info</div>
     <div class="dtab" onclick="switchTab(this,'jobs')">Job History</div>
     <div class="dtab" onclick="switchTab(this,'invoices')">Invoices</div>
-    <div class="dtab" onclick="switchTab(this,'notes')">Notes & Tags</div>
+    <div class="dtab" onclick="switchTab(this,'notes')">Notes</div>
   </div>
 
   <!-- Tab content -->
@@ -579,7 +579,7 @@ user-select:none;
 <div id="tab-contact">
   <!-- VIEW MODE -->
   <div id="c-view-mode">
-    <div class="drawer-section-title">Contact Info</div>
+    <div class="drawer-section-title">Info</div>
     <div class="contact-grid">
       <div class="contact-row">
         <div class="contact-icon">📞</div>
@@ -593,10 +593,7 @@ user-select:none;
         <div class="contact-icon">📍</div>
         <div><div class="contact-label">Property Address</div><div class="contact-value" id="d-address">411 Birchwood Dr, Austin TX 78745</div></div>
       </div>
-      <div class="contact-row">
-        <div class="contact-icon">🏗️</div>
-        <div><div class="contact-label">Property Type</div><div class="contact-value" id="d-proptype">Single family — 2,400 sqft lot</div></div>
-      </div>
+      
       <div class="contact-row">
         <div class="contact-icon">🔑</div>
         <div><div class="contact-label">Customer ID</div><div class="contact-value" id="d-since">January 2024</div></div>
@@ -648,10 +645,9 @@ user-select:none;
   <div class="drawer-section-title">Job History</div>
   <div id="cust-job-list" style="display:flex;flex-direction:column;gap:8px;"></div>
 </div>
-</div>
 
 <div id="tab-invoices" style="display:none;">
-  <div class="drawer-section-title">Invoices & Quotes</div>
+  <div class="drawer-section-title">Invoices</div>
   <div id="cust-inv-list" style="display:flex;flex-direction:column;gap:8px;"></div>
 </div>
 
@@ -664,6 +660,8 @@ user-select:none;
     <textarea class="note-textarea" id="new-note-text" placeholder="Add a note..."></textarea>
     <button class="note-submit" onclick="addNote()">Save</button>
   </div>
+</div>
+
 </div>
 
   <!-- VIEW footer -->
@@ -873,7 +871,7 @@ function renderCustomerTabs(cust) {
   const jobList = document.getElementById('cust-job-list');
   if (jobList) {
     if (!cust.jobHistory || cust.jobHistory.length === 0) {
-      jobList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No job history yet</div>';
+      jobList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No job history yet</div>';
     } else {
       jobList.innerHTML = cust.jobHistory.map(function(j) {
         return '<div class="job-hist-item"><div class="hist-dot" style="background:' + (j.color || 'var(--gray2)') + ';"></div><div class="hist-info"><div class="hist-name">' + j.name + '</div><div class="hist-meta">' + j.meta + '</div></div><div class="hist-amount">' + j.amount + '</div></div>';
@@ -885,7 +883,7 @@ function renderCustomerTabs(cust) {
   const invList = document.getElementById('cust-inv-list');
   if (invList) {
     if (!cust.invoiceHistory || cust.invoiceHistory.length === 0) {
-      invList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No invoices yet</div>';
+      invList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No invoices yet</div>';
     } else {
       invList.innerHTML = cust.invoiceHistory.map(function(inv) {
         var badge = inv.status === 'Paid' ? 'inv-paid' : 'inv-open';
@@ -898,7 +896,7 @@ function renderCustomerTabs(cust) {
   var tagsEl = document.getElementById('cust-tags');
   if (tagsEl) {
     if (!cust.tags || cust.tags.length === 0) {
-      tagsEl.innerHTML = '<span style="font-size:12px;color:var(--gray2);">No tags</span>';
+      tagsEl.innerHTML = '<span style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No tags</span>';
     } else {
       tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + t + '</span>'; }).join('');
     }
@@ -908,7 +906,7 @@ function renderCustomerTabs(cust) {
   var notesEl = document.getElementById('cust-notes');
   if (notesEl) {
     if (!cust.notes || cust.notes.length === 0) {
-      notesEl.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No notes yet</div>';
+      notesEl.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No notes yet</div>';
     } else {
       notesEl.innerHTML = cust.notes.map(function(n, i) {
         var tagStyle = n.tagColor === 'green' ? 'background:rgba(200,241,53,0.1);color:var(--green);' : 'background:rgba(77,159,255,0.1);color:var(--blue);';

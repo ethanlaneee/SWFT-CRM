@@ -182,7 +182,7 @@
 
 /* tab content */
 .drawer-content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;}
-.section-title{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:8px;}
+.section-title{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 
 /* detail rows */
 .detail-grid{display:flex;flex-direction:column;gap:9px;}
@@ -561,7 +561,7 @@
 <div id="tab-payment" style="display:none;">
   <div class="section-title">Payment Breakdown</div>
   <div class="pay-block" id="pay-block">
-    <div style="font-size:12px;color:var(--gray2);padding:8px 0;">Payment info will appear here once a quote or invoice is created for this job.</div>
+    <div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">Payment info will appear here once a quote or invoice is created for this job.</div>
   </div>
   <div style="margin-top:12px;">
     <button onclick="showToast('Invoice sent for balance ✓')" style="width:100%;padding:11px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;border:none;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">
@@ -574,7 +574,7 @@
 <div id="tab-notes" style="display:none;">
   <div class="section-title">Job Notes</div>
   <div id="job-notes-list" style="display:flex;flex-direction:column;gap:8px;">
-    <div style="font-size:12px;color:var(--gray2);padding:8px 0;">No notes yet</div>
+    <div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No notes yet</div>
   </div>
   <div class="note-input-wrap">
     <textarea class="note-textarea" id="job-note-input" placeholder="Add a job note..."></textarea>
@@ -916,7 +916,7 @@
       if (qList) {
         var jobQuotes = quotes.filter(function(q) { return q.customerId === jobId || q.customerName === (window._jobs[jobId]||{}).customerName; });
         if (jobQuotes.length === 0) {
-          qList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No quotes for this job yet</div>';
+          qList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No quotes for this job yet</div>';
         } else {
           qList.innerHTML = jobQuotes.map(function(q) {
             return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;"><div><div style="font-size:13px;color:var(--white);font-weight:500;">$' + (q.total||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px;">' + (q.status||'draft') + '</div></div><a href="swft-billing.html" style="font-size:11px;color:var(--green);">View &rarr;</a></div>';
@@ -932,7 +932,7 @@
       if (iList) {
         var jobInvoices = invoices.filter(function(inv) { return inv.customerId === jobId || inv.customerName === (window._jobs[jobId]||{}).customerName; });
         if (jobInvoices.length === 0) {
-          iList.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No invoices for this job yet</div>';
+          iList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No invoices for this job yet</div>';
         } else {
           iList.innerHTML = jobInvoices.map(function(inv) {
             return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;"><div><div style="font-size:13px;color:var(--white);font-weight:500;">$' + (inv.total||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px;">' + (inv.status||'open') + '</div></div><a href="swft-billing.html" style="font-size:11px;color:var(--green);">View &rarr;</a></div>';
@@ -966,7 +966,7 @@
     var list = document.getElementById('job-notes-list');
     if (!list) return;
     if (!notes || !notes.trim()) {
-      list.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No notes yet</div>';
+      list.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No notes yet</div>';
       return;
     }
     var items = notes.split('\n').filter(function(n){return n.trim();});
