@@ -620,6 +620,7 @@ async function loadInvoices() {
       const balance = (inv.total||0) - (inv.paidAmount||0);
       const balClass = balance <= 0 ? 'bal-green' : inv.status === 'overdue' ? 'bal-red' : 'bal-amber';
       const statusStyle = inv.status === 'paid' ? 'background:rgba(200,241,53,0.1);color:#c8f135;' : inv.status === 'overdue' ? 'background:rgba(255,82,82,0.1);color:#ff5252;' : 'background:rgba(245,166,35,0.1);color:#f5a623;';
+      row.onclick = function() { openInvoiceModal(inv); };
       row.innerHTML = '<div class="inv-num">#INV-' + (inv.id.substring(0,6)) + '</div>' +
         '<div><div class="inv-customer">' + (inv.customerName||'—') + '</div><div class="inv-job">' + (inv.notes||'—') + '</div></div>' +
         '<div class="inv-total">' + total + '</div>' +
@@ -649,6 +650,59 @@ async function loadInvoices() {
     if(document.getElementById('inv-stat-total'))document.getElementById('inv-stat-total').textContent='$'+allTotal.toLocaleString();
     if(document.getElementById('inv-stat-total-sub'))document.getElementById('inv-stat-total-sub').textContent=invoices.length+' invoices';
   } catch(e) { console.error('loadInvoices error:', e); }
+}
+
+function openInvoiceModal(inv) {
+  _q = {
+    id: inv.id,
+    isInvoice: true,
+    num: '#INV-' + (inv.id||'').substring(0,6),
+    created: inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
+    customer: inv.customerName || '',
+    job: inv.notes || '',
+    total: '$' + (inv.total||0).toLocaleString(),
+    sqft: '',
+    service: '',
+    valid: '—',
+    address: '',
+    finish: '',
+    area: '',
+    start: '',
+    status: inv.status || 'open',
+    statusStyle: inv.status === 'paid' ? 'background:rgba(200,241,53,0.12);color:#c8f135;' : inv.status === 'overdue' ? 'background:rgba(255,82,82,0.12);color:#ff5252;' : 'background:rgba(245,166,35,0.12);color:#f5a623;',
+    lines: inv.items || [],
+    expires: '—'
+  };
+
+  document.getElementById('m-num').textContent = _q.num + ' · ' + _q.created;
+  document.getElementById('m-title').textContent = _q.customer || 'Invoice';
+  document.getElementById('m-job').textContent = _q.job || '—';
+  document.getElementById('m-status-pill').textContent = _q.status;
+  document.getElementById('m-status-pill').style.cssText = _q.statusStyle;
+  document.getElementById('m-expires').textContent = '—';
+  document.getElementById('m-total').textContent = _q.total;
+  document.getElementById('m-sqft').textContent = '—';
+  document.getElementById('m-service').textContent = '—';
+  document.getElementById('m-valid').textContent = '—';
+  if (document.getElementById('m-customer')) document.getElementById('m-customer').textContent = _q.customer || '—';
+  if (document.getElementById('m-address')) document.getElementById('m-address').textContent = '—';
+  renderLineItems(_q.lines || []);
+
+  var sb = document.getElementById('send-btn');
+  if (sb) {
+    if (_q.status === 'paid') {
+      sb.innerHTML = 'Paid ✓';
+      sb.disabled = true;
+    } else {
+      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Send Invoice';
+      sb.disabled = false;
+    }
+  }
+
+  document.getElementById('m-footer-view').style.display = 'flex';
+  document.getElementById('m-footer-edit').style.display = 'none';
+  switchTab(document.querySelector('.mtab'), 'details');
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 async function deleteQuoteById(id) {
@@ -693,7 +747,44 @@ function openModalById(id) {
     lines: q.items || [],
     expires: '—'
   };
-  openModal_display();
+  // Display the modal with _q data
+  document.getElementById('m-num').textContent = _q.num + ' · ' + _q.created;
+  document.getElementById('m-title').textContent = _q.customer || 'Quote';
+  document.getElementById('m-job').textContent = _q.job || '—';
+  document.getElementById('m-status-pill').textContent = _q.status;
+  document.getElementById('m-status-pill').style.cssText = _q.statusStyle;
+  document.getElementById('m-expires').textContent = _q.expires || '—';
+  document.getElementById('m-total').textContent = _q.total || '$0';
+  document.getElementById('m-sqft').textContent = _q.sqft || '—';
+  document.getElementById('m-service').textContent = _q.service || '—';
+  document.getElementById('m-valid').textContent = _q.valid || '—';
+  if (document.getElementById('m-customer')) document.getElementById('m-customer').textContent = _q.customer || '—';
+  if (document.getElementById('m-address')) document.getElementById('m-address').textContent = _q.address || '—';
+  if (document.getElementById('m-area')) document.getElementById('m-area').textContent = _q.sqft ? _q.sqft + ' sqft' : '—';
+  if (document.getElementById('m-finish')) document.getElementById('m-finish').textContent = _q.finish || '—';
+  if (document.getElementById('m-start')) document.getElementById('m-start').textContent = _q.start || '—';
+  if (document.getElementById('m-created')) document.getElementById('m-created').textContent = _q.created || '—';
+  renderLineItems(_q.lines || []);
+
+  // Update send button text
+  var sb = document.getElementById('send-btn');
+  if (sb) {
+    if (_q.status === 'approved' || _q.status === 'Approved') {
+      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Convert to Invoice';
+    } else if (_q.status === 'sent' || _q.status === 'Sent') {
+      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Resend Quote';
+    } else {
+      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Send Quote';
+    }
+  }
+
+  // Show view footer, hide edit footer
+  document.getElementById('m-footer-view').style.display = 'flex';
+  document.getElementById('m-footer-edit').style.display = 'none';
+
+  // Switch to details tab
+  switchTab(document.querySelector('.mtab'), 'details');
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 
