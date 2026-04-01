@@ -495,7 +495,8 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
         <div class="edit-field"><label class="edit-label">Quote #</label><input class="edit-input" id="e-num" type="text"/></div>
       </div>
       <div class="edit-field"><label class="edit-label">Job Description</label><input class="edit-input" id="e-job" type="text"/></div>
-      <div class="edit-field"><label class="edit-label">Property Address</label><input class="edit-input" id="e-address" type="text"/></div>
+      <div class="edit-field"><label class="edit-label">Property Address</label><input class="edit-input" id="e-address" type="text" list="addr-suggestions" autocomplete="off"/>
+        <datalist id="addr-suggestions"></datalist></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="edit-field"><label class="edit-label">Service Type</label><select class="edit-input" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service-b').style.display='block';}else{document.getElementById('e-custom-service-b').style.display='none';}"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Other</option></select><input class="edit-input" id="e-custom-service-b" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/></div>
         <div class="edit-field"><label class="edit-label">Sqft</label><input class="edit-input" id="e-sqft" type="text"/></div>
@@ -743,6 +744,18 @@ async function loadBillingCustomers() {
   try {
     var customers = await API.customers.list();
     window._billingCustomers = customers;
+    // Populate address suggestions
+    var datalist = document.getElementById('addr-suggestions');
+    if (datalist) {
+      datalist.innerHTML = '';
+      customers.forEach(function(c) {
+        if (c.address) {
+          var opt = document.createElement('option');
+          opt.value = c.address;
+          datalist.appendChild(opt);
+        }
+      });
+    }
     var select = document.getElementById('e-customer');
     if (!select) return;
     select.innerHTML = '<option value="">Select a customer...</option>';
@@ -762,33 +775,67 @@ async function autofillBillingCustomer(name) {
   var cust = window._billingCustomers.find(function(c) { return c.name === name; });
   if (!cust) return;
 
-  // Fill address
+  // Fill address from customer
   var addrField = document.getElementById('e-address');
   if (addrField) addrField.value = cust.address || '';
 
-  // Fill SQFT and start date from the customer's most recent job
+  // Find the customer's most recent job
   try {
     var jobs = await API.jobs.list();
-    var custJob = jobs.find(function(j) {
+    var custJobs = jobs.filter(function(j) {
       return j.customerName === name || j.customerId === cust.id;
     });
+    // Sort by most recent
+    custJobs.sort(function(a,b) { return (b.createdAt||0) - (a.createdAt||0); });
+    var custJob = custJobs[0];
+
     if (custJob) {
+      // Fill SQFT
       var sqftField = document.getElementById('e-sqft');
-      if (sqftField && !sqftField.value) sqftField.value = custJob.sqft || '';
+      if (sqftField) sqftField.value = custJob.sqft || '';
+
+      // Fill start date
       var startField = document.getElementById('e-start');
-      if (startField && !startField.value) startField.value = custJob.scheduledDate || '';
-      // Also fill service type
+      if (startField) startField.value = custJob.scheduledDate || '';
+
+      // Fill service type - add as option if not in dropdown
       var serviceField = document.getElementById('e-service');
       if (serviceField && custJob.service) {
+        var found = false;
         for (var i = 0; i < serviceField.options.length; i++) {
           if (serviceField.options[i].value === custJob.service || serviceField.options[i].textContent === custJob.service) {
             serviceField.selectedIndex = i;
+            found = true;
             break;
           }
         }
+        // If service not in dropdown, add it
+        if (!found) {
+          var opt = document.createElement('option');
+          opt.value = custJob.service;
+          opt.textContent = custJob.service;
+          serviceField.insertBefore(opt, serviceField.lastElementChild); // before "Other"
+          serviceField.value = custJob.service;
+        }
+      }
+
+      // Fill job description
+      var jobField = document.getElementById('e-job');
+      if (jobField && !jobField.value) jobField.value = custJob.title || '';
+
+      // Fill finish notes
+      var finishField = document.getElementById('e-finish');
+      if (finishField && !finishField.value) finishField.value = custJob.finish || '';
+
+      // Store job reference
+      if (_q) {
+        _q.jobId = custJob.id;
+        _q.sqft = custJob.sqft || '';
+        _q.service = custJob.service || '';
+        _q.start = custJob.scheduledDate || '';
       }
     }
-  } catch(e) {}
+  } catch(e) { console.error('autofill error:', e); }
 
   if (_q) {
     _q.address = cust.address || '';
@@ -798,7 +845,7 @@ async function autofillBillingCustomer(name) {
 
 function openNewQuote() {
   loadBillingCustomers();
-  _q = {num:'#Q-' + (window._nextQuoteNum || 1),created:'Mar 27, 2026',customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
+  _q = {num:'#Q-' + (window._nextQuoteNum || 1),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
   document.getElementById('m-num').textContent      = '#Q-1050 · Draft';
   document.getElementById('m-title').textContent    = 'New Quote';
   document.getElementById('m-job').textContent      = '—';
@@ -980,6 +1027,20 @@ async function saveEdit(){
       } else {
         await API.quotes.create(data);
       }
+      // Auto-create draft invoice with same data
+      try {
+        await API.invoices.create({
+          customerName: data.customerName,
+          customerId: data.customerId,
+          items: data.items,
+          total: data.total,
+          notes: data.notes,
+          status: 'draft',
+          quoteId: _q.id || ''
+        });
+        loadInvoices();
+      } catch(e) { console.error('Auto-create invoice error:', e); }
+
       loadQuotes();
       closeModal();
       showToast('Quote for ' + _q.customer + ' saved');
