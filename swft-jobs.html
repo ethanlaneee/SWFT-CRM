@@ -390,8 +390,8 @@
     <div class="drawer-top">
       <div>
         <div class="drawer-job-id" id="d-id">#JOB-1043 &nbsp;·&nbsp; Mar 27, 2026</div>
-        <div class="drawer-title" id="d-title">Backyard Patio</div>
-        <div class="drawer-customer">Customer: <span id="d-customer">Tom Henderson</span></div>
+        <div class="drawer-title" id="d-title"></div>
+        <div class="drawer-customer">Customer: <span id="d-customer"></span></div>
       </div>
       <div class="drawer-close" onclick="closeDrawer()">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
@@ -444,7 +444,7 @@
       </div>
       <div class="detail-row">
         <div class="detail-icon">🏗️</div>
-        <div><div class="detail-label">Mix / Finish</div><div class="detail-value" id="d-finish">4,000 PSI · Stamped cobblestone pattern · Natural gray</div></div>
+        <div><div class="detail-label">Mix / Finish</div><div class="detail-value" id="d-finish"></div></div>
       </div>
       <div class="detail-row">
         <div class="detail-icon">🌡️</div>
@@ -573,25 +573,12 @@
 <!-- NOTES -->
 <div id="tab-notes" style="display:none;">
   <div class="section-title">Job Notes</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="note-item">
-      <div class="note-text">Customer confirmed cobblestone stamp pattern — brought physical sample on-site. Wants sealer applied same day if weather holds.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 27, 7:15 AM</span>
-        <span class="note-tag" style="background:rgba(77,159,255,0.1);color:var(--blue);">Crew A</span>
-      </div>
-    </div>
-    <div class="note-item">
-      <div class="note-text">Slight slope toward back fence — make sure drainage flows away from house. Crew marked grade stakes before pour.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 26, 5:00 PM</span>
-        <span class="note-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">Pre-Job</span>
-      </div>
-    </div>
-    <div class="note-input-wrap">
-      <textarea class="note-textarea" placeholder="Add a job note..."></textarea>
-      <button class="note-submit" onclick="showToast('Note saved ✓')">Save</button>
-    </div>
+  <div id="job-notes-list" style="display:flex;flex-direction:column;gap:8px;">
+    <div style="font-size:12px;color:var(--gray2);padding:8px 0;">No notes yet</div>
+  </div>
+  <div class="note-input-wrap">
+    <textarea class="note-textarea" id="job-note-input" placeholder="Add a job note..."></textarea>
+    <button class="note-submit" onclick="saveJobNote()">Save</button>
   </div>
 </div>
 
@@ -799,6 +786,7 @@
     document.getElementById('footer-edit').style.display='none';
     document.getElementById('footer-view').style.display='flex';
     loadJobBilling(id);
+    renderJobNotes(j.notes || '');
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
   }
@@ -952,6 +940,39 @@
         }
       }
     } catch(e) {}
+  }
+
+  async function saveJobNote() {
+    if (!_currentJobId) { showToast('No job selected'); return; }
+    var input = document.getElementById('job-note-input');
+    var text = input ? input.value.trim() : '';
+    if (!text) { showToast('Enter a note first'); return; }
+    try {
+      var job = window._jobs[_currentJobId] || {};
+      var notes = job.notes || '';
+      var newNote = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ': ' + text;
+      notes = notes ? notes + '\n' + newNote : newNote;
+      await API.jobs.update(_currentJobId, { notes: notes });
+      // Update local
+      if (window._jobs[_currentJobId]) window._jobs[_currentJobId].notes = notes;
+      // Render notes
+      renderJobNotes(notes);
+      input.value = '';
+      showToast('Note saved');
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  function renderJobNotes(notes) {
+    var list = document.getElementById('job-notes-list');
+    if (!list) return;
+    if (!notes || !notes.trim()) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No notes yet</div>';
+      return;
+    }
+    var items = notes.split('\n').filter(function(n){return n.trim();});
+    list.innerHTML = items.map(function(n) {
+      return '<div class="note-item"><div class="note-text">' + n + '</div></div>';
+    }).join('');
   }
 
   async function markJobComplete() {
