@@ -297,11 +297,24 @@ function handleLogoUpload(file) {
   reader.readAsDataURL(file);
 }
 
-function removeLogo() {
-  _companyLogo = null;
+async function removeLogo() {
+  _companyLogo = '';
   document.getElementById('logo-img').style.display = 'none';
   document.getElementById('logo-placeholder').style.display = '';
-  showToast('Logo removed — click Save to apply');
+  // Save immediately to clear from database
+  try {
+    var token = await getToken();
+    await fetch('/api/me', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ companyLogo: '' })
+    });
+    // Also clear from the global settings
+    if (window._swftSettings) window._swftSettings.companyLogo = '';
+    showToast('Logo removed');
+  } catch(e) {
+    showToast('Error removing logo');
+  }
 }
 
 function showLogo(dataUrl) {
