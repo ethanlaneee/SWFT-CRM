@@ -4,11 +4,17 @@ const express = require("express");
 const cors = require("cors");
 const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
+const { router: billingRouter, webhookHandler } = require("./routes/billing");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+
+// ── Stripe webhook — MUST be registered before express.json() ──
+// Stripe requires the raw request body to verify the webhook signature.
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), webhookHandler);
+
 app.use(express.json());
 
 // ── Serve frontend files ──
@@ -18,6 +24,7 @@ app.use(express.static(path.join(__dirname, "..")));
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
 app.use("/api/me",        auth,               require("./routes/user"));
+app.use("/api/billing",   auth,               billingRouter);
 app.use("/api/dashboard", auth, checkAccess,  require("./routes/dashboard"));
 app.use("/api/customers", auth, checkAccess,  require("./routes/customers"));
 app.use("/api/jobs",      auth, checkAccess,  require("./routes/jobs"));

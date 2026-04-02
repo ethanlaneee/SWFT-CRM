@@ -258,6 +258,31 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
 .bal-amber{color:var(--amber);}
 .bal-red{color:var(--red);}
 
+
+/* ── SUBSCRIPTION BANNER ── */
+.sub-banner{display:none;background:linear-gradient(135deg,rgba(255,82,82,0.08) 0%,rgba(245,166,35,0.08) 100%);border:1px solid rgba(255,82,82,0.25);border-radius:16px;padding:28px 32px;margin-bottom:4px;animation:fadeUp 0.4s ease both;}
+.sub-banner.show{display:flex;flex-direction:column;gap:20px;}
+.sub-banner-header{display:flex;align-items:flex-start;gap:16px;}
+.sub-banner-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,82,82,0.12);border:1px solid rgba(255,82,82,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sub-banner-text h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);line-height:1.1;}
+.sub-banner-text p{font-size:13px;color:var(--gray);margin-top:6px;line-height:1.6;max-width:520px;}
+.sub-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+.plan-card{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px;transition:border-color 0.2s,transform 0.2s;cursor:pointer;position:relative;overflow:hidden;}
+.plan-card:hover{border-color:rgba(200,241,53,0.35);transform:translateY(-2px);}
+.plan-card.popular{border-color:rgba(200,241,53,0.35);}
+.plan-card.popular::before{content:'MOST POPULAR';position:absolute;top:0;left:0;right:0;background:rgba(200,241,53,0.1);color:var(--green);font-size:9px;letter-spacing:2.5px;font-weight:700;text-align:center;padding:4px;}
+.plan-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-top:4px;}
+.plan-card.popular .plan-name{margin-top:16px;}
+.plan-price{font-family:'JetBrains Mono',monospace;font-size:28px;color:var(--white);line-height:1;}
+.plan-price span{font-size:14px;color:var(--gray);font-family:'DM Sans',sans-serif;}
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.plan-features li{font-size:12px;color:var(--gray);display:flex;align-items:center;gap:7px;}
+.plan-features li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.plan-cta{margin-top:auto;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:10px 0;border-radius:9px;border:none;cursor:pointer;width:100%;transition:all 0.18s;font-family:'DM Sans',sans-serif;}
+.plan-cta:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 4px 16px rgba(200,241,53,.2);}
+.plan-cta:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.sub-success-toast{display:none;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.25);border-radius:12px;padding:14px 20px;font-size:13px;color:var(--green);font-weight:500;align-items:center;gap:10px;}
+.sub-success-toast.show{display:flex;}
 </style>
 
 </head>
@@ -309,6 +334,55 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
   </header>
 
   <div class="page-body">
+
+<!-- ── SUBSCRIPTION / TRIAL EXPIRED BANNER ── -->
+<div class="sub-banner" id="sub-banner">
+  <div class="sub-banner-header">
+    <div class="sub-banner-icon">
+      <svg width="20" height="20" fill="none" stroke="#ff5252" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="0.5" fill="#ff5252" stroke-width="2"/></svg>
+    </div>
+    <div class="sub-banner-text">
+      <h3>Your Free Trial Has Ended</h3>
+      <p id="sub-banner-msg">Your 14-day trial of SWFT has expired. Choose a plan below to keep managing your business.</p>
+    </div>
+  </div>
+
+  <!-- Success toast shown after returning from Stripe -->
+  <div class="sub-success-toast" id="sub-success-toast">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    You're all set! Your account is now active. Welcome back.
+  </div>
+
+  <!-- Pricing Plans -->
+  <!-- ⚠️  Replace data-price-id values with your real Stripe Price IDs -->
+  <div class="sub-plans">
+
+    <div class="plan-card" onclick="startCheckout(this)">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">$29<span>/mo</span></div>
+      <ul class="plan-features">
+        <li>Up to 50 customers</li>
+        <li>Jobs, Quotes & Invoices</li>
+        <li>Schedule & Calendar</li>
+        <li>Email integration</li>
+      </ul>
+      <button class="plan-cta" data-price-id="price_REPLACE_STARTER">Subscribe — $29/mo</button>
+    </div>
+
+    <div class="plan-card popular" onclick="startCheckout(this)">
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$59<span>/mo</span></div>
+      <ul class="plan-features">
+        <li>Unlimited customers</li>
+        <li>AI Assistant (SWFT Agent)</li>
+        <li>PDF quotes & invoices</li>
+        <li>Priority support</li>
+      </ul>
+      <button class="plan-cta" data-price-id="price_REPLACE_PRO">Subscribe — $59/mo</button>
+    </div>
+
+  </div>
+</div>
 
 <!-- View Toggle -->
 <div style="display:flex;justify-content:center;margin-bottom:4px;">
@@ -1319,16 +1393,75 @@ function filterInvoices(q) {
 
   document.body.style.visibility = "hidden";
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = "swft-login.html";
-    } else {
-      document.body.style.visibility = "visible";
-      window.__swftUser = user;
-      loadQuotes();
-      loadInvoices();
+      return;
+    }
+
+    document.body.style.visibility = "visible";
+    window.__swftUser = user;
+    loadQuotes();
+    loadInvoices();
+
+    // ── Check account status and show trial-expired banner if needed ──
+    try {
+      const token = await user.getIdToken();
+      const res   = await fetch("/api/me/status", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data  = await res.json();
+
+      if (res.status === 402 || data.accountStatus === "expired" || data.accountStatus === "canceled") {
+        document.getElementById("sub-banner").classList.add("show");
+        if (data.message) {
+          document.getElementById("sub-banner-msg").textContent = data.message;
+        }
+      }
+    } catch (e) { /* non-fatal — banner stays hidden */ }
+
+    // ── Show success toast if returning from Stripe Checkout ──
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("subscribed") === "true") {
+      document.getElementById("sub-success-toast").classList.add("show");
+      document.getElementById("sub-banner").classList.remove("show");
+      // Clean up the URL without reloading
+      history.replaceState({}, "", window.location.pathname);
     }
   });
+
+  // ── Kick off a Stripe Checkout Session ──
+  window.startCheckout = async function(cardEl) {
+    const btn     = cardEl.querySelector(".plan-cta");
+    const priceId = btn?.dataset?.priceId;
+
+    if (!priceId || priceId.includes("REPLACE")) {
+      alert("No Stripe Price ID configured for this plan yet. Add your Price ID from the Stripe Dashboard.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Redirecting to Stripe...";
+
+    try {
+      const token = await window.__swftUser.getIdToken();
+      const res   = await fetch("/api/billing/create-checkout-session", {
+        method:  "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ priceId }),
+      });
+      const { url, error } = await res.json();
+      if (error) throw new Error(error);
+      window.location.href = url;
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "Subscribe";
+      alert("Could not start checkout: " + err.message);
+    }
+  };
 </script>
 
 <script type="module" src="swft-user-sync.js"></script>

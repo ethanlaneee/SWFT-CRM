@@ -2,6 +2,9 @@ const { authAdmin, db } = require("../firebase");
 
 const col = () => db.collection("users");
 
+// Admin accounts bypass all subscription/trial checks
+const ADMIN_EMAILS = ["ethan@goswft.com"];
+
 /**
  * checkAccess middleware — runs after the `auth` middleware on all private routes.
  *
@@ -48,6 +51,11 @@ async function checkAccess(req, res, next) {
         redirect: "/login",
       });
     }
+  }
+
+  // ── Admin bypass ─────────────────────────────────────────────────────────
+  if (req.user?.email && ADMIN_EMAILS.includes(req.user.email)) {
+    return next();
   }
 
   // ── Step 2: Account status ────────────────────────────────────────────────
