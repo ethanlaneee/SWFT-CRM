@@ -40,10 +40,12 @@ async function executeTool(toolName, input, uid) {
 
     case "update_customer": {
       const { customerId, ...updates } = input;
+      const cDoc = await db.collection("customers").doc(customerId).get();
+      if (!cDoc.exists || cDoc.data().userId !== uid) return { error: "Customer not found" };
       updates.updatedAt = Date.now();
       await db.collection("customers").doc(customerId).update(updates);
-      const doc = await db.collection("customers").doc(customerId).get();
-      return { id: doc.id, ...doc.data() };
+      const updated = await db.collection("customers").doc(customerId).get();
+      return { id: updated.id, ...updated.data() };
     }
 
     case "create_quote": {
@@ -71,10 +73,9 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "send_quote": {
-      await db.collection("quotes").doc(input.quoteId).update({
-        status: "sent",
-        sentAt: Date.now(),
-      });
+      const qDoc = await db.collection("quotes").doc(input.quoteId).get();
+      if (!qDoc.exists || qDoc.data().userId !== uid) return { error: "Quote not found" };
+      await db.collection("quotes").doc(input.quoteId).update({ status: "sent", sentAt: Date.now() });
       return { success: true, quoteId: input.quoteId, status: "sent" };
     }
 
@@ -133,10 +134,12 @@ async function executeTool(toolName, input, uid) {
 
     case "update_job": {
       const { jobId, ...updates } = input;
+      const jDoc = await db.collection("jobs").doc(jobId).get();
+      if (!jDoc.exists || jDoc.data().userId !== uid) return { error: "Job not found" };
       updates.updatedAt = Date.now();
       await db.collection("jobs").doc(jobId).update(updates);
-      const doc = await db.collection("jobs").doc(jobId).get();
-      return { id: doc.id, ...doc.data() };
+      const updated = await db.collection("jobs").doc(jobId).get();
+      return { id: updated.id, ...updated.data() };
     }
 
     case "schedule_job": {
@@ -173,7 +176,7 @@ async function executeTool(toolName, input, uid) {
         activeJobs: jobs.filter(j => j.status === "active").length,
         completedJobs: jobs.filter(j => j.status === "complete").length,
         monthlyRevenue: invoices
-          .filter(i => i.status === "paid" && i.paidAt >= thirtyDaysAgo)
+          .filter(i => i.status === "paid" && i.paidAt && i.paidAt >= thirtyDaysAgo)
           .reduce((sum, i) => sum + (i.total || 0), 0),
         totalRevenue: invoices
           .filter(i => i.status === "paid")

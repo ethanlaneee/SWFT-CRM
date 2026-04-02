@@ -485,6 +485,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     if (!auth.currentUser) {
       await new Promise(r => { const u = auth.onAuthStateChanged(user => { u(); r(user); }); });
     }
+    if (!auth.currentUser) throw new Error("Not authenticated");
     return auth.currentUser.getIdToken();
   }
 

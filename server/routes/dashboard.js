@@ -23,7 +23,7 @@ router.get("/", async (req, res, next) => {
     const completedJobs = jobs.filter(j => j.status === "complete").length;
 
     const monthlyRevenue = invoices
-      .filter(i => i.status === "paid" && i.paidAt >= thirtyDaysAgo)
+      .filter(i => i.status === "paid" && i.paidAt && i.paidAt >= thirtyDaysAgo)
       .reduce((sum, i) => sum + (i.total || 0), 0);
 
     const totalRevenue = invoices
