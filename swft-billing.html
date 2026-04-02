@@ -1148,24 +1148,6 @@ async function saveEdit(){
       } else {
         await API.quotes.create(data);
       }
-      // Auto-create draft invoice with ALL quote data
-      try {
-        await API.invoices.create({
-          customerName: data.customerName,
-          customerId: data.customerId,
-          items: data.items,
-          total: data.total,
-          notes: data.notes,
-          status: 'draft',
-          quoteId: _q.id || '',
-          address: _q.address || '',
-          service: _q.service || '',
-          sqft: _q.sqft || '',
-          finish: _q.finish || '',
-          scheduledDate: _q.start || ''
-        });
-        loadInvoices();
-      } catch(e) { console.error('Auto-create invoice error:', e); }
 
       loadQuotes();
       closeModal();
