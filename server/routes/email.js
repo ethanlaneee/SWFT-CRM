@@ -42,13 +42,18 @@ router.post("/send", async (req, res, next) => {
 
     await transporter.sendMail(mailOptions);
 
-    // Update document status if applicable
+    // Update document status if applicable — only if user owns it and it's still in a sendable state
     if (documentId && type) {
       const collection = type === "quote" ? "quotes" : "invoices";
-      await db.collection(collection).doc(documentId).update({
-        status: "sent",
-        sentAt: Date.now(),
-      });
+      const docRef = db.collection(collection).doc(documentId);
+      const docSnap = await docRef.get();
+      if (docSnap.exists && docSnap.data().userId === req.uid) {
+        const currentStatus = docSnap.data().status;
+        const terminalStates = type === "quote" ? ["approved"] : ["paid"];
+        if (!terminalStates.includes(currentStatus)) {
+          await docRef.update({ status: "sent", sentAt: Date.now() });
+        }
+      }
     }
 
     res.json({ success: true, message: `Email sent to ${to}` });

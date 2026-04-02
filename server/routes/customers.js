@@ -50,7 +50,7 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Customer not found" });
     }
     const updates = {};
-    for (const key of ["name", "email", "phone", "address", "notes", "tags"]) {
+    for (const key of ["name", "email", "phone", "address", "notes", "tags", "since"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     updates.updatedAt = Date.now();

@@ -63,7 +63,8 @@ router.put("/:id", async (req, res, next) => {
     }
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
-    res.json({ id: req.params.id, ...doc.data(), ...updates });
+    const updated = await col().doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });
 
@@ -79,7 +80,8 @@ router.post("/:id/pay", async (req, res, next) => {
       paidAt: Date.now(),
       paymentMethod: req.body.paymentMethod || "other",
     });
-    res.json({ success: true, status: "paid" });
+    const updated = await col().doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });
 

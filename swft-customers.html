@@ -919,6 +919,7 @@ function renderCustomerTabs(cust) {
 async function addNote() {
   var text = document.getElementById('new-note-text').value.trim();
   if (!text || !_currentCustomer) return;
+  if (!_currentCustomer.id) { showToast('Save the customer first before adding notes'); return; }
   var note = { text: text, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}), tag: 'Note', tagColor: 'green' };
   if (!_currentCustomer.notes) _currentCustomer.notes = [];
   _currentCustomer.notes.push(note);
@@ -1070,7 +1071,7 @@ async function saveCustomerEdit() {
       showToast(fullName + ' added');
     } else if (_currentCustomer && _currentCustomer.id) {
       // ── Update existing customer (single API call) ──
-      await API.customers.update(_currentCustomer.id, { name: fullName, phone, email, address });
+      await API.customers.update(_currentCustomer.id, { name: fullName, phone, email, address, since });
       await loadCustomers();
 
       // Sync local state
@@ -1236,7 +1237,6 @@ function applySort(key) {
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
-      loadCustomers();
       loadCustomers();
       // Auto-open new customer form if ?new=1
       if (window.location.search.includes('new=1')) {

@@ -63,7 +63,8 @@ router.put("/:id", async (req, res, next) => {
     }
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
-    res.json({ id: req.params.id, ...doc.data(), ...updates });
+    const updated = await col().doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });
 
@@ -75,7 +76,8 @@ router.post("/:id/send", async (req, res, next) => {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
-    res.json({ success: true, status: "sent" });
+    const updated = await col().doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });
 
@@ -87,7 +89,8 @@ router.post("/:id/approve", async (req, res, next) => {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).update({ status: "approved", approvedAt: Date.now() });
-    res.json({ success: true, status: "approved" });
+    const updated = await col().doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });
 

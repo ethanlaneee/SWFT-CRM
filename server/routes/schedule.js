@@ -13,6 +13,17 @@ router.get("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Get single schedule entry
+router.get("/:id", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.params.id).get();
+    if (!doc.exists || doc.data().userId !== req.uid) {
+      return res.status(404).json({ error: "Schedule entry not found" });
+    }
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (err) { next(err); }
+});
+
 // Create schedule entry
 router.post("/", async (req, res, next) => {
   try {
@@ -45,7 +56,8 @@ router.put("/:id", async (req, res, next) => {
     }
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
-    res.json({ id: req.params.id, ...doc.data(), ...updates });
+    const updated = await col().doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });
 

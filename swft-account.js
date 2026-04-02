@@ -200,7 +200,7 @@
         document.getElementById("acct-first").value = parts[0] || "";
         document.getElementById("acct-last").value = parts.slice(1).join(" ") || "";
         document.getElementById("acct-email").value = user.email || "";
-        const initials = ((parts[0] || "?")[0] + (parts[1] || "")[0]).toUpperCase();
+        const initials = ((parts[0] || "?")[0] + ((parts[1] || "")[0] || "")).toUpperCase();
         document.getElementById("acct-avatar").textContent = initials || "?";
       }
     } catch (e) {}
@@ -221,7 +221,7 @@
       document.getElementById("acct-phone").value = data.phone || "";
       if (data.email) document.getElementById("acct-email").value = data.email;
       document.getElementById("acct-gmail").value = data.gmailAddress || "";
-      document.getElementById("acct-gmail-pw").value = data.gmailAppPassword ? "••••••••••••" : "";
+      document.getElementById("acct-gmail-pw").value = data.gmailAppPassword ? "__UNCHANGED__" : "";
 
       const first = (data.firstName || data.name?.split(" ")[0] || "?")[0];
       const last = (data.lastName || data.name?.split(" ")[1] || "")[0] || "";
@@ -255,7 +255,7 @@
       const token = await getToken();
 
       // Save profile
-      await fetch(`${API_BASE}/api/me`, {
+      const profileRes = await fetch(`${API_BASE}/api/me`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -266,11 +266,15 @@
           phone: document.getElementById("acct-phone").value.trim(),
         }),
       });
+      if (!profileRes.ok) {
+        const err = await profileRes.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to save profile");
+      }
 
       // Save Gmail if provided
       const gmail = document.getElementById("acct-gmail").value.trim();
       const gmailPw = document.getElementById("acct-gmail-pw").value.trim();
-      if (gmail && gmailPw && !gmailPw.startsWith("••")) {
+      if (gmail && gmailPw && gmailPw !== "__UNCHANGED__") {
         await fetch(`${API_BASE}/api/email/configure`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

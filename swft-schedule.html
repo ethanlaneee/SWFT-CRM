@@ -532,13 +532,38 @@
 
   async function loadCalendarJobs() {
     try {
-      const jobs = await API.jobs.list();
-      calendarJobs = jobs.map(function(j) {
+      const rawJobs = await API.jobs.list();
+      const tagMap = {
+        'scheduled': { label: 'Scheduled', style: 'background:rgba(77,159,255,0.12);color:#4d9fff;' },
+        'active':    { label: 'Active',    style: 'background:rgba(200,241,53,0.1);color:#c8f135;' },
+        'complete':  { label: 'Complete',  style: 'background:rgba(200,241,53,0.1);color:#c8f135;' },
+        'pending':   { label: 'Pending',   style: 'background:rgba(245,166,35,0.1);color:#f5a623;' },
+      };
+      // Populate the jobs lookup used by openDrawer
+      rawJobs.forEach(function(j) {
+        var tagInfo = tagMap[j.status] || tagMap['scheduled'];
+        jobs[j.id] = {
+          date: j.scheduledDate || '',
+          title: j.title || ((j.customerName || '') + ' - ' + (j.service || '')),
+          customer: j.customerName || '',
+          tag: tagInfo.label,
+          tagStyle: tagInfo.style,
+          crew: '<span class="crew-pill">' + (j.crew || 'Unassigned') + '</span>',
+          amount: j.cost ? '$' + Number(j.cost).toLocaleString() : '$0',
+          sqft: j.sqft || '—',
+          dur: j.duration || '—',
+          num: 'J-' + j.id.substring(0, 6),
+          address: j.address || '',
+          service: j.service || '',
+          wx: '☀️', wxDesc: '—', wxNote: '', wxBadge: '', wxText: '',
+        };
+      });
+      calendarJobs = rawJobs.map(function(j) {
         var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
         return {
           date: j.scheduledDate || '',
-          title: j.title || (j.customerName + ' - ' + (j.service||'')),
-          crew: '',
+          title: j.title || ((j.customerName || '') + ' - ' + (j.service || '')),
+          crew: j.crew || '',
           address: j.address || '',
           color: color,
           drawerId: j.id
@@ -720,9 +745,11 @@
   const jobs = {};
 
   let _currentJob = null;
+  let _currentJobId = null;
   function openDrawer(id) {
     const j = jobs[id]; if(!j) return;
     _currentJob = j;
+    _currentJobId = id;
     document.getElementById('d-date').textContent     = j.date;
     document.getElementById('d-title').textContent    = j.title;
     document.getElementById('d-customer').textContent = j.customer;
@@ -821,7 +848,7 @@
 
     // Match service select
     const svcEl = document.getElementById('e-service');
-    const svcVal = j.service.split(' — ')[0].trim();
+    const svcVal = (j.service || '').split(' — ')[0].trim();
     for (let i = 0; i < svcEl.options.length; i++) {
       if (svcEl.options[i].value === svcVal) { svcEl.selectedIndex = i; break; }
     }
@@ -918,41 +945,7 @@
     } catch(e) {
       showToast('Save error: ' + e.message);
     }
-  };
-
-    // Persist edits back into the jobs object so reopening shows saved state
-    if (_currentJob) {
-      _currentJob.title    = title;
-      _currentJob.customer = customer;
-      _currentJob.date     = date + (time ? ' · ' + time : '');
-      _currentJob.address  = address;
-      _currentJob.service  = service;
-      _currentJob.sqft     = sqft;
-      _currentJob.crew     = '<span class="crew-pill">' + crew + '</span>';
-      _currentJob.dur      = dur;
-      _currentJob.amount   = fmtAmount;
-      _currentJob.tag      = status;
-      _currentJob.tagStyle = tagStyles[status] || tagStyles['Scheduled'];
-    }
-
-    // Update view panel
-    document.getElementById('d-title').textContent          = title;
-    document.getElementById('d-customer').textContent       = customer;
-    document.getElementById('d-date').textContent           = date + (time ? ' · ' + time : '');
-    document.getElementById('d-address').textContent        = address;
-    document.getElementById('d-service').textContent        = service;
-    document.getElementById('d-crew-detail').textContent    = crew;
-    document.getElementById('d-sqft').textContent           = sqft;
-    document.getElementById('d-dur').textContent            = dur;
-    document.getElementById('d-amount').textContent         = fmtAmount;
-    document.getElementById('d-crew').innerHTML             = '<span class="crew-pill">' + crew + '</span>';
-
-    // Update status tag
-    const tagEl = document.getElementById('d-tag');
-    tagEl.textContent   = status;
-    tagEl.style.cssText = tagStyles[status] || tagStyles['Scheduled'];
-
-    // Switch back to view
+  }
 
 </script>
 

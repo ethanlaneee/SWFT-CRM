@@ -36,7 +36,12 @@ async function apiFetch(path, options = {}) {
       ...(options.headers || {}),
     },
   });
-  const data = await res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Server error (${res.status})`);
+  }
   if (!res.ok) throw new Error(data.error || "API error");
   return data;
 }
@@ -101,6 +106,7 @@ const API = {
   // ── Schedule ──
   schedule: {
     list:   ()         => apiFetch("/api/schedule"),
+    get:    (id)       => apiFetch(`/api/schedule/${id}`),
     create: (data)     => apiFetch("/api/schedule",         { method: "POST",   body: JSON.stringify(data) }),
     update: (id, data) => apiFetch(`/api/schedule/${id}`,   { method: "PUT",    body: JSON.stringify(data) }),
     delete: (id)       => apiFetch(`/api/schedule/${id}`,   { method: "DELETE" }),

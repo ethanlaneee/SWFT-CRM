@@ -954,7 +954,7 @@ async function autofillBillingCustomer(name) {
 function openNewQuote() {
   loadBillingCustomers();
   _q = {num:'#Q-' + (window._nextQuoteNum || 1),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
-  document.getElementById('m-num').textContent      = '#Q-1050 · Draft';
+  document.getElementById('m-num').textContent      = _q.num + ' · Draft';
   document.getElementById('m-title').textContent    = 'New Quote';
   document.getElementById('m-job').textContent      = '—';
   document.getElementById('m-status-pill').textContent  = 'Draft';
@@ -1077,7 +1077,7 @@ function populateEditForm(){
   document.getElementById('e-start').value=_q.start||'';
   document.getElementById('e-finish').value=_q.finish||'';
   const se=document.getElementById('e-service');
-  for(let i=0;i<se.options.length;i++){if((_q.finish||'').includes(se.options[i].value.split(' ')[0])){se.selectedIndex=i;break;}}
+  for(let i=0;i<se.options.length;i++){if((_q.service||'').includes(se.options[i].value.split(' ')[0])){se.selectedIndex=i;break;}}
   const st=document.getElementById('e-status');
   for(let i=0;i<st.options.length;i++){if(st.options[i].value===_q.status){st.selectedIndex=i;break;}}
 }
@@ -1216,18 +1216,6 @@ async function deleteQuote() {
   showToast((_q.isInvoice?'Invoice':'Quote') + ' deleted');
 }
 
-async function deleteInvoice(el) {
-  const row = el.closest('.inv-row');
-  if (!row) return;
-  const name = row.querySelector('.inv-customer').textContent;
-  const ok = await swftConfirm(
-    'This will permanently delete the invoice for <strong>' + name + '</strong>.',
-    'DELETE INVOICE', '🗑️'
-  );
-  if (!ok) return;
-  row.remove();
-  showToast('Invoice deleted');
-}
 
 let _tt;
 function showToast(msg){
