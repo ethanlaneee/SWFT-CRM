@@ -1,6 +1,14 @@
 const router = require("express").Router();
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { db } = require("../firebase");
+
+// Initialize lazily so a missing STRIPE_SECRET_KEY env var doesn't crash
+// the server at startup — the error surfaces only when a billing route is hit.
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY environment variable is not set.");
+  }
+  return require("stripe")(process.env.STRIPE_SECRET_KEY);
+}
 
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
@@ -25,6 +33,8 @@ router.post("/create-checkout-session", async (req, res, next) => {
     const data = doc.exists ? doc.data() : {};
 
     let customerId = data.stripeCustomerId || null;
+
+    const stripe = getStripe();
 
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -66,6 +76,7 @@ router.get("/verify-session", async (req, res, next) => {
       return res.status(400).json({ error: "session_id is required." });
     }
 
+    const stripe  = getStripe();
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
     // Guard: session must belong to this user's Stripe customer
@@ -106,6 +117,7 @@ async function webhookHandler(req, res) {
   let event;
 
   try {
+    const stripe = getStripe();
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
