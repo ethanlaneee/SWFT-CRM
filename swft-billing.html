@@ -513,10 +513,6 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
 
 <!-- FOOTER -->
 <div class="m-footer" id="m-footer-view">
-  <button class="mfooter-btn" style="color:#ff5252;border-color:rgba(255,82,82,0.3);" onclick="deleteQuote()">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="1.8"/></svg>
-    Delete
-  </button>
   <button class="mfooter-btn" onclick="switchTab(document.querySelectorAll('.mtab')[3],'edit')">
     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
     Edit
@@ -528,6 +524,10 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
   <button class="mfooter-btn primary" id="send-btn" onclick="sendQuote()">
     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
     Send Quote
+  </button>
+  <button class="mfooter-btn" onclick="saveEdit()" style="background:var(--surface2);color:var(--white);">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Save Changes
   </button>
 </div>
 <div class="m-footer" id="m-footer-edit" style="display:none;">
