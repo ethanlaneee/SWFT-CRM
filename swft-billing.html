@@ -1406,19 +1406,26 @@ function filterInvoices(q) {
     loadQuotes();
     loadInvoices();
 
-    // ── Check account status and show trial-expired banner if needed ──
+    // ── Check account status and show subscription banner ──
+    // Shown for: expired/canceled (must subscribe) AND trialing (new signup, choose a plan)
     try {
       const token = await user.getIdToken();
       const res   = await fetch("/api/me/status", {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data  = await res.json();
+      const status = data.accountStatus;
 
-      if (res.status === 402 || data.accountStatus === "expired" || data.accountStatus === "canceled") {
+      if (status === "expired" || status === "canceled" || res.status === 402) {
+        // Hard block — trial over
+        document.getElementById("sub-banner-msg").textContent =
+          data.message || "Your 14-day trial of SWFT has expired. Choose a plan below to keep managing your business.";
         document.getElementById("sub-banner").classList.add("show");
-        if (data.message) {
-          document.getElementById("sub-banner-msg").textContent = data.message;
-        }
+      } else if (status === "trialing") {
+        // New user — gently prompt them to pick a plan
+        document.getElementById("sub-banner-msg").textContent =
+          "You're on a 14-day free trial. Choose a plan below to keep access after it ends.";
+        document.getElementById("sub-banner").classList.add("show");
       }
     } catch (e) { /* non-fatal — banner stays hidden */ }
 

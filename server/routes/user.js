@@ -113,7 +113,8 @@ router.get("/status", async (req, res, next) => {
     }
 
     const data = await checkTrialExpired(doc.id, doc.data());
-    const { accountStatus } = data;
+    // If accountStatus was never written (pre-subscription-fields user), treat as trialing
+    const accountStatus = data.accountStatus || "trialing";
     const allowed = accountStatus === "active" || accountStatus === "trialing";
 
     if (!allowed) {
