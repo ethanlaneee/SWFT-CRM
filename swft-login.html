@@ -567,15 +567,23 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: `${fname} ${lname}` });
+      const now = Date.now();
       await saveUserToFirestore(cred.user, {
         firstName: fname,
         lastName: lname,
         name: `${fname} ${lname}`,
         company: biz,
         businessName: biz,
-        displayName: `${fname} ${lname}`
+        displayName: `${fname} ${lname}`,
+        // Subscription fields — set at creation so status checks never fail
+        trialStartDate:  now,
+        trialEndDate:    now + 14 * 24 * 60 * 60 * 1000,
+        isSubscribed:    false,
+        stripeCustomerId: '',
+        accountStatus:   'trialing',
       });
-      showSuccessState(`Welcome to SWFT, ${fname}! Your account is ready.`);
+      // Send new users to billing to pick a Stripe plan
+      showSuccessState(`Welcome to SWFT, ${fname}! Choose a plan to get started.`, true);
     } catch (err) {
       setLoading(btn, false);
       showGlobalError(firebaseErrorMsg(err.code));
@@ -649,7 +657,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     el.classList.add('show');
   }
 
-  function showSuccessState(sub) {
+  function showSuccessState(sub, toBilling = false) {
     document.getElementById('form-login').classList.remove('active');
     document.getElementById('form-signup').classList.remove('active');
     document.getElementById('global-error').classList.remove('show');
@@ -658,7 +666,14 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     document.getElementById('card-footer').style.display = 'none';
     document.getElementById('success-sub').textContent = sub;
     document.getElementById('success-state').classList.add('show');
-    setTimeout(() => goToDashboard(), 2500); // goToDashboard checks account status before redirecting
+    // New signups go to billing to pick a Stripe plan; returning users go to dashboard
+    setTimeout(() => {
+      if (toBilling) {
+        window.location.href = 'swft-billing.html';
+      } else {
+        goToDashboard();
+      }
+    }, 2000);
   }
 
   // Accounts that always bypass the subscription/trial gate
