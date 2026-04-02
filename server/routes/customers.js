@@ -42,7 +42,7 @@ router.post("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Update customer
+// Update customer — re-fetch after write so response reflects actual saved state
 router.put("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
@@ -55,11 +55,13 @@ router.put("/:id", async (req, res, next) => {
     }
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
-    res.json({ id: req.params.id, ...doc.data(), ...updates });
+    const updated = await col().doc(req.params.id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });
 
-// Delete customer (cascading: also deletes their jobs, quotes, invoices)
+// Delete customer — cascading delete of jobs, quotes, invoices using Firestore batches
+// Matches strictly by customerId (not name) to avoid hitting other customers' data
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
@@ -68,42 +70,26 @@ router.delete("/:id", async (req, res, next) => {
     }
 
     const customerId = req.params.id;
-    const customerName = doc.data().name || "";
 
-    // Delete all jobs for this customer
-    const jobsSnap = await db.collection("jobs").where("userId", "==", req.uid).get();
-    const jobDeletes = [];
-    jobsSnap.docs.forEach(d => {
-      if (d.data().customerId === customerId || d.data().customerName === customerName) {
-        jobDeletes.push(db.collection("jobs").doc(d.id).delete());
-      }
-    });
+    // Fetch all related collections in parallel
+    const [jobsSnap, quotesSnap, invoicesSnap] = await Promise.all([
+      db.collection("jobs").where("userId", "==", req.uid).where("customerId", "==", customerId).get(),
+      db.collection("quotes").where("userId", "==", req.uid).where("customerId", "==", customerId).get(),
+      db.collection("invoices").where("userId", "==", req.uid).where("customerId", "==", customerId).get(),
+    ]);
 
-    // Delete all quotes for this customer
-    const quotesSnap = await db.collection("quotes").where("userId", "==", req.uid).get();
-    const quoteDeletes = [];
-    quotesSnap.docs.forEach(d => {
-      if (d.data().customerId === customerId || d.data().customerName === customerName) {
-        quoteDeletes.push(db.collection("quotes").doc(d.id).delete());
-      }
-    });
+    // Firestore batch supports up to 500 ops — chunk if needed
+    const allDocs = [...jobsSnap.docs, ...quotesSnap.docs, ...invoicesSnap.docs];
+    const chunkSize = 499;
+    for (let i = 0; i < allDocs.length; i += chunkSize) {
+      const batch = db.batch();
+      allDocs.slice(i, i + chunkSize).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
 
-    // Delete all invoices for this customer
-    const invoicesSnap = await db.collection("invoices").where("userId", "==", req.uid).get();
-    const invoiceDeletes = [];
-    invoicesSnap.docs.forEach(d => {
-      if (d.data().customerId === customerId || d.data().customerName === customerName) {
-        invoiceDeletes.push(db.collection("invoices").doc(d.id).delete());
-      }
-    });
-
-    // Execute all deletes
-    await Promise.all([...jobDeletes, ...quoteDeletes, ...invoiceDeletes]);
-
-    // Delete the customer
     await col().doc(customerId).delete();
 
-    res.json({ success: true, deleted: { jobs: jobDeletes.length, quotes: quoteDeletes.length, invoices: invoiceDeletes.length } });
+    res.json({ success: true, deleted: { jobs: jobsSnap.size, quotes: quotesSnap.size, invoices: invoicesSnap.size } });
   } catch (err) { next(err); }
 });
 
