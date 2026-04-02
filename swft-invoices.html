@@ -511,7 +511,7 @@
     </div>
   </div>
 
-  <div class="d-footer">
+  <div class="d-footer" id="i-footer-view">
     <button class="dfooter-btn" onclick="showToast('PDF downloaded ✓')">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.8"/><polyline points="7,10 12,15 17,10" stroke-width="1.8"/><line x1="12" y1="15" x2="12" y2="3" stroke-width="1.8"/></svg>
       Download PDF
@@ -523,6 +523,13 @@
     <button class="dfooter-btn primary" onclick="showToast('Invoice marked as paid ✓')">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Mark Paid
+    </button>
+  </div>
+  <div class="d-footer" id="i-footer-edit" style="display:none;">
+    <button class="dfooter-btn" onclick="cancelInvoiceEdit()">Cancel</button>
+    <button class="dfooter-btn primary" onclick="saveInvoiceEdit()" style="flex:2;">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Save Changes
     </button>
   </div>
 </div>
