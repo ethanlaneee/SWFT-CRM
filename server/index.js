@@ -33,6 +33,7 @@ app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
+app.use("/api/messages",  auth, checkAccess,  require("./routes/messages"));
 
 // ── Root redirect ──
 app.get("/", (req, res) => res.redirect("/swft-login.html"));
