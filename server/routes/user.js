@@ -3,22 +3,49 @@ const { db } = require("../firebase");
 
 const col = () => db.collection("users");
 
+const VALID_ACCOUNT_STATUSES = ["trialing", "active", "expired", "canceled"];
+
+/**
+ * Checks if the user's trial has expired (trialEndDate passed and not subscribed).
+ * If so, sets accountStatus to 'expired' in Firestore and returns the updated data.
+ * @param {string} uid
+ * @param {object} data - current Firestore document data
+ * @returns {object} potentially updated data
+ */
+async function checkTrialExpired(uid, data) {
+  if (data.isSubscribed) return data;
+  const trialEndDate = data.trialEndDate ? new Date(data.trialEndDate) : null;
+  if (trialEndDate && Date.now() > trialEndDate.getTime() && data.accountStatus !== "expired") {
+    await col().doc(uid).set({ accountStatus: "expired" }, { merge: true });
+    return { ...data, accountStatus: "expired" };
+  }
+  return data;
+}
+
 // GET /api/me
 router.get("/", async (req, res, next) => {
   try {
     const doc = await col().doc(req.uid).get();
     if (!doc.exists) {
       // Auto-create user profile from auth token
+      const now = Date.now();
       const profile = {
         name: req.user.name || "",
         email: req.user.email || "",
         company: "",
-        createdAt: Date.now(),
+        createdAt: now,
+        // Subscription fields
+        trialStartDate: now,
+        trialEndDate: now + 14 * 24 * 60 * 60 * 1000, // 14 days from now
+        isSubscribed: false,
+        stripeCustomerId: "",
+        accountStatus: "trialing",
       };
       await col().doc(req.uid).set(profile);
       return res.json({ id: req.uid, ...profile });
     }
-    res.json({ id: doc.id, ...doc.data() });
+    const data = await checkTrialExpired(doc.id, doc.data());
+    res.json({ id: doc.id, ...data });
   } catch (err) { next(err); }
 });
 
@@ -38,15 +65,31 @@ router.put("/", async (req, res, next) => {
       // Gmail
       "gmailAddress", "gmailAppPassword",
       // Logo
-      "companyLogo"
+      "companyLogo",
+      // Subscription
+      "isSubscribed", "stripeCustomerId", "accountStatus"
     ];
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
+    if (updates.accountStatus && !VALID_ACCOUNT_STATUSES.includes(updates.accountStatus)) {
+      return res.status(400).json({ error: `accountStatus must be one of: ${VALID_ACCOUNT_STATUSES.join(", ")}` });
+    }
     updates.updatedAt = Date.now();
     await col().doc(req.uid).set(updates, { merge: true });
     const doc = await col().doc(req.uid).get();
-    res.json({ id: doc.id, ...doc.data() });
+    const data = await checkTrialExpired(doc.id, doc.data());
+    res.json({ id: doc.id, ...data });
+  } catch (err) { next(err); }
+});
+
+// POST /api/me/check-trial — manually trigger trial expiry check
+router.post("/check-trial", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.uid).get();
+    if (!doc.exists) return res.status(404).json({ error: "User not found" });
+    const data = await checkTrialExpired(doc.id, doc.data());
+    res.json({ id: doc.id, accountStatus: data.accountStatus });
   } catch (err) { next(err); }
 });
 
