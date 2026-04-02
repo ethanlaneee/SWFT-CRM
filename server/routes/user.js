@@ -4,6 +4,7 @@ const { db } = require("../firebase");
 const col = () => db.collection("users");
 
 const VALID_ACCOUNT_STATUSES = ["trialing", "active", "expired", "canceled"];
+const ADMIN_EMAILS = ["ethan@goswft.com"];
 
 /**
  * Checks if the user's trial has expired (trialEndDate passed and not subscribed).
@@ -99,6 +100,11 @@ router.post("/check-trial", async (req, res, next) => {
 // sign the user out and redirect them to the billing/payment page.
 router.get("/status", async (req, res, next) => {
   try {
+    // Admin accounts always get full access — never blocked by trial/subscription checks
+    if (ADMIN_EMAILS.includes(req.user?.email)) {
+      return res.json({ accountStatus: "active", allowed: true });
+    }
+
     const doc = await col().doc(req.uid).get();
 
     // Brand-new user — profile created on first GET /api/me; treat as trialing

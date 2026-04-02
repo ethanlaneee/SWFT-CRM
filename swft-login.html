@@ -661,6 +661,9 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     setTimeout(() => goToDashboard(), 2500); // goToDashboard checks account status before redirecting
   }
 
+  // Accounts that always bypass the subscription/trial gate
+  const ADMIN_EMAILS = ['ethan@goswft.com'];
+
   // ── ACCOUNT STATUS GATE ──
   // Called after every successful Firebase sign-in (and on page load if already
   // signed in). Checks accountStatus on the backend before allowing dashboard
@@ -668,8 +671,16 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // user out immediately so they cannot hold a valid Firebase session and bypass
   // the check by navigating directly to swft-shell.html.
   window.goToDashboard = async function() {
+    const user = auth.currentUser;
+
+    // Admin accounts skip the status check entirely
+    if (user?.email && ADMIN_EMAILS.includes(user.email)) {
+      window.location.href = 'swft-shell.html';
+      return;
+    }
+
     try {
-      const token = await auth.currentUser.getIdToken();
+      const token = await user.getIdToken();
       const res   = await fetch('/api/me/status', {
         headers: { Authorization: `Bearer ${token}` }
       });
