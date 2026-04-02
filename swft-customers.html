@@ -1046,60 +1046,54 @@ function cancelCustomerEdit() {
 }
 
 async function saveCustomerEdit() {
-  const fname   = document.getElementById('e-fname').value.trim();
-  const lname   = document.getElementById('e-lname').value.trim();
-  const phone   = document.getElementById('e-phone').value.trim();
-  const email   = document.getElementById('e-email').value.trim();
-  const address = document.getElementById('e-address').value.trim();
-  const since   = document.getElementById('e-since').value.trim();
+  const fname    = document.getElementById('e-fname').value.trim();
+  const lname    = document.getElementById('e-lname').value.trim();
+  const phone    = document.getElementById('e-phone').value.trim();
+  const email    = document.getElementById('e-email').value.trim();
+  const address  = document.getElementById('e-address').value.trim();
+  const since    = document.getElementById('e-since').value.trim();
   const fullName = (fname + ' ' + lname).trim();
 
   if (!fullName) { showToast('Please enter a name'); return; }
 
   try {
     if (_currentCustomer && _currentCustomer.id === null) {
-      // Create new customer
-      var noteText = document.getElementById('e-note').value.trim();
-      var notes = [];
-      if (noteText) {
-        notes.push({ text: noteText, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}), tag: 'Note', tagColor: 'green' });
-      }
-      var tags = _currentCustomer.tags || [];
-      await API.customers.create({ name: fullName, phone: phone, email: email, address: address, notes: notes, tags: tags });
+      // ── Create new customer ──
+      const noteText = document.getElementById('e-note').value.trim();
+      const notes = noteText
+        ? [{ text: noteText, date: new Date().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}), tag:'Note', tagColor:'green' }]
+        : [];
+      const tags = _currentCustomer.tags || [];
+      await API.customers.create({ name: fullName, phone, email, address, notes, tags });
       await loadCustomers();
       closeDrawer();
       showToast(fullName + ' added');
     } else if (_currentCustomer && _currentCustomer.id) {
-      // Update existing customer
-      await API.customers.update(_currentCustomer.id, { name: fullName, phone: phone, email: email, address: address });
+      // ── Update existing customer (single API call) ──
+      await API.customers.update(_currentCustomer.id, { name: fullName, phone, email, address });
       await loadCustomers();
-      // Update view panel
-      document.getElementById('d-name').textContent    = fullName;
-      document.getElementById('d-phone').textContent   = phone;
-      document.getElementById('d-email').textContent   = email;
-      document.getElementById('d-address').textContent = address;
-      document.getElementById('d-since').textContent   = since;
-      document.getElementById('d-meta').innerHTML      = phone + ' &nbsp;&middot;&nbsp; <a href="#">' + address + '</a>';
-      _currentCustomer.name = fullName;
-      _currentCustomer.phone = phone;
-      _currentCustomer.email = email;
+
+      // Sync local state
+      _currentCustomer.name    = fullName;
+      _currentCustomer.phone   = phone;
+      _currentCustomer.email   = email;
       _currentCustomer.address = address;
-      document.getElementById('c-edit-mode').style.display = 'none';
-      document.getElementById('c-view-mode').style.display = 'block';
+
+      // Update view panel fields
+      document.getElementById('d-name').textContent    = fullName;
+      document.getElementById('d-phone').textContent   = phone || '—';
+      document.getElementById('d-email').textContent   = email || '—';
+      document.getElementById('d-address').textContent = address || '—';
+      document.getElementById('d-since').textContent   = since;
+      document.getElementById('d-meta').innerHTML      = (phone || '') + (phone && address ? ' &nbsp;&middot;&nbsp; ' : '') + (address || '');
+
+      // Return to view mode
+      document.getElementById('c-edit-mode').style.display   = 'none';
+      document.getElementById('c-view-mode').style.display   = 'block';
       document.getElementById('c-footer-edit').style.display = 'none';
       document.getElementById('c-footer-view').style.display = 'flex';
-      // Save to API
-  try {
-    var data = { name: fullName, phone: phone, email: email, address: address, notes: _currentCustomer.notes || '' };
-    if (_currentCustomer.id && !_currentCustomer.id.startsWith('new_')) {
-      await API.customers.update(_currentCustomer.id, data);
-    } else {
-      await API.customers.create(data);
-    }
-    closeDrawer();
-    loadCustomers();
-  } catch(e) { showToast('Error: ' + e.message); return; }
-  showToast('Customer saved');
+
+      showToast('Customer saved');
     }
   } catch (err) {
     console.error('Failed to save customer:', err);
