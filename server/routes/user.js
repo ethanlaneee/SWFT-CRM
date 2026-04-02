@@ -93,6 +93,36 @@ router.post("/check-trial", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/me/status — called immediately after login to gate dashboard access.
+// Returns 200 for payable/active accounts, 402 for expired/canceled.
+// The frontend uses this to decide whether to proceed to the dashboard or
+// sign the user out and redirect them to the billing/payment page.
+router.get("/status", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.uid).get();
+
+    // Brand-new user — profile created on first GET /api/me; treat as trialing
+    if (!doc.exists) {
+      return res.json({ accountStatus: "trialing", allowed: true });
+    }
+
+    const data = await checkTrialExpired(doc.id, doc.data());
+    const { accountStatus } = data;
+    const allowed = accountStatus === "active" || accountStatus === "trialing";
+
+    if (!allowed) {
+      return res.status(402).json({
+        error: "Payment required.",
+        message: "Your trial has ended. Please upgrade to continue.",
+        accountStatus,
+        redirect: "/swft-billing.html",
+      });
+    }
+
+    return res.json({ accountStatus, allowed: true });
+  } catch (err) { next(err); }
+});
+
 // DELETE /api/me/delete-account — permanently delete all user data
 router.delete("/delete-account", async (req, res, next) => {
   try {
