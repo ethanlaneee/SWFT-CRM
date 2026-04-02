@@ -727,6 +727,7 @@ async function loadInvoices() {
 }
 
 function openInvoiceModal(inv) {
+  loadBillingCustomers();
   _q = {
     id: inv.id,
     isInvoice: true,
@@ -1319,6 +1320,7 @@ function toggleSidebar(){
 
 // ── NEW INVOICE ──
 function openNewInvoice() {
+  loadBillingCustomers();
   // Reuse the quote modal for invoices
   _q = {num:'#INV-' + (window._nextInvNum || 1),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'—',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],isInvoice:true};
   document.getElementById('m-num').textContent = _q.num + ' · Draft';
