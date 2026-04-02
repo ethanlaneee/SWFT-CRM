@@ -13,6 +13,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase-admin": "^13.0.3",
-    "nodemailer": "^8.0.4"
+    "nodemailer": "^8.0.4",
+    "stripe": "^21.0.1"
   }
 }

@@ -663,6 +663,30 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     }
     document.body.style.visibility = 'visible';
 
+    // ── Verify Stripe payment on return from Checkout ──
+    // Stripe appends ?session_id=cs_xxx to the success_url.
+    // We call the backend to confirm payment and flip accountStatus → active.
+    const params    = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (sessionId) {
+      try {
+        const token = await user.getIdToken();
+        const res   = await fetch(`/api/billing/verify-session?session_id=${sessionId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          // Show a brief welcome-back banner, then clean up the URL
+          const notice = document.createElement('div');
+          notice.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;background:#c8f135;color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 22px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.35);letter-spacing:.5px;';
+          notice.textContent = '🎉 Subscription activated — welcome to SWFT!';
+          document.body.appendChild(notice);
+          setTimeout(() => notice.remove(), 5000);
+        }
+      } catch(e) { /* non-fatal */ }
+      // Clean up the URL so a page refresh doesn't re-verify
+      history.replaceState({}, '', window.location.pathname);
+    }
+
     // Get name from Firebase Auth profile, then Firestore, then email
     let firstName = user.displayName?.split(' ')[0];
     if (!firstName) {
