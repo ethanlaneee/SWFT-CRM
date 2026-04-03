@@ -25,17 +25,39 @@ async function createSubAccount(friendlyName) {
 
 /**
  * Buy a local US phone number for a sub-account.
+ * Tries to match the user's area code for a local number.
  * @param {string} subAccountSid
  * @param {string} subAccountAuthToken
+ * @param {string} [userPhone] - User's own phone number to extract area code
  * @returns {string} The purchased phone number (e.g. "+15551234567")
  */
-async function buyPhoneNumber(subAccountSid, subAccountAuthToken) {
+async function buyPhoneNumber(subAccountSid, subAccountAuthToken, userPhone) {
   const subClient = twilio(subAccountSid, subAccountAuthToken);
 
-  // Search for available local US numbers
-  const available = await subClient
-    .availablePhoneNumbers("US")
-    .local.list({ limit: 1 });
+  // Extract area code from user's phone number (e.g. "+15125551234" → "512")
+  let areaCode = null;
+  if (userPhone) {
+    const digits = userPhone.replace(/\D/g, "");
+    // US numbers: strip leading 1 if 11 digits, then take first 3
+    const national = digits.length === 11 && digits[0] === "1" ? digits.slice(1) : digits;
+    if (national.length === 10) areaCode = national.slice(0, 3);
+  }
+
+  let available = [];
+
+  // First try: match user's area code
+  if (areaCode) {
+    available = await subClient
+      .availablePhoneNumbers("US")
+      .local.list({ areaCode, limit: 1 });
+  }
+
+  // Fallback: any available US local number
+  if (!available.length) {
+    available = await subClient
+      .availablePhoneNumbers("US")
+      .local.list({ limit: 1 });
+  }
 
   if (!available.length) {
     throw new Error("No available phone numbers found");
