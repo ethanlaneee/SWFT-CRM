@@ -184,7 +184,10 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   <!-- Left: Contact list -->
   <div class="contact-panel">
     <div class="contact-header">
-      <div class="contact-title">CONVERSATIONS</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+        <div class="contact-title">CONVERSATIONS</div>
+        <div id="your-number" style="font-size:10px;color:var(--gray);font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;"></div>
+      </div>
       <div class="contact-search">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.8"/></svg>
         <input placeholder="Search contacts..." id="contact-search" oninput="filterContacts(this.value)"/>
@@ -333,9 +336,13 @@ function setChannel(ch){
 // ── Load data ──
 async function loadData(){
   try{
-    var results=await Promise.all([API.messages.list(),API.customers.list()]);
+    var results=await Promise.all([API.messages.list(),API.customers.list(),apiFetch('/api/me')]);
     _allMessages=results[0];
     _customers=results[1];
+    var user=results[2];
+    var num=user.twilioPhoneNumber||'+1 (681) 281-2146';
+    var el=document.getElementById('your-number');
+    if(el) el.textContent='Your #: '+num;
     buildContacts();
     renderContacts();
   }catch(e){console.error('Load error:',e);}
