@@ -5,8 +5,10 @@
 // ════════════════════════════════════════════════
 
 (function () {
-  // Don't show chat bubble on dashboard (AI is embedded there) or messages page (blocks send button)
-  if (window.location.pathname.endsWith('swft-shell.html') || window.location.pathname.endsWith('swft-messages.html') || window.location.pathname === '/' || window.location.pathname === '') return;
+  // Don't show chat bubble on dashboard (AI is embedded there)
+  if (window.location.pathname.endsWith('swft-shell.html') || window.location.pathname === '/' || window.location.pathname === '') return;
+
+  const isMessagesPage = window.location.pathname.endsWith('swft-messages.html');
 
   const API_BASE = ""; // Uses same origin
 
@@ -311,6 +313,15 @@
       }
     }
   `;
+
+  // Raise the bubble on the messages page so it doesn't cover the compose bar
+  if (isMessagesPage) {
+    style.textContent += `
+      .swft-chat-fab { bottom: 90px !important; }
+      .swft-chat-panel { bottom: 144px !important; }
+    `;
+  }
+
   document.head.appendChild(style);
 
   // ── Build DOM ──
