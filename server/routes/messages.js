@@ -101,20 +101,7 @@ router.post("/send", async (req, res, next) => {
       if (!to) return res.status(400).json({ error: "Phone number is required" });
       if (!body) return res.status(400).json({ error: "Message body is required" });
 
-      if (!user.twilioSubAccountSid || !user.twilioPhoneNumber) {
-        return res.status(400).json({
-          error: "SMS not configured. Please set up your Twilio account first.",
-          code: "TWILIO_NOT_CONFIGURED",
-        });
-      }
-
-      const result = await sendSms(
-        user.twilioSubAccountSid,
-        user.twilioAuthToken,
-        user.twilioPhoneNumber,
-        to,
-        body
-      );
+      const result = await sendSms(to, body);
 
       const msgRecord = {
         userId: req.uid,
