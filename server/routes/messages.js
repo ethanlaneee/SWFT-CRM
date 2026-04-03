@@ -1,11 +1,18 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const postmark = require("postmark");
+const multer = require("multer");
 const { sendSms } = require("../twilio");
 
 const emailClient = new postmark.ServerClient(
   process.env.POSTMARK_API_TOKEN || "32a85e4b-55e5-45e2-950e-6c120b001007"
 );
+
+// Multer — store files in memory (max 10MB total for Postmark)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
 
 /**
  * Generate HTML email body for a quote or invoice attachment.
@@ -86,8 +93,8 @@ function generateDocumentHtml(doc, docType, user) {
 </html>`;
 }
 
-// POST /api/messages/send — send email or SMS
-router.post("/send", async (req, res, next) => {
+// POST /api/messages/send — send email (with file attachments) or SMS
+router.post("/send", upload.array("files", 10), async (req, res, next) => {
   try {
     const { to, subject, body, customerId, customerName, type, quoteId, invoiceId } = req.body;
     const msgType = type || "email";
@@ -115,7 +122,6 @@ router.post("/send", async (req, res, next) => {
         sentAt: Date.now(),
       };
       const docRef = await db.collection("messages").add(msgRecord);
-
       return res.json({ success: true, id: docRef.id, messageSid: result.sid });
     }
 
@@ -127,8 +133,8 @@ router.post("/send", async (req, res, next) => {
     const fromEmail = user.email || "noreply@swft-crm.com";
     const fromName = user.company || user.name || "SWFT";
 
-    // Build email body — if a quote or invoice is attached, generate HTML
-    let htmlBody = body || "<p>No content</p>";
+    // Build email body
+    let htmlBody = body ? `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${body}</div>` : "";
     let attachedDocType = "";
     let attachedDocId = "";
 
@@ -136,8 +142,7 @@ router.post("/send", async (req, res, next) => {
       const quoteDoc = await db.collection("quotes").doc(quoteId).get();
       if (quoteDoc.exists && quoteDoc.data().userId === req.uid) {
         const quoteData = { id: quoteDoc.id, ...quoteDoc.data() };
-        const docHtml = generateDocumentHtml(quoteData, "quote", user);
-        htmlBody = (body ? `<div style="margin-bottom:24px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;">${body}</div>` : "") + docHtml;
+        htmlBody += generateDocumentHtml(quoteData, "quote", user);
         attachedDocType = "quote";
         attachedDocId = quoteId;
       }
@@ -145,21 +150,39 @@ router.post("/send", async (req, res, next) => {
       const invDoc = await db.collection("invoices").doc(invoiceId).get();
       if (invDoc.exists && invDoc.data().userId === req.uid) {
         const invData = { id: invDoc.id, ...invDoc.data() };
-        const docHtml = generateDocumentHtml(invData, "invoice", user);
-        htmlBody = (body ? `<div style="margin-bottom:24px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;">${body}</div>` : "") + docHtml;
+        htmlBody += generateDocumentHtml(invData, "invoice", user);
         attachedDocType = "invoice";
         attachedDocId = invoiceId;
       }
     }
 
-    const result = await emailClient.sendEmail({
+    if (!htmlBody) htmlBody = "<p>No content</p>";
+
+    // Build Postmark attachments from uploaded files
+    const attachments = [];
+    const attachmentNames = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        attachments.push({
+          Name: file.originalname,
+          Content: file.buffer.toString("base64"),
+          ContentType: file.mimetype,
+        });
+        attachmentNames.push(file.originalname);
+      }
+    }
+
+    const emailPayload = {
       From: `${fromName} <${fromEmail}>`,
       To: to,
       Subject: subject,
       HtmlBody: htmlBody,
       TextBody: body ? body.replace(/<[^>]*>/g, "") : "No content",
       MessageStream: "outbound",
-    });
+    };
+    if (attachments.length) emailPayload.Attachments = attachments;
+
+    const result = await emailClient.sendEmail(emailPayload);
 
     const msgRecord = {
       userId: req.uid,
@@ -177,6 +200,9 @@ router.post("/send", async (req, res, next) => {
     if (attachedDocType) {
       msgRecord.attachedDocType = attachedDocType;
       msgRecord.attachedDocId = attachedDocId;
+    }
+    if (attachmentNames.length) {
+      msgRecord.attachments = attachmentNames;
     }
 
     const docRef = await db.collection("messages").add(msgRecord);
@@ -223,23 +249,18 @@ router.delete("/:id", async (req, res, next) => {
 
 /**
  * Twilio incoming SMS webhook handler (no auth — called by Twilio directly).
- * Matches the sender's phone to a customer, saves as an inbound message.
  */
 async function twilioIncomingHandler(req, res) {
   try {
-    const from = req.body.From;     // sender phone e.g. "+14035551234"
-    const body = req.body.Body;     // message text
+    const from = req.body.From;
+    const body = req.body.Body;
     const msgSid = req.body.MessageSid;
 
     if (!from || !body) {
       return res.type("text/xml").send("<Response></Response>");
     }
 
-    // Normalize phone: strip non-digits, ensure leading +1
     const digits = from.replace(/\D/g, "");
-
-    // Find which SWFT user(s) have a customer with this phone number
-    // Search all customers for a matching phone
     const custSnap = await db.collection("customers").get();
     let matched = null;
     for (const doc of custSnap.docs) {
@@ -256,7 +277,6 @@ async function twilioIncomingHandler(req, res) {
       return res.type("text/xml").send("<Response></Response>");
     }
 
-    // Save as inbound message
     await db.collection("messages").add({
       userId: matched.userId,
       customerId: matched.customerId,
@@ -271,7 +291,6 @@ async function twilioIncomingHandler(req, res) {
       sentAt: Date.now(),
     });
 
-    // Respond with empty TwiML (no auto-reply)
     res.type("text/xml").send("<Response></Response>");
   } catch (err) {
     console.error("Twilio incoming webhook error:", err);
@@ -279,4 +298,70 @@ async function twilioIncomingHandler(req, res) {
   }
 }
 
-module.exports = { router, twilioIncomingHandler };
+/**
+ * Postmark inbound email webhook (no auth — called by Postmark directly).
+ * Matches sender email to a customer, saves as inbound message.
+ */
+async function postmarkIncomingHandler(req, res) {
+  try {
+    const from = req.body.FromFull ? req.body.FromFull.Email : (req.body.From || "");
+    const fromName = req.body.FromFull ? req.body.FromFull.Name : "";
+    const subject = req.body.Subject || "";
+    const textBody = req.body.TextBody || "";
+    const htmlBody = req.body.HtmlBody || "";
+    const msgId = req.body.MessageID || "";
+
+    if (!from) {
+      return res.json({ ok: true });
+    }
+
+    const fromLower = from.toLowerCase();
+
+    // Match sender email to a customer
+    const custSnap = await db.collection("customers").get();
+    let matched = null;
+    for (const doc of custSnap.docs) {
+      const data = doc.data();
+      if (data.email && data.email.toLowerCase() === fromLower) {
+        matched = { customerId: doc.id, customerName: data.name || fromName || from, userId: data.userId };
+        break;
+      }
+    }
+
+    if (!matched) {
+      console.log("Incoming email from unknown address:", from);
+      return res.json({ ok: true });
+    }
+
+    // Extract attachment names
+    const attachmentNames = [];
+    if (req.body.Attachments && req.body.Attachments.length) {
+      for (const att of req.body.Attachments) {
+        attachmentNames.push(att.Name || "file");
+      }
+    }
+
+    await db.collection("messages").add({
+      userId: matched.userId,
+      customerId: matched.customerId,
+      customerName: matched.customerName,
+      from: from,
+      to: "inbound",
+      subject: subject,
+      body: textBody || htmlBody.replace(/<[^>]*>/g, "").substring(0, 2000),
+      type: "email",
+      direction: "inbound",
+      status: "received",
+      postmarkId: msgId,
+      attachments: attachmentNames.length ? attachmentNames : [],
+      sentAt: Date.now(),
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Postmark incoming webhook error:", err);
+    res.json({ ok: true });
+  }
+}
+
+module.exports = { router, twilioIncomingHandler, postmarkIncomingHandler };
