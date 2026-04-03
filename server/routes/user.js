@@ -120,7 +120,8 @@ router.post("/setup-twilio", async (req, res, next) => {
     }
 
     // Gather all active Twilio SIDs from other users so we don't close them
-    const allUsers = await col().where("twilioSubAccountSid", "!=", "").get();
+    // Gather Twilio SIDs in use by other SWFT users (so we don't close them)
+    const allUsers = await col().get();
     const activeSids = allUsers.docs.map(d => d.data().twilioSubAccountSid).filter(Boolean);
 
     const friendlyName = data.company || data.name || `SWFT-${req.uid}`;
