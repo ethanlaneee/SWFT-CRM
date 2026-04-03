@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
-const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
+// TODO: Re-enable sub-accounts when Twilio is upgraded
+// const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
 
 const col = () => db.collection("users");
 
@@ -45,24 +46,7 @@ router.get("/", async (req, res, next) => {
       };
       await col().doc(req.uid).set(profile);
 
-      // Create Twilio sub-account + buy phone number (non-blocking)
-      try {
-        const allUsers = await col().where("twilioSubAccountSid", "!=", "").get();
-        const activeSids = allUsers.docs.map(d => d.data().twilioSubAccountSid).filter(Boolean);
-        const friendlyName = profile.company || profile.name || `SWFT-${req.uid}`;
-        const subAccount = await createSubAccount(friendlyName, activeSids);
-        const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken, profile.phone);
-        const twilioFields = {
-          twilioSubAccountSid: subAccount.sid,
-          twilioAuthToken: subAccount.authToken,
-          twilioPhoneNumber: phoneNumber,
-        };
-        await col().doc(req.uid).set(twilioFields, { merge: true });
-        Object.assign(profile, twilioFields);
-      } catch (twilioErr) {
-        console.error("Twilio sub-account creation failed:", twilioErr.message);
-      }
-
+      // TODO: Re-enable per-user Twilio sub-accounts when upgraded
       return res.json({ id: req.uid, ...profile });
     }
     const data = await checkTrialExpired(doc.id, doc.data());
@@ -105,39 +89,9 @@ router.put("/", async (req, res, next) => {
 });
 
 // POST /api/me/setup-twilio — provision Twilio for existing users
-router.post("/setup-twilio", async (req, res, next) => {
-  try {
-    const doc = await col().doc(req.uid).get();
-    if (!doc.exists) return res.status(404).json({ error: "User not found" });
-
-    const data = doc.data();
-    if (data.twilioSubAccountSid) {
-      return res.json({
-        success: true,
-        message: "Twilio already configured",
-        twilioPhoneNumber: data.twilioPhoneNumber,
-      });
-    }
-
-    // Gather Twilio SIDs in use by other SWFT users (so we don't close them)
-    let activeSids = [];
-    try {
-      const allUsers = await col().get();
-      activeSids = allUsers.docs.map(d => (d.data() || {}).twilioSubAccountSid).filter(Boolean);
-    } catch (e) { console.error("Failed to gather active SIDs:", e.message); }
-
-    const friendlyName = data.company || data.name || `SWFT-${req.uid}`;
-    const subAccount = await createSubAccount(friendlyName, activeSids);
-    const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken, data.phone);
-
-    await col().doc(req.uid).set({
-      twilioSubAccountSid: subAccount.sid,
-      twilioAuthToken: subAccount.authToken,
-      twilioPhoneNumber: phoneNumber,
-    }, { merge: true });
-
-    res.json({ success: true, twilioPhoneNumber: phoneNumber });
-  } catch (err) { next(err); }
+// TODO: Re-enable when Twilio is upgraded to support sub-accounts
+router.post("/setup-twilio", async (req, res) => {
+  res.json({ success: true, message: "SMS is ready (shared number)" });
 });
 
 // POST /api/me/check-trial — manually trigger trial expiry check
@@ -191,13 +145,7 @@ router.delete("/delete-account", async (req, res, next) => {
   try {
     const uid = req.uid;
 
-    // Close Twilio sub-account if it exists
-    try {
-      const userDoc = await col().doc(uid).get();
-      if (userDoc.exists && userDoc.data().twilioSubAccountSid) {
-        await closeSubAccount(userDoc.data().twilioSubAccountSid);
-      }
-    } catch (e) { console.error("Twilio sub-account close failed:", e.message); }
+    // TODO: Close Twilio sub-account when sub-accounts are re-enabled
 
     const collections = ["customers", "jobs", "quotes", "invoices", "schedule"];
 

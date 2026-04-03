@@ -586,25 +586,7 @@ async function sendMessage(){
     var found=_contacts.find(function(ct){return ct.customerId===c.customerId&&ct.channel===c.channel&&ct.to===c.to;});
     if(found){_activeContact=found;renderChat();}
     renderContacts();
-  }catch(e){
-    // Auto-provision Twilio if not configured
-    if(e.message&&e.message.indexOf('not configured')!==-1){
-      showToast('Setting up SMS... one moment');
-      try{
-        await apiFetch('/api/me/setup-twilio',{method:'POST'});
-        showToast('SMS enabled! Sending...');
-        await API.messages.send(payload);
-        showToast('Message sent');
-        document.getElementById('compose-body').value='';
-        document.getElementById('compose-body').style.height='auto';
-        var messages=await API.messages.list();
-        _allMessages=messages;buildContacts();
-        var found=_contacts.find(function(ct){return ct.customerId===c.customerId&&ct.channel===c.channel&&ct.to===c.to;});
-        if(found){_activeContact=found;renderChat();}
-        renderContacts();
-      }catch(e2){showToast('Error setting up SMS: '+e2.message);}
-    }else{showToast('Error: '+e.message);}
-  }
+  }catch(e){showToast('Error: '+e.message);}
 }
 
 // ── New conversation modal ──
