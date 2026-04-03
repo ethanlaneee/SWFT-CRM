@@ -484,11 +484,12 @@ function renderChat(){
     var bodyText=(m.body||'').replace(/<[^>]*>/g,'').substring(0,500);
     var attachHtml=m.attachedDocType?'<div class="msg-bubble-attach">📎 '+(m.attachedDocType==='quote'?'Quote':'Invoice')+' attached</div>':'';
 
-    html+='<div class="msg-bubble outbound">'+
+    var dir=m.direction==='inbound'?'inbound':'outbound';
+    html+='<div class="msg-bubble '+dir+'">'+
       subjectHtml+
       '<div class="msg-bubble-body">'+esc(bodyText||'(no content)')+'</div>'+
       attachHtml+
-      '<div class="msg-bubble-time">'+time+'</div>'+
+      '<div class="msg-bubble-time">'+(dir==='inbound'?'↙ ':'')+time+'</div>'+
     '</div>';
   });
 
