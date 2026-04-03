@@ -1,4 +1,13 @@
 require("dotenv").config();
+
+// Prevent unhandled errors from crashing the server
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled Rejection:", err);
+});
+
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
