@@ -11,6 +11,7 @@
 html{background:#0a0a0a;}
 body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
 
+/* Sidebar */
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
 .collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
@@ -37,80 +38,111 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .user-name{font-size:12px;font-weight:500;color:var(--white);}
 .user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
 
-.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+/* Main layout — no topbar, full height two-panel */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
 .main.expanded{margin-left:0!important;}
-.main.expanded .topbar{padding-left:56px;}
-.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);z-index:100;}
-.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
-.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
-.topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.btn-primary{display:flex;align-items:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s;}
-.btn-primary:hover{background:#d5ff40;transform:translateY(-1px);}
 
-.page-body{flex:1;padding:28px;display:flex;flex-direction:column;gap:18px;}
+/* Contact list (left panel) */
+.contact-panel{width:320px;min-width:320px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;}
+.contact-header{padding:18px 16px 12px;border-bottom:1px solid var(--border);}
+.contact-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);}
+.contact-search{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:8px 12px;margin-top:10px;transition:border-color 0.15s;}
+.contact-search:focus-within{border-color:var(--green);}
+.contact-search input{background:transparent;border:none;outline:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;flex:1;}
+.contact-search input::placeholder{color:var(--gray2);}
+.channel-tabs{display:flex;gap:4px;padding:10px 16px 6px;}
+.ch-tab{font-size:11px;font-weight:500;padding:5px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
+.ch-tab:hover{color:var(--white);border-color:var(--gray2);}
+.ch-tab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+.contact-list{flex:1;overflow-y:auto;}
+.contact-item{display:flex;align-items:center;gap:11px;padding:12px 16px;cursor:pointer;transition:background 0.12s;border-bottom:1px solid var(--border);}
+.contact-item:hover{background:var(--surface2);}
+.contact-item.active{background:rgba(200,241,53,0.04);border-left:3px solid var(--green);}
+.c-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--gray);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.contact-item.active .c-avatar{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.2);}
+.c-info{flex:1;min-width:0;}
+.c-name{font-size:13px;font-weight:500;color:var(--white);}
+.c-preview{font-size:11.5px;color:var(--gray2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c-meta{text-align:right;flex-shrink:0;}
+.c-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);}
+.c-badge{font-size:9px;font-weight:700;background:var(--green);color:#0a0a0a;border-radius:10px;padding:1px 6px;margin-top:4px;display:inline-block;}
+.new-msg-btn{margin:12px 16px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12px;padding:9px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s;}
+.new-msg-btn:hover{background:#d5ff40;}
 
-/* Compose */
-.compose-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;display:none;flex-direction:column;gap:14px;}
-.compose-panel.open{display:flex;}
-.compose-field{display:flex;flex-direction:column;gap:4px;}
-.compose-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
-.compose-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
-.compose-input:focus{border-color:var(--green);}
-.compose-textarea{min-height:120px;resize:vertical;line-height:1.5;}
-.compose-footer{display:flex;gap:10px;justify-content:flex-end;}
-.compose-btn{padding:9px 18px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;transition:all 0.14s;}
-.compose-btn:hover{background:var(--surface2);color:var(--white);}
-.compose-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);}
-.compose-btn.primary:hover{background:#d5ff40;}
+/* Chat panel (right) */
+.chat-panel{flex:1;display:flex;flex-direction:column;height:100vh;position:sticky;top:0;}
+.chat-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--surface);min-height:60px;}
+.chat-header-avatar{width:34px;height:34px;border-radius:50%;background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.2);color:var(--green);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+.chat-header-info{flex:1;}
+.chat-header-name{font-size:14px;font-weight:500;color:var(--white);}
+.chat-header-detail{font-size:11px;color:var(--gray);margin-top:1px;}
+.chat-channel-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;letter-spacing:0.3px;}
+.chat-channel-pill.email{background:rgba(77,159,255,0.1);color:var(--blue);}
+.chat-channel-pill.sms{background:rgba(200,241,53,0.1);color:var(--green);}
 
-/* Message list */
-.msg-list{display:flex;flex-direction:column;gap:8px;}
-.msg-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:all 0.14s;display:flex;align-items:flex-start;gap:14px;}
-.msg-item:hover{border-color:var(--border2);background:var(--surface2);}
-.msg-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.msg-body{flex:1;min-width:0;}
-.msg-to{font-size:13px;font-weight:500;color:var(--white);}
-.msg-subject{font-size:12.5px;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.msg-preview{font-size:11.5px;color:var(--gray2);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.msg-meta{flex-shrink:0;text-align:right;}
-.msg-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);}
-.msg-status{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:5px;margin-top:4px;display:inline-block;}
-.msg-status.sent{background:rgba(200,241,53,0.1);color:var(--green);}
+/* Messages area */
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;}
+.chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--gray2);font-size:13px;text-align:center;padding:40px;}
 
-/* Type toggle tabs */
-.type-tabs{display:flex;gap:4px;margin-bottom:8px;}
-.type-tab{font-size:11.5px;font-weight:500;padding:7px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
-.type-tab:hover{color:var(--white);border-color:var(--gray2);}
-.type-tab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+/* Message bubbles */
+.msg-bubble{max-width:75%;padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.5;position:relative;}
+.msg-bubble.outbound{background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.15);align-self:flex-end;border-bottom-right-radius:4px;}
+.msg-bubble.inbound{background:var(--surface2);border:1px solid var(--border2);align-self:flex-start;border-bottom-left-radius:4px;}
+.msg-bubble-subject{font-weight:600;color:var(--white);margin-bottom:4px;font-size:12.5px;}
+.msg-bubble-body{color:var(--white);}
+.msg-bubble-body.preview{color:var(--gray);}
+.msg-bubble-time{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--gray2);margin-top:6px;text-align:right;}
+.msg-bubble-attach{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--amber);margin-top:4px;}
+.msg-date-sep{text-align:center;font-size:10px;color:var(--gray2);letter-spacing:1px;padding:8px 0;}
 
-/* Filter tabs */
-.filter-tabs{display:flex;gap:4px;}
-.filter-tab{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
-.filter-tab:hover{color:var(--white);border-color:var(--gray2);}
-.filter-tab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+/* Compose bar */
+.compose-bar{padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;gap:8px;}
+.compose-subject-row{display:flex;gap:8px;}
+.compose-subject-row input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;outline:none;transition:border-color 0.15s;}
+.compose-subject-row input:focus{border-color:var(--green);}
+.compose-row{display:flex;align-items:flex-end;gap:8px;}
+.compose-input-wrap{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:2px;transition:border-color 0.15s;}
+.compose-input-wrap:focus-within{border-color:var(--green);}
+.compose-input-wrap textarea{width:100%;background:transparent;border:none;outline:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 12px;resize:none;min-height:42px;max-height:120px;line-height:1.5;}
+.compose-input-wrap textarea::placeholder{color:var(--gray2);}
+.compose-actions{display:flex;align-items:center;gap:6px;padding:4px 8px;}
+.compose-icon-btn{width:30px;height:30px;border-radius:7px;border:none;background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.compose-icon-btn:hover{background:var(--surface);color:var(--white);}
+.send-btn{width:36px;height:36px;border-radius:9px;background:var(--green);border:none;color:#0a0a0a;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;flex-shrink:0;}
+.send-btn:hover{background:#d5ff40;transform:translateY(-1px);}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 
-/* Attachment chip */
+/* Attach */
 .attach-dropdown{position:relative;}
-.attach-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
-.attach-btn:hover{background:var(--surface2);color:var(--white);}
-.attach-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);border-radius:7px;padding:5px 10px;font-size:11.5px;color:var(--green);margin-top:6px;}
-.attach-chip .remove{cursor:pointer;opacity:0.6;font-size:14px;}
-.attach-chip .remove:hover{opacity:1;}
 .attach-list{position:absolute;bottom:100%;left:0;margin-bottom:6px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;min-width:280px;max-height:220px;overflow-y:auto;z-index:10;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
 .attach-list.open{display:block;}
 .attach-list-header{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);padding:10px 12px 4px;font-weight:600;}
 .attach-option{padding:9px 12px;font-size:12.5px;color:var(--white);cursor:pointer;transition:background 0.1s;display:flex;justify-content:space-between;align-items:center;}
 .attach-option:hover{background:var(--surface2);}
 .attach-option .doc-total{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);}
+.attach-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);border-radius:6px;padding:4px 8px;font-size:10.5px;color:var(--green);}
+.attach-chip .remove{cursor:pointer;opacity:0.6;font-size:13px;margin-left:2px;}
+.attach-chip .remove:hover{opacity:1;}
 
-/* Message type badge */
-.msg-type-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:0.3px;margin-left:6px;}
-.msg-type-badge.email{background:rgba(77,159,255,0.1);color:var(--blue);}
-.msg-type-badge.sms{background:rgba(200,241,53,0.1);color:var(--green);}
-.msg-attach-badge{font-size:9.5px;color:var(--amber);margin-top:2px;}
-
-.empty-state{text-align:center;padding:40px;color:var(--gray);font-size:13px;}
+/* New conversation modal */
+.new-conv-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.22s;}
+.new-conv-overlay.open{opacity:1;pointer-events:all;}
+.new-conv-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:0;transform:scale(0.96);transition:transform 0.25s cubic-bezier(0.22,1,0.36,1);box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.new-conv-overlay.open .new-conv-modal{transform:scale(1);}
+.ncm-header{padding:20px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ncm-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);}
+.ncm-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
+.ncm-close:hover{background:var(--surface2);color:var(--white);}
+.ncm-body{padding:18px 22px;display:flex;flex-direction:column;gap:14px;}
+.ncm-field{display:flex;flex-direction:column;gap:5px;}
+.ncm-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
+.ncm-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.ncm-input:focus{border-color:var(--green);}
+.ncm-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.ncm-btn{padding:9px 18px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;transition:all 0.14s;}
+.ncm-btn:hover{background:var(--surface2);color:var(--white);}
+.ncm-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);}
+.ncm-btn.primary:hover{background:#d5ff40;}
 
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -144,94 +176,125 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   </div>
 </aside>
 
-<div class="main" id="main">
-  <header class="topbar">
-    <div class="topbar-page">MESSAGES</div>
-    <span class="topbar-slash">/</span>
-    <div class="topbar-sub" id="msg-count">0 sent</div>
-    <div class="topbar-right">
-      <div class="filter-tabs" id="msg-filters">
-        <div class="filter-tab active" onclick="setMsgFilter('all')">All</div>
-        <div class="filter-tab" onclick="setMsgFilter('email')">Email</div>
-        <div class="filter-tab" onclick="setMsgFilter('sms')">SMS</div>
-      </div>
-      <button class="btn-primary" onclick="toggleCompose()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
-        New Message
-      </button>
-    </div>
-  </header>
-
-  <div class="page-body">
-
-<!-- Compose Panel -->
-<div class="compose-panel" id="compose-panel">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;">NEW MESSAGE</div>
-    <div onclick="toggleCompose()" style="cursor:pointer;color:var(--gray);font-size:18px;">&times;</div>
-  </div>
-  <div class="type-tabs">
-    <div class="type-tab active" onclick="setMsgType('email')">Email</div>
-    <div class="type-tab" onclick="setMsgType('sms')">SMS</div>
-  </div>
-  <div class="compose-field">
-    <label class="compose-label">To (Customer)</label>
-    <select class="compose-input" id="msg-customer" onchange="fillCustomerField()">
-      <option value="">Select a customer...</option>
-    </select>
-  </div>
-  <div class="compose-field" id="email-field">
-    <label class="compose-label">Email Address</label>
-    <input class="compose-input" id="msg-to" type="email" placeholder="customer@email.com"/>
-  </div>
-  <div class="compose-field" id="phone-field" style="display:none;">
-    <label class="compose-label">Phone Number</label>
-    <input class="compose-input" id="msg-phone" type="tel" placeholder="+1 (555) 123-4567"/>
-  </div>
-  <div class="compose-field" id="subject-field">
-    <label class="compose-label">Subject</label>
-    <input class="compose-input" id="msg-subject" type="text" placeholder="e.g. Your quote is ready"/>
-  </div>
-  <div class="compose-field">
-    <label class="compose-label">Message</label>
-    <textarea class="compose-input compose-textarea" id="msg-body" placeholder="Write your message..."></textarea>
-  </div>
-  <div class="compose-footer">
-    <div class="attach-dropdown" id="attach-area" style="margin-right:auto;">
-      <button class="attach-btn" onclick="toggleAttachList()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.49" stroke-width="1.8"/></svg>
-        Attach Quote / Invoice
-      </button>
-      <div class="attach-list" id="attach-list"></div>
-      <div id="attach-chip-area"></div>
-    </div>
-    <button class="compose-btn" onclick="toggleCompose()">Cancel</button>
-    <button class="compose-btn primary" onclick="sendMessage()">
-      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
-      Send
-    </button>
-  </div>
-</div>
-
-<!-- Message List -->
-<div class="msg-list" id="msg-list">
-  <div class="empty-state">No messages yet. Click New Message to send your first email.</div>
-</div>
-
-  </div>
-</div>
-
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
 </div>
+
+<div class="main" id="main">
+  <!-- Left: Contact list -->
+  <div class="contact-panel">
+    <div class="contact-header">
+      <div class="contact-title">CONVERSATIONS</div>
+      <div class="contact-search">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.8"/></svg>
+        <input placeholder="Search contacts..." id="contact-search" oninput="filterContacts(this.value)"/>
+      </div>
+    </div>
+    <div class="channel-tabs">
+      <div class="ch-tab active" onclick="setChannel('all')">All</div>
+      <div class="ch-tab" onclick="setChannel('email')">Email</div>
+      <div class="ch-tab" onclick="setChannel('sms')">SMS</div>
+    </div>
+    <div class="contact-list" id="contact-list">
+      <div class="chat-empty" style="padding:30px;font-size:12px;">Loading contacts...</div>
+    </div>
+    <button class="new-msg-btn" onclick="openNewConversation()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
+      New Conversation
+    </button>
+  </div>
+
+  <!-- Right: Chat view -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header" id="chat-header" style="display:none;">
+      <div class="chat-header-avatar" id="chat-avatar">?</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="chat-name">Select a conversation</div>
+        <div class="chat-header-detail" id="chat-detail"></div>
+      </div>
+      <span class="chat-channel-pill" id="chat-channel-pill" style="display:none;"></span>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-empty">
+        <div>
+          <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.15;margin-bottom:12px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.5"/></svg>
+          <div>Select a contact to view conversation</div>
+        </div>
+      </div>
+    </div>
+    <div class="compose-bar" id="compose-bar" style="display:none;">
+      <div class="compose-subject-row" id="subject-row">
+        <input type="text" id="compose-subject" placeholder="Subject..."/>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;" id="attach-chip-bar"></div>
+      <div class="compose-row">
+        <div class="compose-input-wrap">
+          <textarea id="compose-body" placeholder="Type a message..." rows="1" oninput="autoResize(this)"></textarea>
+          <div class="compose-actions">
+            <div class="attach-dropdown" id="attach-area">
+              <div class="compose-icon-btn" onclick="toggleAttachList()" title="Attach quote or invoice">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.49" stroke-width="1.8"/></svg>
+              </div>
+              <div class="attach-list" id="attach-list"></div>
+            </div>
+          </div>
+        </div>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New conversation modal -->
+<div class="new-conv-overlay" id="new-conv-overlay" onclick="if(event.target===this)closeNewConversation()">
+  <div class="new-conv-modal">
+    <div class="ncm-header">
+      <div class="ncm-title">NEW CONVERSATION</div>
+      <button class="ncm-close" onclick="closeNewConversation()">&times;</button>
+    </div>
+    <div class="ncm-body">
+      <div class="ncm-field">
+        <label class="ncm-label">Customer</label>
+        <select class="ncm-input" id="nc-customer" onchange="ncFillContact()">
+          <option value="">Select a customer...</option>
+        </select>
+      </div>
+      <div class="ncm-field">
+        <label class="ncm-label">Channel</label>
+        <select class="ncm-input" id="nc-channel">
+          <option value="email">Email</option>
+          <option value="sms">SMS</option>
+        </select>
+      </div>
+      <div class="ncm-field" id="nc-email-field">
+        <label class="ncm-label">Email Address</label>
+        <input class="ncm-input" id="nc-email" type="email" placeholder="customer@email.com"/>
+      </div>
+      <div class="ncm-field" id="nc-phone-field" style="display:none;">
+        <label class="ncm-label">Phone Number</label>
+        <input class="ncm-input" id="nc-phone" type="tel" placeholder="+1 (555) 123-4567"/>
+      </div>
+    </div>
+    <div class="ncm-footer">
+      <button class="ncm-btn" onclick="closeNewConversation()">Cancel</button>
+      <button class="ncm-btn primary" onclick="startConversation()">Start Conversation</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
 <script>
 // ── State ──
-var _msgType = 'email';
-var _msgFilter = 'all';
-var _allMessages = [];
-var _attachedDoc = null; // { type: 'quote'|'invoice', id, label }
+var _channel = 'all';       // current channel filter
+var _allMessages = [];       // all messages from API
+var _customers = [];         // all customers
+var _contacts = [];          // computed contact list with last message
+var _activeContact = null;   // { customerId, customerName, channel, email, phone }
+var _attachedDoc = null;
+var _searchQuery = '';
 
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
@@ -248,234 +311,378 @@ function showToast(msg){
   _tt=setTimeout(function(){t.classList.remove('show');},2500);
 }
 
-// ── Message type toggle (Email / SMS) ──
-function setMsgType(type) {
-  _msgType = type;
-  document.querySelectorAll('.type-tab').forEach(function(t) {
-    t.classList.toggle('active', t.textContent.toLowerCase() === type);
-  });
-  document.getElementById('email-field').style.display = type === 'email' ? '' : 'none';
-  document.getElementById('phone-field').style.display = type === 'sms' ? '' : 'none';
-  document.getElementById('subject-field').style.display = type === 'email' ? '' : 'none';
-  document.getElementById('attach-area').style.display = type === 'email' ? '' : 'none';
-  if (type === 'sms') { _attachedDoc = null; renderAttachChip(); }
-  fillCustomerField();
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
 }
 
-// ── Message list filter (All / Email / SMS) ──
-function setMsgFilter(filter) {
-  _msgFilter = filter;
-  document.querySelectorAll('.filter-tab').forEach(function(t) {
-    t.classList.toggle('active', t.textContent.toLowerCase() === filter);
+// ── Channel filter ──
+function setChannel(ch){
+  _channel=ch;
+  document.querySelectorAll('.ch-tab').forEach(function(t){
+    t.classList.toggle('active',t.textContent.toLowerCase()===ch);
   });
-  renderMessages();
+  buildContacts();
+  renderContacts();
+  // If active contact doesn't match filter, clear it
+  if(_activeContact && ch!=='all' && _activeContact.channel!==ch){
+    clearChat();
+  }
 }
 
-// ── Compose ──
-function toggleCompose() {
-  var panel = document.getElementById('compose-panel');
-  panel.classList.toggle('open');
-  if (panel.classList.contains('open')) {
-    loadCustomersForCompose();
+// ── Load data ──
+async function loadData(){
+  try{
+    var results=await Promise.all([API.messages.list(),API.customers.list()]);
+    _allMessages=results[0];
+    _customers=results[1];
+    buildContacts();
+    renderContacts();
+  }catch(e){console.error('Load error:',e);}
+}
+
+// ── Build contact list from messages ──
+function buildContacts(){
+  var map={};
+  var msgs=_allMessages;
+  if(_channel!=='all'){
+    msgs=msgs.filter(function(m){return(m.type||'email')===_channel;});
+  }
+  msgs.forEach(function(m){
+    var key=(m.customerId||'')+'_'+(m.type||'email');
+    if(!key||key==='_email'&&!m.customerId){
+      key='unknown_'+(m.type||'email')+'_'+m.to;
+    }
+    if(!map[key]){
+      map[key]={
+        customerId:m.customerId||'',
+        customerName:m.customerName||m.to,
+        channel:m.type||'email',
+        to:m.to,
+        messages:[],
+        lastTime:0
+      };
+      // Find customer details
+      if(m.customerId){
+        var cust=_customers.find(function(c){return c.id===m.customerId;});
+        if(cust){
+          map[key].email=cust.email||m.to;
+          map[key].phone=cust.phone||'';
+          map[key].customerName=cust.name||m.customerName;
+        }
+      }
+    }
+    map[key].messages.push(m);
+    if((m.sentAt||0)>map[key].lastTime)map[key].lastTime=m.sentAt||0;
+  });
+
+  _contacts=Object.values(map).sort(function(a,b){return b.lastTime-a.lastTime;});
+}
+
+// ── Render contacts ──
+function renderContacts(){
+  var list=document.getElementById('contact-list');
+  var filtered=_contacts;
+  if(_searchQuery){
+    var q=_searchQuery.toLowerCase();
+    filtered=filtered.filter(function(c){return c.customerName.toLowerCase().indexOf(q)>-1;});
+  }
+
+  if(!filtered.length){
+    list.innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;">No conversations yet</div>';
+    return;
+  }
+
+  list.innerHTML=filtered.map(function(c){
+    var lastMsg=c.messages[0];
+    c.messages.forEach(function(m){if((m.sentAt||0)>(lastMsg.sentAt||0))lastMsg=m;});
+    var preview=(lastMsg.body||'').substring(0,50).replace(/<[^>]*>/g,'')||lastMsg.subject||'No content';
+    var time=lastMsg.sentAt?formatTime(lastMsg.sentAt):'';
+    var initials=getInitials(c.customerName);
+    var isActive=_activeContact&&_activeContact.customerId===c.customerId&&_activeContact.channel===c.channel&&_activeContact.to===c.to;
+    var chIcon=c.channel==='sms'?'<span style="color:var(--green);font-size:10px;">SMS</span>':'<span style="color:var(--blue);font-size:10px;">Email</span>';
+
+    return '<div class="contact-item'+(isActive?' active':'')+'" onclick="selectContact(\''+escape(JSON.stringify(c))+'\')">' +
+      '<div class="c-avatar">'+initials+'</div>' +
+      '<div class="c-info">' +
+        '<div class="c-name">'+esc(c.customerName)+' '+chIcon+'</div>' +
+        '<div class="c-preview">'+esc(preview)+'</div>' +
+      '</div>' +
+      '<div class="c-meta"><div class="c-time">'+time+'</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+function filterContacts(q){
+  _searchQuery=q;
+  renderContacts();
+}
+
+// ── Select contact ──
+function selectContact(escaped){
+  var c=JSON.parse(unescape(escaped));
+  _activeContact=c;
+  renderContacts();
+  renderChat();
+  showCompose();
+}
+
+function clearChat(){
+  _activeContact=null;
+  document.getElementById('chat-header').style.display='none';
+  document.getElementById('compose-bar').style.display='none';
+  document.getElementById('chat-messages').innerHTML='<div class="chat-empty"><div><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.15;margin-bottom:12px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.5"/></svg><div>Select a contact to view conversation</div></div></div>';
+}
+
+// ── Render chat ──
+function renderChat(){
+  if(!_activeContact)return;
+  var c=_activeContact;
+
+  // Header
+  var header=document.getElementById('chat-header');
+  header.style.display='flex';
+  document.getElementById('chat-avatar').textContent=getInitials(c.customerName);
+  document.getElementById('chat-name').textContent=c.customerName;
+  document.getElementById('chat-detail').textContent=c.channel==='sms'?(c.phone||c.to):(c.email||c.to);
+  var pill=document.getElementById('chat-channel-pill');
+  pill.style.display='';
+  pill.className='chat-channel-pill '+c.channel;
+  pill.textContent=c.channel==='sms'?'SMS':'Email';
+
+  // Subject row visibility
+  document.getElementById('subject-row').style.display=c.channel==='email'?'flex':'none';
+  // Attach area
+  document.getElementById('attach-area').style.display=c.channel==='email'?'':'none';
+
+  // Messages
+  var msgs=c.messages.slice().sort(function(a,b){return(a.sentAt||0)-(b.sentAt||0);});
+  var area=document.getElementById('chat-messages');
+
+  if(!msgs.length){
+    area.innerHTML='<div class="chat-empty"><div>No messages yet. Send the first one!</div></div>';
+    return;
+  }
+
+  var html='';
+  var lastDate='';
+  msgs.forEach(function(m){
+    var d=m.sentAt?new Date(m.sentAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    if(d&&d!==lastDate){
+      html+='<div class="msg-date-sep">'+d+'</div>';
+      lastDate=d;
+    }
+    var time=m.sentAt?new Date(m.sentAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
+    var subjectHtml=m.subject?'<div class="msg-bubble-subject">'+esc(m.subject)+'</div>':'';
+    var bodyText=(m.body||'').replace(/<[^>]*>/g,'').substring(0,500);
+    var attachHtml=m.attachedDocType?'<div class="msg-bubble-attach">📎 '+(m.attachedDocType==='quote'?'Quote':'Invoice')+' attached</div>':'';
+
+    html+='<div class="msg-bubble outbound">'+
+      subjectHtml+
+      '<div class="msg-bubble-body">'+esc(bodyText||'(no content)')+'</div>'+
+      attachHtml+
+      '<div class="msg-bubble-time">'+time+'</div>'+
+    '</div>';
+  });
+
+  area.innerHTML=html;
+  area.scrollTop=area.scrollHeight;
+}
+
+function showCompose(){
+  document.getElementById('compose-bar').style.display='';
+  if(_activeContact&&_activeContact.channel==='email'){
     loadAttachDocs();
   }
 }
 
-async function loadCustomersForCompose() {
-  try {
-    var customers = await API.customers.list();
-    var select = document.getElementById('msg-customer');
-    select.innerHTML = '<option value="">Select a customer...</option>';
-    customers.forEach(function(c) {
-      var opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = c.name || 'Unnamed';
-      opt.dataset.email = c.email || '';
-      opt.dataset.phone = c.phone || '';
-      opt.dataset.name = c.name || '';
-      select.appendChild(opt);
-    });
-    window._msgCustomers = customers;
-  } catch(e) {}
-}
-
-function fillCustomerField() {
-  var select = document.getElementById('msg-customer');
-  var opt = select.options[select.selectedIndex];
-  if (!opt) return;
-  if (_msgType === 'email' && opt.dataset.email) {
-    document.getElementById('msg-to').value = opt.dataset.email;
-  } else if (_msgType === 'sms' && opt.dataset.phone) {
-    document.getElementById('msg-phone').value = opt.dataset.phone;
-  }
-}
-
 // ── Attachments ──
-async function loadAttachDocs() {
-  try {
-    var quotes = await API.quotes.list();
-    var invoices = await API.invoices.list();
-    var list = document.getElementById('attach-list');
-    var html = '';
-
-    if (quotes.length) {
-      html += '<div class="attach-list-header">Quotes</div>';
-      quotes.forEach(function(q) {
-        var label = (q.customerName || 'Quote') + ' — ' + (q.service || '');
-        html += '<div class="attach-option" onclick="selectAttachment(\'quote\',\'' + q.id + '\',\'' + label.replace(/'/g, "\\'") + '\')">' +
-          '<span>' + label + '</span>' +
-          '<span class="doc-total">$' + Number(q.total || 0).toFixed(2) + '</span></div>';
+async function loadAttachDocs(){
+  try{
+    var results=await Promise.all([API.quotes.list(),API.invoices.list()]);
+    var quotes=results[0],invoices=results[1];
+    var list=document.getElementById('attach-list');
+    var html='';
+    if(quotes.length){
+      html+='<div class="attach-list-header">Quotes</div>';
+      quotes.forEach(function(q){
+        var label=(q.customerName||'Quote')+' — '+(q.service||'');
+        html+='<div class="attach-option" onclick="selectAttachment(\'quote\',\''+q.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(q.total||0).toFixed(2)+'</span></div>';
       });
     }
-    if (invoices.length) {
-      html += '<div class="attach-list-header">Invoices</div>';
-      invoices.forEach(function(inv) {
-        var label = (inv.customerName || 'Invoice') + ' — ' + (inv.service || '');
-        html += '<div class="attach-option" onclick="selectAttachment(\'invoice\',\'' + inv.id + '\',\'' + label.replace(/'/g, "\\'") + '\')">' +
-          '<span>' + label + '</span>' +
-          '<span class="doc-total">$' + Number(inv.total || 0).toFixed(2) + '</span></div>';
+    if(invoices.length){
+      html+='<div class="attach-list-header">Invoices</div>';
+      invoices.forEach(function(inv){
+        var label=(inv.customerName||'Invoice')+' — '+(inv.service||'');
+        html+='<div class="attach-option" onclick="selectAttachment(\'invoice\',\''+inv.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(inv.total||0).toFixed(2)+'</span></div>';
       });
     }
-    if (!html) html = '<div style="padding:16px;text-align:center;color:var(--gray);font-size:12px;">No quotes or invoices yet</div>';
-    list.innerHTML = html;
-  } catch(e) {}
+    if(!html)html='<div style="padding:16px;text-align:center;color:var(--gray);font-size:12px;">No quotes or invoices yet</div>';
+    list.innerHTML=html;
+  }catch(e){}
 }
 
-function toggleAttachList() {
-  document.getElementById('attach-list').classList.toggle('open');
-}
+function toggleAttachList(){document.getElementById('attach-list').classList.toggle('open');}
 
-function selectAttachment(docType, docId, label) {
-  _attachedDoc = { type: docType, id: docId, label: label };
+function selectAttachment(docType,docId,label){
+  _attachedDoc={type:docType,id:docId,label:label};
   document.getElementById('attach-list').classList.remove('open');
   renderAttachChip();
 }
 
-function removeAttachment() {
-  _attachedDoc = null;
-  renderAttachChip();
+function removeAttachment(){_attachedDoc=null;renderAttachChip();}
+
+function renderAttachChip(){
+  var bar=document.getElementById('attach-chip-bar');
+  if(!_attachedDoc){bar.innerHTML='';bar.parentElement.querySelector('#attach-chip-bar').style.display='none';return;}
+  bar.style.display='flex';
+  var icon=_attachedDoc.type==='quote'?'📄':'🧾';
+  bar.innerHTML='<div class="attach-chip">'+icon+' '+_attachedDoc.label+'<span class="remove" onclick="removeAttachment()">&times;</span></div>';
 }
 
-function renderAttachChip() {
-  var area = document.getElementById('attach-chip-area');
-  if (!_attachedDoc) { area.innerHTML = ''; return; }
-  var icon = _attachedDoc.type === 'quote' ? '📄' : '🧾';
-  area.innerHTML = '<div class="attach-chip">' + icon + ' ' + _attachedDoc.label +
-    '<span class="remove" onclick="removeAttachment()">&times;</span></div>';
-}
-
-// Close attach list on outside click
-document.addEventListener('click', function(e) {
-  var dd = document.getElementById('attach-area');
-  if (dd && !dd.contains(e.target)) {
-    document.getElementById('attach-list').classList.remove('open');
-  }
+document.addEventListener('click',function(e){
+  var dd=document.getElementById('attach-area');
+  if(dd&&!dd.contains(e.target))document.getElementById('attach-list').classList.remove('open');
 });
 
 // ── Send message ──
-async function sendMessage() {
-  var custSelect = document.getElementById('msg-customer');
-  var customerName = custSelect.options[custSelect.selectedIndex] ? custSelect.options[custSelect.selectedIndex].textContent : '';
-  if (customerName === 'Select a customer...') customerName = '';
-  var customerId = custSelect.value;
-  var body = document.getElementById('msg-body').value.trim();
+async function sendMessage(){
+  if(!_activeContact){showToast('Select a contact first');return;}
+  var body=document.getElementById('compose-body').value.trim();
+  if(!body){showToast('Enter a message');return;}
 
-  if (_msgType === 'sms') {
-    var phone = document.getElementById('msg-phone').value.trim();
-    if (!phone) { showToast('Enter a phone number'); return; }
-    if (!body) { showToast('Enter a message'); return; }
+  var c=_activeContact;
+  var payload={
+    to:c.channel==='sms'?(c.phone||c.to):(c.email||c.to),
+    body:body,
+    type:c.channel,
+    customerId:c.customerId,
+    customerName:c.customerName
+  };
 
-    try {
-      await API.messages.send({ to: phone, body: body, type: 'sms', customerId: customerId, customerName: customerName });
-      showToast('SMS sent to ' + phone);
-      resetCompose();
-      loadMessages();
-    } catch(e) { showToast('Error: ' + e.message); }
-  } else {
-    var to = document.getElementById('msg-to').value.trim();
-    var subject = document.getElementById('msg-subject').value.trim();
-    if (!to) { showToast('Enter an email address'); return; }
-    if (!subject) { showToast('Enter a subject'); return; }
-
-    var payload = { to: to, subject: subject, body: body, type: 'email', customerId: customerId, customerName: customerName };
-    if (_attachedDoc) {
-      if (_attachedDoc.type === 'quote') payload.quoteId = _attachedDoc.id;
-      else payload.invoiceId = _attachedDoc.id;
+  if(c.channel==='email'){
+    var subject=document.getElementById('compose-subject').value.trim();
+    if(!subject){showToast('Enter a subject');return;}
+    payload.subject=subject;
+    if(_attachedDoc){
+      if(_attachedDoc.type==='quote')payload.quoteId=_attachedDoc.id;
+      else payload.invoiceId=_attachedDoc.id;
     }
+  }
 
-    try {
-      await API.messages.send(payload);
-      showToast('Email sent to ' + to);
-      resetCompose();
-      loadMessages();
-    } catch(e) { showToast('Error: ' + e.message); }
+  try{
+    await API.messages.send(payload);
+    showToast('Message sent');
+    document.getElementById('compose-body').value='';
+    document.getElementById('compose-body').style.height='auto';
+    if(c.channel==='email')document.getElementById('compose-subject').value='';
+    _attachedDoc=null;renderAttachChip();
+
+    // Reload messages and refresh view
+    var messages=await API.messages.list();
+    _allMessages=messages;
+    buildContacts();
+    // Re-find active contact
+    var found=_contacts.find(function(ct){return ct.customerId===c.customerId&&ct.channel===c.channel&&ct.to===c.to;});
+    if(found){_activeContact=found;renderChat();}
+    renderContacts();
+  }catch(e){showToast('Error: '+e.message);}
+}
+
+// ── New conversation modal ──
+function openNewConversation(){
+  document.getElementById('new-conv-overlay').classList.add('open');
+  loadCustomerDropdown();
+}
+
+function closeNewConversation(){
+  document.getElementById('new-conv-overlay').classList.remove('open');
+}
+
+async function loadCustomerDropdown(){
+  var select=document.getElementById('nc-customer');
+  select.innerHTML='<option value="">Select a customer...</option>';
+  _customers.forEach(function(c){
+    var opt=document.createElement('option');
+    opt.value=c.id;
+    opt.textContent=c.name||'Unnamed';
+    opt.dataset.email=c.email||'';
+    opt.dataset.phone=c.phone||'';
+    select.appendChild(opt);
+  });
+  // Channel toggle
+  document.getElementById('nc-channel').onchange=function(){
+    document.getElementById('nc-email-field').style.display=this.value==='email'?'':'none';
+    document.getElementById('nc-phone-field').style.display=this.value==='sms'?'':'none';
+  };
+}
+
+function ncFillContact(){
+  var sel=document.getElementById('nc-customer');
+  var opt=sel.options[sel.selectedIndex];
+  if(opt&&opt.dataset){
+    document.getElementById('nc-email').value=opt.dataset.email||'';
+    document.getElementById('nc-phone').value=opt.dataset.phone||'';
   }
 }
 
-function resetCompose() {
-  document.getElementById('msg-to').value = '';
-  document.getElementById('msg-phone').value = '';
-  document.getElementById('msg-subject').value = '';
-  document.getElementById('msg-body').value = '';
-  document.getElementById('msg-customer').selectedIndex = 0;
-  _attachedDoc = null;
-  renderAttachChip();
-  toggleCompose();
+function startConversation(){
+  var sel=document.getElementById('nc-customer');
+  var opt=sel.options[sel.selectedIndex];
+  if(!sel.value){showToast('Select a customer');return;}
+
+  var ch=document.getElementById('nc-channel').value;
+  var contact={
+    customerId:sel.value,
+    customerName:opt.textContent,
+    channel:ch,
+    email:document.getElementById('nc-email').value||opt.dataset.email||'',
+    phone:document.getElementById('nc-phone').value||opt.dataset.phone||'',
+    to:ch==='sms'?(document.getElementById('nc-phone').value||opt.dataset.phone||''):(document.getElementById('nc-email').value||opt.dataset.email||''),
+    messages:[],
+    lastTime:0
+  };
+
+  if(ch==='email'&&!contact.email){showToast('Enter an email address');return;}
+  if(ch==='sms'&&!contact.phone){showToast('Enter a phone number');return;}
+
+  _activeContact=contact;
+  closeNewConversation();
+  renderChat();
+  showCompose();
+  renderContacts();
 }
 
-// ── Load & render messages ──
-async function loadMessages() {
-  try {
-    var messages = await API.messages.list();
-    _allMessages = messages;
-    document.getElementById('msg-count').textContent = messages.length + ' sent';
-    renderMessages();
-  } catch(e) {}
+// ── Helpers ──
+function getInitials(name){
+  if(!name)return'?';
+  var parts=name.trim().split(' ');
+  return((parts[0]||'?')[0]+(parts[1]||'')[0]).toUpperCase();
 }
 
-function renderMessages() {
-  var list = document.getElementById('msg-list');
-  var filtered = _allMessages;
-  if (_msgFilter !== 'all') {
-    filtered = _allMessages.filter(function(m) { return (m.type || 'email') === _msgFilter; });
+function formatTime(ts){
+  if(!ts)return'';
+  var d=new Date(ts);
+  var now=new Date();
+  var diff=now-d;
+  if(diff<86400000&&d.getDate()===now.getDate()){
+    return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   }
-
-  if (!filtered.length) {
-    var emptyMsg = _msgFilter === 'all'
-      ? 'No messages yet. Click New Message to get started.'
-      : 'No ' + _msgFilter.toUpperCase() + ' messages yet.';
-    list.innerHTML = '<div class="empty-state">' + emptyMsg + '</div>';
-    return;
+  if(diff<604800000){
+    return d.toLocaleDateString('en-US',{weekday:'short'});
   }
-
-  list.innerHTML = filtered.map(function(m) {
-    var isSms = (m.type || 'email') === 'sms';
-    var time = m.sentAt ? new Date(m.sentAt).toLocaleDateString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
-
-    var icon = isSms
-      ? '<div class="msg-icon" style="background:rgba(200,241,53,0.1);"><svg width="18" height="18" fill="none" stroke="#c8f135" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg></div>'
-      : '<div class="msg-icon" style="background:rgba(77,159,255,0.1);"><svg width="18" height="18" fill="none" stroke="#4d9fff" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg></div>';
-
-    var typeBadge = '<span class="msg-type-badge ' + (isSms ? 'sms' : 'email') + '">' + (isSms ? 'SMS' : 'Email') + '</span>';
-
-    var subjectLine = isSms ? '' : '<div class="msg-subject">' + (m.subject || '(no subject)') + '</div>';
-    var attachBadge = m.attachedDocType ? '<div class="msg-attach-badge">📎 ' + (m.attachedDocType === 'quote' ? 'Quote' : 'Invoice') + ' attached</div>' : '';
-
-    return '<div class="msg-item">' +
-      icon +
-      '<div class="msg-body">' +
-        '<div class="msg-to">' + (m.customerName || m.to) + typeBadge + '</div>' +
-        subjectLine +
-        '<div class="msg-preview">' + (m.body || '').substring(0, 120).replace(/<[^>]*>/g,'') + '</div>' +
-        attachBadge +
-      '</div>' +
-      '<div class="msg-meta">' +
-        '<div class="msg-time">' + time + '</div>' +
-        '<div class="msg-status sent">Sent</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
+
+function esc(s){
+  if(!s)return'';
+  var d=document.createElement('div');
+  d.textContent=s;
+  return d.innerHTML;
+}
+
+// ── Init ──
+async function loadMessages(){await loadData();}
 </script>
 
 <!-- Firebase Auth -->
