@@ -18,21 +18,24 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 /* SIDEBAR */
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
 .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
 .main.expanded{margin-left:0!important;}
+.main.expanded .topbar{padding-left:56px;}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
 .logo-mark em{color:var(--green);font-style:normal;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
-.nav-label{font-size:9px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
 .nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
 .nav-item:hover{background:var(--surface2);color:var(--white);}
 .nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
-.nav-item.active::before{content:’’;position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
 .nav-item.active .nav-icon{opacity:1;}
-.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:‘JetBrains Mono’,monospace;}
+.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
 .nav-divider{height:1px;background:var(--border);margin:8px 12px;}
 .sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
 .user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
@@ -43,8 +46,8 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 
 /* TOPBAR */
 .topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.92);backdrop-filter:blur(14px);z-index:100;}
-.topbar-page{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
-.topbar-slash{color:var(--border2);font-family:‘JetBrains Mono’,monospace;font-size:16px;}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
 .topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .ai-pill{display:flex;align-items:center;gap:7px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;padding:5px 13px;font-size:11.5px;font-weight:500;color:var(--green);cursor:pointer;}
@@ -56,15 +59,16 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .btn-primary:hover{background:#d5ff40;transform:translateY(-1px);}
 
 /* SIDEBAR TOGGLE */
-.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:300;width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 
 /* PAGE */
 .page-body{flex:1;padding:32px;display:flex;flex-direction:column;gap:14px;}
 
 /* GREETING */
 .greeting{margin-bottom:4px;animation:fadeUp 0.4s ease both;}
-.greeting h2{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:2px;color:var(--white);line-height:1;}
+.greeting h2{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--white);line-height:1;}
 .greeting h2 em{color:var(--green);font-style:normal;}
 .greeting p{font-size:12.5px;color:var(--gray);margin-top:5px;font-weight:300;}
 
@@ -73,12 +77,12 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 22px 18px;position:relative;overflow:hidden;cursor:default;transition:border-color 0.18s,transform 0.18s,box-shadow 0.18s;animation:fadeUp 0.45s ease both;}
 .kpi-card:nth-child(1){animation-delay:0.05s;}.kpi-card:nth-child(2){animation-delay:0.12s;}.kpi-card:nth-child(3){animation-delay:0.19s;}.kpi-card:nth-child(4){animation-delay:0.26s;}
 .kpi-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 12px 32px rgba(0,0,0,0.35);}
-.kpi-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:14px 14px 0 0;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:14px 14px 0 0;}
 .kpi-card.c-green{--accent:var(--green);}.kpi-card.c-blue{--accent:#4d9fff;}.kpi-card.c-amber{--accent:#f5a623;}.kpi-card.c-red{--accent:#ff5252;}
 .kpi-label{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--gray);font-weight:500;}
-.kpi-value{font-family:‘Bebas Neue’,sans-serif;font-size:42px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:8px;}
+.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:8px;}
 .kpi-footer{display:flex;align-items:center;gap:7px;margin-top:10px;}
-.kpi-delta{font-family:‘JetBrains Mono’,monospace;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;}
+.kpi-delta{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;}
 .kpi-delta.up{color:var(--green);background:rgba(200,241,53,0.1);}
 .kpi-delta.warn{color:#f5a623;background:rgba(245,166,35,0.1);}
 .kpi-period{font-size:11.5px;color:var(--gray2);}
@@ -91,7 +95,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 /* PANEL */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp 0.45s ease 0.32s both;}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
-.panel-title{font-family:‘Bebas Neue’,sans-serif;font-size:15px;letter-spacing:2.5px;color:var(--white);}
+.panel-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2.5px;color:var(--white);}
 .panel-link{font-size:11.5px;color:var(--green);cursor:pointer;font-weight:500;}
 
 /* JOB LIST */
@@ -115,7 +119,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .tag-scheduled{background:rgba(77,159,255,0.1);color:#4d9fff;}
 .tag-pending{background:rgba(245,166,35,0.1);color:#f5a623;}
 .tag-complete{background:rgba(100,100,100,0.12);color:var(--gray);}
-.job-amount{font-family:‘JetBrains Mono’,monospace;font-size:12.5px;font-weight:500;color:var(--white);text-align:right;flex-shrink:0;min-width:58px;}
+.job-amount{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:500;color:var(--white);text-align:right;flex-shrink:0;min-width:58px;}
 
 /* SCHEDULE */
 .weather-strip{display:flex;align-items:center;gap:10px;padding:9px 20px;border-bottom:1px solid var(--border);background:rgba(77,159,255,0.03);}
@@ -127,8 +131,8 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .schedule-row:last-child{border-bottom:none;}
 .schedule-row:hover{background:var(--surface2);}
 .schedule-row.now{background:rgba(200,241,53,0.03);}
-.schedule-row.now::before{content:’’;position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--green);}
-.sched-time{font-family:‘JetBrains Mono’,monospace;font-size:10.5px;color:var(--gray2);width:40px;flex-shrink:0;text-align:right;padding-top:2px;line-height:1.3;}
+.schedule-row.now::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--green);}
+.sched-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gray2);width:40px;flex-shrink:0;text-align:right;padding-top:2px;line-height:1.3;}
 .schedule-row.now .sched-time{color:var(--green);}
 .sched-timeline{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:12px;}
 .sched-dot{width:9px;height:9px;border-radius:50%;border:2px solid currentColor;flex-shrink:0;margin-top:2px;}
@@ -139,24 +143,24 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .sched-meta{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;}
 .sched-chip{font-size:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:1px 7px;color:var(--gray);}
 .sched-addr{font-size:11px;color:var(--gray2);}
-.sched-dur{margin-left:auto;font-family:‘JetBrains Mono’,monospace;font-size:10px;color:var(--gray2);flex-shrink:0;align-self:flex-start;padding-top:3px;}
+.sched-dur{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);flex-shrink:0;align-self:flex-start;padding-top:3px;}
 
 /* CHART */
 .chart-body{padding:24px 24px 20px;}
 .chart-stats{display:flex;gap:28px;margin-bottom:24px;}
 .chart-stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);}
-.chart-stat-value{font-family:‘Bebas Neue’,sans-serif;font-size:26px;letter-spacing:1px;color:var(--white);line-height:1.1;margin-top:2px;}
+.chart-stat-value{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:var(--white);line-height:1.1;margin-top:2px;}
 .chart-stat-value.accent{color:var(--green);}
-.chart-stat-delta{font-family:‘JetBrains Mono’,monospace;font-size:10px;color:var(--green);margin-top:1px;}
+.chart-stat-delta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);margin-top:1px;}
 .chart-area{position:relative;height:110px;display:flex;align-items:flex-end;gap:6px;}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;cursor:pointer;}
 .bar-col:hover .bar-fill{filter:brightness(1.15);}
 .bar-fill{width:100%;border-radius:5px 5px 0 0;background:var(--border2);position:relative;min-height:4px;}
 .bar-fill.current{background:var(--green);}
 .bar-fill.forecast{background:transparent;border:1px dashed var(--border2);border-bottom:none;opacity:0.5;}
-.bar-tooltip{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;font-family:‘JetBrains Mono’,monospace;font-size:9.5px;color:var(--white);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.15s;}
+.bar-tooltip{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--white);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.15s;}
 .bar-col:hover .bar-tooltip{opacity:1;}
-.bar-label{font-size:9.5px;color:var(--gray2);font-family:‘JetBrains Mono’,monospace;}
+.bar-label{font-size:9.5px;color:var(--gray2);font-family:'JetBrains Mono',monospace;}
 .bar-col.current-col .bar-label{color:var(--green);}
 .chart-footer{display:flex;align-items:center;gap:18px;padding-top:14px;border-top:1px solid var(--border);margin-top:16px;}
 .chart-legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);}
@@ -175,7 +179,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .activity-text{font-size:12.5px;color:#c8c8c8;line-height:1.45;}
 .activity-text strong{color:var(--white);font-weight:600;}
 .activity-footer{display:flex;align-items:center;gap:8px;margin-top:4px;}
-.activity-time{font-family:‘JetBrains Mono’,monospace;font-size:10px;color:var(--gray2);}
+.activity-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);}
 .activity-tag{font-size:9.5px;font-weight:600;padding:1px 6px;border-radius:4px;}
 
 /* TOAST */
@@ -188,23 +192,31 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .nj-overlay.open{opacity:1;pointer-events:all;}
 .nj-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:480px;max-width:92vw;max-height:88vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;}
 .nj-overlay.open+.nj-modal,.nj-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%) scale(1);}
-.nj-header{padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.nj-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);}
+.nj-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.nj-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);}
 .nj-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
 .nj-close:hover{background:var(--surface2);color:var(--white);}
-.nj-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px;}
-.nj-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.nj-field{display:flex;flex-direction:column;gap:5px;}
-.nj-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
-.nj-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.nj-body{padding:14px 20px;display:flex;flex-direction:column;gap:10px;}
+.nj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.nj-field{display:flex;flex-direction:column;gap:3px;}
+.nj-label{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
+.nj-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .nj-input:focus{border-color:var(--green);}
 .nj-input option{background:var(--surface2);}
-.nj-textarea{resize:none;min-height:60px;line-height:1.5;}
-.nj-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.nj-textarea{resize:none;min-height:44px;line-height:1.5;}
+.nj-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
 .nj-btn{flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
 .nj-btn:hover{background:var(--surface2);color:var(--white);}
 .nj-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);flex:2;}
 .nj-btn.primary:hover{background:#d5ff40;}
+
+/* DASHBOARD CHAT */
+.dash-chat-sug{background:var(--surface2);border:1px solid var(--border2);color:var(--gray);font-family:'DM Sans',sans-serif;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border2);}
+.dash-chat-sug:hover{background:var(--border2);color:var(--green);border-color:var(--green);}
+.dash-msg{max-width:85%;padding:10px 14px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;word-wrap:break-word;}
+.dash-msg.user{align-self:flex-end;background:var(--green);color:#0a0a0a;border-bottom-right-radius:4px;}
+.dash-msg.assistant{align-self:flex-start;background:var(--surface2);color:#e0e0e0;border:1px solid var(--border2);border-bottom-left-radius:4px;}
+
 </style>
 
 </head>
@@ -218,7 +230,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       <div class="logo-mark">SWFT<em>.</em></div>
       <div class="logo-sub">simple. smart. swft.</div>
     </div>
-    <div onclick="toggleSidebar()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+    <div class="collapse-btn" onclick="toggleSidebar()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
   </div>
@@ -230,51 +242,25 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
     <div class="nav-item" onclick="window.location.href='swft-customers.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
-      Customers <span class="nav-badge">14</span>
+      Customers
     </div>
     <div class="nav-item" onclick="window.location.href='swft-jobs.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
-      Jobs <span class="nav-badge">6</span>
+      Jobs
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-quotes.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.8"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.8"/></svg>
-      Quotes
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
     <div class="nav-item" onclick="window.location.href='swft-schedule.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
       Schedule
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-invoices.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>
-      Invoices <span class="nav-badge">3</span>
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">Growth</div>
-    <div class="nav-item" onclick="showToast('Pipeline — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Pipeline
-    </div>
-    <div class="nav-item" onclick="showToast('Campaigns — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
-      Campaigns
-    </div>
-    <div class="nav-item" onclick="showToast('Reviews — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8"/></svg>
-      Reviews
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">AI</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="1.8"/></svg>
-      AI Agents
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-messages.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
   </nav>
-  <div class="sidebar-footer">
+  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings.html'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
-      <div class="avatar" id="user-avatar">JR</div>
+      <div class="avatar" id="user-avatar"></div>
       <div>
-        <div class="user-name" id="user-name">Jake Reynolds</div>
-        <div class="user-role">Owner</div>
+        <div class="user-name" id="user-name"></div>
+        <div class="user-role">—</div>
       </div>
     </div>
   </div>
@@ -297,114 +283,60 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </header>
 
-  <div class="page-body">
+  <div class="page-body" style="padding:20px 28px 28px;">
     <div class="greeting">
       <h2>GOOD MORNING, <em id="greeting-name">JAKE.</em></h2>
       <p id="greeting-sub">Loading your data...</p>
     </div>
 
-<div class="kpi-grid">
-  <div class="kpi-card c-green">
-    <div class="kpi-label" id="kpi-rev-label">Revenue — March</div>
-    <div class="kpi-value" id="kpi-rev">$28,450</div>
-    <div class="kpi-footer"><span class="kpi-delta up">↑ 18%</span><span class="kpi-period">vs last month</span></div>
-    <div class="kpi-bg-icon">💰</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,35 15,28 30,30 45,18 60,22 75,10 90,6" fill="none" stroke="#c8f135" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<!-- AI Chat + Schedule Side by Side -->
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;min-height:calc(100vh - 190px);">
+
+<!-- SWFT AI AGENT -->
+<div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
+  <div class="panel-header">
+    <div class="panel-title" style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:glow 2.2s ease-in-out infinite;"></div> SWFT AI AGENT</div>
   </div>
-  <div class="kpi-card c-blue">
-    <div class="kpi-label">Jobs This Month</div>
-    <div class="kpi-value" id="kpi-jobs">24</div>
-    <div class="kpi-footer"><span class="kpi-delta up">↑ 4</span><span class="kpi-period">vs last month</span></div>
-    <div class="kpi-bg-icon">🔨</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,32 15,26 30,28 45,20 60,16 75,14 90,8" fill="none" stroke="#4d9fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div id="dash-chat-messages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-height:300px;">
+    <div id="dash-chat-welcome" style="text-align:center;padding:30px 20px;color:var(--gray2);">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green);letter-spacing:1px;margin-bottom:6px;">SWFT AI</div>
+      <div style="font-size:12.5px;line-height:1.5;">Your AI assistant. Ask me to add customers,<br>create quotes, manage jobs, and more.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px;">
+        <button class="dash-chat-sug" onclick="dashSend('Add a new customer')">Add a customer</button>
+        <button class="dash-chat-sug" onclick="dashSend('Create a quote')">Create a quote</button>
+        <button class="dash-chat-sug" onclick="dashSend('How is business?')">How's business?</button>
+        <button class="dash-chat-sug" onclick="dashSend('Show open invoices')">Open invoices</button>
+      </div>
+    </div>
+    <div id="dash-chat-typing" style="display:none;gap:4px;padding:12px 16px;align-self:flex-start;">
+      <span style="width:6px;height:6px;background:#555;border-radius:50%;display:inline-block;"></span>
+      <span style="width:6px;height:6px;background:#555;border-radius:50%;display:inline-block;"></span>
+      <span style="width:6px;height:6px;background:#555;border-radius:50%;display:inline-block;"></span>
+    </div>
   </div>
-  <div class="kpi-card c-amber">
-    <div class="kpi-label">Outstanding Invoices</div>
-    <div class="kpi-value" id="kpi-outstanding">$6,200</div>
-    <div class="kpi-footer"><span class="kpi-delta warn">3 unpaid</span><span class="kpi-period">follow-up due</span></div>
-    <div class="kpi-bg-icon">📄</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,10 15,16 30,12 45,20 60,18 75,26 90,30" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
-  <div class="kpi-card c-red">
-    <div class="kpi-label">Open Quotes</div>
-    <div class="kpi-value" id="kpi-quotes">9</div>
-    <div class="kpi-footer"><span class="kpi-delta up">↑ 3</span><span class="kpi-period">awaiting approval</span></div>
-    <div class="kpi-bg-icon">📥</div>
-    <svg class="sparkline" width="90" height="40" viewBox="0 0 90 40"><polyline points="0,30 15,26 30,22 45,24 60,14 75,12 90,8" fill="none" stroke="#ff5252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border);">
+    <input id="dash-chat-input" style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;" placeholder="Ask SWFT anything..." onkeydown="if(event.key==='Enter'&&this.value.trim()){dashSend(this.value.trim());this.value='';}" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border2)'" />
+    <button id="mic-btn" onclick="toggleVoice()" style="width:38px;height:38px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;" title="Voice input">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="1.8"/><path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke-width="1.8"/><line x1="12" y1="19" x2="12" y2="23" stroke-width="1.8"/><line x1="8" y1="23" x2="16" y2="23" stroke-width="1.8"/></svg>
+    </button>
+    <button onclick="const i=document.getElementById('dash-chat-input');if(i.value.trim()){dashSend(i.value.trim());i.value='';}" style="width:38px;height:38px;border-radius:10px;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;flex-shrink:0;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">
+      <svg width="18" height="18" fill="#0a0a0a" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
   </div>
 </div>
 
-<div class="two-col">
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">ACTIVE JOBS</div>
-      <a class="panel-link" onclick="window.location.href='swft-jobs.html'">View all →</a>
-    </div>
-    <div class="job-filters">
-      <div class="filter-tab active" onclick="filterJobs(this,'all')">All</div>
-      <div class="filter-tab" onclick="filterJobs(this,'active')">In Progress</div>
-      <div class="filter-tab" onclick="filterJobs(this,'scheduled')">Scheduled</div>
-      <div class="filter-tab" onclick="filterJobs(this,'pending')">Pending</div>
-      <div class="filter-tab" onclick="filterJobs(this,'complete')">Complete</div>
-    </div>
-    <div id="job-list">
-      <div class="job-row" data-status="active"><div class="status-dot dot-green"></div><div class="job-info"><div class="job-name">Henderson — Backyard Patio</div><div class="job-sub">Stamped concrete · Crew A · Today</div></div><span class="job-tag tag-active">In Progress</span><div class="job-amount">$7,200</div></div>
-      <div class="job-row" data-status="active"><div class="status-dot dot-green"></div><div class="job-info"><div class="job-name">Ortiz — Pool Deck</div><div class="job-sub">Exposed aggregate · Crew B · Today</div></div><span class="job-tag tag-active">In Progress</span><div class="job-amount">$5,400</div></div>
-      <div class="job-row" data-status="scheduled"><div class="status-dot dot-blue"></div><div class="job-info"><div class="job-name">Kim — Driveway Resurface</div><div class="job-sub">Broom finish · Crew A · Mar 29</div></div><span class="job-tag tag-scheduled">Scheduled</span><div class="job-amount">$3,100</div></div>
-      <div class="job-row" data-status="pending"><div class="status-dot dot-amber"></div><div class="job-info"><div class="job-name">Martinez — Driveway</div><div class="job-sub">Stamped · Awaiting deposit</div></div><span class="job-tag tag-pending">Quote Sent</span><div class="job-amount">$4,800</div></div>
-      <div class="job-row" data-status="scheduled"><div class="status-dot dot-blue"></div><div class="job-info"><div class="job-name">Nguyen — Front Walkway</div><div class="job-sub">Exposed aggregate · Crew B · Apr 1</div></div><span class="job-tag tag-scheduled">Scheduled</span><div class="job-amount">$2,250</div></div>
-      <div class="job-row" data-status="complete"><div class="status-dot dot-gray"></div><div class="job-info"><div class="job-name">Chen — Garage Floor</div><div class="job-sub">Epoxy coat · Completed Mar 25</div></div><span class="job-tag tag-complete">Complete</span><div class="job-amount">$2,600</div></div>
-    </div>
+<!-- TODAY'S SCHEDULE -->
+<div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
+  <div class="panel-header">
+    <div class="panel-title">TODAY'S SCHEDULE</div>
+    <a class="panel-link" onclick="window.location.href='swft-schedule.html'">Full calendar &#8594;</a>
   </div>
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">TODAY'S SCHEDULE</div>
-      <a class="panel-link" onclick="window.location.href='swft-schedule.html'">Full calendar →</a>
-    </div>
-    <div class="weather-strip"><span class="weather-icon">⛅</span><span class="weather-text"><strong>72°F</strong> &nbsp;Partly cloudy — good pour conditions</span><span class="weather-badge">✓ Clear</span></div>
-    <div class="schedule-row now"><div class="sched-time">7:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson — Backyard Patio</div><div class="sched-meta"><span class="sched-chip">Crew A</span><span class="sched-chip">Marcus · Devon · Luis</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">~6 hrs</div></div>
-    <div class="schedule-row now"><div class="sched-time">8:30<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--green);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Ortiz — Pool Deck</div><div class="sched-meta"><span class="sched-chip">Crew B</span><span class="sched-chip">Ray · Tomas</span><span class="sched-addr">88 Lakeview Ct</span></div></div><div class="sched-dur">~5 hrs</div></div>
-    <div class="schedule-row"><div class="sched-time">11:00<br>AM</div><div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Site Estimate — Pham Driveway</div><div class="sched-meta"><span class="sched-chip">Jake Reynolds</span><span class="sched-addr">2422 Oak St</span></div></div><div class="sched-dur">~1 hr</div></div>
-    <div class="schedule-row"><div class="sched-time">2:00<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:#f5a623;"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Follow-up Call — Garcia</div><div class="sched-meta"><span class="sched-chip">AI Scheduled</span><span class="sched-addr">Quote #1039 · $3,400</span></div></div><div class="sched-dur">15 min</div></div>
-    <div class="schedule-row"><div class="sched-time">4:30<br>PM</div><div class="sched-timeline"><div class="sched-dot" style="color:var(--gray2);"></div><div class="sched-connector"></div></div><div class="sched-body"><div class="sched-title">Henderson Final Walkthrough</div><div class="sched-meta"><span class="sched-chip">Inspection</span><span class="sched-addr">411 Birchwood Dr</span></div></div><div class="sched-dur">30 min</div></div>
-  </div>
+  <div class="weather-strip"><span class="weather-icon">&#9925;</span><span class="weather-text"><strong>72&#176;F</strong> &nbsp;Partly cloudy</span><span class="weather-badge">&#10003; Clear</span></div>
+  <div id="schedule-list" style="flex:1;overflow-y:auto;"></div>
 </div>
 
-<div class="panel">
-  <div class="panel-header"><div class="panel-title">MONTHLY REVENUE</div><a class="panel-link">Full report →</a></div>
-  <div class="chart-body">
-    <div class="chart-stats">
-      <div><div class="chart-stat-label">This Month</div><div class="chart-stat-value accent">$28,450</div><div class="chart-stat-delta">↑ 18% vs Feb</div></div>
-      <div><div class="chart-stat-label">YTD Revenue</div><div class="chart-stat-value">$71,200</div></div>
-      <div><div class="chart-stat-label">Avg Job Value</div><div class="chart-stat-value">$1,185</div></div>
-      <div><div class="chart-stat-label">Jobs Completed</div><div class="chart-stat-value">24</div></div>
-    </div>
-    <div class="chart-area">
-      <div class="bar-col"><div class="bar-fill" style="height:38%;"><div class="bar-tooltip">$16,200</div></div><div class="bar-label">OCT</div></div>
-      <div class="bar-col"><div class="bar-fill" style="height:26%;"><div class="bar-tooltip">$11,400</div></div><div class="bar-label">NOV</div></div>
-      <div class="bar-col"><div class="bar-fill" style="height:16%;"><div class="bar-tooltip">$7,100</div></div><div class="bar-label">DEC</div></div>
-      <div class="bar-col"><div class="bar-fill" style="height:22%;"><div class="bar-tooltip">$9,800</div></div><div class="bar-label">JAN</div></div>
-      <div class="bar-col"><div class="bar-fill" style="height:54%;"><div class="bar-tooltip">$24,100</div></div><div class="bar-label">FEB</div></div>
-      <div class="bar-col current-col"><div class="bar-fill current" style="height:100%;"><div class="bar-tooltip">$28,450</div></div><div class="bar-label">MAR</div></div>
-      <div class="bar-col"><div class="bar-fill forecast" style="height:72%;"><div class="bar-tooltip">~$32k est.</div></div><div class="bar-label">APR</div></div>
-      <div class="bar-col"><div class="bar-fill forecast" style="height:80%;"><div class="bar-tooltip">~$36k est.</div></div><div class="bar-label">MAY</div></div>
-    </div>
-    <div class="chart-footer">
-      <div class="chart-legend"><div class="legend-dot" style="background:var(--green);"></div>Actual</div>
-      <div class="chart-legend"><div class="legend-dot" style="background:var(--border2);border:1px dashed var(--gray2);"></div>AI Forecast</div>
-      <div class="chart-goal">Monthly goal &nbsp;<div class="goal-bar-track"><div class="goal-bar-fill"></div></div>&nbsp;<strong>$28,450</strong> / $40,000</div>
-    </div>
-  </div>
 </div>
 
-<div class="panel">
-  <div class="panel-header"><div class="panel-title">RECENT ACTIVITY</div><a class="panel-link">View all →</a></div>
-  <div class="activity-item"><div class="activity-icon" style="background:rgba(200,241,53,0.1);">🤖</div><div class="activity-body"><div class="activity-text"><strong>AI Receptionist</strong> booked an estimate for Nguyen — driveway resurface, approx 1,200 sqft</div><div class="activity-footer"><span class="activity-time">9 min ago</span><span class="activity-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">AI</span></div></div></div>
-  <div class="activity-item"><div class="activity-icon" style="background:rgba(77,159,255,0.1);">💳</div><div class="activity-body"><div class="activity-text"><strong>Deposit received</strong> — Kim Driveway Resurface · $775 via card</div><div class="activity-footer"><span class="activity-time">42 min ago</span><span class="activity-tag" style="background:rgba(77,159,255,0.1);color:#4d9fff;">Payment</span></div></div></div>
-  <div class="activity-item"><div class="activity-icon" style="background:rgba(245,166,35,0.1);">📋</div><div class="activity-body"><div class="activity-text"><strong>Quote #1042 sent</strong> to Martinez — $4,800 stamped driveway · awaiting approval</div><div class="activity-footer"><span class="activity-time">2 hrs ago</span><span class="activity-tag" style="background:rgba(245,166,35,0.1);color:#f5a623;">Quote</span></div></div></div>
-  <div class="activity-item"><div class="activity-icon" style="background:rgba(200,241,53,0.08);">⭐</div><div class="activity-body"><div class="activity-text"><strong>New 5-star review</strong> from Chen — "Professional, fast, and clean work."</div><div class="activity-footer"><span class="activity-time">Yesterday, 4:12 PM</span><span class="activity-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">Review</span></div></div></div>
-  <div class="activity-item"><div class="activity-icon" style="background:rgba(100,100,100,0.1);">✅</div><div class="activity-body"><div class="activity-text"><strong>Job completed</strong> — Chen Garage Floor · Invoice #1038 sent · $2,600</div><div class="activity-footer"><span class="activity-time">Mar 25, 5:30 PM</span><span class="activity-tag" style="background:rgba(100,100,100,0.12);color:var(--gray);">Job</span></div></div></div>
-</div>
   </div>
 </div>
 
@@ -424,8 +356,37 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   }
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
   }
+
+  async function loadDashCustomers() {
+    try {
+      var customers = await API.customers.list();
+      var select = document.getElementById('nj-customer');
+      if (!select) return;
+      select.innerHTML = '<option value="">Select a customer...</option>';
+      customers.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name || 'Unnamed';
+        opt.dataset.address = c.address || '';
+        select.appendChild(opt);
+      });
+      window._dashCustList = customers;
+    } catch(e) {}
+  }
+
+  function njAutofill(custId) {
+    if (!custId || !window._dashCustList) return;
+    var cust = window._dashCustList.find(function(c) { return c.id === custId; });
+    if (!cust) return;
+    var addr = document.getElementById('nj-address');
+    if (addr && !addr.value) addr.value = cust.address || '';
+  }
+
   function openNewJobModal() {
+    loadDashCustomers();
     document.getElementById('nj-overlay').classList.add('open');
     document.getElementById('nj-modal').classList.add('open');
   }
@@ -433,10 +394,233 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     document.getElementById('nj-overlay').classList.remove('open');
     document.getElementById('nj-modal').classList.remove('open');
   }
-  function saveNewJob() {
+  async function saveNewJob() {
+    const custSelect = document.getElementById('nj-customer');
+    const custId = custSelect.value;
+    const customer = custSelect.options[custSelect.selectedIndex] ? custSelect.options[custSelect.selectedIndex].textContent : '';
+    if (!customer || customer === 'Select a customer...') { showToast('Please select a customer'); return; }
+    const serviceEl = document.getElementById('nj-service');
+    let service = serviceEl.value;
+    if (service === 'Other') {
+      service = document.getElementById('nj-custom-service').value.trim() || 'Custom Job';
+    }
+    const title = customer + ' - ' + service;
+    const address = document.getElementById('nj-address').value.trim();
+    const dateVal = document.getElementById('nj-date').value;
+    const timeVal = document.getElementById('nj-time').value;
+    const crewEl = document.getElementById('nj-crew');
+    let crew = crewEl.value;
+    if (crew === 'Other') {
+      crew = document.getElementById('nj-custom-crew').value.trim() || 'TBD';
+    }
+
+    // Format time for display
+    let timeDisplay = '';
+    if (timeVal) {
+      const [h, m] = timeVal.split(':');
+      const hr = parseInt(h);
+      const ampm = hr >= 12 ? 'PM' : 'AM';
+      const hr12 = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
+      timeDisplay = hr12 + ':' + m + '<br>' + ampm;
+    } else {
+      timeDisplay = 'TBD';
+    }
+
+    // Add to schedule on dashboard
+    const schedList = document.getElementById('schedule-list');
+    if (schedList) {
+      const row = document.createElement('div');
+      row.className = 'schedule-row';
+      row.style.animation = 'fadeUp 0.35s ease both';
+      row.innerHTML = '<div class="sched-time">' + timeDisplay + '</div>' +
+        '<div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div>' +
+        '<div class="sched-body"><div class="sched-title">' + title + '</div>' +
+        '<div class="sched-meta"><span class="sched-chip">' + crew + '</span>' +
+        (address ? '<span class="sched-addr">' + address + '</span>' : '') +
+        '</div></div><div class="sched-dur">New</div>';
+      schedList.appendChild(row);
+    }
+
+    // Save to Firestore
+    try {
+      await API.jobs.create({
+        title: title,
+        customerName: customer,
+        customerId: custId,
+        service: service,
+        address: address,
+        scheduledDate: dateVal,
+        status: 'scheduled',
+        cost: parseFloat(document.getElementById('nj-amount').value) || 0,
+        sqft: document.getElementById('nj-sqft').value.trim() || '',
+        crew: crew
+      });
+    } catch(e) { showToast('Save error: ' + e.message); return; }
+    loadSchedule();
     closeNewJobModal();
-    showToast('Job created successfully');
+    showToast(title + ' created');
+    // Offer calendar sync
+    setTimeout(function() {
+      const job = { title: title, date: dateVal, time: timeVal, address: address, service: service };
+      if (dateVal && confirm('Add "' + title + '" to your calendar?')) {
+        addToGoogleCalendar(job);
+      }
+    }, 800);
+    // Clear form for next use
+    ['nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount','nj-custom-service','nj-custom-crew'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    if (document.getElementById('nj-notes')) document.getElementById('nj-notes').value = '';
+    document.getElementById('nj-custom-service').style.display = 'none';
+    document.getElementById('nj-custom-crew').style.display = 'none';
+    serviceEl.selectedIndex = 0;
+    crewEl.selectedIndex = 0;
   }
+  // ── DASHBOARD AI CHAT ──
+  let _dashSending = false;
+
+  async function getDashToken() {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      await new Promise(r => { const u = auth.onAuthStateChanged(user => { u(); r(user); }); });
+    }
+    if (!auth.currentUser) throw new Error("Not authenticated");
+    return auth.currentUser.getIdToken();
+  }
+
+  function addDashMsg(role, text) {
+    const welcome = document.getElementById('dash-chat-welcome');
+    if (welcome) welcome.style.display = 'none';
+    const container = document.getElementById('dash-chat-messages');
+    const typing = document.getElementById('dash-chat-typing');
+    const el = document.createElement('div');
+    el.className = 'dash-msg ' + role;
+    el.textContent = text.replace(/\*\*/g,'').replace(/\*/g,'');
+    container.insertBefore(el, typing);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function dashSend(text) {
+    if (_dashSending || !text) return;
+    _dashSending = true;
+    addDashMsg('user', text);
+    const typing = document.getElementById('dash-chat-typing');
+    typing.style.display = 'flex';
+    try {
+      const token = await getDashToken();
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI error');
+      addDashMsg('assistant', data.message);
+    } catch (err) {
+      addDashMsg('assistant', 'Something went wrong: ' + err.message);
+    } finally {
+      typing.style.display = 'none';
+      _dashSending = false;
+    }
+  }
+
+
+  async function loadSchedule() {
+    try {
+      const jobs = await API.jobs.list();
+      const list = document.getElementById('schedule-list');
+      if (!list) return;
+      if (!jobs || jobs.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs scheduled. Create a job to see it here.</div>';
+        return;
+      }
+      list.innerHTML = '';
+      var today = new Date().toISOString().split('T')[0];
+      jobs.forEach(function(j) {
+        var isToday = j.scheduledDate === today;
+        var pipColor = j.status === 'active' ? 'var(--green)' : j.status === 'scheduled' ? '#4d9fff' : j.status === 'pending' ? '#f5a623' : 'var(--gray2)';
+        var row = document.createElement('div');
+        row.className = 'schedule-row' + (isToday ? ' now' : '');
+        var time = j.scheduledDate || 'TBD';
+        row.innerHTML = '<div class="sched-time">' + time.substring(5) + '</div>' +
+          '<div class="sched-timeline"><div class="sched-dot" style="color:' + pipColor + ';"></div><div class="sched-connector"></div></div>' +
+          '<div class="sched-body"><div class="sched-title">' + (j.title || j.customerName + ' - ' + j.service) + '</div>' +
+          '<div class="sched-meta">' + (j.address ? '<span class="sched-addr">' + j.address + '</span>' : '') + '</div></div>' +
+          '<div class="sched-dur">' + (j.status||'') + '</div>';
+        list.appendChild(row);
+      });
+    } catch(e) { console.error('loadSchedule error:', e); }
+  }
+
+
+  // ── VOICE TO TEXT ──
+  let _recognition = null;
+  let _isListening = false;
+
+  function toggleVoice() {
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('Voice not supported - try Chrome');
+      return;
+    }
+    if (_isListening) {
+      if (_recognition) _recognition.stop();
+      return;
+    }
+
+    _recognition = new SpeechRecognition();
+    _recognition.lang = 'en-US';
+    _recognition.interimResults = true;
+    _recognition.continuous = false;
+    _recognition.maxAlternatives = 1;
+
+    var micBtn = document.getElementById('mic-btn');
+
+    _recognition.onstart = function() {
+      _isListening = true;
+      if (micBtn) { micBtn.style.background = '#ff5252'; micBtn.style.borderColor = '#ff5252'; }
+      showToast('Listening...');
+    };
+
+    _recognition.onresult = function(e) {
+      var transcript = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      document.getElementById('dash-chat-input').value = transcript;
+    };
+
+    _recognition.onend = function() {
+      _isListening = false;
+      if (micBtn) { micBtn.style.background = 'var(--surface2)'; micBtn.style.borderColor = 'var(--border2)'; }
+      var input = document.getElementById('dash-chat-input');
+      if (input && input.value.trim()) {
+        dashSend(input.value.trim());
+        input.value = '';
+      }
+    };
+
+    _recognition.onerror = function(e) {
+      _isListening = false;
+      if (micBtn) { micBtn.style.background = 'var(--surface2)'; micBtn.style.borderColor = 'var(--border2)'; }
+      if (e.error === 'not-allowed') {
+        showToast('Microphone blocked - enable in browser settings');
+      } else if (e.error === 'network') {
+        showToast('Voice needs internet');
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        showToast('Voice error: ' + e.error);
+      }
+    };
+
+    try {
+      _recognition.start();
+    } catch(e) {
+      showToast('Could not start voice - try again');
+    }
+  }
+
   let _toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -481,15 +665,43 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     }
     document.body.style.visibility = 'visible';
 
-    // Get name
+    // ── Verify Stripe payment on return from Checkout ──
+    // Stripe appends ?session_id=cs_xxx to the success_url.
+    // We call the backend to confirm payment and flip accountStatus → active.
+    const params    = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (sessionId) {
+      try {
+        const token = await user.getIdToken();
+        const res   = await fetch(`/api/billing/verify-session?session_id=${sessionId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          // Show a brief welcome-back banner, then clean up the URL
+          const notice = document.createElement('div');
+          notice.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;background:#c8f135;color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 22px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.35);letter-spacing:.5px;';
+          notice.textContent = '🎉 Subscription activated — welcome to SWFT!';
+          document.body.appendChild(notice);
+          setTimeout(() => notice.remove(), 5000);
+        }
+      } catch(e) { /* non-fatal */ }
+      // Clean up the URL so a page refresh doesn't re-verify
+      history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Get name from Firebase Auth profile, then Firestore, then email
     let firstName = user.displayName?.split(' ')[0];
     if (!firstName) {
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
-        if (snap.exists()) firstName = snap.data().firstName;
+        if (snap.exists()) {
+          const data = snap.data();
+          firstName = data.firstName || data.name?.split(' ')[0];
+        }
       } catch(e) {}
     }
-    if (!firstName) firstName = 'Jake';
+    if (!firstName && user.email) firstName = user.email.split('@')[0];
+    if (!firstName) firstName = 'Boss';
 
     // Update greeting
     const greetEl = document.getElementById('greeting-name');
@@ -501,7 +713,16 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     const now = new Date();
     const dayStr = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
     const subEl = document.getElementById('greeting-sub');
-    if (subEl) subEl.textContent = `${dayStr} · 3 jobs active today · 2 quotes awaiting approval`;
+    if (subEl) // Load real stats
+    try {
+      var stats = await API.dashboard.stats();
+      var jobsToday = stats.activeJobs || 0;
+      var openQuotes = stats.activeQuotes || 0;
+      subEl.textContent = dayStr + ' · ' + jobsToday + ' jobs active · ' + openQuotes + ' quotes open';
+    } catch(e) {
+      subEl.textContent = dayStr;
+    }
+    // OLD: subEl.textContent = `${dayStr} · real data loaded above`; // disabled
 
   });
 </script>
@@ -516,24 +737,25 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </div>
   <div class="nj-body">
-    <div class="nj-row">
-      <div class="nj-field"><label class="nj-label">Job Title</label><input class="nj-input" id="nj-title" type="text" placeholder="e.g. Backyard Patio"/></div>
-      <div class="nj-field"><label class="nj-label">Customer</label><input class="nj-input" id="nj-customer" type="text" placeholder="e.g. Tom Henderson"/></div>
-    </div>
+    <div class="nj-field"><label class="nj-label">Customer</label><select class="nj-input" id="nj-customer" onchange="njAutofill(this.value)"><option value="">Select a customer...</option></select><a href="swft-customers.html?new=1" target="_blank" style="font-size:11px;color:var(--green);margin-top:3px;display:inline-block;">+ Add new customer</a></div>
     <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="nj-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
     <div class="nj-row">
-      <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="nj-date" type="text" placeholder="e.g. March 29, 2026"/></div>
-      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="nj-time" type="text" placeholder="e.g. 7:00 AM"/></div>
+      <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="nj-date" type="date"/></div>
+      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="nj-time" type="time"/></div>
     </div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Service Type</label>
-        <select class="nj-input" id="nj-service"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option></select>
+        <select class="nj-input" id="nj-service" onchange="if(this.value==='Other'){document.getElementById('nj-custom-service').style.display='block';}else{document.getElementById('nj-custom-service').style.display='none';}">
+          <option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option><option>Other</option>
+        </select>
+        <input class="nj-input" id="nj-custom-service" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="nj-sqft" type="text" placeholder="e.g. 480"/></div>
     </div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Crew</label>
-        <select class="nj-input" id="nj-crew"><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option>Jake Reynolds</option><option>Unassigned</option></select>
+        <select class="nj-input" id="nj-crew" onchange="if(this.value==='Other'){document.getElementById('nj-custom-crew').style.display='block';}else{document.getElementById('nj-custom-crew').style.display='none';}"><option selected>Unassigned</option><option>Crew A</option><option>Crew B</option><option>Crew A + B</option><option>Other</option></select>
+        <input class="nj-input" id="nj-custom-crew" type="text" placeholder="Enter crew name..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="nj-field"><label class="nj-label">Amount ($)</label><input class="nj-input" id="nj-amount" type="text" placeholder="e.g. 7200"/></div>
     </div>
@@ -548,5 +770,14 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   </div>
 </div>
 
+<script type="module" src="swft-user-sync.js"></script>
+<script src="swft-weather.js"></script>
+<script src="swft-calendar-sync.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<script src="swft-settings-loader.js"></script>
+<script src="swft-account.js"></script>
+<script src="swft-notifications.js"></script>
+<script src="swft-chat.js"></script>
 </body>
 </html>

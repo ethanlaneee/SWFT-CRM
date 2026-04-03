@@ -21,24 +21,26 @@
 /* ── SIDEBAR ── */
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
 .main{transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
 .main.expanded{margin-left:0 !important;}
-.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:300;width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
-.sidebar-toggle:hover{background:var(--border2);color:var(--white);}
-.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);}
-.logo-mark{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
 .logo-mark em{color:var(--green);font-style:normal;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
-.nav-label{font-size:9px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
 .nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
 .nav-item:hover{background:var(--surface2);color:var(--white);}
 .nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
-.nav-item.active::before{content:’’;position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
 .nav-item.active .nav-icon{opacity:1;}
-.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:‘JetBrains Mono’,monospace;}
+.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
 .nav-divider{height:1px;background:var(--border);margin:8px 12px;}
 .sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
 .user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
@@ -53,8 +55,8 @@
 /* ── TOPBAR ── */
 .topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;animation:fadeDown 0.3s ease 0.15s both;}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.topbar-page{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
-.topbar-slash{color:var(--border2);font-family:‘JetBrains Mono’,monospace;font-size:16px;}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
 .topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .ai-pill{display:flex;align-items:center;gap:7px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;padding:5px 13px;font-size:11.5px;font-weight:500;color:var(--green);cursor:pointer;}
@@ -72,34 +74,34 @@
 .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp 0.4s ease both;}
 .stat-card:nth-child(1){animation-delay:.04s;} .stat-card:nth-child(2){animation-delay:.09s;} .stat-card:nth-child(3){animation-delay:.14s;} .stat-card:nth-child(4){animation-delay:.19s;}
-.stat-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:var(--c);border-radius:12px 12px 0 0;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c);border-radius:12px 12px 0 0;}
 .stat-card.c-green{--c:var(--green);} .stat-card.c-blue{--c:var(--blue);} .stat-card.c-amber{--c:var(--amber);} .stat-card.c-red{--c:var(--red);}
 .stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);}
-.stat-value{font-family:‘Bebas Neue’,sans-serif;font-size:32px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:5px;}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:5px;}
 .stat-sub{font-size:11px;color:var(--gray2);margin-top:4px;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
 /* ── TOOLBAR ── */
-.toolbar{display:flex;align-items:center;gap:10px;}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .search-wrap{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:9px 14px;flex:1;max-width:320px;transition:border-color 0.15s;}
 .search-wrap:focus-within{border-color:var(--green);}
-.search-input{background:transparent;border:none;outline:none;color:var(--white);font-family:‘DM Sans’,sans-serif;font-size:13px;flex:1;}
+.search-input{background:transparent;border:none;outline:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;flex:1;}
 .search-input::placeholder{color:var(--gray2);}
 .filter-group{display:flex;gap:4px;}
-.ftab{font-size:11.5px;font-weight:500;padding:7px 13px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
+.ftab{font-size:11.5px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;display:flex;align-items:center;justify-content:center;white-space:nowrap;}
 .ftab:hover{color:var(--white);border-color:var(--gray2);}
 .ftab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
-.sort-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:‘DM Sans’,sans-serif;cursor:pointer;transition:all 0.14s;margin-left:auto;}
+.sort-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;margin-left:auto;}
 .sort-btn:hover{color:var(--white);border-color:var(--gray2);}
 
 /* ── TABLE ── */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.table-head{display:grid;grid-template-columns:2.2fr 1.4fr 1fr 1fr 1fr 1fr 60px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.table-head{display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;transition:color 0.14s;}
 .th:hover{color:var(--gray);}
 .th.sort-active{color:var(--green);}
 
-.job-row{display:grid;grid-template-columns:2.2fr 1.4fr 1fr 1fr 1fr 1fr 60px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:fadeUp 0.35s ease both;}
+.job-row{display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:fadeUp 0.35s ease both;}
 .job-row:last-child{border-bottom:none;}
 .job-row:hover{background:var(--surface2);}
 .job-row:nth-child(1){animation-delay:.05s;} .job-row:nth-child(2){animation-delay:.10s;} .job-row:nth-child(3){animation-delay:.15s;} .job-row:nth-child(4){animation-delay:.20s;} .job-row:nth-child(5){animation-delay:.25s;} .job-row:nth-child(6){animation-delay:.30s;}
@@ -113,18 +115,18 @@
 .pip-red{background:var(--red);box-shadow:0 0 5px rgba(255,82,82,0.4);}
 
 .job-title{font-size:13px;font-weight:500;color:var(--white);}
-.job-id{font-size:10.5px;color:var(--gray2);font-family:‘JetBrains Mono’,monospace;margin-top:2px;}
+.job-id{font-size:10.5px;color:var(--gray2);font-family:'JetBrains Mono',monospace;margin-top:2px;}
 
 .job-customer{font-size:12.5px;color:var(--white);}
 .job-addr{font-size:11px;color:var(--gray);margin-top:2px;}
 
 .job-service{font-size:12px;color:var(--gray);}
-.job-sqft{font-size:11px;color:var(--gray2);margin-top:2px;font-family:‘JetBrains Mono’,monospace;}
+.job-sqft{font-size:11px;color:var(--gray2);margin-top:2px;font-family:'JetBrains Mono',monospace;}
 
 .crew-cell{display:flex;gap:-4px;}
 .crew-chip{font-size:11px;color:var(--gray);background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;}
 
-.job-amount{font-family:‘JetBrains Mono’,monospace;font-size:13px;font-weight:500;color:var(--white);}
+.job-amount{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--white);}
 .pay-status{font-size:10px;font-weight:600;margin-top:3px;}
 .pay-paid{color:var(--green);}
 .pay-partial{color:var(--amber);}
@@ -144,18 +146,16 @@
 /* ── DRAWER ── */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:300;opacity:0;pointer-events:none;transition:opacity 0.25s;}
 .drawer-overlay.open{opacity:1;pointer-events:all;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:500px;background:var(--surface);border-left:1px solid var(--border2);z-index:400;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.22,1,0.36,1);overflow:hidden;}
-.drawer.open{transform:translateX(0);}
-.drawer.center-modal{position:fixed;top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:520px;max-width:92vw;max-height:88vh;border-radius:16px;border:1px solid var(--border2);border-left:1px solid var(--border2);box-shadow:0 24px 80px rgba(0,0,0,0.6);}
-.drawer.center-modal.open{transform:translate(-50%,-50%);}
+.drawer{position:fixed;top:50%;left:50%;right:auto;bottom:auto;width:520px;max-width:92vw;max-height:88vh;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:400;display:flex;flex-direction:column;transform:translate(-50%,-50%) scale(0.96);transition:transform 0.3s cubic-bezier(0.22,1,0.36,1),opacity 0.25s;overflow:hidden;opacity:0;pointer-events:none;box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.drawer.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all;}
 
 /* drawer header */
 .drawer-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);}
 .drawer-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}
 .drawer-close{margin-left:auto;width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
 .drawer-close:hover{background:var(--surface2);color:var(--white);}
-.drawer-job-id{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:var(--gray2);margin-bottom:4px;}
-.drawer-title{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);line-height:1;}
+.drawer-job-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray2);margin-bottom:4px;}
+.drawer-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);line-height:1;}
 .drawer-customer{font-size:12.5px;color:var(--gray);margin-top:5px;}
 .drawer-customer span{color:var(--green);}
 
@@ -169,8 +169,8 @@
 .drawer-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);}
 .dstat{padding:13px 16px;border-right:1px solid var(--border);}
 .dstat:last-child{border-right:none;}
-.dstat-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);}
-.dstat-value{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-top:3px;line-height:1;}
+.dstat-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);}
+.dstat-value{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-top:3px;line-height:1;}
 .dstat-value.green{color:var(--green);}
 .dstat-value.amber{color:var(--amber);}
 
@@ -182,13 +182,13 @@
 
 /* tab content */
 .drawer-content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;}
-.section-title{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;}
+.section-title{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 
 /* detail rows */
 .detail-grid{display:flex;flex-direction:column;gap:9px;}
 .detail-row{display:flex;align-items:center;gap:12px;}
 .detail-icon{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;}
-.detail-label{font-size:10.5px;color:var(--gray2);}
+.detail-label{font-size:10.5px;color:var(--white);}
 .detail-value{font-size:13px;color:var(--white);margin-top:1px;}
 
 /* photo grid */
@@ -204,11 +204,11 @@
 .note-item{padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
 .note-text{font-size:12.5px;color:#c8c8c8;line-height:1.5;}
 .note-footer{display:flex;align-items:center;gap:8px;margin-top:6px;}
-.note-date{font-family:‘JetBrains Mono’,monospace;font-size:10px;color:var(--gray2);}
+.note-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);}
 .note-tag{font-size:9.5px;font-weight:600;padding:1px 7px;border-radius:4px;}
 .note-input-wrap{display:flex;gap:8px;align-items:flex-end;padding:12px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;transition:border-color 0.15s;}
 .note-input-wrap:focus-within{border-color:var(--green);}
-.note-textarea{flex:1;background:transparent;border:none;outline:none;color:var(--white);font-family:‘DM Sans’,sans-serif;font-size:12.5px;resize:none;min-height:36px;}
+.note-textarea{flex:1;background:transparent;border:none;outline:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;resize:none;min-height:36px;}
 .note-textarea::placeholder{color:var(--gray2);}
 .note-submit{background:var(--green);color:#0a0a0a;border:none;border-radius:7px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;transition:background 0.15s;white-space:nowrap;}
 .note-submit:hover{background:#d5ff40;}
@@ -218,14 +218,14 @@
 .pay-row{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);}
 .pay-row:last-child{border-bottom:none;}
 .pay-label{font-size:12.5px;color:var(--gray);}
-.pay-val{font-family:‘JetBrains Mono’,monospace;font-size:13px;font-weight:500;color:var(--white);}
+.pay-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--white);}
 .pay-val.green{color:var(--green);}
 .pay-val.amber{color:var(--amber);}
 .pay-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;}
 
 /* drawer footer */
 .drawer-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
-.dfooter-btn{flex:1;padding:9px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:‘DM Sans’,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.14s;}
+.dfooter-btn{flex:1;padding:9px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.14s;}
 .dfooter-btn:hover{background:var(--surface2);color:var(--white);}
 .dfooter-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);}
 .dfooter-btn.primary:hover{background:#d5ff40;}
@@ -244,8 +244,8 @@
 /* ── EDIT MODE ── */
 .edit-field{display:flex;flex-direction:column;gap:5px;}
 .edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
-.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:‘DM Sans’,sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
+.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .edit-input:focus{border-color:var(--green);}
 .edit-input option{background:var(--surface2);}
 .edit-textarea{resize:none;min-height:72px;line-height:1.5;}
@@ -262,12 +262,12 @@
 <!-- SIDEBAR -->
 
 <aside class="sidebar" id="sidebar">
-  <div class="logo-wrap" style="justify-content:space-between;">
+  <div class="logo-wrap">
     <div>
       <div class="logo-mark">SWFT<em>.</em></div>
       <div class="logo-sub">simple. smart. swft.</div>
     </div>
-    <div onclick="toggleSidebar()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+    <div class="collapse-btn" onclick="toggleSidebar()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
   </div>
@@ -280,51 +280,22 @@
     <div class="nav-item" onclick="window.location.href='swft-customers.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/></svg>
       Customers
-      <span class="nav-badge">14</span>
     </div>
     <div class="nav-item active">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
       Jobs
-      <span class="nav-badge">6</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-quotes.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>
-      Quotes
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
     <div class="nav-item" onclick="window.location.href='swft-schedule.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
       Schedule
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-invoices.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>
-      Invoices
-      <span class="nav-badge">3</span>
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">Growth</div>
-    <div class="nav-item" onclick="showToast('Pipeline — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Pipeline
-    </div>
-    <div class="nav-item" onclick="showToast('Campaigns — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
-      Campaigns
-    </div>
-    <div class="nav-item" onclick="showToast('Reviews — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8"/></svg>
-      Reviews
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">AI</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="1.8"/></svg>
-      AI Agents
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-messages.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
   </nav>
-  <div class="sidebar-footer">
+  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings.html'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
-      <div class="avatar">JR</div>
-      <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
+      <div class="avatar"></div>
+      <div><div class="user-name"></div><div class="user-role">—</div></div>
     </div>
   </div>
 </aside>
@@ -338,7 +309,7 @@
     <div class="topbar-sub">6 active this month</div>
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
-      <div class="icon-btn" onclick="showToast('Notifications — 2 unread')">
+      <div class="icon-btn" onclick="">
         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>
       </div>
       <button class="btn-primary" onclick="openNewJob()">
@@ -354,23 +325,23 @@
 <div class="stat-strip">
   <div class="stat-card c-green">
     <div class="stat-label">In Progress</div>
-    <div class="stat-value">2</div>
+    <div class="stat-value" id="stat-active">0</div>
     <div class="stat-sub">On-site today</div>
   </div>
   <div class="stat-card c-blue">
     <div class="stat-label">Scheduled</div>
-    <div class="stat-value">3</div>
+    <div class="stat-value" id="stat-scheduled">0</div>
     <div class="stat-sub">Next 14 days</div>
   </div>
   <div class="stat-card c-amber">
-    <div class="stat-label">Awaiting Deposit</div>
-    <div class="stat-value">1</div>
-    <div class="stat-sub">$4,800 held up</div>
+    <div class="stat-label">Pending</div>
+    <div class="stat-value" id="stat-pending">0</div>
+    <div class="stat-sub">Awaiting action</div>
   </div>
   <div class="stat-card c-red">
-    <div class="stat-label">Completed MTD</div>
-    <div class="stat-value">5</div>
-    <div class="stat-sub">$18,400 invoiced</div>
+    <div class="stat-label">Completed</div>
+    <div class="stat-value" id="stat-complete">0</div>
+    <div class="stat-sub" id="stat-complete-sub">$0 invoiced</div>
   </div>
 </div>
 
@@ -398,164 +369,11 @@
   <div class="table-head">
     <div class="th sort-active">Job <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg></div>
     <div class="th">Customer</div>
-    <div class="th">Service</div>
-    <div class="th">Crew</div>
     <div class="th">Amount</div>
     <div class="th">Status</div>
     <div class="th"></div>
   </div>
   <div class="table-body" id="table-body">
-
-    <div class="job-row" data-status="active" onclick="openDrawer('henderson')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-green"></div>
-        <div>
-          <div class="job-title">Backyard Patio</div>
-          <div class="job-id">#JOB-1043 &nbsp;·&nbsp; Mar 27</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Tom Henderson</div>
-        <div class="job-addr">411 Birchwood Dr</div>
-      </div>
-      <div>
-        <div class="job-service">Stamped Concrete</div>
-        <div class="job-sqft">480 sqft</div>
-      </div>
-      <div><span class="crew-chip">Crew A</span></div>
-      <div>
-        <div class="job-amount">$7,200</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-inprog">In Progress</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="active" onclick="openDrawer('ortiz')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-green"></div>
-        <div>
-          <div class="job-title">Pool Deck</div>
-          <div class="job-id">#JOB-1044 &nbsp;·&nbsp; Mar 27</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Maria Ortiz</div>
-        <div class="job-addr">88 Lakeview Ct</div>
-      </div>
-      <div>
-        <div class="job-service">Exposed Aggregate</div>
-        <div class="job-sqft">320 sqft</div>
-      </div>
-      <div><span class="crew-chip">Crew B</span></div>
-      <div>
-        <div class="job-amount">$5,400</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-inprog">In Progress</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="scheduled" onclick="openDrawer('kim')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-blue"></div>
-        <div>
-          <div class="job-title">Driveway Resurface</div>
-          <div class="job-id">#JOB-1045 &nbsp;·&nbsp; Mar 29</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">James Kim</div>
-        <div class="job-addr">77 Cedar Ridge</div>
-      </div>
-      <div>
-        <div class="job-service">Broom Finish</div>
-        <div class="job-sqft">640 sqft</div>
-      </div>
-      <div><span class="crew-chip">Crew A</span></div>
-      <div>
-        <div class="job-amount">$3,100</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-sched">Scheduled</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="pending" onclick="openDrawer('martinez')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-amber"></div>
-        <div>
-          <div class="job-title">Driveway — Stamped</div>
-          <div class="job-id">#JOB-1042 &nbsp;·&nbsp; TBD</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Rosa Martinez</div>
-        <div class="job-addr">2210 Elm St</div>
-      </div>
-      <div>
-        <div class="job-service">Stamped Concrete</div>
-        <div class="job-sqft">520 sqft</div>
-      </div>
-      <div><span class="crew-chip">Unassigned</span></div>
-      <div>
-        <div class="job-amount">$4,800</div>
-        <div class="pay-status pay-due">Awaiting deposit</div>
-      </div>
-      <div><span class="status-tag tag-pending">Quote Sent</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="scheduled" onclick="openDrawer('nguyen')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-blue"></div>
-        <div>
-          <div class="job-title">Front Walkway</div>
-          <div class="job-id">#JOB-1046 &nbsp;·&nbsp; Apr 1</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">David Nguyen</div>
-        <div class="job-addr">2422 Oak St</div>
-      </div>
-      <div>
-        <div class="job-service">Exposed Aggregate</div>
-        <div class="job-sqft">140 sqft</div>
-      </div>
-      <div><span class="crew-chip">Crew B</span></div>
-      <div>
-        <div class="job-amount">$2,250</div>
-        <div class="pay-status pay-deposit">Deposit paid</div>
-      </div>
-      <div><span class="status-tag tag-sched">Scheduled</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="job-row" data-status="complete" onclick="openDrawer('chen')">
-      <div class="job-id-cell">
-        <div class="status-pip pip-gray"></div>
-        <div>
-          <div class="job-title">Garage Floor Epoxy</div>
-          <div class="job-id">#JOB-1038 &nbsp;·&nbsp; Mar 25</div>
-        </div>
-      </div>
-      <div>
-        <div class="job-customer">Linda Chen</div>
-        <div class="job-addr">903 Maple Ave</div>
-      </div>
-      <div>
-        <div class="job-service">Epoxy Coating</div>
-        <div class="job-sqft">440 sqft</div>
-      </div>
-      <div><span class="crew-chip">Crew A</span></div>
-      <div>
-        <div class="job-amount">$2,600</div>
-        <div class="pay-status pay-due">Invoice due</div>
-      </div>
-      <div><span class="status-tag tag-complete">Complete</span></div>
-      <div style="display:flex;justify-content:flex-end;"><div class="row-btn">→</div></div>
-    </div>
-
   </div>
 </div>
 
@@ -573,8 +391,8 @@
     <div class="drawer-top">
       <div>
         <div class="drawer-job-id" id="d-id">#JOB-1043 &nbsp;·&nbsp; Mar 27, 2026</div>
-        <div class="drawer-title" id="d-title">Backyard Patio</div>
-        <div class="drawer-customer">Customer: <span id="d-customer">Tom Henderson</span></div>
+        <div class="drawer-title" id="d-title"></div>
+        <div class="drawer-customer">Customer: <span id="d-customer"></span></div>
       </div>
       <div class="drawer-close" onclick="closeDrawer()">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
@@ -602,6 +420,8 @@
     <div class="dtab" onclick="switchTab(this,'photos')">Photos</div>
     <div class="dtab" onclick="switchTab(this,'payment')">Payment</div>
     <div class="dtab" onclick="switchTab(this,'notes')">Notes</div>
+      <div class="dtab" onclick="switchTab(this,'job-quotes')">Quotes</div>
+      <div class="dtab" onclick="switchTab(this,'job-invoices')">Invoices</div>
   </div>
 
   <div class="drawer-content">
@@ -625,7 +445,7 @@
       </div>
       <div class="detail-row">
         <div class="detail-icon">🏗️</div>
-        <div><div class="detail-label">Mix / Finish</div><div class="detail-value" id="d-finish">4,000 PSI · Stamped cobblestone pattern · Natural gray</div></div>
+        <div><div class="detail-label">Mix / Finish</div><div class="detail-value" id="d-finish"></div></div>
       </div>
       <div class="detail-row">
         <div class="detail-icon">🌡️</div>
@@ -635,44 +455,53 @@
   </div>
 
   <!-- DETAILS EDIT -->
+  <div id="tab-job-quotes" style="display:none;">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Quotes <button onclick="createQuoteForJob()" style="font-size:11px;color:var(--green);background:none;border:1px solid var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;">+ New Quote</button></div>
+    <div id="job-quotes-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <div id="tab-job-invoices" style="display:none;">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Invoices <button onclick="createInvoiceForJob()" style="font-size:11px;color:var(--green);background:none;border:1px solid var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;">+ New Invoice</button></div>
+    <div id="job-invoices-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
   <div id="d-edit-mode" style="display:none;flex-direction:column;gap:12px;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
       Edit Job
       <span style="font-size:10px;color:var(--gray2);letter-spacing:0;text-transform:none;font-family:'DM Sans',sans-serif;">Changes saved on Save</span>
     </div>
     <div class="edit-field">
-      <label class="edit-label">Job Title</label>
-      <input class="edit-input" id="e-title" type="text"/>
-    </div>
-    <div class="edit-field">
       <label class="edit-label">Customer</label>
-      <input class="edit-input" id="e-customer" type="text"/>
+      <select class="edit-input" id="e-customer" onchange="autofillFromCustomer(this.value)"><option value="">Select a customer...</option></select>
+      <a href="swft-customers.html?new=1" target="_blank" style="font-size:11px;color:var(--green);margin-top:3px;display:inline-block;">+ Add new customer</a>
     </div>
     <div class="edit-row-2">
       <div class="edit-field">
         <label class="edit-label">Date</label>
-        <input class="edit-input" id="e-date" type="text" placeholder="e.g. March 27, 2026"/>
+        <input class="edit-input" id="e-date" type="date"/>
       </div>
       <div class="edit-field">
         <label class="edit-label">Start Time</label>
-        <input class="edit-input" id="e-time" type="text" placeholder="e.g. 7:00 AM"/>
+        <input class="edit-input" id="e-time" type="time"/>
       </div>
     </div>
     <div class="edit-field">
       <label class="edit-label">Address</label>
-      <input class="edit-input" id="e-address-edit" type="text"/>
+      <input class="edit-input" id="e-address-edit" type="text" autocomplete="street-address"/>
     </div>
     <div class="edit-row-2">
       <div class="edit-field">
         <label class="edit-label">Service Type</label>
-        <select class="edit-input" id="e-service">
+        <select class="edit-input" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service').style.display='block';}else{document.getElementById('e-custom-service').style.display='none';}">
           <option>Stamped Concrete</option>
           <option>Broom Finish</option>
           <option>Exposed Aggregate</option>
           <option>Epoxy Coating</option>
           <option>Sealing</option>
           <option>Site Estimate</option>
+          <option>Other</option>
         </select>
+        <input class="edit-input" id="e-custom-service" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="edit-field">
         <label class="edit-label">Sqft</label>
@@ -682,13 +511,14 @@
     <div class="edit-row-2">
       <div class="edit-field">
         <label class="edit-label">Crew</label>
-        <select class="edit-input" id="e-crew">
+        <select class="edit-input" id="e-crew" onchange="if(this.value==='Other'){document.getElementById('e-custom-crew').style.display='block';}else{document.getElementById('e-custom-crew').style.display='none';}">
+          <option selected>Unassigned</option>
           <option>Crew A</option>
           <option>Crew B</option>
           <option>Crew A + B</option>
-          <option>Jake Reynolds</option>
-          <option>Unassigned</option>
+          <option>Other</option>
         </select>
+        <input class="edit-input" id="e-custom-crew" type="text" placeholder="Enter crew name..." style="display:none;margin-top:6px;"/>
       </div>
       <div class="edit-field">
         <label class="edit-label">Duration</label>
@@ -719,33 +549,20 @@
 
 <!-- PHOTOS -->
 <div id="tab-photos" style="display:none;">
-  <div class="section-title">Before Photos</div>
-  <div class="photo-grid" style="margin-bottom:14px;">
-    <div class="photo-tile"><div class="photo-bg" style="background:#1a1a1a;">🏡</div><div class="photo-label">Before — wide</div></div>
-    <div class="photo-tile"><div class="photo-bg" style="background:#161616;">🏚️</div><div class="photo-label">Before — close</div></div>
-    <div class="photo-add">
-      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2" stroke-linecap="round"/></svg>
-      Add photo
-    </div>
+    <div class="section-title">Job Photos</div>
+    <div id="photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;"></div>
+    <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--surface2);border:2px dashed var(--border2);border-radius:10px;cursor:pointer;color:var(--gray);font-size:13px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--gray)'">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.8"/><polyline points="17,8 12,3 7,8" stroke-width="1.8"/><line x1="12" y1="3" x2="12" y2="15" stroke-width="1.8"/></svg>
+      Upload Photo
+      <input type="file" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(this.files)"/>
+    </label>
   </div>
-  <div class="section-title">After Photos</div>
-  <div class="photo-grid">
-    <div class="photo-tile"><div class="photo-bg" style="background:#141a0a;">🪨</div><div class="photo-label">After — stamped finish</div></div>
-    <div class="photo-add">
-      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2" stroke-linecap="round"/></svg>
-      Add photo
-    </div>
-  </div>
-</div>
 
 <!-- PAYMENT -->
 <div id="tab-payment" style="display:none;">
   <div class="section-title">Payment Breakdown</div>
-  <div class="pay-block">
-    <div class="pay-row"><span class="pay-label">Total Job Value</span><span class="pay-val">$7,200.00</span></div>
-    <div class="pay-row"><span class="pay-label">Deposit (50%)</span><span class="pay-val green">$3,600.00 ✓ Paid</span></div>
-    <div class="pay-row"><span class="pay-label">Balance Due</span><span class="pay-val amber">$3,600.00</span></div>
-    <div class="pay-row"><span class="pay-label">Due Date</span><span class="pay-val">On completion</span></div>
+  <div class="pay-block" id="pay-block">
+    <div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">Payment info will appear here once a quote or invoice is created for this job.</div>
   </div>
   <div style="margin-top:12px;">
     <button onclick="showToast('Invoice sent for balance ✓')" style="width:100%;padding:11px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;border:none;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">
@@ -757,25 +574,12 @@
 <!-- NOTES -->
 <div id="tab-notes" style="display:none;">
   <div class="section-title">Job Notes</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="note-item">
-      <div class="note-text">Customer confirmed cobblestone stamp pattern — brought physical sample on-site. Wants sealer applied same day if weather holds.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 27, 7:15 AM</span>
-        <span class="note-tag" style="background:rgba(77,159,255,0.1);color:var(--blue);">Crew A</span>
-      </div>
-    </div>
-    <div class="note-item">
-      <div class="note-text">Slight slope toward back fence — make sure drainage flows away from house. Crew marked grade stakes before pour.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 26, 5:00 PM</span>
-        <span class="note-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">Pre-Job</span>
-      </div>
-    </div>
-    <div class="note-input-wrap">
-      <textarea class="note-textarea" placeholder="Add a job note..."></textarea>
-      <button class="note-submit" onclick="showToast('Note saved ✓')">Save</button>
-    </div>
+  <div id="job-notes-list" style="display:flex;flex-direction:column;gap:8px;">
+    <div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No notes yet</div>
+  </div>
+  <div class="note-input-wrap">
+    <textarea class="note-textarea" id="job-note-input" placeholder="Add a job note..."></textarea>
+    <button class="note-submit" onclick="saveJobNote()">Save</button>
   </div>
 </div>
 
@@ -787,10 +591,6 @@
     <button class="dfooter-btn" onclick="enterEditMode()">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
       Edit
-    </button>
-    <button class="dfooter-btn" onclick="showToast('SMS sent to crew')">
-      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 0 2 2z" stroke-width="1.8"/></svg>
-      Text Crew
     </button>
     <button class="dfooter-btn primary" onclick="showToast('Job marked complete ✓')">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -808,42 +608,186 @@
 </div>
 
 <script>
-  const jobs = {
-    henderson:{id:'#JOB-1043 · Mar 27, 2026',title:'Backyard Patio',customer:'Tom Henderson',statusTag:'In Progress',statusClass:'tag-inprog',crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Devon R.</span><span class="crew-pill">Luis M.</span>',amount:'$7,200',sqft:'480',service:'Stamped',pay:'Deposit',address:'411 Birchwood Dr, Austin TX 78745',date:'March 27, 2026 — 7:00 AM',duration:'~6 hours',finish:'4,000 PSI · Stamped cobblestone · Natural gray'},
-    ortiz:{id:'#JOB-1044 · Mar 27, 2026',title:'Pool Deck',customer:'Maria Ortiz',statusTag:'In Progress',statusClass:'tag-inprog',crew:'<span class="crew-pill">Ray S.</span><span class="crew-pill">Tomas V.</span>',amount:'$5,400',sqft:'320',service:'Exposed Agg.',pay:'Deposit',address:'88 Lakeview Ct, Austin TX 78704',date:'March 27, 2026 — 8:30 AM',duration:'~5 hours',finish:'3,500 PSI · Exposed aggregate · River rock mix'},
-    kim:{id:'#JOB-1045 · Mar 29, 2026',title:'Driveway Resurface',customer:'James Kim',statusTag:'Scheduled',statusClass:'tag-sched',crew:'<span class="crew-pill">Crew A</span>',amount:'$3,100',sqft:'640',service:'Broom Finish',pay:'Deposit',address:'77 Cedar Ridge, Austin TX 78750',date:'March 29, 2026 — 7:00 AM',duration:'~5 hours',finish:'4,000 PSI · Broom finish · Standard gray'},
-    martinez:{id:'#JOB-1042 · TBD',title:'Driveway — Stamped',customer:'Rosa Martinez',statusTag:'Quote Sent',statusClass:'tag-pending',crew:'<span class="crew-pill">Unassigned</span>',amount:'$4,800',sqft:'520',service:'Stamped',pay:'Awaiting',address:'2210 Elm St, Round Rock TX 78664',date:'TBD — Awaiting deposit',duration:'~5 hours',finish:'4,000 PSI · Stamped ashlar slate · Charcoal tint'},
-    nguyen:{id:'#JOB-1046 · Apr 1, 2026',title:'Front Walkway',customer:'David Nguyen',statusTag:'Scheduled',statusClass:'tag-sched',crew:'<span class="crew-pill">Crew B</span>',amount:'$2,250',sqft:'140',service:'Exposed Agg.',pay:'Deposit',address:'2422 Oak St, Austin TX 78745',date:'April 1, 2026 — 9:00 AM',duration:'~3 hours',finish:'3,500 PSI · Exposed aggregate · Pea gravel mix'},
-    chen:{id:'#JOB-1038 · Mar 25, 2026',title:'Garage Floor Epoxy',customer:'Linda Chen',statusTag:'Complete',statusClass:'tag-complete',crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Luis M.</span>',amount:'$2,600',sqft:'440',service:'Epoxy',pay:'Invoice Due',address:'903 Maple Ave, Cedar Park TX 78613',date:'March 25, 2026 — 8:00 AM',duration:'~4 hours',finish:'2-part epoxy · Charcoal base · Metallic flake'}
+  window._jobs = {};
+  let _currentJob = null;
+  let _currentJobId = null;
+
+  /* ── Status helpers ── */
+  const STATUS_MAP = {
+    'scheduled': { pip: 'pip-blue',  tag: 'tag-sched',    label: 'Scheduled' },
+    'active':    { pip: 'pip-green', tag: 'tag-inprog',   label: 'In Progress' },
+    'pending':   { pip: 'pip-amber', tag: 'tag-pending',  label: 'Quote Sent' },
+    'complete':  { pip: 'pip-gray',  tag: 'tag-complete', label: 'Complete' }
   };
 
-  let _currentJob = null;
+  const LABEL_TO_STATUS = {
+    'In Progress': 'active',
+    'Scheduled':   'scheduled',
+    'Quote Sent':  'pending',
+    'Complete':    'complete'
+  };
+
+  function fmtCost(v) {
+    const n = parseFloat(v);
+    if (isNaN(n)) return '$0';
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function fmtDate(d) {
+    if (!d) return 'TBD';
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt)) return d;
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch(e) { return d; }
+  }
+
+  function shortAddr(a) {
+    if (!a) return '';
+    const parts = a.split(',');
+    return parts[0] || a;
+  }
+
+  /* ── Load jobs from API ── */
+  async function loadJobs() {
+    try {
+      const list = await API.jobs.list();
+      window._jobs = {};
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      let counts = { active: 0, scheduled: 0, pending: 0, complete: 0 };
+      let completeCost = 0;
+
+      var today = new Date().toISOString().split('T')[0];
+
+      list.forEach(function(job) {
+        // Auto-update status based on scheduled date
+        if (job.scheduledDate && job.status !== 'complete') {
+          if (job.scheduledDate <= today && job.status !== 'active') {
+            job.status = 'active';
+            try { API.jobs.update(job.id, { status: 'active' }); } catch(e) {}
+          } else if (job.scheduledDate > today && job.status === 'active') {
+            job.status = 'scheduled';
+            try { API.jobs.update(job.id, { status: 'scheduled' }); } catch(e) {}
+          }
+        }
+
+        window._jobs[job.id] = job;
+        var status = job.status || 'scheduled';
+        var sm = STATUS_MAP[status] || STATUS_MAP['scheduled'];
+        counts[status] = (counts[status] || 0) + 1;
+        if (status === 'complete') {
+          completeCost += parseFloat(job.cost) || 0;
+        }
+
+        var row = document.createElement('div');
+        row.className = 'job-row';
+        row.dataset.status = status;
+        row.setAttribute('onclick', "openDrawer('" + job.id + "')");
+        row.innerHTML =
+          '<div class="job-id-cell">' +
+            '<div class="status-pip ' + sm.pip + '"></div>' +
+            '<div>' +
+              '<div class="job-title">' + (job.title || '') + '</div>' +
+              '<div class="job-id">#JOB-' + (job.id ? job.id.slice(-4) : '0000') + ' &nbsp;&middot;&nbsp; ' + fmtDate(job.scheduledDate) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="job-customer">' + (job.customerName || '') + '</div>' +
+            '<div class="job-addr">' + shortAddr(job.address) + '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="job-amount">' + fmtCost(job.cost) + '</div>' +
+          '</div>' +
+          '<div><span class="status-tag ' + sm.tag + '">' + sm.label + '</span></div>' +
+          '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
+            '<div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this,\'' + job.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div>' +
+            '<div class="row-btn">→</div>' +
+          '</div>';
+        tbody.appendChild(row);
+      });
+
+      // Update stat cards
+      var el;
+      el = document.getElementById('stat-active');    if (el) el.textContent = counts.active;
+      el = document.getElementById('stat-scheduled');  if (el) el.textContent = counts.scheduled;
+      el = document.getElementById('stat-pending');    if (el) el.textContent = counts.pending;
+      el = document.getElementById('stat-complete');   if (el) el.textContent = counts.complete;
+      el = document.getElementById('stat-complete-sub'); if (el) el.textContent = fmtCost(completeCost) + ' invoiced';
+
+      // Update topbar sub
+      var topSub = document.querySelector('.topbar-sub');
+      if (topSub) topSub.textContent = list.length + ' total jobs';
+
+    } catch(err) {
+      console.error('Failed to load jobs:', err);
+      showToast('Failed to load jobs');
+    }
+  }
+
+  /* ── Open drawer (view mode) ── */
+
+  async function loadCustomerDropdown() {
+    try {
+      var customers = await API.customers.list();
+      var select = document.getElementById('e-customer');
+      if (!select) return;
+      // Keep the first option
+      select.innerHTML = '<option value="">Select a customer...</option>';
+      customers.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name || 'Unnamed';
+        opt.dataset.address = c.address || '';
+        opt.dataset.phone = c.phone || '';
+        opt.dataset.name = c.name || '';
+        select.appendChild(opt);
+      });
+      window._customerList = customers;
+    } catch(e) { console.error('loadCustomerDropdown:', e); }
+  }
+
+  function autofillFromCustomer(custId) {
+    if (!custId || !window._customerList) return;
+    var cust = window._customerList.find(function(c) { return c.id === custId; });
+    if (!cust) return;
+    var addr = document.getElementById('e-address-edit');
+    if (addr && !addr.value) addr.value = cust.address || '';
+  }
+
   function openDrawer(id) {
-    const j = jobs[id]; if(!j) return;
+    var j = window._jobs[id];
+    if (!j) return;
     _currentJob = j;
+    _currentJobId = id;
+
+    var sm = STATUS_MAP[j.status] || STATUS_MAP['scheduled'];
+
     document.querySelector('.drawer-tabs').style.display = '';
     document.querySelector('.drawer-stats').style.display = '';
-    document.getElementById('d-id').textContent        = j.id;
-    document.getElementById('d-title').textContent     = j.title;
-    document.getElementById('d-customer').textContent  = j.customer;
-    document.getElementById('d-status-tag').textContent= j.statusTag;
-    document.getElementById('d-status-tag').className  = 'd-status-tag ' + j.statusClass;
-    document.getElementById('d-crew').innerHTML        = j.crew;
-    document.getElementById('d-amount').textContent    = j.amount;
-    document.getElementById('d-sqft').textContent      = j.sqft;
-    document.getElementById('d-service').textContent   = j.service;
-    document.getElementById('d-pay').textContent       = j.pay;
-    document.getElementById('d-address').textContent   = j.address;
-    document.getElementById('d-date').textContent      = j.date;
-    document.getElementById('d-duration').textContent  = j.duration;
-    document.getElementById('d-finish').textContent    = j.finish;
+    document.getElementById('d-id').textContent        = '#JOB-' + (id ? id.slice(-4) : '0000') + ' \u00B7 ' + fmtDate(j.scheduledDate);
+    document.getElementById('d-title').textContent     = j.title || '';
+    document.getElementById('d-customer').textContent  = j.customerName || '';
+    document.getElementById('d-status-tag').textContent= sm.label;
+    document.getElementById('d-status-tag').className  = 'd-status-tag ' + sm.tag;
+    document.getElementById('d-crew').innerHTML        = '';
+    document.getElementById('d-amount').textContent    = fmtCost(j.cost);
+    document.getElementById('d-sqft').textContent      = j.sqft || '—';
+    document.getElementById('d-service').textContent   = j.service || '—';
+    document.getElementById('d-pay').textContent       = j.payStatus || '—';
+    document.getElementById('d-address').textContent   = j.address || '';
+    document.getElementById('d-date').textContent      = j.scheduledDate || 'TBD';
+    document.getElementById('d-duration').textContent  = j.duration || '—';
+    document.getElementById('d-finish').textContent    = j.finish || j.service || '';
+
     switchTab(document.querySelector('.dtab'), 'details');
     document.getElementById('d-edit-mode').style.display='none';
     document.getElementById('d-view-mode').style.display='block';
     document.getElementById('footer-edit').style.display='none';
     document.getElementById('footer-view').style.display='flex';
-    // Switch to details tab by default
-    switchTab(document.querySelector('.dtab'), 'details');
+    loadJobBilling(id);
+    renderJobNotes(j.notes || '');
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
   }
@@ -856,71 +800,287 @@
   }
 
   function switchTab(el, tab) {
-    document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dtab').forEach(function(t) { t.classList.remove('active'); });
     el.classList.add('active');
-    ['details','photos','payment','notes'].forEach(t => {
+    ['details','photos','payment','notes','job-quotes','job-invoices'].forEach(function(t) {
       document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
     });
   }
 
   function setFilter(el, status) {
-    document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('active'); });
     el.classList.add('active');
-    document.querySelectorAll('.job-row').forEach(row => {
+    document.querySelectorAll('.job-row').forEach(function(row) {
       row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
     });
   }
 
   function filterJobs(q) {
-    const query = q.toLowerCase();
-    document.querySelectorAll('.job-row').forEach(row => {
-      const text = row.querySelector('.job-title').textContent.toLowerCase()
-                 + row.querySelector('.job-customer').textContent.toLowerCase();
+    var query = q.toLowerCase();
+    document.querySelectorAll('.job-row').forEach(function(row) {
+      var text = row.querySelector('.job-title').textContent.toLowerCase()
+               + row.querySelector('.job-customer').textContent.toLowerCase();
       row.style.display = text.includes(query) ? 'grid' : 'none';
     });
   }
-  function toggleSidebar(){
-    document.querySelector('.sidebar').classList.toggle('collapsed');
+
+  async function deleteJobRow(el, jobId) {
+    var row = el.closest('.job-row');
+    if (!row) return;
+    var titleEl = row.querySelector('.job-title');
+    var name = titleEl ? titleEl.textContent : 'this job';
+    var ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong>.', 'DELETE JOB', '🗑️');
+    if (!ok) return;
+    try {
+      await API.jobs.delete(jobId);
+      await loadJobs();
+      showToast(name + ' deleted');
+    } catch(err) {
+      console.error('Failed to delete job:', err);
+      showToast('Failed to delete job');
+    }
   }
 
-  let _toastTimer;
+  async function deleteJob() {
+    if (!_currentJob || !_currentJobId) return;
+    var ok = await swftConfirm('This will permanently delete <strong>' + (_currentJob.title || 'this job') + '</strong>.', 'DELETE JOB', '🗑️');
+    if (!ok) return;
+    var title = _currentJob.title;
+    try {
+      await API.jobs.delete(_currentJobId);
+      closeDrawer();
+      await loadJobs();
+      showToast(title + ' deleted');
+    } catch(err) {
+      console.error('Failed to delete job:', err);
+      showToast('Failed to delete job');
+    }
+  }
+
+
+
+
+  async function createQuoteForJob() {
+    if (!_currentJob) return;
+    try {
+      var cost = parseFloat(String(_currentJob.cost || '0').replace(/[\$,]/g,'')) || 0;
+      var svc = _currentJob.service || _currentJob.title || 'Service';
+      var lineItems = cost > 0 ? [{
+        desc: svc,
+        sub: (_currentJob.sqft ? _currentJob.sqft + ' sqft' : ''),
+        qty: '1',
+        rate: '$' + cost.toLocaleString(),
+        total: '$' + cost.toLocaleString()
+      }] : [];
+      var data = {
+        customerId: _currentJob.customerId || '',
+        customerName: _currentJob.customerName || _currentJob.customer || '',
+        items: lineItems,
+        total: cost,
+        notes: _currentJob.title || '',
+        status: 'draft',
+        address: _currentJob.address || '',
+        service: _currentJob.service || '',
+        sqft: _currentJob.sqft || ''
+      };
+      var result = await API.quotes.create(data);
+      showToast('Quote created — opening billing page');
+      setTimeout(function(){ window.location.href = 'swft-billing.html'; }, 500);
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  async function createInvoiceForJob() {
+    if (!_currentJob) return;
+    try {
+      // Try to clone line items from the job's quote
+      var quotes = await API.quotes.list();
+      var jobQuote = quotes.find(function(q) {
+        return q.customerName === (_currentJob.customerName || _currentJob.customer);
+      });
+      var items = jobQuote ? (jobQuote.items || []) : [];
+      var total = jobQuote ? (parseFloat(String(jobQuote.total||0).replace(/[\$,]/g,''))||0) : (parseFloat(String(_currentJob.cost||0).replace(/[\$,]/g,''))||0);
+
+      var data = {
+        customerId: _currentJob.customerId || '',
+        customerName: _currentJob.customerName || _currentJob.customer || '',
+        quoteId: jobQuote ? jobQuote.id : null,
+        items: items,
+        total: total,
+        notes: _currentJob.title || '',
+        status: 'open'
+      };
+      await API.invoices.create(data);
+
+      // Update job status to invoiced
+      if (_currentJob.id) {
+        await API.jobs.update(_currentJob.id, { status: 'complete' });
+      }
+
+      showToast('Invoice created from ' + (jobQuote ? 'quote' : 'job') + ' — opening billing');
+      setTimeout(function(){ window.location.href = 'swft-billing.html'; }, 500);
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  async function loadJobBilling(jobId) {
+    // Load quotes for this job
+    try {
+      var quotes = await API.quotes.list();
+      var qList = document.getElementById('job-quotes-list');
+      if (qList) {
+        var jobQuotes = quotes.filter(function(q) { return q.customerId === jobId || q.customerName === (window._jobs[jobId]||{}).customerName; });
+        if (jobQuotes.length === 0) {
+          qList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No quotes for this job yet</div>';
+        } else {
+          qList.innerHTML = jobQuotes.map(function(q) {
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;"><div><div style="font-size:13px;color:var(--white);font-weight:500;">$' + (q.total||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px;">' + (q.status||'draft') + '</div></div><a href="swft-billing.html" style="font-size:11px;color:var(--green);">View &rarr;</a></div>';
+          }).join('');
+        }
+      }
+    } catch(e) {}
+
+    // Load invoices
+    try {
+      var invoices = await API.invoices.list();
+      var iList = document.getElementById('job-invoices-list');
+      if (iList) {
+        var jobInvoices = invoices.filter(function(inv) { return inv.customerId === jobId || inv.customerName === (window._jobs[jobId]||{}).customerName; });
+        if (jobInvoices.length === 0) {
+          iList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No invoices for this job yet</div>';
+        } else {
+          iList.innerHTML = jobInvoices.map(function(inv) {
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;"><div><div style="font-size:13px;color:var(--white);font-weight:500;">$' + (inv.total||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px;">' + (inv.status||'open') + '</div></div><a href="swft-billing.html" style="font-size:11px;color:var(--green);">View &rarr;</a></div>';
+          }).join('');
+        }
+      }
+    } catch(e) {}
+  }
+
+  async function saveJobNote() {
+    if (!_currentJobId) { showToast('No job selected'); return; }
+    var input = document.getElementById('job-note-input');
+    var text = input ? input.value.trim() : '';
+    if (!text) { showToast('Enter a note first'); return; }
+    try {
+      var job = window._jobs[_currentJobId] || {};
+      var notes = job.notes || '';
+      var newNote = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ': ' + text;
+      notes = notes ? notes + '\n' + newNote : newNote;
+      await API.jobs.update(_currentJobId, { notes: notes });
+      // Update local
+      if (window._jobs[_currentJobId]) window._jobs[_currentJobId].notes = notes;
+      // Render notes
+      renderJobNotes(notes);
+      input.value = '';
+      showToast('Note saved');
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  function renderJobNotes(notes) {
+    var list = document.getElementById('job-notes-list');
+    if (!list) return;
+    if (!notes || !notes.trim()) {
+      list.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No notes yet</div>';
+      return;
+    }
+    var items = notes.split('\n').filter(function(n){return n.trim();});
+    list.innerHTML = items.map(function(n) {
+      return '<div class="note-item"><div class="note-text">' + n + '</div></div>';
+    }).join('');
+  }
+
+  async function markJobComplete() {
+    if (!_currentJob || !_currentJob.id) return;
+    try {
+      await API.jobs.update(_currentJob.id, { status: 'complete' });
+      closeDrawer();
+      loadJobs();
+      showToast('Job marked complete');
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  function handlePhotoUpload(files) {
+    var grid = document.getElementById('photo-grid');
+    if (!grid) return;
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var div = document.createElement('div');
+        div.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;';
+        div.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;"/>' +
+          '<div onclick="this.parentElement.remove();showToast(\'Photo removed\')" style="position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px;">x</div>';
+        grid.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    }
+    showToast(files.length + ' photo(s) added');
+  }
+
+  function toggleSidebar(){
+    document.querySelector('.sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
+  }
+
+  var _toastTimer;
   function showToast(msg) {
-    const t = document.getElementById('toast');
+    var t = document.getElementById('toast');
     document.getElementById('toast-msg').textContent = msg;
     t.classList.add('show');
     clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+    _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
   }
 
-
-  function enterEditMode() {
-    const j = _currentJob; if(!j) return;
-    // Switch to details tab first
+  async function enterEditMode() {
+    var j = _currentJob; if(!j) return;
     switchTab(document.querySelector('.dtab'), 'details');
 
-    document.getElementById('e-title').value    = j.title || '';
-    document.getElementById('e-customer').value = j.customer || '';
-    const dateParts = (j.date || '').split(' — ');
-    document.getElementById('e-date').value     = dateParts[0] || '';
-    document.getElementById('e-time').value     = dateParts[1] || '';
+    // Load customers into dropdown first
+    await loadCustomerDropdown();
+
+    // Set customer - find matching option by name
+    var custSelect = document.getElementById('e-customer');
+    var matched = false;
+    for (var i = 0; i < custSelect.options.length; i++) {
+      if (custSelect.options[i].textContent === (j.customerName || '')) {
+        custSelect.selectedIndex = i;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched && j.customerName) {
+      // Add as option if not in list
+      var opt = document.createElement('option');
+      opt.value = j.customerId || j.customerName;
+      opt.textContent = j.customerName;
+      custSelect.appendChild(opt);
+      custSelect.value = opt.value;
+    }
+
+    document.getElementById('e-date').value     = j.scheduledDate || '';
+    document.getElementById('e-time').value     = j.scheduledTime || '';
     document.getElementById('e-address-edit').value = j.address || '';
     document.getElementById('e-sqft').value     = j.sqft || '';
     document.getElementById('e-dur').value      = j.duration || '';
     document.getElementById('e-finish').value   = j.finish || '';
-    const rawAmt = (j.amount || '').replace('$','').replace(',','');
+    var rawAmt = String(j.cost || '0');
     document.getElementById('e-amount').value   = rawAmt;
 
     // Set service dropdown
-    const svcEl = document.getElementById('e-service');
-    for (let i = 0; i < svcEl.options.length; i++) {
-      if ((j.finish || '').toLowerCase().includes(svcEl.options[i].value.toLowerCase().split(' ')[0])) {
-        svcEl.selectedIndex = i; break;
+    var svcEl = document.getElementById('e-service');
+    var svcMatch = false;
+    for (var i = 0; i < svcEl.options.length; i++) {
+      if (svcEl.options[i].value === j.service || (j.service && svcEl.options[i].value.toLowerCase().indexOf(j.service.toLowerCase()) !== -1)) {
+        svcEl.selectedIndex = i; svcMatch = true; break;
       }
     }
+    if (!svcMatch) svcEl.selectedIndex = 0;
+
     // Set status dropdown
-    const statEl = document.getElementById('e-status');
-    for (let i = 0; i < statEl.options.length; i++) {
-      if (statEl.options[i].value === j.status) { statEl.selectedIndex = i; break; }
+    var sm = STATUS_MAP[j.status] || STATUS_MAP['scheduled'];
+    var statEl = document.getElementById('e-status');
+    for (var i2 = 0; i2 < statEl.options.length; i2++) {
+      if (statEl.options[i2].value === sm.label) { statEl.selectedIndex = i2; break; }
     }
 
     document.getElementById('d-view-mode').style.display = 'none';
@@ -929,39 +1089,37 @@
     document.getElementById('footer-edit').style.display = 'flex';
   }
 
-  function openNewJob() {
-    _currentJob = {id:'J-NEW', title:'', customer:'', statusTag:'Scheduled', statusClass:'tag-scheduled', crew:['Crew A'], amount:'$0', sqft:'—', service:'—', pay:'Due on completion', address:'', date:'', duration:'', finish:''};
+  async function openNewJob() {
+    await loadCustomerDropdown();
+    _currentJob = { _isNew: true };
+    _currentJobId = null;
 
-    // Update drawer header
     document.getElementById('d-title').textContent      = 'New Job';
     document.getElementById('d-customer').textContent   = '';
     document.getElementById('d-id').textContent         = '';
     document.getElementById('d-status-tag').textContent = 'Scheduled';
-    document.getElementById('d-status-tag').className   = 'd-status-tag tag-scheduled';
-    document.getElementById('d-crew').innerHTML         = 'Crew A';
+    document.getElementById('d-status-tag').className   = 'd-status-tag tag-sched';
+    document.getElementById('d-crew').innerHTML         = '';
 
-    // Reset stats to defaults
     document.getElementById('d-amount').textContent     = '$0';
     document.getElementById('d-sqft').textContent       = '—';
     document.getElementById('d-service').textContent    = '—';
-    document.getElementById('d-pay').textContent        = 'Due on completion';
+    document.getElementById('d-pay').textContent        = '—';
     document.getElementById('d-address').textContent    = '';
     document.getElementById('d-date').textContent       = '';
     document.getElementById('d-duration').textContent   = '';
     document.getElementById('d-finish').textContent     = '';
 
-    // Reset to Details tab
     switchTab(document.querySelector('.dtab'), 'details');
 
-    // Show edit mode directly
     document.getElementById('d-view-mode').style.display  = 'none';
     document.getElementById('d-edit-mode').style.display   = 'flex';
     document.getElementById('footer-view').style.display   = 'none';
     document.getElementById('footer-edit').style.display   = 'flex';
 
-    // Clear all edit fields
-    document.getElementById('e-title').value        = '';
     document.getElementById('e-customer').value     = '';
+    var crewSel = document.getElementById('e-crew');
+    if(crewSel) { for(var i=0;i<crewSel.options.length;i++) { if(crewSel.options[i].value==='Unassigned'){crewSel.selectedIndex=i;break;} } }
     document.getElementById('e-date').value         = '';
     document.getElementById('e-time').value         = '';
     document.getElementById('e-address-edit').value = '';
@@ -973,17 +1131,15 @@
     document.getElementById('e-status').selectedIndex = 0;
     document.getElementById('e-finish').value       = '';
 
-    // Hide tabs and stats for clean new-job form
     document.querySelector('.drawer-tabs').style.display = 'none';
     document.querySelector('.drawer-stats').style.display = 'none';
 
-    // Open as centered modal
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open', 'center-modal');
   }
 
   function cancelEdit() {
-    if (_currentJob && _currentJob.id === 'J-NEW') { closeDrawer(); return; }
+    if (_currentJob && _currentJob._isNew) { closeDrawer(); return; }
     document.getElementById('d-edit-mode').style.display = 'none';
     document.getElementById('d-view-mode').style.display = 'block';
     document.getElementById('footer-edit').style.display = 'none';
@@ -991,72 +1147,63 @@
     showToast('Changes discarded');
   }
 
-  function saveEdit() {
-    const title    = document.getElementById('e-title').value.trim();
-    const customer = document.getElementById('e-customer').value.trim();
-    const date     = document.getElementById('e-date').value.trim();
-    const time     = document.getElementById('e-time').value.trim();
-    const address  = document.getElementById('e-address-edit').value.trim();
-    const service  = document.getElementById('e-service').value;
-    const sqft     = document.getElementById('e-sqft').value.trim();
-    const crew     = document.getElementById('e-crew').value;
-    const dur      = document.getElementById('e-dur').value.trim();
-    const rawAmt   = document.getElementById('e-amount').value.trim();
-    const status   = document.getElementById('e-status').value;
-    const finish   = document.getElementById('e-finish').value.trim();
-    const fmtAmt   = rawAmt.startsWith('$') ? rawAmt : '$' + rawAmt;
-    const fullDate = date + (time ? ' — ' + time : '');
+  async function saveEdit() {
+    var custSelect = document.getElementById('e-customer');
+    var custId = custSelect.value;
+    var customer = custSelect.options[custSelect.selectedIndex] ? custSelect.options[custSelect.selectedIndex].textContent : '';
+    if (customer === 'Select a customer...') customer = '';
+    var date     = document.getElementById('e-date').value.trim();
+    var time     = document.getElementById('e-time').value.trim();
+    var address  = document.getElementById('e-address-edit').value.trim();
+    var service  = document.getElementById('e-service').value;
+    if (service === 'Other') {
+      service = document.getElementById('e-custom-service').value.trim() || 'Custom Job';
+    }
+    var title    = customer ? customer + ' - ' + service : service;
+    var sqft     = document.getElementById('e-sqft').value.trim();
+    var crew     = document.getElementById('e-crew').value;
+    var dur      = document.getElementById('e-dur').value.trim();
+    var rawAmt   = document.getElementById('e-amount').value.trim().replace('$','').replace(/,/g,'');
+    var statusLabel = document.getElementById('e-status').value;
+    var finish   = document.getElementById('e-finish').value.trim();
+    var status   = LABEL_TO_STATUS[statusLabel] || 'scheduled';
+    var cost     = parseFloat(rawAmt) || 0;
 
-    const tagStyles = {
-      'In Progress':'background:rgba(200,241,53,0.1);color:#c8f135;',
-      'Scheduled':  'background:rgba(77,159,255,0.1);color:#4d9fff;',
-      'Quote Sent': 'background:rgba(245,166,35,0.1);color:#f5a623;',
-      'Complete':   'background:rgba(100,100,100,0.12);color:#7a7a7a;',
+    var data = {
+      title: title,
+      customerName: customer, customerId: custId,
+      service: service,
+      status: status,
+      scheduledDate: date,
+      scheduledTime: time,
+      cost: cost,
+      address: address,
+      sqft: sqft,
+      duration: dur,
+      finish: finish || service,
+      crew: crew
     };
 
-    // Persist to data object
-    if (_currentJob) {
-      _currentJob.title    = title;
-      _currentJob.customer = customer;
-      _currentJob.date     = fullDate;
-      _currentJob.address  = address;
-      _currentJob.finish   = finish || service;
-      _currentJob.sqft     = sqft;
-      _currentJob.duration = dur;
-      _currentJob.amount   = fmtAmt;
-      _currentJob.status   = status;
+    try {
+      if (_currentJob && _currentJob._isNew) {
+        if (!title || title === service) {
+          showToast('Please enter a customer name');
+          return;
+        }
+        await API.jobs.create(data);
+        closeDrawer();
+        await loadJobs();
+        showToast(title + ' created');
+      } else if (_currentJobId) {
+        await API.jobs.update(_currentJobId, data);
+        closeDrawer();
+        await loadJobs();
+        showToast('Job saved');
+      }
+    } catch(err) {
+      console.error('Failed to save job:', err);
+      showToast('Failed to save job');
     }
-
-    // Update view panel
-    document.getElementById('d-title').textContent    = title;
-    document.getElementById('d-customer').textContent = customer;
-    document.getElementById('d-date').textContent      = fullDate;
-    document.getElementById('d-address').textContent   = address;
-    document.getElementById('d-finish').textContent    = finish || service;
-    document.getElementById('d-duration').textContent  = dur;
-
-    // Update header stats
-    const amtEl = document.getElementById('d-amount');
-    if (amtEl) amtEl.textContent = fmtAmt;
-    const sqftEl = document.getElementById('d-sqft');
-    if (sqftEl) sqftEl.textContent = sqft;
-
-    // Status badge in header
-    const statusBadges = document.querySelectorAll('.status-tag');
-    statusBadges.forEach(b => {
-      b.textContent   = status;
-      b.className     = 'status-tag ' + (tagStyles[status] ? {
-        'In Progress':'tag-inprog','Scheduled':'tag-sched','Quote Sent':'tag-pending','Complete':'tag-complete'
-      }[status] : 'tag-sched');
-    });
-
-    // Switch back to view
-    document.getElementById('d-edit-mode').style.display = 'none';
-    document.getElementById('d-view-mode').style.display = 'block';
-    document.getElementById('footer-edit').style.display = 'none';
-    document.getElementById('footer-view').style.display = 'flex';
-    showToast('Job saved ✓');
-    if (_currentJob && _currentJob.id === 'J-NEW') { closeDrawer(); return; }
   }
 
 </script>
@@ -1088,15 +1235,34 @@
 
   document.body.style.visibility = "hidden";
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = "swft-login.html";
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
+      // Load jobs from API
+      await loadJobs();
+      // Auto-open new job if ?customer= param
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('customer')) {
+        setTimeout(function(){
+          openNewJob();
+          var custInput = document.getElementById('e-customer');
+          if (custInput) custInput.value = params.get('customer');
+        }, 400);
+      }
     }
   });
 </script>
 
+<script type="module" src="swft-user-sync.js"></script>
+<script src="swft-calendar-sync.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<script src="swft-settings-loader.js"></script>
+<script src="swft-account.js"></script>
+<script src="swft-notifications.js"></script>
+<script src="swft-chat.js"></script>
 </body>
 </html>

@@ -130,7 +130,7 @@ width:100%;
 background:var(--bg);
 border:1px solid var(--border2);
 border-radius:10px;
-padding:12px 13px 12px 38px;
+padding:12px 40px 12px 38px;
 color:var(--white);
 font-family:‘DM Sans’,sans-serif;font-size:14px;
 outline:none;
@@ -153,8 +153,9 @@ display:none;
 .pwd-toggle{
 position:absolute;right:12px;top:50%;transform:translateY(-50%);
 cursor:pointer;color:var(--gray2);transition:color 0.14s;
-background:none;border:none;padding:2px;
+background:none;border:none;padding:6px;z-index:2;
 }
+.pwd-toggle svg{pointer-events:auto !important;position:static !important;transform:none !important;left:auto !important;}
 .pwd-toggle:hover{color:var(--gray);}
 
 /* ── SUBMIT BTN ── */
@@ -491,27 +492,28 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // Make page visible immediately — no hiding on login page
   document.body.style.visibility = 'visible';
 
-  // Only redirect away if user is already logged in
-  onAuthStateChanged(auth, (user) => {
+  // Only redirect away if user is already logged in AND their account is in good standing
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
-      window.location.href = 'swft-shell.html';
+      await goToDashboard();
     }
   });
 
   // ── SAVE USER TO FIRESTORE ──
   async function saveUserToFirestore(user, extraData = {}) {
     const ref = doc(db, 'users', user.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || '',
-        createdAt: serverTimestamp(),
-        plan: 'free',
-        ...extraData
-      });
-    }
+    // Always merge — don't skip if doc exists
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || '',
+      name: user.displayName || extraData.displayName || '',
+      firstName: extraData.firstName || user.displayName?.split(' ')[0] || '',
+      lastName: extraData.lastName || user.displayName?.split(' ').slice(1).join(' ') || '',
+      company: extraData.businessName || extraData.company || '',
+      updatedAt: serverTimestamp(),
+      ...extraData
+    }, { merge: true });
   }
 
   // ── LOGIN ──
@@ -533,9 +535,9 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     setLoading(btn, true);
 
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      showSuccess('Signed in! Redirecting...');
-      setTimeout(() => goToDashboard(), 1200);
+      await signInWithEmailAndPassword(auth, email, password);
+      showSuccess('Signed in! Checking account...');
+      await goToDashboard();
     } catch (err) {
       setLoading(btn, false);
       showGlobalError(firebaseErrorMsg(err.code));
@@ -565,13 +567,23 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: `${fname} ${lname}` });
+      const now = Date.now();
       await saveUserToFirestore(cred.user, {
         firstName: fname,
         lastName: lname,
+        name: `${fname} ${lname}`,
+        company: biz,
         businessName: biz,
-        displayName: `${fname} ${lname}`
+        displayName: `${fname} ${lname}`,
+        // Subscription fields — set at creation so status checks never fail
+        trialStartDate:  now,
+        trialEndDate:    now + 14 * 24 * 60 * 60 * 1000,
+        isSubscribed:    false,
+        stripeCustomerId: '',
+        accountStatus:   'trialing',
       });
-      showSuccessState(`Welcome to SWFT, ${fname}! Your account is ready.`);
+      // Send new users to billing to pick a Stripe plan
+      showSuccessState(`Welcome to SWFT, ${fname}! Choose a plan to get started.`, true);
     } catch (err) {
       setLoading(btn, false);
       showGlobalError(firebaseErrorMsg(err.code));
@@ -645,7 +657,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     el.classList.add('show');
   }
 
-  function showSuccessState(sub) {
+  function showSuccessState(sub, toBilling = false) {
     document.getElementById('form-login').classList.remove('active');
     document.getElementById('form-signup').classList.remove('active');
     document.getElementById('global-error').classList.remove('show');
@@ -654,12 +666,55 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     document.getElementById('card-footer').style.display = 'none';
     document.getElementById('success-sub').textContent = sub;
     document.getElementById('success-state').classList.add('show');
-    setTimeout(() => goToDashboard(), 2500);
+    // New signups go to billing to pick a Stripe plan; returning users go to dashboard
+    setTimeout(() => {
+      if (toBilling) {
+        window.location.href = 'swft-billing.html';
+      } else {
+        goToDashboard();
+      }
+    }, 2000);
   }
 
-  window.goToDashboard = function() {
-    // Change this to your actual dashboard filename
-    window.location.href = 'swft-shell.html';
+  // Accounts that always bypass the subscription/trial gate
+  const ADMIN_EMAILS = ['ethan@goswft.com'];
+
+  // ── ACCOUNT STATUS GATE ──
+  // Called after every successful Firebase sign-in (and on page load if already
+  // signed in). Checks accountStatus on the backend before allowing dashboard
+  // access. If the account is expired/canceled a 402 is returned — we sign the
+  // user out immediately so they cannot hold a valid Firebase session and bypass
+  // the check by navigating directly to swft-shell.html.
+  window.goToDashboard = async function() {
+    const user = auth.currentUser;
+
+    // Admin accounts skip the status check entirely
+    if (user?.email && ADMIN_EMAILS.includes(user.email)) {
+      window.location.href = 'swft-shell.html';
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken();
+      const res   = await fetch('/api/me/status', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.status === 402) {
+        const { message } = await res.json();
+        // Invalidate the Firebase session — prevents direct-URL bypass
+        await auth.signOut();
+        showGlobalError(message || 'Your trial has ended. Please upgrade to continue.');
+        setTimeout(() => { window.location.href = 'swft-billing.html'; }, 2000);
+        return;
+      }
+
+      // 200 — active or trialing
+      window.location.href = 'swft-shell.html';
+    } catch {
+      // Network error or unexpected failure — fail safe: stay on login page
+      showGlobalError('Unable to verify account status. Please try again.');
+    }
   };
 
   function firebaseErrorMsg(code) {

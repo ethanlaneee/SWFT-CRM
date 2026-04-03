@@ -7,88 +7,43 @@
 <title>SWFT — Customers</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg:       #0a0a0a;
-    --surface:  #111111;
-    --surface2: #181818;
-    --border:   #1f1f1f;
-    --border2:  #2c2c2c;
-    --green:    #c8f135;
-    --white:    #f0f0f0;
-    --gray:     #7a7a7a;
-    --gray2:    #444444;
-    --blue:     #4d9fff;
-    --amber:    #f5a623;
-    --red:      #ff5252;
-    --sidebar-w: 228px;
-  }
-
-* { margin:0; padding:0; box-sizing:border-box; }
-html { background: #0a0a0a; }
-
-body {
-visibility: hidden;
-background: var(--bg);
-color: var(--white);
-font-family: ‘DM Sans’, sans-serif;
-min-height: 100vh;
-display: flex;
-}
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--sidebar-w:228px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{background:#0a0a0a;}
+body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
 
 /* ── SIDEBAR ── */
-.sidebar {
-width: var(--sidebar-w);
-min-height: 100vh;
-background: var(--surface);
-border-right: 1px solid var(--border);
-display: flex;
-flex-direction: column;
-position: fixed;
-top:0; left:0; bottom:0;
-z-index: 200;
-transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
-}
-.sidebar.collapsed { transform: translateX(-100%); }
-.sidebar-toggle { position:fixed; top:14px; left:14px; z-index:300; width:32px; height:32px; border-radius:8px; background:var(--surface2); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--gray); transition:all 0.15s; opacity:0; pointer-events:none; }
-.sidebar-toggle.visible { opacity:1; pointer-events:all; }
-.sidebar-toggle:hover { background:var(--border2); color:var(--white); }
-
-.logo-wrap { padding: 26px 22px 22px; border-bottom: 1px solid var(--border); display:flex; align-items:center; }
-.logo-mark { font-family:‘Bebas Neue’,sans-serif; font-size:30px; letter-spacing:3px; color:var(--white); line-height:1; }
-.logo-mark em { color:var(--green); font-style:normal; }
-.logo-sub { font-size:9.5px; color:var(--gray2); letter-spacing:1.8px; margin-top:3px; font-weight:300; }
-
-.nav { flex:1; padding:16px 10px; display:flex; flex-direction:column; gap:1px; overflow-y:auto; }
-.nav-label { font-size:9px; letter-spacing:2.5px; color:var(--gray2); text-transform:uppercase; padding:14px 12px 5px; }
-
-.nav-item {
-display:flex; align-items:center; gap:11px;
-padding:9px 12px; border-radius:9px; cursor:pointer;
-font-size:13px; font-weight:400; color:var(--gray);
-transition:background 0.14s, color 0.14s;
-position:relative; user-select:none;
-}
-.nav-item:hover { background:var(--surface2); color:var(--white); }
-.nav-item.active { background:rgba(200,241,53,0.07); color:var(--green); font-weight:500; }
-.nav-item.active::before {
-content:’’; position:absolute; left:0; top:50%; transform:translateY(-50%);
-width:3px; height:18px; background:var(--green); border-radius:0 3px 3px 0;
-}
-.nav-icon { width:15px; height:15px; flex-shrink:0; opacity:0.8; }
-.nav-item.active .nav-icon { opacity:1; }
-.nav-badge { margin-left:auto; background:var(--green); color:#0a0a0a; font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:20px; font-family:‘JetBrains Mono’,monospace; }
-.nav-divider { height:1px; background:var(--border); margin:8px 12px; }
-
-.sidebar-footer { border-top:1px solid var(--border); padding:12px 10px; }
-.user-tile { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:9px; cursor:pointer; transition:background 0.14s; }
-.user-tile:hover { background:var(--surface2); }
-.avatar { width:30px; height:30px; border-radius:50%; background:var(--green); color:#0a0a0a; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.user-name { font-size:12px; font-weight:500; color:var(--white); }
-.user-role { font-size:10.5px; color:var(--gray2); margin-top:1px; }
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
+.logo-mark em{color:var(--green);font-style:normal;}
+.logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
+.nav-divider{height:1px;background:var(--border);margin:8px 12px;}
+.sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(--surface2);}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--white);}
+.user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
 
 /* ── MAIN ── */
-.main { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; min-height:100vh; transition: margin-left 0.28s cubic-bezier(0.22,1,0.36,1); }
-.main.expanded { margin-left: 0 !important; }
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
 
 /* ── TOPBAR ── */
 .topbar {
@@ -100,8 +55,8 @@ z-index:100;
 animation: fadeDown 0.3s ease 0.15s both;
 }
 @keyframes fadeDown { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
-.topbar-page { font-family:‘Bebas Neue’,sans-serif; font-size:20px; letter-spacing:2.5px; color:var(--white); }
-.topbar-slash { color:var(--border2); font-family:‘JetBrains Mono’,monospace; font-size:16px; }
+.topbar-page { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2.5px; color:var(--white); }
+.topbar-slash { color:var(--border2); font-family:'JetBrains Mono',monospace; font-size:16px; }
 .topbar-sub { font-size:12px; color:var(--gray); font-style:italic; font-weight:300; }
 .topbar-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
 
@@ -133,7 +88,7 @@ transition:border-color 0.15s;
 }
 .search-wrap:focus-within { border-color:var(--green); }
 .search-wrap svg { color:var(--gray2); flex-shrink:0; }
-.search-input { background:transparent; border:none; outline:none; color:var(--white); font-family:‘DM Sans’,sans-serif; font-size:13px; flex:1; }
+.search-input { background:transparent; border:none; outline:none; color:var(--white); font-family:'DM Sans',sans-serif; font-size:13px; flex:1; }
 .search-input::placeholder { color:var(--gray2); }
 
 .filter-group { display:flex; gap:4px; }
@@ -141,7 +96,7 @@ transition:border-color 0.15s;
 .ftab:hover { color:var(--white); border-color:var(--gray2); }
 .ftab.active { background:rgba(200,241,53,0.1); color:var(--green); border-color:rgba(200,241,53,0.25); }
 
-.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:‘DM Sans’,sans-serif; cursor:pointer; transition:all 0.14s; margin-left:auto; }
+.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all 0.14s; margin-left:auto; }
 .sort-btn:hover { color:var(--white); border-color:var(--gray2); }
 
 /* ── CUSTOMER TABLE ── */
@@ -149,7 +104,7 @@ transition:border-color 0.15s;
 
 .table-head {
 display:grid;
-grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr 80px;
+grid-template-columns: 2fr 1.2fr 1fr 80px;
 padding:11px 20px;
 border-bottom:1px solid var(--border);
 background:var(--surface2);
@@ -168,7 +123,7 @@ user-select:none; transition:color 0.14s;
 
 .cust-row {
 display:grid;
-grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr 80px;
+grid-template-columns: 2fr 1.2fr 1fr 80px;
 padding:13px 20px;
 border-bottom:1px solid var(--border);
 align-items:center;
@@ -197,11 +152,11 @@ flex-shrink:0;
 .cust-name { font-size:13.5px; font-weight:500; color:var(--white); }
 .cust-addr { font-size:11px; color:var(--gray); margin-top:1px; }
 
-.cust-phone { font-size:12.5px; color:var(--gray); font-family:‘JetBrains Mono’,monospace; }
+.cust-phone { font-size:12.5px; color:var(--gray); font-family:'JetBrains Mono',monospace; }
 
-.cust-spend { font-family:‘JetBrains Mono’,monospace; font-size:13px; font-weight:500; color:var(--white); }
+.cust-spend { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:500; color:var(--white); }
 
-.cust-jobs { font-family:‘JetBrains Mono’,monospace; font-size:13px; color:var(--gray); }
+.cust-jobs { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--gray); }
 
 .cust-status span {
 font-size:10px; font-weight:600; padding:3px 9px; border-radius:6px; letter-spacing:0.4px;
@@ -224,19 +179,20 @@ transition:opacity 0.25s;
 .drawer-overlay.open { opacity:1; pointer-events:all; }
 
 .drawer {
-position:fixed; top:0; right:0; bottom:0;
-width:480px;
+position:fixed; top:50%; left:50%; right:auto; bottom:auto;
+width:580px; max-width:94vw; max-height:90vh;
 background:var(--surface);
-border-left:1px solid var(--border2);
+border:1px solid var(--border2);
+border-radius:16px;
 z-index:400;
 display:flex; flex-direction:column;
-transform:translateX(100%);
-transition:transform 0.3s cubic-bezier(0.22,1,0.36,1);
+transform:translate(-50%,-50%) scale(0.96);
+transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s;
 overflow:hidden;
+opacity:0; pointer-events:none;
+box-shadow:0 24px 80px rgba(0,0,0,0.6);
 }
-.drawer.open { transform:translateX(0); }
-.drawer.center-modal{position:fixed;top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:520px;max-width:92vw;max-height:88vh;border-radius:16px;border:1px solid var(--border2);box-shadow:0 24px 80px rgba(0,0,0,0.6);}
-.drawer.center-modal.open{transform:translate(-50%,-50%);}
+.drawer.open { transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:all; }
 
 /* Drawer header */
 .drawer-header {
@@ -258,7 +214,7 @@ width:46px; height:46px; border-radius:50%;
 display:flex; align-items:center; justify-content:center;
 font-size:16px; font-weight:700; color:#0a0a0a; flex-shrink:0;
 }
-.drawer-name { font-family:‘Bebas Neue’,sans-serif; font-size:22px; letter-spacing:1.5px; color:var(--white); line-height:1; }
+.drawer-name { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1.5px; color:var(--white); line-height:1; }
 .drawer-meta { font-size:12px; color:var(--gray); margin-top:4px; }
 .drawer-meta a { color:var(--green); text-decoration:none; }
 
@@ -272,8 +228,8 @@ padding:14px 18px;
 border-right:1px solid var(--border);
 }
 .dstat:last-child { border-right:none; }
-.dstat-label { font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gray2); }
-.dstat-value { font-family:‘Bebas Neue’,sans-serif; font-size:22px; letter-spacing:1px; color:var(--white); margin-top:3px; line-height:1; }
+.dstat-label { font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--white); }
+.dstat-value { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; color:var(--white); margin-top:3px; line-height:1; }
 .dstat-value.green { color:var(--green); }
 
 /* Drawer tabs */
@@ -295,14 +251,14 @@ transition:all 0.14s; user-select:none; white-space:nowrap;
 
 .drawer-section-title {
 font-size:9.5px; letter-spacing:2px; text-transform:uppercase;
-color:var(--gray2); margin-bottom:8px;
+color:var(--white); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border);
 }
 
 /* Contact info */
 .contact-grid { display:flex; flex-direction:column; gap:10px; }
 .contact-row { display:flex; align-items:center; gap:12px; }
 .contact-icon { width:30px; height:30px; border-radius:8px; background:var(--surface2); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.contact-label { font-size:10.5px; color:var(--gray2); }
+.contact-label { font-size:10.5px; color:var(--white); }
 .contact-value { font-size:13px; color:var(--white); margin-top:1px; }
 
 /* Job history */
@@ -315,7 +271,7 @@ border:1px solid var(--border); border-radius:10px;
 .hist-info { flex:1; }
 .hist-name { font-size:13px; font-weight:500; color:var(--white); }
 .hist-meta { font-size:11px; color:var(--gray); margin-top:2px; }
-.hist-amount { font-family:‘JetBrains Mono’,monospace; font-size:12.5px; font-weight:500; color:var(--white); }
+.hist-amount { font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500; color:var(--white); }
 
 /* Invoices */
 .invoice-item {
@@ -323,9 +279,9 @@ display:flex; align-items:center; gap:12px;
 padding:11px 14px; background:var(--surface2);
 border:1px solid var(--border); border-radius:10px;
 }
-.inv-num { font-family:‘JetBrains Mono’,monospace; font-size:11px; color:var(--gray2); width:52px; flex-shrink:0; }
+.inv-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gray2); width:52px; flex-shrink:0; }
 .inv-desc { flex:1; font-size:12.5px; color:var(--white); }
-.inv-amount { font-family:‘JetBrains Mono’,monospace; font-size:12.5px; color:var(--white); font-weight:500; }
+.inv-amount { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--white); font-weight:500; }
 .inv-badge { font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:5px; }
 .inv-paid { background:rgba(200,241,53,0.1); color:var(--green); }
 .inv-open { background:rgba(245,166,35,0.1); color:var(--amber); }
@@ -334,7 +290,7 @@ border:1px solid var(--border); border-radius:10px;
 .note-item { padding:12px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; }
 .note-text { font-size:12.5px; color:#c8c8c8; line-height:1.5; }
 .note-footer { display:flex; align-items:center; gap:8px; margin-top:6px; }
-.note-date { font-family:‘JetBrains Mono’,monospace; font-size:10px; color:var(--gray2); }
+.note-date { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--gray2); }
 .note-tag { font-size:9.5px; font-weight:600; padding:1px 7px; border-radius:4px; }
 
 .tags-row { display:flex; gap:6px; flex-wrap:wrap; }
@@ -348,7 +304,7 @@ border:1px solid var(--border2); border-radius:10px;
 transition:border-color 0.15s;
 }
 .note-input-wrap:focus-within { border-color:var(--green); }
-.note-textarea { flex:1; background:transparent; border:none; outline:none; color:var(--white); font-family:‘DM Sans’,sans-serif; font-size:12.5px; resize:none; min-height:36px; }
+.note-textarea { flex:1; background:transparent; border:none; outline:none; color:var(--white); font-family:'DM Sans',sans-serif; font-size:12.5px; resize:none; min-height:36px; }
 .note-textarea::placeholder { color:var(--gray2); }
 .note-submit { background:var(--green); color:#0a0a0a; border:none; border-radius:7px; padding:6px 12px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:background 0.15s; }
 .note-submit:hover { background:#d5ff40; }
@@ -361,7 +317,7 @@ display:flex; gap:8px;
 }
 .dfooter-btn {
 flex:1; padding:9px; border-radius:9px; border:1px solid var(--border2);
-background:transparent; color:var(--gray); font-size:12px; font-family:‘DM Sans’,sans-serif;
+background:transparent; color:var(--gray); font-size:12px; font-family:'DM Sans',sans-serif;
 cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;
 transition:all 0.14s;
 }
@@ -410,15 +366,15 @@ flex-shrink: 0;
 /* ── EDIT MODE ── */
 .edit-field{display:flex;flex-direction:column;gap:5px;}
 .edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
-.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:‘DM Sans’,sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
+.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .edit-input:focus{border-color:var(--green);}
 .edit-input option{background:var(--surface2);}
 .edit-textarea{resize:none;min-height:60px;line-height:1.5;}
 
 /* ── SORT DROPDOWN ── */
 .sort-wrap { position: relative; }
-.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:‘DM Sans’,sans-serif; cursor:pointer; transition:all 0.14s; }
+.sort-btn { display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all 0.14s; }
 .sort-btn:hover, .sort-btn.open { color:var(--white); border-color:var(--gray2); background:var(--surface2); }
 .sort-btn .sort-label { font-size:11px; color:var(--green); font-weight:600; margin-left:2px; }
 .sort-menu {
@@ -455,12 +411,12 @@ user-select:none;
 <!-- SIDEBAR -->
 
 <aside class="sidebar" id="sidebar">
-  <div class="logo-wrap" style="justify-content:space-between;">
+  <div class="logo-wrap">
     <div>
       <div class="logo-mark">SWFT<em>.</em></div>
       <div class="logo-sub">simple. smart. swft.</div>
     </div>
-    <div onclick="toggleSidebar()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+    <div class="collapse-btn" onclick="toggleSidebar()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
   </div>
@@ -473,53 +429,24 @@ user-select:none;
     <div class="nav-item active">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
       Customers
-      <span class="nav-badge">14</span>
     </div>
     <div class="nav-item" onclick="window.location.href='swft-jobs.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
       Jobs
-      <span class="nav-badge">6</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-quotes.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.8"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.8"/></svg>
-      Quotes
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
     <div class="nav-item" onclick="window.location.href='swft-schedule.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
       Schedule
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-invoices.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>
-      Invoices
-      <span class="nav-badge">3</span>
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">Growth</div>
-    <div class="nav-item" onclick="showToast('Pipeline — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Pipeline
-    </div>
-    <div class="nav-item" onclick="showToast('Campaigns — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
-      Campaigns
-    </div>
-    <div class="nav-item" onclick="showToast('Reviews — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8"/></svg>
-      Reviews
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">AI</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="1.8"/></svg>
-      AI Agents
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-messages.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
   </nav>
-  <div class="sidebar-footer">
+  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings.html'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
-      <div class="avatar">JR</div>
+      <div class="avatar"></div>
       <div>
-        <div class="user-name">Jake Reynolds</div>
-        <div class="user-role">Owner</div>
+        <div class="user-name"></div>
+        <div class="user-role">—</div>
       </div>
     </div>
   </div>
@@ -537,7 +464,7 @@ user-select:none;
     <div class="topbar-sub">14 contacts</div>
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
-      <div class="icon-btn" onclick="showToast('Notifications — 2 unread')" title="Notifications">
+      <div class="icon-btn" onclick="" title="Notifications">
         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>
       </div>
       <button class="btn-primary" onclick="openNewCustomer()">
@@ -589,104 +516,10 @@ user-select:none;
   <div class="table-head">
     <div class="th sort-active">Customer <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg></div>
     <div class="th">Phone</div>
-    <div class="th">Total Spend</div>
-    <div class="th">Jobs</div>
     <div class="th">Status</div>
     <div class="th"></div>
   </div>
-  <div class="table-body" id="table-body">
-
-    <div class="cust-row" data-status="active" onclick="openDrawer('henderson')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#c8f135;">TH</div>
-        <div>
-          <div class="cust-name">Tom Henderson</div>
-          <div class="cust-addr">411 Birchwood Dr, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 884-2291</div>
-      <div class="cust-spend">$14,800</div>
-      <div class="cust-jobs">4 jobs</div>
-      <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="active" onclick="openDrawer('ortiz')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#4d9fff;">MO</div>
-        <div>
-          <div class="cust-name">Maria Ortiz</div>
-          <div class="cust-addr">88 Lakeview Ct, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 774-0183</div>
-      <div class="cust-spend">$9,200</div>
-      <div class="cust-jobs">2 jobs</div>
-      <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="quoted" onclick="openDrawer('martinez')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#f5a623;">RM</div>
-        <div>
-          <div class="cust-name">Rosa Martinez</div>
-          <div class="cust-addr">2210 Elm St, Round Rock TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 334-9902</div>
-      <div class="cust-spend">$0</div>
-      <div class="cust-jobs">0 jobs</div>
-      <div class="cust-status"><span class="status-quoted">Quoted</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="active" onclick="openDrawer('kim')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#b388ff;">JK</div>
-        <div>
-          <div class="cust-name">James Kim</div>
-          <div class="cust-addr">77 Cedar Ridge, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 991-4450</div>
-      <div class="cust-spend">$6,200</div>
-      <div class="cust-jobs">2 jobs</div>
-      <div class="cust-status"><span class="status-active">Active</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="inactive" onclick="openDrawer('chen')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#ff7b7b;">LC</div>
-        <div>
-          <div class="cust-name">Linda Chen</div>
-          <div class="cust-addr">903 Maple Ave, Cedar Park TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 220-5577</div>
-      <div class="cust-spend">$4,100</div>
-      <div class="cust-jobs">2 jobs</div>
-      <div class="cust-status"><span class="status-inactive">Inactive</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
-    </div>
-
-    <div class="cust-row" data-status="quoted" onclick="openDrawer('nguyen')">
-      <div class="cust-name-cell">
-        <div class="cust-avatar" style="background:#4dd0c4;">DN</div>
-        <div>
-          <div class="cust-name">David Nguyen</div>
-          <div class="cust-addr">2422 Oak St, Austin TX</div>
-        </div>
-      </div>
-      <div class="cust-phone">(512) 667-8821</div>
-      <div class="cust-spend">$0</div>
-      <div class="cust-jobs">0 jobs</div>
-      <div class="cust-status"><span class="status-quoted">Quoted</span></div>
-      <div class="cust-action"><div class="row-btn">→</div></div>
-    </div>
-
-  </div>
+  <div class="table-body" id="table-body"></div>
 </div>
 
   </div><!-- /page-body -->
@@ -705,7 +538,7 @@ user-select:none;
   <div class="drawer-header">
     <div class="drawer-avatar" id="d-avatar" style="background:#c8f135;">TH</div>
     <div>
-      <div class="drawer-name" id="d-name">Tom Henderson</div>
+      <div class="drawer-name" id="d-name"></div>
       <div class="drawer-meta" id="d-meta">(512) 884-2291 &nbsp;·&nbsp; <a href="#">411 Birchwood Dr, Austin TX</a></div>
     </div>
     <div class="drawer-close" onclick="closeDrawer()">
@@ -733,10 +566,10 @@ user-select:none;
   <!-- Tabs -->
 
   <div class="drawer-tabs">
-    <div class="dtab active" onclick="switchTab(this,'contact')">Contact</div>
+    <div class="dtab active" onclick="switchTab(this,'contact')">Info</div>
     <div class="dtab" onclick="switchTab(this,'jobs')">Job History</div>
     <div class="dtab" onclick="switchTab(this,'invoices')">Invoices</div>
-    <div class="dtab" onclick="switchTab(this,'notes')">Notes & Tags</div>
+    <div class="dtab" onclick="switchTab(this,'notes')">Notes</div>
   </div>
 
   <!-- Tab content -->
@@ -747,7 +580,7 @@ user-select:none;
 <div id="tab-contact">
   <!-- VIEW MODE -->
   <div id="c-view-mode">
-    <div class="drawer-section-title">Contact Info</div>
+    <div class="drawer-section-title">Info</div>
     <div class="contact-grid">
       <div class="contact-row">
         <div class="contact-icon">📞</div>
@@ -761,13 +594,10 @@ user-select:none;
         <div class="contact-icon">📍</div>
         <div><div class="contact-label">Property Address</div><div class="contact-value" id="d-address">411 Birchwood Dr, Austin TX 78745</div></div>
       </div>
+      
       <div class="contact-row">
-        <div class="contact-icon">🏗️</div>
-        <div><div class="contact-label">Property Type</div><div class="contact-value" id="d-proptype">Single family — 2,400 sqft lot</div></div>
-      </div>
-      <div class="contact-row">
-        <div class="contact-icon">📅</div>
-        <div><div class="contact-label">Customer Since</div><div class="contact-value" id="d-since">January 2024</div></div>
+        <div class="contact-icon">🔑</div>
+        <div><div class="contact-label">Customer ID</div><div class="contact-value" id="d-since">January 2024</div></div>
       </div>
     </div>
   </div>
@@ -797,21 +627,12 @@ user-select:none;
     </div>
     <div class="edit-field">
       <label class="edit-label">Property Address</label>
-      <input class="edit-input" id="e-address" type="text"/>
+      <input class="edit-input" id="e-address" type="text" autocomplete="street-address"/>
     </div>
     <div class="edit-row-2">
       <div class="edit-field">
-        <label class="edit-label">Property Type</label>
-        <select class="edit-input" id="e-proptype">
-          <option>Single family</option>
-          <option>Multi-family</option>
-          <option>Commercial</option>
-          <option>HOA / Community</option>
-        </select>
-      </div>
-      <div class="edit-field">
-        <label class="edit-label">Customer Since</label>
-        <input class="edit-input" id="e-since" type="text" placeholder="e.g. January 2024"/>
+        <label class="edit-label">Customer ID</label>
+        <input class="edit-input" id="e-since" type="text" readonly style="opacity:0.6;cursor:not-allowed;" placeholder="Auto-generated"/>
       </div>
     </div>
     <div class="edit-field">
@@ -823,128 +644,56 @@ user-select:none;
 
 <div id="tab-jobs" style="display:none;">
   <div class="drawer-section-title">Job History</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--green);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Backyard Patio — Stamped Concrete</div>
-        <div class="hist-meta">Mar 27, 2026 &nbsp;·&nbsp; Crew A &nbsp;·&nbsp; 480 sqft</div>
-      </div>
-      <div class="hist-amount">$7,200</div>
-    </div>
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--gray2);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Driveway — Broom Finish</div>
-        <div class="hist-meta">Aug 14, 2025 &nbsp;·&nbsp; Crew B &nbsp;·&nbsp; 640 sqft</div>
-      </div>
-      <div class="hist-amount">$4,100</div>
-    </div>
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--gray2);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Front Walkway — Exposed Aggregate</div>
-        <div class="hist-meta">Mar 3, 2025 &nbsp;·&nbsp; Crew A &nbsp;·&nbsp; 120 sqft</div>
-      </div>
-      <div class="hist-amount">$2,100</div>
-    </div>
-    <div class="job-hist-item">
-      <div class="hist-dot" style="background:var(--gray2);"></div>
-      <div class="hist-info">
-        <div class="hist-name">Side Yard — Broom Finish</div>
-        <div class="hist-meta">Jan 18, 2024 &nbsp;·&nbsp; Crew A &nbsp;·&nbsp; 200 sqft</div>
-      </div>
-      <div class="hist-amount">$1,400</div>
-    </div>
-  </div>
+  <div id="cust-job-list" style="display:flex;flex-direction:column;gap:8px;"></div>
 </div>
 
 <div id="tab-invoices" style="display:none;">
-  <div class="drawer-section-title">Invoices & Quotes</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="invoice-item">
-      <div class="inv-num">#1043</div>
-      <div class="inv-desc">Backyard Patio — Stamped</div>
-      <div class="inv-amount">$7,200</div>
-      <span class="inv-badge inv-open">Due</span>
-    </div>
-    <div class="invoice-item">
-      <div class="inv-num">#0998</div>
-      <div class="inv-desc">Driveway — Broom Finish</div>
-      <div class="inv-amount">$4,100</div>
-      <span class="inv-badge inv-paid">Paid</span>
-    </div>
-    <div class="invoice-item">
-      <div class="inv-num">#0941</div>
-      <div class="inv-desc">Front Walkway</div>
-      <div class="inv-amount">$2,100</div>
-      <span class="inv-badge inv-paid">Paid</span>
-    </div>
-    <div class="invoice-item">
-      <div class="inv-num">#0887</div>
-      <div class="inv-desc">Side Yard</div>
-      <div class="inv-amount">$1,400</div>
-      <span class="inv-badge inv-paid">Paid</span>
-    </div>
-  </div>
+  <div class="drawer-section-title">Invoices</div>
+  <div id="cust-inv-list" style="display:flex;flex-direction:column;gap:8px;"></div>
 </div>
 
 <div id="tab-notes" style="display:none;">
   <div class="drawer-section-title">Tags</div>
-  <div class="tags-row" style="margin-bottom:16px;">
-    <span class="cust-tag">Repeat Customer</span>
-    <span class="cust-tag">Referral Source</span>
-    <span class="cust-tag">High Value</span>
-    <span class="cust-tag">Sealing Due — Fall</span>
-  </div>
-
+  <div id="cust-tags" class="tags-row" style="margin-bottom:16px;"></div>
   <div class="drawer-section-title">Notes</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="note-item">
-      <div class="note-text">Prefers text over calls. Referred us to the Nguyens next door — make sure to mention this when following up.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 26, 2026</span>
-        <span class="note-tag" style="background:rgba(200,241,53,0.1);color:var(--green);">Owner</span>
-      </div>
-    </div>
-    <div class="note-item">
-      <div class="note-text">Patio job: customer wants a sealing follow-up quote in the fall (Sep/Oct). Flag for AI campaign.</div>
-      <div class="note-footer">
-        <span class="note-date">Mar 27, 2026</span>
-        <span class="note-tag" style="background:rgba(77,159,255,0.1);color:var(--blue);">Job Note</span>
-      </div>
-    </div>
-    <div class="note-input-wrap">
-      <textarea class="note-textarea" placeholder="Add a note..."></textarea>
-      <button class="note-submit">Save</button>
-    </div>
+  <div id="cust-notes" style="display:flex;flex-direction:column;gap:8px;"></div>
+  <div class="note-input-wrap">
+    <textarea class="note-textarea" id="new-note-text" placeholder="Add a note..."></textarea>
+    <button class="note-submit" onclick="addNote()">Save</button>
   </div>
 </div>
 
-  </div>
+</div>
 
   <!-- VIEW footer -->
 
   <div class="drawer-footer" id="c-footer-view">
-    <button class="dfooter-btn" onclick="callCustomer()">
-      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.27a16 16 0 0 0 5.82 5.82l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.28 16z" stroke-width="1.8"/></svg>
-      Call
-    </button>
-    <button class="dfooter-btn" onclick="textCustomer()">
-      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>
-      Text
-    </button>
+    <div style="position:relative;">
+      <button class="dfooter-btn" onclick="toggleContactMenu()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.36 2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.27a16 16 0 0 0 5.82 5.82l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.28 16z" stroke-width="1.8"/></svg>
+        Contact
+      </button>
+      <div id="contact-menu" style="display:none;position:absolute;bottom:100%;left:0;margin-bottom:6px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;overflow:hidden;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:10;">
+        <div onclick="callCustomer();document.getElementById('contact-menu').style.display='none';" style="padding:10px 14px;cursor:pointer;font-size:12.5px;color:var(--white);display:flex;align-items:center;gap:8px;transition:background 0.12s;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">📞 Call</div>
+        <div onclick="textCustomer();document.getElementById('contact-menu').style.display='none';" style="padding:10px 14px;cursor:pointer;font-size:12.5px;color:var(--white);display:flex;align-items:center;gap:8px;transition:background 0.12s;border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">💬 Text</div>
+        <div onclick="emailCustomer();document.getElementById('contact-menu').style.display='none';" style="padding:10px 14px;cursor:pointer;font-size:12.5px;color:var(--white);display:flex;align-items:center;gap:8px;transition:background 0.12s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">✉️ Email</div>
+      </div>
+    </div>
     <button class="dfooter-btn" onclick="enterCustomerEdit()">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
       Edit
     </button>
-    <button class="dfooter-btn primary" onclick="showToast('Schedule Job — opening calendar')">
+    <button class="dfooter-btn primary" onclick="addJobForCustomer()">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
-      Schedule Job
+      Add Job
     </button>
   </div>
   <!-- EDIT footer -->
   <div class="drawer-footer" id="c-footer-edit" style="display:none;">
+    <button class="dfooter-btn" style="color:#ff5252;border-color:rgba(255,82,82,0.3);" onclick="deleteCustomer()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="1.8"/></svg>
+      Delete
+    </button>
     <button class="dfooter-btn" onclick="cancelCustomerEdit()">Cancel</button>
     <button class="dfooter-btn primary" onclick="saveCustomerEdit()" style="flex:2;">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -954,303 +703,505 @@ user-select:none;
 
 </div>
 
+
 <script>
 
-const customers = {
-henderson: {
-initials:‘TH’, color:’#c8f135’, name:‘Tom Henderson’,
-meta:’(512) 884-2291  ·  <a href="#">411 Birchwood Dr, Austin TX</a>’,
-spend:’$14,800’, jobs:‘4’, last:‘Mar 27’,
-phone:’(512) 884-2291’, email:‘tom.henderson@email.com’, address:‘411 Birchwood Dr, Austin TX 78745’, since:‘January 2024’
-},
-ortiz: {
-initials:‘MO’, color:’#4d9fff’, name:‘Maria Ortiz’,
-meta:’(512) 774-0183  ·  <a href="#">88 Lakeview Ct, Austin TX</a>’,
-spend:’$9,200’, jobs:‘2’, last:‘Mar 27’,
-phone:’(512) 774-0183’, email:‘maria.ortiz@email.com’, address:‘88 Lakeview Ct, Austin TX 78704’, since:‘March 2025’
-},
-martinez: {
-initials:‘RM’, color:’#f5a623’, name:‘Rosa Martinez’,
-meta:’(512) 334-9902  ·  <a href="#">2210 Elm St, Round Rock TX</a>’,
-spend:’$0’, jobs:‘0’, last:’—’,
-phone:’(512) 334-9902’, email:‘rosa.martinez@email.com’, address:‘2210 Elm St, Round Rock TX 78664’, since:‘March 2026’
-},
-kim: {
-initials:‘JK’, color:’#b388ff’, name:‘James Kim’,
-meta:’(512) 991-4450  ·  <a href="#">77 Cedar Ridge, Austin TX</a>’,
-spend:’$6,200’, jobs:‘2’, last:‘Feb 10’,
-phone:’(512) 991-4450’, email:‘james.kim@email.com’, address:‘77 Cedar Ridge, Austin TX 78750’, since:‘February 2025’
-},
-chen: {
-initials:‘LC’, color:’#ff7b7b’, name:‘Linda Chen’,
-meta:’(512) 220-5577  ·  <a href="#">903 Maple Ave, Cedar Park TX</a>’,
-spend:’$4,100’, jobs:‘2’, last:‘Mar 25’,
-phone:’(512) 220-5577’, email:‘linda.chen@email.com’, address:‘903 Maple Ave, Cedar Park TX 78613’, since:‘June 2024’
-},
-nguyen: {
-initials:‘DN’, color:’#4dd0c4’, name:‘David Nguyen’,
-meta:’(512) 667-8821  ·  <a href="#">2422 Oak St, Austin TX</a>’,
-spend:’$0’, jobs:‘0’, last:’—’,
-phone:’(512) 667-8821’, email:‘d.nguyen@email.com’, address:‘2422 Oak St, Austin TX 78745’, since:‘March 2026’
+window._customers = {};
+
+async function loadCustomers() {
+  try {
+    const list = await API.customers.list();
+    window._customers = {};
+    const tbody = document.getElementById('table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const colors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
+    if (list.length === 0) {
+      tbody.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No customers yet. Click Add Customer to get started.</div>';
+      return;
+    }
+    list.forEach(function(cust, idx) {
+      window._customers[cust.id] = cust;
+      var names = (cust.name||'').split(' ');
+      var initials = ((names[0]||'?')[0] + (names[1]||'')[0]).toUpperCase();
+      var color = colors[idx % colors.length];
+      var row = document.createElement('div');
+      row.className = 'cust-row';
+      row.dataset.status = 'active';
+      row.onclick = function(){ openDrawer(cust.id); };
+      row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + initials + '</div><div><div class="cust-name">' + (cust.name||'') + '</div><div class="cust-addr">' + (cust.address||'') + '</div></div></div>' +
+        '<div class="cust-phone">' + (cust.phone||'') + '</div>' +
+        '<div class="cust-status"><span class="status-active">Active</span></div>' +
+        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">x</div><div class="row-btn">→</div></div>';
+      tbody.appendChild(row);
+    });
+  } catch(e) { console.error('loadCustomers error:', e); }
 }
-};
+
+async function deleteCustById(id) {
+  try {
+    var ok = await swftConfirm('Delete this customer permanently?', 'DELETE CUSTOMER', '🗑️');
+    if (!ok) return;
+    await API.customers.delete(id);
+    loadCustomers();
+    showToast('Customer deleted');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
 
 let _currentCustomer = null;
+const _avatarColors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
+
+function getInitials(name) {
+  if (!name) return '?';
+  var parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0][0] || '?').toUpperCase();
+}
+
+
+
 function openDrawer(id) {
-if (id === ‘new’) { closeDrawer(); return; }
-document.querySelector(‘.drawer-tabs’).style.display = ‘’;
-document.querySelector(‘.drawer-stats’).style.display = ‘’;
-const c = customers[id];
-if (!c) return;
-document.getElementById(‘d-avatar’).textContent    = c.initials;
-document.getElementById(‘d-avatar’).style.background = c.color;
-document.getElementById(‘d-name’).textContent      = c.name;
-document.getElementById(‘d-meta’).innerHTML        = c.meta;
-document.getElementById(‘d-spend’).textContent     = c.spend;
-document.getElementById(‘d-jobs’).textContent      = c.jobs;
-document.getElementById(‘d-last’).textContent      = c.last;
-_currentCustomer = c;
-document.getElementById(‘d-phone’).textContent     = c.phone;
-document.getElementById(‘d-email’).textContent     = c.email;
-document.getElementById(‘d-address’).textContent   = c.address;
-switchTab(document.querySelector(’.dtab’), ‘contact’);
-document.getElementById(‘c-edit-mode’).style.display=‘none’;
-document.getElementById(‘c-view-mode’).style.display=‘block’;
-document.getElementById(‘c-footer-edit’).style.display=‘none’;
-document.getElementById(‘c-footer-view’).style.display=‘flex’;
-document.getElementById(‘overlay’).classList.add(‘open’);
-document.getElementById(‘drawer’).classList.add(‘open’);
+  if (id === 'new') { closeDrawer(); return; }
+  document.querySelector('.drawer-tabs').style.display = '';
+  document.querySelector('.drawer-stats').style.display = '';
+  var c = window._customers[id];
+  if (!c) return;
+  var initials = c._initials || getInitials(c.name);
+  var color = c._color || _avatarColors[0];
+  document.getElementById('d-avatar').textContent    = initials;
+  document.getElementById('d-avatar').style.background = color;
+  document.getElementById('d-name').textContent      = c.name || '';
+  document.getElementById('d-meta').innerHTML        = (c.phone || '') + ' &nbsp;&middot;&nbsp; <a href="#">' + (c.address || '') + '</a>';
+  document.getElementById('d-spend').textContent     = c.spend || '$0';
+  document.getElementById('d-jobs').textContent      = c.jobs || '0';
+  document.getElementById('d-last').textContent      = c.last || '\u2014';
+  _currentCustomer = c;
+  document.getElementById('d-phone').textContent     = c.phone || '';
+  document.getElementById('d-email').textContent     = c.email || '';
+  document.getElementById('d-address').textContent   = c.address || '';
+  document.getElementById('d-since').textContent     = c.since || c.createdAt || '';
+  switchTab(document.querySelector('.dtab'), 'contact');
+  document.getElementById('c-edit-mode').style.display='none';
+  document.getElementById('c-view-mode').style.display='block';
+  document.getElementById('c-footer-edit').style.display='none';
+  document.getElementById('c-footer-view').style.display='flex';
+  renderCustomerTabs(c);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
 }
 
 function openNewCustomer() {
-_currentCustomer = {name:'', phone:'', email:'', address:'', since:'Mar 2026', status:'Active', statusClass:'status-active', spend:'$0', jobs:'0', color:'var(--green)', initials:'?'};
-document.getElementById('d-avatar').textContent = _currentCustomer.initials;
-document.getElementById('d-avatar').style.background = _currentCustomer.color;
-document.getElementById('d-name').textContent = 'New Customer';
-document.getElementById('d-meta').innerHTML = '';
-document.getElementById('d-spend').textContent = '$0';
-document.getElementById('d-jobs').textContent = '0';
-document.getElementById('d-last').textContent = '—';
-document.getElementById('d-phone').textContent = '';
-document.getElementById('d-email').textContent = '';
-document.getElementById('d-address').textContent = '';
-switchTab(document.querySelector('.dtab'), 'contact');
-document.getElementById('e-fname').value = '';
-document.getElementById('e-lname').value = '';
-document.getElementById('e-phone').value = '';
-document.getElementById('e-email').value = '';
-document.getElementById('e-address').value = '';
-document.getElementById('e-proptype').value = '';
-document.getElementById('e-since').value = 'Mar 2026';
-document.getElementById('e-note').value = '';
-document.getElementById('c-view-mode').style.display = 'none';
-document.getElementById('c-edit-mode').style.display = 'flex';
-document.getElementById('c-footer-view').style.display = 'none';
-document.getElementById('c-footer-edit').style.display = 'flex';
-document.querySelector(‘.drawer-tabs’).style.display = ‘none’;
-document.querySelector(‘.drawer-stats’).style.display = ‘none’;
-document.getElementById(‘overlay’).classList.add(‘open’);
-document.getElementById(‘drawer’).classList.add(‘open’, ‘center-modal’);
+  _currentCustomer = {id: null, name:'', phone:'', email:'', address:'', notes:[], tags:[], since:'Mar 2026', spend:'$0', jobs:'0', _color:'var(--green)', _initials:'?', jobHistory:[], invoiceHistory:[]};
+  document.getElementById('d-avatar').textContent = '?';
+  document.getElementById('d-avatar').style.background = 'var(--green)';
+  document.getElementById('d-name').textContent = 'New Customer';
+  document.getElementById('d-meta').innerHTML = '';
+  document.getElementById('d-spend').textContent = '$0';
+  document.getElementById('d-jobs').textContent = '0';
+  document.getElementById('d-last').textContent = '\u2014';
+  document.getElementById('d-phone').textContent = '';
+  document.getElementById('d-email').textContent = '';
+  document.getElementById('d-address').textContent = '';
+  switchTab(document.querySelector('.dtab'), 'contact');
+  document.getElementById('e-fname').value = '';
+  document.getElementById('e-lname').value = '';
+  document.getElementById('e-phone').value = '';
+  document.getElementById('e-email').value = '';
+  document.getElementById('e-address').value = '';
+  // propertyType removed
+  document.getElementById('e-since').value = 'CUST-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  document.getElementById('e-note').value = '';
+  document.getElementById('c-view-mode').style.display = 'none';
+  document.getElementById('c-edit-mode').style.display = 'flex';
+  document.getElementById('c-footer-view').style.display = 'none';
+  document.getElementById('c-footer-edit').style.display = 'flex';
+  document.querySelector('.drawer-tabs').style.display = 'none';
+  document.querySelector('.drawer-stats').style.display = 'none';
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open', 'center-modal');
 }
 
 function closeDrawer() {
-document.getElementById(‘overlay’).classList.remove(‘open’);
-document.getElementById(‘drawer’).classList.remove(‘open’, ‘center-modal’);
-document.querySelector(‘.drawer-tabs’).style.display = ‘’;
-document.querySelector(‘.drawer-stats’).style.display = ‘’;
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open', 'center-modal');
+  document.querySelector('.drawer-tabs').style.display = '';
+  document.querySelector('.drawer-stats').style.display = '';
 }
 
 function switchTab(el, tab) {
-document.querySelectorAll(’.dtab’).forEach(t => t.classList.remove(‘active’));
-el.classList.add(‘active’);
-[‘contact’,‘jobs’,‘invoices’,‘notes’].forEach(t => {
-document.getElementById(‘tab-’ + t).style.display = (t === tab) ? ‘block’ : ‘none’;
-});
+  document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['contact','jobs','invoices','notes'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
+  });
 }
 
 function setFilter(el, status) {
-document.querySelectorAll(’.ftab’).forEach(t => t.classList.remove(‘active’));
-el.classList.add(‘active’);
-document.querySelectorAll(’.cust-row’).forEach(row => {
-row.style.display = (status === ‘all’ || row.dataset.status === status) ? ‘grid’ : ‘none’;
-});
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.cust-row').forEach(row => {
+    row.style.display = (status === 'all' || row.dataset.status === status) ? 'grid' : 'none';
+  });
 }
 
 function filterTable(q) {
-const query = q.toLowerCase();
-document.querySelectorAll(’.cust-row’).forEach(row => {
-const name = row.querySelector(’.cust-name’).textContent.toLowerCase();
-row.style.display = name.includes(query) ? ‘grid’ : ‘none’;
-});
+  var query = q.toLowerCase();
+  document.querySelectorAll('.cust-row').forEach(function(row) {
+    var name = (row.querySelector('.cust-name') || {}).textContent || '';
+    var phone = (row.querySelector('.cust-phone') || {}).textContent || '';
+    var addr = (row.querySelector('.cust-addr') || {}).textContent || '';
+    var email = '';
+    var id = '';
+    // Get email and ID from stored customer data
+    if (row.onclick) {
+      var fn = row.onclick.toString();
+      var match = fn.match(/'([^']+)'/);
+      if (match && window._customers && window._customers[match[1]]) {
+        email = window._customers[match[1]].email || '';
+        id = match[1];
+      }
+    }
+    var searchable = (name + ' ' + phone + ' ' + addr + ' ' + email + ' ' + id).toLowerCase();
+    row.style.display = searchable.includes(query) ? 'grid' : 'none';
+  });
 }
+
+function renderCustomerTabs(cust) {
+  // Job History
+  const jobList = document.getElementById('cust-job-list');
+  if (jobList) {
+    if (!cust.jobHistory || cust.jobHistory.length === 0) {
+      jobList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No job history yet</div>';
+    } else {
+      jobList.innerHTML = cust.jobHistory.map(function(j) {
+        return '<div class="job-hist-item"><div class="hist-dot" style="background:' + (j.color || 'var(--gray2)') + ';"></div><div class="hist-info"><div class="hist-name">' + j.name + '</div><div class="hist-meta">' + j.meta + '</div></div><div class="hist-amount">' + j.amount + '</div></div>';
+      }).join('');
+    }
+  }
+
+  // Invoices
+  const invList = document.getElementById('cust-inv-list');
+  if (invList) {
+    if (!cust.invoiceHistory || cust.invoiceHistory.length === 0) {
+      invList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No invoices yet</div>';
+    } else {
+      invList.innerHTML = cust.invoiceHistory.map(function(inv) {
+        var badge = inv.status === 'Paid' ? 'inv-paid' : 'inv-open';
+        return '<div class="invoice-item"><div class="inv-num">' + inv.num + '</div><div class="inv-desc">' + inv.desc + '</div><div class="inv-amount">' + inv.amount + '</div><span class="inv-badge ' + badge + '">' + inv.status + '</span></div>';
+      }).join('');
+    }
+  }
+
+  // Tags
+  var tagsEl = document.getElementById('cust-tags');
+  if (tagsEl) {
+    if (!cust.tags || cust.tags.length === 0) {
+      tagsEl.innerHTML = '<span style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No tags</span>';
+    } else {
+      tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + t + '</span>'; }).join('');
+    }
+  }
+
+  // Notes
+  var notesEl = document.getElementById('cust-notes');
+  if (notesEl) {
+    if (!cust.notes || cust.notes.length === 0) {
+      notesEl.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No notes yet</div>';
+    } else {
+      notesEl.innerHTML = cust.notes.map(function(n, i) {
+        var tagStyle = n.tagColor === 'green' ? 'background:rgba(200,241,53,0.1);color:var(--green);' : 'background:rgba(77,159,255,0.1);color:var(--blue);';
+        return '<div class="note-item"><div class="note-text">' + n.text + '</div><div class="note-footer"><span class="note-date">' + n.date + '</span><span class="note-tag" style="' + tagStyle + '">' + (n.tag || 'Note') + '</span><span style="margin-left:auto;display:flex;gap:6px;"><span onclick="editNote(' + i + ')" style="cursor:pointer;font-size:12px;color:var(--gray);transition:color 0.15s;" onmouseover="this.style.color=\'var(--green)\'" onmouseout="this.style.color=\'var(--gray)\'">&#9998;</span><span onclick="deleteNote(' + i + ')" style="cursor:pointer;font-size:12px;color:var(--gray);transition:color 0.15s;" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--gray)\'">&#128465;</span></span></div></div>';
+      }).join('');
+    }
+  }
+}
+
+async function addNote() {
+  var text = document.getElementById('new-note-text').value.trim();
+  if (!text || !_currentCustomer) return;
+  var note = { text: text, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}), tag: 'Note', tagColor: 'green' };
+  if (!_currentCustomer.notes) _currentCustomer.notes = [];
+  _currentCustomer.notes.push(note);
+  document.getElementById('new-note-text').value = '';
+  try {
+    if (_currentCustomer.id) {
+      await API.customers.update(_currentCustomer.id, { notes: _currentCustomer.notes });
+    }
+    renderCustomerTabs(_currentCustomer);
+    showToast('Note added');
+  } catch (err) {
+    console.error('Failed to save note:', err);
+    showToast('Error saving note');
+  }
+}
+
+async function editNote(i) {
+  if (!_currentCustomer || !_currentCustomer.notes || !_currentCustomer.notes[i]) return;
+  var newText = prompt('Edit note:', _currentCustomer.notes[i].text);
+  if (newText !== null) {
+    _currentCustomer.notes[i].text = newText;
+    try {
+      if (_currentCustomer.id) {
+        await API.customers.update(_currentCustomer.id, { notes: _currentCustomer.notes });
+      }
+      renderCustomerTabs(_currentCustomer);
+      showToast('Note updated');
+    } catch (err) {
+      console.error('Failed to update note:', err);
+      showToast('Error updating note');
+    }
+  }
+}
+
+async function deleteNote(i) {
+  if (!_currentCustomer || !_currentCustomer.notes) return;
+  _currentCustomer.notes.splice(i, 1);
+  try {
+    if (_currentCustomer.id) {
+      await API.customers.update(_currentCustomer.id, { notes: _currentCustomer.notes });
+    }
+    renderCustomerTabs(_currentCustomer);
+    showToast('Note deleted');
+  } catch (err) {
+    console.error('Failed to delete note:', err);
+    showToast('Error deleting note');
+  }
+}
+
+function addJobForCustomer() {
+  if (!_currentCustomer) return;
+  var name = _currentCustomer.name || '';
+  window.location.href = 'swft-jobs.html?customer=' + encodeURIComponent(name);
+}
+
+function toggleContactMenu() {
+  const menu = document.getElementById('contact-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  if (menu.style.display === 'block') {
+    setTimeout(() => document.addEventListener('click', function closeMenu(e) {
+      if (!menu.contains(e.target)) { menu.style.display = 'none'; document.removeEventListener('click', closeMenu); }
+    }), 10);
+  }
+}
+
+function emailCustomer() {
+  if (!_currentCustomer) return;
+  const email = _currentCustomer.email || '';
+  if (email) window.location.href = 'mailto:' + email;
+  else showToast('No email on file');
+}
+
 function toggleSidebar(){
-  document.querySelector(‘.sidebar’).classList.toggle(‘collapsed’);
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('expanded');
+  document.getElementById('sidebar-toggle').classList.toggle('visible');
 }
 
 let toastTimer;
 function showToast(msg) {
-const toast = document.getElementById(‘toast’);
-const label = document.getElementById(‘toast-msg’);
-label.textContent = msg;
-toast.classList.add(‘show’);
-clearTimeout(toastTimer);
-toastTimer = setTimeout(() => toast.classList.remove(‘show’), 2500);
+  const toast = document.getElementById('toast');
+  const label = document.getElementById('toast-msg');
+  label.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
 function callCustomer() {
-const phone = document.getElementById(‘d-phone’).textContent;
-showToast(‘Calling ’ + phone + ‘…’);
-setTimeout(() => window.location.href = ‘tel:’ + phone.replace(/[^0-9]/g,’’), 400);
+  const phone = document.getElementById('d-phone').textContent;
+  showToast('Calling ' + phone + '\u2026');
+  setTimeout(() => window.location.href = 'tel:' + phone.replace(/[^0-9]/g,''), 400);
 }
 
 function textCustomer() {
-const phone = document.getElementById(‘d-phone’).textContent;
-showToast(‘Opening SMS to ’ + phone);
-setTimeout(() => window.location.href = ‘sms:’ + phone.replace(/[^0-9]/g,’’), 400);
+  const phone = document.getElementById('d-phone').textContent;
+  showToast('Opening SMS to ' + phone);
+  setTimeout(() => window.location.href = 'sms:' + phone.replace(/[^0-9]/g,''), 400);
 }
 
 function enterCustomerEdit() {
-const c = _currentCustomer; if(!c) return;
-switchTab(document.querySelector(’.dtab’), ‘contact’);
-const nameParts = c.name.split(’ ‘);
-document.getElementById(‘e-fname’).value   = nameParts[0] || ‘’;
-document.getElementById(‘e-lname’).value   = nameParts.slice(1).join(’ ’) || ‘’;
-document.getElementById(‘e-phone’).value   = c.phone || ‘’;
-document.getElementById(‘e-email’).value   = c.email || ‘’;
-document.getElementById(‘e-address’).value = c.address || ‘’;
-document.getElementById(‘e-since’).value   = c.since || ‘’;
-document.getElementById(‘e-note’).value    = ‘’;
-document.getElementById(‘c-view-mode’).style.display = ‘none’;
-document.getElementById(‘c-edit-mode’).style.display = ‘flex’;
-document.getElementById(‘c-footer-view’).style.display = ‘none’;
-document.getElementById(‘c-footer-edit’).style.display = ‘flex’;
+  const c = _currentCustomer; if(!c) return;
+  switchTab(document.querySelector('.dtab'), 'contact');
+  const nameParts = (c.name || '').split(' ');
+  document.getElementById('e-fname').value   = nameParts[0] || '';
+  document.getElementById('e-lname').value   = nameParts.slice(1).join(' ') || '';
+  document.getElementById('e-phone').value   = c.phone || '';
+  document.getElementById('e-email').value   = c.email || '';
+  document.getElementById('e-address').value = c.address || '';
+  document.getElementById('e-since').value   = c.since || '';
+  document.getElementById('e-note').value    = '';
+  document.getElementById('c-view-mode').style.display = 'none';
+  document.getElementById('c-edit-mode').style.display = 'flex';
+  document.getElementById('c-footer-view').style.display = 'none';
+  document.getElementById('c-footer-edit').style.display = 'flex';
 }
 
 function cancelCustomerEdit() {
-if (_currentCustomer && _currentCustomer.name === ‘’) { closeDrawer(); return; }
-document.getElementById(‘c-edit-mode’).style.display = ‘none’;
-document.getElementById(‘c-view-mode’).style.display = ‘block’;
-document.getElementById(‘c-footer-edit’).style.display = ‘none’;
-document.getElementById(‘c-footer-view’).style.display = ‘flex’;
-showToast(‘Changes discarded’);
+  if (_currentCustomer && _currentCustomer.id === null) { closeDrawer(); return; }
+  document.getElementById('c-edit-mode').style.display = 'none';
+  document.getElementById('c-view-mode').style.display = 'block';
+  document.getElementById('c-footer-edit').style.display = 'none';
+  document.getElementById('c-footer-view').style.display = 'flex';
+  showToast('Changes discarded');
 }
 
-function saveCustomerEdit() {
-const fname   = document.getElementById(‘e-fname’).value.trim();
-const lname   = document.getElementById(‘e-lname’).value.trim();
-const phone   = document.getElementById(‘e-phone’).value.trim();
-const email   = document.getElementById(‘e-email’).value.trim();
-const address = document.getElementById(‘e-address’).value.trim();
-const since   = document.getElementById(‘e-since’).value.trim();
-const fullName = (fname + ’ ’ + lname).trim();
+async function saveCustomerEdit() {
+  const fname    = document.getElementById('e-fname').value.trim();
+  const lname    = document.getElementById('e-lname').value.trim();
+  const phone    = document.getElementById('e-phone').value.trim();
+  const email    = document.getElementById('e-email').value.trim();
+  const address  = document.getElementById('e-address').value.trim();
+  const since    = document.getElementById('e-since').value.trim();
+  const fullName = (fname + ' ' + lname).trim();
 
-// Persist to customer data
-if (_currentCustomer) {
-  _currentCustomer.name    = fullName;
-  _currentCustomer.phone   = phone;
-  _currentCustomer.email   = email;
-  _currentCustomer.address = address;
-  _currentCustomer.since   = since;
-  _currentCustomer.meta    = phone + ' &nbsp;·&nbsp; <a href="#">' + address + '</a>';
+  if (!fullName) { showToast('Please enter a name'); return; }
+
+  try {
+    if (_currentCustomer && _currentCustomer.id === null) {
+      // ── Create new customer ──
+      const noteText = document.getElementById('e-note').value.trim();
+      const notes = noteText
+        ? [{ text: noteText, date: new Date().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}), tag:'Note', tagColor:'green' }]
+        : [];
+      const tags = _currentCustomer.tags || [];
+      await API.customers.create({ name: fullName, phone, email, address, notes, tags });
+      await loadCustomers();
+      closeDrawer();
+      showToast(fullName + ' added');
+    } else if (_currentCustomer && _currentCustomer.id) {
+      // ── Update existing customer (single API call) ──
+      await API.customers.update(_currentCustomer.id, { name: fullName, phone, email, address });
+      await loadCustomers();
+
+      // Sync local state
+      _currentCustomer.name    = fullName;
+      _currentCustomer.phone   = phone;
+      _currentCustomer.email   = email;
+      _currentCustomer.address = address;
+
+      // Update view panel fields
+      document.getElementById('d-name').textContent    = fullName;
+      document.getElementById('d-phone').textContent   = phone || '—';
+      document.getElementById('d-email').textContent   = email || '—';
+      document.getElementById('d-address').textContent = address || '—';
+      document.getElementById('d-since').textContent   = since;
+      document.getElementById('d-meta').innerHTML      = (phone || '') + (phone && address ? ' &nbsp;&middot;&nbsp; ' : '') + (address || '');
+
+      // Return to view mode
+      document.getElementById('c-edit-mode').style.display   = 'none';
+      document.getElementById('c-view-mode').style.display   = 'block';
+      document.getElementById('c-footer-edit').style.display = 'none';
+      document.getElementById('c-footer-view').style.display = 'flex';
+
+      showToast('Customer saved');
+    }
+  } catch (err) {
+    console.error('Failed to save customer:', err);
+    showToast('Error saving customer');
+  }
 }
 
-// Update view panel
-document.getElementById('d-name').textContent    = fullName;
-document.getElementById('d-phone').textContent   = phone;
-document.getElementById('d-email').textContent   = email;
-document.getElementById('d-address').textContent = address;
-document.getElementById('d-since').textContent   = since;
-document.getElementById('d-meta').innerHTML      = phone + ' &nbsp;·&nbsp; <a href="#">' + address + '</a>';
-
-document.getElementById('c-edit-mode').style.display = 'none';
-document.getElementById('c-view-mode').style.display = 'block';
-document.getElementById('c-footer-edit').style.display = 'none';
-document.getElementById('c-footer-view').style.display = 'flex';
-showToast('Customer saved ✓');
-if (_currentCustomer && _currentCustomer.initials === '?') { closeDrawer(); return; }
-
+async function deleteCustRow(el, id) {
+  const row = el.closest('.cust-row');
+  if (!row) return;
+  const nameEl = row.querySelector('.cust-name');
+  const name = nameEl ? nameEl.textContent : 'this customer';
+  const ok = await swftConfirm('This will permanently delete <strong>' + name + '</strong> from your customers.', 'DELETE CUSTOMER', '\ud83d\uddd1\ufe0f');
+  if (!ok) return;
+  try {
+    if (id) await API.customers.delete(id);
+    await loadCustomers();
+    showToast(name + ' deleted');
+  } catch (err) {
+    console.error('Failed to delete customer:', err);
+    showToast('Error deleting customer');
+  }
 }
 
-// ── SORT ──
+async function deleteCustomer() {
+  if (!_currentCustomer) return;
+  if (!_currentCustomer.id) { closeDrawer(); return; }
+  const ok = await swftConfirm('This will permanently delete <strong>' + (_currentCustomer.name || 'this customer') + '</strong> and all their data.', 'DELETE CUSTOMER', '\ud83d\uddd1\ufe0f');
+  if (!ok) return;
+  const name = _currentCustomer.name;
+  try {
+    if (_currentCustomer.id) await API.customers.delete(_currentCustomer.id);
+    await loadCustomers();
+    closeDrawer();
+    showToast(name + ' deleted');
+  } catch (err) {
+    console.error('Failed to delete customer:', err);
+    showToast('Error deleting customer');
+  }
+}
+
+// -- SORT --
 const sortLabels = {
-‘name-az’:   ‘Name A--Z’,
-‘name-za’:   ‘Name Z--A’,
-‘spend-hi’:  ‘Spend ↓’,
-‘spend-lo’:  ‘Spend ↑’,
-‘jobs-hi’:   ‘Jobs ↓’,
-‘jobs-lo’:   ‘Jobs ↑’,
-‘status’:    ‘Status’,
+  'name-az':   'Name A--Z',
+  'name-za':   'Name Z--A',
+  'spend-hi':  'Spend \u2193',
+  'spend-lo':  'Spend \u2191',
+  'jobs-hi':   'Jobs \u2193',
+  'jobs-lo':   'Jobs \u2191',
+  'status':    'Status',
 };
 
 function toggleSortMenu() {
-const menu = document.getElementById(‘sort-menu’);
-const btn  = document.getElementById(‘sort-btn’);
-const open = menu.classList.toggle(‘open’);
-btn.classList.toggle(‘open’, open);
-if (open) {
-// close on outside click
-setTimeout(() => document.addEventListener(‘click’, closeSortOnOutside), 10);
-}
+  const menu = document.getElementById('sort-menu');
+  const btn  = document.getElementById('sort-btn');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) {
+    setTimeout(() => document.addEventListener('click', closeSortOnOutside), 10);
+  }
 }
 
 function closeSortOnOutside(e) {
-const wrap = document.querySelector(’.sort-wrap’);
-if (!wrap.contains(e.target)) {
-document.getElementById(‘sort-menu’).classList.remove(‘open’);
-document.getElementById(‘sort-btn’).classList.remove(‘open’);
-document.removeEventListener(‘click’, closeSortOnOutside);
-}
+  const wrap = document.querySelector('.sort-wrap');
+  if (!wrap.contains(e.target)) {
+    document.getElementById('sort-menu').classList.remove('open');
+    document.getElementById('sort-btn').classList.remove('open');
+    document.removeEventListener('click', closeSortOnOutside);
+  }
 }
 
 function applySort(key) {
-// Update active option
-document.querySelectorAll(’.sort-option’).forEach(o => o.classList.remove(‘active’));
-const activeEl = document.getElementById(‘so-’ + key);
-if (activeEl) activeEl.classList.add(‘active’);
-document.getElementById(‘sort-label’).textContent = sortLabels[key] || key;
+  document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+  const activeEl = document.getElementById('so-' + key);
+  if (activeEl) activeEl.classList.add('active');
+  document.getElementById('sort-label').textContent = sortLabels[key] || key;
 
-// Close menu
-document.getElementById('sort-menu').classList.remove('open');
-document.getElementById('sort-btn').classList.remove('open');
-document.removeEventListener('click', closeSortOnOutside);
+  document.getElementById('sort-menu').classList.remove('open');
+  document.getElementById('sort-btn').classList.remove('open');
+  document.removeEventListener('click', closeSortOnOutside);
 
-// Get all visible rows
-const tbody  = document.getElementById('table-body');
-const rows   = Array.from(tbody.querySelectorAll('.cust-row'));
+  const tbody  = document.getElementById('table-body');
+  const rows   = Array.from(tbody.querySelectorAll('.cust-row'));
 
-const getValue = (row, type) => {
-  switch(type) {
-    case 'name':
-      return row.querySelector('.cust-name').textContent.trim().toLowerCase();
-    case 'spend':
-      return parseFloat(row.querySelector('.cust-spend').textContent.replace(/[$,]/g,'')) || 0;
-    case 'jobs':
-      return parseInt(row.querySelector('.cust-jobs').textContent) || 0;
-    case 'status': {
-      const s = row.dataset.status;
-      return s === 'active' ? 0 : s === 'quoted' ? 1 : 2;
+  const getValue = (row, type) => {
+    switch(type) {
+      case 'name':
+        return row.querySelector('.cust-name').textContent.trim().toLowerCase();
+      case 'status': {
+        const s = row.dataset.status;
+        return s === 'active' ? 0 : s === 'quoted' ? 1 : 2;
+      }
+      default: return 0;
     }
-    default: return 0;
-  }
-};
+  };
 
-rows.sort((a, b) => {
-  switch(key) {
-    case 'name-az':   return getValue(a,'name').localeCompare(getValue(b,'name'));
-    case 'name-za':   return getValue(b,'name').localeCompare(getValue(a,'name'));
-    case 'spend-hi':  return getValue(b,'spend') - getValue(a,'spend');
-    case 'spend-lo':  return getValue(a,'spend') - getValue(b,'spend');
-    case 'jobs-hi':   return getValue(b,'jobs')  - getValue(a,'jobs');
-    case 'jobs-lo':   return getValue(a,'jobs')  - getValue(b,'jobs');
-    case 'status':    return getValue(a,'status')- getValue(b,'status');
-    default: return 0;
-  }
-});
+  rows.sort((a, b) => {
+    switch(key) {
+      case 'name-az':   return getValue(a,'name').localeCompare(getValue(b,'name'));
+      case 'name-za':   return getValue(b,'name').localeCompare(getValue(a,'name'));
+      case 'status':    return getValue(a,'status')- getValue(b,'status');
+      default: return 0;
+    }
+  });
 
-// Re-append in sorted order
-rows.forEach(r => tbody.appendChild(r));
-showToast('Sorted by ' + sortLabels[key]);
-
+  rows.forEach(r => tbody.appendChild(r));
+  showToast('Sorted by ' + sortLabels[key]);
 }
 
 </script>
@@ -1286,9 +1237,22 @@ showToast('Sorted by ' + sortLabels[key]);
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
+      loadCustomers();
+      loadCustomers();
+      // Auto-open new customer form if ?new=1
+      if (window.location.search.includes('new=1')) {
+        setTimeout(function(){ openNewCustomer(); }, 300);
+      }
     }
   });
 </script>
 
+<script type="module" src="swft-user-sync.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<script src="swft-settings-loader.js"></script>
+<script src="swft-account.js"></script>
+<script src="swft-notifications.js"></script>
+<script src="swft-chat.js"></script>
 </body>
 </html>

@@ -22,20 +22,20 @@
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:‘Bebas Neue’,sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
 .logo-mark em{color:var(--green);font-style:normal;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
 .collapse-btn:hover{background:var(--surface2);color:var(--white);}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
-.nav-label{font-size:9px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
 .nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
 .nav-item:hover{background:var(--surface2);color:var(--white);}
 .nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
-.nav-item.active::before{content:’’;position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
 .nav-item.active .nav-icon{opacity:1;}
-.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:‘JetBrains Mono’,monospace;}
+.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
 .nav-divider{height:1px;background:var(--border);margin:8px 12px;}
 .sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
 .user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
@@ -45,9 +45,9 @@
 .user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
 
 /* ── SIDEBAR TOGGLE ── */
-.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:300;width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
-.sidebar-toggle:hover{background:var(--border2);color:var(--white);}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 
 /* ── MAIN ── */
 .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
@@ -56,8 +56,8 @@
 /* ── TOPBAR ── */
 .topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.88);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:100;animation:fadeDown 0.3s ease 0.15s both;}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.topbar-page{font-family:‘Bebas Neue’,sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
-.topbar-slash{color:var(--border2);font-family:‘JetBrains Mono’,monospace;font-size:16px;}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
 .topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .ai-pill{display:flex;align-items:center;gap:7px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;padding:5px 13px;font-size:11.5px;font-weight:500;color:var(--green);cursor:pointer;}
@@ -75,22 +75,24 @@
 .cal-header{display:flex;align-items:center;gap:14px;}
 .cal-nav-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
 .cal-nav-btn:hover{background:var(--surface2);color:var(--white);}
-.cal-month{font-family:‘Bebas Neue’,sans-serif;font-size:26px;letter-spacing:2px;color:var(--white);}
+.cal-month{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--white);}
 .cal-month em{color:var(--green);font-style:normal;}
-.cal-today-btn{font-size:11.5px;font-weight:500;padding:6px 13px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;transition:all 0.14s;font-family:‘DM Sans’,sans-serif;}
+.cal-today-btn{font-size:11.5px;font-weight:500;padding:6px 13px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
 .cal-today-btn:hover{color:var(--white);border-color:var(--gray2);}
 .view-toggle{display:flex;gap:2px;margin-left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:3px;}
 .view-tab{font-size:11.5px;font-weight:500;padding:5px 13px;border-radius:7px;cursor:pointer;color:var(--gray);transition:all 0.14s;user-select:none;}
 .view-tab.active{background:var(--surface);color:var(--white);box-shadow:0 1px 4px rgba(0,0,0,0.4);}
 
 /* ── WEATHER STRIP ── */
-.weather-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.weather-day{padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:3px;border-right:1px solid var(--border);cursor:default;}
+.weather-strip{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow-x:auto;overflow-y:hidden;}
+.weather-strip::-webkit-scrollbar{height:4px;}
+.weather-strip::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.weather-day{padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:3px;border-right:1px solid var(--border);cursor:default;min-width:64px;flex-shrink:0;}
 .weather-day:last-child{border-right:none;}
 .wx-label{font-size:9.5px;letter-spacing:1px;color:var(--gray2);text-transform:uppercase;}
 .wx-icon{font-size:18px;line-height:1;}
-.wx-temp{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:var(--gray);}
-.wx-day-num{font-family:‘JetBrains Mono’,monospace;font-size:10px;color:var(--gray2);}
+.wx-temp{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);}
+.wx-day-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);}
 .weather-day.today{background:rgba(200,241,53,0.04);}
 .weather-day.today .wx-label{color:var(--green);}
 .weather-day.warn{background:rgba(245,166,35,0.03);}
@@ -102,23 +104,45 @@
 .cal-dow{padding:9px 0;text-align:center;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
 
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(108px,auto);}
-.cal-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 8px 6px;display:flex;flex-direction:column;gap:4px;cursor:default;transition:background 0.12s;min-height:108px;}
+.cal-cell{position:relative;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:6px 6px 4px;display:flex;flex-direction:column;gap:2px;cursor:default;transition:background 0.12s;height:80px;overflow:hidden;}
 .cal-cell:hover{background:rgba(255,255,255,0.015);}
 .cal-cell:nth-child(7n){border-right:none;}
 .cal-cell.other-month{opacity:0.3;}
 .cal-cell.today{background:rgba(200,241,53,0.03);}
-.cal-cell.today .day-num{color:var(--green);background:rgba(200,241,53,0.12);border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.cal-cell.today .day-num{color:var(--green);background:rgba(200,241,53,0.12);border-radius:6px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;}
 
-.day-num{font-family:‘JetBrains Mono’,monospace;font-size:11.5px;color:var(--gray2);margin-bottom:2px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.day-num{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gray2);margin-bottom:2px;width:auto;height:22px;display:flex;align-items:center;gap:0;}
+.day-wx{font-size:9.5px;color:var(--gray);font-family:'JetBrains Mono',monospace;position:absolute;top:4px;right:6px;}
+
+/* ── MONTH PICKER ── */
+.month-picker{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;z-index:50;gap:6px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+.month-picker.open{display:flex;}
+.month-picker select{background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;cursor:pointer;}
+.month-picker select option{background:var(--surface2);}
+.month-picker button{background:var(--green);color:#0a0a0a;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.14s;}
+.month-picker button:hover{background:#d5ff40;}
+.cal-month-wrap{position:relative;cursor:pointer;}
 
 /* ── JOB BLOCKS ── */
-.job-block{border-radius:6px;padding:4px 7px;cursor:pointer;transition:filter 0.12s, transform 0.12s;font-size:10.5px;line-height:1.3;position:relative;overflow:hidden;}
-.job-block:hover{filter:brightness(1.15);transform:translateY(-1px);}
-.job-block.green{background:rgba(200,241,53,0.14);border-left:2px solid var(--green);}
-.job-block.blue{background:rgba(77,159,255,0.14);border-left:2px solid var(--blue);}
-.job-block.amber{background:rgba(245,166,35,0.14);border-left:2px solid var(--amber);}
-.job-block.purple{background:rgba(179,136,255,0.14);border-left:2px solid var(--purple);}
-.job-block.gray{background:rgba(100,100,100,0.1);border-left:2px solid var(--gray2);}
+.job-block{border-radius:4px;padding:2px 6px;cursor:pointer;transition:all 0.12s;font-size:9px;line-height:1.2;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.job-block:hover{filter:brightness(1.2);}
+.job-block.green{background:rgba(200,241,53,0.18);color:var(--green);}
+.job-block.blue{background:rgba(77,159,255,0.18);color:var(--blue);}
+.job-block.amber{background:rgba(245,166,35,0.18);color:var(--amber);}
+.job-block.purple{background:rgba(179,136,255,0.18);color:var(--purple);}
+.job-block.gray{background:rgba(100,100,100,0.15);color:var(--gray);}
+.jb-crew{display:none;}
+
+/* Job popup on calendar */
+.cal-popup{position:fixed;z-index:9000;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;width:280px;box-shadow:0 12px 40px rgba(0,0,0,0.5);display:none;}
+.cal-popup.open{display:block;}
+.cal-popup-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--white);margin-bottom:8px;}
+.cal-popup-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);}
+.cal-popup-row:last-child{border-bottom:none;}
+.cal-popup-label{color:var(--gray);}
+.cal-popup-val{color:var(--white);font-weight:500;}
+.cal-popup-close{position:absolute;top:8px;right:10px;cursor:pointer;color:var(--gray);font-size:14px;}
+.cal-popup-close:hover{color:var(--white);}
 .jb-title{font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .jb-crew{color:var(--gray);font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .more-badge{font-size:10px;color:var(--gray2);padding:2px 4px;cursor:pointer;}
@@ -136,8 +160,8 @@
 .drawer-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
 .drawer-close{margin-left:auto;width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
 .drawer-close:hover{background:var(--surface2);color:var(--white);}
-.d-date-tag{font-family:‘JetBrains Mono’,monospace;font-size:11px;color:var(--gray2);margin-bottom:4px;}
-.d-title{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);line-height:1;}
+.d-date-tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray2);margin-bottom:4px;}
+.d-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);line-height:1;}
 .d-customer{font-size:12.5px;color:var(--gray);margin-top:4px;}
 .d-customer span{color:var(--green);}
 .d-status-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -148,7 +172,7 @@
 .dstat{padding:12px 14px;border-right:1px solid var(--border);}
 .dstat:last-child{border-right:none;}
 .dstat-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);}
-.dstat-value{font-family:‘Bebas Neue’,sans-serif;font-size:19px;letter-spacing:1px;color:var(--white);margin-top:3px;line-height:1;}
+.dstat-value{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;color:var(--white);margin-top:3px;line-height:1;}
 .dstat-value.green{color:var(--green);}
 
 .d-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;}
@@ -159,7 +183,7 @@
 .detail-value{font-size:13px;color:var(--white);margin-top:2px;}
 
 .wx-card{display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(77,159,255,0.05);border:1px solid rgba(77,159,255,0.12);border-radius:10px;}
-.wx-big{font-size:32px;}
+.wx-big{font-size:28px;}
 .wx-info{}
 .wx-desc{font-size:13.5px;font-weight:500;color:var(--white);}
 .wx-note{font-size:11.5px;color:var(--gray);margin-top:3px;}
@@ -168,7 +192,7 @@
 .wx-warn{background:rgba(245,166,35,0.1);color:var(--amber);}
 
 .d-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
-.dfooter-btn{flex:1;padding:9px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:‘DM Sans’,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.14s;}
+.dfooter-btn{flex:1;padding:9px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.14s;}
 .dfooter-btn:hover{background:var(--surface2);color:var(--white);}
 .dfooter-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);}
 .dfooter-btn.primary:hover{background:#d5ff40;}
@@ -186,7 +210,7 @@
 .edit-field{display:flex;flex-direction:column;gap:5px;}
 .edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
-.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:‘DM Sans’,sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .edit-input:focus{border-color:var(--green);}
 .edit-input option{background:var(--surface2);}
 .edit-textarea{resize:none;min-height:72px;line-height:1.5;}
@@ -220,49 +244,23 @@
     </div>
     <div class="nav-item" onclick="window.location.href='swft-customers.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/></svg>
-      Customers <span class="nav-badge">14</span>
+      Customers
     </div>
     <div class="nav-item" onclick="window.location.href='swft-jobs.html'">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>
-      Jobs <span class="nav-badge">6</span>
+      Jobs
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-quotes.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>
-      Quotes
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
     <div class="nav-item active">
       <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
       Schedule
     </div>
-    <div class="nav-item" onclick="window.location.href='swft-invoices.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>
-      Invoices <span class="nav-badge">3</span>
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">Growth</div>
-    <div class="nav-item" onclick="showToast('Pipeline — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Pipeline
-    </div>
-    <div class="nav-item" onclick="showToast('Campaigns — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
-      Campaigns
-    </div>
-    <div class="nav-item" onclick="showToast('Reviews — coming soon')">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8"/></svg>
-      Reviews
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-label">AI</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents.html'">
-      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="1.8"/></svg>
-      AI Agents
-    </div>
+    <div class="nav-item" onclick="window.location.href='swft-messages.html'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
   </nav>
-  <div class="sidebar-footer">
+  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings.html'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
-      <div class="avatar">JR</div>
-      <div><div class="user-name">Jake Reynolds</div><div class="user-role">Owner</div></div>
+      <div class="avatar"></div>
+      <div><div class="user-name"></div><div class="user-role">—</div></div>
     </div>
   </div>
 </aside>
@@ -276,7 +274,7 @@
     <div class="topbar-sub">March 2026</div>
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
-      <div class="icon-btn" onclick="showToast('Notifications — 2 unread')">
+      <div class="icon-btn" onclick="">
         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>
       </div>
       <button class="btn-primary" onclick="openNewJob()">
@@ -290,63 +288,30 @@
 
 <!-- Cal controls -->
 <div class="cal-header">
-  <div class="cal-nav-btn" onclick="showToast('Previous month')">
+  <div class="cal-nav-btn" onclick="prevMonth()">
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6" stroke-width="2" stroke-linecap="round"/></svg>
   </div>
-  <div class="cal-month">MARCH <em>2026</em></div>
-  <div class="cal-nav-btn" onclick="showToast('Next month')">
+  <div class="cal-month-wrap" onclick="toggleMonthPicker()">
+    <div class="cal-month" id="cal-month-title">MARCH <em>2026</em></div>
+    <div class="month-picker" id="month-picker">
+      <select id="pick-month">
+        <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+        <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+        <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+        <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+      </select>
+      <select id="pick-year">
+        <option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option>
+      </select>
+      <button onclick="applyMonthPick(event)">Go</button>
+    </div>
+  </div>
+  <div class="cal-nav-btn" onclick="nextMonth()">
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" stroke-width="2" stroke-linecap="round"/></svg>
   </div>
-  <button class="cal-today-btn" onclick="showToast('Jumped to today — Mar 27')">Today</button>
+  <button class="cal-today-btn" onclick="goToday()">Today</button>
   <div class="view-toggle">
     <div class="view-tab active">Month</div>
-    <div class="view-tab">Week</div>
-  </div>
-</div>
-
-<!-- 7-day weather strip (Mon Mar 23 -- Sun Mar 29) -->
-<div class="weather-strip">
-  <div class="weather-day">
-    <div class="wx-label">Mon</div>
-    <div class="wx-day-num">23</div>
-    <div class="wx-icon">☀️</div>
-    <div class="wx-temp">74°</div>
-  </div>
-  <div class="weather-day">
-    <div class="wx-label">Tue</div>
-    <div class="wx-day-num">24</div>
-    <div class="wx-icon">🌤️</div>
-    <div class="wx-temp">71°</div>
-  </div>
-  <div class="weather-day">
-    <div class="wx-label">Wed</div>
-    <div class="wx-day-num">25</div>
-    <div class="wx-icon">☀️</div>
-    <div class="wx-temp">76°</div>
-  </div>
-  <div class="weather-day">
-    <div class="wx-label">Thu</div>
-    <div class="wx-day-num">26</div>
-    <div class="wx-icon">⛅</div>
-    <div class="wx-temp">69°</div>
-  </div>
-  <div class="weather-day today">
-    <div class="wx-label">Fri</div>
-    <div class="wx-day-num">27</div>
-    <div class="wx-icon">⛅</div>
-    <div class="wx-temp">72°</div>
-  </div>
-  <div class="weather-day warn">
-    <div class="wx-label">Sat</div>
-    <div class="wx-day-num">28</div>
-    <div class="wx-icon">🌧️</div>
-    <div class="wx-temp">61°</div>
-  </div>
-  <div class="weather-day">
-    <div class="wx-label">Sun</div>
-    <div class="wx-day-num">29</div>
-    <div class="wx-icon">🌤️</div>
-    <div class="wx-temp">68°</div>
   </div>
 </div>
 
@@ -361,188 +326,7 @@
     <div class="cal-dow">Fri</div>
     <div class="cal-dow">Sat</div>
   </div>
-  <div class="cal-grid">
-
-    <!-- Row 1: Mar 1--7 (Mar 1 = Sun) -->
-    <div class="cal-cell">
-      <div class="day-num">1</div>
-      <div class="job-block green" onclick="openDrawer('garage')">
-        <div class="jb-title">Garcia — Garage</div>
-        <div class="jb-crew">Crew B · 902 Pine St</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">2</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">3</div>
-      <div class="job-block blue" onclick="openDrawer('walkway')">
-        <div class="jb-title">Torres — Walkway</div>
-        <div class="jb-crew">Crew A · 54 Elm Ave</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">4</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">5</div>
-      <div class="job-block amber" onclick="openDrawer('patio_smith')">
-        <div class="jb-title">Smith — Patio</div>
-        <div class="jb-crew">Crew A · 18 Oakwood</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">6</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">7</div>
-    </div>
-
-    <!-- Row 2: Mar 8--14 -->
-    <div class="cal-cell">
-      <div class="day-num">8</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">9</div>
-      <div class="job-block green" onclick="openDrawer('driveway_patel')">
-        <div class="jb-title">Patel — Driveway</div>
-        <div class="jb-crew">Crew B · 331 Maple</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">10</div>
-      <div class="job-block purple" onclick="openDrawer('pool_kim')">
-        <div class="jb-title">Kim — Pool Deck</div>
-        <div class="jb-crew">Crew A · 77 Cedar Rdg</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">11</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">12</div>
-      <div class="job-block blue" onclick="openDrawer('reseal_jones')">
-        <div class="jb-title">Jones — Reseal</div>
-        <div class="jb-crew">Crew B · 209 Birch</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">13</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">14</div>
-    </div>
-
-    <!-- Row 3: Mar 15--21 -->
-    <div class="cal-cell">
-      <div class="day-num">15</div>
-      <div class="job-block green" onclick="openDrawer('driveway_brown')">
-        <div class="jb-title">Brown — Driveway</div>
-        <div class="jb-crew">Crew A · 710 Oak St</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">16</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">17</div>
-      <div class="job-block amber" onclick="openDrawer('sidewalk_lee')">
-        <div class="jb-title">Lee — Sidewalk</div>
-        <div class="jb-crew">Crew B · 45 Willow</div>
-      </div>
-      <div class="job-block blue" onclick="openDrawer('epoxy_white')">
-        <div class="jb-title">White — Epoxy</div>
-        <div class="jb-crew">Crew A · 88 Ash Ln</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">18</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">19</div>
-      <div class="job-block green" onclick="openDrawer('patio_nguyen_2')">
-        <div class="jb-title">Nguyen — Patio</div>
-        <div class="jb-crew">Crew A · 119 River</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">20</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">21</div>
-    </div>
-
-    <!-- Row 4: Mar 22--28 -->
-    <div class="cal-cell">
-      <div class="day-num">22</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">23</div>
-      <div class="job-block purple" onclick="openDrawer('chen_garage')">
-        <div class="jb-title">Chen — Garage Flr</div>
-        <div class="jb-crew">Crew A · 903 Maple</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">24</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">25</div>
-      <div class="job-block gray" onclick="openDrawer('chen_complete')">
-        <div class="jb-title">Chen — Garage Flr ✓</div>
-        <div class="jb-crew">Crew A · Complete</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">26</div>
-    </div>
-    <div class="cal-cell today">
-      <div class="day-num">27</div>
-      <div class="job-block green" onclick="openDrawer('henderson')">
-        <div class="jb-title">Henderson — Patio</div>
-        <div class="jb-crew">Crew A · 411 Birchwood</div>
-      </div>
-      <div class="job-block green" onclick="openDrawer('ortiz')">
-        <div class="jb-title">Ortiz — Pool Deck</div>
-        <div class="jb-crew">Crew B · 88 Lakeview</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">28</div>
-      <!-- Rain day — no jobs scheduled -->
-      <div style="font-size:10px;color:var(--amber);padding:2px 4px;opacity:0.7;">🌧️ Rain — no pours</div>
-    </div>
-
-    <!-- Row 5: Mar 29 -- Apr 4 -->
-    <div class="cal-cell">
-      <div class="day-num">29</div>
-      <div class="job-block blue" onclick="openDrawer('kim_drive')">
-        <div class="jb-title">Kim — Driveway</div>
-        <div class="jb-crew">Crew A · 77 Cedar Rdg</div>
-      </div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">30</div>
-    </div>
-    <div class="cal-cell">
-      <div class="day-num">31</div>
-      <div class="job-block amber" onclick="openDrawer('estimate_pham')">
-        <div class="jb-title">Estimate — Pham</div>
-        <div class="jb-crew">Jake · 2422 Oak St</div>
-      </div>
-    </div>
-    <div class="cal-cell other-month">
-      <div class="day-num">1</div>
-      <div class="job-block blue" onclick="openDrawer('nguyen_walk')">
-        <div class="jb-title">Nguyen — Walkway</div>
-        <div class="jb-crew">Crew B · 2422 Oak</div>
-      </div>
-    </div>
-    <div class="cal-cell other-month"><div class="day-num">2</div></div>
-    <div class="cal-cell other-month"><div class="day-num">3</div></div>
-    <div class="cal-cell other-month"><div class="day-num">4</div></div>
-
-  </div>
+  <div class="cal-grid" id="cal-grid"></div>
 </div>
 
   </div>
@@ -559,8 +343,8 @@
     <div class="drawer-top">
       <div>
         <div class="d-date-tag" id="d-date">Mar 27, 2026 · 7:00 AM</div>
-        <div class="d-title" id="d-title">Henderson — Backyard Patio</div>
-        <div class="d-customer">Customer: <span id="d-customer">Tom Henderson</span></div>
+        <div class="d-title" id="d-title"></div>
+        <div class="d-customer">Customer: <span id="d-customer"></span></div>
       </div>
       <div class="drawer-close" onclick="closeDrawer()">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
@@ -624,16 +408,16 @@
 </div>
 <div class="edit-field">
   <label class="edit-label">Customer</label>
-  <input class="edit-input" id="e-customer" type="text" placeholder="Customer name"/>
+  <select class="edit-input" id="e-customer"><option value="">Select a customer...</option></select>
 </div>
 <div class="edit-row-2">
   <div class="edit-field">
     <label class="edit-label">Date</label>
-    <input class="edit-input" id="e-date" type="text" placeholder="e.g. Mar 27, 2026"/>
+    <input class="edit-input" id="e-date" type="date"/>
   </div>
   <div class="edit-field">
     <label class="edit-label">Start Time</label>
-    <input class="edit-input" id="e-time" type="text" placeholder="e.g. 7:00 AM"/>
+    <input class="edit-input" id="e-time" type="time"/>
   </div>
 </div>
 <div class="edit-field">
@@ -643,14 +427,16 @@
 <div class="edit-row-2">
   <div class="edit-field">
     <label class="edit-label">Service Type</label>
-    <select class="edit-input" id="e-service">
+    <select class="edit-input" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service-s').style.display='block';}else{document.getElementById('e-custom-service-s').style.display='none';}">
       <option>Stamped Concrete</option>
       <option>Broom Finish</option>
       <option>Exposed Aggregate</option>
       <option>Epoxy Coating</option>
       <option>Sealing</option>
       <option>Site Estimate</option>
+      <option>Other</option>
     </select>
+    <input class="edit-input" id="e-custom-service-s" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/>
   </div>
   <div class="edit-field">
     <label class="edit-label">Sqft</label>
@@ -660,13 +446,15 @@
 <div class="edit-row-2">
   <div class="edit-field">
     <label class="edit-label">Crew</label>
-    <select class="edit-input" id="e-crew">
+    <select class="edit-input" id="e-crew" onchange="if(this.value==='Other'){document.getElementById('e-custom-crew-s').style.display='block';}else{document.getElementById('e-custom-crew-s').style.display='none';}">
       <option>Crew A</option>
       <option>Crew B</option>
       <option>Crew A + B</option>
-      <option>Jake Reynolds</option>
+      <option></option>
       <option>Unassigned</option>
+      <option>Other</option>
     </select>
+    <input class="edit-input" id="e-custom-crew-s" type="text" placeholder="Enter crew name..." style="display:none;margin-top:6px;"/>
   </div>
   <div class="edit-field">
     <label class="edit-label">Est. Duration</label>
@@ -703,7 +491,7 @@
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
       Edit
     </button>
-    <button class="dfooter-btn" onclick="showToast('SMS sent to crew')">
+    <button class="dfooter-btn" onclick="showToast('Feature coming soon')">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 0 2 2z" stroke-width="1.8"/></svg>
       Text Crew
     </button>
@@ -729,24 +517,208 @@
 
 <!-- Floating re-open button -->
 
+<div class="cal-popup" id="cal-popup">
+  <div class="cal-popup-close" onclick="closeCalPopup()">&times;</div>
+  <div class="cal-popup-title" id="cal-popup-title"></div>
+  <div id="cal-popup-body"></div>
+</div>
+
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
 </div>
 
 <script>
-  const jobs = {
-    henderson:    {date:'Mar 27, 2026 · 7:00 AM',  title:'Henderson — Backyard Patio', customer:'Tom Henderson',    tag:'In Progress', tagStyle:'background:rgba(200,241,53,0.1);color:#c8f135;', crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Devon R.</span><span class="crew-pill">Luis M.</span>', amount:'$7,200', sqft:'480', dur:'~6 hrs', num:'#1043', address:'411 Birchwood Dr, Austin TX', service:'Stamped — Cobblestone, Natural Gray',      wx:'⛅', wxDesc:'72°F — Partly Cloudy',   wxNote:'Low humidity · No precipitation',        wxBadge:'wx-ok', wxText:'✓ Good'},
-    ortiz:        {date:'Mar 27, 2026 · 8:30 AM',  title:'Ortiz — Pool Deck',          customer:'Maria Ortiz',     tag:'In Progress', tagStyle:'background:rgba(200,241,53,0.1);color:#c8f135;', crew:'<span class="crew-pill">Ray S.</span><span class="crew-pill">Tomas V.</span>',                                           amount:'$5,400', sqft:'320', dur:'~5 hrs', num:'#1044', address:'88 Lakeview Ct, Austin TX',    service:'Exposed Aggregate — River Rock Mix',  wx:'⛅', wxDesc:'72°F — Partly Cloudy',   wxNote:'Low humidity · No precipitation',        wxBadge:'wx-ok', wxText:'✓ Good'},
-    kim_drive:    {date:'Mar 29, 2026 · 7:00 AM',  title:'Kim — Driveway Resurface',   customer:'James Kim',       tag:'Scheduled',   tagStyle:'background:rgba(77,159,255,0.1);color:#4d9fff;',  crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$3,100', sqft:'640', dur:'~5 hrs', num:'#1045', address:'77 Cedar Ridge, Austin TX',    service:'Broom Finish — Standard Gray',        wx:'🌤️',wxDesc:'68°F — Mostly Clear',    wxNote:'Good conditions · Low wind',             wxBadge:'wx-ok', wxText:'✓ Good'},
-    nguyen_walk:  {date:'Apr 1, 2026 · 9:00 AM',   title:'Nguyen — Front Walkway',     customer:'David Nguyen',    tag:'Scheduled',   tagStyle:'background:rgba(77,159,255,0.1);color:#4d9fff;',  crew:'<span class="crew-pill">Crew B</span>',                                                                               amount:'$2,250', sqft:'140', dur:'~3 hrs', num:'#1046', address:'2422 Oak St, Austin TX',       service:'Exposed Aggregate — Pea Gravel',      wx:'☀️', wxDesc:'74°F — Sunny',          wxNote:'Excellent pour conditions',              wxBadge:'wx-ok', wxText:'✓ Excellent'},
-    garage:       {date:'Mar 1, 2026 · 8:00 AM',   title:'Garcia — Garage Floor',      customer:'Carlos Garcia',   tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew B</span>',                                                                               amount:'$2,800', sqft:'420', dur:'~4 hrs', num:'#1033', address:'902 Pine St, Austin TX',       service:'Epoxy Coating — Charcoal Base',       wx:'☀️', wxDesc:'74°F — Sunny',          wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
-    chen_complete:{date:'Mar 25, 2026 · 8:00 AM',  title:'Chen — Garage Floor',        customer:'Linda Chen',      tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Marcus T.</span><span class="crew-pill">Luis M.</span>',                                       amount:'$2,600', sqft:'440', dur:'~4 hrs', num:'#1038', address:'903 Maple Ave, Cedar Park TX', service:'Epoxy Coating — Metallic Flake',      wx:'☀️', wxDesc:'76°F — Clear',          wxNote:'Excellent conditions',                   wxBadge:'wx-ok', wxText:'✓ Excellent'},
-    estimate_pham:{date:'Mar 31, 2026 · 11:00 AM', title:'Site Estimate — Pham',       customer:'Linh Pham',       tag:'Estimate',    tagStyle:'background:rgba(245,166,35,0.1);color:#f5a623;',   crew:'<span class="crew-pill">Jake Reynolds</span>',                                                                        amount:'TBD',    sqft:'~900', dur:'~1 hr',  num:'—',     address:'2422 Oak St, Austin TX',       service:'Driveway Resurface — TBD',            wx:'☀️', wxDesc:'71°F — Clear',          wxNote:'No weather concerns',                    wxBadge:'wx-ok', wxText:'✓ Good'},
-    walkway:      {date:'Mar 3, 2026 · 7:30 AM',   title:'Torres — Front Walkway',     customer:'Ana Torres',      tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$1,900', sqft:'160', dur:'~3 hrs', num:'#1034', address:'54 Elm Ave, Austin TX',        service:'Exposed Aggregate',                   wx:'☀️', wxDesc:'74°F — Sunny',          wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
-    patio_smith:  {date:'Mar 5, 2026 · 7:00 AM',   title:'Smith — Backyard Patio',     customer:'Greg Smith',      tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$6,100', sqft:'460', dur:'~6 hrs', num:'#1035', address:'18 Oakwood Dr, Austin TX',     service:'Stamped — Herringbone Pattern',       wx:'☀️', wxDesc:'75°F — Clear',          wxNote:'Ideal pour conditions',                  wxBadge:'wx-ok', wxText:'✓ Excellent'},
-    driveway_patel:{date:'Mar 9, 2026 · 7:00 AM',  title:'Patel — Driveway',           customer:'Raj Patel',       tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew B</span>',                                                                               amount:'$4,200', sqft:'580', dur:'~5 hrs', num:'#1036', address:'331 Maple Blvd, Round Rock TX', service:'Broom Finish — Standard Gray',        wx:'🌤️',wxDesc:'70°F — Partly Cloudy',   wxNote:'Good conditions',                        wxBadge:'wx-ok', wxText:'✓ Good'},
-    pool_kim:     {date:'Mar 10, 2026 · 8:00 AM',  title:'Kim — Pool Deck',            customer:'James Kim',       tag:'Complete',    tagStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;', crew:'<span class="crew-pill">Crew A</span>',                                                                               amount:'$3,800', sqft:'290', dur:'~4 hrs', num:'#1037', address:'77 Cedar Ridge, Austin TX',    service:'Exposed Aggregate — River Rock',      wx:'☀️', wxDesc:'73°F — Sunny',          wxNote:'Excellent conditions',                   wxBadge:'wx-ok', wxText:'✓ Excellent'},
-  };
+  /* ── Calendar Jobs Data ── */
+  let calendarJobs = [];
+
+  async function loadCalendarJobs() {
+    try {
+      const jobs = await API.jobs.list();
+      calendarJobs = jobs.map(function(j) {
+        var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
+        return {
+          date: j.scheduledDate || '',
+          title: j.title || (j.customerName + ' - ' + (j.service||'')),
+          crew: '',
+          address: j.address || '',
+          color: color,
+          drawerId: j.id
+        };
+      });
+      renderCalendar(calYear, calMonth);
+    } catch(e) { console.error('loadCalendarJobs error:', e); }
+  }
+
+  /* ── Calendar State ── */
+  let calYear = new Date().getFullYear();
+  let calMonth = new Date().getMonth();
+
+  const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function renderCalendar(year, month) {
+    const grid = document.getElementById('cal-grid');
+    if (!grid) return;
+
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    // Update header
+    const titleEl = document.getElementById('cal-month-title');
+    if (titleEl) titleEl.innerHTML = MONTH_NAMES[month] + ' <em>' + year + '</em>';
+
+    // Update topbar subtitle
+    const topSub = document.querySelector('.topbar-sub');
+    if (topSub) topSub.textContent = MONTH_NAMES_SHORT[month] + ' ' + year;
+
+    // Weather icons
+    const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};
+
+    // Weather data lookup
+    const wxData = window._swftWeatherData;
+    let wxMap = {};
+    let wxCodeMap = {};
+    if (wxData && wxData.daily && wxData.daily.time) {
+      for (let i = 0; i < wxData.daily.time.length; i++) {
+        const high = Math.round(wxData.daily.temperature_2m_max[i]);
+        wxMap[wxData.daily.time[i]] = high;
+        var code = wxData.daily.weathercode ? wxData.daily.weathercode[i] : 0;
+        wxCodeMap[wxData.daily.time[i]] = code;
+      }
+    }
+
+    // Build cells
+    let html = '';
+
+    // Previous month trailing days
+    for (let i = 0; i < firstDay; i++) {
+      const d = prevMonthDays - firstDay + 1 + i;
+      html += '<div class="cal-cell other-month"><div class="day-num">' + d + '</div></div>';
+    }
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      const isToday = dateStr === todayStr;
+      let cls = 'cal-cell';
+      if (isToday) cls += ' today';
+
+      // Weather temp for this day
+      let wxHtml = '';
+      if (wxMap[dateStr] !== undefined) {
+        var wxCode = wxCodeMap[dateStr] || 0;
+        var wxIcon = WMO_ICONS[wxCode] || '';
+        wxHtml = '<span class="day-wx">' + wxIcon + ' ' + wxMap[dateStr] + '°</span>';
+      }
+
+      html += '<div class="' + cls + '">';
+      html += '<div class="day-num">' + d + '</div>' + wxHtml;
+
+      // Find jobs for this day
+      const dayJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
+      for (let ji = 0; ji < dayJobs.length; ji++) {
+        const job = dayJobs[ji];
+        html += '<div class="job-block ' + job.color + '" onclick="showCalPopup(event,\'' + job.drawerId + '\',' + JSON.stringify(job).replace(/'/g,"\\'") + ')">' + job.title + '</div>';
+      }
+
+      html += '</div>';
+    }
+
+    // Next month leading days to fill out the grid
+    const totalCells = firstDay + daysInMonth;
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remaining; i++) {
+      const dateStr = (month === 11 ? (year + 1) : year) + '-' + String(month === 11 ? 1 : month + 2).padStart(2, '0') + '-' + String(i).padStart(2, '0');
+      let nextHtml = '';
+
+      // Check for jobs in next month overflow
+      const nextJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
+      for (let ji = 0; ji < nextJobs.length; ji++) {
+        const job = nextJobs[ji];
+        nextHtml += '<div class="job-block ' + job.color + '" onclick="openDrawer(\'' + job.drawerId + '\')">';
+        nextHtml += '<div class="jb-title">' + job.title + '</div>';
+        nextHtml += '<div class="jb-crew">' + job.crew + ' · ' + job.address + '</div>';
+        nextHtml += '</div>';
+      }
+
+      html += '<div class="cal-cell other-month"><div class="day-num">' + i + '</div>' + nextHtml + '</div>';
+    }
+
+    grid.innerHTML = html;
+  }
+
+  function prevMonth() {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar(calYear, calMonth);
+  }
+
+  function nextMonth() {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar(calYear, calMonth);
+  }
+
+  function goToday() {
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    renderCalendar(calYear, calMonth);
+    showToast('Jumped to today');
+  }
+
+  function toggleMonthPicker(e) {
+    const picker = document.getElementById('month-picker');
+    const isOpen = picker.classList.contains('open');
+    if (isOpen) {
+      picker.classList.remove('open');
+    } else {
+      document.getElementById('pick-month').value = calMonth;
+      document.getElementById('pick-year').value = calYear;
+      picker.classList.add('open');
+    }
+  }
+
+  function applyMonthPick(e) {
+    if (e) { e.stopPropagation(); }
+    calMonth = parseInt(document.getElementById('pick-month').value);
+    calYear = parseInt(document.getElementById('pick-year').value);
+    document.getElementById('month-picker').classList.remove('open');
+    renderCalendar(calYear, calMonth);
+  }
+
+  // Close month picker when clicking outside
+  document.addEventListener('click', function(e) {
+    const picker = document.getElementById('month-picker');
+    const wrap = document.querySelector('.cal-month-wrap');
+    if (picker && wrap && !wrap.contains(e.target)) {
+      picker.classList.remove('open');
+    }
+  });
+
+  // Stop clicks inside picker from toggling it
+  document.addEventListener('DOMContentLoaded', function() {
+    var picker = document.getElementById('month-picker');
+    if (picker) picker.addEventListener('click', function(e) { e.stopPropagation(); });
+  });
+
+  // Initialize calendar
+  renderCalendar(calYear, calMonth);
+
+  // Re-render when weather data arrives (to show temps on cells)
+  (function pollWeather() {
+    if (window._swftWeatherData) {
+      renderCalendar(calYear, calMonth);
+    } else {
+      setTimeout(pollWeather, 500);
+    }
+  })();
+
+  const jobs = {};
 
   let _currentJob = null;
   function openDrawer(id) {
@@ -785,8 +757,41 @@
     document.getElementById('drawer').classList.remove('open', 'center-modal');
   }
 
+  function showCalPopup(e, jobId, job) {
+    var popup = document.getElementById('cal-popup');
+    var title = document.getElementById('cal-popup-title');
+    var body = document.getElementById('cal-popup-body');
+    title.textContent = job.title || 'Job';
+    body.innerHTML = '<div class="cal-popup-row"><span class="cal-popup-label">Date</span><span class="cal-popup-val">' + (job.date||'—') + '</span></div>' +
+      '<div class="cal-popup-row"><span class="cal-popup-label">Crew</span><span class="cal-popup-val">' + (job.crew||'—') + '</span></div>' +
+      '<div class="cal-popup-row"><span class="cal-popup-label">Address</span><span class="cal-popup-val">' + (job.address||'—') + '</span></div>' +
+      '<div class="cal-popup-row"><span class="cal-popup-label">Status</span><span class="cal-popup-val">' + (job.color||'—') + '</span></div>' +
+      '<div style="margin-top:10px;"><a href="swft-jobs.html" style="font-size:11px;color:var(--green);">View in Jobs &rarr;</a></div>';
+    // Position near click
+    var x = e.clientX;
+    var y = e.clientY;
+    popup.style.left = Math.min(x, window.innerWidth - 300) + 'px';
+    popup.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+    popup.classList.add('open');
+    e.stopPropagation();
+  }
+
+  function closeCalPopup() {
+    document.getElementById('cal-popup').classList.remove('open');
+  }
+
+  // Close popup on outside click
+  document.addEventListener('click', function(e) {
+    var popup = document.getElementById('cal-popup');
+    if (popup && !popup.contains(e.target) && !e.target.closest('.job-block')) {
+      popup.classList.remove('open');
+    }
+  });
+
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+    document.getElementById('sidebar-toggle').classList.toggle('visible');
   }
 
   let _toastTimer;
@@ -896,27 +901,25 @@
     showToast('Changes discarded');
   }
 
-  function saveEdit() {
-    const title    = document.getElementById('e-title').value.trim();
-    const customer = document.getElementById('e-customer').value.trim();
-    const date     = document.getElementById('e-date').value.trim();
-    const time     = document.getElementById('e-time').value.trim();
-    const address  = document.getElementById('e-address').value.trim();
-    const service  = document.getElementById('e-service').value;
-    const sqft     = document.getElementById('e-sqft').value.trim();
-    const crew     = document.getElementById('e-crew').value;
-    const dur      = document.getElementById('e-dur').value.trim();
-    const amount   = document.getElementById('e-amount').value.trim();
-    const status   = document.getElementById('e-status').value;
-    const fmtAmount = amount.startsWith('$') ? amount : '$' + amount;
-
-    const tagStyles = {
-      'In Progress': 'background:rgba(200,241,53,0.1);color:#c8f135;',
-      'Scheduled':   'background:rgba(77,159,255,0.1);color:#4d9fff;',
-      'Quote Sent':  'background:rgba(245,166,35,0.1);color:#f5a623;',
-      'Estimate':    'background:rgba(245,166,35,0.1);color:#f5a623;',
-      'Complete':    'background:rgba(100,100,100,0.12);color:#7a7a7a;',
+  async function saveEdit() {
+    if (!_currentJobId) return;
+    var data = {
+      customerName: document.getElementById('e-customer').value || '',
+      scheduledDate: document.getElementById('e-date').value || '',
+      service: document.getElementById('e-service').value || '',
+      address: document.getElementById('e-address-edit') ? document.getElementById('e-address-edit').value : '',
+      sqft: document.getElementById('e-sqft') ? document.getElementById('e-sqft').value : '',
+      crew: document.getElementById('e-crew') ? document.getElementById('e-crew').value : ''
     };
+    try {
+      await API.jobs.update(_currentJobId, data);
+      closeDrawer();
+      await loadCalendarJobs();
+      showToast('Job updated');
+    } catch(e) {
+      showToast('Save error: ' + e.message);
+    }
+  };
 
     // Persist edits back into the jobs object so reopening shows saved state
     if (_currentJob) {
@@ -951,13 +954,6 @@
     tagEl.style.cssText = tagStyles[status] || tagStyles['Scheduled'];
 
     // Switch back to view
-    document.getElementById('d-edit').style.display  = 'none';
-    document.getElementById('d-view').style.display  = 'flex';
-    document.getElementById('footer-edit').style.display = 'none';
-    document.getElementById('footer-view').style.display = 'flex';
-    showToast('Job saved ✓');
-    if (_currentJob && _currentJob.num === 'J-NEW') { closeDrawer(); return; }
-  }
 
 </script>
 
@@ -990,9 +986,19 @@
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
+      loadCalendarJobs();
     }
   });
 </script>
 
+<script type="module" src="swft-user-sync.js"></script>
+<script src="swft-weather.js"></script>
+<script src="swft-calendar-sync.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<script src="swft-settings-loader.js"></script>
+<script src="swft-account.js"></script>
+<script src="swft-notifications.js"></script>
+<script src="swft-chat.js"></script>
 </body>
 </html>
