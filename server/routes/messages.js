@@ -221,4 +221,62 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
-module.exports = router;
+/**
+ * Twilio incoming SMS webhook handler (no auth — called by Twilio directly).
+ * Matches the sender's phone to a customer, saves as an inbound message.
+ */
+async function twilioIncomingHandler(req, res) {
+  try {
+    const from = req.body.From;     // sender phone e.g. "+14035551234"
+    const body = req.body.Body;     // message text
+    const msgSid = req.body.MessageSid;
+
+    if (!from || !body) {
+      return res.type("text/xml").send("<Response></Response>");
+    }
+
+    // Normalize phone: strip non-digits, ensure leading +1
+    const digits = from.replace(/\D/g, "");
+
+    // Find which SWFT user(s) have a customer with this phone number
+    // Search all customers for a matching phone
+    const custSnap = await db.collection("customers").get();
+    let matched = null;
+    for (const doc of custSnap.docs) {
+      const data = doc.data();
+      const custDigits = (data.phone || "").replace(/\D/g, "");
+      if (custDigits && (custDigits === digits || custDigits === digits.slice(1) || "1" + custDigits === digits)) {
+        matched = { customerId: doc.id, customerName: data.name || "", userId: data.userId };
+        break;
+      }
+    }
+
+    if (!matched) {
+      console.log("Incoming SMS from unknown number:", from);
+      return res.type("text/xml").send("<Response></Response>");
+    }
+
+    // Save as inbound message
+    await db.collection("messages").add({
+      userId: matched.userId,
+      customerId: matched.customerId,
+      customerName: matched.customerName,
+      from: from,
+      to: "inbound",
+      body: body,
+      type: "sms",
+      direction: "inbound",
+      status: "received",
+      twilioMessageSid: msgSid || "",
+      sentAt: Date.now(),
+    });
+
+    // Respond with empty TwiML (no auto-reply)
+    res.type("text/xml").send("<Response></Response>");
+  } catch (err) {
+    console.error("Twilio incoming webhook error:", err);
+    res.type("text/xml").send("<Response></Response>");
+  }
+}
+
+module.exports = { router, twilioIncomingHandler };

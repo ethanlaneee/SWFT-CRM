@@ -14,6 +14,7 @@ const cors = require("cors");
 const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
+const { router: messagesRouter, twilioIncomingHandler } = require("./routes/messages");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,10 @@ app.use(cors());
 app.post("/api/billing/webhook", express.raw({ type: "application/json" }), webhookHandler);
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded webhooks
+
+// ── Twilio incoming SMS webhook (no auth — called by Twilio) ──
+app.post("/api/webhooks/twilio/sms", twilioIncomingHandler);
 
 // ── Serve frontend files ──
 app.use(express.static(path.join(__dirname, "..")));
@@ -42,7 +47,7 @@ app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
-app.use("/api/messages",  auth, checkAccess,  require("./routes/messages"));
+app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 
 // ── Root redirect ──
 app.get("/", (req, res) => res.redirect("/swft-login.html"));
