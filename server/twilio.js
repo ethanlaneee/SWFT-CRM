@@ -56,16 +56,12 @@ async function createSubAccount(friendlyName, activeSids) {
       const accounts = await client.api.accounts.list({ status: "active" });
       const safeSet = new Set(activeSids || []);
       safeSet.add(ACCOUNT_SID); // never close the main account
-      let closed = 0;
-      for (const acct of accounts) {
-        if (!safeSet.has(acct.sid)) {
-          try {
-            await client.api.accounts(acct.sid).update({ status: "closed" });
-            closed++;
-          } catch (e) { /* skip */ }
-        }
-      }
-      if (closed === 0) throw new Error("Cannot create sub-account: limit reached and no unused accounts to close");
+      const toClose = accounts.filter(a => !safeSet.has(a.sid));
+      if (toClose.length === 0) throw new Error("Cannot create sub-account: limit reached and no unused accounts to close");
+      // Close in parallel for speed
+      await Promise.all(toClose.map(a =>
+        client.api.accounts(a.sid).update({ status: "closed" }).catch(() => {})
+      ));
       // Retry
       const account = await client.api.accounts.create({ friendlyName });
       return { sid: account.sid, authToken: account.authToken };
