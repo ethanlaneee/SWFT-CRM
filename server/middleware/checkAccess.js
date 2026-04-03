@@ -75,7 +75,7 @@ async function checkAccess(req, res, next) {
       accountStatus = "expired";
     }
 
-    if (accountStatus === "active" || accountStatus === "trialing") {
+    if (!accountStatus || accountStatus === "active" || accountStatus === "trialing") {
       return next();
     }
 
