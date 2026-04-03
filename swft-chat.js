@@ -317,8 +317,8 @@
   // Raise the bubble on the messages page so it doesn't cover the compose bar
   if (isMessagesPage) {
     style.textContent += `
-      .swft-chat-fab { bottom: 90px !important; }
-      .swft-chat-panel { bottom: 144px !important; }
+      .swft-chat-fab { bottom: 180px !important; }
+      .swft-chat-panel { bottom: 234px !important; }
     `;
   }
 
