@@ -34,28 +34,41 @@ async function createSubAccount(friendlyName) {
 async function buyPhoneNumber(subAccountSid, subAccountAuthToken, userPhone) {
   const subClient = twilio(subAccountSid, subAccountAuthToken);
 
-  // Extract area code from user's phone number (e.g. "+15125551234" → "512")
+  // Extract area code from user's phone number (e.g. "+14035551234" → "403")
   let areaCode = null;
   if (userPhone) {
     const digits = userPhone.replace(/\D/g, "");
-    // US numbers: strip leading 1 if 11 digits, then take first 3
+    // North American numbers: strip leading 1 if 11 digits, then take first 3
     const national = digits.length === 11 && digits[0] === "1" ? digits.slice(1) : digits;
     if (national.length === 10) areaCode = national.slice(0, 3);
   }
 
+  // Canadian area codes (Calgary target market + common CA codes)
+  const canadianAreaCodes = ["403", "587", "780", "604", "778", "250", "236", "416", "647", "437", "905", "289", "365", "613", "343", "819", "873", "514", "438", "450", "579", "306", "639", "204", "431", "506", "709", "902", "782", "867"];
+  const isCanadian = areaCode && canadianAreaCodes.includes(areaCode);
+  const country = isCanadian ? "CA" : "US";
+
   let available = [];
 
-  // First try: match user's area code
+  // First try: match user's area code in their country
   if (areaCode) {
     available = await subClient
-      .availablePhoneNumbers("US")
+      .availablePhoneNumbers(country)
       .local.list({ areaCode, limit: 1 });
   }
 
-  // Fallback: any available US local number
+  // Fallback: any available number in the same country
   if (!available.length) {
     available = await subClient
-      .availablePhoneNumbers("US")
+      .availablePhoneNumbers(country)
+      .local.list({ limit: 1 });
+  }
+
+  // Last resort: try the other country
+  if (!available.length) {
+    const fallbackCountry = country === "CA" ? "US" : "CA";
+    available = await subClient
+      .availablePhoneNumbers(fallbackCountry)
       .local.list({ limit: 1 });
   }
 
