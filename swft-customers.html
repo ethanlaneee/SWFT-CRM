@@ -1047,6 +1047,8 @@ function cancelCustomerEdit() {
 }
 
 async function saveCustomerEdit() {
+  if (!_currentCustomer) { showToast('No customer selected'); return; }
+
   const fname    = document.getElementById('e-fname').value.trim();
   const lname    = document.getElementById('e-lname').value.trim();
   const phone    = document.getElementById('e-phone').value.trim();
@@ -1058,23 +1060,23 @@ async function saveCustomerEdit() {
   if (!fullName) { showToast('Please enter a name'); return; }
 
   try {
-    if (_currentCustomer && _currentCustomer.id === null) {
+    if (!_currentCustomer.id || _currentCustomer.id === null) {
       // ── Create new customer ──
       const noteText = document.getElementById('e-note').value.trim();
       const notes = noteText
         ? [{ text: noteText, date: new Date().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}), tag:'Note', tagColor:'green' }]
         : [];
       const tags = _currentCustomer.tags || [];
-      await API.customers.create({ name: fullName, phone, email, address, notes, tags });
+      const created = await API.customers.create({ name: fullName, phone, email, address, notes, tags });
       await loadCustomers();
       closeDrawer();
       showToast(fullName + ' added');
-    } else if (_currentCustomer && _currentCustomer.id) {
-      // ── Update existing customer (single API call) ──
-      await API.customers.update(_currentCustomer.id, { name: fullName, phone, email, address });
-      await loadCustomers();
+    } else {
+      // ── Update existing customer ──
+      const custId = _currentCustomer.id;
+      await API.customers.update(custId, { name: fullName, phone, email, address });
 
-      // Sync local state
+      // Sync local state before reloading table
       _currentCustomer.name    = fullName;
       _currentCustomer.phone   = phone;
       _currentCustomer.email   = email;
@@ -1095,6 +1097,12 @@ async function saveCustomerEdit() {
       document.getElementById('c-footer-view').style.display = 'flex';
 
       showToast('Customer saved');
+
+      // Reload table in background (don't block the UI)
+      loadCustomers().then(function() {
+        // Re-sync _currentCustomer with the refreshed map
+        if (window._customers[custId]) _currentCustomer = window._customers[custId];
+      });
     }
   } catch (err) {
     console.error('Failed to save customer:', err);
@@ -1237,7 +1245,6 @@ function applySort(key) {
     } else {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
-      loadCustomers();
       loadCustomers();
       // Auto-open new customer form if ?new=1
       if (window.location.search.includes('new=1')) {
