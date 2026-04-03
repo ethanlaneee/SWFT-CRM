@@ -47,8 +47,10 @@ router.get("/", async (req, res, next) => {
 
       // Create Twilio sub-account + buy phone number (non-blocking)
       try {
+        const allUsers = await col().where("twilioSubAccountSid", "!=", "").get();
+        const activeSids = allUsers.docs.map(d => d.data().twilioSubAccountSid).filter(Boolean);
         const friendlyName = profile.company || profile.name || `SWFT-${req.uid}`;
-        const subAccount = await createSubAccount(friendlyName);
+        const subAccount = await createSubAccount(friendlyName, activeSids);
         const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken, profile.phone);
         const twilioFields = {
           twilioSubAccountSid: subAccount.sid,
@@ -117,8 +119,12 @@ router.post("/setup-twilio", async (req, res, next) => {
       });
     }
 
+    // Gather all active Twilio SIDs from other users so we don't close them
+    const allUsers = await col().where("twilioSubAccountSid", "!=", "").get();
+    const activeSids = allUsers.docs.map(d => d.data().twilioSubAccountSid).filter(Boolean);
+
     const friendlyName = data.company || data.name || `SWFT-${req.uid}`;
-    const subAccount = await createSubAccount(friendlyName);
+    const subAccount = await createSubAccount(friendlyName, activeSids);
     const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken, data.phone);
 
     await col().doc(req.uid).set({

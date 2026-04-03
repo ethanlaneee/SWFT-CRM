@@ -13,14 +13,65 @@ function getMasterClient() {
 }
 
 /**
+ * List all active sub-accounts.
+ */
+async function listSubAccounts() {
+  const client = getMasterClient();
+  return client.api.accounts.list({ status: "active" });
+}
+
+/**
+ * Close all sub-accounts except the main one (cleanup helper).
+ */
+async function closeAllSubAccounts() {
+  const client = getMasterClient();
+  const accounts = await client.api.accounts.list({ status: "active" });
+  let closed = 0;
+  for (const acct of accounts) {
+    if (acct.sid !== ACCOUNT_SID) {
+      try {
+        await client.api.accounts(acct.sid).update({ status: "closed" });
+        closed++;
+      } catch (e) { /* skip if can't close */ }
+    }
+  }
+  return closed;
+}
+
+/**
  * Create a Twilio sub-account for a SWFT user.
+ * If at the sub-account limit, closes unused ones first.
  * @param {string} friendlyName - e.g. "SWFT-<uid>" or company name
+ * @param {string[]} [activeSids] - sub-account SIDs currently in use (don't close these)
  * @returns {{ sid: string, authToken: string }}
  */
-async function createSubAccount(friendlyName) {
+async function createSubAccount(friendlyName, activeSids) {
   const client = getMasterClient();
-  const account = await client.api.accounts.create({ friendlyName });
-  return { sid: account.sid, authToken: account.authToken };
+  try {
+    const account = await client.api.accounts.create({ friendlyName });
+    return { sid: account.sid, authToken: account.authToken };
+  } catch (err) {
+    // If we hit the sub-account limit, close unused ones and retry
+    if (err.message && err.message.toLowerCase().includes("max")) {
+      const accounts = await client.api.accounts.list({ status: "active" });
+      const safeSet = new Set(activeSids || []);
+      safeSet.add(ACCOUNT_SID); // never close the main account
+      let closed = 0;
+      for (const acct of accounts) {
+        if (!safeSet.has(acct.sid)) {
+          try {
+            await client.api.accounts(acct.sid).update({ status: "closed" });
+            closed++;
+          } catch (e) { /* skip */ }
+        }
+      }
+      if (closed === 0) throw new Error("Cannot create sub-account: limit reached and no unused accounts to close");
+      // Retry
+      const account = await client.api.accounts.create({ friendlyName });
+      return { sid: account.sid, authToken: account.authToken };
+    }
+    throw err;
+  }
 }
 
 /**
@@ -113,4 +164,6 @@ module.exports = {
   buyPhoneNumber,
   sendSms,
   closeSubAccount,
+  listSubAccounts,
+  closeAllSubAccounts,
 };
