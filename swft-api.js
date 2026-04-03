@@ -118,6 +118,13 @@ const API = {
     configure: (data) => apiFetch("/api/email/configure", { method: "POST", body: JSON.stringify(data) }),
   },
 
+  // ── Messages ──
+  messages: {
+    list:   ()     => apiFetch("/api/messages"),
+    send:   (data) => apiFetch("/api/messages/send", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
+  },
+
 };
 
 // ── Auth guard — call on every protected page ──

@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
 
 const col = () => db.collection("users");
 
@@ -43,6 +44,23 @@ router.get("/", async (req, res, next) => {
         accountStatus: "trialing",
       };
       await col().doc(req.uid).set(profile);
+
+      // Create Twilio sub-account + buy phone number (non-blocking)
+      try {
+        const friendlyName = profile.company || profile.name || `SWFT-${req.uid}`;
+        const subAccount = await createSubAccount(friendlyName);
+        const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken);
+        const twilioFields = {
+          twilioSubAccountSid: subAccount.sid,
+          twilioAuthToken: subAccount.authToken,
+          twilioPhoneNumber: phoneNumber,
+        };
+        await col().doc(req.uid).set(twilioFields, { merge: true });
+        Object.assign(profile, twilioFields);
+      } catch (twilioErr) {
+        console.error("Twilio sub-account creation failed:", twilioErr.message);
+      }
+
       return res.json({ id: req.uid, ...profile });
     }
     const data = await checkTrialExpired(doc.id, doc.data());
@@ -81,6 +99,35 @@ router.put("/", async (req, res, next) => {
     const doc = await col().doc(req.uid).get();
     const data = await checkTrialExpired(doc.id, doc.data());
     res.json({ id: doc.id, ...data });
+  } catch (err) { next(err); }
+});
+
+// POST /api/me/setup-twilio — provision Twilio for existing users
+router.post("/setup-twilio", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.uid).get();
+    if (!doc.exists) return res.status(404).json({ error: "User not found" });
+
+    const data = doc.data();
+    if (data.twilioSubAccountSid) {
+      return res.json({
+        success: true,
+        message: "Twilio already configured",
+        twilioPhoneNumber: data.twilioPhoneNumber,
+      });
+    }
+
+    const friendlyName = data.company || data.name || `SWFT-${req.uid}`;
+    const subAccount = await createSubAccount(friendlyName);
+    const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken);
+
+    await col().doc(req.uid).set({
+      twilioSubAccountSid: subAccount.sid,
+      twilioAuthToken: subAccount.authToken,
+      twilioPhoneNumber: phoneNumber,
+    }, { merge: true });
+
+    res.json({ success: true, twilioPhoneNumber: phoneNumber });
   } catch (err) { next(err); }
 });
 
@@ -134,6 +181,15 @@ router.get("/status", async (req, res, next) => {
 router.delete("/delete-account", async (req, res, next) => {
   try {
     const uid = req.uid;
+
+    // Close Twilio sub-account if it exists
+    try {
+      const userDoc = await col().doc(uid).get();
+      if (userDoc.exists && userDoc.data().twilioSubAccountSid) {
+        await closeSubAccount(userDoc.data().twilioSubAccountSid);
+      }
+    } catch (e) { console.error("Twilio sub-account close failed:", e.message); }
+
     const collections = ["customers", "jobs", "quotes", "invoices", "schedule"];
 
     // Delete all documents in each collection for this user
