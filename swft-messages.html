@@ -78,6 +78,38 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .msg-status{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:5px;margin-top:4px;display:inline-block;}
 .msg-status.sent{background:rgba(200,241,53,0.1);color:var(--green);}
 
+/* Type toggle tabs */
+.type-tabs{display:flex;gap:4px;margin-bottom:8px;}
+.type-tab{font-size:11.5px;font-weight:500;padding:7px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
+.type-tab:hover{color:var(--white);border-color:var(--gray2);}
+.type-tab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+
+/* Filter tabs */
+.filter-tabs{display:flex;gap:4px;}
+.filter-tab{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
+.filter-tab:hover{color:var(--white);border-color:var(--gray2);}
+.filter-tab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+
+/* Attachment chip */
+.attach-dropdown{position:relative;}
+.attach-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
+.attach-btn:hover{background:var(--surface2);color:var(--white);}
+.attach-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);border-radius:7px;padding:5px 10px;font-size:11.5px;color:var(--green);margin-top:6px;}
+.attach-chip .remove{cursor:pointer;opacity:0.6;font-size:14px;}
+.attach-chip .remove:hover{opacity:1;}
+.attach-list{position:absolute;bottom:100%;left:0;margin-bottom:6px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;min-width:280px;max-height:220px;overflow-y:auto;z-index:10;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.attach-list.open{display:block;}
+.attach-list-header{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);padding:10px 12px 4px;font-weight:600;}
+.attach-option{padding:9px 12px;font-size:12.5px;color:var(--white);cursor:pointer;transition:background 0.1s;display:flex;justify-content:space-between;align-items:center;}
+.attach-option:hover{background:var(--surface2);}
+.attach-option .doc-total{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);}
+
+/* Message type badge */
+.msg-type-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:0.3px;margin-left:6px;}
+.msg-type-badge.email{background:rgba(77,159,255,0.1);color:var(--blue);}
+.msg-type-badge.sms{background:rgba(200,241,53,0.1);color:var(--green);}
+.msg-attach-badge{font-size:9.5px;color:var(--amber);margin-top:2px;}
+
 .empty-state{text-align:center;padding:40px;color:var(--gray);font-size:13px;}
 
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
@@ -118,6 +150,11 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <span class="topbar-slash">/</span>
     <div class="topbar-sub" id="msg-count">0 sent</div>
     <div class="topbar-right">
+      <div class="filter-tabs" id="msg-filters">
+        <div class="filter-tab active" onclick="setMsgFilter('all')">All</div>
+        <div class="filter-tab" onclick="setMsgFilter('email')">Email</div>
+        <div class="filter-tab" onclick="setMsgFilter('sms')">SMS</div>
+      </div>
       <button class="btn-primary" onclick="toggleCompose()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
         New Message
@@ -133,17 +170,25 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;">NEW MESSAGE</div>
     <div onclick="toggleCompose()" style="cursor:pointer;color:var(--gray);font-size:18px;">&times;</div>
   </div>
+  <div class="type-tabs">
+    <div class="type-tab active" onclick="setMsgType('email')">Email</div>
+    <div class="type-tab" onclick="setMsgType('sms')">SMS</div>
+  </div>
   <div class="compose-field">
     <label class="compose-label">To (Customer)</label>
-    <select class="compose-input" id="msg-customer" onchange="fillCustomerEmail()">
+    <select class="compose-input" id="msg-customer" onchange="fillCustomerField()">
       <option value="">Select a customer...</option>
     </select>
   </div>
-  <div class="compose-field">
+  <div class="compose-field" id="email-field">
     <label class="compose-label">Email Address</label>
     <input class="compose-input" id="msg-to" type="email" placeholder="customer@email.com"/>
   </div>
-  <div class="compose-field">
+  <div class="compose-field" id="phone-field" style="display:none;">
+    <label class="compose-label">Phone Number</label>
+    <input class="compose-input" id="msg-phone" type="tel" placeholder="+1 (555) 123-4567"/>
+  </div>
+  <div class="compose-field" id="subject-field">
     <label class="compose-label">Subject</label>
     <input class="compose-input" id="msg-subject" type="text" placeholder="e.g. Your quote is ready"/>
   </div>
@@ -152,6 +197,14 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <textarea class="compose-input compose-textarea" id="msg-body" placeholder="Write your message..."></textarea>
   </div>
   <div class="compose-footer">
+    <div class="attach-dropdown" id="attach-area" style="margin-right:auto;">
+      <button class="attach-btn" onclick="toggleAttachList()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.49" stroke-width="1.8"/></svg>
+        Attach Quote / Invoice
+      </button>
+      <div class="attach-list" id="attach-list"></div>
+      <div id="attach-chip-area"></div>
+    </div>
     <button class="compose-btn" onclick="toggleCompose()">Cancel</button>
     <button class="compose-btn primary" onclick="sendMessage()">
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
@@ -174,13 +227,19 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
 <script>
+// ── State ──
+var _msgType = 'email';
+var _msgFilter = 'all';
+var _allMessages = [];
+var _attachedDoc = null; // { type: 'quote'|'invoice', id, label }
+
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
   document.getElementById('main').classList.toggle('expanded');
   document.getElementById('sidebar-toggle').classList.toggle('visible');
 }
 
-let _tt;
+var _tt;
 function showToast(msg){
   var t=document.getElementById('toast');
   document.getElementById('toast-msg').textContent=msg;
@@ -189,10 +248,37 @@ function showToast(msg){
   _tt=setTimeout(function(){t.classList.remove('show');},2500);
 }
 
+// ── Message type toggle (Email / SMS) ──
+function setMsgType(type) {
+  _msgType = type;
+  document.querySelectorAll('.type-tab').forEach(function(t) {
+    t.classList.toggle('active', t.textContent.toLowerCase() === type);
+  });
+  document.getElementById('email-field').style.display = type === 'email' ? '' : 'none';
+  document.getElementById('phone-field').style.display = type === 'sms' ? '' : 'none';
+  document.getElementById('subject-field').style.display = type === 'email' ? '' : 'none';
+  document.getElementById('attach-area').style.display = type === 'email' ? '' : 'none';
+  if (type === 'sms') { _attachedDoc = null; renderAttachChip(); }
+  fillCustomerField();
+}
+
+// ── Message list filter (All / Email / SMS) ──
+function setMsgFilter(filter) {
+  _msgFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(function(t) {
+    t.classList.toggle('active', t.textContent.toLowerCase() === filter);
+  });
+  renderMessages();
+}
+
+// ── Compose ──
 function toggleCompose() {
   var panel = document.getElementById('compose-panel');
   panel.classList.toggle('open');
-  if (panel.classList.contains('open')) loadCustomersForCompose();
+  if (panel.classList.contains('open')) {
+    loadCustomersForCompose();
+    loadAttachDocs();
+  }
 }
 
 async function loadCustomersForCompose() {
@@ -205,6 +291,7 @@ async function loadCustomersForCompose() {
       opt.value = c.id;
       opt.textContent = c.name || 'Unnamed';
       opt.dataset.email = c.email || '';
+      opt.dataset.phone = c.phone || '';
       opt.dataset.name = c.name || '';
       select.appendChild(opt);
     });
@@ -212,87 +299,187 @@ async function loadCustomersForCompose() {
   } catch(e) {}
 }
 
-function fillCustomerEmail() {
+function fillCustomerField() {
   var select = document.getElementById('msg-customer');
   var opt = select.options[select.selectedIndex];
-  if (opt && opt.dataset.email) {
+  if (!opt) return;
+  if (_msgType === 'email' && opt.dataset.email) {
     document.getElementById('msg-to').value = opt.dataset.email;
+  } else if (_msgType === 'sms' && opt.dataset.phone) {
+    document.getElementById('msg-phone').value = opt.dataset.phone;
   }
 }
 
+// ── Attachments ──
+async function loadAttachDocs() {
+  try {
+    var quotes = await API.quotes.list();
+    var invoices = await API.invoices.list();
+    var list = document.getElementById('attach-list');
+    var html = '';
+
+    if (quotes.length) {
+      html += '<div class="attach-list-header">Quotes</div>';
+      quotes.forEach(function(q) {
+        var label = (q.customerName || 'Quote') + ' — ' + (q.service || '');
+        html += '<div class="attach-option" onclick="selectAttachment(\'quote\',\'' + q.id + '\',\'' + label.replace(/'/g, "\\'") + '\')">' +
+          '<span>' + label + '</span>' +
+          '<span class="doc-total">$' + Number(q.total || 0).toFixed(2) + '</span></div>';
+      });
+    }
+    if (invoices.length) {
+      html += '<div class="attach-list-header">Invoices</div>';
+      invoices.forEach(function(inv) {
+        var label = (inv.customerName || 'Invoice') + ' — ' + (inv.service || '');
+        html += '<div class="attach-option" onclick="selectAttachment(\'invoice\',\'' + inv.id + '\',\'' + label.replace(/'/g, "\\'") + '\')">' +
+          '<span>' + label + '</span>' +
+          '<span class="doc-total">$' + Number(inv.total || 0).toFixed(2) + '</span></div>';
+      });
+    }
+    if (!html) html = '<div style="padding:16px;text-align:center;color:var(--gray);font-size:12px;">No quotes or invoices yet</div>';
+    list.innerHTML = html;
+  } catch(e) {}
+}
+
+function toggleAttachList() {
+  document.getElementById('attach-list').classList.toggle('open');
+}
+
+function selectAttachment(docType, docId, label) {
+  _attachedDoc = { type: docType, id: docId, label: label };
+  document.getElementById('attach-list').classList.remove('open');
+  renderAttachChip();
+}
+
+function removeAttachment() {
+  _attachedDoc = null;
+  renderAttachChip();
+}
+
+function renderAttachChip() {
+  var area = document.getElementById('attach-chip-area');
+  if (!_attachedDoc) { area.innerHTML = ''; return; }
+  var icon = _attachedDoc.type === 'quote' ? '📄' : '🧾';
+  area.innerHTML = '<div class="attach-chip">' + icon + ' ' + _attachedDoc.label +
+    '<span class="remove" onclick="removeAttachment()">&times;</span></div>';
+}
+
+// Close attach list on outside click
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('attach-area');
+  if (dd && !dd.contains(e.target)) {
+    document.getElementById('attach-list').classList.remove('open');
+  }
+});
+
+// ── Send message ──
 async function sendMessage() {
-  var to = document.getElementById('msg-to').value.trim();
-  var subject = document.getElementById('msg-subject').value.trim();
-  var body = document.getElementById('msg-body').value.trim();
   var custSelect = document.getElementById('msg-customer');
   var customerName = custSelect.options[custSelect.selectedIndex] ? custSelect.options[custSelect.selectedIndex].textContent : '';
   if (customerName === 'Select a customer...') customerName = '';
   var customerId = custSelect.value;
+  var body = document.getElementById('msg-body').value.trim();
 
-  if (!to) { showToast('Enter an email address'); return; }
-  if (!subject) { showToast('Enter a subject'); return; }
+  if (_msgType === 'sms') {
+    var phone = document.getElementById('msg-phone').value.trim();
+    if (!phone) { showToast('Enter a phone number'); return; }
+    if (!body) { showToast('Enter a message'); return; }
 
-  try {
-    var token = await getAuthToken();
-    var res = await fetch('/api/messages/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ to: to, subject: subject, body: body, customerId: customerId, customerName: customerName })
-    });
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Send failed');
-    showToast('Message sent to ' + to);
-    document.getElementById('msg-to').value = '';
-    document.getElementById('msg-subject').value = '';
-    document.getElementById('msg-body').value = '';
-    document.getElementById('msg-customer').selectedIndex = 0;
-    toggleCompose();
-    loadMessages();
-  } catch(e) {
-    showToast('Error: ' + e.message);
+    try {
+      await API.messages.send({ to: phone, body: body, type: 'sms', customerId: customerId, customerName: customerName });
+      showToast('SMS sent to ' + phone);
+      resetCompose();
+      loadMessages();
+    } catch(e) { showToast('Error: ' + e.message); }
+  } else {
+    var to = document.getElementById('msg-to').value.trim();
+    var subject = document.getElementById('msg-subject').value.trim();
+    if (!to) { showToast('Enter an email address'); return; }
+    if (!subject) { showToast('Enter a subject'); return; }
+
+    var payload = { to: to, subject: subject, body: body, type: 'email', customerId: customerId, customerName: customerName };
+    if (_attachedDoc) {
+      if (_attachedDoc.type === 'quote') payload.quoteId = _attachedDoc.id;
+      else payload.invoiceId = _attachedDoc.id;
+    }
+
+    try {
+      await API.messages.send(payload);
+      showToast('Email sent to ' + to);
+      resetCompose();
+      loadMessages();
+    } catch(e) { showToast('Error: ' + e.message); }
   }
 }
 
+function resetCompose() {
+  document.getElementById('msg-to').value = '';
+  document.getElementById('msg-phone').value = '';
+  document.getElementById('msg-subject').value = '';
+  document.getElementById('msg-body').value = '';
+  document.getElementById('msg-customer').selectedIndex = 0;
+  _attachedDoc = null;
+  renderAttachChip();
+  toggleCompose();
+}
+
+// ── Load & render messages ──
 async function loadMessages() {
   try {
-    var token = await getAuthToken();
-    var res = await fetch('/api/messages', { headers: { 'Authorization': 'Bearer ' + token } });
-    var messages = await res.json();
-    var list = document.getElementById('msg-list');
+    var messages = await API.messages.list();
+    _allMessages = messages;
     document.getElementById('msg-count').textContent = messages.length + ' sent';
-
-    if (!messages.length) {
-      list.innerHTML = '<div class="empty-state">No messages yet. Click New Message to send your first email.</div>';
-      return;
-    }
-
-    list.innerHTML = messages.map(function(m) {
-      var time = m.sentAt ? new Date(m.sentAt).toLocaleDateString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
-      return '<div class="msg-item">' +
-        '<div class="msg-icon" style="background:rgba(200,241,53,0.1);">✉️</div>' +
-        '<div class="msg-body">' +
-          '<div class="msg-to">' + (m.customerName || m.to) + '</div>' +
-          '<div class="msg-subject">' + (m.subject || '(no subject)') + '</div>' +
-          '<div class="msg-preview">' + (m.body || '').substring(0, 100).replace(/<[^>]*>/g,'') + '</div>' +
-        '</div>' +
-        '<div class="msg-meta">' +
-          '<div class="msg-time">' + time + '</div>' +
-          '<div class="msg-status sent">Sent</div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+    renderMessages();
   } catch(e) {}
 }
 
-async function getAuthToken() {
-  var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
-  var user = getAuth().currentUser;
-  if (!user) throw new Error('Not authenticated');
-  return user.getIdToken();
+function renderMessages() {
+  var list = document.getElementById('msg-list');
+  var filtered = _allMessages;
+  if (_msgFilter !== 'all') {
+    filtered = _allMessages.filter(function(m) { return (m.type || 'email') === _msgFilter; });
+  }
+
+  if (!filtered.length) {
+    var emptyMsg = _msgFilter === 'all'
+      ? 'No messages yet. Click New Message to get started.'
+      : 'No ' + _msgFilter.toUpperCase() + ' messages yet.';
+    list.innerHTML = '<div class="empty-state">' + emptyMsg + '</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function(m) {
+    var isSms = (m.type || 'email') === 'sms';
+    var time = m.sentAt ? new Date(m.sentAt).toLocaleDateString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+
+    var icon = isSms
+      ? '<div class="msg-icon" style="background:rgba(200,241,53,0.1);"><svg width="18" height="18" fill="none" stroke="#c8f135" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg></div>'
+      : '<div class="msg-icon" style="background:rgba(77,159,255,0.1);"><svg width="18" height="18" fill="none" stroke="#4d9fff" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg></div>';
+
+    var typeBadge = '<span class="msg-type-badge ' + (isSms ? 'sms' : 'email') + '">' + (isSms ? 'SMS' : 'Email') + '</span>';
+
+    var subjectLine = isSms ? '' : '<div class="msg-subject">' + (m.subject || '(no subject)') + '</div>';
+    var attachBadge = m.attachedDocType ? '<div class="msg-attach-badge">📎 ' + (m.attachedDocType === 'quote' ? 'Quote' : 'Invoice') + ' attached</div>' : '';
+
+    return '<div class="msg-item">' +
+      icon +
+      '<div class="msg-body">' +
+        '<div class="msg-to">' + (m.customerName || m.to) + typeBadge + '</div>' +
+        subjectLine +
+        '<div class="msg-preview">' + (m.body || '').substring(0, 120).replace(/<[^>]*>/g,'') + '</div>' +
+        attachBadge +
+      '</div>' +
+      '<div class="msg-meta">' +
+        '<div class="msg-time">' + time + '</div>' +
+        '<div class="msg-status sent">Sent</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 </script>
 
 <!-- Firebase Auth -->
+<script src="swft-api.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
@@ -322,8 +509,6 @@ async function getAuthToken() {
     }
   });
 </script>
-
-<script src="swft-api.js"></script>
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-settings-loader.js"></script>
 <script src="swft-account.js"></script>
