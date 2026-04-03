@@ -49,7 +49,7 @@ router.get("/", async (req, res, next) => {
       try {
         const friendlyName = profile.company || profile.name || `SWFT-${req.uid}`;
         const subAccount = await createSubAccount(friendlyName);
-        const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken);
+        const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken, profile.phone);
         const twilioFields = {
           twilioSubAccountSid: subAccount.sid,
           twilioAuthToken: subAccount.authToken,
@@ -119,7 +119,7 @@ router.post("/setup-twilio", async (req, res, next) => {
 
     const friendlyName = data.company || data.name || `SWFT-${req.uid}`;
     const subAccount = await createSubAccount(friendlyName);
-    const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken);
+    const phoneNumber = await buyPhoneNumber(subAccount.sid, subAccount.authToken, data.phone);
 
     await col().doc(req.uid).set({
       twilioSubAccountSid: subAccount.sid,
