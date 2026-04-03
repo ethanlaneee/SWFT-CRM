@@ -172,9 +172,12 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       }
     }
 
+    const INBOUND_ADDRESS = process.env.POSTMARK_INBOUND_ADDRESS || "bd196517d8ffba85bb53831c50d00fb1@inbound.postmarkapp.com";
+
     const emailPayload = {
       From: `${fromName} <${fromEmail}>`,
       To: to,
+      ReplyTo: INBOUND_ADDRESS,
       Subject: subject,
       HtmlBody: htmlBody,
       TextBody: body ? body.replace(/<[^>]*>/g, "") : "No content",
