@@ -310,6 +310,119 @@ router.delete("/:memberId", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Roles & Permissions ──
+
+const DEFAULT_PERMISSIONS = [
+  { id: "dashboard",      label: "View Dashboard",      group: "General" },
+  { id: "customers",      label: "Manage Customers",    group: "General" },
+  { id: "jobs",           label: "Manage Jobs",         group: "General" },
+  { id: "jobs.viewAll",   label: "View All Jobs",       group: "General" },
+  { id: "quotes",         label: "Manage Quotes",       group: "Billing" },
+  { id: "invoices",       label: "Manage Invoices",     group: "Billing" },
+  { id: "schedule",       label: "Manage Schedule",     group: "General" },
+  { id: "messages",       label: "Send Messages",       group: "Communication" },
+  { id: "ai",             label: "Use AI Assistant",    group: "General" },
+  { id: "team",           label: "Manage Team",         group: "Admin" },
+  { id: "integrations",   label: "Manage Integrations", group: "Admin" },
+  { id: "settings",       label: "Edit Settings",       group: "Admin" },
+];
+
+const BUILT_IN_ROLES = {
+  owner:      { name: "Owner",      builtIn: true, permissions: DEFAULT_PERMISSIONS.map(p => p.id) },
+  admin:      { name: "Admin",      builtIn: true, permissions: ["dashboard","customers","jobs","jobs.viewAll","quotes","invoices","schedule","messages","ai","team","integrations","settings"] },
+  office:     { name: "Office",     builtIn: true, permissions: ["dashboard","customers","jobs","jobs.viewAll","quotes","invoices","schedule","messages","ai"] },
+  technician: { name: "Technician", builtIn: true, permissions: ["dashboard","jobs","schedule","messages"] },
+};
+
+// GET /api/team/roles — get all roles and permissions for this org
+router.get("/roles", async (req, res, next) => {
+  try {
+    const doc = await db.collection("orgRoles").doc(req.orgId).get();
+    const customRoles = doc.exists ? doc.data().roles || {} : {};
+
+    // Merge built-in with any custom overrides
+    const roles = {};
+    for (const [id, role] of Object.entries(BUILT_IN_ROLES)) {
+      roles[id] = customRoles[id]
+        ? { ...role, permissions: customRoles[id].permissions }
+        : { ...role };
+    }
+    // Add custom roles
+    for (const [id, role] of Object.entries(customRoles)) {
+      if (!BUILT_IN_ROLES[id]) {
+        roles[id] = { ...role, builtIn: false };
+      }
+    }
+
+    res.json({ roles, permissions: DEFAULT_PERMISSIONS });
+  } catch (err) { next(err); }
+});
+
+// POST /api/team/roles — create or update a role
+router.post("/roles", async (req, res, next) => {
+  try {
+    if (req.userRole !== "owner") {
+      return res.status(403).json({ error: "Only the owner can manage roles" });
+    }
+
+    const { roleId, name, permissions } = req.body;
+    if (!roleId || !name) return res.status(400).json({ error: "Role ID and name are required" });
+    if (roleId === "owner") return res.status(403).json({ error: "Cannot modify the owner role" });
+    if (!Array.isArray(permissions)) return res.status(400).json({ error: "Permissions must be an array" });
+
+    // Validate permission IDs
+    const validIds = DEFAULT_PERMISSIONS.map(p => p.id);
+    const filtered = permissions.filter(p => validIds.includes(p));
+
+    const doc = await db.collection("orgRoles").doc(req.orgId).get();
+    const existing = doc.exists ? doc.data().roles || {} : {};
+
+    existing[roleId] = {
+      name,
+      permissions: filtered,
+      builtIn: !!BUILT_IN_ROLES[roleId],
+      updatedAt: Date.now(),
+    };
+
+    await db.collection("orgRoles").doc(req.orgId).set({ roles: existing }, { merge: true });
+
+    res.json({ success: true, roleId, permissions: filtered });
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/team/roles/:roleId — delete a custom role
+router.delete("/roles/:roleId", async (req, res, next) => {
+  try {
+    if (req.userRole !== "owner") {
+      return res.status(403).json({ error: "Only the owner can manage roles" });
+    }
+
+    const { roleId } = req.params;
+    if (BUILT_IN_ROLES[roleId]) {
+      return res.status(403).json({ error: "Cannot delete a built-in role" });
+    }
+
+    // Check no members are using this role
+    const memberSnap = await db.collection("team")
+      .where("orgId", "==", req.orgId)
+      .where("role", "==", roleId)
+      .limit(1)
+      .get();
+
+    if (!memberSnap.empty) {
+      return res.status(409).json({ error: "Cannot delete a role that is assigned to team members. Reassign them first." });
+    }
+
+    const doc = await db.collection("orgRoles").doc(req.orgId).get();
+    if (doc.exists) {
+      const roles = doc.data().roles || {};
+      delete roles[roleId];
+      await db.collection("orgRoles").doc(req.orgId).set({ roles }, { merge: true });
+    }
+
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
 
 // ── Public routes (no auth required for validate, auth-only for join) ──
 const publicRouter = require("express").Router();
