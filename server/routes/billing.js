@@ -52,8 +52,8 @@ router.post("/create-checkout-session", async (req, res, next) => {
     }
 
     const session = await stripe.checkout.sessions.create({
+      ui_mode:              "embedded",
       customer:             customerId,
-      payment_method_types: ["card"],
       line_items:           [{ price: priceId, quantity: 1 }],
       mode:                 "subscription",
       allow_promotion_codes: true,
@@ -61,12 +61,11 @@ router.post("/create-checkout-session", async (req, res, next) => {
         trial_period_days: 14,
         metadata: { firebaseUid: req.uid, plan: planKey },
       },
-      success_url: `${process.env.APP_URL}/swft-dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.APP_URL}/swft-checkout?plan=${planKey}&canceled=true`,
-      metadata:    { firebaseUid: req.uid, plan: planKey },
+      return_url: `${process.env.APP_URL}/swft-checkout?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
+      metadata:   { firebaseUid: req.uid, plan: planKey },
     });
 
-    res.json({ url: session.url });
+    res.json({ clientSecret: session.client_secret });
   } catch (err) { next(err); }
 });
 
@@ -105,7 +104,7 @@ router.get("/verify-session", async (req, res, next) => {
       return res.status(403).json({ error: "Session does not belong to this account." });
     }
 
-    if (session.payment_status !== "paid") {
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
       return res.status(402).json({ error: "Payment not completed.", paymentStatus: session.payment_status });
     }
 
