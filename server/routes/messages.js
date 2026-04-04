@@ -4,6 +4,8 @@ const postmark = require("postmark");
 const multer = require("multer");
 const { google } = require("googleapis");
 const { sendSms } = require("../twilio");
+const { getPlan } = require("../plans");
+const { getUsage, incrementSms } = require("../usage");
 
 const emailClient = new postmark.ServerClient(
   process.env.POSTMARK_API_TOKEN || "32a85e4b-55e5-45e2-950e-6c120b001007"
@@ -195,7 +197,20 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       if (!to) return res.status(400).json({ error: "Phone number is required" });
       if (!body) return res.status(400).json({ error: "Message body is required" });
 
+      // Enforce SMS cap based on user's plan
+      const plan = getPlan(user.plan);
+      if (plan.smsLimit !== Infinity) {
+        const usage = await getUsage(req.uid);
+        if (usage.smsCount >= plan.smsLimit) {
+          return res.status(429).json({
+            error: `SMS limit reached (${plan.smsLimit}/month on the ${plan.name} plan). Upgrade your plan for more SMS.`,
+          });
+        }
+      }
+
       const result = await sendSms(to, body);
+
+      await incrementSms(req.uid);
 
       const msgRecord = {
         userId: req.uid,
@@ -254,14 +269,16 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
 
     let sendResult;
     let sentVia;
+    let gmailWarning = null;
 
     if (user.gmailConnected && user.gmailTokens) {
-      // ── Send via Gmail ──
+      // ── Send via Gmail (preferred — free) ──
       user._uid = req.uid; // pass uid for token refresh
       sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, req.files || []);
       sentVia = "gmail";
     } else {
       // ── Fallback: send via Postmark ──
+      gmailWarning = "Email sent via Postmark. Connect your Gmail account in Settings for free, reliable email delivery.";
       const attachments = (req.files || []).map(f => ({
         Name: f.originalname,
         Content: f.buffer.toString("base64"),
@@ -317,7 +334,9 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       await db.collection("invoices").doc(attachedDocId).update({ status: "sent", sentAt: Date.now() });
     }
 
-    res.json({ success: true, id: docRef.id, sentVia });
+    const response = { success: true, id: docRef.id, sentVia };
+    if (gmailWarning) response.warning = gmailWarning;
+    res.json(response);
   } catch (err) {
     console.error("Message send error:", err);
     res.status(500).json({ error: err.message || "Failed to send message" });

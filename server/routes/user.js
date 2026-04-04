@@ -1,5 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { DEFAULT_PLAN, getPlan } = require("../plans");
+const { getUsage } = require("../usage");
 // TODO: Re-enable sub-accounts when Twilio is upgraded
 // const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
 
@@ -38,6 +40,7 @@ router.get("/", async (req, res, next) => {
         company: "",
         createdAt: now,
         // Subscription fields
+        plan: DEFAULT_PLAN,
         trialStartDate: now,
         trialEndDate: now + 14 * 24 * 60 * 60 * 1000, // 14 days from now
         isSubscribed: false,
@@ -72,7 +75,7 @@ router.put("/", async (req, res, next) => {
       // Logo
       "companyLogo",
       // Subscription
-      "isSubscribed", "stripeCustomerId", "accountStatus"
+      "plan", "isSubscribed", "stripeCustomerId", "accountStatus"
     ];
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
@@ -85,6 +88,22 @@ router.put("/", async (req, res, next) => {
     const doc = await col().doc(req.uid).get();
     const data = await checkTrialExpired(doc.id, doc.data());
     res.json({ id: doc.id, ...data });
+  } catch (err) { next(err); }
+});
+
+// GET /api/me/usage — returns current month's usage and plan limits
+router.get("/usage", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.uid).get();
+    const data = doc.exists ? doc.data() : {};
+    const plan = getPlan(data.plan);
+    const usage = await getUsage(req.uid);
+    res.json({
+      plan: data.plan || DEFAULT_PLAN,
+      planName: plan.name,
+      sms:  { used: usage.smsCount, limit: plan.smsLimit === Infinity ? "unlimited" : plan.smsLimit },
+      ai:   { used: usage.aiMessageCount, limit: plan.aiMessageLimit === Infinity ? "unlimited" : plan.aiMessageLimit },
+    });
   } catch (err) { next(err); }
 });
 

@@ -5,6 +5,8 @@ const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
 const { getIntegrationTools, executeIntegrationTool, syncJobToCalendar } = require("./integration-tools");
 const { sendSms } = require("../twilio");
+const { getPlan } = require("../plans");
+const { getUsage, incrementSms, incrementAiMessage } = require("../usage");
 
 const client = new Anthropic();
 
@@ -241,7 +243,17 @@ async function executeTool(toolName, input, uid, orgId) {
 
     case "send_sms": {
       try {
+        // Enforce SMS cap based on user's plan
+        const userDoc = await db.collection("users").doc(uid).get();
+        const userPlan = getPlan(userDoc.exists ? userDoc.data().plan : undefined);
+        if (userPlan.smsLimit !== Infinity) {
+          const usage = await getUsage(uid);
+          if (usage.smsCount >= userPlan.smsLimit) {
+            return { error: `SMS limit reached (${userPlan.smsLimit}/month on the ${userPlan.name} plan). The user needs to upgrade their plan for more SMS.` };
+          }
+        }
         const result = await sendSms(input.to, input.body);
+        await incrementSms(uid);
         // Save to messages collection
         await db.collection("messages").add({
           orgId: oid,
@@ -376,6 +388,19 @@ async function executeTool(toolName, input, uid, orgId) {
 // ── Main agent loop — handles tool calling with Claude ──
 
 async function runAgent(uid, userMessage, userProfile, orgId) {
+  // Enforce AI message cap based on user's plan
+  const plan = getPlan(userProfile.plan);
+  if (plan.aiMessageLimit !== Infinity) {
+    const usage = await getUsage(uid);
+    if (usage.aiMessageCount >= plan.aiMessageLimit) {
+      return {
+        message: `You've reached your AI message limit (${plan.aiMessageLimit}/month on the ${plan.name} plan). Upgrade your plan for more AI messages.`,
+        actions: [],
+      };
+    }
+  }
+  await incrementAiMessage(uid);
+
   // Get conversation history
   const history = await getConversationHistory(uid);
 

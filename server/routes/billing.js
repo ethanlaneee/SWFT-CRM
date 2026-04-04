@@ -19,11 +19,11 @@ const users = () => db.collection("users");
 // Creates a Stripe Checkout Session and returns the hosted URL.
 // The frontend redirects the browser there directly.
 //
-// Body: { priceId: "price_xxx" }  ← your Stripe Price ID
+// Body: { priceId: "price_xxx", plan: "starter"|"pro"|"business" }
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/create-checkout-session", async (req, res, next) => {
   try {
-    const { priceId } = req.body;
+    const { priceId, plan } = req.body;
     if (!priceId) {
       return res.status(400).json({ error: "priceId is required." });
     }
@@ -53,8 +53,8 @@ router.post("/create-checkout-session", async (req, res, next) => {
       // session_id token in the success URL lets the dashboard verify payment immediately
       success_url: `${process.env.APP_URL}/swft-dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${process.env.APP_URL}/swft-billing?canceled=true`,
-      metadata:    { firebaseUid: req.uid },
-      subscription_data: { metadata: { firebaseUid: req.uid } },
+      metadata:    { firebaseUid: req.uid, plan: plan || "starter" },
+      subscription_data: { metadata: { firebaseUid: req.uid, plan: plan || "starter" } },
     });
 
     res.json({ url: session.url });
@@ -96,6 +96,7 @@ router.get("/verify-session", async (req, res, next) => {
     await users().doc(req.uid).set({
       accountStatus:        "active",
       isSubscribed:         true,
+      plan:                 session.metadata?.plan || "starter",
       stripeSubscriptionId: session.subscription,
     }, { merge: true });
 
@@ -136,6 +137,7 @@ async function webhookHandler(req, res) {
         await users().doc(uid).set({
           accountStatus:        "active",
           isSubscribed:         true,
+          plan:                 session.metadata?.plan || "starter",
           stripeCustomerId:     session.customer,
           stripeSubscriptionId: session.subscription,
         }, { merge: true });
