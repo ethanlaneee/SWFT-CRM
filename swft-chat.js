@@ -583,10 +583,25 @@
     const el = document.createElement("div");
     el.className = `swft-chat-msg ${role}`;
     // Strip markdown formatting for clean display
-    el.textContent = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^[-•]\s/gm, "").replace(/^#+\s/gm, "");
+    const cleaned = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^[-•]\s/gm, "").replace(/^#+\s/gm, "");
+    el.textContent = cleaned;
     messagesContainer.insertBefore(el, typingEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     return el;
+  }
+
+  // ── Add navigation button for maps links ──
+  function addNavButton(address, mapsUrl) {
+    const el = document.createElement("a");
+    el.href = mapsUrl;
+    el.target = "_blank";
+    el.rel = "noopener";
+    el.className = "swft-chat-action";
+    el.style.cssText = "text-decoration:none;cursor:pointer;";
+    el.innerHTML = '<span class="action-icon">📍</span> Open in Google Maps — ' +
+      address.substring(0, 40) + (address.length > 40 ? '...' : '');
+    messagesContainer.insertBefore(el, typingEl);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
   // ── Add action card ──
@@ -607,6 +622,7 @@
       get_dashboard_stats: ["Dashboard", "stats"],
       send_sms: ["SMS sent", input.to || ""],
       get_weather: ["Weather", input.city || "forecast"],
+      navigate_to_customer: ["Navigate", input.customerName || "customer"],
       get_directions: ["Directions", input.destination || "route"],
       list_calendar_events: ["Calendar", "events"],
       create_calendar_event: ["Calendar", input.title || "event"],
@@ -660,9 +676,15 @@
       // Remove acknowledgment
       if (ackEl && ackEl.parentNode) ackEl.remove();
 
-      // Show action cards
+      // Show action cards + navigation buttons
       if (data.actions && data.actions.length > 0) {
-        data.actions.forEach((a) => addAction(a.tool, a.input));
+        data.actions.forEach((a) => {
+          addAction(a.tool, a.input);
+          // If navigate_to_customer returned a maps URL, show a clickable button
+          if (a.tool === "navigate_to_customer" && a.result && a.result.mapsUrl) {
+            addNavButton(a.result.address, a.result.mapsUrl);
+          }
+        });
       }
 
       // Show response

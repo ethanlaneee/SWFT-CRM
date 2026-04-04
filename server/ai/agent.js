@@ -196,6 +196,32 @@ async function executeTool(toolName, input, uid) {
       };
     }
 
+    case "navigate_to_customer": {
+      let address = "";
+      let name = "";
+
+      if (input.customerId) {
+        const cDoc = await db.collection("customers").doc(input.customerId).get();
+        if (!cDoc.exists || cDoc.data().userId !== uid) return { error: "Customer not found" };
+        address = cDoc.data().address || "";
+        name = cDoc.data().name || "";
+      } else if (input.customerName) {
+        const snap = await db.collection("customers").where("userId", "==", uid).get();
+        const q = (input.customerName || "").toLowerCase();
+        const match = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .find(c => c.name.toLowerCase().includes(q));
+        if (!match) return { error: `No customer found matching "${input.customerName}"` };
+        address = match.address || "";
+        name = match.name || "";
+      }
+
+      if (!address) return { error: `${name || "Customer"} doesn't have an address on file` };
+
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+      return { name, address, mapsUrl };
+    }
+
     case "send_sms": {
       try {
         const result = await sendSms(input.to, input.body);

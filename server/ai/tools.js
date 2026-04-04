@@ -225,6 +225,17 @@ const tools = [
     },
   },
   {
+    name: "navigate_to_customer",
+    description: "Open Google Maps navigation to a customer's address. Use when the user says 'take me to', 'navigate to', 'directions to [customer]', or 'how do I get to [customer]'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        customerId: { type: "string", description: "The customer's ID" },
+        customerName: { type: "string", description: "Customer name to search for if ID not known" },
+      },
+    },
+  },
+  {
     name: "get_directions",
     description: "Get driving directions and travel time between two addresses. Use when the user asks about drive time, how to get to a job site, or route between locations.",
     input_schema: {
