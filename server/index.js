@@ -38,7 +38,16 @@ app.get("/api/auth/google/callback", googleCallback);
 
 // ── Serve frontend files ──
 const staticRoot = path.join(__dirname, "..");
-app.use(express.static(staticRoot, { extensions: ["html"] }));
+
+// Rewrite clean URLs → .html before static lookup (e.g. /swft-customers → /swft-customers.html)
+app.use((req, res, next) => {
+  if (req.method === "GET" && !req.path.startsWith("/api/") && !path.extname(req.path) && req.path !== "/") {
+    req.url = req.url.replace(req.path, req.path + ".html");
+  }
+  next();
+});
+
+app.use(express.static(staticRoot));
 
 // ── Routes ──
 // /api/me is auth-only: expired/canceled users must still reach their profile
@@ -58,19 +67,6 @@ app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 
 // ── Root redirect ──
 app.get("/", (req, res) => res.redirect("/swft-login"));
-
-// ── Clean URL fallback ──
-// If express.static's extensions option didn't match, try serving the .html file directly
-const fs = require("fs");
-app.use((req, res, next) => {
-  // Skip API routes, files with extensions, and non-GET requests
-  if (req.method !== "GET" || req.path.startsWith("/api/") || path.extname(req.path)) return next();
-  const htmlPath = path.join(staticRoot, req.path + ".html");
-  fs.access(htmlPath, fs.constants.F_OK, (err) => {
-    if (err) return next();
-    res.sendFile(htmlPath);
-  });
-});
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));
