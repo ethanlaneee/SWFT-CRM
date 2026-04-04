@@ -492,19 +492,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // Make page visible immediately — no hiding on login page
   document.body.style.visibility = 'visible';
 
-  // Only redirect away if user is already logged in AND their account is in good standing
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // If redirected from checkout page, go back there instead of dashboard
-      const redirect = new URLSearchParams(window.location.search).get('redirect');
-      if (redirect && redirect.startsWith('swft-')) {
-        const plan = new URLSearchParams(window.location.search).get('plan') || '';
-        window.location.href = plan ? `${redirect}?plan=${plan}` : redirect;
-        return;
-      }
-      await goToDashboard();
-    }
-  });
+  // Do not auto-redirect — wait for the user to sign in manually
 
   // ── SAVE USER TO FIRESTORE ──
   async function saveUserToFirestore(user, extraData = {}) {
