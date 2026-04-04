@@ -9,9 +9,14 @@ router.get("/", async (req, res, next) => {
     const snap = await col().where("orgId", "==", req.orgId).get();
     let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Technicians only see jobs assigned to them
+    // Technicians only see jobs explicitly assigned to them
+    // If NO jobs have assignedTo set yet, they see all (graceful migration)
     if (req.userRole === "technician") {
-      results = results.filter(r => r.assignedTo === req.uid);
+      const anyAssigned = results.some(r => r.assignedTo);
+      if (anyAssigned) {
+        results = results.filter(r => r.assignedTo === req.uid);
+      }
+      // If no jobs have assignedTo set at all yet, show all (zero-config rollout)
     }
 
     if (req.query.status) results = results.filter(r => r.status === req.query.status);

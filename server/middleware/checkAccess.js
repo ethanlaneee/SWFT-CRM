@@ -5,6 +5,31 @@ const col = () => db.collection("users");
 // Admin accounts bypass all subscription/trial checks
 const ADMIN_EMAILS = ["ethan@goswft.com"];
 
+// Maps API base routes → permission key
+const ROUTE_PERMISSION = {
+  "/api/dashboard":     "dashboard",
+  "/api/customers":     "customers",
+  "/api/jobs":          "jobs",
+  "/api/quotes":        "quotes",
+  "/api/invoices":      "invoices",
+  "/api/schedule":      "schedule",
+  "/api/messages":      "messages",
+  "/api/ai":            "ai",
+  "/api/team":          "team",
+  "/api/integrations":  "integrations",
+  "/api/payments":      "invoices",
+  "/api/photos":        "jobs",
+  "/api/notifications": "dashboard",
+};
+
+// Permissions per built-in role
+const ROLE_PERMISSIONS = {
+  owner:      null, // null = unrestricted
+  admin:      new Set(["dashboard","customers","jobs","quotes","invoices","schedule","messages","ai","team","integrations","settings"]),
+  office:     new Set(["dashboard","customers","jobs","quotes","invoices","schedule","messages","ai"]),
+  technician: new Set(["dashboard","jobs","schedule","messages","ai"]),
+};
+
 /**
  * checkAccess middleware — runs after the `auth` middleware on all private routes.
  *
@@ -76,6 +101,17 @@ async function checkAccess(req, res, next) {
     }
 
     if (!accountStatus || accountStatus === "active" || accountStatus === "trialing") {
+      // ── Role-based permission check ────────────────────────────────────────
+      const role = req.userRole || "owner";
+      const allowedPerms = ROLE_PERMISSIONS[role]; // null = owner (unrestricted)
+      if (allowedPerms) {
+        const requiredPerm = ROUTE_PERMISSION[req.baseUrl];
+        if (requiredPerm && !allowedPerms.has(requiredPerm)) {
+          return res.status(403).json({
+            error: `Your role (${role}) doesn't have permission to access this area.`,
+          });
+        }
+      }
       return next();
     }
 
