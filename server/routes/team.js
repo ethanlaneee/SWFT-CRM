@@ -313,25 +313,76 @@ router.delete("/:memberId", async (req, res, next) => {
 // ── Roles & Permissions ──
 
 const DEFAULT_PERMISSIONS = [
-  { id: "dashboard",      label: "View Dashboard",      group: "General" },
-  { id: "customers",      label: "Manage Customers",    group: "General" },
-  { id: "jobs",           label: "Manage Jobs",         group: "General" },
-  { id: "jobs.viewAll",   label: "View All Jobs",       group: "General" },
-  { id: "quotes",         label: "Manage Quotes",       group: "Billing" },
-  { id: "invoices",       label: "Manage Invoices",     group: "Billing" },
-  { id: "schedule",       label: "Manage Schedule",     group: "General" },
-  { id: "messages",       label: "Send Messages",       group: "Communication" },
-  { id: "ai",             label: "Use AI Assistant",    group: "General" },
-  { id: "team",           label: "Manage Team",         group: "Admin" },
-  { id: "integrations",   label: "Manage Integrations", group: "Admin" },
-  { id: "settings",       label: "Edit Settings",       group: "Admin" },
+  // General
+  { id: "dashboard.view",       label: "View Dashboard",         group: "General" },
+  { id: "ai.use",               label: "Use AI Assistant",       group: "General" },
+  // Customers
+  { id: "customers.view",       label: "View Customers",         group: "Customers" },
+  { id: "customers.add",        label: "Add Customers",          group: "Customers" },
+  { id: "customers.edit",       label: "Edit Customers",         group: "Customers" },
+  { id: "customers.delete",     label: "Delete Customers",       group: "Customers" },
+  // Jobs
+  { id: "jobs.view",            label: "View Jobs",              group: "Jobs" },
+  { id: "jobs.viewAll",         label: "View All Jobs (not just assigned)", group: "Jobs" },
+  { id: "jobs.add",             label: "Add Jobs",               group: "Jobs" },
+  { id: "jobs.edit",            label: "Edit Jobs",              group: "Jobs" },
+  { id: "jobs.delete",          label: "Delete Jobs",            group: "Jobs" },
+  // Quotes
+  { id: "quotes.view",          label: "View Quotes",            group: "Quotes" },
+  { id: "quotes.add",           label: "Create Quotes",          group: "Quotes" },
+  { id: "quotes.edit",          label: "Edit Quotes",            group: "Quotes" },
+  { id: "quotes.delete",        label: "Delete Quotes",          group: "Quotes" },
+  // Invoices
+  { id: "invoices.view",        label: "View Invoices",          group: "Invoices" },
+  { id: "invoices.add",         label: "Create Invoices",        group: "Invoices" },
+  { id: "invoices.edit",        label: "Edit Invoices",          group: "Invoices" },
+  { id: "invoices.delete",      label: "Delete Invoices",        group: "Invoices" },
+  // Schedule
+  { id: "schedule.view",        label: "View Schedule",          group: "Schedule" },
+  { id: "schedule.add",         label: "Add Schedule Entries",   group: "Schedule" },
+  { id: "schedule.edit",        label: "Edit Schedule Entries",  group: "Schedule" },
+  { id: "schedule.delete",      label: "Delete Schedule Entries",group: "Schedule" },
+  // Messages
+  { id: "messages.view",        label: "View Messages",          group: "Messages" },
+  { id: "messages.send",        label: "Send Messages",          group: "Messages" },
+  // Admin
+  { id: "team.manage",          label: "Manage Team",            group: "Admin" },
+  { id: "integrations.manage",  label: "Manage Integrations",    group: "Admin" },
+  { id: "settings.manage",      label: "Edit Settings",          group: "Admin" },
 ];
 
+const ALL_PERM_IDS = DEFAULT_PERMISSIONS.map(p => p.id);
+
 const BUILT_IN_ROLES = {
-  owner:      { name: "Owner",      builtIn: true, permissions: DEFAULT_PERMISSIONS.map(p => p.id) },
-  admin:      { name: "Admin",      builtIn: true, permissions: ["dashboard","customers","jobs","jobs.viewAll","quotes","invoices","schedule","messages","ai","team","integrations","settings"] },
-  office:     { name: "Office",     builtIn: true, permissions: ["dashboard","customers","jobs","jobs.viewAll","quotes","invoices","schedule","messages","ai"] },
-  technician: { name: "Technician", builtIn: true, permissions: ["dashboard","jobs","schedule","messages"] },
+  owner: { name: "Owner", builtIn: true, permissions: ALL_PERM_IDS },
+  admin: { name: "Admin", builtIn: true, permissions: [
+    "dashboard.view",
+    "customers.view","customers.add","customers.edit","customers.delete",
+    "jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete",
+    "quotes.view","quotes.add","quotes.edit","quotes.delete",
+    "invoices.view","invoices.add","invoices.edit","invoices.delete",
+    "schedule.view","schedule.add","schedule.edit","schedule.delete",
+    "messages.view","messages.send",
+    "ai.use",
+    "team.manage","integrations.manage","settings.manage",
+  ]},
+  office: { name: "Office", builtIn: true, permissions: [
+    "dashboard.view",
+    "customers.view","customers.add","customers.edit","customers.delete",
+    "jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete",
+    "quotes.view","quotes.add","quotes.edit","quotes.delete",
+    "invoices.view","invoices.add","invoices.edit","invoices.delete",
+    "schedule.view","schedule.add","schedule.edit","schedule.delete",
+    "messages.view","messages.send",
+    "ai.use",
+  ]},
+  technician: { name: "Technician", builtIn: true, permissions: [
+    "dashboard.view",
+    "jobs.view","jobs.edit",
+    "schedule.view",
+    "messages.view","messages.send",
+    "ai.use",
+  ]},
 };
 
 // GET /api/team/roles — get all roles and permissions for this org
@@ -371,8 +422,7 @@ router.post("/roles", async (req, res, next) => {
     if (!Array.isArray(permissions)) return res.status(400).json({ error: "Permissions must be an array" });
 
     // Validate permission IDs
-    const validIds = DEFAULT_PERMISSIONS.map(p => p.id);
-    const filtered = permissions.filter(p => validIds.includes(p));
+    const filtered = permissions.filter(p => ALL_PERM_IDS.includes(p));
 
     const doc = await db.collection("orgRoles").doc(req.orgId).get();
     const existing = doc.exists ? doc.data().roles || {} : {};
