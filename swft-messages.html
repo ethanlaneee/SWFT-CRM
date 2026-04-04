@@ -414,6 +414,38 @@ async function disconnectGmail(){
   }catch(e){showToast('Error: '+e.message);}
 }
 
+function showConnectEmailPopup(){
+  var existing=document.getElementById('connect-email-popup');
+  if(existing)existing.remove();
+
+  var overlay=document.createElement('div');
+  overlay.id='connect-email-popup';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;';
+
+  overlay.innerHTML=
+    '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:400px;padding:32px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.6);transform:scale(0.96);transition:transform 0.25s cubic-bezier(0.22,1,0.36,1);">'+
+      '<div style="width:52px;height:52px;border-radius:14px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">'+
+        '<svg width="24" height="24" fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>'+
+      '</div>'+
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);margin-bottom:8px;">CONNECT YOUR EMAIL</div>'+
+      '<div style="font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:24px;">Link your Gmail account to send emails directly from your own address. Your customers will see your real email and can reply to you directly.</div>'+
+      '<div style="display:flex;gap:10px;justify-content:center;">'+
+        '<button onclick="document.getElementById(\'connect-email-popup\').remove()" style="padding:10px 20px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:13px;cursor:pointer;font-family:\'DM Sans\',sans-serif;transition:all 0.14s;">Cancel</button>'+
+        '<button onclick="document.getElementById(\'connect-email-popup\').remove();connectGmail();" style="padding:10px 24px;border-radius:9px;border:none;background:var(--green);color:#0a0a0a;font-size:13px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif;transition:all 0.14s;display:flex;align-items:center;gap:8px;">'+
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>'+
+          'Connect Gmail'+
+        '</button>'+
+      '</div>'+
+    '</div>';
+
+  document.body.appendChild(overlay);
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  requestAnimationFrame(function(){
+    overlay.style.opacity='1';
+    overlay.querySelector('div').style.transform='scale(1)';
+  });
+}
+
 // ── Build contact list from messages ──
 function buildContacts(){
   var map={};
@@ -678,6 +710,13 @@ async function sendMessage(){
   if(!body&&!_attachedFiles.length){showToast('Enter a message');return;}
 
   var c=_activeContact;
+
+  // Block email sending if Gmail not connected
+  if(c.channel==='email'&&!_gmailConnected){
+    showConnectEmailPopup();
+    return;
+  }
+
   var to=c.channel==='sms'?(c.phone||c.to):(c.email||c.to);
   var hasFiles=c.channel==='email'&&_attachedFiles.length>0;
 
