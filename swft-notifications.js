@@ -86,64 +86,139 @@
   `;
   document.head.appendChild(style);
 
-  // Default notifications (sample data)
-  const notifications = [];
+  var notifications = [];
 
   // Build dropdown
-  const dropdown = document.createElement("div");
+  var dropdown = document.createElement("div");
   dropdown.className = "notif-dropdown";
-  dropdown.innerHTML = `
-    <div class="notif-header">
-      <h4>NOTIFICATIONS</h4>
-      <button class="notif-mark-read" onclick="markAllRead()">Mark all read</button>
-    </div>
-    <div class="notif-list" id="notif-list"></div>
-  `;
+  dropdown.innerHTML =
+    '<div class="notif-header">' +
+      '<h4>NOTIFICATIONS</h4>' +
+      '<button class="notif-mark-read" onclick="markAllRead()">Mark all read</button>' +
+    '</div>' +
+    '<div class="notif-list" id="notif-list"></div>';
   document.body.appendChild(dropdown);
 
-  // Render notifications
   function renderNotifications() {
-    const list = document.getElementById("notif-list");
+    var list = document.getElementById("notif-list");
+    if (!list) return;
     if (notifications.length === 0) {
       list.innerHTML = '<div class="notif-empty">No notifications yet</div>';
-      return;
+    } else {
+      list.innerHTML = notifications.map(function(n) {
+        return '<div class="notif-item ' + (n.unread ? 'unread' : '') + '" onclick="' + (n.href ? "window.location.href='" + n.href + "'" : '') + '">' +
+          '<div class="notif-icon" style="background:' + (n.bg || 'rgba(200,241,53,0.1)') + ';">' + (n.icon || '🔔') + '</div>' +
+          '<div class="notif-body">' +
+            '<div class="notif-text">' + n.text + '</div>' +
+            '<div class="notif-time">' + (n.time || '') + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
     }
-    list.innerHTML = notifications
-      .map(
-        (n) => `
-      <div class="notif-item ${n.unread ? "unread" : ""}">
-        <div class="notif-icon" style="background:${n.bg};">${n.icon}</div>
-        <div class="notif-body">
-          <div class="notif-text">${n.text}</div>
-          <div class="notif-time">${n.time}</div>
-        </div>
-      </div>
-    `
-      )
-      .join("");
+    updateBadge();
   }
-  // Check if all were previously marked as read
-  const readAt = localStorage.getItem('swft_notifs_read_at');
-  if (readAt) {
-    notifications.forEach(n => n.unread = false);
-    document.querySelectorAll('.badge-dot').forEach(d => d.style.display = 'none');
+
+  function updateBadge() {
+    var hasUnread = notifications.some(function(n) { return n.unread; });
+    document.querySelectorAll('.badge-dot').forEach(function(d) {
+      d.style.display = hasUnread ? '' : 'none';
+    });
   }
+
+  function formatTimeAgo(ts) {
+    if (!ts) return '';
+    var diff = Date.now() - ts;
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // Load saved notifications from localStorage
+  try {
+    var saved = JSON.parse(localStorage.getItem('swft_notifs') || '[]');
+    saved.forEach(function(n) { notifications.push(n); });
+  } catch (e) {}
+
+  // Save notifications
+  function saveNotifs() {
+    try {
+      localStorage.setItem('swft_notifs', JSON.stringify(notifications.slice(0, 50)));
+    } catch (e) {}
+  }
+
+  // Check for new inbound messages
+  async function checkNewMessages() {
+    try {
+      // Need auth token
+      if (typeof getAuthToken !== 'function') return;
+      var token = await getAuthToken();
+      var res = await fetch('/api/messages', {
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) return;
+      var messages = await res.json();
+
+      var lastChecked = parseInt(localStorage.getItem('swft_notif_last_checked') || '0');
+      var newInbound = messages.filter(function(m) {
+        return m.direction === 'inbound' && (m.sentAt || 0) > lastChecked;
+      });
+
+      if (newInbound.length > 0) {
+        // Add notifications for each new inbound message
+        newInbound.forEach(function(m) {
+          var isSms = m.type === 'sms';
+          var icon = isSms ? '💬' : '✉️';
+          var bg = isSms ? 'rgba(200,241,53,0.1)' : 'rgba(77,159,255,0.1)';
+          var name = m.customerName || m.from || 'Unknown';
+          var preview = (m.body || '').substring(0, 60);
+          if (preview.length >= 60) preview += '…';
+          var text = '<strong>' + name + '</strong> ' + (isSms ? 'sent an SMS' : 'sent an email');
+          if (m.subject) text += ': ' + m.subject;
+          if (preview && !m.subject) text += ': ' + preview;
+
+          // Check if already exists (avoid duplicates)
+          var msgId = m.id || m.gmailMessageId || m.twilioMessageSid || '';
+          var exists = notifications.some(function(n) { return n.msgId === msgId; });
+          if (!exists) {
+            notifications.unshift({
+              icon: icon,
+              bg: bg,
+              text: text,
+              time: formatTimeAgo(m.sentAt),
+              unread: true,
+              msgId: msgId,
+              href: 'swft-messages.html',
+              sentAt: m.sentAt || 0
+            });
+          }
+        });
+
+        // Update last checked to the most recent message time
+        var maxTime = Math.max.apply(null, newInbound.map(function(m) { return m.sentAt || 0; }));
+        localStorage.setItem('swft_notif_last_checked', maxTime.toString());
+        saveNotifs();
+        renderNotifications();
+      }
+    } catch (e) {
+      // Silently fail — user may not be logged in
+    }
+  }
+
   renderNotifications();
 
   // Toggle
-  let isOpen = false;
+  var isOpen = false;
 
   function wireIconBtns() {
-    document.querySelectorAll(".icon-btn").forEach((btn) => {
-      // Only wire bells (has the badge-dot or bell SVG)
-      if (btn.querySelector(".badge-dot") || btn.innerHTML.includes("M18 8A6")) {
-        btn.onclick = (e) => {
+    document.querySelectorAll(".icon-btn").forEach(function(btn) {
+      if (btn.querySelector(".badge-dot") || btn.innerHTML.indexOf("M18 8A6") > -1) {
+        btn.onclick = function(e) {
           e.stopPropagation();
           isOpen = !isOpen;
           dropdown.classList.toggle("open", isOpen);
           if (isOpen) {
-            // Position near the bell
-            const rect = btn.getBoundingClientRect();
+            var rect = btn.getBoundingClientRect();
             dropdown.style.top = rect.bottom + 8 + "px";
             dropdown.style.right = window.innerWidth - rect.right + "px";
           }
@@ -153,7 +228,7 @@
   }
 
   // Close on outside click
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", function(e) {
     if (isOpen && !dropdown.contains(e.target)) {
       isOpen = false;
       dropdown.classList.remove("open");
@@ -162,43 +237,39 @@
 
   // Mark all read
   window.markAllRead = function () {
-    localStorage.setItem('swft_notifs_read_at', Date.now().toString());
-    notifications.forEach((n) => (n.unread = false));
+    notifications.forEach(function(n) { n.unread = false; });
+    saveNotifs();
     renderNotifications();
-    document.querySelectorAll(".badge-dot").forEach((d) => (d.style.display = "none"));
   };
 
-  // Wire after DOM loads
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", wireIconBtns);
-  } else {
-    wireIconBtns();
-  }
-
-  // Public function to add real notifications from AI actions, automations, etc.
-  window.swftNotify = function(text, icon, bg) {
+  // Public function to add notifications from anywhere
+  window.swftNotify = function(text, icon, bg, href) {
     notifications.unshift({
       icon: icon || '🔔',
       bg: bg || 'rgba(200,241,53,0.1)',
       text: text,
       time: 'Just now',
-      unread: true
+      unread: true,
+      href: href || ''
     });
+    saveNotifs();
     renderNotifications();
-    // Show badge dot
-    document.querySelectorAll('.badge-dot').forEach(function(d) { d.style.display = ''; });
-    // Save to localStorage
-    localStorage.setItem('swft_notifs', JSON.stringify(notifications.slice(0, 20)));
   };
 
-  // Load saved notifications from localStorage
-  var saved = localStorage.getItem('swft_notifs');
-  if (saved) {
-    try {
-      var parsed = JSON.parse(saved);
-      parsed.forEach(function(n) { notifications.push(n); });
-    } catch(e) {}
+  // Wire after DOM loads, then check messages
+  function init() {
+    wireIconBtns();
+    updateBadge();
+    // Check for new messages after a short delay (let auth load)
+    setTimeout(checkNewMessages, 1500);
+    // Poll every 60 seconds
+    setInterval(checkNewMessages, 60000);
   }
-  renderNotifications();
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 
 })();
