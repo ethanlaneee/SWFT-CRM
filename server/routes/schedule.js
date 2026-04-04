@@ -6,7 +6,7 @@ const col = () => db.collection("schedule");
 // List schedule entries
 router.get("/", async (req, res, next) => {
   try {
-    const snap = await col().where("userId", "==", req.uid).get();
+    const snap = await col().where("orgId", "==", req.orgId).get();
     const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     results.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     res.json(results);
@@ -17,6 +17,7 @@ router.get("/", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const data = {
+      orgId: req.orgId,
       userId: req.uid,
       jobId: req.body.jobId || null,
       title: req.body.title || "",
@@ -36,7 +37,7 @@ router.post("/", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Schedule entry not found" });
     }
     const updates = {};
@@ -53,7 +54,7 @@ router.put("/:id", async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Schedule entry not found" });
     }
     await col().doc(req.params.id).delete();

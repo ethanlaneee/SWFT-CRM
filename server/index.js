@@ -72,6 +72,7 @@ app.use("/api/quotes",    auth, checkAccess,  require("./routes/quotes"));
 app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
+app.use("/api/team",      auth, checkAccess,  require("./routes/team"));
 app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);

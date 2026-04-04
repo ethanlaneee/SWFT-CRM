@@ -247,6 +247,26 @@ const tools = [
       required: ["origin", "destination"],
     },
   },
+  {
+    name: "list_team_members",
+    description: "List all team members in the organization. Use when the user asks about their team, crew, who's available, or wants to assign someone to a job.",
+    input_schema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "assign_job",
+    description: "Assign a job to a specific team member. Use when the user says 'assign [job] to [person]' or 'give [job] to [technician]'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        jobId: { type: "string", description: "The job ID to assign" },
+        assigneeUid: { type: "string", description: "The UID of the team member to assign the job to" },
+      },
+      required: ["jobId", "assigneeUid"],
+    },
+  },
 ];
 
 module.exports = tools;

@@ -3,10 +3,10 @@ const { db } = require("../firebase");
 
 const col = () => db.collection("customers");
 
-// List customers for the current user
+// List customers for the org
 router.get("/", async (req, res, next) => {
   try {
-    const snap = await col().where("userId", "==", req.uid).get();
+    const snap = await col().where("orgId", "==", req.orgId).get();
     const customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     customers.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     res.json(customers);
@@ -17,7 +17,7 @@ router.get("/", async (req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Customer not found" });
     }
     res.json({ id: doc.id, ...doc.data() });
@@ -28,7 +28,8 @@ router.get("/:id", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const data = {
-      userId: req.uid,
+      orgId: req.orgId,
+      userId: req.uid, // keep for legacy compat
       name: req.body.name || "",
       email: req.body.email || "",
       phone: req.body.phone || "",
@@ -42,11 +43,11 @@ router.post("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Update customer — re-fetch after write so response reflects actual saved state
+// Update customer
 router.put("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Customer not found" });
     }
     const updates = {};
@@ -60,35 +61,26 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Delete customer — cascading delete of jobs, quotes, invoices using Firestore batches
-// Matches strictly by customerId (not name) to avoid hitting other customers' data
+// Delete customer — cascading delete
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Customer not found" });
     }
-
     const customerId = req.params.id;
-
-    // Fetch all related collections in parallel
     const [jobsSnap, quotesSnap, invoicesSnap] = await Promise.all([
-      db.collection("jobs").where("userId", "==", req.uid).where("customerId", "==", customerId).get(),
-      db.collection("quotes").where("userId", "==", req.uid).where("customerId", "==", customerId).get(),
-      db.collection("invoices").where("userId", "==", req.uid).where("customerId", "==", customerId).get(),
+      db.collection("jobs").where("orgId", "==", req.orgId).where("customerId", "==", customerId).get(),
+      db.collection("quotes").where("orgId", "==", req.orgId).where("customerId", "==", customerId).get(),
+      db.collection("invoices").where("orgId", "==", req.orgId).where("customerId", "==", customerId).get(),
     ]);
-
-    // Firestore batch supports up to 500 ops — chunk if needed
     const allDocs = [...jobsSnap.docs, ...quotesSnap.docs, ...invoicesSnap.docs];
-    const chunkSize = 499;
-    for (let i = 0; i < allDocs.length; i += chunkSize) {
+    for (let i = 0; i < allDocs.length; i += 499) {
       const batch = db.batch();
-      allDocs.slice(i, i + chunkSize).forEach(d => batch.delete(d.ref));
+      allDocs.slice(i, i + 499).forEach(d => batch.delete(d.ref));
       await batch.commit();
     }
-
     await col().doc(customerId).delete();
-
     res.json({ success: true, deleted: { jobs: jobsSnap.size, quotes: quotesSnap.size, invoices: invoicesSnap.size } });
   } catch (err) { next(err); }
 });

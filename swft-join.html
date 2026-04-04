@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT — Join Team</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--red:#ff5252;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:18px;width:420px;max-width:92vw;padding:40px 32px;text-align:center;animation:fadeUp 0.4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;margin-bottom:4px;}
+.logo em{color:var(--green);font-style:normal;}
+.subtitle{font-size:11px;color:var(--gray2);letter-spacing:2px;margin-bottom:28px;}
+.invite-info{margin-bottom:24px;}
+.invite-info h2{font-size:18px;font-weight:600;margin-bottom:6px;}
+.invite-info p{font-size:13px;color:var(--gray);line-height:1.5;}
+.role-badge{display:inline-block;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;margin-top:8px;background:rgba(200,241,53,0.12);color:var(--green);}
+.btn{width:100%;padding:12px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.18s;border:none;margin-top:16px;}
+.btn-green{background:var(--green);color:#0a0a0a;}
+.btn-green:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 4px 18px rgba(200,241,53,0.22);}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--gray);margin-top:10px;}
+.btn-outline:hover{background:var(--surface2);color:var(--white);}
+.error-msg{color:var(--red);font-size:13px;margin-top:16px;}
+.success-msg{color:var(--green);font-size:13px;margin-top:16px;}
+.loading{color:var(--gray);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="logo">SWFT<em>.</em></div>
+  <div class="subtitle">SIMPLE. SMART. SWFT.</div>
+  <div id="content"><p class="loading">Validating invite...</p></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const content = document.getElementById('content');
+
+  if (!token) {
+    content.innerHTML = '<p class="error-msg">Invalid invite link. Please ask your team admin for a new one.</p>';
+  } else {
+    validateInvite();
+  }
+
+  async function validateInvite() {
+    try {
+      const res = await fetch('/api/team/invite/' + token);
+      const data = await res.json();
+
+      if (data.error) {
+        content.innerHTML = '<p class="error-msg">' + data.error + '</p><button class="btn btn-outline" onclick="window.location.href=\'swft-login\'">Go to Login</button>';
+        return;
+      }
+
+      const invite = data;
+      content.innerHTML =
+        '<div class="invite-info">' +
+          '<h2>You\'re invited to join a team!</h2>' +
+          '<p>You\'ve been invited as:</p>' +
+          '<span class="role-badge">' + (invite.role || 'technician') + '</span>' +
+        '</div>' +
+        '<div id="auth-section"></div>';
+
+      // Check if user is already logged in
+      onAuthStateChanged(auth, async (user) => {
+        const authSection = document.getElementById('auth-section');
+        if (user) {
+          authSection.innerHTML =
+            '<p style="font-size:13px;color:var(--gray);margin-bottom:12px;">Signed in as <strong style="color:var(--white);">' + user.email + '</strong></p>' +
+            '<button class="btn btn-green" id="join-btn">Join Team</button>' +
+            '<button class="btn btn-outline" onclick="window.location.href=\'swft-login\'">Use Different Account</button>' +
+            '<div id="join-msg"></div>';
+          document.getElementById('join-btn').addEventListener('click', function() { acceptInvite(user); });
+        } else {
+          authSection.innerHTML =
+            '<p style="font-size:13px;color:var(--gray);margin-bottom:16px;">Sign in or create an account to join.</p>' +
+            '<input type="email" id="j-email" placeholder="Email" value="' + (invite.email || '') + '" style="width:100%;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-family:DM Sans,sans-serif;font-size:13px;outline:none;margin-bottom:10px;"/>' +
+            '<input type="password" id="j-pass" placeholder="Password" style="width:100%;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-family:DM Sans,sans-serif;font-size:13px;outline:none;margin-bottom:10px;"/>' +
+            '<button class="btn btn-green" id="signup-btn">Create Account & Join</button>' +
+            '<button class="btn btn-outline" id="signin-btn">I Have an Account — Sign In & Join</button>' +
+            '<div id="join-msg"></div>';
+
+          document.getElementById('signup-btn').addEventListener('click', async function() {
+            const email = document.getElementById('j-email').value.trim();
+            const pass = document.getElementById('j-pass').value;
+            if (!email || !pass) { showMsg('Enter email and password', true); return; }
+            if (pass.length < 6) { showMsg('Password must be at least 6 characters', true); return; }
+            try {
+              const cred = await createUserWithEmailAndPassword(auth, email, pass);
+              await acceptInvite(cred.user);
+            } catch(e) { showMsg(e.message, true); }
+          });
+
+          document.getElementById('signin-btn').addEventListener('click', async function() {
+            const email = document.getElementById('j-email').value.trim();
+            const pass = document.getElementById('j-pass').value;
+            if (!email || !pass) { showMsg('Enter email and password', true); return; }
+            try {
+              const cred = await signInWithEmailAndPassword(auth, email, pass);
+              await acceptInvite(cred.user);
+            } catch(e) { showMsg(e.message, true); }
+          });
+        }
+      });
+    } catch(e) {
+      content.innerHTML = '<p class="error-msg">Could not validate invite. Please try again.</p>';
+    }
+  }
+
+  async function acceptInvite(user) {
+    const msgEl = document.getElementById('join-msg');
+    try {
+      msgEl.innerHTML = '<p class="loading" style="margin-top:12px;">Joining team...</p>';
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/team/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+        body: JSON.stringify({ token: token })
+      });
+      const data = await res.json();
+      if (data.error) {
+        msgEl.innerHTML = '<p class="error-msg">' + data.error + '</p>';
+      } else {
+        msgEl.innerHTML = '<p class="success-msg">Welcome to the team! Redirecting...</p>';
+        setTimeout(function() { window.location.href = 'swft-dashboard'; }, 1500);
+      }
+    } catch(e) {
+      msgEl.innerHTML = '<p class="error-msg">Failed to join: ' + e.message + '</p>';
+    }
+  }
+
+  function showMsg(msg, isError) {
+    var el = document.getElementById('join-msg');
+    el.innerHTML = '<p class="' + (isError ? 'error-msg' : 'success-msg') + '">' + msg + '</p>';
+  }
+</script>
+</body>
+</html>
