@@ -14,7 +14,8 @@ const cors = require("cors");
 const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
-const { router: messagesRouter, twilioIncomingHandler } = require("./routes/messages");
+const { router: messagesRouter, twilioIncomingHandler, postmarkIncomingHandler } = require("./routes/messages");
+const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,8 +29,12 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), webh
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded webhooks
 
-// ── Twilio incoming SMS webhook (no auth — called by Twilio) ──
+// ── Incoming message webhooks (no auth — called by Twilio/Postmark) ──
 app.post("/api/webhooks/twilio/sms", twilioIncomingHandler);
+app.post("/api/webhooks/postmark/inbound", postmarkIncomingHandler);
+
+// ── Google OAuth callback (no auth — Google redirects here) ──
+app.get("/api/auth/google/callback", googleCallback);
 
 // ── Serve frontend files ──
 app.use(express.static(path.join(__dirname, "..")));
@@ -38,6 +43,7 @@ app.use(express.static(path.join(__dirname, "..")));
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
 app.use("/api/me",        auth,               require("./routes/user"));
+app.use("/api/auth/google", auth,             googleAuthRouter);
 app.use("/api/billing",   auth,               billingRouter);
 app.use("/api/dashboard", auth, checkAccess,  require("./routes/dashboard"));
 app.use("/api/customers", auth, checkAccess,  require("./routes/customers"));
