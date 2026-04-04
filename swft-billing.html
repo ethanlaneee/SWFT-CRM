@@ -882,7 +882,12 @@ function populateEditForm(){
   document.getElementById('e-start').value=_q.start||'';
   document.getElementById('e-finish').value=_q.finish||'';
   const se=document.getElementById('e-service');
-  for(let i=0;i<se.options.length;i++){if((_q.finish||'').includes(se.options[i].value.split(' ')[0])){se.selectedIndex=i;break;}}
+  var customSvc=document.getElementById('e-custom-service-b');
+  var svcMatch=false;
+  var svcVal=_q.service||'';
+  for(let i=0;i<se.options.length;i++){if(se.options[i].value===svcVal){se.selectedIndex=i;svcMatch=true;break;}}
+  if(!svcMatch&&svcVal){se.value='Other';if(customSvc){customSvc.style.display='block';customSvc.value=svcVal;}}
+  else if(customSvc){customSvc.style.display='none';customSvc.value='';}
   const st=document.getElementById('e-status');
   for(let i=0;i<st.options.length;i++){if(st.options[i].value===_q.status){st.selectedIndex=i;break;}}
 }
@@ -911,7 +916,12 @@ async function saveEdit(){
   _q.start=document.getElementById('e-start').value.trim() || _q.start || '';
   _q.finish=document.getElementById('e-finish').value.trim() || _q.finish || '';
   var svcEl = document.getElementById('e-service');
-  if (svcEl && svcEl.value) _q.service = svcEl.value;
+  var customSvcEl = document.getElementById('e-custom-service-b');
+  if (svcEl && svcEl.value === 'Other' && customSvcEl && customSvcEl.value.trim()) {
+    _q.service = customSvcEl.value.trim();
+  } else if (svcEl && svcEl.value && svcEl.value !== 'Other') {
+    _q.service = svcEl.value;
+  }
   if (!_q.service) _q.service = '';
   var statEl = document.getElementById('e-status');
   _q.status = statEl ? statEl.value : (_q.status || 'draft');
@@ -989,6 +999,20 @@ function filterQuotes(q){
 
 function previewCurrentDoc() {
   if (!_q) return;
+  // Sync current form field values into _q before preview (handles unsaved new docs)
+  var g = function(id){ var el=document.getElementById(id); return el ? el.value : ''; };
+  _q.customer = g('e-customer') || _q.customer;
+  _q.job      = g('e-job')      || _q.job;
+  _q.address  = g('e-address')  || _q.address;
+  var svcPreview = g('e-service');
+  if (svcPreview === 'Other') { var cs = document.getElementById('e-custom-service-b'); svcPreview = cs && cs.value.trim() ? cs.value.trim() : _q.service; }
+  _q.service  = svcPreview || _q.service;
+  _q.sqft     = g('e-sqft')     || _q.sqft;
+  _q.start    = g('e-start')    || _q.start;
+  _q.finish   = g('e-finish')   || _q.finish;
+  _q.status   = g('e-status')   || _q.status;
+  _q.notes    = g('m-notes')    || _q.notes;
+  _q.lineItems = _items && _items.length ? _items : _q.lineItems;
   const type = _q.isInvoice ? 'invoice' : 'quote';
   showPdfPreview(type, _q);
 }
