@@ -264,11 +264,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 var _myRole = 'owner';
 var _allRoles = {};
 var _allPermissions = [];
-var _builtInDefaults = {
-  admin:      ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","team.manage","integrations.manage","settings.manage"],
-  office:     ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use"],
-  technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use"],
-};
 
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
@@ -470,7 +465,7 @@ function renderRoles(){
     headerHtml += '</div>';
     if(!isOwnerRole){
       headerHtml += '<div class="role-card-actions">';
-      headerHtml += '<button class="delete-btn" onclick="deleteCustomRole(\'' + roleId + '\',\'' + role.name + '\',' + isBuiltIn + ')">Delete</button>';
+      headerHtml += '<button class="delete-btn" onclick="deleteCustomRole(\'' + roleId + '\',\'' + role.name + '\')">Delete</button>';
       headerHtml += '</div>';
     }
     headerHtml += '</div>';
@@ -551,17 +546,8 @@ async function createCustomRole(){
   } catch(e){ showToast('Error: ' + e.message); }
 }
 
-async function deleteCustomRole(roleId, name, isBuiltIn){
-  if(isBuiltIn){
-    if(!confirm('Built-in roles can\'t be fully deleted, but you can reset "' + name + '" to its default permissions. Reset now?')) return;
-    try{
-      await API.team.saveRole({ roleId: roleId, name: name, permissions: _builtInDefaults[roleId] || [] });
-      showToast(name + ' role reset to defaults');
-      await loadRoles();
-    } catch(e){ showToast('Error: ' + e.message); }
-    return;
-  }
-  if(!confirm('Delete the "' + name + '" role? Make sure no team members are assigned to it first.')) return;
+async function deleteCustomRole(roleId, name){
+  if(!confirm('Delete the "' + name + '" role? Any team members assigned to it must be reassigned first.')) return;
   try{
     await API.team.deleteRole(roleId);
     showToast(name + ' role deleted');

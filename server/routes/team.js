@@ -391,16 +391,17 @@ router.get("/roles", async (req, res, next) => {
     const doc = await db.collection("orgRoles").doc(req.orgId).get();
     const customRoles = doc.exists ? doc.data().roles || {} : {};
 
-    // Merge built-in with any custom overrides
+    // Merge built-in with any custom overrides, skipping deleted ones
     const roles = {};
     for (const [id, role] of Object.entries(BUILT_IN_ROLES)) {
+      if (customRoles[id]?.deleted) continue; // deleted by org owner
       roles[id] = customRoles[id]
         ? { ...role, permissions: customRoles[id].permissions }
         : { ...role };
     }
-    // Add custom roles
+    // Add custom roles (skip deleted)
     for (const [id, role] of Object.entries(customRoles)) {
-      if (!BUILT_IN_ROLES[id]) {
+      if (!BUILT_IN_ROLES[id] && !role.deleted) {
         roles[id] = { ...role, builtIn: false };
       }
     }
@@ -448,8 +449,8 @@ router.delete("/roles/:roleId", async (req, res, next) => {
     }
 
     const { roleId } = req.params;
-    if (BUILT_IN_ROLES[roleId]) {
-      return res.status(403).json({ error: "Cannot delete a built-in role" });
+    if (roleId === "owner") {
+      return res.status(403).json({ error: "Cannot delete the owner role" });
     }
 
     // Check no members are using this role
@@ -464,11 +465,14 @@ router.delete("/roles/:roleId", async (req, res, next) => {
     }
 
     const doc = await db.collection("orgRoles").doc(req.orgId).get();
-    if (doc.exists) {
-      const roles = doc.data().roles || {};
+    const roles = doc.exists ? (doc.data().roles || {}) : {};
+    if (BUILT_IN_ROLES[roleId]) {
+      // Mark built-in role as deleted for this org so it stops appearing
+      roles[roleId] = { ...BUILT_IN_ROLES[roleId], deleted: true };
+    } else {
       delete roles[roleId];
-      await db.collection("orgRoles").doc(req.orgId).set({ roles }, { merge: true });
     }
+    await db.collection("orgRoles").doc(req.orgId).set({ roles }, { merge: true });
 
     res.json({ success: true });
   } catch (err) { next(err); }
