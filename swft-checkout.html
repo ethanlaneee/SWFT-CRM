@@ -286,22 +286,24 @@ body::after{
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  // Wait for auth state before enabling checkout
+  // Check auth state — allow browsing plans without login
   onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      // Not logged in — send to login with redirect back
-      const plan = new URLSearchParams(window.location.search).get('plan') || '';
-      window.location.href = `swft-login?redirect=swft-checkout&plan=${plan}`;
-      return;
+    if (user) {
+      window._firebaseUser = user;
     }
-    window._firebaseUser = user;
+    // Always enable the button — we'll check auth when they click it
     document.getElementById('checkout-btn').disabled = false;
   });
 
   // ── Start Stripe Checkout ──
   window.startCheckout = async function() {
     const user = window._firebaseUser;
-    if (!user) return;
+    if (!user) {
+      // Not logged in — send to login, then come back
+      const plan = window._selectedPlan || 'starter';
+      window.location.href = `swft-login?redirect=swft-checkout&plan=${plan}`;
+      return;
+    }
 
     const btn = document.getElementById('checkout-btn');
     btn.disabled = true;
