@@ -13,20 +13,26 @@ function getStripe() {
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
 
+// Stripe Price IDs for each plan
+const PRICE_IDS = {
+  starter:  "price_1TIc1URNPpAjdxw0uscz7ouv",
+  pro:      "price_1TIc1VRNPpAjdxw0fwN1bfEH",
+  business: "price_1TIc1VRNPpAjdxw05e9i863i",
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/billing/create-checkout-session
 //
 // Creates a Stripe Checkout Session and returns the hosted URL.
 // The frontend redirects the browser there directly.
 //
-// Body: { priceId: "price_xxx", plan: "starter"|"pro"|"business" }
+// Body: { plan: "starter"|"pro"|"business" }
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/create-checkout-session", async (req, res, next) => {
   try {
-    const { priceId, plan } = req.body;
-    if (!priceId) {
-      return res.status(400).json({ error: "priceId is required." });
-    }
+    const { plan } = req.body;
+    const planKey = plan && PRICE_IDS[plan] ? plan : "starter";
+    const priceId = PRICE_IDS[planKey];
 
     // Fetch Firestore profile to reuse existing Stripe customer ID
     const doc  = await users().doc(req.uid).get();
@@ -50,15 +56,27 @@ router.post("/create-checkout-session", async (req, res, next) => {
       payment_method_types: ["card"],
       line_items:           [{ price: priceId, quantity: 1 }],
       mode:                 "subscription",
-      // session_id token in the success URL lets the dashboard verify payment immediately
+      allow_promotion_codes: true,
+      subscription_data: {
+        trial_period_days: 14,
+        metadata: { firebaseUid: req.uid, plan: planKey },
+      },
       success_url: `${process.env.APP_URL}/swft-dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.APP_URL}/swft-billing?canceled=true`,
-      metadata:    { firebaseUid: req.uid, plan: plan || "starter" },
-      subscription_data: { metadata: { firebaseUid: req.uid, plan: plan || "starter" } },
+      cancel_url:  `${process.env.APP_URL}/swft-checkout?plan=${planKey}&canceled=true`,
+      metadata:    { firebaseUid: req.uid, plan: planKey },
     });
 
     res.json({ url: session.url });
   } catch (err) { next(err); }
+});
+
+// GET /api/billing/plans — return plan info and Stripe price IDs (public-ish)
+router.get("/plans", (req, res) => {
+  res.json({
+    starter:  { name: "Starter",  price: 49,  priceId: PRICE_IDS.starter },
+    pro:      { name: "Pro",      price: 99,  priceId: PRICE_IDS.pro },
+    business: { name: "Business", price: 149, priceId: PRICE_IDS.business },
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

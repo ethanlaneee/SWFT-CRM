@@ -495,6 +495,13 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // Only redirect away if user is already logged in AND their account is in good standing
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      // If redirected from checkout page, go back there instead of dashboard
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      if (redirect && redirect.startsWith('swft-')) {
+        const plan = new URLSearchParams(window.location.search).get('plan') || '';
+        window.location.href = plan ? `${redirect}?plan=${plan}` : redirect;
+        return;
+      }
       await goToDashboard();
     }
   });
@@ -582,8 +589,9 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
         stripeCustomerId: '',
         accountStatus:   'trialing',
       });
-      // Send new users to billing to pick a Stripe plan
-      showSuccessState(`Welcome to SWFT, ${fname}! Choose a plan to get started.`, true);
+      // Send new users to checkout to pick a Stripe plan
+      const urlPlan = new URLSearchParams(window.location.search).get('plan') || '';
+      showSuccessState(`Welcome to SWFT, ${fname}! Choose a plan to get started.`, `swft-checkout?plan=${urlPlan}`);
     } catch (err) {
       setLoading(btn, false);
       showGlobalError(firebaseErrorMsg(err.code));
@@ -657,7 +665,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     el.classList.add('show');
   }
 
-  function showSuccessState(sub, toBilling = false) {
+  function showSuccessState(sub, redirectUrl = false) {
     document.getElementById('form-login').classList.remove('active');
     document.getElementById('form-signup').classList.remove('active');
     document.getElementById('global-error').classList.remove('show');
@@ -666,10 +674,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     document.getElementById('card-footer').style.display = 'none';
     document.getElementById('success-sub').textContent = sub;
     document.getElementById('success-state').classList.add('show');
-    // New signups go to billing to pick a Stripe plan; returning users go to dashboard
+    // New signups go to checkout to pick a Stripe plan; returning users go to dashboard
     setTimeout(() => {
-      if (toBilling) {
-        window.location.href = 'swft-billing';
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
       } else {
         goToDashboard();
       }
@@ -705,7 +713,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
         // Invalidate the Firebase session — prevents direct-URL bypass
         await auth.signOut();
         showGlobalError(message || 'Your trial has ended. Please upgrade to continue.');
-        setTimeout(() => { window.location.href = 'swft-billing'; }, 2000);
+        setTimeout(() => { window.location.href = 'swft-checkout'; }, 2000);
         return;
       }
 

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT — Choose Your Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--green-dim:rgba(200,241,53,0.12);
+  --white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+  --blue:#4d9fff;--red:#ff5252;--amber:#f5a623;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+.wrapper{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 20px;
+}
+
+.logo-top{
+  font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;
+  color:var(--white);text-decoration:none;margin-bottom:8px;
+}
+.logo-top span{color:var(--green);}
+
+.page-title{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,42px);
+  letter-spacing:1px;text-align:center;margin-bottom:8px;
+}
+.page-title .accent{color:var(--green);}
+.page-sub{font-size:15px;color:var(--gray);text-align:center;margin-bottom:40px;}
+
+/* ── PRICING GRID ── */
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  max-width:1020px;width:100%;
+}
+
+.plan-card{
+  background:var(--surface);border:2px solid var(--border);border-radius:16px;
+  padding:32px 28px;display:flex;flex-direction:column;
+  cursor:pointer;transition:all 0.25s ease;position:relative;overflow:hidden;
+}
+.plan-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.plan-card.selected{border-color:var(--green);box-shadow:0 0 30px rgba(200,241,53,0.1);}
+.plan-card.featured{
+  background:linear-gradient(135deg, rgba(200,241,53,0.06), rgba(200,241,53,0.02));
+}
+.plan-card.featured::before{
+  content:'';position:absolute;top:-40%;left:50%;transform:translateX(-50%);
+  width:300px;height:200px;
+  background:radial-gradient(ellipse, rgba(200,241,53,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.plan-badge{
+  display:inline-block;width:fit-content;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--green);padding:5px 14px;border-radius:100px;
+  background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);
+  margin-bottom:16px;
+}
+
+.plan-name{
+  font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;
+  color:var(--white);margin-bottom:6px;
+}
+.plan-price{display:flex;align-items:baseline;gap:2px;margin-bottom:6px;}
+.plan-dollar{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--green);}
+.plan-amount{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--white);line-height:1;}
+.plan-period{font-size:16px;color:var(--gray);margin-left:2px;}
+.plan-desc{font-size:13px;color:var(--gray);line-height:1.5;margin-bottom:20px;}
+
+.plan-divider{height:1px;background:var(--border2);margin-bottom:18px;}
+
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:10px;flex:1;}
+.plan-features li{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:13px;color:var(--gray);line-height:1.4;
+}
+.plan-features li .ck{color:var(--green);font-weight:700;flex-shrink:0;}
+.plan-features li .hl{color:var(--white);font-weight:600;}
+
+/* selected indicator */
+.plan-radio{
+  position:absolute;top:16px;right:16px;
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.plan-card.selected .plan-radio{border-color:var(--green);background:var(--green);}
+.plan-radio::after{
+  content:'';width:8px;height:8px;border-radius:50%;
+  background:#0a0a0a;opacity:0;transition:opacity 0.2s;
+}
+.plan-card.selected .plan-radio::after{opacity:1;}
+
+/* ── CHECKOUT BUTTON ── */
+.checkout-section{
+  max-width:1020px;width:100%;margin-top:32px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;
+}
+.trial-note{
+  font-size:14px;color:var(--gray);line-height:1.5;
+}
+.trial-note strong{color:var(--white);}
+
+.checkout-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 48px;border-radius:12px;font-size:16px;font-weight:700;
+  text-decoration:none;cursor:pointer;border:none;
+  background:var(--green);color:#0a0a0a;
+  font-family:'DM Sans',sans-serif;
+  box-shadow:0 0 20px rgba(200,241,53,0.15);
+  transition:all 0.25s;
+}
+.checkout-btn:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(200,241,53,0.25);}
+.checkout-btn:disabled{background:var(--gray2);color:var(--border2);cursor:not-allowed;transform:none;box-shadow:none;}
+.checkout-btn svg{width:20px;height:20px;}
+.checkout-btn .spinner{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(0,0,0,0.3);border-top-color:#0a0a0a;
+  animation:spin 0.6s linear infinite;display:none;
+}
+.checkout-btn.loading .btn-text{display:none;}
+.checkout-btn.loading .spinner{display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── ALERT ── */
+.alert{
+  max-width:1020px;width:100%;margin-top:16px;
+  padding:12px 16px;border-radius:10px;
+  font-size:13px;display:none;
+}
+.alert.show{display:flex;align-items:center;gap:8px;}
+.alert.error{background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);color:#ff8080;}
+.alert.info{background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.2);color:var(--green);}
+
+.back-link{
+  margin-top:24px;font-size:13px;color:var(--gray);
+  text-decoration:none;transition:color 0.2s;
+}
+.back-link:hover{color:var(--white);}
+
+@media(max-width:768px){
+  .pricing-grid{grid-template-columns:1fr;max-width:400px;}
+  .checkout-section{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <a href="/" class="logo-top">SWFT<span>.</span></a>
+  <h1 class="page-title">CHOOSE YOUR <span class="accent">PLAN</span></h1>
+  <p class="page-sub">14-day free trial on every plan. You won't be charged until the trial ends.</p>
+
+  <div class="pricing-grid">
+
+    <!-- STARTER -->
+    <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
+      <div class="plan-radio"></div>
+      <div class="plan-name">STARTER</div>
+      <div class="plan-price">
+        <span class="plan-dollar">$</span>
+        <span class="plan-amount">49</span>
+        <span class="plan-period">/mo</span>
+      </div>
+      <p class="plan-desc">Everything you need to run your business from day one.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="ck">&#10003;</span> Full CRM & customer management</li>
+        <li><span class="ck">&#10003;</span> Quotes & invoicing</li>
+        <li><span class="ck">&#10003;</span> Job scheduling & calendar sync</li>
+        <li><span class="ck">&#10003;</span> Gmail & Google Calendar integration</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">200 SMS</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">100 AI messages</span> / month</li>
+      </ul>
+    </div>
+
+    <!-- PRO -->
+    <div class="plan-card featured" data-plan="pro" onclick="selectPlan('pro')">
+      <div class="plan-radio"></div>
+      <div class="plan-badge">MOST POPULAR</div>
+      <div class="plan-name">PRO</div>
+      <div class="plan-price">
+        <span class="plan-dollar">$</span>
+        <span class="plan-amount">99</span>
+        <span class="plan-period">/mo</span>
+      </div>
+      <p class="plan-desc">For growing teams that need more power and higher limits.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="ck">&#10003;</span> Everything in Starter</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">1,000 SMS</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">500 AI messages</span> / month</li>
+        <li><span class="ck">&#10003;</span> Priority support</li>
+        <li><span class="ck">&#10003;</span> Team management</li>
+        <li><span class="ck">&#10003;</span> Google Sheets export</li>
+      </ul>
+    </div>
+
+    <!-- BUSINESS -->
+    <div class="plan-card" data-plan="business" onclick="selectPlan('business')">
+      <div class="plan-radio"></div>
+      <div class="plan-name">BUSINESS</div>
+      <div class="plan-price">
+        <span class="plan-dollar">$</span>
+        <span class="plan-amount">149</span>
+        <span class="plan-period">/mo</span>
+      </div>
+      <p class="plan-desc">Unlimited everything. Built for high-volume operations.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="ck">&#10003;</span> Everything in Pro</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">Unlimited SMS</span></li>
+        <li><span class="ck">&#10003;</span> <span class="hl">Unlimited AI messages</span></li>
+        <li><span class="ck">&#10003;</span> Dedicated support</li>
+        <li><span class="ck">&#10003;</span> Multi-user access</li>
+        <li><span class="ck">&#10003;</span> QuickBooks integration (coming soon)</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="checkout-section">
+    <div class="trial-note">
+      <strong>14-day free trial</strong> — no charge today. Cancel anytime.<br/>
+      Have a discount code? You can enter it on the next step.
+    </div>
+    <button class="checkout-btn" id="checkout-btn" onclick="startCheckout()">
+      <span class="btn-text">Continue to Payment</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      <div class="spinner"></div>
+    </button>
+  </div>
+
+  <div class="alert error" id="error-alert">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>
+    <span id="error-msg"></span>
+  </div>
+
+  <a href="/" class="back-link">&larr; Back to SWFT home</a>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Wait for auth state before enabling checkout
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      // Not logged in — send to login with redirect back
+      const plan = new URLSearchParams(window.location.search).get('plan') || '';
+      window.location.href = `swft-login?redirect=swft-checkout&plan=${plan}`;
+      return;
+    }
+    window._firebaseUser = user;
+    document.getElementById('checkout-btn').disabled = false;
+  });
+
+  // ── Start Stripe Checkout ──
+  window.startCheckout = async function() {
+    const user = window._firebaseUser;
+    if (!user) return;
+
+    const btn = document.getElementById('checkout-btn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('error-alert').classList.remove('show');
+
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ plan: window._selectedPlan || 'starter' }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create checkout session');
+
+      // Redirect to Stripe Checkout (has promo code field built in)
+      window.location.href = data.url;
+    } catch (err) {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      const el = document.getElementById('error-alert');
+      document.getElementById('error-msg').textContent = err.message;
+      el.classList.add('show');
+    }
+  };
+</script>
+
+<script>
+  // ── Plan selection ──
+  let selectedPlan = 'starter';
+
+  // Read ?plan= from URL
+  const params = new URLSearchParams(window.location.search);
+  const urlPlan = params.get('plan');
+  if (urlPlan && ['starter', 'pro', 'business'].includes(urlPlan)) {
+    selectedPlan = urlPlan;
+  }
+
+  function selectPlan(plan) {
+    selectedPlan = plan;
+    window._selectedPlan = plan;
+    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector(`.plan-card[data-plan="${plan}"]`).classList.add('selected');
+  }
+
+  // Select initial plan
+  selectPlan(selectedPlan);
+
+  // Show canceled message if redirected back
+  if (params.get('canceled') === 'true') {
+    const el = document.getElementById('error-alert');
+    document.getElementById('error-msg').textContent = 'Checkout was canceled. Select a plan and try again.';
+    el.classList.add('show');
+  }
+</script>
+
+</body>
+</html>
