@@ -123,15 +123,13 @@ body::after{
 }
 .plan-card.selected .plan-radio::after{opacity:1;}
 
-/* ── CHECKOUT BUTTON ── */
+/* ── CHECKOUT SECTION ── */
 .checkout-section{
   max-width:1020px;width:100%;margin-top:32px;
   display:flex;align-items:center;justify-content:space-between;
   gap:20px;flex-wrap:wrap;
 }
-.trial-note{
-  font-size:14px;color:var(--gray);line-height:1.5;
-}
+.trial-note{font-size:14px;color:var(--gray);line-height:1.5;}
 .trial-note strong{color:var(--white);}
 
 .checkout-btn{
@@ -155,6 +153,56 @@ body::after{
 .checkout-btn.loading .spinner{display:block;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
+/* ── AUTH FORM (inline) ── */
+.auth-section{
+  display:none;max-width:480px;width:100%;margin-top:32px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:16px;
+  padding:32px;
+  animation:slideUp 0.35s ease;
+}
+.auth-section.show{display:block;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.auth-title{
+  font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;
+  margin-bottom:4px;
+}
+.auth-sub{font-size:13px;color:var(--gray);margin-bottom:20px;}
+
+.auth-form{display:flex;flex-direction:column;gap:14px;}
+.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;}
+.field input{
+  width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;
+  padding:11px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;transition:border-color 0.15s;
+}
+.field input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(200,241,53,0.08);}
+.field input::placeholder{color:var(--gray2);}
+
+.google-btn{
+  width:100%;padding:11px;background:transparent;
+  border:1px solid var(--border2);border-radius:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-size:13px;font-weight:500;color:var(--gray);
+  font-family:'DM Sans',sans-serif;transition:all 0.14s;
+}
+.google-btn:hover{background:var(--surface2);color:var(--white);border-color:var(--gray2);}
+
+.divider{
+  display:flex;align-items:center;gap:12px;
+  font-size:11px;color:var(--gray2);margin:4px 0;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.auth-toggle{
+  text-align:center;font-size:12px;color:var(--gray2);margin-top:8px;
+}
+.auth-toggle a{color:var(--green);cursor:pointer;font-weight:500;text-decoration:none;}
+.auth-toggle a:hover{text-decoration:underline;}
+
 /* ── ALERT ── */
 .alert{
   max-width:1020px;width:100%;margin-top:16px;
@@ -163,7 +211,6 @@ body::after{
 }
 .alert.show{display:flex;align-items:center;gap:8px;}
 .alert.error{background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);color:#ff8080;}
-.alert.info{background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.2);color:var(--green);}
 
 .back-link{
   margin-top:24px;font-size:13px;color:var(--gray);
@@ -174,6 +221,7 @@ body::after{
 @media(max-width:768px){
   .pricing-grid{grid-template-columns:1fr;max-width:400px;}
   .checkout-section{flex-direction:column;text-align:center;}
+  .auth-row{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -186,7 +234,6 @@ body::after{
   <p class="page-sub">14-day free trial on every plan. You won't be charged until the trial ends.</p>
 
   <div class="pricing-grid">
-
     <!-- STARTER -->
     <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
       <div class="plan-radio"></div>
@@ -250,10 +297,10 @@ body::after{
         <li><span class="ck">&#10003;</span> QuickBooks integration (coming soon)</li>
       </ul>
     </div>
-
   </div>
 
-  <div class="checkout-section">
+  <!-- Checkout button (shown when logged in or before auth) -->
+  <div class="checkout-section" id="checkout-section">
     <div class="trial-note">
       <strong>14-day free trial</strong> — no charge today. Cancel anytime.<br/>
       Have a discount code? You can enter it on the next step.
@@ -265,6 +312,77 @@ body::after{
     </button>
   </div>
 
+  <!-- Inline auth form (shown when not logged in and they click Continue) -->
+  <div class="auth-section" id="auth-section">
+
+    <!-- SIGNUP VIEW -->
+    <div id="auth-signup">
+      <div class="auth-title">CREATE YOUR ACCOUNT</div>
+      <div class="auth-sub">Then you'll go straight to payment.</div>
+      <div class="auth-form">
+        <div class="auth-row">
+          <div class="field">
+            <label>First Name</label>
+            <input type="text" id="s-fname" placeholder="Jake"/>
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <input type="text" id="s-lname" placeholder="Reynolds"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Business Name</label>
+          <input type="text" id="s-biz" placeholder="SWFT Concrete LLC"/>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="s-email" placeholder="jake@swftconcrete.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="s-password" placeholder="Min. 8 characters"/>
+        </div>
+        <button class="checkout-btn" id="signup-btn" onclick="handleSignup()" style="width:100%;justify-content:center;">
+          <span class="btn-text">Create Account & Continue</span>
+          <div class="spinner"></div>
+        </button>
+        <div class="divider">or</div>
+        <button class="google-btn" onclick="handleGoogle()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-toggle">Already have an account? <a onclick="showLogin()">Sign in</a></div>
+      </div>
+    </div>
+
+    <!-- LOGIN VIEW -->
+    <div id="auth-login" style="display:none;">
+      <div class="auth-title">SIGN IN</div>
+      <div class="auth-sub">Sign in to continue to payment.</div>
+      <div class="auth-form">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="l-email" placeholder="you@example.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="l-password" placeholder="Your password"/>
+        </div>
+        <button class="checkout-btn" id="login-btn" onclick="handleLogin()" style="width:100%;justify-content:center;">
+          <span class="btn-text">Sign In & Continue</span>
+          <div class="spinner"></div>
+        </button>
+        <div class="divider">or</div>
+        <button class="google-btn" onclick="handleGoogle()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-toggle">Don't have an account? <a onclick="showSignup()">Create one</a></div>
+      </div>
+    </div>
+
+  </div>
+
   <div class="alert error" id="error-alert">
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>
     <span id="error-msg"></span>
@@ -274,10 +392,16 @@ body::after{
 
 </div>
 
-<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import {
+    getAuth, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    signInWithPopup, GoogleAuthProvider, updateProfile
+  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import {
+    getFirestore, doc, setDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
@@ -289,69 +413,181 @@ body::after{
     measurementId: "G-B8BEW7E87V"
   };
 
-  const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  const app      = initializeApp(firebaseConfig);
+  const auth     = getAuth(app);
+  const db       = getFirestore(app);
+  const provider = new GoogleAuthProvider();
 
-  // Check auth state — allow browsing plans without login
+  // If already logged in, skip auth form
   onAuthStateChanged(auth, (user) => {
     if (user) {
       window._firebaseUser = user;
     }
-    // Always enable the button — we'll check auth when they click it
     document.getElementById('checkout-btn').disabled = false;
   });
 
-  // ── Start Stripe Checkout ──
-  window.startCheckout = async function() {
-    const user = window._firebaseUser;
-    if (!user) {
-      // Not logged in — send to login, then come back
-      const plan = window._selectedPlan || 'starter';
-      window.location.href = `swft-login?redirect=swft-checkout&plan=${plan}`;
-      return;
-    }
-
+  // ── Redirect to Stripe Checkout ──
+  async function goToStripe(user) {
     const btn = document.getElementById('checkout-btn');
-    btn.disabled = true;
-    btn.classList.add('loading');
-    document.getElementById('error-alert').classList.remove('show');
-
+    // Show loading on whatever button was used
     try {
       const token = await user.getIdToken();
       const res = await fetch('/api/billing/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ plan: window._selectedPlan || 'starter' }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create checkout session');
-
-      // Redirect to Stripe Checkout (has promo code field built in)
       window.location.href = data.url;
     } catch (err) {
-      btn.disabled = false;
-      btn.classList.remove('loading');
-      const el = document.getElementById('error-alert');
-      document.getElementById('error-msg').textContent = err.message;
-      el.classList.add('show');
+      showError(err.message);
+      resetButtons();
+    }
+  }
+
+  // ── "Continue to Payment" — if logged in go to Stripe, else show auth form ──
+  window.startCheckout = function() {
+    if (window._firebaseUser) {
+      setLoading('checkout-btn');
+      goToStripe(window._firebaseUser);
+    } else {
+      // Show inline auth form, hide checkout button
+      document.getElementById('auth-section').classList.add('show');
+      document.getElementById('checkout-section').style.display = 'none';
+      document.getElementById('auth-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
+
+  // ── Signup ──
+  window.handleSignup = async function() {
+    const fname = document.getElementById('s-fname').value.trim();
+    const lname = document.getElementById('s-lname').value.trim();
+    const biz   = document.getElementById('s-biz').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    const pwd   = document.getElementById('s-password').value;
+
+    if (!fname || !lname || !biz) { showError('Please fill in all fields.'); return; }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { showError('Please enter a valid email.'); return; }
+    if (pwd.length < 8) { showError('Password must be at least 8 characters.'); return; }
+
+    setLoading('signup-btn');
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+      await updateProfile(cred.user, { displayName: `${fname} ${lname}` });
+      const now = Date.now();
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        uid: cred.user.uid,
+        email, name: `${fname} ${lname}`,
+        firstName: fname, lastName: lname,
+        displayName: `${fname} ${lname}`,
+        company: biz, businessName: biz,
+        trialStartDate: now,
+        trialEndDate: now + 14 * 24 * 60 * 60 * 1000,
+        isSubscribed: false, stripeCustomerId: '',
+        accountStatus: 'trialing', plan: 'starter',
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      window._firebaseUser = cred.user;
+      await goToStripe(cred.user);
+    } catch (err) {
+      showError(firebaseMsg(err.code));
+      resetButtons();
+    }
+  };
+
+  // ── Login ──
+  window.handleLogin = async function() {
+    const email = document.getElementById('l-email').value.trim();
+    const pwd   = document.getElementById('l-password').value;
+
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { showError('Please enter a valid email.'); return; }
+    if (!pwd) { showError('Please enter your password.'); return; }
+
+    setLoading('login-btn');
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, pwd);
+      window._firebaseUser = cred.user;
+      await goToStripe(cred.user);
+    } catch (err) {
+      showError(firebaseMsg(err.code));
+      resetButtons();
+    }
+  };
+
+  // ── Google ──
+  window.handleGoogle = async function() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid, email: user.email,
+        displayName: user.displayName || '',
+        name: user.displayName || '',
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      window._firebaseUser = user;
+      await goToStripe(user);
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user') showError(firebaseMsg(err.code));
+    }
+  };
+
+  // ── Helpers ──
+  function showError(msg) {
+    const el = document.getElementById('error-alert');
+    document.getElementById('error-msg').textContent = msg;
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function setLoading(id) {
+    const btn = document.getElementById(id);
+    btn.disabled = true;
+    btn.classList.add('loading');
+  }
+
+  function resetButtons() {
+    ['checkout-btn', 'signup-btn', 'login-btn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    });
+  }
+
+  function firebaseMsg(code) {
+    const map = {
+      'auth/email-already-in-use': 'An account with this email already exists. Try signing in.',
+      'auth/invalid-credential':   'Email or password is incorrect.',
+      'auth/user-not-found':       'No account found with that email.',
+      'auth/wrong-password':       'Incorrect password.',
+      'auth/weak-password':        'Password must be at least 6 characters.',
+      'auth/invalid-email':        'Please enter a valid email address.',
+      'auth/too-many-requests':    'Too many attempts. Please wait and try again.',
+      'auth/popup-blocked':        'Popup blocked. Allow popups for this site.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+
+  // Allow Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const signup = document.getElementById('auth-signup');
+    const login  = document.getElementById('auth-login');
+    if (signup.style.display !== 'none' && document.getElementById('auth-section').classList.contains('show')) {
+      window.handleSignup();
+    } else if (login.style.display !== 'none' && document.getElementById('auth-section').classList.contains('show')) {
+      window.handleLogin();
+    }
+  });
 </script>
 
 <script>
   // ── Plan selection ──
   let selectedPlan = 'starter';
-
-  // Read ?plan= from URL
   const params = new URLSearchParams(window.location.search);
   const urlPlan = params.get('plan');
-  if (urlPlan && ['starter', 'pro', 'business'].includes(urlPlan)) {
-    selectedPlan = urlPlan;
-  }
+  if (urlPlan && ['starter', 'pro', 'business'].includes(urlPlan)) selectedPlan = urlPlan;
 
   function selectPlan(plan) {
     selectedPlan = plan;
@@ -359,11 +595,20 @@ body::after{
     document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
     document.querySelector(`.plan-card[data-plan="${plan}"]`).classList.add('selected');
   }
-
-  // Select initial plan
   selectPlan(selectedPlan);
 
-  // Show canceled message if redirected back
+  // Toggle signup/login views
+  function showLogin() {
+    document.getElementById('auth-signup').style.display = 'none';
+    document.getElementById('auth-login').style.display = 'block';
+    document.getElementById('error-alert').classList.remove('show');
+  }
+  function showSignup() {
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-signup').style.display = 'block';
+    document.getElementById('error-alert').classList.remove('show');
+  }
+
   if (params.get('canceled') === 'true') {
     const el = document.getElementById('error-alert');
     document.getElementById('error-msg').textContent = 'Checkout was canceled. Select a plan and try again.';
