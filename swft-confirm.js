@@ -218,7 +218,9 @@
       <div class="pdf-row"><span class="label">Customer</span><span class="value">${data.customer || "—"}</span></div>
       <div class="pdf-row"><span class="label">Job</span><span class="value">${data.job || "—"}</span></div>
       <div class="pdf-row"><span class="label">Address</span><span class="value">${data.address || "—"}</span></div>
-      <div class="pdf-row"><span class="label">Date</span><span class="value">${data.created || data.date || "—"}</span></div>
+      ${data.service ? '<div class="pdf-row"><span class="label">Service</span><span class="value">' + data.service + (data.sqft ? ' &nbsp;·&nbsp; ' + data.sqft + ' sqft' : '') + '</span></div>' : ""}
+      <div class="pdf-row"><span class="label">Date</span><span class="value">${data.created || data.start || data.date || "—"}</span></div>
+      ${data.finish ? '<div class="pdf-row"><span class="label">Finish</span><span class="value">' + data.finish + '</span></div>' : ""}
       ${data.expires ? '<div class="pdf-row"><span class="label">Expires</span><span class="value">' + data.expires + '</span></div>' : ""}
       ${data.due ? '<div class="pdf-row"><span class="label">Due Date</span><span class="value">' + data.due + '</span></div>' : ""}
       <div class="pdf-section">Line Items</div>
