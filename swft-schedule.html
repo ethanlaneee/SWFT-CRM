@@ -112,7 +112,8 @@
 .cal-cell.today .day-num{color:var(--green);font-size:14px;font-weight:700;}
 
 .day-num{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--gray);margin-bottom:2px;width:auto;height:22px;display:flex;align-items:center;gap:0;}
-.day-wx{font-size:10px;color:var(--gray);font-family:'JetBrains Mono',monospace;position:absolute;top:5px;right:6px;line-height:1.2;}
+.day-wx{font-size:10px;color:var(--gray);font-family:'JetBrains Mono',monospace;position:absolute;top:5px;right:6px;line-height:1.2;cursor:pointer;transition:color 0.14s;}
+.day-wx:hover{color:var(--white);}
 
 /* ── MONTH PICKER ── */
 .month-picker{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;z-index:50;gap:6px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
@@ -132,6 +133,22 @@
 .job-block.purple{background:rgba(179,136,255,0.18);color:var(--purple);}
 .job-block.gray{background:rgba(100,100,100,0.15);color:var(--gray);}
 .jb-crew{display:none;}
+
+/* Weather popup on calendar */
+.wx-popup{position:fixed;z-index:9500;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:18px;width:240px;box-shadow:0 12px 40px rgba(0,0,0,0.5);display:none;}
+.wx-popup.open{display:block;}
+.wx-popup-close{position:absolute;top:8px;right:10px;cursor:pointer;color:var(--gray);font-size:14px;}
+.wx-popup-close:hover{color:var(--white);}
+.wx-popup-icon{font-size:32px;line-height:1;margin-bottom:6px;}
+.wx-popup-desc{font-size:13px;color:var(--white);font-weight:500;margin-bottom:2px;}
+.wx-popup-date{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gray2);margin-bottom:12px;}
+.wx-popup-temps{display:flex;gap:16px;margin-bottom:12px;}
+.wx-popup-temp{display:flex;flex-direction:column;gap:2px;}
+.wx-popup-temp-label{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gray2);}
+.wx-popup-temp-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--white);line-height:1;}
+.wx-popup-cond{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;display:inline-block;}
+.wx-popup-cond.good{background:rgba(200,241,53,0.1);color:var(--green);}
+.wx-popup-cond.warn{background:rgba(245,166,35,0.1);color:var(--amber);}
 
 /* Job popup on calendar */
 .cal-popup{position:fixed;z-index:9000;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;width:280px;box-shadow:0 12px 40px rgba(0,0,0,0.5);display:none;}
@@ -524,6 +541,11 @@
   <div id="cal-popup-body"></div>
 </div>
 
+<div class="wx-popup" id="wx-popup">
+  <div class="wx-popup-close" onclick="closeWxPopup()">&times;</div>
+  <div id="wx-popup-content"></div>
+</div>
+
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
 </div>
@@ -613,7 +635,7 @@
       if (wxMap[dateStr] !== undefined) {
         var wxCode = wxCodeMap[dateStr] || 0;
         var wxIcon = WMO_ICONS[wxCode] || '';
-        wxHtml = '<span class="day-wx">' + wxIcon + ' ' + wxMap[dateStr] + '°</span>';
+        wxHtml = '<span class="day-wx" onclick="showWxPopup(event,\'' + dateStr + '\')">' + wxIcon + ' ' + wxMap[dateStr] + '°</span>';
       }
 
       html += '<div class="' + cls + '">';
@@ -781,11 +803,68 @@
     document.getElementById('cal-popup').classList.remove('open');
   }
 
-  // Close popup on outside click
+  var WMO_DESC = {0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Light showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm w/ hail',99:'Severe thunderstorm'};
+  var WMO_ICONS_POPUP = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};
+
+  function showWxPopup(e, dateStr) {
+    e.stopPropagation();
+    var wxData = window._swftWeatherData;
+    if (!wxData || !wxData.daily) return;
+    var idx = wxData.daily.time.indexOf(dateStr);
+    if (idx === -1) return;
+
+    var code = wxData.daily.weathercode[idx];
+    var high = Math.round(wxData.daily.temperature_2m_max[idx]);
+    var low = Math.round(wxData.daily.temperature_2m_min[idx]);
+    var icon = WMO_ICONS_POPUP[code] || '☁️';
+    var desc = WMO_DESC[code] || 'Cloudy';
+    var unit = (wxData.daily_units && wxData.daily_units.temperature_2m_max === '°C') ? '°C' : '°F';
+
+    var isWarn = code >= 61 || low < 35 || high > 100;
+    var condText = 'Good work conditions';
+    var condCls = 'good';
+    if (code >= 95) { condText = 'Storm — Unsafe'; condCls = 'warn'; }
+    else if (code >= 61) { condText = 'Rain expected'; condCls = 'warn'; }
+    else if (low < 35) { condText = 'Freezing temps'; condCls = 'warn'; }
+    else if (high > 100) { condText = 'Extreme heat'; condCls = 'warn'; }
+
+    var d = new Date(dateStr + 'T12:00:00');
+    var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dateLabel = dayNames[d.getDay()] + ', ' + monthNames[d.getMonth()] + ' ' + d.getDate();
+
+    var content = document.getElementById('wx-popup-content');
+    content.innerHTML =
+      '<div class="wx-popup-icon">' + icon + '</div>' +
+      '<div class="wx-popup-desc">' + desc + '</div>' +
+      '<div class="wx-popup-date">' + dateLabel + '</div>' +
+      '<div class="wx-popup-temps">' +
+        '<div class="wx-popup-temp"><span class="wx-popup-temp-label">High</span><span class="wx-popup-temp-val">' + high + unit + '</span></div>' +
+        '<div class="wx-popup-temp"><span class="wx-popup-temp-label">Low</span><span class="wx-popup-temp-val">' + low + unit + '</span></div>' +
+      '</div>' +
+      '<div class="wx-popup-cond ' + condCls + '">' + condText + '</div>';
+
+    var popup = document.getElementById('wx-popup');
+    var x = e.clientX;
+    var y = e.clientY;
+    popup.style.left = Math.min(x, window.innerWidth - 260) + 'px';
+    popup.style.top = Math.min(y + 10, window.innerHeight - 250) + 'px';
+    popup.classList.add('open');
+  }
+
+  function closeWxPopup() {
+    document.getElementById('wx-popup').classList.remove('open');
+  }
+
+  // Close popups on outside click
   document.addEventListener('click', function(e) {
     var popup = document.getElementById('cal-popup');
     if (popup && !popup.contains(e.target) && !e.target.closest('.job-block')) {
       popup.classList.remove('open');
+    }
+    var wxPopup = document.getElementById('wx-popup');
+    if (wxPopup && !wxPopup.contains(e.target) && !e.target.closest('.day-wx')) {
+      wxPopup.classList.remove('open');
     }
   });
 
