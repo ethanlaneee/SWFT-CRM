@@ -39,6 +39,10 @@ app.get("/api/auth/google/callback", googleCallback);
 // ── Serve frontend files ──
 const staticRoot = path.join(__dirname, "..");
 
+// Backward compat: old swft-shell URL → renamed swft-dashboard
+app.get("/swft-shell", (req, res) => res.redirect("/swft-dashboard"));
+app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
+
 // Rewrite clean URLs → .html before static lookup (e.g. /swft-customers → /swft-customers.html)
 app.use((req, res, next) => {
   if (req.method === "GET" && !req.path.startsWith("/api/") && !path.extname(req.path) && req.path !== "/") {
