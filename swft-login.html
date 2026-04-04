@@ -695,10 +695,21 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // the check by navigating directly to swft-dashboard.
   window.goToDashboard = async function() {
     const user = auth.currentUser;
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get('redirect');
+    const planParam = urlParams.get('plan');
+
+    // Build the destination URL — respect ?redirect= if present
+    function getDestination() {
+      if (redirect && redirect.startsWith('swft-')) {
+        return planParam ? `${redirect}?plan=${planParam}` : redirect;
+      }
+      return 'swft-dashboard';
+    }
 
     // Admin accounts skip the status check entirely
     if (user?.email && ADMIN_EMAILS.includes(user.email)) {
-      window.location.href = 'swft-dashboard';
+      window.location.href = getDestination();
       return;
     }
 
@@ -718,7 +729,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
       }
 
       // 200 — active or trialing
-      window.location.href = 'swft-dashboard';
+      window.location.href = getDestination();
     } catch {
       // Network error or unexpected failure — fail safe: stay on login page
       showGlobalError('Unable to verify account status. Please try again.');
