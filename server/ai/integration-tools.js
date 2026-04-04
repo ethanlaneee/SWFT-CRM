@@ -313,4 +313,46 @@ async function getIntegrationTools(uid) {
   return tools;
 }
 
-module.exports = { getIntegrationTools, executeIntegrationTool };
+// ── Auto-sync: push a job/schedule entry to Google Calendar if connected ──
+
+async function syncJobToCalendar(uid, jobData) {
+  try {
+    const userDoc = await db.collection("users").doc(uid).get();
+    if (!userDoc.exists) return null;
+    const integrations = userDoc.data().integrations || {};
+    const gcal = integrations.google_calendar;
+    if (!gcal?.connected || !gcal?.tokens) return null;
+    if (!jobData.scheduledDate && !jobData.date) return null;
+
+    const auth = getOAuthClient(gcal.tokens);
+    const calendar = google.calendar({ version: "v3", auth });
+
+    const date = jobData.scheduledDate || jobData.date;
+    const startTime = jobData.startTime || "09:00";
+    const endTime = jobData.endTime || "10:00";
+    const startDateTime = `${date}T${startTime}:00`;
+    const endDateTime = `${date}T${endTime}:00`;
+
+    const res = await calendar.events.insert({
+      calendarId: "primary",
+      requestBody: {
+        summary: jobData.title || jobData.customerName || "SWFT Job",
+        description: [
+          jobData.description || "",
+          jobData.customerName ? `Customer: ${jobData.customerName}` : "",
+          jobData.service ? `Service: ${jobData.service}` : "",
+        ].filter(Boolean).join("\n"),
+        location: jobData.address || jobData.location || "",
+        start: { dateTime: startDateTime, timeZone: "America/Chicago" },
+        end: { dateTime: endDateTime, timeZone: "America/Chicago" },
+      },
+    });
+
+    return { eventId: res.data.id, link: res.data.htmlLink };
+  } catch (err) {
+    console.error("Calendar auto-sync failed:", err.message);
+    return null;
+  }
+}
+
+module.exports = { getIntegrationTools, executeIntegrationTool, syncJobToCalendar };

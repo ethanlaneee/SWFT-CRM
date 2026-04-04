@@ -474,16 +474,6 @@
         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
     </div>
-    <div class="swft-chat-tools-drawer" id="swft-tools-drawer">
-      <h5>CONNECTED TOOLS</h5>
-      <div class="swft-chat-tools-list" id="swft-tools-list">
-        <div class="swft-chat-tools-empty">Loading tools...</div>
-      </div>
-    </div>
-    <div class="swft-chat-tools-tab" id="swft-tools-tab">
-      <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      Connect your tools to SWFT
-    </div>
   `;
 
   const fab = document.createElement("button");
@@ -723,86 +713,6 @@
     }
   }
 
-  // ── Connect Your Tools panel ──
-  const toolsTab = document.getElementById("swft-tools-tab");
-  const toolsDrawer = document.getElementById("swft-tools-drawer");
-  const toolsList = document.getElementById("swft-tools-list");
-  let toolsLoaded = false;
-
-  if (toolsTab) {
-    toolsTab.addEventListener("click", async () => {
-      const isDrawerOpen = toolsDrawer.classList.toggle("open");
-      if (isDrawerOpen && !toolsLoaded) {
-        await loadTools();
-      }
-    });
-  }
-
-  async function loadTools() {
-    try {
-      const token = await getToken();
-      const res = await fetch(`${API_BASE}/api/integrations`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      const integrations = data.integrations || [];
-
-      if (integrations.length === 0) {
-        toolsList.innerHTML = '<div class="swft-chat-tools-empty">No tools available yet.</div>';
-        toolsLoaded = true;
-        return;
-      }
-
-      const icons = {
-        gmail: "📧", google_calendar: "📅", google_sheets: "📊",
-        quickbooks: "💰", default: "🔗"
-      };
-
-      toolsList.innerHTML = integrations.map(i => {
-        const icon = icons[i.id] || icons.default;
-        if (i.connected) {
-          return `
-            <div class="swft-chat-tool-item">
-              <span class="tool-name"><span class="tool-icon">${icon}</span> ${i.name}</span>
-              <span style="color:#c8f135;font-size:11px;">Connected</span>
-            </div>
-          `;
-        }
-        return `
-          <div class="swft-chat-tool-item">
-            <span class="tool-name"><span class="tool-icon">${icon}</span> ${i.name}</span>
-            <button class="swft-chat-tool-toggle" data-id="${i.id}" style="background:#c8f135;border:none;color:#0a0a0a;font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;width:auto;height:auto;">Connect</button>
-          </div>
-        `;
-      }).join("");
-
-      // Connect button handlers — redirect to OAuth
-      toolsList.querySelectorAll(".swft-chat-tool-toggle").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          try {
-            const tk = await getToken();
-            const connectRes = await fetch(`${API_BASE}/api/integrations/${btn.dataset.id}/connect`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${tk}` },
-            });
-            const connectData = await connectRes.json();
-            if (connectData.url) {
-              window.location.href = connectData.url;
-            } else if (connectData.error) {
-              addMessage("assistant", connectData.error);
-            }
-          } catch (e) {
-            addMessage("assistant", "Could not start connection. Try from Settings.");
-          }
-        });
-      });
-
-      toolsLoaded = true;
-    } catch (err) {
-      toolsList.innerHTML = '<div class="swft-chat-tools-empty">Could not load tools.</div>';
-      toolsLoaded = true;
-    }
-  }
 
   // ── Voice Recognition for Chat Bubble ──
   let _chatRecognition = null;
