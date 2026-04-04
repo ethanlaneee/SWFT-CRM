@@ -814,6 +814,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     ['details','photos','payment','notes','job-quotes','job-invoices'].forEach(function(t) {
       document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
     });
+    if (tab === 'photos' && _currentJobId) loadJobPhotos(_currentJobId);
   }
 
   function setFilter(el, status) {
@@ -1030,22 +1031,53 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     } catch(e) { showToast('Error: ' + e.message); }
   }
 
-  function handlePhotoUpload(files) {
+  async function loadJobPhotos(jobId) {
+    if (!jobId) return;
     var grid = document.getElementById('photo-grid');
     if (!grid) return;
-    for (var i = 0; i < files.length; i++) {
-      var file = files[i];
-      var reader = new FileReader();
-      reader.onload = function(e) {
+    grid.innerHTML = '<div style="font-size:12px;color:var(--gray);">Loading...</div>';
+    try {
+      var photos = await API.photos.list(jobId);
+      grid.innerHTML = '';
+      photos.forEach(function(p) {
         var div = document.createElement('div');
         div.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;';
-        div.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;"/>' +
-          '<div onclick="this.parentElement.remove();showToast(\'Photo removed\')" style="position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px;">x</div>';
+        div.innerHTML = '<img src="' + p.url + '" style="width:100%;height:100%;object-fit:cover;" onclick="window.open(\'' + p.url + '\',\'_blank\')" title="View full size"/>' +
+          '<div onclick="deletePhoto(\'' + p.id + '\',this.parentElement)" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.65);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:13px;font-weight:700;">×</div>';
         grid.appendChild(div);
-      };
-      reader.readAsDataURL(file);
+      });
+      if (photos.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;font-size:12.5px;color:var(--gray);text-align:center;padding:16px 0;">No photos yet</div>';
+      }
+    } catch(e) {
+      grid.innerHTML = '<div style="font-size:12px;color:var(--gray);">Could not load photos</div>';
     }
-    showToast(files.length + ' photo(s) added');
+  }
+
+  async function deletePhoto(photoId, el) {
+    if (!confirm('Delete this photo?')) return;
+    try {
+      await API.photos.delete(photoId);
+      el.remove();
+      showToast('Photo deleted');
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  async function handlePhotoUpload(files) {
+    var grid = document.getElementById('photo-grid');
+    if (!grid || !_currentJobId || !files.length) return;
+    showToast('Uploading ' + files.length + ' photo(s)...');
+    try {
+      var form = new FormData();
+      for (var i = 0; i < files.length; i++) form.append('photos', files[i]);
+      var res = await API.photos.upload(_currentJobId, form);
+      if (res.uploaded) {
+        showToast(res.uploaded.length + ' photo(s) uploaded');
+        await loadJobPhotos(_currentJobId);
+      } else {
+        showToast(res.error || 'Upload failed');
+      }
+    } catch(e) { showToast('Upload failed: ' + e.message); }
   }
 
   function toggleSidebar(){

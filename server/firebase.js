@@ -17,9 +17,11 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   }
 }
 
-admin.initializeApp({ credential });
+const storageBucket = "swft-ai26.firebasestorage.app";
+admin.initializeApp({ credential, storageBucket });
 
 const db = admin.firestore();
 const authAdmin = admin.auth();
+const bucket = admin.storage().bucket();
 
-module.exports = { admin, db, authAdmin };
+module.exports = { admin, db, authAdmin, bucket };

@@ -129,6 +129,17 @@ const API = {
     delete: (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
   },
 
+  // ── Photos ──
+  photos: {
+    list:   (jobId)        => apiFetch(`/api/photos/job/${jobId}`),
+    upload: (jobId, form)  => getAuthToken().then(t => fetch(`/api/photos/job/${jobId}`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${t}` },
+      body: form,
+    }).then(r => r.json())),
+    delete: (photoId)      => apiFetch(`/api/photos/${photoId}`, { method: "DELETE" }),
+  },
+
   // ── Payments (Stripe) ──
   payments: {
     invoiceLink: (id) => apiFetch(`/api/payments/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),

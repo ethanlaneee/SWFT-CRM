@@ -76,6 +76,7 @@ app.use("/api/team",      auth, checkAccess,  require("./routes/team"));
 app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
+app.use("/api/photos",    auth, checkAccess,  require("./routes/photos"));
 
 // ── Root redirect ──
 app.get("/", (req, res) => res.redirect("/swft-login"));
