@@ -139,6 +139,8 @@
 .tag-pending{background:rgba(245,166,35,0.1);color:var(--amber);}
 .tag-complete{background:rgba(100,100,100,0.12);color:var(--gray);}
 .tag-cancelled{background:rgba(255,82,82,0.1);color:var(--red);}
+select.status-tag{cursor:pointer;border:none;-webkit-appearance:none;appearance:none;outline:none;font-family:inherit;}
+select.status-tag option{background:#141414;color:#e0e0e0;}
 
 .row-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray2);transition:all 0.14s;}
 .row-btn:hover{background:var(--surface2);color:var(--green);border-color:var(--green);}
@@ -701,7 +703,12 @@
           '<div>' +
             '<div class="job-amount">' + fmtCost(job.cost) + '</div>' +
           '</div>' +
-          '<div><span class="status-tag ' + sm.tag + '">' + sm.label + '</span></div>' +
+          '<div><select class="status-tag ' + sm.tag + '" onclick="event.stopPropagation()" onchange="changeJobStatus(\'' + job.id + '\',this.value,this)">' +
+            '<option value="scheduled"' + (status === 'scheduled' ? ' selected' : '') + '>Scheduled</option>' +
+            '<option value="active"' + (status === 'active' ? ' selected' : '') + '>In Progress</option>' +
+            '<option value="pending"' + (status === 'pending' ? ' selected' : '') + '>Quote Sent</option>' +
+            '<option value="complete"' + (status === 'complete' ? ' selected' : '') + '>Complete</option>' +
+          '</select></div>' +
           '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
             '<div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this,\'' + job.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div>' +
             '<div class="row-btn">→</div>' +
@@ -987,6 +994,29 @@
     list.innerHTML = items.map(function(n) {
       return '<div class="note-item"><div class="note-text">' + n + '</div></div>';
     }).join('');
+  }
+
+  async function changeJobStatus(id, val, el) {
+    var sm = STATUS_MAP[val] || STATUS_MAP['scheduled'];
+    el.className = 'status-tag ' + sm.tag;
+    var job = window._jobs[id];
+    var prev = job ? job.status : 'scheduled';
+    if (job) job.status = val;
+    try {
+      await API.jobs.update(id, { status: val });
+      var row = el.closest('.job-row');
+      if (row) {
+        row.dataset.status = val;
+        var pip = row.querySelector('.status-pip');
+        if (pip) pip.className = 'status-pip ' + sm.pip;
+      }
+      showToast('Status updated');
+      loadJobs();
+    } catch(e) {
+      showToast('Error updating status');
+      if (job) job.status = prev;
+      el.className = 'status-tag ' + (STATUS_MAP[prev] || STATUS_MAP['scheduled']).tag;
+    }
   }
 
   async function markJobComplete() {
