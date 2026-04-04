@@ -271,10 +271,59 @@
     }
   };
 
+  // ── Role guard ────────────────────────────────────────────────────────────
+  // Pages technicians cannot access
+  const RESTRICTED_FOR_TECHNICIAN = [
+    "swft-customers", "swft-billing", "swft-quotes", "swft-invoices",
+    "swft-team", "swft-settings", "swft-ai-agents",
+  ];
+
+  function applyRoleGuard(role) {
+    if (role !== "technician") return;
+
+    // Hide restricted nav items in sidebar
+    document.querySelectorAll(".nav-item[onclick]").forEach(function (el) {
+      var onclick = el.getAttribute("onclick") || "";
+      for (var i = 0; i < RESTRICTED_FOR_TECHNICIAN.length; i++) {
+        if (onclick.indexOf(RESTRICTED_FOR_TECHNICIAN[i]) > -1) {
+          el.style.display = "none";
+          break;
+        }
+      }
+    });
+
+    // Redirect if currently on a restricted page
+    var page = window.location.pathname.split("/").pop().split(".")[0];
+    if (RESTRICTED_FOR_TECHNICIAN.indexOf(page) > -1) {
+      window.location.href = "swft-dashboard";
+    }
+  }
+
+  async function initRoleGuard() {
+    try {
+      const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+      onAuthStateChanged(getAuth(), async function (user) {
+        if (!user) return;
+        try {
+          const token = await user.getIdToken();
+          const res = await fetch(`${API_BASE}/api/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          if (data.role) applyRoleGuard(data.role);
+        } catch (e) { /* fail silently — backend enforces anyway */ }
+      });
+    } catch (e) {}
+  }
+
   // Wire tiles after DOM loads
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", wireUserTiles);
+    document.addEventListener("DOMContentLoaded", function () {
+      wireUserTiles();
+      initRoleGuard();
+    });
   } else {
     wireUserTiles();
+    initRoleGuard();
   }
 })();
