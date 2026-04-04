@@ -368,9 +368,14 @@ async function sendInvite(){
   try{
     var res = await API.team.invite({ email: email, name: name, role: role });
     if(res.inviteUrl){
-      document.getElementById('invite-link').value = res.inviteUrl;
-      document.getElementById('invite-result').style.display = res.emailSent ? 'none' : 'block';
-      showToast(res.emailSent ? 'Invite emailed to ' + (name || email) : 'Invite created — share the link with ' + (name || email));
+      if(res.emailSent){
+        closeInviteModal();
+        showToast('Invite emailed to ' + (name || email));
+      } else {
+        document.getElementById('invite-link').value = res.inviteUrl;
+        document.getElementById('invite-result').style.display = 'block';
+        showToast('Invite created — share the link with ' + (name || email));
+      }
       loadTeam();
     } else {
       showToast(res.error || 'Failed to send invite');
