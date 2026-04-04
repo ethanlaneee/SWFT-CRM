@@ -301,8 +301,8 @@ async function sendInvite(){
     var res = await API.team.invite({ email: email, name: name, role: role });
     if(res.inviteUrl){
       document.getElementById('invite-link').value = res.inviteUrl;
-      document.getElementById('invite-result').style.display = 'block';
-      showToast('Invite sent to ' + (name || email));
+      document.getElementById('invite-result').style.display = res.emailSent ? 'none' : 'block';
+      showToast(res.emailSent ? 'Invite emailed to ' + (name || email) : 'Invite created — share the link with ' + (name || email));
       loadTeam();
     } else {
       showToast(res.error || 'Failed to send invite');

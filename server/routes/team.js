@@ -5,8 +5,110 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const crypto = require("crypto");
+const { google } = require("googleapis");
 
 const ROLES = ["owner", "admin", "technician", "office"];
+
+// ── Gmail helper for sending invite emails ──
+
+async function sendInviteViaGmail(ownerUser, toEmail, inviteUrl, orgName, role, companyLogo) {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
+  );
+  oauth2Client.setCredentials(ownerUser.gmailTokens);
+
+  // Refresh token if expired
+  const tokenInfo = await oauth2Client.getAccessToken();
+  if (tokenInfo.token !== ownerUser.gmailTokens.access_token) {
+    await db.collection("users").doc(ownerUser._uid).set({
+      gmailTokens: { ...ownerUser.gmailTokens, access_token: tokenInfo.token },
+    }, { merge: true });
+  }
+
+  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+  const fromAddr = ownerUser.gmailAddress || ownerUser.email;
+  const fromName = orgName;
+  const subject = `You're invited to join ${orgName} on SWFT`;
+
+  const logoHtml = companyLogo
+    ? `<img src="${companyLogo}" alt="${orgName}" style="max-height:48px;max-width:180px;margin-bottom:8px;" />`
+    : "";
+
+  const htmlBody = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+
+    <!-- Header -->
+    <div style="background:#0a0a0a;padding:32px 40px;text-align:center;">
+      ${logoHtml}
+      <h1 style="margin:0;font-size:22px;font-weight:700;color:#c8f135;letter-spacing:0.5px;">${orgName}</h1>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:36px 40px;">
+      <h2 style="margin:0 0 12px;font-size:20px;font-weight:600;color:#1a1a1a;">You've been invited!</h2>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#444;">
+        <strong>${orgName}</strong> has invited you to join their team on <strong>SWFT</strong> as a <strong style="text-transform:capitalize;">${role}</strong>.
+      </p>
+      <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#444;">
+        SWFT helps service businesses manage jobs, customers, scheduling, and more — all in one place. Click below to accept and get started.
+      </p>
+
+      <!-- CTA Button -->
+      <div style="text-align:center;margin:0 0 28px;">
+        <a href="${inviteUrl}" style="display:inline-block;background:#c8f135;color:#0a0a0a;text-decoration:none;font-size:15px;font-weight:700;padding:14px 36px;border-radius:8px;letter-spacing:0.3px;">Accept Invite</a>
+      </div>
+
+      <p style="margin:0 0 8px;font-size:13px;color:#888;line-height:1.5;">
+        This invite expires in 7 days. If you weren't expecting this, you can safely ignore this email.
+      </p>
+      <p style="margin:0;font-size:12px;color:#aaa;word-break:break-all;">
+        ${inviteUrl}
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:20px 40px;background:#fafafa;border-top:1px solid #eee;text-align:center;">
+      <p style="margin:0;font-size:12px;color:#999;">Sent via <strong>SWFT</strong> &mdash; goswft.com</p>
+    </div>
+
+  </div>
+</body>
+</html>`;
+
+  const textBody = `You're invited to join ${orgName} on SWFT!\n\n${orgName} has invited you to join their team as a ${role}.\n\nAccept your invite: ${inviteUrl}\n\nThis invite expires in 7 days.\n\nSent via SWFT — goswft.com`;
+
+  // Build MIME message
+  const boundary = "swft_invite_" + Date.now();
+  let mime = "";
+  mime += `From: ${fromName} <${fromAddr}>\r\n`;
+  mime += `To: ${toEmail}\r\n`;
+  mime += `Subject: ${subject}\r\n`;
+  mime += `MIME-Version: 1.0\r\n`;
+  mime += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
+  mime += `--${boundary}\r\n`;
+  mime += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
+  mime += textBody + "\r\n\r\n";
+  mime += `--${boundary}\r\n`;
+  mime += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
+  mime += htmlBody + "\r\n\r\n";
+  mime += `--${boundary}--`;
+
+  const encodedMessage = Buffer.from(mime)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  await gmail.users.messages.send({
+    userId: "me",
+    requestBody: { raw: encodedMessage },
+  });
+}
 
 // ── Role permission helpers ──
 
@@ -101,18 +203,37 @@ router.post("/invite", async (req, res, next) => {
       joinedAt: null,
     });
 
-    // TODO: Send invite email via Postmark/Gmail
-    // For now, return the invite link so owner can share it manually
     const appUrl = process.env.APP_URL || "https://goswft.com";
     const inviteUrl = `${appUrl}/swft-join?token=${inviteToken}`;
+
+    // Send invite email via Gmail if connected
+    let emailSent = false;
+    if (ownerData.gmailTokens && ownerData.gmailTokens.refresh_token) {
+      try {
+        await sendInviteViaGmail(
+          { ...ownerData, _uid: req.orgId, gmailTokens: ownerData.gmailTokens },
+          email.toLowerCase(),
+          inviteUrl,
+          orgName,
+          assignedRole,
+          ownerData.companyLogo || ""
+        );
+        emailSent = true;
+      } catch (emailErr) {
+        console.error("Failed to send invite email via Gmail:", emailErr.message);
+      }
+    }
 
     res.json({
       success: true,
       id: ref.id,
       inviteUrl,
+      emailSent,
       email: email.toLowerCase(),
       role: assignedRole,
-      message: `Invite created for ${email}. Share the link with them to join.`,
+      message: emailSent
+        ? `Invite sent to ${email}.`
+        : `Invite created for ${email}. Share the link with them to join.`,
     });
   } catch (err) { next(err); }
 });
