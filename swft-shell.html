@@ -532,22 +532,22 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       const jobs = await API.jobs.list();
       const list = document.getElementById('schedule-list');
       if (!list) return;
-      if (!jobs || jobs.length === 0) {
-        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs scheduled. Create a job to see it here.</div>';
+      var today = new Date().toISOString().split('T')[0];
+      var todayJobs = (jobs || []).filter(function(j) { return j.scheduledDate === today; });
+      if (todayJobs.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs scheduled for today.</div>';
         return;
       }
       list.innerHTML = '';
-      var today = new Date().toISOString().split('T')[0];
-      jobs.forEach(function(j) {
-        var isToday = j.scheduledDate === today;
+      todayJobs.forEach(function(j) {
         var pipColor = j.status === 'active' ? 'var(--green)' : j.status === 'scheduled' ? '#4d9fff' : j.status === 'pending' ? '#f5a623' : 'var(--gray2)';
         var row = document.createElement('div');
-        row.className = 'schedule-row' + (isToday ? ' now' : '');
-        var time = j.scheduledDate || 'TBD';
-        row.innerHTML = '<div class="sched-time">' + time.substring(5) + '</div>' +
+        row.className = 'schedule-row now';
+        var crew = j.crew && j.crew !== 'Unassigned' ? '<span class="sched-chip">' + j.crew + '</span>' : '';
+        row.innerHTML = '<div class="sched-time">' + (j.duration || '—') + '</div>' +
           '<div class="sched-timeline"><div class="sched-dot" style="color:' + pipColor + ';"></div><div class="sched-connector"></div></div>' +
           '<div class="sched-body"><div class="sched-title">' + (j.title || j.customerName + ' - ' + j.service) + '</div>' +
-          '<div class="sched-meta">' + (j.address ? '<span class="sched-addr">' + j.address + '</span>' : '') + '</div></div>' +
+          '<div class="sched-meta">' + crew + (j.address ? '<span class="sched-addr">' + j.address + '</span>' : '') + '</div></div>' +
           '<div class="sched-dur">' + (j.status||'') + '</div>';
         list.appendChild(row);
       });
