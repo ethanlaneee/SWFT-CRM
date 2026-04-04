@@ -51,7 +51,7 @@ router.post("/create-checkout-session", async (req, res, next) => {
       line_items:           [{ price: priceId, quantity: 1 }],
       mode:                 "subscription",
       // session_id token in the success URL lets the dashboard verify payment immediately
-      success_url: `${process.env.APP_URL}/swft-shell?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.APP_URL}/swft-dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${process.env.APP_URL}/swft-billing?canceled=true`,
       metadata:    { firebaseUid: req.uid },
       subscription_data: { metadata: { firebaseUid: req.uid } },

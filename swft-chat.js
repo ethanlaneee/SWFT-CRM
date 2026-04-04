@@ -6,7 +6,7 @@
 
 (function () {
   // Don't show chat bubble on dashboard (AI is embedded there)
-  if (window.location.pathname.endsWith('swft-shell') || window.location.pathname.endsWith('swft-shell.html') || window.location.pathname === '/' || window.location.pathname === '') return;
+  if (window.location.pathname.endsWith('swft-dashboard') || window.location.pathname.endsWith('swft-dashboard.html') || window.location.pathname === '/' || window.location.pathname === '') return;
 
   const isMessagesPage = window.location.pathname.endsWith('swft-messages') || window.location.pathname.endsWith('swft-messages.html');
 

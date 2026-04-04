@@ -684,13 +684,13 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // signed in). Checks accountStatus on the backend before allowing dashboard
   // access. If the account is expired/canceled a 402 is returned — we sign the
   // user out immediately so they cannot hold a valid Firebase session and bypass
-  // the check by navigating directly to swft-shell.
+  // the check by navigating directly to swft-dashboard.
   window.goToDashboard = async function() {
     const user = auth.currentUser;
 
     // Admin accounts skip the status check entirely
     if (user?.email && ADMIN_EMAILS.includes(user.email)) {
-      window.location.href = 'swft-shell';
+      window.location.href = 'swft-dashboard';
       return;
     }
 
@@ -710,7 +710,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
       }
 
       // 200 — active or trialing
-      window.location.href = 'swft-shell';
+      window.location.href = 'swft-dashboard';
     } catch {
       // Network error or unexpected failure — fail safe: stay on login page
       showGlobalError('Unable to verify account status. Please try again.');
