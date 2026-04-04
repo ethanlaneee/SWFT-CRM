@@ -140,15 +140,6 @@
           <input class="account-input" id="acct-email" placeholder="you@example.com" readonly style="opacity:0.6;"/>
         </div>
 
-        <div class="account-section-title">Gmail Integration</div>
-        <div class="account-field">
-          <label class="account-label">Gmail Address</label>
-          <input class="account-input" id="acct-gmail" placeholder="you@gmail.com"/>
-        </div>
-        <div class="account-field">
-          <label class="account-label">Gmail App Password</label>
-          <input class="account-input" id="acct-gmail-pw" type="password" placeholder="16-char app password"/>
-        </div>
       </div>
       <div class="account-footer">
         <button class="account-btn" onclick="logoutAccount()" style="color:#ff5252;border-color:rgba(255,82,82,0.3);">Log Out</button>
@@ -220,8 +211,6 @@
       document.getElementById("acct-company").value = data.company || "";
       document.getElementById("acct-phone").value = data.phone || "";
       if (data.email) document.getElementById("acct-email").value = data.email;
-      document.getElementById("acct-gmail").value = data.gmailAddress || "";
-      document.getElementById("acct-gmail-pw").value = data.gmailAppPassword ? "••••••••••••" : "";
 
       const first = (data.firstName || data.name?.split(" ")[0] || "?")[0];
       const last = (data.lastName || data.name?.split(" ")[1] || "")[0] || "";
@@ -266,17 +255,6 @@
           phone: document.getElementById("acct-phone").value.trim(),
         }),
       });
-
-      // Save Gmail if provided
-      const gmail = document.getElementById("acct-gmail").value.trim();
-      const gmailPw = document.getElementById("acct-gmail-pw").value.trim();
-      if (gmail && gmailPw && !gmailPw.startsWith("••")) {
-        await fetch(`${API_BASE}/api/email/configure`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ gmailAddress: gmail, gmailAppPassword: gmailPw }),
-        });
-      }
 
       // Update sidebar user tile
       document.querySelectorAll(".user-name").forEach((el) => {
