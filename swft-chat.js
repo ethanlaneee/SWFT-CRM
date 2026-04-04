@@ -298,16 +298,6 @@
       right: 340px;
     }
 
-    /* ── Source badge (Claude / Manus) ── */
-    .swft-chat-source {
-      font-size: 10px;
-      color: #555;
-      font-family: 'DM Sans', sans-serif;
-      margin-top: 2px;
-      padding-left: 4px;
-    }
-    .swft-chat-source.manus { color: #a78bfa; }
-
     /* ── Acknowledgment message ── */
     .swft-chat-ack {
       align-self: flex-start;
@@ -615,6 +605,10 @@
       update_job: ["Updated", "job"],
       schedule_job: ["Scheduled", input.date],
       get_dashboard_stats: ["Dashboard", "stats"],
+      list_calendar_events: ["Calendar", "events"],
+      create_calendar_event: ["Calendar", input.title || "event"],
+      check_gmail_inbox: ["Gmail", input.query || "inbox"],
+      send_gmail: ["Email sent", input.to || ""],
     };
 
     const [label, detail] = labels[toolName] || [toolName, ""];
@@ -667,14 +661,8 @@
         data.actions.forEach((a) => addAction(a.tool, a.input));
       }
 
-      // Show response with source badge
-      const msgEl = addMessage("assistant", data.message);
-      if (data.source) {
-        const badge = document.createElement("div");
-        badge.className = "swft-chat-source" + (data.source === "manus" ? " manus" : "");
-        badge.textContent = data.source === "manus" ? "via Manus" : "via SWFT AI";
-        msgEl.after(badge);
-      }
+      // Show response
+      addMessage("assistant", data.message);
 
       // Dispatch event so current page can refresh data
       window.dispatchEvent(new CustomEvent("swft-ai-action", {
@@ -727,64 +715,58 @@
   async function loadTools() {
     try {
       const token = await getToken();
-      const [availRes, userRes] = await Promise.all([
-        fetch(`${API_BASE}/api/ai/connectors`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/api/ai/connectors/user`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
+      const res = await fetch(`${API_BASE}/api/integrations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const integrations = data.integrations || [];
 
-      const availData = await availRes.json();
-      const userData = await userRes.json();
-
-      if (!availData.enabled) {
-        toolsList.innerHTML = '<div class="swft-chat-tools-empty">Tools integration is not configured yet.</div>';
+      if (integrations.length === 0) {
+        toolsList.innerHTML = '<div class="swft-chat-tools-empty">No tools available yet.</div>';
         toolsLoaded = true;
         return;
       }
 
-      const connectors = availData.connectors || [];
-      const userConnectors = userData.connectors || [];
-
-      if (connectors.length === 0) {
-        toolsList.innerHTML = '<div class="swft-chat-tools-empty">No tools available yet. Check back soon!</div>';
-        toolsLoaded = true;
-        return;
-      }
-
-      // Tool icons by common connector types
       const icons = {
-        gmail: "📧", google_calendar: "📅", notion: "📝", slack: "💬",
-        google_sheets: "📊", google_drive: "📁", trello: "📋", quickbooks: "💰",
-        default: "🔗"
+        gmail: "📧", google_calendar: "📅", quickbooks: "💰", default: "🔗"
       };
 
-      toolsList.innerHTML = connectors.map(c => {
-        const id = c.id || c.uuid || "";
-        const name = c.name || c.type || "Unknown Tool";
-        const key = name.toLowerCase().replace(/\s+/g, "_");
-        const icon = icons[key] || icons.default;
-        const active = userConnectors.includes(id);
+      toolsList.innerHTML = integrations.map(i => {
+        const icon = icons[i.id] || icons.default;
+        if (i.connected) {
+          return `
+            <div class="swft-chat-tool-item">
+              <span class="tool-name"><span class="tool-icon">${icon}</span> ${i.name}</span>
+              <span style="color:#c8f135;font-size:11px;">Connected</span>
+            </div>
+          `;
+        }
         return `
-          <div class="swft-chat-tool-item" data-connector-id="${id}">
-            <span class="tool-name"><span class="tool-icon">${icon}</span> ${name}</span>
-            <button class="swft-chat-tool-toggle ${active ? "active" : ""}" data-id="${id}"></button>
+          <div class="swft-chat-tool-item">
+            <span class="tool-name"><span class="tool-icon">${icon}</span> ${i.name}</span>
+            <button class="swft-chat-tool-toggle" data-id="${i.id}" style="background:#c8f135;border:none;color:#0a0a0a;font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;width:auto;height:auto;">Connect</button>
           </div>
         `;
       }).join("");
 
-      // Toggle handlers
+      // Connect button handlers — redirect to OAuth
       toolsList.querySelectorAll(".swft-chat-tool-toggle").forEach(btn => {
         btn.addEventListener("click", async () => {
-          btn.classList.toggle("active");
-          const allActive = Array.from(toolsList.querySelectorAll(".swft-chat-tool-toggle.active"))
-            .map(b => b.dataset.id);
           try {
             const tk = await getToken();
-            await fetch(`${API_BASE}/api/ai/connectors/user`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
-              body: JSON.stringify({ connectors: allActive }),
+            const connectRes = await fetch(`${API_BASE}/api/integrations/${btn.dataset.id}/connect`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${tk}` },
             });
-          } catch (e) { /* silently fail — toggle still works visually */ }
+            const connectData = await connectRes.json();
+            if (connectData.url) {
+              window.location.href = connectData.url;
+            } else if (connectData.error) {
+              addMessage("assistant", connectData.error);
+            }
+          } catch (e) {
+            addMessage("assistant", "Could not start connection. Try from Settings.");
+          }
         });
       });
 

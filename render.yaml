@@ -8,8 +8,6 @@ services:
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: MANUS_API_KEY
-        sync: false
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: NODE_ENV

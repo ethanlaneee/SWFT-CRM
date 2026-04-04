@@ -1,12 +1,17 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const { db } = require("../firebase");
-const tools = require("./tools");
+const crmTools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
-const { routeMessage } = require("./router");
-const { runManusTask } = require("./manus");
+const { getIntegrationTools, executeIntegrationTool } = require("./integration-tools");
 
 const client = new Anthropic();
+
+// Integration tool names — if a tool call matches one of these, route to integration handler
+const INTEGRATION_TOOL_NAMES = [
+  "list_calendar_events", "create_calendar_event",
+  "check_gmail_inbox", "send_gmail",
+];
 
 // ── Tool execution — maps tool names to Firestore operations ──
 
@@ -211,6 +216,10 @@ async function runAgent(uid, userMessage, userProfile) {
 
   const systemPrompt = getSystemPrompt(userProfile.name, userProfile.company);
 
+  // Dynamically add integration tools based on user's connected services
+  const integrationTools = await getIntegrationTools(uid);
+  const allTools = [...crmTools, ...integrationTools];
+
   // Agent loop — keep calling Claude until it stops using tools
   let response;
   const actionsTaken = [];
@@ -220,7 +229,7 @@ async function runAgent(uid, userMessage, userProfile) {
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
       system: systemPrompt,
-      tools,
+      tools: allTools,
       messages,
     });
 
@@ -236,7 +245,10 @@ async function runAgent(uid, userMessage, userProfile) {
     const toolResults = [];
     for (const block of assistantContent) {
       if (block.type === "tool_use") {
-        const result = await executeTool(block.name, block.input, uid);
+        // Route to integration handler or CRM handler
+        const result = INTEGRATION_TOOL_NAMES.includes(block.name)
+          ? await executeIntegrationTool(block.name, block.input, uid)
+          : await executeTool(block.name, block.input, uid);
         actionsTaken.push({ tool: block.name, input: block.input, result });
         toolResults.push({
           type: "tool_result",
@@ -262,44 +274,4 @@ async function runAgent(uid, userMessage, userProfile) {
   };
 }
 
-// ── Hybrid agent — routes to Claude or Manus based on the message ──
-
-async function runHybridAgent(uid, userMessage, userProfile) {
-  // Get user's connected Manus connectors (if any)
-  const userDoc = await db.collection("users").doc(uid).get();
-  const userData = userDoc.exists ? userDoc.data() : {};
-  const connectorIds = userData.manusConnectors || [];
-
-  const route = routeMessage(userMessage, connectorIds);
-
-  if (route === "manus") {
-    // Save user message to conversation history
-    await saveMessage(uid, "user", userMessage);
-
-    try {
-      const result = await runManusTask(userMessage, connectorIds);
-
-      // Save Manus response to conversation history
-      await saveMessage(uid, "assistant", result.message);
-
-      return {
-        message: result.message,
-        actions: [],
-        source: "manus",
-        taskId: result.taskId,
-        taskUrl: result.taskUrl,
-      };
-    } catch (err) {
-      // If Manus fails, fall back to Claude
-      console.error("Manus failed, falling back to Claude:", err.message);
-      const result = await runAgent(uid, userMessage, userProfile);
-      return { ...result, source: "claude", fallback: true };
-    }
-  }
-
-  // Default: Claude handles CRM and general chat
-  const result = await runAgent(uid, userMessage, userProfile);
-  return { ...result, source: "claude" };
-}
-
-module.exports = { runAgent, runHybridAgent };
+module.exports = { runAgent };
