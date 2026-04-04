@@ -4,6 +4,7 @@ const crmTools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
 const { getIntegrationTools, executeIntegrationTool } = require("./integration-tools");
+const { sendSms } = require("../twilio");
 
 const client = new Anthropic();
 
@@ -11,6 +12,7 @@ const client = new Anthropic();
 const INTEGRATION_TOOL_NAMES = [
   "list_calendar_events", "create_calendar_event",
   "check_gmail_inbox", "send_gmail",
+  "export_to_sheets",
 ];
 
 // ── Tool execution — maps tool names to Firestore operations ──
@@ -192,6 +194,112 @@ async function executeTool(toolName, input, uid) {
         openInvoices: invoices.filter(i => i.status === "open").length,
         upcomingTasks: scheduleSnap.size,
       };
+    }
+
+    case "send_sms": {
+      try {
+        const result = await sendSms(input.to, input.body);
+        // Save to messages collection
+        await db.collection("messages").add({
+          userId: uid,
+          type: "sms",
+          direction: "outbound",
+          to: input.to,
+          body: input.body,
+          twilioSid: result.sid,
+          status: result.status,
+          createdAt: Date.now(),
+        });
+        return { success: true, to: input.to, status: result.status };
+      } catch (err) {
+        return { error: `SMS failed: ${err.message}` };
+      }
+    }
+
+    case "get_weather": {
+      try {
+        // Default to Dallas, TX if no location provided
+        let lat = input.latitude || 32.78;
+        let lon = input.longitude || -96.80;
+
+        // If city provided, geocode it via Open-Meteo
+        if (input.city && !input.latitude) {
+          const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(input.city)}&count=1&language=en&format=json`);
+          const geoData = await geoRes.json();
+          if (geoData.results && geoData.results[0]) {
+            lat = geoData.results[0].latitude;
+            lon = geoData.results[0].longitude;
+          }
+        }
+
+        const weatherRes = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+          `&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m` +
+          `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max` +
+          `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch` +
+          `&timezone=America%2FChicago&forecast_days=3`
+        );
+        const weather = await weatherRes.json();
+
+        const WMO = {
+          0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+          45: "Foggy", 48: "Icy fog", 51: "Light drizzle", 53: "Drizzle", 55: "Heavy drizzle",
+          61: "Light rain", 63: "Rain", 65: "Heavy rain", 71: "Light snow", 73: "Snow", 75: "Heavy snow",
+          80: "Light showers", 81: "Showers", 82: "Heavy showers", 95: "Thunderstorm",
+          96: "Thunderstorm with hail", 99: "Severe thunderstorm",
+        };
+
+        return {
+          current: {
+            temperature: weather.current?.temperature_2m + "°F",
+            conditions: WMO[weather.current?.weather_code] || "Unknown",
+            wind: weather.current?.wind_speed_10m + " mph",
+            humidity: weather.current?.relative_humidity_2m + "%",
+          },
+          forecast: (weather.daily?.time || []).map((date, i) => ({
+            date,
+            high: weather.daily.temperature_2m_max[i] + "°F",
+            low: weather.daily.temperature_2m_min[i] + "°F",
+            conditions: WMO[weather.daily.weather_code[i]] || "Unknown",
+            rain_chance: weather.daily.precipitation_probability_max[i] + "%",
+          })),
+        };
+      } catch (err) {
+        return { error: `Weather lookup failed: ${err.message}` };
+      }
+    }
+
+    case "get_directions": {
+      try {
+        const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
+        if (!MAPS_KEY) return { error: "Google Maps not configured — ask your admin to add GOOGLE_MAPS_API_KEY" };
+
+        const params = new URLSearchParams({
+          origin: input.origin,
+          destination: input.destination,
+          key: MAPS_KEY,
+        });
+
+        const res = await fetch(`https://maps.googleapis.com/maps/api/directions/json?${params}`);
+        const data = await res.json();
+
+        if (data.status !== "OK" || !data.routes?.length) {
+          return { error: `Could not find directions: ${data.status}` };
+        }
+
+        const route = data.routes[0];
+        const leg = route.legs[0];
+
+        return {
+          origin: leg.start_address,
+          destination: leg.end_address,
+          distance: leg.distance.text,
+          duration: leg.duration.text,
+          steps: leg.steps.slice(0, 8).map(s => s.html_instructions.replace(/<[^>]*>/g, "")),
+        };
+      } catch (err) {
+        return { error: `Directions failed: ${err.message}` };
+      }
     }
 
     default:

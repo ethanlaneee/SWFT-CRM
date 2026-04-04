@@ -74,6 +74,22 @@ const GMAIL_TOOLS = [
   },
 ];
 
+const GOOGLE_SHEETS_TOOLS = [
+  {
+    name: "export_to_sheets",
+    description: "Export data to a new Google Sheets spreadsheet. Use when the user asks to export customers, jobs, invoices, or quotes to a spreadsheet or Google Sheets.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Spreadsheet title (e.g., 'Customer Export March 2026')" },
+        data_type: { type: "string", enum: ["customers", "jobs", "quotes", "invoices"], description: "What data to export" },
+        status: { type: "string", description: "Optional status filter (e.g., 'active', 'open', 'paid')" },
+      },
+      required: ["title", "data_type"],
+    },
+  },
+];
+
 // ── Tool execution ──
 
 async function executeIntegrationTool(toolName, input, uid) {
@@ -207,6 +223,66 @@ async function executeIntegrationTool(toolName, input, uid) {
       return { success: true, to: input.to, subject: input.subject };
     }
 
+    case "export_to_sheets": {
+      const sheets = integrations.google_sheets;
+      if (!sheets?.connected || !sheets?.tokens) return { error: "Google Sheets not connected" };
+
+      const auth = getOAuthClient(sheets.tokens);
+      const sheetsApi = google.sheets({ version: "v4", auth });
+      const driveApi = google.drive({ version: "v3", auth });
+
+      // Fetch data from Firestore based on type
+      const collection = input.data_type;
+      let snap = await db.collection(collection).where("userId", "==", uid).get();
+      let rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (input.status) {
+        rows = rows.filter(r => r.status === input.status);
+      }
+
+      if (rows.length === 0) return { error: `No ${collection} found to export` };
+
+      // Build header row from first item's keys
+      const exclude = ["userId"];
+      const keys = Object.keys(rows[0]).filter(k => !exclude.includes(k));
+      const headerRow = keys;
+      const dataRows = rows.map(r => keys.map(k => {
+        const val = r[k];
+        if (val === null || val === undefined) return "";
+        if (typeof val === "object") return JSON.stringify(val);
+        return String(val);
+      }));
+
+      // Create spreadsheet
+      const spreadsheet = await sheetsApi.spreadsheets.create({
+        requestBody: {
+          properties: { title: input.title },
+          sheets: [{ properties: { title: collection } }],
+        },
+      });
+
+      const spreadsheetId = spreadsheet.data.spreadsheetId;
+      const sheetUrl = spreadsheet.data.spreadsheetUrl;
+
+      // Write data
+      await sheetsApi.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${collection}!A1`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [headerRow, ...dataRows],
+        },
+      });
+
+      return {
+        success: true,
+        spreadsheetId,
+        url: sheetUrl,
+        title: input.title,
+        rows_exported: rows.length,
+      };
+    }
+
     default:
       return { error: `Unknown integration tool: ${toolName}` };
   }
@@ -228,6 +304,10 @@ async function getIntegrationTools(uid) {
 
   if (integrations.gmail?.connected || userData.gmailConnected) {
     tools.push(...GMAIL_TOOLS);
+  }
+
+  if (integrations.google_sheets?.connected) {
+    tools.push(...GOOGLE_SHEETS_TOOLS);
   }
 
   return tools;

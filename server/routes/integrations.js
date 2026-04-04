@@ -39,6 +39,18 @@ const INTEGRATIONS = [
     ],
   },
   {
+    id: "google_sheets",
+    name: "Google Sheets",
+    icon: "spreadsheet",
+    description: "Export customers, jobs, and invoices to spreadsheets",
+    provider: "google",
+    scopes: [
+      "https://www.googleapis.com/auth/spreadsheets",
+      "https://www.googleapis.com/auth/drive.file",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
+  },
+  {
     id: "quickbooks",
     name: "QuickBooks",
     icon: "dollar-sign",

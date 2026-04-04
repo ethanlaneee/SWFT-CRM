@@ -605,10 +605,14 @@
       update_job: ["Updated", "job"],
       schedule_job: ["Scheduled", input.date],
       get_dashboard_stats: ["Dashboard", "stats"],
+      send_sms: ["SMS sent", input.to || ""],
+      get_weather: ["Weather", input.city || "forecast"],
+      get_directions: ["Directions", input.destination || "route"],
       list_calendar_events: ["Calendar", "events"],
       create_calendar_event: ["Calendar", input.title || "event"],
       check_gmail_inbox: ["Gmail", input.query || "inbox"],
       send_gmail: ["Email sent", input.to || ""],
+      export_to_sheets: ["Exported", input.data_type || "data"],
     };
 
     const [label, detail] = labels[toolName] || [toolName, ""];
@@ -728,7 +732,8 @@
       }
 
       const icons = {
-        gmail: "📧", google_calendar: "📅", quickbooks: "💰", default: "🔗"
+        gmail: "📧", google_calendar: "📅", google_sheets: "📊",
+        quickbooks: "💰", default: "🔗"
       };
 
       toolsList.innerHTML = integrations.map(i => {
