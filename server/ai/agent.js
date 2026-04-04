@@ -3,7 +3,7 @@ const { db } = require("../firebase");
 const crmTools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
-const { getIntegrationTools, executeIntegrationTool } = require("./integration-tools");
+const { getIntegrationTools, executeIntegrationTool, syncJobToCalendar } = require("./integration-tools");
 const { sendSms } = require("../twilio");
 
 const client = new Anthropic();
@@ -130,7 +130,11 @@ async function executeTool(toolName, input, uid) {
         createdAt: Date.now(),
       };
       const ref = await db.collection("jobs").add(data);
-      return { id: ref.id, ...data };
+
+      // Auto-sync to Google Calendar if connected
+      const calEvent = await syncJobToCalendar(uid, data);
+
+      return { id: ref.id, ...data, calendarSynced: !!calEvent };
     }
 
     case "list_jobs": {
@@ -164,7 +168,11 @@ async function executeTool(toolName, input, uid) {
         createdAt: Date.now(),
       };
       const ref = await db.collection("schedule").add(data);
-      return { id: ref.id, ...data };
+
+      // Auto-sync to Google Calendar if connected
+      const calEvent = await syncJobToCalendar(uid, data);
+
+      return { id: ref.id, ...data, calendarSynced: !!calEvent };
     }
 
     case "get_dashboard_stats": {
