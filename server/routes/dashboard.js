@@ -5,10 +5,10 @@ const { db } = require("../firebase");
 router.get("/", async (req, res, next) => {
   try {
     const [jobsSnap, quotesSnap, invoicesSnap, scheduleSnap] = await Promise.all([
-      db.collection("jobs").where("userId", "==", req.uid).get(),
-      db.collection("quotes").where("userId", "==", req.uid).get(),
-      db.collection("invoices").where("userId", "==", req.uid).get(),
-      db.collection("schedule").where("userId", "==", req.uid).get(),
+      db.collection("jobs").where("orgId", "==", req.orgId).get(),
+      db.collection("quotes").where("orgId", "==", req.orgId).get(),
+      db.collection("invoices").where("orgId", "==", req.orgId).get(),
+      db.collection("schedule").where("orgId", "==", req.orgId).get(),
     ]);
 
     const jobs = jobsSnap.docs.map(d => d.data());

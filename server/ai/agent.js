@@ -17,10 +17,14 @@ const INTEGRATION_TOOL_NAMES = [
 
 // ── Tool execution — maps tool names to Firestore operations ──
 
-async function executeTool(toolName, input, uid) {
+async function executeTool(toolName, input, uid, orgId) {
+  // Default orgId to uid for solo users (backward compat)
+  const oid = orgId || uid;
+
   switch (toolName) {
     case "create_customer": {
       const data = {
+        orgId: oid,
         userId: uid,
         name: input.name || "",
         email: input.email || "",
@@ -35,7 +39,7 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "search_customers": {
-      const snap = await db.collection("customers").where("userId", "==", uid).get();
+      const snap = await db.collection("customers").where("orgId", "==", oid).get();
       const q = (input.query || "").toLowerCase();
       const results = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
@@ -50,7 +54,7 @@ async function executeTool(toolName, input, uid) {
     case "update_customer": {
       const { customerId, ...updates } = input;
       const cDoc = await db.collection("customers").doc(customerId).get();
-      if (!cDoc.exists || cDoc.data().userId !== uid) return { error: "Customer not found" };
+      if (!cDoc.exists || cDoc.data().orgId !== oid) return { error: "Customer not found" };
       updates.updatedAt = Date.now();
       await db.collection("customers").doc(customerId).update(updates);
       const updated = await db.collection("customers").doc(customerId).get();
@@ -60,6 +64,7 @@ async function executeTool(toolName, input, uid) {
     case "create_quote": {
       const total = (input.items || []).reduce((sum, i) => sum + (i.amount || 0), 0);
       const data = {
+        orgId: oid,
         userId: uid,
         customerId: input.customerId || "",
         customerName: input.customerName || "",
@@ -74,7 +79,7 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "list_quotes": {
-      const snap = await db.collection("quotes").where("userId", "==", uid).get();
+      const snap = await db.collection("quotes").where("orgId", "==", oid).get();
       let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (input.status) results = results.filter(r => r.status === input.status);
       results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -83,7 +88,7 @@ async function executeTool(toolName, input, uid) {
 
     case "send_quote": {
       const qDoc = await db.collection("quotes").doc(input.quoteId).get();
-      if (!qDoc.exists || qDoc.data().userId !== uid) return { error: "Quote not found" };
+      if (!qDoc.exists || qDoc.data().orgId !== oid) return { error: "Quote not found" };
       await db.collection("quotes").doc(input.quoteId).update({ status: "sent", sentAt: Date.now() });
       return { success: true, quoteId: input.quoteId, status: "sent" };
     }
@@ -91,6 +96,7 @@ async function executeTool(toolName, input, uid) {
     case "create_invoice": {
       const total = (input.items || []).reduce((sum, i) => sum + (i.amount || 0), 0);
       const data = {
+        orgId: oid,
         userId: uid,
         customerId: input.customerId || "",
         customerName: input.customerName || "",
@@ -107,7 +113,7 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "list_invoices": {
-      const snap = await db.collection("invoices").where("userId", "==", uid).get();
+      const snap = await db.collection("invoices").where("orgId", "==", oid).get();
       let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (input.status) results = results.filter(r => r.status === input.status);
       results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -116,6 +122,7 @@ async function executeTool(toolName, input, uid) {
 
     case "create_job": {
       const data = {
+        orgId: oid,
         userId: uid,
         customerId: input.customerId || "",
         customerName: input.customerName || "",
@@ -127,6 +134,7 @@ async function executeTool(toolName, input, uid) {
         scheduledDate: input.scheduledDate || null,
         cost: input.cost || 0,
         address: input.address || "",
+        assignedTo: input.assignedTo || null,
         createdAt: Date.now(),
       };
       const ref = await db.collection("jobs").add(data);
@@ -138,7 +146,7 @@ async function executeTool(toolName, input, uid) {
     }
 
     case "list_jobs": {
-      const snap = await db.collection("jobs").where("userId", "==", uid).get();
+      const snap = await db.collection("jobs").where("orgId", "==", oid).get();
       let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (input.status) results = results.filter(r => r.status === input.status);
       results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -148,7 +156,7 @@ async function executeTool(toolName, input, uid) {
     case "update_job": {
       const { jobId, ...updates } = input;
       const jDoc = await db.collection("jobs").doc(jobId).get();
-      if (!jDoc.exists || jDoc.data().userId !== uid) return { error: "Job not found" };
+      if (!jDoc.exists || jDoc.data().orgId !== oid) return { error: "Job not found" };
       updates.updatedAt = Date.now();
       await db.collection("jobs").doc(jobId).update(updates);
       const updated = await db.collection("jobs").doc(jobId).get();
@@ -157,6 +165,7 @@ async function executeTool(toolName, input, uid) {
 
     case "schedule_job": {
       const data = {
+        orgId: oid,
         userId: uid,
         jobId: input.jobId || null,
         title: input.title || "",
@@ -177,10 +186,10 @@ async function executeTool(toolName, input, uid) {
 
     case "get_dashboard_stats": {
       const [jobsSnap, quotesSnap, invoicesSnap, scheduleSnap] = await Promise.all([
-        db.collection("jobs").where("userId", "==", uid).get(),
-        db.collection("quotes").where("userId", "==", uid).get(),
-        db.collection("invoices").where("userId", "==", uid).get(),
-        db.collection("schedule").where("userId", "==", uid).get(),
+        db.collection("jobs").where("orgId", "==", oid).get(),
+        db.collection("quotes").where("orgId", "==", oid).get(),
+        db.collection("invoices").where("orgId", "==", oid).get(),
+        db.collection("schedule").where("orgId", "==", oid).get(),
       ]);
 
       const jobs = jobsSnap.docs.map(d => d.data());
@@ -210,11 +219,11 @@ async function executeTool(toolName, input, uid) {
 
       if (input.customerId) {
         const cDoc = await db.collection("customers").doc(input.customerId).get();
-        if (!cDoc.exists || cDoc.data().userId !== uid) return { error: "Customer not found" };
+        if (!cDoc.exists || cDoc.data().orgId !== oid) return { error: "Customer not found" };
         address = cDoc.data().address || "";
         name = cDoc.data().name || "";
       } else if (input.customerName) {
-        const snap = await db.collection("customers").where("userId", "==", uid).get();
+        const snap = await db.collection("customers").where("orgId", "==", oid).get();
         const q = (input.customerName || "").toLowerCase();
         const match = snap.docs
           .map(d => ({ id: d.id, ...d.data() }))
@@ -235,6 +244,7 @@ async function executeTool(toolName, input, uid) {
         const result = await sendSms(input.to, input.body);
         // Save to messages collection
         await db.collection("messages").add({
+          orgId: oid,
           userId: uid,
           type: "sms",
           direction: "outbound",
@@ -336,6 +346,28 @@ async function executeTool(toolName, input, uid) {
       }
     }
 
+    case "list_team_members": {
+      const snap = await db.collection("team").where("orgId", "==", oid).get();
+      const members = snap.docs.map(d => {
+        const data = d.data();
+        return { id: d.id, name: data.name || "", email: data.email || "", role: data.role || "technician", status: data.status || "active" };
+      });
+      const roleOrder = { owner: 0, admin: 1, office: 2, technician: 3 };
+      members.sort((a, b) => (roleOrder[a.role] ?? 4) - (roleOrder[b.role] ?? 4) || a.name.localeCompare(b.name));
+      return { members };
+    }
+
+    case "assign_job": {
+      const jDoc = await db.collection("jobs").doc(input.jobId).get();
+      if (!jDoc.exists || jDoc.data().orgId !== oid) return { error: "Job not found" };
+      // Verify the assignee is on this org's team
+      const teamSnap = await db.collection("team").where("orgId", "==", oid).where("uid", "==", input.assigneeUid).limit(1).get();
+      if (teamSnap.empty) return { error: "Team member not found" };
+      const member = teamSnap.docs[0].data();
+      await db.collection("jobs").doc(input.jobId).update({ assignedTo: input.assigneeUid, updatedAt: Date.now() });
+      return { success: true, jobId: input.jobId, assignedTo: input.assigneeUid, assigneeName: member.name || member.email };
+    }
+
     default:
       return { error: `Unknown tool: ${toolName}` };
   }
@@ -343,7 +375,7 @@ async function executeTool(toolName, input, uid) {
 
 // ── Main agent loop — handles tool calling with Claude ──
 
-async function runAgent(uid, userMessage, userProfile) {
+async function runAgent(uid, userMessage, userProfile, orgId) {
   // Get conversation history
   const history = await getConversationHistory(uid);
 
@@ -390,7 +422,7 @@ async function runAgent(uid, userMessage, userProfile) {
         // Route to integration handler or CRM handler
         const result = INTEGRATION_TOOL_NAMES.includes(block.name)
           ? await executeIntegrationTool(block.name, block.input, uid)
-          : await executeTool(block.name, block.input, uid);
+          : await executeTool(block.name, block.input, uid, orgId);
         actionsTaken.push({ tool: block.name, input: block.input, result });
         toolResults.push({
           type: "tool_result",

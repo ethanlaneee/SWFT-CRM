@@ -129,6 +129,16 @@ const API = {
     delete: (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
   },
 
+  // ── Team ──
+  team: {
+    list:         ()           => apiFetch("/api/team"),
+    invite:       (data)       => apiFetch("/api/team/invite", { method: "POST", body: JSON.stringify(data) }),
+    updateRole:   (id, role)   => apiFetch(`/api/team/${id}`, { method: "PUT", body: JSON.stringify({ role }) }),
+    remove:       (id)         => apiFetch(`/api/team/${id}`, { method: "DELETE" }),
+    join:         (token)      => apiFetch("/api/team/join", { method: "POST", body: JSON.stringify({ token }) }),
+    validateInvite: (token)    => fetch(`/api/team/invite/${token}`).then(r => r.json()),
+  },
+
 };
 
 // ── Auth guard — call on every protected page ──
