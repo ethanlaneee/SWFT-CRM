@@ -1012,7 +1012,6 @@ function previewCurrentDoc() {
   _q.finish   = g('e-finish')   || _q.finish;
   _q.status   = g('e-status')   || _q.status;
   _q.notes    = g('m-notes')    || _q.notes;
-  _q.lineItems = _items && _items.length ? _items : _q.lineItems;
   const type = _q.isInvoice ? 'invoice' : 'quote';
   showPdfPreview(type, _q);
 }
