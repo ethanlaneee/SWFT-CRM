@@ -14,6 +14,7 @@ const cors = require("cors");
 const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
+const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = require("./routes/payments");
 const { router: messagesRouter, twilioIncomingHandler, postmarkIncomingHandler } = require("./routes/messages");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
@@ -23,9 +24,10 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
-// ── Stripe webhook — MUST be registered before express.json() ──
+// ── Stripe webhooks — MUST be registered before express.json() ──
 // Stripe requires the raw request body to verify the webhook signature.
 app.post("/api/billing/webhook", express.raw({ type: "application/json" }), webhookHandler);
+app.post("/api/payments/webhook", express.raw({ type: "application/json" }), paymentsWebhookHandler);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded webhooks
@@ -67,6 +69,7 @@ app.use("/api/customers", auth, checkAccess,  require("./routes/customers"));
 app.use("/api/jobs",      auth, checkAccess,  require("./routes/jobs"));
 app.use("/api/quotes",    auth, checkAccess,  require("./routes/quotes"));
 app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
+app.use("/api/payments",  auth, checkAccess,  paymentsRouter);
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
 app.use("/api/team",      auth, checkAccess,  require("./routes/team"));

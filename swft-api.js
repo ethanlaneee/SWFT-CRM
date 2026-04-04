@@ -129,6 +129,11 @@ const API = {
     delete: (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
   },
 
+  // ── Payments (Stripe) ──
+  payments: {
+    invoiceLink: (id) => apiFetch(`/api/payments/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
+  },
+
   // ── Team ──
   team: {
     list:         ()           => apiFetch("/api/team"),
