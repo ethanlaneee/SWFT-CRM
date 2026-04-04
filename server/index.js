@@ -46,6 +46,9 @@ const staticRoot = path.join(__dirname, "..");
 app.get("/swft-shell", (req, res) => res.redirect("/swft-dashboard"));
 app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
 
+// ── Root → landing page (must be before static middleware) ──
+app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
+
 // Rewrite clean URLs → .html before static lookup (e.g. /swft-customers → /swft-customers.html)
 app.use((req, res, next) => {
   if (req.method === "GET" && !req.path.startsWith("/api/") && !path.extname(req.path) && req.path !== "/") {
@@ -72,9 +75,6 @@ app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
 app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
-
-// ── Root → landing page ──
-app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));
