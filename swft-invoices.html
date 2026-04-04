@@ -74,6 +74,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .s-open{background:rgba(245,166,35,0.12);color:var(--amber);}
 .s-paid{background:rgba(200,241,53,0.12);color:var(--green);}
 .s-draft{background:rgba(100,100,100,0.12);color:var(--gray);}
+select.status-pill{cursor:pointer;border:none;-webkit-appearance:none;appearance:none;outline:none;font-family:inherit;}
+select.status-pill option{background:#141414;color:#e0e0e0;}
 .row-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray2);transition:all 0.14s;margin-left:auto;}
 .row-btn:hover{background:var(--surface2);color:var(--green);border-color:var(--green);}
 .empty-state{text-align:center;padding:40px;color:var(--gray);font-size:13px;}
@@ -270,19 +272,34 @@ function renderTable(){
   body.innerHTML=list.map(function(inv){
     var due=inv.dueDate?new Date(inv.dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
     var total='$'+Number(inv.total||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-    var sc=inv.status==='paid'?'s-paid':'s-open';
+    var sc=inv.status==='paid'?'s-paid':inv.status==='draft'?'s-draft':'s-open';
+    var st=inv.status||'open';
     return '<div class="inv-row" onclick="openInvoice(\''+inv.id+'\')">'+
       '<div><div class="inv-customer">'+(inv.customerName||'Unnamed')+'</div><div class="inv-job">'+(inv.service||'')+'</div></div>'+
       '<div class="inv-date">'+(inv.service||'—')+'</div>'+
       '<div class="inv-date">'+due+'</div>'+
       '<div class="inv-total">'+total+'</div>'+
-      '<div><span class="status-pill '+sc+'">'+(inv.status||'open')+'</span></div>'+
+      '<div><select class="status-pill '+sc+'" onclick="event.stopPropagation()" onchange="changeInvoiceStatus(\''+inv.id+'\',this.value,this)">'+
+        '<option value="open"'+(st==='open'?' selected':'')+'>open</option>'+
+        '<option value="paid"'+(st==='paid'?' selected':'')+'>paid</option>'+
+        '<option value="draft"'+(st==='draft'?' selected':'')+'>draft</option>'+
+      '</select></div>'+
       '<div><div class="row-btn">→</div></div></div>';
   }).join('');
 }
 
 function setFilter(el,f){_filter=f;document.querySelectorAll('.ftab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderTable();}
 function filterInvoices(q){_search=q;renderTable();}
+
+async function changeInvoiceStatus(id,val,el){
+  var sc=val==='paid'?'s-paid':val==='draft'?'s-draft':'s-open';
+  el.className='status-pill '+sc;
+  var inv=_invoices.find(function(i){return i.id===id;});
+  var prev=inv?inv.status:'open';
+  if(inv)inv.status=val;
+  try{await API.invoices.update(id,{status:val});renderStats();showToast('Status updated');}
+  catch(e){showToast('Error updating status');if(inv)inv.status=prev;el.className='status-pill '+(prev==='paid'?'s-paid':prev==='draft'?'s-draft':'s-open');}
+}
 
 async function openInvoice(id){
   try{var inv=await API.invoices.get(id);_currentInv=inv;_items=(inv.items||[]).map(function(i){return{desc:i.desc||'',qty:Number(i.qty)||1,rate:Number(i.rate)||0,total:Number(i.total)||0};});populateModal(inv);document.getElementById('btn-delete').style.display='';document.getElementById('btn-paid').style.display=inv.status!=='paid'?'':'none';document.getElementById('modal-overlay').classList.add('open');}catch(e){showToast('Error loading invoice');}

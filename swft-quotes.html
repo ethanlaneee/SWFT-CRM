@@ -84,6 +84,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .s-draft{background:rgba(100,100,100,0.12);color:var(--gray);}
 .s-sent{background:rgba(77,159,255,0.12);color:var(--blue);}
 .s-approved{background:rgba(200,241,53,0.12);color:var(--green);}
+select.status-pill{cursor:pointer;border:none;-webkit-appearance:none;appearance:none;outline:none;font-family:inherit;}
+select.status-pill option{background:#141414;color:#e0e0e0;}
 .row-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray2);transition:all 0.14s;margin-left:auto;}
 .row-btn:hover{background:var(--surface2);color:var(--green);border-color:var(--green);}
 .empty-state{text-align:center;padding:40px;color:var(--gray);font-size:13px;}
@@ -327,12 +329,17 @@ function renderTable(){
     var created=q.createdAt?new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
     var total='$'+Number(q.total||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
     var sc=q.status==='approved'?'s-approved':q.status==='sent'?'s-sent':'s-draft';
+    var st=q.status||'draft';
     return '<div class="q-row" onclick="openQuote(\''+q.id+'\')">'+
       '<div><div class="q-customer">'+(q.customerName||'Unnamed')+'</div><div class="q-job">'+(q.service||'')+(q.finish?' — '+q.finish:'')+'</div></div>'+
       '<div class="q-date">'+(q.service||'—')+'</div>'+
       '<div class="q-date">'+created+'</div>'+
       '<div class="q-total">'+total+'</div>'+
-      '<div><span class="status-pill '+sc+'">'+(q.status||'draft')+'</span></div>'+
+      '<div><select class="status-pill '+sc+'" onclick="event.stopPropagation()" onchange="changeQuoteStatus(\''+q.id+'\',this.value,this)">'+
+        '<option value="draft"'+(st==='draft'?' selected':'')+'>draft</option>'+
+        '<option value="sent"'+(st==='sent'?' selected':'')+'>sent</option>'+
+        '<option value="approved"'+(st==='approved'?' selected':'')+'>approved</option>'+
+      '</select></div>'+
       '<div><div class="row-btn">→</div></div>'+
     '</div>';
   }).join('');
@@ -340,6 +347,16 @@ function renderTable(){
 
 function setFilter(el,f){_filter=f;document.querySelectorAll('.ftab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderTable();}
 function filterQuotes(q){_search=q;renderTable();}
+
+async function changeQuoteStatus(id,val,el){
+  var sc=val==='approved'?'s-approved':val==='sent'?'s-sent':'s-draft';
+  el.className='status-pill '+sc;
+  var q=_quotes.find(function(i){return i.id===id;});
+  var prev=q?q.status:'draft';
+  if(q)q.status=val;
+  try{await API.quotes.update(id,{status:val});renderStats();showToast('Status updated');}
+  catch(e){showToast('Error updating status');if(q)q.status=prev;el.className='status-pill '+(prev==='approved'?'s-approved':prev==='sent'?'s-sent':'s-draft');}
+}
 
 // ── Modal ──
 async function openQuote(id){
