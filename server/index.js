@@ -73,8 +73,8 @@ app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 
-// ── Root redirect ──
-app.get("/", (req, res) => res.redirect("/swft-login"));
+// ── Root → landing page ──
+app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));
