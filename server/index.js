@@ -74,7 +74,7 @@ app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 
 // ── Root redirect ──
-app.get("/", (req, res) => res.redirect("/swft-login"));
+app.get("/", (req, res) => res.redirect("/swft-landing"));
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));

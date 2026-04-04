@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="SWFT CRM — the fast, modern platform built for service businesses. Manage customers, jobs, quotes, invoices, and scheduling all in one place."/>
+<meta property="og:title" content="SWFT — Simple. Smart. Fast."/>
+<meta property="og:description" content="The fast, modern CRM built for service businesses. Customers, jobs, quotes, invoices, scheduling, and AI — all in one place."/>
+<meta property="og:type" content="website"/>
+<title>SWFT — Simple. Smart. Fast.</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+  --blue:#4d9fff;--red:#ff5252;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 90% 60% at 10% 10%, rgba(200,241,53,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 80%, rgba(77,159,255,0.03) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(200,241,53,0.02) 0%, transparent 70%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:20px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  background:rgba(10,10,10,0.85);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.nav-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:26px;letter-spacing:4px;color:var(--white);line-height:1;
+  display:flex;align-items:center;gap:2px;text-decoration:none;
+}
+.nav-logo em{color:var(--green);font-style:normal;}
+.nav-actions{display:flex;align-items:center;gap:12px;}
+.btn-ghost{
+  padding:9px 20px;border-radius:9px;
+  background:transparent;border:1px solid var(--border2);
+  color:var(--gray);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;
+  cursor:pointer;text-decoration:none;
+  transition:all 0.18s ease;
+}
+.btn-ghost:hover{border-color:var(--gray2);color:var(--white);background:var(--surface);}
+.btn-primary{
+  padding:9px 22px;border-radius:9px;
+  background:var(--green);border:none;
+  color:#0a0a0a;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;
+  cursor:pointer;text-decoration:none;
+  transition:all 0.18s ease;
+}
+.btn-primary:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 4px 20px rgba(200,241,53,0.3);}
+
+/* ── SECTIONS ── */
+section{position:relative;z-index:1;}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  padding:120px 24px 80px;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 14px;border-radius:99px;
+  border:1px solid rgba(200,241,53,0.2);
+  background:rgba(200,241,53,0.06);
+  color:var(--green);
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:36px;
+  animation:fadeIn 0.5s ease both;
+}
+.hero-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+.hero h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(64px,10vw,120px);
+  letter-spacing:4px;line-height:0.95;
+  color:var(--white);
+  animation:slideUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.1s both;
+}
+.hero h1 span{color:var(--green);}
+.hero-sub{
+  margin-top:24px;
+  font-size:clamp(15px,2vw,18px);
+  color:var(--gray);font-weight:400;line-height:1.6;
+  max-width:520px;
+  animation:slideUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+}
+.hero-cta{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+  margin-top:40px;
+  animation:slideUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.3s both;
+}
+.btn-lg{
+  padding:14px 32px;border-radius:12px;
+  font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;
+  cursor:pointer;text-decoration:none;
+  transition:all 0.18s ease;
+}
+.btn-lg-primary{
+  background:var(--green);border:none;color:#0a0a0a;
+}
+.btn-lg-primary:hover{background:#d5ff40;transform:translateY(-2px);box-shadow:0 8px 32px rgba(200,241,53,0.35);}
+.btn-lg-ghost{
+  background:transparent;border:1px solid var(--border2);color:var(--white);
+}
+.btn-lg-ghost:hover{border-color:var(--gray);background:var(--surface);transform:translateY(-1px);}
+
+.hero-tagline{
+  margin-top:56px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gray2);
+  animation:fadeIn 0.8s ease 0.5s both;
+}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* ── DIVIDER ── */
+.section-divider{
+  height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);
+  margin:0 40px;
+}
+
+/* ── FEATURES ── */
+.features{padding:100px 24px;}
+.section-label{
+  text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--green);margin-bottom:16px;
+}
+.section-title{
+  text-align:center;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(40px,6vw,64px);
+  letter-spacing:3px;color:var(--white);
+  margin-bottom:12px;
+}
+.section-desc{
+  text-align:center;color:var(--gray);font-size:15px;line-height:1.6;
+  max-width:480px;margin:0 auto 60px;
+}
+
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1px;
+  max-width:1100px;margin:0 auto;
+  border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;
+  background:var(--border);
+}
+.feature-card{
+  background:var(--surface);
+  padding:36px 32px;
+  transition:background 0.2s ease;
+  position:relative;
+  overflow:hidden;
+}
+.feature-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%, rgba(200,241,53,0.04) 0%, transparent 70%);
+  opacity:0;transition:opacity 0.3s ease;
+}
+.feature-card:hover{background:var(--surface2);}
+.feature-card:hover::before{opacity:1;}
+
+.feature-icon{
+  width:40px;height:40px;border-radius:10px;
+  background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.12);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+}
+.feature-icon svg{width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.feature-card h3{
+  font-size:14px;font-weight:600;color:var(--white);margin-bottom:8px;letter-spacing:0.2px;
+}
+.feature-card p{font-size:13px;color:var(--gray);line-height:1.6;}
+
+/* ── STATS ── */
+.stats{padding:80px 24px;}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:1px;max-width:900px;margin:0 auto;
+  background:var(--border);
+  border:1px solid var(--border);border-radius:20px;overflow:hidden;
+}
+.stat-item{
+  background:var(--surface);padding:40px 32px;text-align:center;
+}
+.stat-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;letter-spacing:2px;
+  color:var(--green);line-height:1;
+  margin-bottom:8px;
+}
+.stat-label{font-size:12px;color:var(--gray);letter-spacing:1px;text-transform:uppercase;}
+
+/* ── CTA SECTION ── */
+.cta-section{
+  padding:100px 24px;
+  text-align:center;
+}
+.cta-card{
+  max-width:700px;margin:0 auto;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:24px;padding:64px 48px;
+  position:relative;overflow:hidden;
+}
+.cta-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+}
+.cta-card::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(200,241,53,0.05) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-card h2{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(36px,5vw,56px);
+  letter-spacing:3px;color:var(--white);margin-bottom:16px;
+  position:relative;z-index:1;
+}
+.cta-card p{
+  font-size:15px;color:var(--gray);line-height:1.6;
+  max-width:440px;margin:0 auto 36px;
+  position:relative;z-index:1;
+}
+.cta-card .hero-cta{position:relative;z-index:1;}
+
+/* ── FOOTER ── */
+footer{
+  padding:40px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  position:relative;z-index:1;
+}
+.footer-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:4px;color:var(--white);
+  display:flex;align-items:center;gap:2px;text-decoration:none;
+}
+.footer-logo em{color:var(--green);font-style:normal;}
+.footer-copy{font-size:12px;color:var(--gray2);}
+.footer-links{display:flex;gap:20px;}
+.footer-links a{font-size:12px;color:var(--gray2);text-decoration:none;transition:color 0.15s;}
+.footer-links a:hover{color:var(--white);}
+
+/* ── MOBILE ── */
+@media(max-width:600px){
+  nav{padding:16px 20px;}
+  .nav-actions .btn-ghost{display:none;}
+  footer{flex-direction:column;align-items:flex-start;padding:32px 20px;}
+  .cta-card{padding:40px 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="/swft-landing">SWFT<em>.</em></a>
+  <div class="nav-actions">
+    <a class="btn-ghost" href="/swft-login">Sign In</a>
+    <a class="btn-primary" href="/swft-login#signup">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Built for service businesses
+  </div>
+  <h1>RUN YOUR<br>BUSINESS.<br><span>NOT YOUR</span><br>SOFTWARE.</h1>
+  <p class="hero-sub">SWFT brings customers, jobs, quotes, invoices, scheduling, and AI into one clean, fast platform — so you can focus on the work that matters.</p>
+  <div class="hero-cta">
+    <a class="btn-lg btn-lg-primary" href="/swft-login#signup">Get Started Free</a>
+    <a class="btn-lg btn-lg-ghost" href="/swft-login">Sign In</a>
+  </div>
+  <div class="hero-tagline">simple &nbsp;·&nbsp; smart &nbsp;·&nbsp; swft</div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-num">6+</div>
+      <div class="stat-label">Core Modules</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">AI</div>
+      <div class="stat-label">Powered Agent</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">1</div>
+      <div class="stat-label">Platform for Everything</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Spreadsheets Needed</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="section-label">What's Inside</div>
+  <h2 class="section-title">EVERYTHING YOU NEED</h2>
+  <p class="section-desc">Every tool your service business needs — nothing you don't. All connected, all fast.</p>
+
+  <div class="features-grid">
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <h3>Customers</h3>
+      <p>Keep every client detail, contact, and history in one place. Search, filter, and act fast.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <h3>Jobs</h3>
+      <p>Track every job from open to closed. Assign work, set statuses, and never let anything slip.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <h3>Quotes</h3>
+      <p>Build and send professional quotes in minutes. Track acceptances and convert to invoices instantly.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      </div>
+      <h3>Invoices</h3>
+      <p>Send invoices, track payment status, and keep your cash flow visible at a glance.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <h3>Schedule</h3>
+      <p>Manage appointments and jobs on a calendar. Google Calendar sync keeps everything aligned.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <h3>Messages</h3>
+      <p>SMS and email with clients directly from SWFT. Every conversation tied to the right customer.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <h3>AI Agent</h3>
+      <p>Your built-in AI assistant understands your business and helps you move faster every day.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/></svg>
+      </div>
+      <h3>Integrations</h3>
+      <p>Connect Google, QuickBooks, Twilio, and more. Your tools, working together seamlessly.</p>
+    </div>
+
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-card">
+    <h2>READY TO RUN SWFT?</h2>
+    <p>Create your account and get your business organized in minutes — no credit card required to start.</p>
+    <div class="hero-cta">
+      <a class="btn-lg btn-lg-primary" href="/swft-login#signup">Create Free Account</a>
+      <a class="btn-lg btn-lg-ghost" href="/swft-login">Sign In</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="footer-logo" href="/swft-landing">SWFT<em>.</em></a>
+  <div class="footer-links">
+    <a href="/swft-login">Sign In</a>
+    <a href="/swft-login#signup">Sign Up</a>
+  </div>
+  <span class="footer-copy">&copy; 2025 SWFT. All rights reserved.</span>
+</footer>
+
+</body>
+</html>
