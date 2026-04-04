@@ -16,6 +16,7 @@ const { checkAccess } = require("./middleware/checkAccess");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
 const { router: messagesRouter, twilioIncomingHandler, postmarkIncomingHandler } = require("./routes/messages");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
+const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,8 +34,10 @@ app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded w
 app.post("/api/webhooks/twilio/sms", twilioIncomingHandler);
 app.post("/api/webhooks/postmark/inbound", postmarkIncomingHandler);
 
-// ── Google OAuth callback (no auth — Google redirects here) ──
+// ── OAuth callbacks (no auth — providers redirect here directly) ──
 app.get("/api/auth/google/callback", googleCallback);
+app.get("/api/integrations/google/callback", googleIntegrationCallback);
+app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
 
 // ── Serve frontend files ──
 const staticRoot = path.join(__dirname, "..");
@@ -66,6 +69,7 @@ app.use("/api/quotes",    auth, checkAccess,  require("./routes/quotes"));
 app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
+app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 

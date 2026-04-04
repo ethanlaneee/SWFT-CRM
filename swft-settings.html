@@ -191,20 +191,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
 <!-- Integrations -->
 <div class="settings-section">
-  <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>INTEGRATIONS</h3></div>
-  <div class="settings-body">
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Gmail (Send Quotes & Invoices)</div><div class="settings-row-desc">Connect your Gmail to send documents via email</div></div>
-      <button class="settings-btn" onclick="openAccountPanel()">Configure Gmail</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Google Calendar</div><div class="settings-row-desc">Sync jobs to your Google Calendar automatically</div></div>
-      <button class="settings-btn" id="gcal-btn" onclick="connectGoogleCalendar()">Connect</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Apple Calendar (iCal)</div><div class="settings-row-desc">When you create a job, download an .ics file to add it to Apple Calendar</div></div>
-      <button class="settings-btn" onclick="showToast('Apple Calendar works automatically — when you create a job with a date, you will be offered an .ics download')">How it works</button>
-    </div>
+  <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
+  <div class="settings-body" id="integrations-list" style="gap:0;">
+    <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
   </div>
 </div>
 
@@ -405,11 +394,85 @@ async function deleteAccount() {
   }
 }
 
-function connectGoogleCalendar() {
-  // Open Google Calendar settings - user can subscribe to their SWFT calendar
-  window.open('https://calendar.google.com', '_blank');
-  showToast('Google Calendar opened — create jobs in SWFT and add them to your calendar');
+// ── Integrations ──
+async function loadIntegrations() {
+  try {
+    var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    var user = getAuth().currentUser;
+    if (!user) return;
+    var token = await user.getIdToken();
+    var res = await fetch('/api/integrations', { headers: { Authorization: 'Bearer ' + token } });
+    var data = await res.json();
+    var container = document.getElementById('integrations-list');
+    if (!container) return;
+
+    var icons = { gmail: '📧', google_calendar: '📅', quickbooks: '💰' };
+    container.innerHTML = data.integrations.map(function(i) {
+      return '<div class="settings-row">' +
+        '<div class="settings-row-info">' +
+          '<div class="settings-row-label">' + (icons[i.id] || '🔗') + ' ' + i.name + '</div>' +
+          '<div class="settings-row-desc">' + i.description +
+            (i.connected ? ' <span style="color:var(--green);font-weight:600;">Connected' + (i.account ? ' — ' + i.account : '') + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+        (i.connected
+          ? '<button class="settings-btn danger" onclick="disconnectIntegration(\'' + i.id + '\')">Disconnect</button>'
+          : '<button class="settings-btn primary" onclick="connectIntegration(\'' + i.id + '\')">Connect</button>') +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    var c = document.getElementById('integrations-list');
+    if (c) c.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px;">Could not load integrations</div>';
+  }
 }
+
+async function connectIntegration(id) {
+  try {
+    var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    var token = await getAuth().currentUser.getIdToken();
+    var res = await fetch('/api/integrations/' + id + '/connect', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    var data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else if (data.error) {
+      showToast(data.error);
+    }
+  } catch(e) {
+    showToast('Failed to start connection');
+  }
+}
+
+async function disconnectIntegration(id) {
+  if (!confirm('Disconnect this integration?')) return;
+  try {
+    var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    var token = await getAuth().currentUser.getIdToken();
+    await fetch('/api/integrations/' + id + '/disconnect', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    showToast('Disconnected');
+    loadIntegrations();
+  } catch(e) {
+    showToast('Error disconnecting');
+  }
+}
+
+// Check URL params for connection result
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('connected')) {
+    setTimeout(function() { showToast(params.get('connected').replace(/_/g, ' ') + ' connected!'); }, 500);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  if (params.get('error')) {
+    setTimeout(function() { showToast('Connection failed — please try again'); }, 500);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
 </script>
 
 <!-- Firebase Auth -->
@@ -439,6 +502,7 @@ function connectGoogleCalendar() {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
       loadSettings();
+      loadIntegrations();
     }
   });
 </script>

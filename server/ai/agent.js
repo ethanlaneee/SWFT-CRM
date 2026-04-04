@@ -1,10 +1,19 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const { db } = require("../firebase");
-const tools = require("./tools");
+const crmTools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
+const { getIntegrationTools, executeIntegrationTool } = require("./integration-tools");
+const { sendSms } = require("../twilio");
 
 const client = new Anthropic();
+
+// Integration tool names — if a tool call matches one of these, route to integration handler
+const INTEGRATION_TOOL_NAMES = [
+  "list_calendar_events", "create_calendar_event",
+  "check_gmail_inbox", "send_gmail",
+  "export_to_sheets",
+];
 
 // ── Tool execution — maps tool names to Firestore operations ──
 
@@ -187,6 +196,138 @@ async function executeTool(toolName, input, uid) {
       };
     }
 
+    case "navigate_to_customer": {
+      let address = "";
+      let name = "";
+
+      if (input.customerId) {
+        const cDoc = await db.collection("customers").doc(input.customerId).get();
+        if (!cDoc.exists || cDoc.data().userId !== uid) return { error: "Customer not found" };
+        address = cDoc.data().address || "";
+        name = cDoc.data().name || "";
+      } else if (input.customerName) {
+        const snap = await db.collection("customers").where("userId", "==", uid).get();
+        const q = (input.customerName || "").toLowerCase();
+        const match = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .find(c => c.name.toLowerCase().includes(q));
+        if (!match) return { error: `No customer found matching "${input.customerName}"` };
+        address = match.address || "";
+        name = match.name || "";
+      }
+
+      if (!address) return { error: `${name || "Customer"} doesn't have an address on file` };
+
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+      return { name, address, mapsUrl };
+    }
+
+    case "send_sms": {
+      try {
+        const result = await sendSms(input.to, input.body);
+        // Save to messages collection
+        await db.collection("messages").add({
+          userId: uid,
+          type: "sms",
+          direction: "outbound",
+          to: input.to,
+          body: input.body,
+          twilioSid: result.sid,
+          status: result.status,
+          createdAt: Date.now(),
+        });
+        return { success: true, to: input.to, status: result.status };
+      } catch (err) {
+        return { error: `SMS failed: ${err.message}` };
+      }
+    }
+
+    case "get_weather": {
+      try {
+        // Default to Dallas, TX if no location provided
+        let lat = input.latitude || 32.78;
+        let lon = input.longitude || -96.80;
+
+        // If city provided, geocode it via Open-Meteo
+        if (input.city && !input.latitude) {
+          const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(input.city)}&count=1&language=en&format=json`);
+          const geoData = await geoRes.json();
+          if (geoData.results && geoData.results[0]) {
+            lat = geoData.results[0].latitude;
+            lon = geoData.results[0].longitude;
+          }
+        }
+
+        const weatherRes = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+          `&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m` +
+          `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max` +
+          `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch` +
+          `&timezone=America%2FChicago&forecast_days=3`
+        );
+        const weather = await weatherRes.json();
+
+        const WMO = {
+          0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+          45: "Foggy", 48: "Icy fog", 51: "Light drizzle", 53: "Drizzle", 55: "Heavy drizzle",
+          61: "Light rain", 63: "Rain", 65: "Heavy rain", 71: "Light snow", 73: "Snow", 75: "Heavy snow",
+          80: "Light showers", 81: "Showers", 82: "Heavy showers", 95: "Thunderstorm",
+          96: "Thunderstorm with hail", 99: "Severe thunderstorm",
+        };
+
+        return {
+          current: {
+            temperature: weather.current?.temperature_2m + "°F",
+            conditions: WMO[weather.current?.weather_code] || "Unknown",
+            wind: weather.current?.wind_speed_10m + " mph",
+            humidity: weather.current?.relative_humidity_2m + "%",
+          },
+          forecast: (weather.daily?.time || []).map((date, i) => ({
+            date,
+            high: weather.daily.temperature_2m_max[i] + "°F",
+            low: weather.daily.temperature_2m_min[i] + "°F",
+            conditions: WMO[weather.daily.weather_code[i]] || "Unknown",
+            rain_chance: weather.daily.precipitation_probability_max[i] + "%",
+          })),
+        };
+      } catch (err) {
+        return { error: `Weather lookup failed: ${err.message}` };
+      }
+    }
+
+    case "get_directions": {
+      try {
+        const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
+        if (!MAPS_KEY) return { error: "Google Maps not configured — ask your admin to add GOOGLE_MAPS_API_KEY" };
+
+        const params = new URLSearchParams({
+          origin: input.origin,
+          destination: input.destination,
+          key: MAPS_KEY,
+        });
+
+        const res = await fetch(`https://maps.googleapis.com/maps/api/directions/json?${params}`);
+        const data = await res.json();
+
+        if (data.status !== "OK" || !data.routes?.length) {
+          return { error: `Could not find directions: ${data.status}` };
+        }
+
+        const route = data.routes[0];
+        const leg = route.legs[0];
+
+        return {
+          origin: leg.start_address,
+          destination: leg.end_address,
+          distance: leg.distance.text,
+          duration: leg.duration.text,
+          steps: leg.steps.slice(0, 8).map(s => s.html_instructions.replace(/<[^>]*>/g, "")),
+        };
+      } catch (err) {
+        return { error: `Directions failed: ${err.message}` };
+      }
+    }
+
     default:
       return { error: `Unknown tool: ${toolName}` };
   }
@@ -209,6 +350,10 @@ async function runAgent(uid, userMessage, userProfile) {
 
   const systemPrompt = getSystemPrompt(userProfile.name, userProfile.company);
 
+  // Dynamically add integration tools based on user's connected services
+  const integrationTools = await getIntegrationTools(uid);
+  const allTools = [...crmTools, ...integrationTools];
+
   // Agent loop — keep calling Claude until it stops using tools
   let response;
   const actionsTaken = [];
@@ -218,7 +363,7 @@ async function runAgent(uid, userMessage, userProfile) {
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
       system: systemPrompt,
-      tools,
+      tools: allTools,
       messages,
     });
 
@@ -234,7 +379,10 @@ async function runAgent(uid, userMessage, userProfile) {
     const toolResults = [];
     for (const block of assistantContent) {
       if (block.type === "tool_use") {
-        const result = await executeTool(block.name, block.input, uid);
+        // Route to integration handler or CRM handler
+        const result = INTEGRATION_TOOL_NAMES.includes(block.name)
+          ? await executeIntegrationTool(block.name, block.input, uid)
+          : await executeTool(block.name, block.input, uid);
         actionsTaken.push({ tool: block.name, input: block.input, result });
         toolResults.push({
           type: "tool_result",

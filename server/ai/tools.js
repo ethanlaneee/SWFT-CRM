@@ -200,6 +200,53 @@ const tools = [
       properties: {},
     },
   },
+  {
+    name: "send_sms",
+    description: "Send a text message (SMS) to a customer or phone number. Use when the user says 'text', 'send a message to', 'let them know', or wants to notify a customer via SMS.",
+    input_schema: {
+      type: "object",
+      properties: {
+        to: { type: "string", description: "Phone number to text (e.g., '+15551234567')" },
+        body: { type: "string", description: "The text message to send" },
+      },
+      required: ["to", "body"],
+    },
+  },
+  {
+    name: "get_weather",
+    description: "Get the current weather and forecast for a location. Use when the user asks about weather, whether it's safe to work outside, or wants to check conditions before scheduling a job.",
+    input_schema: {
+      type: "object",
+      properties: {
+        latitude: { type: "number", description: "Latitude of the location" },
+        longitude: { type: "number", description: "Longitude of the location" },
+        city: { type: "string", description: "City name (used if lat/long not available — defaults to user's area)" },
+      },
+    },
+  },
+  {
+    name: "navigate_to_customer",
+    description: "Open Google Maps navigation to a customer's address. Use when the user says 'take me to', 'navigate to', 'directions to [customer]', or 'how do I get to [customer]'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        customerId: { type: "string", description: "The customer's ID" },
+        customerName: { type: "string", description: "Customer name to search for if ID not known" },
+      },
+    },
+  },
+  {
+    name: "get_directions",
+    description: "Get driving directions and travel time between two addresses. Use when the user asks about drive time, how to get to a job site, or route between locations.",
+    input_schema: {
+      type: "object",
+      properties: {
+        origin: { type: "string", description: "Starting address or location" },
+        destination: { type: "string", description: "Destination address or job site" },
+      },
+      required: ["origin", "destination"],
+    },
+  },
 ];
 
 module.exports = tools;

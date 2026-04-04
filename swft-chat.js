@@ -298,6 +298,121 @@
       right: 340px;
     }
 
+    /* ── Acknowledgment message ── */
+    .swft-chat-ack {
+      align-self: flex-start;
+      color: #777;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-style: italic;
+      padding: 4px 14px;
+    }
+
+    /* ── Connect Tools Tab ── */
+    .swft-chat-tools-tab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-top: 1px solid #222;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: #7a7a7a;
+      background: #0d0d0d;
+      border-radius: 0 0 16px 16px;
+    }
+    .swft-chat-tools-tab:hover {
+      background: #1a1a1a;
+      color: #c8f135;
+    }
+    .swft-chat-tools-tab svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* ── Tools Drawer ── */
+    .swft-chat-tools-drawer {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid #222;
+      background: #0d0d0d;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .swft-chat-tools-drawer.open {
+      display: flex;
+    }
+    .swft-chat-tools-drawer h5 {
+      margin: 0;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      color: #c8f135;
+      letter-spacing: 0.5px;
+    }
+    .swft-chat-tool-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: #151515;
+      border: 1px solid #222;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: #ccc;
+    }
+    .swft-chat-tool-item .tool-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .swft-chat-tool-item .tool-icon {
+      font-size: 16px;
+    }
+    .swft-chat-tool-toggle {
+      width: 32px;
+      height: 18px;
+      background: #333;
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .swft-chat-tool-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #666;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .swft-chat-tool-toggle.active {
+      background: #2a3d1a;
+    }
+    .swft-chat-tool-toggle.active::after {
+      transform: translateX(14px);
+      background: #c8f135;
+    }
+    .swft-chat-tools-empty {
+      color: #555;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      text-align: center;
+      padding: 8px 0;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 480px) {
       .swft-chat-panel {
@@ -338,8 +453,7 @@
     <div class="swft-chat-messages">
       <div class="swft-chat-welcome">
         <h4>SWFT AI</h4>
-        <p>Your AI-powered business assistant.</p>
-        <p>I can manage customers, create quotes,<br>generate invoices, and more.</p>
+        <p>Hey, I'm SWFT your personal AI assistant. How can I help you?</p>
         <div class="swft-chat-suggestions">
           <button class="swft-chat-suggestion">Add a new customer</button>
           <button class="swft-chat-suggestion">Create a quote</button>
@@ -359,6 +473,16 @@
       <button class="swft-chat-send" disabled>
         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
+    </div>
+    <div class="swft-chat-tools-drawer" id="swft-tools-drawer">
+      <h5>CONNECTED TOOLS</h5>
+      <div class="swft-chat-tools-list" id="swft-tools-list">
+        <div class="swft-chat-tools-empty">Loading tools...</div>
+      </div>
+    </div>
+    <div class="swft-chat-tools-tab" id="swft-tools-tab">
+      <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      Connect your tools to SWFT
     </div>
   `;
 
@@ -459,10 +583,25 @@
     const el = document.createElement("div");
     el.className = `swft-chat-msg ${role}`;
     // Strip markdown formatting for clean display
-    el.textContent = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^[-•]\s/gm, "").replace(/^#+\s/gm, "");
+    const cleaned = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^[-•]\s/gm, "").replace(/^#+\s/gm, "");
+    el.textContent = cleaned;
     messagesContainer.insertBefore(el, typingEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     return el;
+  }
+
+  // ── Add navigation button for maps links ──
+  function addNavButton(address, mapsUrl) {
+    const el = document.createElement("a");
+    el.href = mapsUrl;
+    el.target = "_blank";
+    el.rel = "noopener";
+    el.className = "swft-chat-action";
+    el.style.cssText = "text-decoration:none;cursor:pointer;";
+    el.innerHTML = '<span class="action-icon">📍</span> Open in Google Maps — ' +
+      address.substring(0, 40) + (address.length > 40 ? '...' : '');
+    messagesContainer.insertBefore(el, typingEl);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
   // ── Add action card ──
@@ -481,6 +620,15 @@
       update_job: ["Updated", "job"],
       schedule_job: ["Scheduled", input.date],
       get_dashboard_stats: ["Dashboard", "stats"],
+      send_sms: ["SMS sent", input.to || ""],
+      get_weather: ["Weather", input.city || "forecast"],
+      navigate_to_customer: ["Navigate", input.customerName || "customer"],
+      get_directions: ["Directions", input.destination || "route"],
+      list_calendar_events: ["Calendar", "events"],
+      create_calendar_event: ["Calendar", input.title || "event"],
+      check_gmail_inbox: ["Gmail", input.query || "inbox"],
+      send_gmail: ["Email sent", input.to || ""],
+      export_to_sheets: ["Exported", input.data_type || "data"],
     };
 
     const [label, detail] = labels[toolName] || [toolName, ""];
@@ -491,6 +639,16 @@
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
+  // ── Show acknowledgment while AI is working ──
+  function showAck() {
+    const el = document.createElement("div");
+    el.className = "swft-chat-ack";
+    el.textContent = "Got it, working on it...";
+    messagesContainer.insertBefore(el, typingEl);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    return el;
+  }
+
   // ── Send message ──
   async function sendMessage(text) {
     isSending = true;
@@ -498,6 +656,7 @@
     input.value = "";
 
     addMessage("user", text);
+    const ackEl = showAck();
     typingEl.classList.add("active");
 
     try {
@@ -514,9 +673,18 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "AI error");
 
-      // Show action cards
+      // Remove acknowledgment
+      if (ackEl && ackEl.parentNode) ackEl.remove();
+
+      // Show action cards + navigation buttons
       if (data.actions && data.actions.length > 0) {
-        data.actions.forEach((a) => addAction(a.tool, a.input));
+        data.actions.forEach((a) => {
+          addAction(a.tool, a.input);
+          // If navigate_to_customer returned a maps URL, show a clickable button
+          if (a.tool === "navigate_to_customer" && a.result && a.result.mapsUrl) {
+            addNavButton(a.result.address, a.result.mapsUrl);
+          }
+        });
       }
 
       // Show response
@@ -546,11 +714,93 @@
       }
 
     } catch (err) {
+      if (ackEl && ackEl.parentNode) ackEl.remove();
       addMessage("assistant", `Something went wrong: ${err.message}`);
     } finally {
       typingEl.classList.remove("active");
       isSending = false;
       sendBtn.disabled = !input.value.trim();
+    }
+  }
+
+  // ── Connect Your Tools panel ──
+  const toolsTab = document.getElementById("swft-tools-tab");
+  const toolsDrawer = document.getElementById("swft-tools-drawer");
+  const toolsList = document.getElementById("swft-tools-list");
+  let toolsLoaded = false;
+
+  if (toolsTab) {
+    toolsTab.addEventListener("click", async () => {
+      const isDrawerOpen = toolsDrawer.classList.toggle("open");
+      if (isDrawerOpen && !toolsLoaded) {
+        await loadTools();
+      }
+    });
+  }
+
+  async function loadTools() {
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/integrations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const integrations = data.integrations || [];
+
+      if (integrations.length === 0) {
+        toolsList.innerHTML = '<div class="swft-chat-tools-empty">No tools available yet.</div>';
+        toolsLoaded = true;
+        return;
+      }
+
+      const icons = {
+        gmail: "📧", google_calendar: "📅", google_sheets: "📊",
+        quickbooks: "💰", default: "🔗"
+      };
+
+      toolsList.innerHTML = integrations.map(i => {
+        const icon = icons[i.id] || icons.default;
+        if (i.connected) {
+          return `
+            <div class="swft-chat-tool-item">
+              <span class="tool-name"><span class="tool-icon">${icon}</span> ${i.name}</span>
+              <span style="color:#c8f135;font-size:11px;">Connected</span>
+            </div>
+          `;
+        }
+        return `
+          <div class="swft-chat-tool-item">
+            <span class="tool-name"><span class="tool-icon">${icon}</span> ${i.name}</span>
+            <button class="swft-chat-tool-toggle" data-id="${i.id}" style="background:#c8f135;border:none;color:#0a0a0a;font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;width:auto;height:auto;">Connect</button>
+          </div>
+        `;
+      }).join("");
+
+      // Connect button handlers — redirect to OAuth
+      toolsList.querySelectorAll(".swft-chat-tool-toggle").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          try {
+            const tk = await getToken();
+            const connectRes = await fetch(`${API_BASE}/api/integrations/${btn.dataset.id}/connect`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${tk}` },
+            });
+            const connectData = await connectRes.json();
+            if (connectData.url) {
+              window.location.href = connectData.url;
+            } else if (connectData.error) {
+              addMessage("assistant", connectData.error);
+            }
+          } catch (e) {
+            addMessage("assistant", "Could not start connection. Try from Settings.");
+          }
+        });
+      });
+
+      toolsLoaded = true;
+    } catch (err) {
+      toolsList.innerHTML = '<div class="swft-chat-tools-empty">Could not load tools.</div>';
+      toolsLoaded = true;
     }
   }
 
