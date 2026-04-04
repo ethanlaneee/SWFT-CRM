@@ -221,7 +221,8 @@ function initials(name){
 
 async function loadTeam(){
   try{
-    var members = await API.team.list();
+    var res = await API.team.list();
+    var members = res.members || [];
     var grid = document.getElementById('team-grid');
     grid.innerHTML = '';
 
