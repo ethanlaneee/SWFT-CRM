@@ -15,7 +15,7 @@ router.post("/chat", async (req, res, next) => {
     const userDoc = await db.collection("users").doc(req.uid).get();
     const userProfile = userDoc.exists ? userDoc.data() : { name: "", company: "" };
 
-    const result = await runAgent(req.uid, message, userProfile);
+    const result = await runAgent(req.uid, message, userProfile, req.orgId);
     res.json(result);
   } catch (err) { next(err); }
 });

@@ -6,7 +6,7 @@ const col = () => db.collection("invoices");
 // List invoices
 router.get("/", async (req, res, next) => {
   try {
-    const snap = await col().where("userId", "==", req.uid).get();
+    const snap = await col().where("orgId", "==", req.orgId).get();
     let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (req.query.status) results = results.filter(r => r.status === req.query.status);
     results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -18,7 +18,7 @@ router.get("/", async (req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Invoice not found" });
     }
     res.json({ id: doc.id, ...doc.data() });
@@ -29,6 +29,7 @@ router.get("/:id", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const data = {
+      orgId: req.orgId,
       userId: req.uid,
       customerId: req.body.customerId || "",
       customerName: req.body.customerName || "",
@@ -54,7 +55,7 @@ router.post("/", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Invoice not found" });
     }
     const updates = {};
@@ -71,7 +72,7 @@ router.put("/:id", async (req, res, next) => {
 router.post("/:id/pay", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Invoice not found" });
     }
     await col().doc(req.params.id).update({
@@ -87,7 +88,7 @@ router.post("/:id/pay", async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Invoice not found" });
     }
     await col().doc(req.params.id).delete();
