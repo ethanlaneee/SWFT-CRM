@@ -115,119 +115,66 @@
 .row-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray2);transition:all 0.14s;}
 .row-btn:hover{background:var(--surface2);color:var(--green);border-color:var(--green);}
 
-/* ── CENTERED MODAL ── */
-.modal-overlay{
-position:fixed;inset:0;
-background:rgba(0,0,0,0.7);
-backdrop-filter:blur(6px);
-z-index:400;
-display:flex;align-items:center;justify-content:center;
-opacity:0;pointer-events:none;
-transition:opacity 0.22s;
-padding:24px;
-}
+/* ── PDF-STYLE MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.22s;padding:24px;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-
-.modal{
-background:var(--surface);
-border:1px solid var(--border2);
-border-radius:18px;
-width:100%;
-max-width:780px;
-max-height:88vh;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-transform:scale(0.96) translateY(12px);
-transition:transform 0.25s cubic-bezier(0.22,1,0.36,1);
-box-shadow:0 24px 80px rgba(0,0,0,0.6);
-}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:720px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;transform:scale(0.96);transition:transform 0.25s cubic-bezier(0.22,1,0.36,1);box-shadow:0 24px 80px rgba(0,0,0,0.5);color:#111;}
 .modal-overlay.open .modal{transform:scale(1) translateY(0);}
-
-/* modal header */
-.m-header{padding:22px 26px 16px;border-bottom:1px solid var(--border);}
-.m-top{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px;}
-.m-close{margin-left:auto;width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
-.m-close:hover{background:var(--surface2);color:var(--white);}
-.m-q-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray2);margin-bottom:5px;}
-.m-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.5px;color:var(--white);line-height:1;}
-.m-sub{font-size:13px;color:var(--gray);margin-top:5px;}
-.m-sub span{color:var(--green);}
-.m-status-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-
-/* stats bar */
-.m-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);}
-.mstat{padding:13px 16px;border-right:1px solid var(--border);}
-.mstat:last-child{border-right:none;}
-.mstat-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);}
-.mstat-value{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-top:3px;line-height:1;}
-.mstat-value.green{color:var(--green);}
-
-/* tabs */
-.m-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 22px;}
-.mtab{font-size:12px;font-weight:500;padding:12px 14px;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;transition:all 0.14s;user-select:none;white-space:nowrap;}
-.mtab:hover{color:var(--white);}
-.mtab.active{color:var(--green);border-bottom-color:var(--green);}
-
-/* scrollable body */
-.m-body{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:14px;min-height:0;}
-
-/* two-col layout inside modal */
-.m-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-
-/* info rows */
-.info-row{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
-.info-icon{font-size:14px;width:22px;text-align:center;flex-shrink:0;margin-top:1px;}
-.info-label{font-size:10.5px;color:var(--white);}
-.info-value{font-size:13px;color:var(--white);margin-top:2px;}
-
-/* section title */
-.section-title{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:8px;}
-
-/* line items */
-.line-items{background:var(--surface2);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
-.li-head{display:grid;grid-template-columns:2.2fr 0.7fr 0.7fr 0.8fr 28px;padding:9px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);}
-.li-th{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);}
-.li-row{display:grid;grid-template-columns:2.2fr 0.7fr 0.7fr 0.8fr 28px;padding:11px 14px;border-bottom:1px solid var(--border);align-items:center;}
-.li-row:last-child{border-bottom:none;}
-.li-desc{font-size:12.5px;color:var(--white);}
-.li-sub-text{font-size:10.5px;color:var(--gray);margin-top:2px;}
-.li-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gray);}
-.li-total{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--white);font-weight:500;}
-.li-del{width:20px;height:20px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--gray2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.12s;}
-.li-del:hover{background:rgba(255,82,82,0.1);color:var(--red);border-color:rgba(255,82,82,0.2);}
-.add-line-row{display:grid;grid-template-columns:2.2fr 0.7fr 0.7fr 0.8fr 28px;gap:6px;padding:10px 14px;border-top:1px solid var(--border);background:rgba(200,241,53,0.02);}
-.add-input{background:transparent;border:1px solid var(--border2);border-radius:6px;padding:6px 9px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color 0.14s;width:100%;}
-.add-input:focus{border-color:var(--green);}
-.add-input::placeholder{color:var(--gray2);}
-.add-btn{width:28px;height:32px;border-radius:6px;background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.2);color:var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.14s;}
-.add-btn:hover{background:rgba(200,241,53,0.18);}
-
-/* totals */
-.totals-block{background:var(--surface2);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
-.total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);}
-.total-row:last-child{border-bottom:none;}
-.total-label{font-size:12.5px;color:var(--gray);}
-.total-val{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--white);font-weight:500;}
-.total-val.green{color:var(--green);font-size:16px;}
-
-/* notes */
-.note-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13px;color:#c8c8c8;line-height:1.6;outline:none;transition:border-color 0.14s;min-height:80px;}
-.note-box:focus{border-color:var(--green);}
-
-/* edit fields */
-.edit-field{display:flex;flex-direction:column;gap:5px;}
-.edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
-.edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
-.edit-input:focus{border-color:var(--green);}
-.edit-input option{background:var(--surface2);}
-
-/* footer */
-.m-footer{padding:16px 26px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;}
-.mfooter-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.14s;font-weight:500;}
-.mfooter-btn:hover{background:var(--surface2);color:var(--white);}
-.mfooter-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);}
-.mfooter-btn.primary:hover{background:#d5ff40;}
+.pdf-doc-header{padding:28px 32px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.pdf-brand{display:flex;flex-direction:column;}
+.pdf-company-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#111;line-height:1;}
+.pdf-company-name em{color:#8ab800;font-style:normal;}
+.pdf-company-logo{max-height:50px;max-width:180px;object-fit:contain;margin-bottom:4px;}
+.pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-top:4px;}
+.pdf-close{width:30px;height:30px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#666;font-size:16px;flex-shrink:0;}
+.pdf-close:hover{background:#eee;color:#333;}
+.pdf-doc-body{flex:1;overflow-y:auto;padding:20px 32px 28px;}
+.pdf-type-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid #8ab800;}
+.pdf-type-label{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#111;}
+.pdf-status-select{background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:12px;color:#333;outline:none;cursor:pointer;}
+.pdf-status-select:focus{border-color:#8ab800;}
+.pdf-fields{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.pdf-field-row{display:flex;align-items:center;justify-content:space-between;min-height:32px;}
+.pdf-field-label{font-size:12px;color:#888;flex-shrink:0;min-width:90px;}
+.pdf-field-input{background:transparent;border:none;border-bottom:1px dashed transparent;padding:4px 8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#111;font-weight:500;text-align:right;outline:none;flex:1;max-width:280px;transition:border-color 0.15s;}
+.pdf-field-input:hover{border-bottom-color:#ccc;}
+.pdf-field-input:focus{border-bottom:2px solid #8ab800;padding-bottom:3px;}
+.pdf-field-input::placeholder{color:#ccc;font-weight:400;}
+.pdf-field-select{background:transparent;border:none;border-bottom:1px dashed transparent;padding:4px 8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#111;font-weight:500;text-align:right;outline:none;cursor:pointer;flex:1;max-width:280px;direction:rtl;}
+.pdf-field-select:hover{border-bottom-color:#ccc;}
+.pdf-field-select:focus{border-bottom:2px solid #8ab800;}
+.pdf-field-select option{direction:ltr;background:#fff;}
+.pdf-2col{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;}
+.pdf-section-label{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}
+.pdf-li-header{display:grid;grid-template-columns:2fr 0.6fr 0.8fr 0.8fr 26px;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}
+.pdf-li-row{display:grid;grid-template-columns:2fr 0.6fr 0.8fr 0.8fr 26px;padding:6px 0;align-items:center;border-bottom:1px solid #f0f0f0;gap:4px;}
+.pdf-li-input{background:transparent;border:none;border-bottom:1px solid transparent;padding:4px 4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#111;outline:none;width:100%;transition:border-color 0.14s;}
+.pdf-li-input:hover{border-bottom-color:#ccc;}
+.pdf-li-input:focus{border-bottom-color:#8ab800;}
+.pdf-li-input.mono{font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center;}
+.pdf-li-total{font-family:'JetBrains Mono',monospace;font-size:12px;color:#111;font-weight:500;padding:4px;}
+.pdf-li-del{width:22px;height:22px;border-radius:5px;border:none;background:transparent;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.12s;}
+.pdf-li-del:hover{background:rgba(255,82,82,0.1);color:#ff5252;}
+.pdf-add-row{display:grid;grid-template-columns:2fr 0.6fr 0.8fr 0.8fr 26px;padding:8px 0;gap:4px;border-top:1px dashed #ddd;margin-top:4px;}
+.pdf-add-input{background:transparent;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:#111;outline:none;}
+.pdf-add-input:focus{border-color:#8ab800;}
+.pdf-add-input::placeholder{color:#bbb;}
+.pdf-add-btn{width:22px;height:22px;border-radius:5px;background:rgba(138,184,0,0.1);border:1px solid rgba(138,184,0,0.3);color:#8ab800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.pdf-add-btn:hover{background:rgba(138,184,0,0.2);}
+.pdf-totals{margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;}
+.pdf-total-line{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;min-width:220px;}
+.pdf-total-line.grand{font-size:18px;font-weight:700;color:#111;border-top:2px solid #111;margin-top:4px;padding-top:12px;}
+.pdf-notes-label{margin-top:24px;margin-bottom:6px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}
+.pdf-notes-area{background:#fafafa;border:1px solid #e8e8e8;border-radius:8px;padding:12px 14px;color:#111;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;min-height:60px;resize:vertical;line-height:1.5;width:100%;transition:border-color 0.15s;}
+.pdf-notes-area:focus{border-color:#8ab800;}
+.pdf-doc-footer{padding:14px 24px;border-top:1px solid #e8e8e8;display:flex;gap:8px;background:#fafafa;border-radius:0 0 14px 14px;}
+.pdf-btn{padding:9px 16px;border-radius:9px;border:1px solid #ddd;background:#fff;color:#555;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;transition:all 0.14s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.pdf-btn:hover{background:#f0f0f0;color:#111;}
+.pdf-btn.primary{background:#8ab800;color:#fff;font-weight:700;border-color:#8ab800;}
+.pdf-btn.primary:hover{background:#7aa300;}
+.pdf-btn.danger{color:#ff5252;border-color:rgba(255,82,82,0.3);}
+.pdf-btn.danger:hover{background:rgba(255,82,82,0.05);}
+.pdf-spacer{flex:1;}
 
 /* toast */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
@@ -403,142 +350,59 @@ box-shadow:0 24px 80px rgba(0,0,0,0.6);
   </div>
 </div>
 
-<!-- CENTERED MODAL OVERLAY -->
-
+<!-- PDF-STYLE MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
   <div class="modal" id="modal">
-
-<div class="m-header">
-  <div class="m-top">
-    <div>
-      <div class="m-q-num" id="m-num">#Q-1042 · Created Mar 23, 2026</div>
-      <div class="m-title" id="m-title"></div>
-      <div class="m-sub">Job: <span id="m-job"></span></div>
+    <div class="pdf-doc-header">
+      <div class="pdf-brand" id="pdf-brand"></div>
+      <div class="pdf-close" onclick="closeModal()">&times;</div>
     </div>
-    <div class="m-close" onclick="closeModal()">
-      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
-    </div>
-  </div>
-  <div class="m-status-row">
-    <span class="status-pill" id="m-status-pill" style="background:rgba(77,159,255,0.12);color:#4d9fff;">Sent</span>
-    <span style="font-size:11.5px;color:var(--gray);" id="m-expires">Expires Mar 30</span>
-  </div>
-</div>
-
-<div class="m-stats">
-  <div class="mstat"><div class="mstat-label">Total</div><div class="mstat-value green" id="m-total">$4,800</div></div>
-  <div class="mstat"><div class="mstat-label">Sqft</div><div class="mstat-value" id="m-sqft" id="m-sqft">—</div></div>
-  <div class="mstat"><div class="mstat-label">Service</div><div class="mstat-value" id="m-service" style="font-size:13px;margin-top:5px;">Stamped</div></div>
-  <div class="mstat"><div class="mstat-label">Valid</div><div class="mstat-value" id="m-valid" style="font-size:13px;margin-top:5px;">30 days</div></div>
-</div>
-
-<div class="m-tabs">
-  <div class="mtab active" onclick="switchTab(this,'details')">Details</div>
-  <div class="mtab" onclick="switchTab(this,'lineitems')">Line Items</div>
-  <div class="mtab" onclick="switchTab(this,'notes')">Notes</div>
-  <div class="mtab" onclick="switchTab(this,'edit')">Edit</div>
-</div>
-
-<div class="m-body">
-
-  <!-- DETAILS -->
-  <div id="tab-details">
-    <div class="m-2col">
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="info-row"><div class="info-icon">👤</div><div><div class="info-label">Customer</div><div class="info-value" id="m-customer"></div></div></div>
-        <div class="info-row"><div class="info-icon">📍</div><div><div class="info-label">Address</div><div class="info-value" id="m-address"></div></div></div>
-        <div class="info-row"><div class="info-icon">📐</div><div><div class="info-label">Area</div><div class="info-value" id="m-area"></div></div></div>
+    <div class="pdf-doc-body">
+      <div class="pdf-type-row">
+        <div class="pdf-type-label" id="m-doc-type">QUOTE</div>
+        <select class="pdf-status-select" id="e-status"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="info-row"><div class="info-icon">🏗️</div><div><div class="info-label">Service / Finish</div><div class="info-value" id="m-finish"></div></div></div>
-        <div class="info-row"><div class="info-icon">📅</div><div><div class="info-label">Est. Start</div><div class="info-value" id="m-start"></div></div></div>
-        <div class="info-row"><div class="info-icon">⏱️</div><div><div class="info-label">Quote Created</div><div class="info-value" id="m-created"></div></div></div>
+      <div class="pdf-fields">
+        <div class="pdf-field-row">
+          <span class="pdf-field-label">Customer</span>
+          <select class="pdf-field-select" id="e-customer" onchange="autofillBillingCustomer(this.value)"><option value="">Select customer...</option></select>
+        </div>
+        <div class="pdf-field-row"><span class="pdf-field-label">Job</span><input class="pdf-field-input" id="e-job" placeholder="Job description"/></div>
+        <div class="pdf-field-row"><span class="pdf-field-label">Address</span><input class="pdf-field-input" id="e-address" placeholder="Property address" list="addr-suggestions" autocomplete="off"/><datalist id="addr-suggestions"></datalist></div>
+        <div class="pdf-2col">
+          <div class="pdf-field-row"><span class="pdf-field-label">Service</span><select class="pdf-field-select" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service-b').style.display='block';}else{document.getElementById('e-custom-service-b').style.display='none';}"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Other</option></select></div>
+          <div class="pdf-field-row"><span class="pdf-field-label">Sqft</span><input class="pdf-field-input" id="e-sqft" placeholder="e.g. 500"/></div>
+        </div>
+        <input class="pdf-field-input" id="e-custom-service-b" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:4px;text-align:left;max-width:100%;"/>
+        <div class="pdf-2col">
+          <div class="pdf-field-row"><span class="pdf-field-label">Start Date</span><input class="pdf-field-input" id="e-start" type="date"/></div>
+          <div class="pdf-field-row"><span class="pdf-field-label">Finish</span><input class="pdf-field-input" id="e-finish" placeholder="e.g. Broom finish"/></div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <!-- LINE ITEMS -->
-  <div id="tab-lineitems" style="display:none;">
-    <div class="section-title">Line Items</div>
-    <div class="line-items">
-      <div class="li-head">
-        <div class="li-th">Description</div>
-        <div class="li-th">Qty</div>
-        <div class="li-th">Rate</div>
-        <div class="li-th">Total</div>
-        <div></div>
-      </div>
+      <input type="hidden" id="e-num"/>
+      <div class="pdf-section-label">Line Items</div>
+      <div class="pdf-li-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div><div></div></div>
       <div id="li-body"></div>
-      <div class="add-line-row">
-        <input class="add-input" id="new-desc" placeholder="Description..."/>
-        <input class="add-input" id="new-qty" placeholder="Qty"/>
-        <input class="add-input" id="new-rate" placeholder="Rate $"/>
-        <input class="add-input" id="new-total" placeholder="Total" readonly style="color:var(--green);"/>
-        <button class="add-btn" onclick="addLineItem()">+</button>
+      <div class="pdf-add-row">
+        <input class="pdf-add-input" id="new-desc" placeholder="Add description..."/>
+        <input class="pdf-add-input" id="new-qty" placeholder="Qty" style="text-align:center;"/>
+        <input class="pdf-add-input" id="new-rate" placeholder="$ Rate"/>
+        <input class="pdf-add-input" id="new-total" placeholder="Total" readonly style="color:#8ab800;font-weight:500;"/>
+        <button class="pdf-add-btn" onclick="addLineItem()">+</button>
       </div>
+      <div class="pdf-totals" id="totals-block"></div>
+      <div class="pdf-notes-label">Notes</div>
+      <textarea class="pdf-notes-area" id="m-notes" placeholder="Add notes..."></textarea>
     </div>
-    <div class="totals-block" style="margin-top:12px;" id="totals-block"></div>
-  </div>
-
-  <!-- NOTES -->
-  <div id="tab-notes" style="display:none;">
-    <div class="section-title">Internal Notes</div>
-    <div class="note-box" contenteditable="true" id="m-notes"></div>
-    <div style="margin-top:8px;font-size:11px;color:var(--gray2);">Click to edit · changes auto-save</div>
-  </div>
-
-  <!-- EDIT -->
-  <div id="tab-edit" style="display:none;">
-    <div class="section-title">Edit Quote</div>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="edit-field"><label class="edit-label">Customer</label><select class="edit-input" id="e-customer" onchange="autofillBillingCustomer(this.value)"><option value="">Select a customer...</option></select></div>
-        <div class="edit-field"><label class="edit-label">Quote #</label><input class="edit-input" id="e-num" type="text"/></div>
-      </div>
-      <div class="edit-field"><label class="edit-label">Job Description</label><input class="edit-input" id="e-job" type="text"/></div>
-      <div class="edit-field"><label class="edit-label">Property Address</label><input class="edit-input" id="e-address" type="text" list="addr-suggestions" autocomplete="off"/>
-        <datalist id="addr-suggestions"></datalist></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="edit-field"><label class="edit-label">Service Type</label><select class="edit-input" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service-b').style.display='block';}else{document.getElementById('e-custom-service-b').style.display='none';}"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Other</option></select><input class="edit-input" id="e-custom-service-b" type="text" placeholder="Enter custom service type..." style="display:none;margin-top:6px;"/></div>
-        <div class="edit-field"><label class="edit-label">Sqft</label><input class="edit-input" id="e-sqft" type="text"/></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="edit-field"><label class="edit-label">Est. Start Date</label><input class="edit-input" id="e-start" type="date"/></div>
-        <div class="edit-field"><label class="edit-label">Status</label><select class="edit-input" id="e-status"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select></div>
-      </div>
-      <div class="edit-field"><label class="edit-label">Finish Details</label><input class="edit-input" id="e-finish" type="text"/></div>
+    <div class="pdf-doc-footer">
+      <button class="pdf-btn" onclick="previewCurrentDoc()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke-width="1.8"/><rect x="6" y="14" width="12" height="8" stroke-width="1.8"/></svg>
+        Print / Save PDF
+      </button>
+      <div class="pdf-spacer"></div>
+      <button class="pdf-btn primary" id="send-btn" onclick="sendQuote()">Send Quote</button>
+      <button class="pdf-btn primary" onclick="saveEdit()">Save</button>
     </div>
-  </div>
-
-</div>
-
-<!-- FOOTER -->
-<div class="m-footer" id="m-footer-view">
-  <button class="mfooter-btn" onclick="switchTab(document.querySelectorAll('.mtab')[3],'edit')">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
-    Edit
-  </button>
-  <button class="mfooter-btn" onclick="previewCurrentDoc()">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>
-    Preview PDF
-  </button>
-  <button class="mfooter-btn primary" id="send-btn" onclick="sendQuote()">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
-    Send Quote
-  </button>
-  <button class="mfooter-btn" onclick="saveEdit()" style="background:var(--surface2);color:var(--white);">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Save Changes
-  </button>
-</div>
-<div class="m-footer" id="m-footer-edit" style="display:none;">
-  <button class="mfooter-btn" onclick="cancelEdit()">Cancel</button>
-  <button class="mfooter-btn primary" onclick="saveEdit()" style="flex:2;">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Save Changes
-  </button>
-</div>
-
   </div>
 </div>
 
@@ -677,34 +541,22 @@ function openInvoiceModal(inv) {
     expires: '—'
   };
 
-  document.getElementById('m-num').textContent = _q.num + ' · ' + _q.created;
-  document.getElementById('m-title').textContent = _q.customer || 'Invoice';
-  document.getElementById('m-job').textContent = _q.job || '—';
-  document.getElementById('m-status-pill').textContent = _q.status;
-  document.getElementById('m-status-pill').style.cssText = _q.statusStyle;
-  document.getElementById('m-expires').textContent = '—';
-  document.getElementById('m-total').textContent = _q.total;
-  document.getElementById('m-sqft').textContent = '—';
-  document.getElementById('m-service').textContent = '—';
-  document.getElementById('m-valid').textContent = '—';
-  if (document.getElementById('m-customer')) document.getElementById('m-customer').textContent = _q.customer || '—';
-  if (document.getElementById('m-address')) document.getElementById('m-address').textContent = '—';
+  renderPdfBrand();
+  document.getElementById('m-doc-type').textContent = 'INVOICE';
+  populateEditForm();
   renderLineItems(_q.lines || []);
 
   var sb = document.getElementById('send-btn');
   if (sb) {
     if (_q.status === 'paid') {
-      sb.innerHTML = 'Paid ✓';
+      sb.textContent = 'Paid';
       sb.disabled = true;
     } else {
-      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Send Invoice';
+      sb.textContent = 'Send Invoice';
       sb.disabled = false;
     }
   }
 
-  document.getElementById('m-footer-view').style.display = 'flex';
-  document.getElementById('m-footer-edit').style.display = 'none';
-  switchTab(document.querySelector('.mtab'), 'details');
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -751,43 +603,26 @@ function openModalById(id) {
     lines: q.items || [],
     expires: q.expiresAt ? new Date(q.expiresAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'
   };
-  // Display the modal with _q data
-  document.getElementById('m-num').textContent = _q.num + ' · ' + _q.created;
-  document.getElementById('m-title').textContent = _q.customer || 'Quote';
-  document.getElementById('m-job').textContent = _q.job || '—';
-  document.getElementById('m-status-pill').textContent = _q.status;
-  document.getElementById('m-status-pill').style.cssText = _q.statusStyle;
-  document.getElementById('m-expires').textContent = _q.expires || '—';
-  document.getElementById('m-total').textContent = _q.total || '$0';
-  document.getElementById('m-sqft').textContent = _q.sqft || '—';
-  document.getElementById('m-service').textContent = _q.service || '—';
-  document.getElementById('m-valid').textContent = _q.valid || '—';
-  if (document.getElementById('m-customer')) document.getElementById('m-customer').textContent = _q.customer || '—';
-  if (document.getElementById('m-address')) document.getElementById('m-address').textContent = _q.address || '—';
-  if (document.getElementById('m-area')) document.getElementById('m-area').textContent = _q.sqft ? _q.sqft + ' sqft' : '—';
-  if (document.getElementById('m-finish')) document.getElementById('m-finish').textContent = _q.finish || '—';
-  if (document.getElementById('m-start')) document.getElementById('m-start').textContent = _q.start || '—';
-  if (document.getElementById('m-created')) document.getElementById('m-created').textContent = _q.created || '—';
+  // Render brand header
+  renderPdfBrand();
+  document.getElementById('m-doc-type').textContent = _q.isInvoice ? 'INVOICE' : 'QUOTE';
+
+  // Populate edit fields directly on the PDF
+  populateEditForm();
   renderLineItems(_q.lines || []);
 
   // Update send button text
   var sb = document.getElementById('send-btn');
   if (sb) {
     if (_q.status === 'approved' || _q.status === 'Approved') {
-      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Convert to Invoice';
+      sb.textContent = 'Convert to Invoice';
     } else if (_q.status === 'sent' || _q.status === 'Sent') {
-      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Resend Quote';
+      sb.textContent = 'Resend Quote';
     } else {
-      sb.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Send Quote';
+      sb.textContent = 'Send Quote';
     }
   }
 
-  // Show view footer, hide edit footer
-  document.getElementById('m-footer-view').style.display = 'flex';
-  document.getElementById('m-footer-edit').style.display = 'none';
-
-  // Switch to details tab
-  switchTab(document.querySelector('.mtab'), 'details');
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -797,32 +632,12 @@ function openModalById(id) {
 function openModal(id) {
   const q = window._quotes[id]; if(!q) return;
   _q = q;
-  document.getElementById('m-num').textContent       = q.num + ' · Created ' + q.created;
-  document.getElementById('m-title').textContent     = q.customer;
-  document.getElementById('m-job').textContent       = q.job;
-  document.getElementById('m-status-pill').textContent   = q.status;
-  document.getElementById('m-status-pill').style.cssText  = q.statusStyle;
-  document.getElementById('m-expires').textContent   = q.expires;
-  document.getElementById('m-total').textContent     = q.total;
-  document.getElementById('m-sqft').textContent      = q.sqft;
-  document.getElementById('m-service').textContent   = q.service;
-  document.getElementById('m-valid').textContent     = q.valid;
-  document.getElementById('m-customer').textContent  = q.customer;
-  document.getElementById('m-address').textContent   = q.address;
-  document.getElementById('m-area').textContent      = q.area;
-  document.getElementById('m-finish').textContent    = q.finish;
-  document.getElementById('m-start').textContent     = q.start;
-  document.getElementById('m-created').textContent   = q.created;
+  renderPdfBrand();
+  document.getElementById('m-doc-type').textContent = _q.isInvoice ? 'INVOICE' : 'QUOTE';
+  populateEditForm();
   renderLineItems(q.lines);
   const sb = document.getElementById('send-btn');
-  sb.innerHTML = q.status === 'Approved'
-    ? '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Convert to Invoice'
-    : q.status === 'Draft'
-    ? '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Send Quote'
-    : '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg> Resend Quote';
-  switchTab(document.querySelector('.mtab'), 'details');
-  document.getElementById('m-footer-view').style.display = 'flex';
-  document.getElementById('m-footer-edit').style.display = 'none';
+  sb.textContent = q.status === 'Approved' ? 'Convert to Invoice' : q.status === 'Draft' ? 'Send Quote' : 'Resend Quote';
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -939,8 +754,6 @@ async function autofillBillingCustomer(name) {
             total: '$' + Number(custJob.cost).toLocaleString()
           }];
           renderLineItems(_q.lines);
-          // Update total display
-          document.getElementById('m-total').textContent = '$' + Number(custJob.cost).toLocaleString();
         }
       }
     }
@@ -952,46 +765,37 @@ async function autofillBillingCustomer(name) {
   }
 }
 
+function renderPdfBrand() {
+  var brand = document.getElementById('pdf-brand');
+  var s = window._swftSettings || {};
+  if (s.companyLogo) { brand.innerHTML = '<img class="pdf-company-logo" src="' + s.companyLogo + '"/><div class="pdf-tagline">' + (s.phone || '') + ' &nbsp; ' + (s.address || '') + '</div>'; }
+  else { brand.innerHTML = '<div class="pdf-company-name">' + (s.company || 'SWFT') + '<em>.</em></div><div class="pdf-tagline">' + (s.phone ? s.phone + ' &nbsp; ' : '') + (s.address || 'simple. smart. swft.') + '</div>'; }
+}
+
 function openNewQuote() {
   loadBillingCustomers();
   _q = {num:'#Q-' + (window._nextQuoteNum || 1),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
-  document.getElementById('m-num').textContent      = '#Q-1050 · Draft';
-  document.getElementById('m-title').textContent    = 'New Quote';
-  document.getElementById('m-job').textContent      = '—';
-  document.getElementById('m-status-pill').textContent  = 'Draft';
-  document.getElementById('m-status-pill').style.cssText = _q.statusStyle;
-  document.getElementById('m-expires').textContent  = 'Not sent';
-  document.getElementById('m-total').textContent    = '$0';
-  document.getElementById('m-sqft').textContent     = '—';
-  document.getElementById('m-service').textContent  = '—';
-  document.getElementById('m-valid').textContent    = '30 days';
-  document.getElementById('m-customer').textContent = '—';
-  document.getElementById('m-address').textContent  = '—';
-  document.getElementById('m-area').textContent     = '—';
-  document.getElementById('m-finish').textContent   = '—';
-  document.getElementById('m-start').textContent    = '—';
-  document.getElementById('m-created').textContent  = 'Mar 27, 2026';
+  renderPdfBrand();
+  document.getElementById('m-doc-type').textContent = 'QUOTE';
+  populateEditForm();
   renderLineItems([]);
-  switchTab(document.querySelectorAll('.mtab')[3], 'edit');
   document.getElementById('modal-overlay').classList.add('open');
 }
 
 function renderLineItems(lines) {
   const body = document.getElementById('li-body');
   body.innerHTML = lines.map((l,i) => `
-    <div class="li-row">
-      <div><div class="li-desc">${l.desc}</div><div class="li-sub-text">${l.sub||''}</div></div>
-      <div class="li-val">${l.qty}</div>
-      <div class="li-val">${l.rate}</div>
-      <div class="li-total">${l.total}</div>
-      <button class="li-del" onclick="removeLineItem(${i})">✕</button>
+    <div class="pdf-li-row">
+      <input class="pdf-li-input" value="${(l.desc||'').replace(/"/g,'&quot;')}" onchange="_q.lines[${i}].desc=this.value"/>
+      <input class="pdf-li-input mono" value="${l.qty||1}" type="number" min="1" onchange="_q.lines[${i}].qty=this.value;_q.lines[${i}].total='$'+(parseFloat(this.value)*(parseFloat((_q.lines[${i}].rate||'').toString().replace(/[\\$,]/g,''))||0)).toFixed(2);renderLineItems(_q.lines)"/>
+      <input class="pdf-li-input mono" value="${(l.rate||'').toString().replace(/[$]/g,'')}" onchange="_q.lines[${i}].rate='$'+parseFloat(this.value).toFixed(2);_q.lines[${i}].total='$'+((parseFloat(_q.lines[${i}].qty)||1)*parseFloat(this.value)).toFixed(2);renderLineItems(_q.lines)"/>
+      <div class="pdf-li-total">${l.total||'$0.00'}</div>
+      <button class="pdf-li-del" onclick="removeLineItem(${i})">&times;</button>
     </div>`).join('');
-  const sub = lines.reduce((s,l)=>s+(parseFloat((l.total||'').replace(/[$,]/g,''))||0),0);
-  document.getElementById('totals-block').innerHTML = `
-    <div class="total-row"><span class="total-label">Subtotal</span><span class="total-val">$${sub.toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
-    <div class="total-row"><span class="total-label">Tax (0%)</span><span class="total-val">$0.00</span></div>
-    <div class="total-row" style="background:rgba(200,241,53,0.03);"><span class="total-label" style="font-weight:600;color:var(--white);">Total</span><span class="total-val green">$${sub.toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>
-    <div class="total-row" style="display:flex;align-items:center;"><span class="total-label">Deposit (<input id="deposit-pct" type="number" value="50" min="0" max="100" style="width:40px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--white);text-align:center;font-size:12px;padding:2px;font-family:JetBrains Mono,monospace;" onchange="updateDeposit()"/>%)</span><span class="total-val" style="color:var(--amber);" id="deposit-amount">$${(sub*.5).toLocaleString('en-US',{minimumFractionDigits:2})}</span></div>`;
+  const sub = lines.reduce((s,l)=>s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0),0);
+  document.getElementById('totals-block').innerHTML =
+    '<div class="pdf-total-line"><span>Subtotal</span><span>$'+sub.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>'+
+    '<div class="pdf-total-line grand"><span>Total</span><span>$'+sub.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>';
 }
 
 function addLineItem() {
@@ -1084,7 +888,7 @@ function populateEditForm(){
 }
 
 function cancelEdit(){
-  switchTab(document.querySelector('.mtab'),'details');
+  closeModal();
   showToast('Changes discarded');
 }
 
@@ -1162,20 +966,9 @@ async function saveEdit(){
 }
 
 function switchTab(el,tab){
-  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
-  if(el)el.classList.add('active');
-  ['details','lineitems','notes','edit'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display=(t===tab)?'block':'none';
-  });
-  if(tab==='edit'){
-    populateEditForm();
-    document.getElementById('m-footer-view').style.display='none';
-    document.getElementById('m-footer-edit').style.display='flex';
-  } else {
-    document.getElementById('m-footer-view').style.display='flex';
-    document.getElementById('m-footer-edit').style.display='none';
-  }
-  if(tab==='lineitems'&&_q)renderLineItems(_q.lines);
+  // No-op: tabs removed in PDF view. Keep function for compatibility.
+  if(tab==='edit') populateEditForm();
+  if(tab==='lineitems'&&_q) renderLineItems(_q.lines);
 }
 
 function setFilter(el,status){
@@ -1248,26 +1041,13 @@ function toggleSidebar(){
 // ── NEW INVOICE ──
 function openNewInvoice() {
   loadBillingCustomers();
-  // Reuse the quote modal for invoices
   _q = {num:'#INV-' + (window._nextInvNum || 1),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'—',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],isInvoice:true};
-  document.getElementById('m-num').textContent = _q.num + ' · Draft';
-  document.getElementById('m-title').textContent = 'New Invoice';
-  document.getElementById('m-job').textContent = '—';
-  document.getElementById('m-status-pill').textContent = 'Draft';
-  document.getElementById('m-status-pill').style.cssText = _q.statusStyle;
-  document.getElementById('m-expires').textContent = 'Not sent';
-  document.getElementById('m-total').textContent = '$0';
-  document.getElementById('m-sqft').textContent = '—';
-  document.getElementById('m-service').textContent = '—';
-  document.getElementById('m-valid').textContent = '—';
-  document.getElementById('m-customer').textContent = '—';
-  document.getElementById('m-address').textContent = '—';
-  document.getElementById('m-area').textContent = '—';
-  document.getElementById('m-finish').textContent = '—';
-  document.getElementById('m-start').textContent = '—';
-  document.getElementById('m-created').textContent = _q.created;
+  renderPdfBrand();
+  document.getElementById('m-doc-type').textContent = 'INVOICE';
+  populateEditForm();
   renderLineItems([]);
-  switchTab(document.querySelectorAll('.mtab')[3], 'edit');
+  var sb = document.getElementById('send-btn');
+  if (sb) { sb.textContent = 'Send Invoice'; sb.disabled = false; }
   document.getElementById('modal-overlay').classList.add('open');
 }
 
