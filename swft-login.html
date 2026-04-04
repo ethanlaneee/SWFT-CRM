@@ -669,7 +669,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     // New signups go to billing to pick a Stripe plan; returning users go to dashboard
     setTimeout(() => {
       if (toBilling) {
-        window.location.href = 'swft-billing.html';
+        window.location.href = 'swft-billing';
       } else {
         goToDashboard();
       }
@@ -684,13 +684,13 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // signed in). Checks accountStatus on the backend before allowing dashboard
   // access. If the account is expired/canceled a 402 is returned — we sign the
   // user out immediately so they cannot hold a valid Firebase session and bypass
-  // the check by navigating directly to swft-shell.html.
+  // the check by navigating directly to swft-shell.
   window.goToDashboard = async function() {
     const user = auth.currentUser;
 
     // Admin accounts skip the status check entirely
     if (user?.email && ADMIN_EMAILS.includes(user.email)) {
-      window.location.href = 'swft-shell.html';
+      window.location.href = 'swft-shell';
       return;
     }
 
@@ -705,12 +705,12 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
         // Invalidate the Firebase session — prevents direct-URL bypass
         await auth.signOut();
         showGlobalError(message || 'Your trial has ended. Please upgrade to continue.');
-        setTimeout(() => { window.location.href = 'swft-billing.html'; }, 2000);
+        setTimeout(() => { window.location.href = 'swft-billing'; }, 2000);
         return;
       }
 
       // 200 — active or trialing
-      window.location.href = 'swft-shell.html';
+      window.location.href = 'swft-shell';
     } catch {
       // Network error or unexpected failure — fail safe: stay on login page
       showGlobalError('Unable to verify account status. Please try again.');

@@ -188,7 +188,7 @@
               time: formatTimeAgo(m.sentAt),
               unread: true,
               msgId: msgId,
-              href: 'swft-messages.html',
+              href: 'swft-messages',
               sentAt: m.sentAt || 0
             });
           }

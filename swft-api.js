@@ -19,7 +19,7 @@ async function getAuthToken() {
   const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
   const user = getAuth().currentUser;
   if (!user) {
-    window.location.href = "swft-login.html";
+    window.location.href = "swft-login";
     throw new Error("Not authenticated");
   }
   return user.getIdToken();
@@ -137,7 +137,7 @@ async function requireAuth() {
   const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
   return new Promise((resolve) => {
     onAuthStateChanged(getAuth(), (user) => {
-      if (!user) window.location.href = "swft-login.html";
+      if (!user) window.location.href = "swft-login";
       else resolve(user);
     });
   });

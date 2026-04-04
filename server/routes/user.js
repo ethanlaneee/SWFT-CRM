@@ -132,7 +132,7 @@ router.get("/status", async (req, res, next) => {
         error: "Payment required.",
         message: "Your trial has ended. Please upgrade to continue.",
         accountStatus,
-        redirect: "/swft-billing.html",
+        redirect: "/swft-billing",
       });
     }
 

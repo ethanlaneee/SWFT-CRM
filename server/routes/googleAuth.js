@@ -76,10 +76,10 @@ async function googleCallback(req, res) {
     }, { merge: true });
 
     // Redirect back to the messages page
-    res.redirect("/swft-messages.html?gmail=connected");
+    res.redirect("/swft-messages?gmail=connected");
   } catch (err) {
     console.error("Google OAuth callback error:", err);
-    res.redirect("/swft-messages.html?gmail=error");
+    res.redirect("/swft-messages?gmail=error");
   }
 }
 

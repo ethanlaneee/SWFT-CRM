@@ -239,9 +239,9 @@
     try {
       const { getAuth, signOut } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
       await signOut(getAuth());
-      window.location.href = "swft-login.html";
+      window.location.href = "swft-login";
     } catch (e) {
-      window.location.href = "swft-login.html";
+      window.location.href = "swft-login";
     }
   };
 

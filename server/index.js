@@ -37,7 +37,7 @@ app.post("/api/webhooks/postmark/inbound", postmarkIncomingHandler);
 app.get("/api/auth/google/callback", googleCallback);
 
 // ── Serve frontend files ──
-app.use(express.static(path.join(__dirname, "..")));
+app.use(express.static(path.join(__dirname, ".."), { extensions: ["html"] }));
 
 // ── Routes ──
 // /api/me is auth-only: expired/canceled users must still reach their profile
@@ -56,7 +56,7 @@ app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 
 // ── Root redirect ──
-app.get("/", (req, res) => res.redirect("/swft-login.html"));
+app.get("/", (req, res) => res.redirect("/swft-login"));
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));
