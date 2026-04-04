@@ -989,6 +989,18 @@ function filterQuotes(q){
 
 function previewCurrentDoc() {
   if (!_q) return;
+  // Sync current form field values into _q before preview (handles unsaved new docs)
+  var g = function(id){ var el=document.getElementById(id); return el ? el.value : ''; };
+  _q.customer = g('e-customer') || _q.customer;
+  _q.job      = g('e-job')      || _q.job;
+  _q.address  = g('e-address')  || _q.address;
+  _q.service  = g('e-service')  || _q.service;
+  _q.sqft     = g('e-sqft')     || _q.sqft;
+  _q.start    = g('e-start')    || _q.start;
+  _q.finish   = g('e-finish')   || _q.finish;
+  _q.status   = g('e-status')   || _q.status;
+  _q.notes    = g('m-notes')    || _q.notes;
+  _q.lineItems = _items && _items.length ? _items : _q.lineItems;
   const type = _q.isInvoice ? 'invoice' : 'quote';
   showPdfPreview(type, _q);
 }
