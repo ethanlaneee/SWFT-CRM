@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT — The AI-Powered CRM for Home Service Pros</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--green-dim:rgba(200,241,53,0.12);
+  --white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+  --blue:#4d9fff;--red:#ff5252;--amber:#f5a623;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{width:100%;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden;line-height:1.6;}
+
+/* ── BACKGROUND ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── NAV ── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(10,10,10,0.7);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  transition:all 0.3s ease;
+}
+.nav.scrolled{background:rgba(10,10,10,0.92);box-shadow:0 4px 30px rgba(0,0,0,0.4);}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--white);text-decoration:none;}
+.nav-logo span{color:var(--green);}
+.nav-links{display:flex;align-items:center;gap:32px;}
+.nav-link{color:var(--gray);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;}
+.nav-link:hover{color:var(--white);}
+.btn-login{
+  padding:10px 28px;border-radius:8px;font-size:14px;font-weight:600;
+  text-decoration:none;transition:all 0.2s;cursor:pointer;
+  background:transparent;color:var(--white);border:1px solid var(--border2);
+}
+.btn-login:hover{border-color:var(--gray);background:var(--surface);}
+.btn-cta{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 32px;border-radius:10px;font-size:15px;font-weight:600;
+  text-decoration:none;transition:all 0.25s;cursor:pointer;border:none;
+  background:var(--green);color:#0a0a0a;
+  box-shadow:0 0 20px rgba(200,241,53,0.15);
+}
+.btn-cta:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(200,241,53,0.25);}
+.btn-cta svg{width:18px;height:18px;}
+
+/* ── SECTIONS ── */
+section{position:relative;z-index:1;}
+.container{max-width:1200px;margin:0 auto;padding:0 32px;}
+
+/* ── HERO ── */
+.hero{
+  padding:160px 0 100px;
+  text-align:center;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 20px;border-radius:100px;
+  background:var(--green-dim);border:1px solid rgba(200,241,53,0.15);
+  font-size:13px;font-weight:600;color:var(--green);
+  margin-bottom:32px;
+  animation:fadeDown 0.6s ease both;
+}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.hero h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(52px, 8vw, 96px);
+  line-height:0.95;
+  letter-spacing:2px;
+  margin-bottom:24px;
+  animation:fadeUp 0.7s ease both;
+  animation-delay:0.1s;
+}
+.hero h1 .accent{color:var(--green);}
+.hero-sub{
+  font-size:clamp(16px, 2vw, 20px);
+  color:var(--gray);
+  max-width:600px;
+  margin:0 auto 48px;
+  line-height:1.7;
+  animation:fadeUp 0.7s ease both;
+  animation-delay:0.2s;
+}
+.hero-actions{
+  display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+  animation:fadeUp 0.7s ease both;
+  animation-delay:0.3s;
+}
+.hero-trust{
+  display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;
+  margin-top:56px;padding-top:40px;
+  border-top:1px solid var(--border);
+  animation:fadeUp 0.7s ease both;
+  animation-delay:0.4s;
+}
+.trust-item{
+  display:flex;align-items:center;gap:10px;
+  color:var(--gray);font-size:14px;font-weight:500;
+}
+.trust-item svg{width:20px;height:20px;color:var(--green);flex-shrink:0;}
+.trust-item strong{color:var(--white);}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity 0.7s ease, transform 0.7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ── MOBILE ── */
+/* ── SECTION HEADERS ── */
+.section-header{text-align:center;margin-bottom:56px;}
+.section-tag{
+  display:inline-block;
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--green);margin-bottom:16px;
+}
+.section-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(36px, 5vw, 64px);
+  line-height:1;letter-spacing:1px;margin-bottom:16px;
+}
+.section-title .accent{color:var(--green);}
+.section-sub{font-size:18px;color:var(--gray);max-width:520px;margin:0 auto;}
+
+/* ── PAIN SECTION ── */
+.pain{padding:100px 0 120px;}
+.pain-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  margin-bottom:56px;
+}
+.pain-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:32px 28px;
+  transition:all 0.3s ease;
+}
+.pain-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.3);}
+.pain-icon{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--green-dim);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:18px;
+}
+.pain-icon svg{width:22px;height:22px;color:var(--green);}
+.pain-card h3{font-size:17px;font-weight:600;margin-bottom:10px;color:var(--white);}
+.pain-card p{font-size:14px;color:var(--gray);line-height:1.65;}
+.pain-bottom{text-align:center;font-size:18px;color:var(--gray);}
+
+/* ── PRODUCT / MOCK DASHBOARD ── */
+.product{padding:80px 0 120px;overflow:hidden;}
+.mock-wrapper{position:relative;margin-bottom:48px;}
+.mock-glow{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:80%;height:60%;
+  background:radial-gradient(ellipse, rgba(200,241,53,0.06) 0%, transparent 70%);
+  pointer-events:none;
+}
+.mock-dash{
+  position:relative;
+  display:flex;
+  background:var(--bg);border:1px solid var(--border2);border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  min-height:400px;
+}
+.mock-sidebar{
+  width:180px;flex-shrink:0;
+  background:var(--surface);border-right:1px solid var(--border);
+  padding:20px 16px;
+}
+.mock-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;
+  margin-bottom:24px;padding-left:4px;
+}
+.mock-nav-items{display:flex;flex-direction:column;gap:4px;}
+.mock-nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:8px;font-size:12px;color:var(--gray);
+  transition:all 0.2s;
+}
+.mock-nav-item.active{background:rgba(200,241,53,0.08);color:var(--white);border-left:2px solid var(--green);padding-left:10px;}
+.mock-nav-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.mock-main{flex:1;padding:16px 20px;display:flex;flex-direction:column;gap:16px;}
+.mock-topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.mock-ai-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:100px;
+  background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.15);
+  font-size:11px;color:var(--green);font-weight:600;
+}
+.mock-ai-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.mock-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.mock-kpi{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;display:flex;flex-direction:column;gap:4px;
+}
+.mock-kpi-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;}
+.mock-kpi-value{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--white);}
+.mock-kpi-delta{font-size:11px;font-weight:600;}
+.mock-kpi-delta.up{color:var(--green);}
+.mock-content{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;}
+.mock-panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:16px;display:flex;flex-direction:column;gap:10px;
+}
+.mock-panel-head{font-size:12px;font-weight:600;color:var(--white);padding-bottom:8px;border-bottom:1px solid var(--border);}
+.mock-row{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;color:var(--gray);
+  padding:6px 0;
+}
+.mock-status{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* Feature pills */
+.feature-pills{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:12px;
+}
+.pill{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:100px;
+  background:var(--surface);border:1px solid var(--border);
+  font-size:13px;font-weight:500;color:var(--gray);
+  transition:all 0.2s;
+}
+.pill:hover{color:var(--white);border-color:var(--border2);}
+.pill svg{width:16px;height:16px;color:var(--green);}
+
+/* ── BEFORE vs AFTER ── */
+.compare{padding:100px 0 120px;}
+.compare-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;
+  max-width:900px;margin:0 auto;
+}
+.compare-col{
+  border-radius:16px;padding:36px 32px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.compare-col.before{
+  background:var(--surface);border:1px solid var(--border);
+}
+.compare-col.after{
+  background:linear-gradient(135deg, rgba(200,241,53,0.06), rgba(200,241,53,0.02));
+  border:1px solid rgba(200,241,53,0.15);
+}
+.compare-label{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;
+  padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:4px;
+}
+.before-label{color:var(--gray);}
+.after-label{color:var(--green);}
+.compare-item{
+  display:flex;align-items:flex-start;gap:12px;
+  font-size:15px;line-height:1.5;color:var(--gray);
+}
+.compare-col.after .compare-item{color:var(--white);}
+.compare-x{color:var(--red);font-weight:700;font-size:14px;flex-shrink:0;margin-top:2px;}
+.compare-check{color:var(--green);font-weight:700;font-size:14px;flex-shrink:0;margin-top:2px;}
+
+/* ── PRICING ── */
+.pricing{padding:100px 0 120px;}
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  max-width:1080px;margin:0 auto;align-items:stretch;
+}
+.pricing-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:40px 32px;display:flex;flex-direction:column;
+  transition:all 0.3s ease;position:relative;overflow:hidden;
+}
+.pricing-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 24px 64px rgba(0,0,0,0.3);}
+.pricing-card.featured{
+  background:linear-gradient(135deg, rgba(200,241,53,0.06), rgba(200,241,53,0.02));
+  border:1px solid rgba(200,241,53,0.25);
+}
+.pricing-card.featured::before{
+  content:'';position:absolute;top:-40%;left:50%;transform:translateX(-50%);
+  width:300px;height:200px;
+  background:radial-gradient(ellipse, rgba(200,241,53,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.pricing-badge{
+  display:inline-block;width:fit-content;
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--green);
+  padding:6px 16px;border-radius:100px;
+  background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);
+  margin-bottom:20px;
+}
+.pricing-plan-name{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;
+  color:var(--white);margin-bottom:8px;
+}
+.pricing-price{display:flex;align-items:baseline;gap:2px;margin-bottom:8px;}
+.pricing-dollar{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green);}
+.pricing-amount{font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--white);line-height:1;}
+.pricing-period{font-size:18px;color:var(--gray);font-weight:500;margin-left:2px;}
+.pricing-desc{font-size:14px;color:var(--gray);line-height:1.6;margin-bottom:24px;}
+.pricing-divider{height:1px;background:var(--border2);margin-bottom:24px;}
+.pricing-features{list-style:none;display:flex;flex-direction:column;gap:14px;margin-bottom:32px;flex:1;}
+.pricing-features li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:14px;color:var(--gray);line-height:1.5;
+}
+.pricing-features li .check{color:var(--green);font-weight:700;font-size:14px;flex-shrink:0;margin-top:1px;}
+.pricing-features li .highlight{color:var(--white);font-weight:600;}
+.pricing-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;
+  text-decoration:none;cursor:pointer;transition:all 0.25s;border:none;
+}
+.pricing-cta.primary{
+  background:var(--green);color:#0a0a0a;
+  box-shadow:0 0 20px rgba(200,241,53,0.15);
+}
+.pricing-cta.primary:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(200,241,53,0.25);}
+.pricing-cta.secondary{
+  background:transparent;color:var(--white);border:1px solid var(--border2);
+}
+.pricing-cta.secondary:hover{border-color:var(--gray);background:var(--surface2);}
+.pricing-cta svg{width:18px;height:18px;}
+.pricing-note{text-align:center;margin-top:32px;font-size:13px;color:var(--gray);}
+.pricing-note strong{color:var(--white);}
+
+/* ── VALUE STACK (below pricing) ── */
+.value-stack{padding:0 0 80px;}
+.stack-row{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:12px;
+  max-width:900px;margin:0 auto;
+}
+.stack-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:100px;
+  background:var(--surface);border:1px solid var(--border);
+  font-size:13px;color:var(--gray);
+}
+.stack-chip .replaced-price{
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;
+  color:var(--red);text-decoration:line-through;
+}
+
+/* ── FINAL CTA ── */
+.final-cta{padding:80px 0 100px;}
+.cta-box{
+  position:relative;
+  text-align:center;
+  padding:80px 48px;border-radius:24px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  overflow:hidden;
+}
+.cta-glow{
+  position:absolute;top:-40%;left:50%;transform:translateX(-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse, rgba(200,241,53,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.cta-headline{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px, 5vw, 56px);
+  line-height:1;letter-spacing:1px;
+  margin-bottom:20px;
+  position:relative;
+}
+.cta-sub{
+  font-size:17px;color:var(--gray);line-height:1.7;
+  max-width:560px;margin:0 auto 28px;
+  position:relative;
+}
+
+/* ── FOOTER ── */
+.footer{
+  padding:48px 0;
+  border-top:1px solid var(--border);
+}
+.footer-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:24px;
+}
+.footer-tagline{font-size:13px;color:var(--gray);margin-top:4px;}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap;}
+.footer-link{color:var(--gray);text-decoration:none;font-size:14px;transition:color 0.2s;}
+.footer-link:hover{color:var(--white);}
+.footer-copy{font-size:12px;color:var(--gray2);}
+
+@media(max-width:768px){
+  .nav{padding:14px 20px;}
+  .nav-links .nav-link{display:none;}
+  .hero{padding:130px 0 60px;}
+  .hero-trust{gap:20px;}
+  .container{padding:0 20px;}
+  .pain-grid{grid-template-columns:1fr;}
+  .pain{padding:60px 0 80px;}
+  .mock-sidebar{display:none;}
+  .mock-kpis{grid-template-columns:repeat(2,1fr);}
+  .mock-content{grid-template-columns:1fr;}
+  .product{padding:60px 0 80px;}
+  .feature-pills{gap:8px;}
+  .pill{font-size:12px;padding:8px 14px;}
+  .compare-grid{grid-template-columns:1fr;}
+  .compare{padding:60px 0 80px;}
+  .pricing-grid{grid-template-columns:1fr;max-width:400px;}
+  .pricing{padding:60px 0 80px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav" id="nav">
+  <a href="/" class="nav-logo">SWFT<span>.</span></a>
+  <div class="nav-links">
+    <a href="#problems" class="nav-link">Why SWFT</a>
+    <a href="#product" class="nav-link">Product</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
+    <a class="btn-login" href="/swft-login">Log In</a>
+    <a class="btn-cta" href="/swft-checkout">
+      Start Free Trial
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge"><span class="dot"></span> AI-Powered CRM for Home Services</div>
+    <h1>STOP LOSING JOBS.<br/>START <span class="accent">CLOSING</span> THEM.</h1>
+    <p class="hero-sub">
+      SWFT replaces your spreadsheets, sticky notes, and 6 different apps with one
+      AI-powered command center — built specifically for home service pros.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-cta" href="/swft-checkout" style="padding:14px 40px;font-size:16px;">
+        Start Your 14-Day Free Trial
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a class="btn-login" href="#product" style="padding:14px 28px;font-size:15px;">See How It Works</a>
+    </div>
+    <div class="hero-trust">
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+        <span>No credit card required</span>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+        <span>Set up in <strong>under 2 minutes</strong></span>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+        <span>Cancel anytime</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PAIN SECTION ── -->
+<section class="pain" id="problems">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">The Problem</span>
+      <h2 class="section-title">SOUND <span class="accent">FAMILIAR</span>?</h2>
+      <p class="section-sub">You didn't start a business to drown in admin work. But here you are.</p>
+    </div>
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <div class="pain-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <h3>Spreadsheet chaos</h3>
+        <p>Customer info lives in 4 different places — your phone, a notebook, a spreadsheet, and your head.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h3>Quoting takes forever</h3>
+        <p>You're typing quotes on your phone at 10pm, copying and pasting prices from old texts.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Money slipping through cracks</h3>
+        <p>Unpaid invoices pile up. You forget to follow up. Thousands of dollars — just gone.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Leads go cold</h3>
+        <p>Someone calls while you're on a job. You mean to call back. You forget. They hire someone else.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <h3>Scheduling nightmares</h3>
+        <p>Double bookings. Missed appointments. Driving across town twice because nobody coordinated.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <h3>Too many apps</h3>
+        <p>One app for invoicing, another for scheduling, another for texting. None of them talk to each other.</p>
+      </div>
+    </div>
+    <p class="pain-bottom reveal">If you're nodding along, <strong style="color:var(--green)">you're exactly who we built SWFT for.</strong></p>
+  </div>
+</section>
+
+<!-- ── PRODUCT SHOWCASE (CSS Mock Dashboard) ── -->
+<section class="product" id="product">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">The Product</span>
+      <h2 class="section-title">YOUR ENTIRE BUSINESS.<br/><span class="accent">ONE SCREEN.</span></h2>
+      <p class="section-sub">Everything you need to run your operation — customers, jobs, quotes, invoices, schedule — all in one place.</p>
+    </div>
+
+    <!-- CSS-only mock dashboard -->
+    <div class="mock-wrapper reveal">
+      <div class="mock-glow"></div>
+      <div class="mock-dash">
+        <!-- Sidebar -->
+        <div class="mock-sidebar">
+          <div class="mock-logo">SWFT</div>
+          <div class="mock-nav-items">
+            <div class="mock-nav-item active"><span class="mock-nav-dot"></span> Dashboard</div>
+            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Customers</div>
+            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Jobs</div>
+            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Quotes</div>
+            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Invoices</div>
+            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Schedule</div>
+          </div>
+        </div>
+        <!-- Main content -->
+        <div class="mock-main">
+          <!-- Top bar -->
+          <div class="mock-topbar">
+            <span style="font-weight:600;font-size:14px;">Dashboard</span>
+            <div class="mock-ai-pill"><span class="mock-ai-dot"></span> AI Assistant</div>
+          </div>
+          <!-- KPI row -->
+          <div class="mock-kpis">
+            <div class="mock-kpi">
+              <span class="mock-kpi-label">Revenue (MTD)</span>
+              <span class="mock-kpi-value">$24,850</span>
+              <span class="mock-kpi-delta up">+18%</span>
+            </div>
+            <div class="mock-kpi">
+              <span class="mock-kpi-label">Active Jobs</span>
+              <span class="mock-kpi-value">12</span>
+              <span class="mock-kpi-delta up">+3</span>
+            </div>
+            <div class="mock-kpi">
+              <span class="mock-kpi-label">Pending Quotes</span>
+              <span class="mock-kpi-value">7</span>
+              <span class="mock-kpi-delta" style="color:var(--amber)">2 expiring</span>
+            </div>
+            <div class="mock-kpi">
+              <span class="mock-kpi-label">Unpaid Invoices</span>
+              <span class="mock-kpi-value">$6,400</span>
+              <span class="mock-kpi-delta up">3 due today</span>
+            </div>
+          </div>
+          <!-- Content grid -->
+          <div class="mock-content">
+            <div class="mock-panel">
+              <div class="mock-panel-head">Today's Schedule</div>
+              <div class="mock-row"><span class="mock-status" style="background:var(--green)"></span><span>9:00 AM — Kitchen remodel @ Johnson</span></div>
+              <div class="mock-row"><span class="mock-status" style="background:var(--blue)"></span><span>1:30 PM — Estimate @ 412 Oak St</span></div>
+              <div class="mock-row"><span class="mock-status" style="background:var(--amber)"></span><span>4:00 PM — Follow-up call — Garcia</span></div>
+            </div>
+            <div class="mock-panel">
+              <div class="mock-panel-head">Recent Activity</div>
+              <div class="mock-row"><span style="color:var(--green)">$</span><span>Invoice #1042 paid — $3,200</span></div>
+              <div class="mock-row"><span style="color:var(--blue)">+</span><span>New lead — Sarah Mitchell</span></div>
+              <div class="mock-row"><span style="color:var(--amber)">!</span><span>Quote #87 expires tomorrow</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature pills below -->
+    <div class="feature-pills reveal">
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> CRM & Customers</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Quotes & Invoices</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Scheduling</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> SMS & Email</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5"/></svg> AI Assistant</div>
+      <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Gmail & Calendar Sync</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── BEFORE vs AFTER ── -->
+<section class="compare">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">The Transformation</span>
+      <h2 class="section-title">BEFORE SWFT <span class="accent">vs. AFTER</span></h2>
+      <p class="section-sub">See what changes when you stop duct-taping your business together.</p>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-col before reveal">
+        <div class="compare-label before-label">BEFORE SWFT</div>
+        <div class="compare-item"><span class="compare-x">✕</span> Customer info scattered everywhere</div>
+        <div class="compare-item"><span class="compare-x">✕</span> Quoting takes 20+ minutes per job</div>
+        <div class="compare-item"><span class="compare-x">✕</span> Chasing unpaid invoices manually</div>
+        <div class="compare-item"><span class="compare-x">✕</span> Double-booking appointments</div>
+        <div class="compare-item"><span class="compare-x">✕</span> Leads going cold — no follow-up system</div>
+        <div class="compare-item"><span class="compare-x">✕</span> Paying for 5+ different apps</div>
+        <div class="compare-item"><span class="compare-x">✕</span> Working until midnight on admin</div>
+      </div>
+      <div class="compare-col after reveal">
+        <div class="compare-label after-label">AFTER SWFT</div>
+        <div class="compare-item"><span class="compare-check">✓</span> Every customer, job, and note in one place</div>
+        <div class="compare-item"><span class="compare-check">✓</span> AI generates quotes in seconds</div>
+        <div class="compare-item"><span class="compare-check">✓</span> Automated invoicing & payment tracking</div>
+        <div class="compare-item"><span class="compare-check">✓</span> Smart scheduling — never overlap again</div>
+        <div class="compare-item"><span class="compare-check">✓</span> AI follows up with leads for you</div>
+        <div class="compare-item"><span class="compare-check">✓</span> One app replaces everything</div>
+        <div class="compare-item"><span class="compare-check">✓</span> Home by dinner — admin runs itself</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">Pricing</span>
+      <h2 class="section-title">REPLACE <span class="accent">$224/MO</span> IN TOOLS<br/>WITH ONE PLATFORM</h2>
+      <p class="section-sub">CRM, invoicing, scheduling, SMS, AI, quotes, and email — all included in every plan.</p>
+    </div>
+
+    <div class="pricing-grid">
+
+      <!-- ── STARTER ── -->
+      <div class="pricing-card reveal" data-delay="0">
+        <div class="pricing-plan-name">STARTER</div>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-amount">49</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <p class="pricing-desc">Everything you need to run your business from day one.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check">&#10003;</span> Full CRM &amp; customer management</li>
+          <li><span class="check">&#10003;</span> Quotes &amp; invoicing</li>
+          <li><span class="check">&#10003;</span> Job scheduling &amp; calendar sync</li>
+          <li><span class="check">&#10003;</span> Gmail &amp; Google Calendar integration</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">200 SMS</span> / month</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">100 AI messages</span> / month</li>
+          <li><span class="check">&#10003;</span> Email (Gmail or Postmark fallback)</li>
+        </ul>
+        <a class="pricing-cta secondary" href="/swft-checkout?plan=starter">
+          Start 14-Day Free Trial
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <!-- ── PRO (featured) ── -->
+      <div class="pricing-card featured reveal" data-delay="100">
+        <div class="pricing-badge">MOST POPULAR</div>
+        <div class="pricing-plan-name">PRO</div>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-amount">99</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <p class="pricing-desc">For growing teams that need more power and higher limits.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check">&#10003;</span> Everything in Starter</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">1,000 SMS</span> / month</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">500 AI messages</span> / month</li>
+          <li><span class="check">&#10003;</span> Priority support</li>
+          <li><span class="check">&#10003;</span> Google Sheets export</li>
+          <li><span class="check">&#10003;</span> Team management</li>
+          <li><span class="check">&#10003;</span> Advanced AI tools (directions, weather)</li>
+        </ul>
+        <a class="pricing-cta primary" href="/swft-checkout?plan=pro">
+          Start 14-Day Free Trial
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <!-- ── BUSINESS ── -->
+      <div class="pricing-card reveal" data-delay="200">
+        <div class="pricing-plan-name">BUSINESS</div>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-amount">149</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <p class="pricing-desc">Unlimited everything. Built for high-volume operations.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check">&#10003;</span> Everything in Pro</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited SMS</span></li>
+          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited AI messages</span></li>
+          <li><span class="check">&#10003;</span> QuickBooks integration (coming soon)</li>
+          <li><span class="check">&#10003;</span> Dedicated support</li>
+          <li><span class="check">&#10003;</span> Custom branding (coming soon)</li>
+          <li><span class="check">&#10003;</span> Multi-user access</li>
+        </ul>
+        <a class="pricing-cta secondary" href="/swft-checkout?plan=business">
+          Start 14-Day Free Trial
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+    </div>
+
+    <p class="pricing-note reveal">
+      All plans include a <strong>14-day free trial</strong>. No credit card required. Cancel anytime.<br/>
+      Replaces $224/mo in tools — CRM, invoicing, scheduling, SMS, AI, quotes &amp; email marketing.
+    </p>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ── -->
+<section class="final-cta">
+  <div class="container">
+    <div class="cta-box reveal">
+      <div class="cta-glow"></div>
+      <span class="section-tag" style="margin-bottom:20px;">Ready?</span>
+      <h2 class="cta-headline">EVERY DAY WITHOUT SWFT<br/>IS MONEY LEFT ON THE TABLE.</h2>
+      <p class="cta-sub">
+        The leads you forget to follow up on. The invoices collecting dust.
+        The hours you waste on busywork instead of billable jobs.<br/><br/>
+        <strong style="color:var(--white);">Your competitors are getting faster. It's time you did too.</strong>
+      </p>
+      <a class="btn-cta" href="/swft-checkout" style="padding:16px 48px;font-size:17px;margin-top:8px;">
+        Start Your Free 14-Day Trial
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <p style="margin-top:16px;font-size:13px;color:var(--gray);">No credit card. No contracts. No risk.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="/" class="nav-logo" style="font-size:28px;">SWFT<span>.</span></a>
+        <p class="footer-tagline">Simple. Smart. SWFT.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/swft-login" class="footer-link">Log In</a>
+        <a href="/swft-checkout" class="footer-link">Sign Up</a>
+        <a href="#problems" class="footer-link">Why SWFT</a>
+        <a href="#product" class="footer-link">Product</a>
+        <a href="#pricing" class="footer-link">Pricing</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 SWFT. All rights reserved.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ── Sticky nav shadow ── */
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+});
+
+/* ── Scroll reveal with stagger ── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const delay = e.target.dataset.delay || 0;
+      setTimeout(() => e.target.classList.add('visible'), delay);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+/* Stagger pain cards */
+document.querySelectorAll('.pain-card.reveal').forEach((el, i) => { el.dataset.delay = i * 80; });
+/* Stagger compare cols */
+document.querySelectorAll('.compare-col.reveal').forEach((el, i) => { el.dataset.delay = i * 150; });
+/* Stagger pricing cards */
+document.querySelectorAll('.pricing-card.reveal').forEach((el, i) => { el.dataset.delay = i * 120; });
+</script>
+
+</body>
+</html>

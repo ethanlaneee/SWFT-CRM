@@ -191,7 +191,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Integrations -->
-<div class="settings-section">
+<div class="settings-section" id="integrations">
   <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
   <div class="settings-body" id="integrations-list" style="gap:0;">
     <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
@@ -503,7 +503,12 @@ async function disconnectIntegration(id) {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
       loadSettings();
-      loadIntegrations();
+      loadIntegrations().then(function(){
+        if(window.location.hash){
+          var el=document.querySelector(window.location.hash);
+          if(el) el.scrollIntoView({behavior:'smooth'});
+        }
+      });
     }
   });
 </script>

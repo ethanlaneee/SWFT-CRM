@@ -13,20 +13,26 @@ function getStripe() {
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
 
+// Stripe Price IDs for each plan
+const PRICE_IDS = {
+  starter:  "price_1TIc1URNPpAjdxw0uscz7ouv",
+  pro:      "price_1TIc1VRNPpAjdxw0fwN1bfEH",
+  business: "price_1TIc1VRNPpAjdxw05e9i863i",
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/billing/create-checkout-session
 //
 // Creates a Stripe Checkout Session and returns the hosted URL.
 // The frontend redirects the browser there directly.
 //
-// Body: { priceId: "price_xxx" }  ← your Stripe Price ID
+// Body: { plan: "starter"|"pro"|"business" }
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/create-checkout-session", async (req, res, next) => {
   try {
-    const { priceId } = req.body;
-    if (!priceId) {
-      return res.status(400).json({ error: "priceId is required." });
-    }
+    const { plan } = req.body;
+    const planKey = plan && PRICE_IDS[plan] ? plan : "starter";
+    const priceId = PRICE_IDS[planKey];
 
     // Fetch Firestore profile to reuse existing Stripe customer ID
     const doc  = await users().doc(req.uid).get();
@@ -46,19 +52,30 @@ router.post("/create-checkout-session", async (req, res, next) => {
     }
 
     const session = await stripe.checkout.sessions.create({
+      ui_mode:              "embedded",
       customer:             customerId,
-      payment_method_types: ["card"],
       line_items:           [{ price: priceId, quantity: 1 }],
       mode:                 "subscription",
-      // session_id token in the success URL lets the dashboard verify payment immediately
-      success_url: `${process.env.APP_URL}/swft-dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.APP_URL}/swft-billing?canceled=true`,
-      metadata:    { firebaseUid: req.uid },
-      subscription_data: { metadata: { firebaseUid: req.uid } },
+      allow_promotion_codes: true,
+      subscription_data: {
+        trial_period_days: 14,
+        metadata: { firebaseUid: req.uid, plan: planKey },
+      },
+      return_url: `${process.env.APP_URL}/swft-checkout?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
+      metadata:   { firebaseUid: req.uid, plan: planKey },
     });
 
-    res.json({ url: session.url });
+    res.json({ clientSecret: session.client_secret });
   } catch (err) { next(err); }
+});
+
+// GET /api/billing/plans — return plan info and Stripe price IDs (public-ish)
+router.get("/plans", (req, res) => {
+  res.json({
+    starter:  { name: "Starter",  price: 49,  priceId: PRICE_IDS.starter },
+    pro:      { name: "Pro",      price: 99,  priceId: PRICE_IDS.pro },
+    business: { name: "Business", price: 149, priceId: PRICE_IDS.business },
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -87,7 +104,7 @@ router.get("/verify-session", async (req, res, next) => {
       return res.status(403).json({ error: "Session does not belong to this account." });
     }
 
-    if (session.payment_status !== "paid") {
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
       return res.status(402).json({ error: "Payment not completed.", paymentStatus: session.payment_status });
     }
 
@@ -96,6 +113,7 @@ router.get("/verify-session", async (req, res, next) => {
     await users().doc(req.uid).set({
       accountStatus:        "active",
       isSubscribed:         true,
+      plan:                 session.metadata?.plan || "starter",
       stripeSubscriptionId: session.subscription,
     }, { merge: true });
 
@@ -136,6 +154,7 @@ async function webhookHandler(req, res) {
         await users().doc(uid).set({
           accountStatus:        "active",
           isSubscribed:         true,
+          plan:                 session.metadata?.plan || "starter",
           stripeCustomerId:     session.customer,
           stripeSubscriptionId: session.subscription,
         }, { merge: true });

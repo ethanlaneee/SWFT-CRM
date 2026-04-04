@@ -153,6 +153,9 @@ const API = {
     remove:       (id)         => apiFetch(`/api/team/${id}`, { method: "DELETE" }),
     join:         (token)      => apiFetch("/api/team/join", { method: "POST", body: JSON.stringify({ token }) }),
     validateInvite: (token)    => fetch(`/api/team/invite/${token}`).then(r => r.json()),
+    getRoles:     ()           => apiFetch("/api/team/roles"),
+    saveRole:     (data)       => apiFetch("/api/team/roles", { method: "POST", body: JSON.stringify(data) }),
+    deleteRole:   (roleId)     => apiFetch(`/api/team/roles/${roleId}`, { method: "DELETE" }),
   },
 
 };

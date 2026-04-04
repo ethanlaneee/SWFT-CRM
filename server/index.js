@@ -48,6 +48,9 @@ const staticRoot = path.join(__dirname, "..");
 app.get("/swft-shell", (req, res) => res.redirect("/swft-dashboard"));
 app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
 
+// ── Root → landing page (must be before static middleware) ──
+app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
+
 // Rewrite clean URLs → .html before static lookup (e.g. /swft-customers → /swft-customers.html)
 app.use((req, res, next) => {
   if (req.method === "GET" && !req.path.startsWith("/api/") && !path.extname(req.path) && req.path !== "/") {
@@ -72,14 +75,13 @@ app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
 app.use("/api/payments",  auth, checkAccess,  paymentsRouter);
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
-app.use("/api/team",      auth, checkAccess,  require("./routes/team"));
+const { router: teamRouter, publicRouter: teamPublicRouter } = require("./routes/team");
+app.use("/api/team",        teamPublicRouter);                        // validate invite (no auth), join (has own auth)
+app.use("/api/team",        auth, checkAccess, teamRouter);           // full auth — manage team
 app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 app.use("/api/photos",    auth, checkAccess,  require("./routes/photos"));
-
-// ── Root redirect ──
-app.get("/", (req, res) => res.redirect("/swft-login"));
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));

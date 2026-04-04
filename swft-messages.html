@@ -227,7 +227,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <!-- Gmail connection banner -->
     <div id="gmail-banner" style="display:none;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;color:var(--gray);display:flex;align-items:center;justify-content:space-between;">
       <div id="gmail-banner-text"></div>
-      <button id="gmail-banner-btn" onclick="connectGmail()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--white);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;">Connect Gmail</button>
+      <button id="gmail-banner-btn" onclick="goToIntegrations()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--white);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;">Connect Gmail</button>
     </div>
     <div class="chat-header" id="chat-header" style="display:none;">
       <div class="chat-header-avatar" id="chat-avatar">?</div>
@@ -241,7 +241,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div id="connect-email-bar" style="display:none;padding:10px 16px;background:rgba(200,241,53,0.04);border-bottom:1px solid rgba(200,241,53,0.12);font-size:12.5px;color:var(--gray);align-items:center;gap:12px;">
       <svg width="16" height="16" fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="1.8" style="flex-shrink:0;"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
       <span style="flex:1;">Connect your Gmail to send emails from your own address</span>
-      <button onclick="connectGmail()" style="padding:5px 14px;border-radius:7px;border:none;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Connect Gmail</button>
+      <button onclick="goToIntegrations()" style="padding:5px 14px;border-radius:7px;border:none;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Connect Gmail</button>
       <span onclick="document.getElementById('connect-email-bar').style.display='none'" style="cursor:pointer;color:var(--gray2);font-size:16px;line-height:1;">&times;</span>
     </div>
     <div class="chat-messages" id="chat-messages">
@@ -459,6 +459,10 @@ async function disconnectGmail(){
     showToast('Gmail disconnected');
     loadData();
   }catch(e){showToast('Error: '+e.message);}
+}
+
+function goToIntegrations(){
+  window.location.href='swft-settings#integrations';
 }
 
 function showConnectEmailPopup(){
