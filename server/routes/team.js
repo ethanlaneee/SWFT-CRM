@@ -310,13 +310,48 @@ router.delete("/:memberId", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/team/join — accept an invite (called after user creates account)
-router.post("/join", async (req, res, next) => {
+
+// ── Public routes (no auth required for validate, auth-only for join) ──
+const publicRouter = require("express").Router();
+const { auth: authMiddleware } = require("../middleware/auth");
+
+// GET /api/team/invite/:token — validate an invite token (no auth)
+publicRouter.get("/invite/:token", async (req, res, next) => {
+  try {
+    const snap = await db.collection("team")
+      .where("inviteToken", "==", req.params.token)
+      .where("status", "==", "invited")
+      .limit(1)
+      .get();
+
+    if (snap.empty) {
+      return res.json({ valid: false, error: "Invite not found or already used" });
+    }
+
+    const data = snap.docs[0].data();
+    if (Date.now() > data.inviteExpires) {
+      return res.json({ valid: false, error: "This invite has expired" });
+    }
+
+    const ownerDoc = await db.collection("users").doc(data.orgId).get();
+    const ownerData = ownerDoc.exists ? ownerDoc.data() : {};
+
+    res.json({
+      valid: true,
+      email: data.email,
+      role: data.role,
+      orgName: ownerData.company || ownerData.name || "SWFT",
+      invitedBy: ownerData.name || "Your team owner",
+    });
+  } catch (err) { next(err); }
+});
+
+// POST /api/team/join — accept an invite (auth required, no checkAccess)
+publicRouter.post("/join", authMiddleware, async (req, res, next) => {
   try {
     const { token } = req.body;
     if (!token) return res.status(400).json({ error: "Invite token required" });
 
-    // Find the invite
     const snap = await db.collection("team")
       .where("inviteToken", "==", token)
       .where("status", "==", "invited")
@@ -334,11 +369,9 @@ router.post("/join", async (req, res, next) => {
       return res.status(410).json({ error: "This invite has expired. Ask your team owner to send a new one." });
     }
 
-    // Get the invitee's email from their Firebase account
     const userDoc = await db.collection("users").doc(req.uid).get();
     const userData = userDoc.exists ? userDoc.data() : {};
 
-    // Activate the member
     await db.collection("team").doc(memberDoc.id).update({
       uid: req.uid,
       status: "active",
@@ -347,14 +380,13 @@ router.post("/join", async (req, res, next) => {
       name: userData.name || memberData.name || "",
     });
 
-    // Update the user's profile to join this org
     await db.collection("users").doc(req.uid).set({
       orgId: memberData.orgId,
       role: memberData.role,
       joinedOrgAt: Date.now(),
     }, { merge: true });
 
-    // Also add owner to their org's team record if not already there
+    // Add owner to team record if not already there
     const ownerSnap = await db.collection("team")
       .where("orgId", "==", memberData.orgId)
       .where("uid", "==", memberData.orgId)
@@ -362,8 +394,8 @@ router.post("/join", async (req, res, next) => {
       .get();
 
     if (ownerSnap.empty) {
-      const ownerDoc = await db.collection("users").doc(memberData.orgId).get();
-      const ownerData = ownerDoc.exists ? ownerDoc.data() : {};
+      const ownerDoc2 = await db.collection("users").doc(memberData.orgId).get();
+      const ownerData = ownerDoc2.exists ? ownerDoc2.data() : {};
       await db.collection("team").add({
         orgId: memberData.orgId,
         uid: memberData.orgId,
@@ -384,36 +416,4 @@ router.post("/join", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/team/invite/:token — validate an invite token (no auth required)
-router.get("/invite/:token", async (req, res, next) => {
-  try {
-    const snap = await db.collection("team")
-      .where("inviteToken", "==", req.params.token)
-      .where("status", "==", "invited")
-      .limit(1)
-      .get();
-
-    if (snap.empty) {
-      return res.json({ valid: false, error: "Invite not found or already used" });
-    }
-
-    const data = snap.docs[0].data();
-    if (Date.now() > data.inviteExpires) {
-      return res.json({ valid: false, error: "This invite has expired" });
-    }
-
-    // Get org name
-    const ownerDoc = await db.collection("users").doc(data.orgId).get();
-    const ownerData = ownerDoc.exists ? ownerDoc.data() : {};
-
-    res.json({
-      valid: true,
-      email: data.email,
-      role: data.role,
-      orgName: ownerData.company || ownerData.name || "SWFT",
-      invitedBy: ownerData.name || "Your team owner",
-    });
-  } catch (err) { next(err); }
-});
-
-module.exports = router;
+module.exports = { router, publicRouter };
