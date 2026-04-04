@@ -3,6 +3,8 @@ const { db } = require("../firebase");
 const tools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
+const { routeMessage } = require("./router");
+const { runManusTask } = require("./manus");
 
 const client = new Anthropic();
 
@@ -260,4 +262,44 @@ async function runAgent(uid, userMessage, userProfile) {
   };
 }
 
-module.exports = { runAgent };
+// ── Hybrid agent — routes to Claude or Manus based on the message ──
+
+async function runHybridAgent(uid, userMessage, userProfile) {
+  // Get user's connected Manus connectors (if any)
+  const userDoc = await db.collection("users").doc(uid).get();
+  const userData = userDoc.exists ? userDoc.data() : {};
+  const connectorIds = userData.manusConnectors || [];
+
+  const route = routeMessage(userMessage, connectorIds);
+
+  if (route === "manus") {
+    // Save user message to conversation history
+    await saveMessage(uid, "user", userMessage);
+
+    try {
+      const result = await runManusTask(userMessage, connectorIds);
+
+      // Save Manus response to conversation history
+      await saveMessage(uid, "assistant", result.message);
+
+      return {
+        message: result.message,
+        actions: [],
+        source: "manus",
+        taskId: result.taskId,
+        taskUrl: result.taskUrl,
+      };
+    } catch (err) {
+      // If Manus fails, fall back to Claude
+      console.error("Manus failed, falling back to Claude:", err.message);
+      const result = await runAgent(uid, userMessage, userProfile);
+      return { ...result, source: "claude", fallback: true };
+    }
+  }
+
+  // Default: Claude handles CRM and general chat
+  const result = await runAgent(uid, userMessage, userProfile);
+  return { ...result, source: "claude" };
+}
+
+module.exports = { runAgent, runHybridAgent };
