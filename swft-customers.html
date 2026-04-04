@@ -988,9 +988,8 @@ function toggleContactMenu() {
 
 function emailCustomer() {
   if (!_currentCustomer) return;
-  const email = _currentCustomer.email || '';
-  if (email) window.location.href = 'mailto:' + email;
-  else showToast('No email on file');
+  if (!_currentCustomer.email) { showToast('No email on file'); return; }
+  window.location.href = 'swft-messages.html?customerId=' + encodeURIComponent(_currentCustomer.id) + '&channel=email';
 }
 
 function toggleSidebar(){
@@ -1016,9 +1015,8 @@ function callCustomer() {
 }
 
 function textCustomer() {
-  const phone = document.getElementById('d-phone').textContent;
-  showToast('Opening SMS to ' + phone);
-  setTimeout(() => window.location.href = 'sms:' + phone.replace(/[^0-9]/g,''), 400);
+  if (!_currentCustomer) return;
+  window.location.href = 'swft-messages.html?customerId=' + encodeURIComponent(_currentCustomer.id) + '&channel=sms';
 }
 
 function enterCustomerEdit() {

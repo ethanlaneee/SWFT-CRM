@@ -406,6 +406,42 @@ async function loadData(){
       showToast('Failed to connect Gmail');
       history.replaceState(null,'',window.location.pathname);
     }
+
+    // Open specific customer conversation from URL params (e.g. from customer page Contact button)
+    var _urlParams=new URLSearchParams(window.location.search);
+    var _paramCustomerId=_urlParams.get('customerId');
+    var _paramChannel=_urlParams.get('channel');
+    if(_paramCustomerId&&_paramChannel){
+      history.replaceState(null,'',window.location.pathname);
+      var _paramContact=_contacts.find(function(ct){
+        return ct.customerId===_paramCustomerId&&ct.channel===_paramChannel;
+      });
+      if(_paramContact){
+        _activeContact=_paramContact;
+        renderContacts();
+        renderChat();
+        showCompose();
+      }else{
+        // No existing conversation — start a new one from customer data
+        var _paramCust=_customers.find(function(c){return c.id===_paramCustomerId;});
+        if(_paramCust){
+          var _newContact={
+            customerId:_paramCust.id,
+            customerName:_paramCust.name||'',
+            channel:_paramChannel,
+            to:_paramChannel==='sms'?(_paramCust.phone||''):(_paramCust.email||''),
+            email:_paramCust.email||'',
+            phone:_paramCust.phone||'',
+            messages:[],
+            lastTime:0
+          };
+          _activeContact=_newContact;
+          renderContacts();
+          renderChat();
+          showCompose();
+        }
+      }
+    }
   }catch(e){console.error('Load error:',e);}
 }
 
