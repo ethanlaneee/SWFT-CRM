@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { pushNotification } = require("./notifications");
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -80,6 +81,8 @@ async function webhookHandler(req, res) {
     const invoiceId = session.metadata?.invoiceId;
     if (invoiceId) {
       try {
+        const invDoc = await db.collection("invoices").doc(invoiceId).get();
+        const inv = invDoc.exists ? invDoc.data() : {};
         await db.collection("invoices").doc(invoiceId).update({
           status: "paid",
           paidAt: Date.now(),
@@ -88,6 +91,15 @@ async function webhookHandler(req, res) {
           updatedAt: Date.now(),
         });
         console.log(`Invoice ${invoiceId} auto-marked paid via Stripe`);
+        // Notify the org owner
+        if (inv.userId) {
+          await pushNotification(inv.userId, {
+            type: "payment",
+            title: "Payment Received",
+            body: `${inv.customerName || "A customer"} paid invoice #${invoiceId.slice(-4)} — $${(inv.total || 0).toLocaleString()}`,
+            link: "/swft-invoices",
+          });
+        }
       } catch (err) {
         console.error(`Failed to mark invoice ${invoiceId} as paid:`, err);
       }

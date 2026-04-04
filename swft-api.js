@@ -129,6 +129,14 @@ const API = {
     delete: (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
   },
 
+  // ── Notifications ──
+  notifications: {
+    list:    ()   => apiFetch("/api/notifications"),
+    readAll: ()   => apiFetch("/api/notifications/read-all", { method: "POST", body: JSON.stringify({}) }),
+    read:    (id) => apiFetch(`/api/notifications/${id}/read`, { method: "POST", body: JSON.stringify({}) }),
+    delete:  (id) => apiFetch(`/api/notifications/${id}`, { method: "DELETE" }),
+  },
+
   // ── Photos ──
   photos: {
     list:   (jobId)        => apiFetch(`/api/photos/job/${jobId}`),

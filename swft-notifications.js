@@ -1,7 +1,7 @@
 // ════════════════════════════════════════════════
-// SWFT Notification Dropdown
-// Injected on every page via <script src="swft-notifications.js"></script>
-// Click the bell icon in the topbar to open
+// SWFT Notification Bell
+// Loads real notifications from /api/notifications
+// Polls every 30s for new ones
 // ════════════════════════════════════════════════
 
 (function () {
@@ -11,7 +11,7 @@
       position: fixed;
       top: 56px; right: 80px;
       width: 360px;
-      max-height: 460px;
+      max-height: 480px;
       background: #111111;
       border: 1px solid #2c2c2c;
       border-radius: 14px;
@@ -24,7 +24,6 @@
       display: flex; flex-direction: column;
     }
     .notif-dropdown.open { opacity: 1; pointer-events: all; transform: translateY(0); }
-
     .notif-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 18px;
@@ -39,91 +38,46 @@
       background: none; border: none; font-family: 'DM Sans', sans-serif;
     }
     .notif-mark-read:hover { text-decoration: underline; }
-
-    .notif-list {
-      flex: 1; overflow-y: auto; padding: 6px 0;
-    }
+    .notif-list { flex: 1; overflow-y: auto; padding: 6px 0; }
     .notif-list::-webkit-scrollbar { width: 4px; }
     .notif-list::-webkit-scrollbar-thumb { background: #2c2c2c; border-radius: 2px; }
-
     .notif-item {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 12px 18px;
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 18px 12px 14px;
       cursor: pointer; transition: background 0.12s;
-      border-bottom: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a; position: relative;
     }
     .notif-item:last-child { border-bottom: none; }
     .notif-item:hover { background: #181818; }
-    .notif-item.unread { background: rgba(200,241,53,0.02); }
-    .notif-item.unread::before {
-      content: '';
+    .notif-unread-dot {
       width: 6px; height: 6px; border-radius: 50%;
-      background: #c8f135; flex-shrink: 0; margin-top: 6px;
+      background: #c8f135; flex-shrink: 0; margin-top: 7px;
     }
-    .notif-item:not(.unread)::before {
-      content: '';
-      width: 6px; height: 6px; flex-shrink: 0; margin-top: 6px;
-    }
+    .notif-read-dot { width: 6px; height: 6px; flex-shrink: 0; margin-top: 7px; }
     .notif-icon {
       width: 32px; height: 32px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
       font-size: 15px; flex-shrink: 0;
     }
     .notif-body { flex: 1; min-width: 0; }
-    .notif-text {
-      font-size: 12.5px; color: #c8c8c8; line-height: 1.4;
-    }
-    .notif-text strong { color: #f0f0f0; }
-    .notif-time {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; color: #444; margin-top: 3px;
-    }
-
-    .notif-empty {
-      text-align: center; padding: 40px 20px;
-      color: #444; font-size: 13px;
-    }
+    .notif-title { font-size: 12.5px; color: #f0f0f0; font-weight: 600; margin-bottom: 1px; }
+    .notif-text { font-size: 12px; color: #999; line-height: 1.4; }
+    .notif-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; margin-top: 3px; }
+    .notif-empty { text-align: center; padding: 40px 20px; color: #444; font-size: 13px; }
   `;
   document.head.appendChild(style);
 
-  var notifications = [];
+  var _notifications = [];
+  var _isOpen = false;
 
-  // Build dropdown
-  var dropdown = document.createElement("div");
-  dropdown.className = "notif-dropdown";
-  dropdown.innerHTML =
-    '<div class="notif-header">' +
-      '<h4>NOTIFICATIONS</h4>' +
-      '<button class="notif-mark-read" onclick="markAllRead()">Mark all read</button>' +
-    '</div>' +
-    '<div class="notif-list" id="notif-list"></div>';
-  document.body.appendChild(dropdown);
-
-  function renderNotifications() {
-    var list = document.getElementById("notif-list");
-    if (!list) return;
-    if (notifications.length === 0) {
-      list.innerHTML = '<div class="notif-empty">No notifications yet</div>';
-    } else {
-      list.innerHTML = notifications.map(function(n) {
-        return '<div class="notif-item ' + (n.unread ? 'unread' : '') + '" onclick="' + (n.href ? "window.location.href='" + n.href + "'" : '') + '">' +
-          '<div class="notif-icon" style="background:' + (n.bg || 'rgba(200,241,53,0.1)') + ';">' + (n.icon || '🔔') + '</div>' +
-          '<div class="notif-body">' +
-            '<div class="notif-text">' + n.text + '</div>' +
-            '<div class="notif-time">' + (n.time || '') + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    }
-    updateBadge();
-  }
-
-  function updateBadge() {
-    var hasUnread = notifications.some(function(n) { return n.unread; });
-    document.querySelectorAll('.badge-dot').forEach(function(d) {
-      d.style.display = hasUnread ? '' : 'none';
-    });
-  }
+  // Icon map by type
+  var TYPE_ICONS = {
+    payment: { icon: '💰', bg: 'rgba(200,241,53,0.1)' },
+    job:     { icon: '🔧', bg: 'rgba(77,159,255,0.1)' },
+    message: { icon: '💬', bg: 'rgba(179,136,255,0.1)' },
+    team:    { icon: '👥', bg: 'rgba(245,166,35,0.1)' },
+    info:    { icon: '🔔', bg: 'rgba(200,241,53,0.07)' },
+  };
 
   function formatTimeAgo(ts) {
     if (!ts) return '';
@@ -134,142 +88,126 @@
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // Load saved notifications from localStorage
-  try {
-    var saved = JSON.parse(localStorage.getItem('swft_notifs') || '[]');
-    saved.forEach(function(n) { notifications.push(n); });
-  } catch (e) {}
+  // Build dropdown HTML
+  var dropdown = document.createElement('div');
+  dropdown.className = 'notif-dropdown';
+  dropdown.id = 'notif-dropdown';
+  dropdown.innerHTML =
+    '<div class="notif-header">' +
+      '<h4>NOTIFICATIONS</h4>' +
+      '<button class="notif-mark-read" id="notif-mark-all-btn">Mark all read</button>' +
+    '</div>' +
+    '<div class="notif-list" id="notif-list"></div>';
+  document.body.appendChild(dropdown);
 
-  // Save notifications
-  function saveNotifs() {
-    try {
-      localStorage.setItem('swft_notifs', JSON.stringify(notifications.slice(0, 50)));
-    } catch (e) {}
+  document.getElementById('notif-mark-all-btn').addEventListener('click', markAllRead);
+
+  function render() {
+    var list = document.getElementById('notif-list');
+    if (!list) return;
+    if (!_notifications.length) {
+      list.innerHTML = '<div class="notif-empty">All caught up — no notifications</div>';
+      updateBadge(false);
+      return;
+    }
+    list.innerHTML = _notifications.map(function(n) {
+      var meta = TYPE_ICONS[n.type] || TYPE_ICONS.info;
+      return '<div class="notif-item" data-id="' + n.id + '" onclick="_notifClick(\'' + n.id + '\',\'' + (n.link || '') + '\')">' +
+        (n.read ? '<div class="notif-read-dot"></div>' : '<div class="notif-unread-dot"></div>') +
+        '<div class="notif-icon" style="background:' + meta.bg + '">' + meta.icon + '</div>' +
+        '<div class="notif-body">' +
+          '<div class="notif-title">' + (n.title || '') + '</div>' +
+          '<div class="notif-text">' + (n.body || '') + '</div>' +
+          '<div class="notif-time">' + formatTimeAgo(n.createdAt) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    updateBadge(_notifications.some(function(n){ return !n.read; }));
   }
 
-  // Check for new inbound messages
-  async function checkNewMessages() {
+  function updateBadge(hasUnread) {
+    document.querySelectorAll('.badge-dot').forEach(function(d) {
+      d.style.display = hasUnread ? '' : 'none';
+    });
+  }
+
+  window._notifClick = function(id, link) {
+    // mark read
+    markRead(id);
+    if (link && link !== 'null' && link !== 'undefined') {
+      window.location.href = link;
+    }
+  };
+
+  async function loadNotifications() {
     try {
-      // Need auth token
-      if (typeof getAuthToken !== 'function') return;
-      var token = await getAuthToken();
-      var res = await fetch('/api/messages', {
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-      });
-      if (!res.ok) return;
-      var messages = await res.json();
-
-      var lastChecked = parseInt(localStorage.getItem('swft_notif_last_checked') || '0');
-      var newInbound = messages.filter(function(m) {
-        return m.direction === 'inbound' && (m.sentAt || 0) > lastChecked;
-      });
-
-      if (newInbound.length > 0) {
-        // Add notifications for each new inbound message
-        newInbound.forEach(function(m) {
-          var isSms = m.type === 'sms';
-          var icon = isSms ? '💬' : '✉️';
-          var bg = isSms ? 'rgba(200,241,53,0.1)' : 'rgba(77,159,255,0.1)';
-          var name = m.customerName || m.from || 'Unknown';
-          var preview = (m.body || '').substring(0, 60);
-          if (preview.length >= 60) preview += '…';
-          var text = '<strong>' + name + '</strong> ' + (isSms ? 'sent an SMS' : 'sent an email');
-          if (m.subject) text += ': ' + m.subject;
-          if (preview && !m.subject) text += ': ' + preview;
-
-          // Check if already exists (avoid duplicates)
-          var msgId = m.id || m.gmailMessageId || m.twilioMessageSid || '';
-          var exists = notifications.some(function(n) { return n.msgId === msgId; });
-          if (!exists) {
-            notifications.unshift({
-              icon: icon,
-              bg: bg,
-              text: text,
-              time: formatTimeAgo(m.sentAt),
-              unread: true,
-              msgId: msgId,
-              href: 'swft-messages',
-              sentAt: m.sentAt || 0
-            });
-          }
-        });
-
-        // Update last checked to the most recent message time
-        var maxTime = Math.max.apply(null, newInbound.map(function(m) { return m.sentAt || 0; }));
-        localStorage.setItem('swft_notif_last_checked', maxTime.toString());
-        saveNotifs();
-        renderNotifications();
-      }
-    } catch (e) {
-      // Silently fail — user may not be logged in
+      if (typeof API === 'undefined' || !API.notifications) return;
+      var notifs = await API.notifications.list();
+      _notifications = notifs;
+      render();
+    } catch(e) {
+      // silently fail if not authed yet
     }
   }
 
-  renderNotifications();
+  async function markRead(id) {
+    var n = _notifications.find(function(n){ return n.id === id; });
+    if (!n || n.read) return;
+    n.read = true;
+    render();
+    try { await API.notifications.read(id); } catch(e) {}
+  }
 
-  // Toggle
-  var isOpen = false;
+  async function markAllRead() {
+    _notifications.forEach(function(n) { n.read = true; });
+    render();
+    try { await API.notifications.readAll(); } catch(e) {}
+  }
 
+  // Toggle dropdown
   function wireIconBtns() {
-    document.querySelectorAll(".icon-btn").forEach(function(btn) {
-      if (btn.querySelector(".badge-dot") || btn.innerHTML.indexOf("M18 8A6") > -1) {
-        btn.onclick = function(e) {
+    document.querySelectorAll('.icon-btn').forEach(function(btn) {
+      // target the bell icon button by checking SVG content
+      if (btn.innerHTML.indexOf('M18 8A6') > -1 || btn.querySelector('.badge-dot')) {
+        btn.addEventListener('click', function(e) {
           e.stopPropagation();
-          isOpen = !isOpen;
-          dropdown.classList.toggle("open", isOpen);
-          if (isOpen) {
+          _isOpen = !_isOpen;
+          dropdown.classList.toggle('open', _isOpen);
+          if (_isOpen) {
             var rect = btn.getBoundingClientRect();
-            dropdown.style.top = rect.bottom + 8 + "px";
-            dropdown.style.right = window.innerWidth - rect.right + "px";
+            dropdown.style.top  = (rect.bottom + 8) + 'px';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            loadNotifications(); // refresh on open
           }
-        };
+        });
       }
     });
   }
 
-  // Close on outside click
-  document.addEventListener("click", function(e) {
-    if (isOpen && !dropdown.contains(e.target)) {
-      isOpen = false;
-      dropdown.classList.remove("open");
+  document.addEventListener('click', function(e) {
+    if (_isOpen && !dropdown.contains(e.target)) {
+      _isOpen = false;
+      dropdown.classList.remove('open');
     }
   });
 
-  // Mark all read
-  window.markAllRead = function () {
-    notifications.forEach(function(n) { n.unread = false; });
-    saveNotifs();
-    renderNotifications();
+  // Public: push a local notification (used by other scripts)
+  window.swftNotify = function(title, body, type, link) {
+    _notifications.unshift({ id: '_local_' + Date.now(), title: title, body: body, type: type || 'info', link: link || null, read: false, createdAt: Date.now() });
+    render();
   };
 
-  // Public function to add notifications from anywhere
-  window.swftNotify = function(text, icon, bg, href) {
-    notifications.unshift({
-      icon: icon || '🔔',
-      bg: bg || 'rgba(200,241,53,0.1)',
-      text: text,
-      time: 'Just now',
-      unread: true,
-      href: href || ''
-    });
-    saveNotifs();
-    renderNotifications();
-  };
-
-  // Wire after DOM loads, then check messages
   function init() {
     wireIconBtns();
-    updateBadge();
-    // Check for new messages after a short delay (let auth load)
-    setTimeout(checkNewMessages, 1500);
-    // Poll every 60 seconds
-    setInterval(checkNewMessages, 60000);
+    // Load notifications after a short delay to let auth settle
+    setTimeout(loadNotifications, 1800);
+    // Poll every 30 seconds
+    setInterval(loadNotifications, 30000);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
-
 })();

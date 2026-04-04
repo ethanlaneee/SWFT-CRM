@@ -15,6 +15,7 @@ const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
 const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = require("./routes/payments");
+const { router: notificationsRouter } = require("./routes/notifications");
 const { router: messagesRouter, twilioIncomingHandler, postmarkIncomingHandler } = require("./routes/messages");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
@@ -81,7 +82,8 @@ app.use("/api/team",        auth, checkAccess, teamRouter);           // full au
 app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
-app.use("/api/photos",    auth, checkAccess,  require("./routes/photos"));
+app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
+app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));
