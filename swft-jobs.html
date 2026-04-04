@@ -419,7 +419,6 @@
   <div class="drawer-tabs">
     <div class="dtab active" onclick="switchTab(this,'details')">Details</div>
     <div class="dtab" onclick="switchTab(this,'photos')">Photos</div>
-    <div class="dtab" onclick="switchTab(this,'payment')">Payment</div>
     <div class="dtab" onclick="switchTab(this,'notes')">Notes</div>
       <div class="dtab" onclick="switchTab(this,'job-quotes')">Quotes</div>
       <div class="dtab" onclick="switchTab(this,'job-invoices')">Invoices</div>
@@ -559,18 +558,6 @@
     </label>
   </div>
 
-<!-- PAYMENT -->
-<div id="tab-payment" style="display:none;">
-  <div class="section-title">Payment Breakdown</div>
-  <div class="pay-block" id="pay-block">
-    <div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">Payment info will appear here once a quote or invoice is created for this job.</div>
-  </div>
-  <div style="margin-top:12px;">
-    <button onclick="showToast('Invoice sent for balance ✓')" style="width:100%;padding:11px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;border:none;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">
-      Send Invoice for Balance →
-    </button>
-  </div>
-</div>
 
 <!-- NOTES -->
 <div id="tab-notes" style="display:none;">
@@ -803,7 +790,7 @@
   function switchTab(el, tab) {
     document.querySelectorAll('.dtab').forEach(function(t) { t.classList.remove('active'); });
     el.classList.add('active');
-    ['details','photos','payment','notes','job-quotes','job-invoices'].forEach(function(t) {
+    ['details','photos','notes','job-quotes','job-invoices'].forEach(function(t) {
       document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
     });
   }

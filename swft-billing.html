@@ -367,7 +367,7 @@
           <span class="pdf-field-label">Customer</span>
           <select class="pdf-field-select" id="e-customer" onchange="autofillBillingCustomer(this.value)"><option value="">Select customer...</option></select>
         </div>
-        <div class="pdf-field-row"><span class="pdf-field-label">Job</span><input class="pdf-field-input" id="e-job" placeholder="Job description"/></div>
+        <div class="pdf-field-row"><span class="pdf-field-label">Job</span><select class="pdf-field-select" id="e-job" onchange="selectBillingJob(this.value)"><option value="">Select job...</option></select></div>
         <div class="pdf-field-row"><span class="pdf-field-label">Address</span><input class="pdf-field-input" id="e-address" placeholder="Property address" list="addr-suggestions" autocomplete="off"/><datalist id="addr-suggestions"></datalist></div>
         <div class="pdf-2col">
           <div class="pdf-field-row"><span class="pdf-field-label">Service</span><select class="pdf-field-select" id="e-service" onchange="if(this.value==='Other'){document.getElementById('e-custom-service-b').style.display='block';}else{document.getElementById('e-custom-service-b').style.display='none';}"><option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Other</option></select></div>
@@ -689,79 +689,93 @@ async function autofillBillingCustomer(name) {
   var addrField = document.getElementById('e-address');
   if (addrField) addrField.value = cust.address || '';
 
-  // Find the customer's most recent job
-  try {
-    var jobs = await API.jobs.list();
-    var custJobs = jobs.filter(function(j) {
-      return j.customerName === name || j.customerId === cust.id;
-    });
-    // Sort by most recent
-    custJobs.sort(function(a,b) { return (b.createdAt||0) - (a.createdAt||0); });
-    var custJob = custJobs[0];
-
-    if (custJob) {
-      // Fill SQFT
-      var sqftField = document.getElementById('e-sqft');
-      if (sqftField) sqftField.value = custJob.sqft || '';
-
-      // Fill start date
-      var startField = document.getElementById('e-start');
-      if (startField) startField.value = custJob.scheduledDate || '';
-
-      // Fill service type - add as option if not in dropdown
-      var serviceField = document.getElementById('e-service');
-      if (serviceField && custJob.service) {
-        var found = false;
-        for (var i = 0; i < serviceField.options.length; i++) {
-          if (serviceField.options[i].value === custJob.service || serviceField.options[i].textContent === custJob.service) {
-            serviceField.selectedIndex = i;
-            found = true;
-            break;
-          }
-        }
-        // If service not in dropdown, add it
-        if (!found) {
-          var opt = document.createElement('option');
-          opt.value = custJob.service;
-          opt.textContent = custJob.service;
-          serviceField.insertBefore(opt, serviceField.lastElementChild); // before "Other"
-          serviceField.value = custJob.service;
-        }
+  // Populate job dropdown with this customer's jobs
+  var jobSelect = document.getElementById('e-job');
+  if (jobSelect) {
+    jobSelect.innerHTML = '<option value="">Select job...</option>';
+    try {
+      var jobs = await API.jobs.list();
+      var custJobs = jobs.filter(function(j) {
+        return j.customerName === name || j.customerId === cust.id;
+      });
+      custJobs.sort(function(a,b) { return (b.createdAt||0) - (a.createdAt||0); });
+      window._billingCustJobs = custJobs;
+      custJobs.forEach(function(j) {
+        var opt = document.createElement('option');
+        opt.value = j.id;
+        var label = j.title || j.service || 'Untitled Job';
+        if (j.scheduledDate) label += ' (' + j.scheduledDate + ')';
+        opt.textContent = label;
+        jobSelect.appendChild(opt);
+      });
+      // Auto-select if only one job
+      if (custJobs.length === 1) {
+        jobSelect.value = custJobs[0].id;
+        selectBillingJob(custJobs[0].id);
       }
-
-      // Fill job description
-      var jobField = document.getElementById('e-job');
-      if (jobField && !jobField.value) jobField.value = custJob.title || '';
-
-      // Fill finish notes
-      var finishField = document.getElementById('e-finish');
-      if (finishField && !finishField.value) finishField.value = custJob.finish || '';
-
-      // Store job reference and cost
-      if (_q) {
-        _q.jobId = custJob.id;
-        _q.sqft = custJob.sqft || '';
-        _q.service = custJob.service || '';
-        _q.start = custJob.scheduledDate || '';
-        // If job has a cost and no line items yet, create a default line item
-        if (custJob.cost && (!_q.lines || _q.lines.length === 0)) {
-          var svc = custJob.service || custJob.title || 'Service';
-          _q.lines = [{
-            desc: svc,
-            sub: (custJob.sqft ? custJob.sqft + ' sqft' : ''),
-            qty: '1',
-            rate: '$' + Number(custJob.cost).toLocaleString(),
-            total: '$' + Number(custJob.cost).toLocaleString()
-          }];
-          renderLineItems(_q.lines);
-        }
-      }
-    }
-  } catch(e) { console.error('autofill error:', e); }
+    } catch(e) { console.error('job list error:', e); }
+  }
 
   if (_q) {
     _q.address = cust.address || '';
     _q.customerId = cust.id || '';
+  }
+}
+
+function selectBillingJob(jobId) {
+  if (!jobId || !window._billingCustJobs) return;
+  var custJob = window._billingCustJobs.find(function(j) { return j.id === jobId; });
+  if (!custJob) return;
+
+  // Fill SQFT
+  var sqftField = document.getElementById('e-sqft');
+  if (sqftField) sqftField.value = custJob.sqft || '';
+
+  // Fill start date
+  var startField = document.getElementById('e-start');
+  if (startField) startField.value = custJob.scheduledDate || '';
+
+  // Fill service type
+  var serviceField = document.getElementById('e-service');
+  if (serviceField && custJob.service) {
+    var found = false;
+    for (var i = 0; i < serviceField.options.length; i++) {
+      if (serviceField.options[i].value === custJob.service || serviceField.options[i].textContent === custJob.service) {
+        serviceField.selectedIndex = i;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      var opt = document.createElement('option');
+      opt.value = custJob.service;
+      opt.textContent = custJob.service;
+      serviceField.insertBefore(opt, serviceField.lastElementChild);
+      serviceField.value = custJob.service;
+    }
+  }
+
+  // Fill finish notes
+  var finishField = document.getElementById('e-finish');
+  if (finishField) finishField.value = custJob.finish || '';
+
+  // Store job reference and cost
+  if (_q) {
+    _q.jobId = custJob.id;
+    _q.sqft = custJob.sqft || '';
+    _q.service = custJob.service || '';
+    _q.start = custJob.scheduledDate || '';
+    if (custJob.cost && (!_q.lines || _q.lines.length === 0)) {
+      var svc = custJob.service || custJob.title || 'Service';
+      _q.lines = [{
+        desc: svc,
+        sub: (custJob.sqft ? custJob.sqft + ' sqft' : ''),
+        qty: '1',
+        rate: '$' + Number(custJob.cost).toLocaleString(),
+        total: '$' + Number(custJob.cost).toLocaleString()
+      }];
+      renderLineItems(_q.lines);
+    }
   }
 }
 
