@@ -2,11 +2,98 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const postmark = require("postmark");
 const multer = require("multer");
+const { google } = require("googleapis");
 const { sendSms } = require("../twilio");
 
 const emailClient = new postmark.ServerClient(
   process.env.POSTMARK_API_TOKEN || "32a85e4b-55e5-45e2-950e-6c120b001007"
 );
+
+/**
+ * Send email via user's connected Gmail account.
+ */
+async function sendViaGmail(user, to, subject, htmlBody, textBody, files) {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
+  );
+  oauth2Client.setCredentials(user.gmailTokens);
+
+  // Refresh token if expired
+  const tokenInfo = await oauth2Client.getAccessToken();
+  if (tokenInfo.token !== user.gmailTokens.access_token) {
+    await db.collection("users").doc(user._uid).set({
+      gmailTokens: { ...user.gmailTokens, access_token: tokenInfo.token },
+    }, { merge: true });
+  }
+
+  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+  const fromAddr = user.gmailAddress || user.email;
+  const fromName = user.company || user.name || "SWFT";
+
+  // Build MIME message
+  const boundary = "swft_boundary_" + Date.now();
+  let mime = "";
+  mime += `From: ${fromName} <${fromAddr}>\r\n`;
+  mime += `To: ${to}\r\n`;
+  mime += `Subject: ${subject}\r\n`;
+  mime += `MIME-Version: 1.0\r\n`;
+
+  const hasAttachments = files && files.length > 0;
+
+  if (hasAttachments) {
+    mime += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
+    mime += `--${boundary}\r\n`;
+    mime += `Content-Type: multipart/alternative; boundary="${boundary}_alt"\r\n\r\n`;
+
+    // Plain text part
+    mime += `--${boundary}_alt\r\n`;
+    mime += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
+    mime += (textBody || "") + "\r\n\r\n";
+
+    // HTML part
+    mime += `--${boundary}_alt\r\n`;
+    mime += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
+    mime += (htmlBody || "") + "\r\n\r\n";
+    mime += `--${boundary}_alt--\r\n\r\n`;
+
+    // File attachments
+    for (const file of files) {
+      mime += `--${boundary}\r\n`;
+      mime += `Content-Type: ${file.mimetype}; name="${file.originalname}"\r\n`;
+      mime += `Content-Disposition: attachment; filename="${file.originalname}"\r\n`;
+      mime += `Content-Transfer-Encoding: base64\r\n\r\n`;
+      mime += file.buffer.toString("base64") + "\r\n\r\n";
+    }
+    mime += `--${boundary}--`;
+  } else {
+    mime += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
+
+    mime += `--${boundary}\r\n`;
+    mime += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
+    mime += (textBody || "") + "\r\n\r\n";
+
+    mime += `--${boundary}\r\n`;
+    mime += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
+    mime += (htmlBody || "") + "\r\n\r\n";
+
+    mime += `--${boundary}--`;
+  }
+
+  const encodedMessage = Buffer.from(mime)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const result = await gmail.users.messages.send({
+    userId: "me",
+    requestBody: { raw: encodedMessage },
+  });
+
+  return { messageId: result.data.id, threadId: result.data.threadId };
+}
 
 // Multer — store files in memory (max 10MB total for Postmark)
 const upload = multer({
@@ -125,7 +212,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       return res.json({ success: true, id: docRef.id, messageSid: result.sid });
     }
 
-    // ── Email via Postmark ──
+    // ── Email ──
     if (!to || !subject) {
       return res.status(400).json({ error: "Recipient email and subject are required" });
     }
@@ -157,35 +244,43 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     }
 
     if (!htmlBody) htmlBody = "<p>No content</p>";
+    const textBody = body ? body.replace(/<[^>]*>/g, "") : "No content";
 
-    // Build Postmark attachments from uploaded files
-    const attachments = [];
+    // Collect attachment file names
     const attachmentNames = [];
     if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        attachments.push({
-          Name: file.originalname,
-          Content: file.buffer.toString("base64"),
-          ContentType: file.mimetype,
-        });
-        attachmentNames.push(file.originalname);
-      }
+      req.files.forEach(f => attachmentNames.push(f.originalname));
     }
 
-    const INBOUND_ADDRESS = process.env.POSTMARK_INBOUND_ADDRESS || "bd196517d8ffba85bb53831c50d00fb1@inbound.postmarkapp.com";
+    let sendResult;
+    let sentVia;
 
-    const emailPayload = {
-      From: `${fromName} <${fromEmail}>`,
-      To: to,
-      ReplyTo: INBOUND_ADDRESS,
-      Subject: subject,
-      HtmlBody: htmlBody,
-      TextBody: body ? body.replace(/<[^>]*>/g, "") : "No content",
-      MessageStream: "outbound",
-    };
-    if (attachments.length) emailPayload.Attachments = attachments;
-
-    const result = await emailClient.sendEmail(emailPayload);
+    if (user.gmailConnected && user.gmailTokens) {
+      // ── Send via Gmail ──
+      user._uid = req.uid; // pass uid for token refresh
+      sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, req.files || []);
+      sentVia = "gmail";
+    } else {
+      // ── Fallback: send via Postmark ──
+      const attachments = (req.files || []).map(f => ({
+        Name: f.originalname,
+        Content: f.buffer.toString("base64"),
+        ContentType: f.mimetype,
+      }));
+      const INBOUND_ADDRESS = process.env.POSTMARK_INBOUND_ADDRESS || "bd196517d8ffba85bb53831c50d00fb1@inbound.postmarkapp.com";
+      const emailPayload = {
+        From: `${fromName} <${fromEmail}>`,
+        To: to,
+        ReplyTo: INBOUND_ADDRESS,
+        Subject: subject,
+        HtmlBody: htmlBody,
+        TextBody: textBody,
+        MessageStream: "outbound",
+      };
+      if (attachments.length) emailPayload.Attachments = attachments;
+      sendResult = await emailClient.sendEmail(emailPayload);
+      sentVia = "postmark";
+    }
 
     const msgRecord = {
       userId: req.uid,
@@ -196,10 +291,15 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       customerName: customerName || "",
       type: "email",
       status: "sent",
-      postmarkId: result.MessageID,
+      sentVia,
       sentAt: Date.now(),
     };
-
+    if (sentVia === "gmail") {
+      msgRecord.gmailMessageId = sendResult.messageId;
+      msgRecord.gmailThreadId = sendResult.threadId;
+    } else {
+      msgRecord.postmarkId = sendResult.MessageID;
+    }
     if (attachedDocType) {
       msgRecord.attachedDocType = attachedDocType;
       msgRecord.attachedDocId = attachedDocId;
@@ -217,7 +317,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       await db.collection("invoices").doc(attachedDocId).update({ status: "sent", sentAt: Date.now() });
     }
 
-    res.json({ success: true, id: docRef.id, messageId: result.MessageID });
+    res.json({ success: true, id: docRef.id, sentVia });
   } catch (err) {
     console.error("Message send error:", err);
     res.status(500).json({ error: err.message || "Failed to send message" });
@@ -233,6 +333,124 @@ router.get("/", async (req, res, next) => {
     res.json(results);
   } catch (err) {
     next(err);
+  }
+});
+
+// POST /api/messages/sync-gmail — pull recent inbound emails from Gmail
+router.post("/sync-gmail", async (req, res, next) => {
+  try {
+    const userDoc = await db.collection("users").doc(req.uid).get();
+    const user = userDoc.exists ? userDoc.data() : {};
+
+    if (!user.gmailConnected || !user.gmailTokens) {
+      return res.json({ synced: 0, message: "Gmail not connected" });
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
+    );
+    oauth2Client.setCredentials(user.gmailTokens);
+
+    // Refresh token if needed
+    const tokenInfo = await oauth2Client.getAccessToken();
+    if (tokenInfo.token !== user.gmailTokens.access_token) {
+      await db.collection("users").doc(req.uid).set({
+        gmailTokens: { ...user.gmailTokens, access_token: tokenInfo.token },
+      }, { merge: true });
+    }
+
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+    // Get customer emails for matching
+    const custSnap = await db.collection("customers").where("userId", "==", req.uid).get();
+    const customersByEmail = {};
+    custSnap.docs.forEach(d => {
+      const data = d.data();
+      if (data.email) customersByEmail[data.email.toLowerCase()] = { id: d.id, name: data.name || "" };
+    });
+
+    if (Object.keys(customersByEmail).length === 0) {
+      return res.json({ synced: 0, message: "No customers with emails" });
+    }
+
+    // Get existing Gmail message IDs to avoid duplicates
+    const existingSnap = await db.collection("messages")
+      .where("userId", "==", req.uid)
+      .where("direction", "==", "inbound")
+      .where("sentVia", "==", "gmail")
+      .get();
+    const existingGmailIds = new Set(existingSnap.docs.map(d => d.data().gmailMessageId).filter(Boolean));
+
+    // Search Gmail for recent messages from customers (last 3 days)
+    const query = Object.keys(customersByEmail).map(e => `from:${e}`).join(" OR ");
+    const listRes = await gmail.users.messages.list({
+      userId: "me",
+      q: `${query} newer_than:3d`,
+      maxResults: 50,
+    });
+
+    if (!listRes.data.messages || !listRes.data.messages.length) {
+      return res.json({ synced: 0 });
+    }
+
+    let synced = 0;
+    for (const msg of listRes.data.messages) {
+      if (existingGmailIds.has(msg.id)) continue;
+
+      const full = await gmail.users.messages.get({ userId: "me", id: msg.id, format: "full" });
+      const headers = full.data.payload.headers || [];
+      const fromHeader = headers.find(h => h.name.toLowerCase() === "from");
+      const subjectHeader = headers.find(h => h.name.toLowerCase() === "subject");
+
+      // Extract email from "Name <email>" format
+      const fromRaw = fromHeader ? fromHeader.value : "";
+      const emailMatch = fromRaw.match(/<(.+?)>/) || [null, fromRaw];
+      const fromEmail = (emailMatch[1] || "").toLowerCase().trim();
+
+      const cust = customersByEmail[fromEmail];
+      if (!cust) continue; // Not from a known customer
+
+      // Extract body
+      let bodyText = "";
+      const parts = full.data.payload.parts || [];
+      if (parts.length) {
+        const textPart = parts.find(p => p.mimeType === "text/plain");
+        if (textPart && textPart.body && textPart.body.data) {
+          bodyText = Buffer.from(textPart.body.data, "base64url").toString("utf8");
+        }
+      } else if (full.data.payload.body && full.data.payload.body.data) {
+        bodyText = Buffer.from(full.data.payload.body.data, "base64url").toString("utf8");
+      }
+
+      // Get date
+      const dateHeader = headers.find(h => h.name.toLowerCase() === "date");
+      const sentAt = dateHeader ? new Date(dateHeader.value).getTime() : Date.now();
+
+      await db.collection("messages").add({
+        userId: req.uid,
+        customerId: cust.id,
+        customerName: cust.name,
+        from: fromEmail,
+        to: "inbound",
+        subject: subjectHeader ? subjectHeader.value : "",
+        body: bodyText.substring(0, 5000),
+        type: "email",
+        direction: "inbound",
+        status: "received",
+        sentVia: "gmail",
+        gmailMessageId: msg.id,
+        gmailThreadId: msg.threadId,
+        sentAt,
+      });
+      synced++;
+    }
+
+    res.json({ synced });
+  } catch (err) {
+    console.error("Gmail sync error:", err);
+    res.status(500).json({ error: err.message || "Gmail sync failed" });
   }
 });
 

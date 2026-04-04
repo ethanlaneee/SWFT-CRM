@@ -220,6 +220,11 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
   <!-- Right: Chat view -->
   <div class="chat-panel" id="chat-panel">
+    <!-- Gmail connection banner -->
+    <div id="gmail-banner" style="display:none;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;color:var(--gray);display:flex;align-items:center;justify-content:space-between;">
+      <div id="gmail-banner-text"></div>
+      <button id="gmail-banner-btn" onclick="connectGmail()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--white);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;">Connect Gmail</button>
+    </div>
     <div class="chat-header" id="chat-header" style="display:none;">
       <div class="chat-header-avatar" id="chat-avatar">?</div>
       <div class="chat-header-info">
@@ -351,6 +356,7 @@ function setChannel(ch){
 }
 
 // ── Load data ──
+var _gmailConnected=false;
 async function loadData(){
   try{
     var results=await Promise.all([API.messages.list(),API.customers.list(),apiFetch('/api/me')]);
@@ -360,9 +366,52 @@ async function loadData(){
     var num=user.twilioPhoneNumber||'+1 (681) 281-2146';
     var el=document.getElementById('your-number');
     if(el) el.textContent='Your #: '+num;
+
+    // Gmail connection status
+    _gmailConnected=!!user.gmailConnected;
+    var banner=document.getElementById('gmail-banner');
+    var bannerText=document.getElementById('gmail-banner-text');
+    var bannerBtn=document.getElementById('gmail-banner-btn');
+    if(banner){
+      banner.style.display='flex';
+      if(_gmailConnected){
+        bannerText.innerHTML='✉️ <span style="color:var(--green);">Gmail connected</span> — '+esc(user.gmailAddress||'');
+        bannerBtn.textContent='Disconnect';
+        bannerBtn.onclick=disconnectGmail;
+      }else{
+        bannerText.textContent='Connect Gmail to send emails from your own address';
+        bannerBtn.textContent='Connect Gmail';
+        bannerBtn.onclick=connectGmail;
+      }
+    }
+
     buildContacts();
     renderContacts();
+
+    // Check URL params for Gmail connection result
+    if(window.location.search.includes('gmail=connected')){
+      showToast('Gmail connected successfully!');
+      history.replaceState(null,'',window.location.pathname);
+    }else if(window.location.search.includes('gmail=error')){
+      showToast('Failed to connect Gmail');
+      history.replaceState(null,'',window.location.pathname);
+    }
   }catch(e){console.error('Load error:',e);}
+}
+
+async function connectGmail(){
+  try{
+    var res=await apiFetch('/api/auth/google/authorize');
+    if(res.url) window.location.href=res.url;
+  }catch(e){showToast('Error: '+e.message);}
+}
+
+async function disconnectGmail(){
+  try{
+    await apiFetch('/api/auth/google/disconnect',{method:'POST'});
+    showToast('Gmail disconnected');
+    loadData();
+  }catch(e){showToast('Error: '+e.message);}
 }
 
 // ── Build contact list from messages ──
@@ -782,7 +831,18 @@ function esc(s){
 }
 
 // ── Init ──
-async function loadMessages(){await loadData();}
+async function loadMessages(){
+  await loadData();
+  // Auto-sync Gmail inbox if connected (non-blocking)
+  if(_gmailConnected){
+    apiFetch('/api/messages/sync-gmail',{method:'POST'}).then(function(r){
+      if(r&&r.synced>0){
+        showToast(r.synced+' new email'+(r.synced>1?'s':'')+' synced');
+        loadData();
+      }
+    }).catch(function(){});
+  }
+}
 </script>
 
 <!-- Firebase Auth -->
