@@ -264,7 +264,7 @@ async function loadTeam(){
         '</div>';
       } else if(canEdit && status === 'invited'){
         html += '<div class="member-actions">' +
-          '<button onclick="removeMember(\'' + m.id + '\',\'' + (m.name||m.email) + '\')">Cancel Invite</button>' +
+          '<button onclick="cancelInvite(\'' + m.id + '\',\'' + (m.name||m.email) + '\')">Cancel Invite</button>' +
         '</div>';
       }
 
@@ -301,8 +301,8 @@ async function sendInvite(){
     var res = await API.team.invite({ email: email, name: name, role: role });
     if(res.inviteUrl){
       document.getElementById('invite-link').value = res.inviteUrl;
-      document.getElementById('invite-result').style.display = 'block';
-      showToast('Invite sent to ' + (name || email));
+      document.getElementById('invite-result').style.display = res.emailSent ? 'none' : 'block';
+      showToast(res.emailSent ? 'Invite emailed to ' + (name || email) : 'Invite created — share the link with ' + (name || email));
       loadTeam();
     } else {
       showToast(res.error || 'Failed to send invite');
@@ -323,6 +323,15 @@ async function changeRole(memberId, newRole){
   try{
     await API.team.updateRole(memberId, newRole);
     showToast('Role updated');
+    loadTeam();
+  } catch(e){ showToast('Error: ' + e.message); }
+}
+
+async function cancelInvite(memberId, name){
+  if(!confirm('Cancel the invite for ' + name + '? They will no longer be able to join using the invite link.')) return;
+  try{
+    await API.team.remove(memberId);
+    showToast('Invite cancelled for ' + name);
     loadTeam();
   } catch(e){ showToast('Error: ' + e.message); }
 }
