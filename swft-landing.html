@@ -280,54 +280,87 @@ section{position:relative;z-index:1;}
 .compare-x{color:var(--red);font-weight:700;font-size:14px;flex-shrink:0;margin-top:2px;}
 .compare-check{color:var(--green);font-weight:700;font-size:14px;flex-shrink:0;margin-top:2px;}
 
-/* ── VALUE STACK ── */
-.value{padding:100px 0 120px;}
-.stack-wrapper{
-  display:grid;grid-template-columns:1fr 380px;gap:32px;
-  max-width:920px;margin:0 auto;align-items:start;
+/* ── PRICING ── */
+.pricing{padding:100px 0 120px;}
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  max-width:1080px;margin:0 auto;align-items:stretch;
 }
-.stack-list{
+.pricing-card{
   background:var(--surface);border:1px solid var(--border);border-radius:16px;
-  padding:32px;display:flex;flex-direction:column;gap:0;
+  padding:40px 32px;display:flex;flex-direction:column;
+  transition:all 0.3s ease;position:relative;overflow:hidden;
 }
-.stack-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 0;
-  border-bottom:1px solid var(--border);
-  font-size:15px;
+.pricing-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 24px 64px rgba(0,0,0,0.3);}
+.pricing-card.featured{
+  background:linear-gradient(135deg, rgba(200,241,53,0.06), rgba(200,241,53,0.02));
+  border:1px solid rgba(200,241,53,0.25);
 }
-.stack-item:last-child{border-bottom:none;}
-.stack-name{color:var(--white);font-weight:500;}
-.stack-example{color:var(--gray);font-size:13px;font-weight:400;}
-.stack-price{
-  font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;
-  color:var(--red);white-space:nowrap;
+.pricing-card.featured::before{
+  content:'';position:absolute;top:-40%;left:50%;transform:translateX(-50%);
+  width:300px;height:200px;
+  background:radial-gradient(ellipse, rgba(200,241,53,0.08) 0%, transparent 70%);
+  pointer-events:none;
 }
-.stack-divider{height:1px;background:var(--border2);margin:8px 0;}
-.stack-item.total .stack-name{font-weight:700;font-size:17px;}
-.stack-item.total .stack-price{font-size:18px;}
-.strikethrough{text-decoration:line-through;}
-
-.stack-swft{
-  background:linear-gradient(135deg, rgba(200,241,53,0.08), rgba(200,241,53,0.02));
-  border:1px solid rgba(200,241,53,0.2);border-radius:16px;
-  padding:36px 32px;text-align:center;
-  position:sticky;top:100px;
-}
-.stack-swft-badge{
-  display:inline-block;
-  font-size:11px;font-weight:700;letter-spacing:2px;
+.pricing-badge{
+  display:inline-block;width:fit-content;
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   color:var(--green);
   padding:6px 16px;border-radius:100px;
   background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);
-  margin-bottom:24px;
+  margin-bottom:20px;
 }
-.stack-swft-price{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:12px;}
-.stack-swft-dollar{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--green);}
-.stack-swft-amount{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--white);line-height:1;}
-.stack-swft-period{font-size:18px;color:var(--gray);font-weight:500;}
-.stack-swft-sub{font-size:15px;color:var(--gray);line-height:1.6;margin-bottom:4px;}
-.stack-swft-note{display:block;margin-top:12px;font-size:12px;color:var(--gray);}
+.pricing-plan-name{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;
+  color:var(--white);margin-bottom:8px;
+}
+.pricing-price{display:flex;align-items:baseline;gap:2px;margin-bottom:8px;}
+.pricing-dollar{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green);}
+.pricing-amount{font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--white);line-height:1;}
+.pricing-period{font-size:18px;color:var(--gray);font-weight:500;margin-left:2px;}
+.pricing-desc{font-size:14px;color:var(--gray);line-height:1.6;margin-bottom:24px;}
+.pricing-divider{height:1px;background:var(--border2);margin-bottom:24px;}
+.pricing-features{list-style:none;display:flex;flex-direction:column;gap:14px;margin-bottom:32px;flex:1;}
+.pricing-features li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:14px;color:var(--gray);line-height:1.5;
+}
+.pricing-features li .check{color:var(--green);font-weight:700;font-size:14px;flex-shrink:0;margin-top:1px;}
+.pricing-features li .highlight{color:var(--white);font-weight:600;}
+.pricing-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;
+  text-decoration:none;cursor:pointer;transition:all 0.25s;border:none;
+}
+.pricing-cta.primary{
+  background:var(--green);color:#0a0a0a;
+  box-shadow:0 0 20px rgba(200,241,53,0.15);
+}
+.pricing-cta.primary:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(200,241,53,0.25);}
+.pricing-cta.secondary{
+  background:transparent;color:var(--white);border:1px solid var(--border2);
+}
+.pricing-cta.secondary:hover{border-color:var(--gray);background:var(--surface2);}
+.pricing-cta svg{width:18px;height:18px;}
+.pricing-note{text-align:center;margin-top:32px;font-size:13px;color:var(--gray);}
+.pricing-note strong{color:var(--white);}
+
+/* ── VALUE STACK (below pricing) ── */
+.value-stack{padding:0 0 80px;}
+.stack-row{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:12px;
+  max-width:900px;margin:0 auto;
+}
+.stack-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:100px;
+  background:var(--surface);border:1px solid var(--border);
+  font-size:13px;color:var(--gray);
+}
+.stack-chip .replaced-price{
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;
+  color:var(--red);text-decoration:line-through;
+}
 
 /* ── FINAL CTA ── */
 .final-cta{padding:80px 0 100px;}
@@ -389,9 +422,8 @@ section{position:relative;z-index:1;}
   .pill{font-size:12px;padding:8px 14px;}
   .compare-grid{grid-template-columns:1fr;}
   .compare{padding:60px 0 80px;}
-  .stack-wrapper{grid-template-columns:1fr;}
-  .stack-swft{position:static;}
-  .value{padding:60px 0 80px;}
+  .pricing-grid{grid-template-columns:1fr;max-width:400px;}
+  .pricing{padding:60px 0 80px;}
 }
 </style>
 </head>
@@ -403,7 +435,7 @@ section{position:relative;z-index:1;}
   <div class="nav-links">
     <a href="#problems" class="nav-link">Why SWFT</a>
     <a href="#product" class="nav-link">Product</a>
-    <a href="#value" class="nav-link">Pricing</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
     <a class="btn-login" href="/swft-login">Log In</a>
     <a class="btn-cta" href="/swft-login">
       Start Free Trial
@@ -620,67 +652,99 @@ section{position:relative;z-index:1;}
   </div>
 </section>
 
-<!-- ── VALUE STACK ── -->
-<section class="value" id="value">
+<!-- ── PRICING ── -->
+<section class="pricing" id="pricing">
   <div class="container">
     <div class="section-header reveal">
-      <span class="section-tag">The Value</span>
+      <span class="section-tag">Pricing</span>
       <h2 class="section-title">REPLACE <span class="accent">$224/MO</span> IN TOOLS<br/>WITH ONE PLATFORM</h2>
-      <p class="section-sub">Here's what you're currently paying for — and what SWFT replaces for a fraction of the cost.</p>
+      <p class="section-sub">CRM, invoicing, scheduling, SMS, AI, quotes, and email — all included in every plan.</p>
     </div>
 
-    <div class="stack-wrapper reveal">
-      <div class="stack-list">
-        <div class="stack-item">
-          <span class="stack-name">CRM Software <span class="stack-example">(HubSpot, Jobber)</span></span>
-          <span class="stack-price">$49/mo</span>
-        </div>
-        <div class="stack-item">
-          <span class="stack-name">Invoicing Tool <span class="stack-example">(QuickBooks, FreshBooks)</span></span>
-          <span class="stack-price">$30/mo</span>
-        </div>
-        <div class="stack-item">
-          <span class="stack-name">Scheduling App <span class="stack-example">(Calendly, ServiceTitan)</span></span>
-          <span class="stack-price">$25/mo</span>
-        </div>
-        <div class="stack-item">
-          <span class="stack-name">SMS / Messaging <span class="stack-example">(Podium, SimpleTexting)</span></span>
-          <span class="stack-price">$40/mo</span>
-        </div>
-        <div class="stack-item">
-          <span class="stack-name">AI Assistant <span class="stack-example">(ChatGPT Plus)</span></span>
-          <span class="stack-price">$20/mo</span>
-        </div>
-        <div class="stack-item">
-          <span class="stack-name">Quote Builder <span class="stack-example">(PandaDoc, Proposify)</span></span>
-          <span class="stack-price">$35/mo</span>
-        </div>
-        <div class="stack-item">
-          <span class="stack-name">Email Marketing <span class="stack-example">(Mailchimp)</span></span>
-          <span class="stack-price">$25/mo</span>
-        </div>
-        <div class="stack-divider"></div>
-        <div class="stack-item total">
-          <span class="stack-name">Total you're paying now</span>
-          <span class="stack-price strikethrough">$224/mo</span>
-        </div>
-      </div>
+    <div class="pricing-grid">
 
-      <div class="stack-swft">
-        <div class="stack-swft-badge">SWFT REPLACES ALL OF IT</div>
-        <div class="stack-swft-price">
-          <span class="stack-swft-dollar">$</span>
-          <span class="stack-swft-amount">49</span>
-          <span class="stack-swft-period">/mo</span>
+      <!-- ── STARTER ── -->
+      <div class="pricing-card reveal" data-delay="0">
+        <div class="pricing-plan-name">STARTER</div>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-amount">49</span>
+          <span class="pricing-period">/mo</span>
         </div>
-        <p class="stack-swft-sub">Everything above. One login. One bill. Zero headaches.</p>
-        <a class="btn-cta" href="/swft-login" style="width:100%;justify-content:center;margin-top:20px;padding:16px;">
-          Start Your 14-Day Free Trial
+        <p class="pricing-desc">Everything you need to run your business from day one.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check">&#10003;</span> Full CRM &amp; customer management</li>
+          <li><span class="check">&#10003;</span> Quotes &amp; invoicing</li>
+          <li><span class="check">&#10003;</span> Job scheduling &amp; calendar sync</li>
+          <li><span class="check">&#10003;</span> Gmail &amp; Google Calendar integration</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">200 SMS</span> / month</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">100 AI messages</span> / month</li>
+          <li><span class="check">&#10003;</span> Email (Gmail or Postmark fallback)</li>
+        </ul>
+        <a class="pricing-cta secondary" href="/swft-login?plan=starter">
+          Start 14-Day Free Trial
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-        <span class="stack-swft-note">No credit card required. Cancel anytime.</span>
       </div>
+
+      <!-- ── PRO (featured) ── -->
+      <div class="pricing-card featured reveal" data-delay="100">
+        <div class="pricing-badge">MOST POPULAR</div>
+        <div class="pricing-plan-name">PRO</div>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-amount">99</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <p class="pricing-desc">For growing teams that need more power and higher limits.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check">&#10003;</span> Everything in Starter</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">1,000 SMS</span> / month</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">500 AI messages</span> / month</li>
+          <li><span class="check">&#10003;</span> Priority support</li>
+          <li><span class="check">&#10003;</span> Google Sheets export</li>
+          <li><span class="check">&#10003;</span> Team management</li>
+          <li><span class="check">&#10003;</span> Advanced AI tools (directions, weather)</li>
+        </ul>
+        <a class="pricing-cta primary" href="/swft-login?plan=pro">
+          Start 14-Day Free Trial
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <!-- ── BUSINESS ── -->
+      <div class="pricing-card reveal" data-delay="200">
+        <div class="pricing-plan-name">BUSINESS</div>
+        <div class="pricing-price">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-amount">149</span>
+          <span class="pricing-period">/mo</span>
+        </div>
+        <p class="pricing-desc">Unlimited everything. Built for high-volume operations.</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check">&#10003;</span> Everything in Pro</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited SMS</span></li>
+          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited AI messages</span></li>
+          <li><span class="check">&#10003;</span> QuickBooks integration (coming soon)</li>
+          <li><span class="check">&#10003;</span> Dedicated support</li>
+          <li><span class="check">&#10003;</span> Custom branding (coming soon)</li>
+          <li><span class="check">&#10003;</span> Multi-user access</li>
+        </ul>
+        <a class="pricing-cta secondary" href="/swft-login?plan=business">
+          Start 14-Day Free Trial
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
     </div>
+
+    <p class="pricing-note reveal">
+      All plans include a <strong>14-day free trial</strong>. No credit card required. Cancel anytime.<br/>
+      Replaces $224/mo in tools — CRM, invoicing, scheduling, SMS, AI, quotes &amp; email marketing.
+    </p>
   </div>
 </section>
 
@@ -718,7 +782,7 @@ section{position:relative;z-index:1;}
         <a href="/swft-login" class="footer-link">Sign Up</a>
         <a href="#problems" class="footer-link">Why SWFT</a>
         <a href="#product" class="footer-link">Product</a>
-        <a href="#value" class="footer-link">Pricing</a>
+        <a href="#pricing" class="footer-link">Pricing</a>
       </div>
       <div class="footer-copy">
         &copy; 2026 SWFT. All rights reserved.
@@ -750,6 +814,8 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 document.querySelectorAll('.pain-card.reveal').forEach((el, i) => { el.dataset.delay = i * 80; });
 /* Stagger compare cols */
 document.querySelectorAll('.compare-col.reveal').forEach((el, i) => { el.dataset.delay = i * 150; });
+/* Stagger pricing cards */
+document.querySelectorAll('.pricing-card.reveal').forEach((el, i) => { el.dataset.delay = i * 120; });
 </script>
 
 </body>
