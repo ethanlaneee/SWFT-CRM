@@ -115,133 +115,171 @@ const upload = multer({
 
 /**
  * Generate a PDF buffer for a quote or invoice.
- * Matches the frontend preview style: clean white layout, #8ab800 green accent.
+ * Uses Bebas Neue + DM Sans fonts to match the SWFT frontend exactly.
  */
 function generateDocumentPdf(doc, docType, user) {
+  const path = require("path");
+  const fontsDir = path.join(__dirname, "..", "fonts");
+
   return new Promise((resolve, reject) => {
-    const pdf = new PDFDocument({ size: "LETTER", margin: 50 });
+    const pdf = new PDFDocument({ size: "LETTER", margins: { top: 40, bottom: 40, left: 50, right: 50 } });
     const chunks = [];
     pdf.on("data", (chunk) => chunks.push(chunk));
     pdf.on("end", () => resolve(Buffer.concat(chunks)));
     pdf.on("error", reject);
 
+    // Register fonts
+    pdf.registerFont("Bebas", path.join(fontsDir, "BebasNeue-Regular.ttf"));
+    pdf.registerFont("DM", path.join(fontsDir, "DMSans-Regular.woff"));
+    pdf.registerFont("DM-Medium", path.join(fontsDir, "DMSans-Medium.woff"));
+    pdf.registerFont("DM-Bold", path.join(fontsDir, "DMSans-Bold.woff"));
+
     const companyName = user.company || user.name || "SWFT";
-    const tagline = user.phone
-      ? `${user.phone}     ${user.address || ""}`
-      : "simple. smart. swft.";
+    const taglineParts = [];
+    if (user.phone) taglineParts.push(user.phone);
+    if (user.address) taglineParts.push(user.address);
+    const tagline = taglineParts.length ? taglineParts.join("     ") : "simple. smart. swft.";
     const title = docType === "quote" ? "QUOTE" : "INVOICE";
     const items = doc.items || [];
     const GREEN = "#8ab800";
+    const pageW = 612; // LETTER width
+    const left = 50;
+    const right = pageW - 50;
+    const contentW = right - left; // 512
 
-    // ── Company header (logo or text) ──
-    let y = 50;
+    let y = 40;
+
+    // ═══════════════════════════════════════════
+    //  COMPANY HEADER
+    // ═══════════════════════════════════════════
     if (user.companyLogo) {
       try {
-        // companyLogo is a data URL like "data:image/png;base64,..."
         const matches = user.companyLogo.match(/^data:image\/\w+;base64,(.+)$/);
         if (matches) {
           const imgBuffer = Buffer.from(matches[1], "base64");
-          pdf.image(imgBuffer, 50, y, { height: 50, fit: [180, 50] });
+          pdf.image(imgBuffer, left, y, { fit: [180, 50] });
           y += 58;
         } else {
-          pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
-          pdf.fill(GREEN).text(".", { continued: false });
-          y += 36;
+          pdf.font("Bebas").fontSize(28).fill("#111").text(companyName + ".", left, y, { characterSpacing: 2.5 });
+          y += 34;
         }
       } catch (e) {
-        // Fallback to text if image fails
-        pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
-        pdf.fill(GREEN).text(".", { continued: false });
-        y += 36;
+        pdf.font("Bebas").fontSize(28).fill("#111").text(companyName + ".", left, y, { characterSpacing: 2.5 });
+        y += 34;
       }
     } else {
-      pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
-      pdf.fill(GREEN).text(".", { continued: false });
-      y += 36;
+      // Render company name in Bebas with green dot
+      const nameWidth = pdf.font("Bebas").fontSize(28).widthOfString(companyName, { characterSpacing: 2.5 });
+      pdf.fill("#111").text(companyName, left, y, { characterSpacing: 2.5, continued: false });
+      pdf.fill(GREEN).text(".", left + nameWidth + 1, y, { characterSpacing: 0 });
+      y += 34;
     }
-    pdf.fontSize(9).fill("#999999").text(tagline, 50, y);
+
+    // Tagline
+    pdf.font("DM").fontSize(9).fill("#999").text(tagline, left, y, { characterSpacing: 1.2 });
+    y += 22;
+
+    // ═══════════════════════════════════════════
+    //  DOCUMENT TYPE + GREEN RULE
+    // ═══════════════════════════════════════════
+    pdf.font("Bebas").fontSize(18).fill("#111").text(title, left, y, { characterSpacing: 1.8 });
     y += 24;
+    pdf.moveTo(left, y).lineTo(right, y).strokeColor(GREEN).lineWidth(2).stroke();
+    y += 18;
 
-    // ── Document type with green underline ──
-    pdf.fontSize(18).fill("#111111").text(title, 50, y);
-    y += 26;
-    pdf.moveTo(50, y).lineTo(560, y).strokeColor(GREEN).lineWidth(2).stroke();
-    y += 16;
-
-    // ── Info fields ──
+    // ═══════════════════════════════════════════
+    //  INFO FIELDS  (label left, value right)
+    // ═══════════════════════════════════════════
     const fields = [
       { label: "Customer", value: doc.customerName || "—" },
-      { label: "Service", value: doc.service || "—" },
-      { label: "Address", value: doc.address || "—" },
+      { label: "Service", value: doc.service || "" },
+      { label: "Address", value: doc.address || "" },
     ];
-    if (docType === "quote" && doc.scheduledDate) {
-      fields.push({ label: "Scheduled", value: new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
+    if (docType === "quote") {
+      if (doc.scheduledDate) fields.push({ label: "Scheduled", value: new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
     }
-    if (docType === "quote" && doc.expiresAt) {
-      fields.push({ label: "Expires", value: new Date(doc.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
-    }
-    if (docType === "invoice" && doc.dueDate) {
-      fields.push({ label: "Due Date", value: new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
+    if (docType === "invoice") {
+      if (doc.dueDate) fields.push({ label: "Due Date", value: new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
     }
 
     for (const f of fields) {
-      if (f.value === "—" && f.label !== "Customer") continue;
-      pdf.fontSize(11).fill("#666666").text(f.label, 50, y);
-      pdf.fontSize(12).fill("#111111").text(f.value, 200, y, { width: 360, align: "right" });
-      y += 22;
+      if (!f.value) continue;
+      pdf.font("DM").fontSize(12).fill("#666").text(f.label, left, y);
+      pdf.font("DM-Medium").fontSize(12).fill("#111").text(f.value, left, y, { width: contentW, align: "right" });
+      y += 20;
     }
-    y += 12;
-
-    // ── Line Items header ──
-    pdf.fontSize(9).fill("#999999").text("LINE ITEMS", 50, y);
     y += 16;
-    const colX = { desc: 50, qty: 310, rate: 400, total: 490 };
-    // Column headers
-    pdf.fontSize(9).fill("#999999");
-    pdf.text("DESCRIPTION", colX.desc, y);
-    pdf.text("QTY", colX.qty, y, { width: 70, align: "center" });
-    pdf.text("RATE", colX.rate, y, { width: 70, align: "right" });
-    pdf.text("TOTAL", colX.total, y, { width: 70, align: "right" });
-    y += 14;
-    pdf.moveTo(50, y).lineTo(560, y).strokeColor("#e0e0e0").lineWidth(1).stroke();
-    y += 8;
 
-    // ── Line item rows ──
+    // ═══════════════════════════════════════════
+    //  LINE ITEMS SECTION LABEL
+    // ═══════════════════════════════════════════
+    pdf.font("DM").fontSize(10).fill("#999").text("LINE ITEMS", left, y, { characterSpacing: 1.2 });
+    y += 18;
+
+    // Column positions (grid: 2fr 1fr 1fr 1fr over 512pt)
+    const c1 = left;          // Description — 2/5 of width
+    const c2 = left + 256;    // Qty
+    const c3 = left + 358;    // Rate
+    const c4 = left + 440;    // Total
+    const c4End = right;
+
+    // Column headers
+    pdf.font("DM").fontSize(9).fill("#999");
+    pdf.text("DESCRIPTION", c1, y, { characterSpacing: 0.8 });
+    pdf.text("QTY", c2, y, { width: 80, align: "center", characterSpacing: 0.8 });
+    pdf.text("RATE", c3, y, { width: 70, align: "right", characterSpacing: 0.8 });
+    pdf.text("TOTAL", c4, y, { width: c4End - c4, align: "right", characterSpacing: 0.8 });
+    y += 16;
+    pdf.moveTo(left, y).lineTo(right, y).strokeColor("#e0e0e0").lineWidth(1).stroke();
+    y += 10;
+
+    // ═══════════════════════════════════════════
+    //  LINE ITEM ROWS
+    // ═══════════════════════════════════════════
     for (const item of items) {
       const qty = Number(item.qty) || 1;
       const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
       const total = Number(item.total) || (qty * rate) || 0;
 
-      pdf.fontSize(12).fill("#111111");
-      pdf.text(item.desc || item.description || "", colX.desc, y, { width: 250 });
-      pdf.fill("#333333");
-      pdf.text(String(qty), colX.qty, y, { width: 70, align: "center" });
-      pdf.text("$" + rate.toFixed(2), colX.rate, y, { width: 70, align: "right" });
-      pdf.fontSize(12).fill("#111111");
-      pdf.text("$" + total.toFixed(2), colX.total, y, { width: 70, align: "right" });
+      pdf.font("DM").fontSize(12).fill("#111");
+      pdf.text(item.desc || item.description || "", c1, y, { width: 240 });
+      pdf.font("DM").fontSize(12).fill("#111");
+      pdf.text(String(qty), c2, y, { width: 80, align: "center" });
+      pdf.text("$" + rate.toFixed(2), c3, y, { width: 70, align: "right" });
+      pdf.font("DM-Medium").fontSize(12).fill("#111");
+      pdf.text("$" + total.toFixed(2), c4, y, { width: c4End - c4, align: "right" });
 
       y += 26;
-      pdf.moveTo(50, y).lineTo(560, y).strokeColor("#f0f0f0").lineWidth(0.5).stroke();
-      y += 8;
+      pdf.moveTo(left, y).lineTo(right, y).strokeColor("#f0f0f0").lineWidth(0.5).stroke();
+      y += 10;
     }
 
-    // ── Totals ──
-    y += 8;
+    // ═══════════════════════════════════════════
+    //  TOTALS
+    // ═══════════════════════════════════════════
+    y += 6;
     const grandTotal = Number(doc.total) || 0;
-    pdf.fontSize(12).fill("#333333").text("Subtotal", 400, y, { width: 90, align: "right" });
-    pdf.text("$" + grandTotal.toFixed(2), 490, y, { width: 70, align: "right" });
+    const totalFormatted = "$" + grandTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Subtotal row
+    pdf.font("DM").fontSize(13).fill("#111").text("Subtotal", left, y, { width: contentW - 120, align: "right" });
+    pdf.font("DM").fontSize(13).fill("#111").text(totalFormatted, left, y, { width: contentW, align: "right" });
     y += 24;
-    pdf.moveTo(400, y).lineTo(560, y).strokeColor("#111111").lineWidth(2).stroke();
+
+    // Grand total row with top border
+    pdf.moveTo(right - 220, y).lineTo(right, y).strokeColor("#111").lineWidth(2).stroke();
     y += 10;
-    pdf.fontSize(18).fill("#111111").text("Total", 400, y, { width: 80, align: "right" });
-    pdf.text("$" + grandTotal.toFixed(2), 480, y, { width: 80, align: "right" });
+    pdf.font("DM-Bold").fontSize(18).fill("#111").text("Total", left, y, { width: contentW - 130, align: "right" });
+    pdf.font("DM-Bold").fontSize(18).fill("#111").text(totalFormatted, left, y, { width: contentW, align: "right" });
     y += 36;
 
-    // ── Notes ──
+    // ═══════════════════════════════════════════
+    //  NOTES
+    // ═══════════════════════════════════════════
     if (doc.notes) {
-      pdf.fontSize(9).fill("#999999").text("NOTES", 50, y);
-      y += 14;
-      pdf.fontSize(11).fill("#555555").text(doc.notes, 50, y, { width: 510 });
+      pdf.font("DM").fontSize(10).fill("#999").text("NOTES", left, y, { characterSpacing: 1.2 });
+      y += 16;
+      pdf.font("DM").fontSize(12).fill("#555").text(doc.notes, left, y, { width: contentW, lineGap: 4 });
     }
 
     pdf.end();
