@@ -61,8 +61,8 @@ async function sendAutomationEmail(orgUser, to, subject, body) {
     return;
   }
 
-  // Gmail not connected — skip email
-  console.warn("Automation email skipped: Gmail not connected for org");
+  // Gmail not connected — throw so message is marked failed, not sent
+  throw new Error("Gmail not connected. Connect Gmail in Settings to send automation emails.");
 }
 
 // ── Exported worker functions ────────────────────────────────────────────────
@@ -227,6 +227,7 @@ async function processScheduledMessages() {
       // Create a record in the messages collection so it shows in the chat thread
       const msgRecord = {
         userId: ownerUid,
+        orgId: msg.orgId,
         to: msg.messageType === "sms" ? msg.phone : msg.email,
         body: msg.message,
         customerId: msg.customerId || "",
@@ -236,7 +237,7 @@ async function processScheduledMessages() {
         sentVia: msg.messageType === "sms" ? "twilio" : "gmail",
         sentAt: Date.now(),
         scheduledMessageId: msgDoc.id,
-        isAutomation: !msg.isManual,
+        isAutomation: !!msg.automationId,
       };
       if (msg.messageType === "email") {
         const companyName = orgUser.company || orgUser.name || "SWFT";
@@ -383,6 +384,20 @@ router.delete("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Automation not found" });
     }
     await db.collection("automations").doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/automations/pending/:id — delete a scheduled message
+router.delete("/pending/:id", async (req, res, next) => {
+  try {
+    const doc = await db.collection("scheduledMessages").doc(req.params.id).get();
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Scheduled message not found" });
+    }
+    await db.collection("scheduledMessages").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (err) {
     next(err);

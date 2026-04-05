@@ -207,8 +207,9 @@ const API = {
     list:    ()         => apiFetch("/api/automations"),
     create:  (data)     => apiFetch("/api/automations", { method: "POST", body: JSON.stringify(data) }),
     update:  (id, data) => apiFetch(`/api/automations/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    delete:  (id)       => apiFetch(`/api/automations/${id}`, { method: "DELETE" }),
-    pending: ()         => apiFetch("/api/automations/pending"),
+    delete:        (id) => apiFetch(`/api/automations/${id}`, { method: "DELETE" }),
+    pending:        ()  => apiFetch("/api/automations/pending"),
+    deletePending: (id) => apiFetch(`/api/automations/pending/${id}`, { method: "DELETE" }),
   },
 
   // ── Survey (public — no auth) ──

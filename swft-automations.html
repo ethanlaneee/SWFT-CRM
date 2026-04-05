@@ -186,8 +186,8 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
   <div id="pending-section" style="display:none;">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;">
       <table class="pending-table" id="pending-table">
-        <thead><tr><th>Customer</th><th>Type</th><th>Sends At</th><th>Status</th></tr></thead>
-        <tbody id="pending-body"><tr><td colspan="4" style="color:var(--gray);padding:20px;text-align:center;">No pending messages</td></tr></tbody>
+        <thead><tr><th>Customer</th><th>Type</th><th>Sends At</th><th>Status</th><th></th></tr></thead>
+        <tbody id="pending-body"><tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">No pending messages</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -402,9 +402,18 @@ function renderPending(msgs) {
   tbody.innerHTML = msgs.slice(0, 50).map(m => {
     const d = m.sendAt ? new Date(m.sendAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
     const cls = m.status === 'sent' ? 'status-sent' : m.status === 'failed' ? 'status-failed' : 'status-pending';
-    return `<tr><td>${esc(m.customerName||'—')}</td><td style="text-transform:uppercase;font-size:11px;color:var(--gray);">${m.messageType||'sms'}</td><td style="font-size:12px;color:var(--gray);">${d}</td><td><span class="status-badge ${cls}">${m.status}</span></td></tr>`;
+    const delBtn = m.status === 'pending' ? `<button class="btn-icon del" onclick="deletePending('${m.id}')" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="1.8"/></svg></button>` : '';
+    return `<tr><td>${esc(m.customerName||'—')}</td><td style="text-transform:uppercase;font-size:11px;color:var(--gray);">${m.messageType||'sms'}</td><td style="font-size:12px;color:var(--gray);">${d}</td><td><span class="status-badge ${cls}">${m.status}</span></td><td>${delBtn}</td></tr>`;
   }).join('');
 }
+
+window.deletePending = async function(id) {
+  try {
+    await API.automations.deletePending(id);
+    toast('Scheduled message deleted');
+    loadAll();
+  } catch(e) { toast(e.message, true); }
+};
 
 window.togglePending = function() {
   const sec = document.getElementById('pending-section');
