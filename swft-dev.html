@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT — Developer Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{background:var(--bg);}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;visibility:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes toastIn{from{opacity:0;transform:translateX(100%);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(100%);}}
+
+/* HEADER */
+.header{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.92);backdrop-filter:blur(14px);z-index:100;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white);line-height:1;}
+.logo-mark em{color:var(--green);font-style:normal;}
+.header-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2.5px;color:var(--gray);line-height:1;}
+.header-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;margin:0 2px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.back-btn{display:flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--border2);color:var(--gray);font-size:12px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all 0.14s;font-family:'DM Sans',sans-serif;text-decoration:none;}
+.back-btn:hover{background:var(--surface2);color:var(--white);border-color:var(--gray2);}
+.back-btn svg{width:14px;height:14px;}
+.refresh-btn{display:flex;align-items:center;gap:6px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);color:var(--green);font-size:11.5px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
+.refresh-btn:hover{background:rgba(200,241,53,0.12);}
+.refresh-btn svg{width:13px;height:13px;}
+.refresh-btn.spinning svg{animation:spin 0.6s linear infinite;}
+
+/* PAGE */
+.page-body{max-width:1400px;margin:0 auto;width:100%;padding:28px 32px 64px;display:flex;flex-direction:column;gap:20px;}
+
+/* SECTION */
+.section-label{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--gray);margin-bottom:-8px;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 20px 16px;position:relative;overflow:hidden;cursor:default;transition:border-color 0.18s,transform 0.18s,box-shadow 0.18s;animation:fadeUp 0.45s ease both;}
+.kpi-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 12px 32px rgba(0,0,0,0.35);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;}
+.kpi-card[data-accent="green"]::before{background:var(--green);}
+.kpi-card[data-accent="blue"]::before{background:var(--blue);}
+.kpi-card[data-accent="amber"]::before{background:var(--amber);}
+.kpi-card[data-accent="red"]::before{background:var(--red);}
+.kpi-card[data-accent="white"]::before{background:var(--white);}
+.kpi-label{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:8px;}
+.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--white);line-height:1;}
+.kpi-value.green{color:var(--green);}
+.kpi-value.blue{color:var(--blue);}
+.kpi-value.amber{color:var(--amber);}
+.kpi-value.red{color:var(--red);}
+.kpi-sub{font-size:10.5px;color:var(--gray2);margin-top:4px;font-weight:400;}
+
+/* PLAN BREAKDOWN */
+.plan-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;animation:fadeUp 0.45s ease both;}
+.plan-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:18px;}
+.plan-bars{display:flex;flex-direction:column;gap:14px;}
+.plan-row{display:flex;align-items:center;gap:14px;}
+.plan-name{font-size:12px;font-weight:500;color:var(--gray);width:80px;text-transform:uppercase;letter-spacing:1px;}
+.plan-bar-wrap{flex:1;height:28px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative;}
+.plan-bar{height:100%;border-radius:6px;transition:width 0.8s cubic-bezier(0.22,1,0.36,1);display:flex;align-items:center;padding:0 10px;min-width:fit-content;}
+.plan-bar.starter{background:rgba(200,241,53,0.15);border:1px solid rgba(200,241,53,0.25);}
+.plan-bar.pro{background:rgba(77,159,255,0.15);border:1px solid rgba(77,159,255,0.25);}
+.plan-bar.business{background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.25);}
+.plan-bar-count{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;white-space:nowrap;}
+.plan-bar.starter .plan-bar-count{color:var(--green);}
+.plan-bar.pro .plan-bar-count{color:var(--blue);}
+.plan-bar.business .plan-bar-count{color:var(--amber);}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp 0.45s ease both;}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
+.table-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);}
+.table-count{font-size:11px;color:var(--gray);font-family:'JetBrains Mono',monospace;margin-left:10px;}
+.search-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 12px 7px 34px;font-size:12px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;width:260px;transition:border-color 0.14s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a7a7a' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;}
+.search-input:focus{border-color:var(--green);}
+.search-input::placeholder{color:var(--gray2);}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table thead th{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:500;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;background:var(--surface);}
+.data-table tbody tr{cursor:pointer;transition:background 0.12s;}
+.data-table tbody tr:hover{background:var(--surface2);}
+.data-table tbody tr.expanded-parent{background:var(--surface2);}
+.data-table tbody td{padding:10px 14px;font-size:12px;color:var(--gray);border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle;}
+.data-table tbody td:first-child{color:var(--white);font-weight:500;}
+.table-scroll{max-height:600px;overflow-y:auto;}
+
+/* STATUS DOT */
+.status-dot{display:inline-flex;align-items:center;gap:6px;font-size:11px;}
+.status-dot::before{content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.status-dot.active::before{background:var(--green);}
+.status-dot.trialing::before{background:var(--blue);}
+.status-dot.expired::before{background:var(--amber);}
+.status-dot.canceled::before{background:var(--gray2);}
+.status-dot.past_due::before{background:var(--red);}
+
+/* PLAN BADGE */
+.plan-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.8px;font-family:'JetBrains Mono',monospace;}
+.plan-badge.starter{background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.2);}
+.plan-badge.pro{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
+.plan-badge.business{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
+.plan-badge.none{background:rgba(122,122,122,0.1);color:var(--gray);border:1px solid rgba(122,122,122,0.2);}
+
+/* EXPANDED ROW */
+.detail-row td{padding:0!important;border-bottom:1px solid var(--border);}
+.detail-content{padding:20px 24px;background:var(--bg);border-top:1px solid var(--border);animation:fadeUp 0.25s ease both;}
+.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.detail-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.detail-card-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;color:var(--green);margin-bottom:10px;}
+.detail-item{display:flex;justify-content:space-between;padding:4px 0;font-size:11.5px;}
+.detail-item .dlabel{color:var(--gray);}
+.detail-item .dvalue{color:var(--white);font-family:'JetBrains Mono',monospace;font-size:10.5px;text-align:right;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+.detail-item .dvalue.green{color:var(--green);}
+.detail-item .dvalue.blue{color:var(--blue);}
+.detail-item .dvalue.amber{color:var(--amber);}
+.detail-item .dvalue.red{color:var(--red);}
+.detail-loading{text-align:center;padding:30px;color:var(--gray);font-size:12px;}
+
+/* TOAST */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:12px 18px;border-radius:10px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;animation:toastIn 0.3s ease;min-width:260px;border:1px solid;backdrop-filter:blur(12px);}
+.toast.success{background:rgba(200,241,53,0.1);border-color:rgba(200,241,53,0.2);color:var(--green);}
+.toast.error{background:rgba(255,82,82,0.1);border-color:rgba(255,82,82,0.2);color:var(--red);}
+.toast.info{background:rgba(77,159,255,0.1);border-color:rgba(77,159,255,0.2);color:var(--blue);}
+.toast.removing{animation:toastOut 0.3s ease forwards;}
+
+/* LOADER */
+.page-loader{display:flex;align-items:center;justify-content:center;padding:80px 0;flex-direction:column;gap:14px;}
+.page-loader .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;}
+.page-loader span{font-size:12px;color:var(--gray);}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.detail-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr;}.page-body{padding:20px 16px;}.header{padding:0 16px;}.detail-grid{grid-template-columns:1fr;}.search-input{width:160px;}.table-scroll{max-height:none;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo-mark">SWFT<em>.</em></div>
+  <span class="header-slash">/</span>
+  <span class="header-title">DEVELOPER DASHBOARD</span>
+  <div class="header-right">
+    <button class="refresh-btn" id="refreshBtn" onclick="loadAllData()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Refresh
+    </button>
+    <a href="/swft-dashboard" class="back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="page-body" id="pageBody">
+  <div class="page-loader" id="pageLoader">
+    <div class="spinner"></div>
+    <span>Loading developer data...</span>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+  authDomain: "swft-ai26.firebaseapp.com",
+  projectId: "swft-ai26",
+  storageBucket: "swft-ai26.firebasestorage.app",
+  messagingSenderId: "170879575187",
+  appId: "1:170879575187:web:e329382b0adf9518ead966",
+  measurementId: "G-B8BEW7E87V"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const ALLOWED_EMAIL = 'ethan@goswft.com';
+
+/* ── HELPERS ── */
+function fmt(n) { return n == null ? '—' : Number(n).toLocaleString('en-US'); }
+function fmtCurrency(n) { return n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtPct(n) { return n == null ? '—' : Number(n).toFixed(1) + '%'; }
+function timeAgo(dateStr) {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = now - date;
+  const secs = Math.floor(diff / 1000);
+  const mins = Math.floor(secs / 60);
+  const hrs = Math.floor(mins / 60);
+  const days = Math.floor(hrs / 24);
+  const months = Math.floor(days / 30);
+  if (secs < 60) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  if (hrs < 24) return hrs + 'h ago';
+  if (days < 30) return days + 'd ago';
+  if (months < 12) return months + 'mo ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function escHtml(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+
+/* ── TOAST ── */
+window.showToast = function(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '&#10003;', error: '&#10007;', info: '&#9432;' };
+  toast.innerHTML = `<span>${icons[type] || ''}</span> ${escHtml(msg)}`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 4000);
+};
+
+/* ── API ── */
+async function devFetch(path) {
+  const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+  const user = getAuth().currentUser;
+  if (!user) { window.location.href = 'swft-login'; return null; }
+  const token = await user.getIdToken();
+  const res = await fetch(path, { headers: { Authorization: 'Bearer ' + token } });
+  if (res.status === 403) {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff5252;font-size:20px;font-family:DM Sans,sans-serif;">Access Denied</div>';
+    return null;
+  }
+  if (!res.ok) throw new Error('API error: ' + res.status);
+  return res.json();
+}
+
+/* ── STATE ── */
+let allUsers = [];
+let expandedUserId = null;
+
+/* ── RENDER ── */
+function renderDashboard(stats) {
+  const u = stats.users || {};
+  const p = stats.platform || {};
+  const r = stats.revenue || {};
+  const plans = stats.plans || {};
+  const totalUsers = u.total || 0;
+
+  const body = document.getElementById('pageBody');
+  body.innerHTML = `
+    <!-- KPI ROW 1 -->
+    <div class="section-label">User Metrics</div>
+    <div class="kpi-grid" id="kpiGrid1">
+      ${kpiCard('Total Users', fmt(u.total), u.recentSignups ? `+${u.recentSignups} this month` : '', 'green', 0)}
+      ${kpiCard('Paid Users', fmt(u.paid), '', 'green', 1)}
+      ${kpiCard('Trial Users', fmt(u.trial), '', 'blue', 2)}
+      ${kpiCard('Expired Users', fmt(u.expired), '', 'amber', 3)}
+      ${kpiCard('Est. MRR', fmtCurrency(r.estimatedMRR), '', 'green', 4)}
+      ${kpiCard('Monthly Revenue', fmtCurrency(r.monthlyRevenue), '', 'blue', 5)}
+      ${kpiCard('Total Revenue', fmtCurrency(r.totalRevenue), '', 'white', 6)}
+      ${kpiCard('Trial Conversion', fmtPct(u.trialConversionRate), '', 'amber', 7)}
+    </div>
+
+    <!-- KPI ROW 2 -->
+    <div class="section-label">Platform Totals</div>
+    <div class="kpi-grid" id="kpiGrid2">
+      ${kpiCard('Total Customers', fmt(p.totalCustomers), '', 'green', 8)}
+      ${kpiCard('Total Jobs', fmt(p.totalJobs), p.activeJobs ? `${fmt(p.activeJobs)} active` : '', 'blue', 9)}
+      ${kpiCard('Total Quotes', fmt(p.totalQuotes), '', 'amber', 10)}
+      ${kpiCard('Total Invoices', fmt(p.totalInvoices), '', 'white', 11)}
+    </div>
+
+    <!-- PLAN BREAKDOWN -->
+    <div class="plan-section" style="animation-delay:0.3s">
+      <div class="plan-title">Plan Breakdown</div>
+      <div class="plan-bars">
+        ${planBar('Starter', plans.starter || 0, totalUsers, 'starter')}
+        ${planBar('Pro', plans.pro || 0, totalUsers, 'pro')}
+        ${planBar('Business', plans.business || 0, totalUsers, 'business')}
+      </div>
+    </div>
+
+    <!-- USER TABLE -->
+    <div class="table-wrap" style="animation-delay:0.35s">
+      <div class="table-header">
+        <div style="display:flex;align-items:center;">
+          <span class="table-title">All Users</span>
+          <span class="table-count" id="userCount"></span>
+        </div>
+        <input class="search-input" type="text" placeholder="Search users..." id="userSearch" oninput="window._filterUsers(this.value)"/>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Company</th><th>Plan</th><th>Status</th>
+              <th>AI Msgs</th><th>SMS</th><th>Customers</th><th>Jobs</th><th>Invoices</th><th>Joined</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function kpiCard(label, value, sub, accent, i) {
+  const colorClass = (accent === 'green' || accent === 'blue' || accent === 'amber' || accent === 'red') ? accent : '';
+  return `<div class="kpi-card" data-accent="${accent}" style="animation-delay:${0.05 + i * 0.05}s">
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value ${colorClass}">${value}</div>
+    ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+function planBar(name, count, total, cls) {
+  const pct = total > 0 ? Math.max((count / total) * 100, 4) : 4;
+  return `<div class="plan-row">
+    <span class="plan-name">${name}</span>
+    <div class="plan-bar-wrap">
+      <div class="plan-bar ${cls}" style="width:${pct}%">
+        <span class="plan-bar-count">${count} user${count !== 1 ? 's' : ''} (${total > 0 ? ((count/total)*100).toFixed(0) : 0}%)</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderUserTable(users) {
+  const tbody = document.getElementById('userTableBody');
+  const countEl = document.getElementById('userCount');
+  if (countEl) countEl.textContent = `(${users.length})`;
+  if (!tbody) return;
+
+  tbody.innerHTML = users.map(u => {
+    const usage = u.usage || {};
+    const counts = u.counts || {};
+    const status = u.accountStatus || 'unknown';
+    const plan = (u.plan || 'none').toLowerCase();
+    return `<tr data-uid="${u.id}" onclick="window._toggleUserDetail('${u.id}', this)">
+      <td>${escHtml(u.name || '—')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(u.email || '—')}</td>
+      <td>${escHtml(u.company || '—')}</td>
+      <td><span class="plan-badge ${plan}">${plan}</span></td>
+      <td><span class="status-dot ${status}">${status}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;">${fmt(usage.aiMessageCount)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${fmt(usage.smsCount)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.customers)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.jobs)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.invoices)}</td>
+      <td style="font-size:11px;">${timeAgo(u.createdAt)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── USER DETAIL ── */
+window._toggleUserDetail = async function(uid, rowEl) {
+  // Close existing
+  const existing = document.querySelector('.detail-row');
+  if (existing) {
+    const wasExpanded = existing.getAttribute('data-uid') === uid;
+    existing.previousElementSibling?.classList.remove('expanded-parent');
+    existing.remove();
+    expandedUserId = null;
+    if (wasExpanded) return;
+  }
+
+  expandedUserId = uid;
+  rowEl.classList.add('expanded-parent');
+
+  // Insert loading row
+  const detailRow = document.createElement('tr');
+  detailRow.className = 'detail-row';
+  detailRow.setAttribute('data-uid', uid);
+  detailRow.innerHTML = `<td colspan="11"><div class="detail-loading"><div class="spinner" style="width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 8px;"></div>Loading user detail...</div></td>`;
+  rowEl.insertAdjacentElement('afterend', detailRow);
+
+  try {
+    const data = await devFetch(`/api/dev/user/${uid}`);
+    if (!data) return;
+    if (expandedUserId !== uid) return; // user clicked away
+
+    const u = data;
+    const usage = u.usage || {};
+    const counts = u.counts || {};
+    const sub = u.subscription || {};
+    const limits = u.planLimits || {};
+    const jobs = u.jobBreakdown || {};
+    const integrations = u.integrations || {};
+
+    detailRow.innerHTML = `<td colspan="11"><div class="detail-content">
+      <div class="detail-grid">
+        <!-- PROFILE -->
+        <div class="detail-card">
+          <div class="detail-card-title">Profile</div>
+          ${detailItem('Name', u.name)}
+          ${detailItem('Email', u.email)}
+          ${detailItem('Phone', u.phone)}
+          ${detailItem('Company', u.company)}
+          ${detailItem('Address', u.address)}
+          ${detailItem('Website', u.website)}
+          ${detailItem('Role', u.role)}
+          ${detailItem('Created', formatDate(u.createdAt))}
+        </div>
+
+        <!-- SUBSCRIPTION -->
+        <div class="detail-card">
+          <div class="detail-card-title">Subscription</div>
+          ${detailItem('Plan', u.plan, 'blue')}
+          ${detailItem('Status', u.accountStatus, u.accountStatus === 'active' ? 'green' : u.accountStatus === 'trialing' ? 'blue' : 'amber')}
+          ${detailItem('Subscribed', u.isSubscribed ? 'Yes' : 'No', u.isSubscribed ? 'green' : 'red')}
+          ${detailItem('Trial End', formatDate(u.trialEndDate))}
+          ${detailItem('Stripe Customer', sub.stripeCustomerId || '—')}
+          ${detailItem('Stripe Sub', sub.stripeSubscriptionId || '—')}
+          ${detailItem('Period End', formatDate(sub.currentPeriodEnd))}
+        </div>
+
+        <!-- INTEGRATIONS -->
+        <div class="detail-card">
+          <div class="detail-card-title">Integrations</div>
+          ${detailItem('Gmail', integrations.gmailConnected || u.gmailConnected ? 'Connected' : 'Not connected', integrations.gmailConnected || u.gmailConnected ? 'green' : 'red')}
+          ${detailItem('Google Calendar', integrations.calendarConnected ? 'Connected' : 'Not connected', integrations.calendarConnected ? 'green' : 'red')}
+          ${detailItem('Stripe', integrations.stripeConnected ? 'Connected' : 'Not connected', integrations.stripeConnected ? 'green' : 'red')}
+          ${detailItem('QuickBooks', integrations.quickbooksConnected ? 'Connected' : 'Not connected', integrations.quickbooksConnected ? 'green' : 'red')}
+        </div>
+
+        <!-- USAGE -->
+        <div class="detail-card">
+          <div class="detail-card-title">Usage This Month</div>
+          ${detailItem('AI Messages', `${fmt(usage.aiMessageCount || 0)} / ${fmt(limits.aiMessages || '∞')}`)}
+          ${detailItem('SMS Sent', `${fmt(usage.smsCount || 0)} / ${fmt(limits.sms || '∞')}`)}
+          ${detailItem('Customers', `${fmt(counts.customers || 0)} / ${fmt(limits.customers || '∞')}`)}
+          ${detailItem('Team Members', `${fmt(usage.teamMembers || 0)} / ${fmt(limits.teamMembers || '∞')}`)}
+        </div>
+
+        <!-- DATA COUNTS -->
+        <div class="detail-card">
+          <div class="detail-card-title">Data Counts</div>
+          ${detailItem('Customers', fmt(counts.customers))}
+          ${detailItem('Jobs', fmt(counts.jobs))}
+          ${detailItem('Invoices', fmt(counts.invoices))}
+          ${detailItem('Quotes', fmt(counts.quotes))}
+          ${detailItem('Contacts', fmt(counts.contacts))}
+          ${detailItem('Templates', fmt(counts.templates))}
+        </div>
+
+        <!-- JOBS + REVENUE -->
+        <div class="detail-card">
+          <div class="detail-card-title">Jobs &amp; Revenue</div>
+          ${detailItem('Active Jobs', fmt(jobs.active), 'green')}
+          ${detailItem('Scheduled', fmt(jobs.scheduled), 'blue')}
+          ${detailItem('Completed', fmt(jobs.completed), 'green')}
+          ${detailItem('Canceled', fmt(jobs.canceled), 'red')}
+          <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
+          ${detailItem('Revenue Generated', fmtCurrency(u.revenueGenerated), 'green')}
+        </div>
+      </div>
+    </div></td>`;
+  } catch (e) {
+    console.error('Detail fetch error:', e);
+    detailRow.innerHTML = `<td colspan="11"><div class="detail-content" style="text-align:center;color:var(--red);padding:20px;">Failed to load user detail</div></td>`;
+    showToast('Failed to load user detail', 'error');
+  }
+};
+
+function detailItem(label, value, colorClass) {
+  const cls = colorClass ? ` ${colorClass}` : '';
+  return `<div class="detail-item"><span class="dlabel">${label}</span><span class="dvalue${cls}">${escHtml(value != null ? String(value) : '—')}</span></div>`;
+}
+
+/* ── FILTER ── */
+window._filterUsers = function(query) {
+  const q = query.toLowerCase().trim();
+  const filtered = q ? allUsers.filter(u =>
+    (u.name || '').toLowerCase().includes(q) ||
+    (u.email || '').toLowerCase().includes(q) ||
+    (u.company || '').toLowerCase().includes(q) ||
+    (u.plan || '').toLowerCase().includes(q) ||
+    (u.accountStatus || '').toLowerCase().includes(q)
+  ) : allUsers;
+  renderUserTable(filtered);
+};
+
+/* ── LOAD ── */
+window.loadAllData = async function() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) btn.classList.add('spinning');
+
+  try {
+    const [stats, users] = await Promise.all([
+      devFetch('/api/dev/stats'),
+      devFetch('/api/dev/users')
+    ]);
+
+    if (!stats || !users) return;
+
+    allUsers = users;
+    renderDashboard(stats);
+    renderUserTable(users);
+    showToast('Data loaded successfully', 'success');
+  } catch (e) {
+    console.error('Load error:', e);
+    showToast('Failed to load data: ' + e.message, 'error');
+    const body = document.getElementById('pageBody');
+    body.innerHTML = `<div style="text-align:center;padding:80px 0;color:var(--red);font-size:14px;">Failed to load data. <button onclick="loadAllData()" style="color:var(--green);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;">Retry</button></div>`;
+  } finally {
+    if (btn) btn.classList.remove('spinning');
+  }
+};
+
+/* ── AUTH GUARD ── */
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = 'swft-login';
+    return;
+  }
+  if (user.email !== ALLOWED_EMAIL) {
+    document.body.style.visibility = 'visible';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff5252;font-size:20px;font-family:DM Sans,sans-serif;">Access Denied</div>';
+    setTimeout(() => { window.location.href = 'swft-dashboard'; }, 2000);
+    return;
+  }
+  document.body.style.visibility = 'visible';
+  loadAllData();
+});
+</script>
+</body>
+</html>

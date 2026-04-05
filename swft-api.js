@@ -62,6 +62,13 @@ const API = {
     stats: () => apiFetch("/api/dashboard"),
   },
 
+  // ── Dev (admin only) ──
+  dev: {
+    stats:  ()   => apiFetch("/api/dev/stats"),
+    users:  ()   => apiFetch("/api/dev/users"),
+    user:   (id) => apiFetch(`/api/dev/user/${id}`),
+  },
+
   // ── User ──
   user: {
     me:     ()       => apiFetch("/api/me"),

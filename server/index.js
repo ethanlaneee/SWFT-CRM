@@ -84,6 +84,7 @@ app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
+app.use("/api/dev",           auth,               require("./routes/dev"));
 
 // ── Health check ──
 app.get("/health", (req, res) => res.json({ status: "ok" }));
