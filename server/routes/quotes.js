@@ -73,7 +73,7 @@ router.put("/:id", async (req, res, next) => {
 router.post("/:id/send", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
@@ -103,7 +103,7 @@ router.post("/:id/send", async (req, res, next) => {
 router.post("/:id/approve", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).update({ status: "approved", approvedAt: Date.now() });
@@ -115,7 +115,7 @@ router.post("/:id/approve", async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).delete();

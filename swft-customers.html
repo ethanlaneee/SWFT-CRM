@@ -712,6 +712,7 @@ user-select:none;
 <script>
 
 window._customers = {};
+function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
 async function loadCustomers() {
   try {
@@ -734,10 +735,10 @@ async function loadCustomers() {
       row.className = 'cust-row';
       row.dataset.status = 'active';
       row.onclick = function(){ openDrawer(cust.id); };
-      row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + initials + '</div><div><div class="cust-name">' + (cust.name||'') + '</div></div></div>' +
-        '<div class="cust-addr" style="font-size:12px;color:var(--gray);align-self:center;">' + (cust.address||'—') + '</div>' +
-        '<div class="cust-phone">' + (cust.phone||'—') + '</div>' +
-        '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (cust.email||'—') + '</div>' +
+      row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + esc(initials) + '</div><div><div class="cust-name">' + esc(cust.name||'') + '</div></div></div>' +
+        '<div class="cust-addr" style="font-size:12px;color:var(--gray);align-self:center;">' + esc(cust.address||'—') + '</div>' +
+        '<div class="cust-phone">' + esc(cust.phone||'—') + '</div>' +
+        '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(cust.email||'—') + '</div>' +
         '<div class="cust-status"><span class="status-active">Active</span></div>' +
         '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">x</div><div class="row-btn">→</div></div>';
       tbody.appendChild(row);
@@ -906,7 +907,7 @@ function renderCustomerTabs(cust) {
     if (!cust.tags || cust.tags.length === 0) {
       tagsEl.innerHTML = '<span style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No tags</span>';
     } else {
-      tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + t + '</span>'; }).join('');
+      tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + esc(t) + '</span>'; }).join('');
     }
   }
 
