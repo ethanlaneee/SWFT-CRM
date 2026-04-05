@@ -274,6 +274,10 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
         Print / Save PDF
       </button>
       <button class="pdf-btn primary" onclick="saveQuote('draft')">Save Quote</button>
+      <button class="pdf-btn" id="btn-send-email" onclick="sendQuoteEmail()" style="background:#111;color:#fff;border-color:#111;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        Send to Customer
+      </button>
     </div>
   </div>
 </div>
@@ -501,6 +505,57 @@ async function saveQuote(action){
       if(action==='send'&&created.id)await API.quotes.send(created.id);
       showToast(action==='send'?'Quote created & sent':'Quote created');
     }
+    closeModal();
+    loadQuotes();
+  }catch(e){showToast('Error: '+e.message);}
+}
+
+async function sendQuoteEmail(){
+  // Save first if needed, then email
+  if(!_currentQuote||!_currentQuote.id){
+    // New quote — save it first
+    var custSel=document.getElementById('f-customer');
+    if(!custSel.value){showToast('Select a customer first');return;}
+    var total=_items.reduce(function(s,i){return s+i.total;},0);
+    var data={
+      customerId:custSel.value,
+      customerName:custSel.options[custSel.selectedIndex].textContent,
+      items:_items,total:total,status:'draft',
+      service:document.getElementById('f-service').value,
+      sqft:document.getElementById('f-sqft').value,
+      address:document.getElementById('f-address').value,
+      finish:document.getElementById('f-finish').value,
+      notes:document.getElementById('f-notes').value,
+      scheduledDate:document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).getTime():null
+    };
+    try{
+      var created=await API.quotes.create(data);
+      _currentQuote={id:created.id,...data};
+    }catch(e){showToast('Error saving: '+e.message);return;}
+  } else {
+    // Save latest changes first
+    var total=_items.reduce(function(s,i){return s+i.total;},0);
+    var custSel=document.getElementById('f-customer');
+    var data={
+      customerId:custSel.value,
+      customerName:custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'',
+      items:_items,total:total,
+      status:document.getElementById('f-status').value,
+      service:document.getElementById('f-service').value,
+      sqft:document.getElementById('f-sqft').value,
+      address:document.getElementById('f-address').value,
+      finish:document.getElementById('f-finish').value,
+      notes:document.getElementById('f-notes').value,
+      scheduledDate:document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).getTime():null
+    };
+    try{await API.quotes.update(_currentQuote.id,data);}catch(e){showToast('Error saving: '+e.message);return;}
+  }
+
+  // Now send email
+  try{
+    showToast('Sending quote...');
+    await API.quotes.email(_currentQuote.id);
+    showToast('Quote sent to customer!');
     closeModal();
     loadQuotes();
   }catch(e){showToast('Error: '+e.message);}

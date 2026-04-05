@@ -101,6 +101,7 @@ const API = {
     create:  (data)   => apiFetch("/api/quotes",         { method: "POST",   body: JSON.stringify(data) }),
     update:  (id, data) => apiFetch(`/api/quotes/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
     send:    (id)     => apiFetch(`/api/quotes/${id}/send`,    { method: "POST", body: JSON.stringify({}) }),
+    email:   (id, msg) => apiFetch(`/api/quotes/${id}/email`,  { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
     approve: (id)     => apiFetch(`/api/quotes/${id}/approve`, { method: "POST", body: JSON.stringify({}) }),
     delete:  (id)     => apiFetch(`/api/quotes/${id}`,   { method: "DELETE" }),
   },
@@ -111,6 +112,7 @@ const API = {
     get:    (id)     => apiFetch(`/api/invoices/${id}`),
     create: (data)   => apiFetch("/api/invoices",         { method: "POST",   body: JSON.stringify(data) }),
     update: (id, data) => apiFetch(`/api/invoices/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
+    email:  (id, msg) => apiFetch(`/api/invoices/${id}/email`, { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
     pay:    (id, data) => apiFetch(`/api/invoices/${id}/pay`, { method: "POST", body: JSON.stringify(data) }),
     delete: (id)     => apiFetch(`/api/invoices/${id}`,   { method: "DELETE" }),
   },
@@ -137,9 +139,11 @@ const API = {
 
   // ── Messages ──
   messages: {
-    list:   ()     => apiFetch("/api/messages"),
-    send:   (data) => apiFetch("/api/messages/send", { method: "POST", body: JSON.stringify(data) }),
-    delete: (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
+    list:      ()     => apiFetch("/api/messages"),
+    send:      (data) => apiFetch("/api/messages/send", { method: "POST", body: JSON.stringify(data) }),
+    schedule:  (data) => apiFetch("/api/messages/schedule", { method: "POST", body: JSON.stringify(data) }),
+    scheduled: ()     => apiFetch("/api/messages/scheduled"),
+    delete:    (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
   },
 
   // ── Notifications ──
@@ -203,8 +207,10 @@ const API = {
     list:    ()         => apiFetch("/api/automations"),
     create:  (data)     => apiFetch("/api/automations", { method: "POST", body: JSON.stringify(data) }),
     update:  (id, data) => apiFetch(`/api/automations/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    delete:  (id)       => apiFetch(`/api/automations/${id}`, { method: "DELETE" }),
-    pending: ()         => apiFetch("/api/automations/pending"),
+    delete:        (id) => apiFetch(`/api/automations/${id}`, { method: "DELETE" }),
+    pending:        ()  => apiFetch("/api/automations/pending"),
+    deletePending: (id) => apiFetch(`/api/automations/pending/${id}`, { method: "DELETE" }),
+    retryPending:  (id) => apiFetch(`/api/automations/pending/${id}/retry`, { method: "POST" }),
   },
 
   // ── Survey (public — no auth) ──

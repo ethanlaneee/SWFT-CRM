@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
+const { sendViaGmail, generateDocumentPdf } = require("./messages");
 
 const col = () => db.collection("invoices");
 
@@ -101,6 +102,85 @@ router.post("/:id/pay", async (req, res, next) => {
 
     res.json({ success: true, status: "paid" });
   } catch (err) { next(err); }
+});
+
+// Email invoice — generate PDF and send via Gmail, add to message thread
+router.post("/:id/email", async (req, res, next) => {
+  try {
+    const invDoc = await col().doc(req.params.id).get();
+    if (!invDoc.exists || invDoc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Invoice not found" });
+    }
+    const invData = { id: invDoc.id, ...invDoc.data() };
+
+    if (!invData.customerId) {
+      return res.status(400).json({ error: "No customer linked to this invoice" });
+    }
+    const custDoc = await db.collection("customers").doc(invData.customerId).get();
+    if (!custDoc.exists) return res.status(404).json({ error: "Customer not found" });
+    const cust = custDoc.data();
+    if (!cust.email) {
+      return res.status(400).json({ error: "Customer has no email address. Add an email in their profile first." });
+    }
+
+    const userDoc = await db.collection("users").doc(req.uid).get();
+    const user = userDoc.exists ? userDoc.data() : {};
+    if (!user.gmailConnected || !user.gmailTokens) {
+      return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
+    }
+
+    const pdfBuffer = await generateDocumentPdf(invData, "invoice", user);
+    const custName = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
+    const pdfFile = {
+      buffer: pdfBuffer,
+      mimetype: "application/pdf",
+      originalname: `Invoice-${custName}.pdf`,
+    };
+
+    const fromName = user.company || user.name || "SWFT";
+    const subject = `Invoice from ${fromName}`;
+    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nPlease find your invoice attached.\n\nBest,\n${fromName}`;
+    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
+
+    user._uid = req.uid;
+    const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, [pdfFile]);
+
+    const msgRecord = {
+      userId: req.uid,
+      orgId: req.orgId,
+      to: cust.email,
+      subject,
+      body: bodyText,
+      customerId: invData.customerId,
+      customerName: invData.customerName || cust.name || "",
+      type: "email",
+      status: "sent",
+      sentVia: "gmail",
+      gmailMessageId: sendResult.messageId,
+      gmailThreadId: sendResult.threadId,
+      attachedDocType: "invoice",
+      attachedDocId: req.params.id,
+      attachments: [pdfFile.originalname],
+      sentAt: Date.now(),
+    };
+    await db.collection("messages").add(msgRecord);
+
+    await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
+
+    if (invData.customerId) {
+      triggerAutomation(req.orgId, "invoice_sent", {
+        id: invData.customerId,
+        name: cust.name || invData.customerName || "",
+        phone: cust.phone || "",
+        email: cust.email || "",
+      }).catch(console.error);
+    }
+
+    res.json({ success: true, messageId: sendResult.messageId });
+  } catch (err) {
+    console.error("[invoice email] Error:", err);
+    next(err);
+  }
 });
 
 // Delete invoice
