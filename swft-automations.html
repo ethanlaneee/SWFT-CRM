@@ -393,20 +393,34 @@ window.deleteRule = async function(id) {
   } catch(e) { toast(e.message, true); }
 };
 
+const _defaultTemplates = {
+  quote_sent: {
+    name: 'Quote Follow-up Reminder',
+    template: 'Hi {{customer_name}}, this is {{company_name}}. Just following up on the quote we sent over — let us know if you have any questions or would like to move forward. We\'re happy to help!',
+    followup: 'Hi {{customer_name}}, thank you so much for the kind words! If you have a moment, we\'d really appreciate a quick Google review — it helps us a ton: {{review_link}}'
+  },
+  invoice_paid: {
+    name: 'Post-Service Thank You',
+    template: 'Hi {{customer_name}}, thank you for choosing {{company_name}}! We hope you\'re happy with the work. If you ever need anything, don\'t hesitate to reach out.',
+    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
+  }
+};
+
 window.openModal = function() {
   _editId = null;
   document.getElementById('modal-title').textContent = 'NEW AUTOMATION';
-  document.getElementById('f-name').value = '';
-  document.getElementById('f-trigger').value = 'quote_sent';
+  const trigger = 'quote_sent';
+  document.getElementById('f-trigger').value = trigger;
+  document.getElementById('f-name').value = _defaultTemplates[trigger].name;
   document.getElementById('f-delay').value = '3';
   document.getElementById('f-type').value = 'sms';
-  document.getElementById('f-template').value = '';
+  document.getElementById('f-template').value = _defaultTemplates[trigger].template;
   _surveyOn = false;
   document.getElementById('f-survey-toggle').className = 'toggle';
   document.getElementById('survey-section').className = 'survey-section';
   document.getElementById('f-threshold').value = '7';
   document.getElementById('f-followup-type').value = 'sms';
-  document.getElementById('f-followup-template').value = '';
+  document.getElementById('f-followup-template').value = _defaultTemplates[trigger].followup;
   _enabledOn = true;
   document.getElementById('f-enabled-toggle').className = 'toggle on';
   document.getElementById('modal-overlay').classList.add('open');
@@ -462,6 +476,15 @@ window.saveAutomation = async function() {
     closeModal();
   } catch(e) { toast(e.message || 'Failed to save', true); }
 };
+
+document.getElementById('f-trigger').addEventListener('change', function() {
+  if (_editId) return;
+  const t = _defaultTemplates[this.value];
+  if (!t) return;
+  document.getElementById('f-name').value = t.name;
+  document.getElementById('f-template').value = t.template;
+  document.getElementById('f-followup-template').value = t.followup;
+});
 
 document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-overlay')) closeModal();
