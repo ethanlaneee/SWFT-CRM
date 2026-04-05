@@ -260,7 +260,7 @@ function renderDashboard(stats) {
       ${kpiCard('Paid Users', fmt(u.paid), '', 'green', 1)}
       ${kpiCard('Trial Users', fmt(u.trial), '', 'blue', 2)}
       ${kpiCard('Expired Users', fmt(u.expired), '', 'amber', 3)}
-      ${kpiCard('Est. MRR', fmtCurrency(r.estimatedMRR), '', 'green', 4)}
+      ${kpiCard('Stripe MRR', fmtCurrency(r.stripeMRR), '', 'green', 4)}
       ${kpiCard('Monthly Revenue', fmtCurrency(r.monthlyRevenue), '', 'blue', 5)}
       ${kpiCard('Total Revenue', fmtCurrency(r.totalRevenue), '', 'white', 6)}
       ${kpiCard('Trial Conversion', fmtPct(u.trialConversionRate), '', 'amber', 7)}

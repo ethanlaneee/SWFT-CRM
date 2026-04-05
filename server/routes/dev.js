@@ -98,14 +98,30 @@ router.get("/stats", async (req, res, next) => {
       })
       .reduce((sum, i) => sum + (i.total || 0), 0);
 
-    // MRR estimate (paid users × plan price)
-    let estimatedMRR = 0;
-    users.forEach(u => {
-      if (u.isSubscribed) {
-        const plan = getPlan(u.plan);
-        estimatedMRR += plan.price;
+    // MRR from Stripe (real active subscriptions)
+    let stripeMRR = 0;
+    try {
+      const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+      let hasMore = true;
+      let startingAfter = undefined;
+      while (hasMore) {
+        const params = { status: "active", limit: 100 };
+        if (startingAfter) params.starting_after = startingAfter;
+        const subs = await stripe.subscriptions.list(params);
+        for (const sub of subs.data) {
+          for (const item of sub.items.data) {
+            const amount = item.price.unit_amount || 0; // cents
+            const interval = item.price.recurring?.interval;
+            // Normalize to monthly
+            if (interval === "year") stripeMRR += amount / 12;
+            else stripeMRR += amount; // monthly or default
+          }
+        }
+        hasMore = subs.has_more;
+        if (subs.data.length) startingAfter = subs.data[subs.data.length - 1].id;
       }
-    });
+      stripeMRR = Math.round(stripeMRR) / 100; // cents → dollars
+    } catch (_) { /* Stripe unavailable — leave at 0 */ }
 
     // Trial conversion rate
     const convertedFromTrial = users.filter(u => u.isSubscribed && u.trialStartDate).length;
@@ -118,7 +134,7 @@ router.get("/stats", async (req, res, next) => {
       users: { total: totalUsers, active: activeUsers, trial: trialUsers, expired: expiredUsers, paid: paidUsers, recentSignups, monthlySignups, trialConversionRate },
       plans: planBreakdown,
       platform: { totalCustomers, totalJobs, totalQuotes, totalInvoices, activeJobs, scheduledJobs, completedJobs },
-      revenue: { totalRevenue, monthlyRevenue, estimatedMRR },
+      revenue: { totalRevenue, monthlyRevenue, stripeMRR },
     });
   } catch (err) { next(err); }
 });
