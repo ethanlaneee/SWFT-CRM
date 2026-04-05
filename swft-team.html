@@ -401,7 +401,12 @@ async function changeRole(memberId, newRole){
 }
 
 async function cancelInvite(memberId, name){
-  if(!confirm('Cancel the invite for ' + name + '? They will no longer be able to join using the invite link.')) return;
+  var ok = await swftConfirm(
+    'Cancel the invite for <strong>' + name + '</strong>? They will no longer be able to join using the invite link.',
+    'CANCEL INVITE',
+    '✉️'
+  );
+  if(!ok) return;
   try{
     await API.team.remove(memberId);
     showToast('Invite cancelled for ' + name);
@@ -410,7 +415,12 @@ async function cancelInvite(memberId, name){
 }
 
 async function removeMember(memberId, name){
-  if(!confirm('Remove ' + name + ' from your team?')) return;
+  var ok = await swftConfirm(
+    'Remove <strong>' + name + '</strong> from your team?',
+    'REMOVE MEMBER',
+    '👤'
+  );
+  if(!ok) return;
   try{
     await API.team.remove(memberId);
     showToast(name + ' removed');
@@ -547,7 +557,12 @@ async function createCustomRole(){
 }
 
 async function deleteCustomRole(roleId, name){
-  if(!confirm('Delete the "' + name + '" role? Any team members assigned to it must be reassigned first.')) return;
+  var ok = await swftConfirm(
+    'Delete the <strong>' + name + '</strong> role? Any team members assigned to it must be reassigned first.',
+    'DELETE ROLE',
+    '🗑️'
+  );
+  if(!ok) return;
   try{
     await API.team.deleteRole(roleId);
     showToast(name + ' role deleted');
