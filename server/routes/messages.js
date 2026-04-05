@@ -194,6 +194,8 @@ function generateDocumentPdf(doc, docType, user) {
       { label: "Customer", value: doc.customerName || "—" },
       { label: "Service", value: doc.service || "" },
       { label: "Address", value: doc.address || "" },
+      { label: "Sqft", value: doc.sqft || "" },
+      { label: "Finish", value: doc.finish || "" },
     ];
     if (docType === "quote") {
       if (doc.scheduledDate) fields.push({ label: "Scheduled", value: new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
