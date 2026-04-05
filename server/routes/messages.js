@@ -518,6 +518,46 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
   }
 });
 
+// POST /api/messages/schedule — schedule a message for later
+router.post("/schedule", async (req, res, next) => {
+  try {
+    const { to, body, type, subject, customerId, customerName, sendAt } = req.body;
+    const msgType = type || "sms";
+
+    if (!to) return res.status(400).json({ error: "Recipient is required" });
+    if (!body) return res.status(400).json({ error: "Message body is required" });
+    if (!sendAt) return res.status(400).json({ error: "Scheduled time is required" });
+
+    const sendAtMs = new Date(sendAt).getTime();
+    if (isNaN(sendAtMs) || sendAtMs <= Date.now()) {
+      return res.status(400).json({ error: "Scheduled time must be in the future" });
+    }
+
+    const msgData = {
+      orgId: req.orgId,
+      userId: req.uid,
+      customerId: customerId || "",
+      customerName: customerName || "",
+      phone: msgType === "sms" ? to : "",
+      email: msgType === "email" ? to : "",
+      message: body,
+      subject: msgType === "email" ? (subject || "") : "",
+      messageType: msgType,
+      sendAt: sendAtMs,
+      status: "pending",
+      sentAt: null,
+      error: null,
+      isManual: true,
+      createdAt: Date.now(),
+    };
+
+    const ref = await db.collection("scheduledMessages").add(msgData);
+    res.status(201).json({ id: ref.id, ...msgData });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/messages — list sent messages
 router.get("/", async (req, res, next) => {
   try {

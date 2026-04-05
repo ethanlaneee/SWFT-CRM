@@ -208,6 +208,7 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
         <label class="form-label">Trigger</label>
         <select class="form-select" id="f-trigger">
           <option value="quote_sent">Quote Sent</option>
+          <option value="invoice_sent">Invoice Sent</option>
           <option value="invoice_paid">Invoice Paid</option>
         </select>
       </div>
@@ -367,8 +368,9 @@ function renderRules(rules) {
     return;
   }
   list.innerHTML = rules.map(r => {
-    const trigLabel = r.trigger === 'invoice_paid' ? 'Invoice Paid' : 'Quote Sent';
-    const trigClass = r.trigger === 'invoice_paid' ? 'badge-invoice' : 'badge-trigger';
+    const trigLabels = {quote_sent:'Quote Sent', invoice_sent:'Invoice Sent', invoice_paid:'Invoice Paid'};
+    const trigLabel = trigLabels[r.trigger] || r.trigger;
+    const trigClass = r.trigger === 'quote_sent' ? 'badge-trigger' : 'badge-invoice';
     return `<div class="rule-card${r.enabled?'':' disabled'}" id="rule-${r.id}">
       <div class="rule-info">
         <div class="rule-name">${esc(r.name)}</div>
@@ -465,6 +467,11 @@ const _defaultTemplates = {
     name: 'Quote Follow-up Reminder',
     template: 'Hi {{customer_name}}, this is {{company_name}}. Just following up on the quote we sent over — let us know if you have any questions or would like to move forward. We\'re happy to help!',
     followup: 'Hi {{customer_name}}, thank you so much for the kind words! If you have a moment, we\'d really appreciate a quick Google review — it helps us a ton: {{review_link}}'
+  },
+  invoice_sent: {
+    name: 'Invoice Follow-up Reminder',
+    template: 'Hi {{customer_name}}, just a reminder that your invoice from {{company_name}} is ready for payment. Let us know if you have any questions!',
+    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
   },
   invoice_paid: {
     name: 'Post-Service Thank You',

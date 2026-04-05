@@ -72,7 +72,7 @@ async function sendAutomationEmail(orgUser, to, subject, body) {
  * Creates scheduledMessages for every matching enabled automation rule.
  *
  * @param {string} orgId
- * @param {string} trigger  "quote_sent" | "invoice_paid"
+ * @param {string} trigger  "quote_sent" | "invoice_sent" | "invoice_paid"
  * @param {{ id: string, name: string, phone: string, email: string }} customer
  */
 async function triggerAutomation(orgId, trigger, customer) {
@@ -211,15 +211,33 @@ async function processScheduledMessages() {
       } else {
         if (!msg.email) throw new Error("No email address for email");
         const companyName = orgUser.company || orgUser.name || "SWFT";
+        const emailSubject = msg.subject || `Message from ${companyName}`;
         await sendAutomationEmail(
           orgUser,
           msg.email,
-          `Message from ${companyName}`,
+          emailSubject,
           msg.message
         );
       }
 
       await ref.update({ status: "sent", sentAt: Date.now(), error: null });
+
+      // For manual scheduled messages, also create a record in the messages collection
+      if (msg.isManual && msg.userId) {
+        const msgRecord = {
+          userId: msg.userId,
+          to: msg.messageType === "sms" ? msg.phone : msg.email,
+          body: msg.message,
+          customerId: msg.customerId || "",
+          customerName: msg.customerName || "",
+          type: msg.messageType,
+          status: "sent",
+          sentVia: msg.messageType === "sms" ? "twilio" : "gmail",
+          sentAt: Date.now(),
+        };
+        if (msg.messageType === "email" && msg.subject) msgRecord.subject = msg.subject;
+        await db.collection("messages").add(msgRecord);
+      }
     } catch (err) {
       console.error(`Failed to send scheduled message ${msgDoc.id}:`, err);
       await ref.update({ status: "failed", error: err.message || "Unknown error" }).catch(() => {});
