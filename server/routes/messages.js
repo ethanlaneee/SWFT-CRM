@@ -565,12 +565,15 @@ router.post("/schedule", async (req, res, next) => {
 // GET /api/messages/scheduled — list pending scheduled messages for this user's org
 router.get("/scheduled", async (req, res, next) => {
   try {
+    const now = Date.now();
     const snap = await db
       .collection("scheduledMessages")
       .where("orgId", "==", req.orgId)
       .where("status", "==", "pending")
       .get();
     let results = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    // Only return future scheduled messages
+    results = results.filter((m) => m.sendAt > now);
     results.sort((a, b) => (a.sendAt || 0) - (b.sendAt || 0));
     res.json({ messages: results });
   } catch (err) {
