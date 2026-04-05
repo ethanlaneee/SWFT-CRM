@@ -82,7 +82,8 @@
   window.SWFT_PERMS = null; // Set after auth, array of permission IDs
 
   window.can = function (perm) {
-    if (!window.SWFT_PERMS) return true; // not loaded yet — don't block
+    if (window.SWFT_PERMS === undefined) return true; // not loaded yet — don't block
+    if (window.SWFT_PERMS === null) return true;      // owner — unrestricted
     return window.SWFT_PERMS.includes(perm);
   };
 
@@ -388,7 +389,8 @@
   };
 
   function applyPermGuard(perms) {
-    window.SWFT_PERMS = perms || [];
+    window.SWFT_PERMS = perms; // null = owner (unrestricted)
+    if (perms === null) return; // owner — skip all restrictions
 
     // ── Page redirect ────────────────────────────────────────────────────
     var page = window.location.pathname.split("/").pop().replace(/\.html$/, "");
