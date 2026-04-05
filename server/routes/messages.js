@@ -456,6 +456,16 @@ router.delete("/:id", async (req, res, next) => {
  */
 async function twilioIncomingHandler(req, res) {
   try {
+    const twilio = require("twilio");
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    if (twilioAuthToken) {
+      const signature = req.headers['x-twilio-signature'] || '';
+      const url = `${process.env.APP_URL || 'https://goswft.com'}/api/webhooks/twilio/sms`;
+      if (!twilio.validateRequest(twilioAuthToken, signature, url, req.body)) {
+        return res.status(403).type("text/xml").send("<Response></Response>");
+      }
+    }
+
     const from = req.body.From;
     const body = req.body.Body;
     const msgSid = req.body.MessageSid;

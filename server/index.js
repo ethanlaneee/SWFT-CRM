@@ -10,6 +10,7 @@ process.on("unhandledRejection", (err) => {
 
 const path = require("path");
 const express = require("express");
+const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const { auth } = require("./middleware/auth");
@@ -26,6 +27,13 @@ const surveyRouter = require("./routes/survey");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ── Security headers ──
+app.use(helmet({
+  contentSecurityPolicy: false,  // disabled — frontend uses inline scripts and external CDNs
+  crossOriginEmbedderPolicy: false,  // disabled — Stripe embeds
+  hsts: { maxAge: 63072000, includeSubDomains: true },
+}));
 
 // ── CORS — restrict to production domain ──
 const APP_URL = process.env.APP_URL || "https://goswft.com";
