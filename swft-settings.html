@@ -407,7 +407,7 @@ async function loadIntegrations() {
     var container = document.getElementById('integrations-list');
     if (!container) return;
 
-    var icons = { gmail: '📧', google_calendar: '📅', google_sheets: '📊', quickbooks: '💰', stripe: '💳', square: '🟦' };
+    var icons = { gmail: '📧', google_calendar: '📅', google_sheets: '📊', quickbooks: '💰', square: '🟦' };
     container.innerHTML = data.integrations.map(function(i) {
       return '<div class="settings-row" style="' + (i.connected ? 'border-left:2px solid var(--green);padding-left:14px;' : '') + '">' +
         '<div class="settings-row-info">' +

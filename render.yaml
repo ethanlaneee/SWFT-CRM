@@ -18,5 +18,17 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      - key: SQUARE_ACCESS_TOKEN
+        sync: false
+      - key: SQUARE_LOCATION_ID
+        sync: false
+      - key: SQUARE_ENVIRONMENT
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
       - key: NODE_ENV
         value: production

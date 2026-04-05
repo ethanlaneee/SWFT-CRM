@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { triggerAutomation } = require("./automations");
 
 const col = () => db.collection("quotes");
 
@@ -76,6 +77,24 @@ router.post("/:id/send", async (req, res, next) => {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
+
+    // Trigger automations for quote_sent
+    const quoteData = doc.data();
+    if (quoteData.customerId) {
+      try {
+        const custDoc = await db.collection("customers").doc(quoteData.customerId).get();
+        const cust = custDoc.exists ? custDoc.data() : {};
+        triggerAutomation(req.orgId, "quote_sent", {
+          id: quoteData.customerId,
+          name: cust.name || quoteData.customerName || "",
+          phone: cust.phone || "",
+          email: cust.email || "",
+        }).catch(console.error);
+      } catch (autoErr) {
+        console.error("quote_sent automation lookup error:", autoErr);
+      }
+    }
+
     res.json({ success: true, status: "sent" });
   } catch (err) { next(err); }
 });

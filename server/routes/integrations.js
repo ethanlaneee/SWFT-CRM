@@ -51,20 +51,23 @@ const INTEGRATIONS = [
     ],
   },
   {
+    id: "google_business",
+    name: "Google Business Profile",
+    icon: "star",
+    description: "View and respond to Google reviews",
+    provider: "google",
+    scopes: [
+      "https://www.googleapis.com/auth/business.manage",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
+  },
+  {
     id: "quickbooks",
     name: "QuickBooks",
     icon: "dollar-sign",
     description: "Sync invoices and expenses",
     provider: "quickbooks",
     scopes: ["com.intuit.quickbooks.accounting"],
-  },
-  {
-    id: "stripe",
-    name: "Stripe",
-    icon: "credit-card",
-    description: "Accept online payments via payment links on invoices",
-    provider: "stripe",
-    scopes: [],
   },
 ];
 
