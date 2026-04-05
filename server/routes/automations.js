@@ -232,7 +232,7 @@ router.get("/", async (req, res, next) => {
       .get();
     const results = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    res.json(results);
+    res.json({ automations: results });
   } catch (err) {
     next(err);
   }
@@ -248,7 +248,7 @@ router.get("/pending", async (req, res, next) => {
     let results = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     results = results.slice(0, 50);
-    res.json(results);
+    res.json({ messages: results });
   } catch (err) {
     next(err);
   }
