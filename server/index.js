@@ -11,13 +11,14 @@ process.on("unhandledRejection", (err) => {
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
 const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = require("./routes/payments");
 const { router: squareRouter, squareWebhookHandler } = require("./routes/square");
 const { router: notificationsRouter } = require("./routes/notifications");
-const { router: messagesRouter, twilioIncomingHandler, postmarkIncomingHandler } = require("./routes/messages");
+const { router: messagesRouter, twilioIncomingHandler } = require("./routes/messages");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
@@ -26,7 +27,33 @@ const surveyRouter = require("./routes/survey");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// ── CORS — restrict to production domain ──
+const APP_URL = process.env.APP_URL || "https://goswft.com";
+app.use(cors({
+  origin: [APP_URL, "https://goswft.com", "https://www.goswft.com"],
+  credentials: true,
+}));
+
+// ── Rate limiting ──
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100,                 // 100 requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please try again shortly." },
+});
+app.use("/api/", apiLimiter);
+
+// Stricter limit on auth-sensitive endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,                   // 20 attempts per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many attempts. Please try again later." },
+});
+app.use("/api/me/status", authLimiter);
+app.use("/api/billing/create-checkout-session", authLimiter);
 
 // ── Stripe webhooks — MUST be registered before express.json() ──
 // Stripe requires the raw request body to verify the webhook signature.
@@ -37,9 +64,8 @@ app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded webhooks
 
-// ── Incoming message webhooks (no auth — called by Twilio/Postmark) ──
+// ── Incoming message webhooks (no auth — called by Twilio) ──
 app.post("/api/webhooks/twilio/sms", twilioIncomingHandler);
-app.post("/api/webhooks/postmark/inbound", postmarkIncomingHandler);
 
 // ── OAuth callbacks (no auth — providers redirect here directly) ──
 app.get("/api/auth/google/callback", googleCallback);

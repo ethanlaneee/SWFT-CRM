@@ -1,15 +1,10 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
-const postmark = require("postmark");
 const multer = require("multer");
 const { google } = require("googleapis");
 const { sendSms } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
-
-const emailClient = new postmark.ServerClient(
-  process.env.POSTMARK_API_TOKEN || "32a85e4b-55e5-45e2-950e-6c120b001007"
-);
 
 /**
  * Send email via user's connected Gmail account.
@@ -97,7 +92,7 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files) {
   return { messageId: result.data.id, threadId: result.data.threadId };
 }
 
-// Multer — store files in memory (max 10MB total for Postmark)
+// Multer — store files in memory (max 10MB total)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -267,37 +262,12 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       req.files.forEach(f => attachmentNames.push(f.originalname));
     }
 
-    let sendResult;
-    let sentVia;
-    let gmailWarning = null;
-
-    if (user.gmailConnected && user.gmailTokens) {
-      // ── Send via Gmail (preferred — free) ──
-      user._uid = req.uid; // pass uid for token refresh
-      sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, req.files || []);
-      sentVia = "gmail";
-    } else {
-      // ── Fallback: send via Postmark ──
-      gmailWarning = "Email sent via Postmark. Connect your Gmail account in Settings for free, reliable email delivery.";
-      const attachments = (req.files || []).map(f => ({
-        Name: f.originalname,
-        Content: f.buffer.toString("base64"),
-        ContentType: f.mimetype,
-      }));
-      const INBOUND_ADDRESS = process.env.POSTMARK_INBOUND_ADDRESS || "bd196517d8ffba85bb53831c50d00fb1@inbound.postmarkapp.com";
-      const emailPayload = {
-        From: `${fromName} <${fromEmail}>`,
-        To: to,
-        ReplyTo: INBOUND_ADDRESS,
-        Subject: subject,
-        HtmlBody: htmlBody,
-        TextBody: textBody,
-        MessageStream: "outbound",
-      };
-      if (attachments.length) emailPayload.Attachments = attachments;
-      sendResult = await emailClient.sendEmail(emailPayload);
-      sentVia = "postmark";
+    if (!user.gmailConnected || !user.gmailTokens) {
+      return res.status(400).json({ error: "Gmail not connected. Connect your Gmail account in Settings to send emails." });
     }
+
+    user._uid = req.uid;
+    const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, req.files || []);
 
     const msgRecord = {
       userId: req.uid,
@@ -308,15 +278,11 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       customerName: customerName || "",
       type: "email",
       status: "sent",
-      sentVia,
+      sentVia: "gmail",
+      gmailMessageId: sendResult.messageId,
+      gmailThreadId: sendResult.threadId,
       sentAt: Date.now(),
     };
-    if (sentVia === "gmail") {
-      msgRecord.gmailMessageId = sendResult.messageId;
-      msgRecord.gmailThreadId = sendResult.threadId;
-    } else {
-      msgRecord.postmarkId = sendResult.MessageID;
-    }
     if (attachedDocType) {
       msgRecord.attachedDocType = attachedDocType;
       msgRecord.attachedDocId = attachedDocId;
@@ -334,9 +300,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       await db.collection("invoices").doc(attachedDocId).update({ status: "sent", sentAt: Date.now() });
     }
 
-    const response = { success: true, id: docRef.id, sentVia };
-    if (gmailWarning) response.warning = gmailWarning;
-    res.json(response);
+    res.json({ success: true, id: docRef.id, sentVia: "gmail" });
   } catch (err) {
     console.error("Message send error:", err);
     res.status(500).json({ error: err.message || "Failed to send message" });
@@ -538,70 +502,4 @@ async function twilioIncomingHandler(req, res) {
   }
 }
 
-/**
- * Postmark inbound email webhook (no auth — called by Postmark directly).
- * Matches sender email to a customer, saves as inbound message.
- */
-async function postmarkIncomingHandler(req, res) {
-  try {
-    const from = req.body.FromFull ? req.body.FromFull.Email : (req.body.From || "");
-    const fromName = req.body.FromFull ? req.body.FromFull.Name : "";
-    const subject = req.body.Subject || "";
-    const textBody = req.body.TextBody || "";
-    const htmlBody = req.body.HtmlBody || "";
-    const msgId = req.body.MessageID || "";
-
-    if (!from) {
-      return res.json({ ok: true });
-    }
-
-    const fromLower = from.toLowerCase();
-
-    // Match sender email to a customer
-    const custSnap = await db.collection("customers").get();
-    let matched = null;
-    for (const doc of custSnap.docs) {
-      const data = doc.data();
-      if (data.email && data.email.toLowerCase() === fromLower) {
-        matched = { customerId: doc.id, customerName: data.name || fromName || from, userId: data.userId };
-        break;
-      }
-    }
-
-    if (!matched) {
-      console.log("Incoming email from unknown address:", from);
-      return res.json({ ok: true });
-    }
-
-    // Extract attachment names
-    const attachmentNames = [];
-    if (req.body.Attachments && req.body.Attachments.length) {
-      for (const att of req.body.Attachments) {
-        attachmentNames.push(att.Name || "file");
-      }
-    }
-
-    await db.collection("messages").add({
-      userId: matched.userId,
-      customerId: matched.customerId,
-      customerName: matched.customerName,
-      from: from,
-      to: "inbound",
-      subject: subject,
-      body: textBody || htmlBody.replace(/<[^>]*>/g, "").substring(0, 2000),
-      type: "email",
-      direction: "inbound",
-      status: "received",
-      postmarkId: msgId,
-      attachments: attachmentNames.length ? attachmentNames : [],
-      sentAt: Date.now(),
-    });
-
-    res.json({ ok: true });
-  } catch (err) {
-    console.error("Postmark incoming webhook error:", err);
-    res.json({ ok: true });
-  }
-}
-
-module.exports = { router, twilioIncomingHandler, postmarkIncomingHandler };
+module.exports = { router, twilioIncomingHandler };

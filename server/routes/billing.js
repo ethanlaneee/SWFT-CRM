@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { google } = require("googleapis");
 
 // Initialize lazily so a missing STRIPE_SECRET_KEY env var doesn't crash
 // the server at startup — the error surfaces only when a billing route is hit.
@@ -173,13 +174,59 @@ async function webhookHandler(req, res) {
       }
     }
 
-    // Skip emails for the admin account
+    // Payment failed — notify the user via email
     if (event.type === "invoice.payment_failed") {
       const invoice = event.data.object;
       const snap    = await users().where("stripeCustomerId", "==", invoice.customer).limit(1).get();
       if (!snap.empty && snap.docs[0].data().email !== ADMIN_EMAIL) {
-        // TODO: send payment-failed email notification here
-        console.warn("Payment failed for customer:", invoice.customer);
+        const userData = snap.docs[0].data();
+        const userEmail = userData.email;
+        const userName = userData.name || "";
+        const billingUrl = `${process.env.APP_URL || "https://goswft.com"}/swft-billing`;
+
+        // Send via admin Gmail if tokens available
+        try {
+          const adminSnap = await users().where("email", "==", ADMIN_EMAIL).limit(1).get();
+          if (!adminSnap.empty) {
+            const admin = adminSnap.data ? adminSnap.data() : adminSnap.docs[0].data();
+            if (admin.gmailConnected && admin.gmailTokens) {
+              const oauth2Client = new google.auth.OAuth2(
+                process.env.GOOGLE_CLIENT_ID,
+                process.env.GOOGLE_CLIENT_SECRET,
+                process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
+              );
+              oauth2Client.setCredentials(admin.gmailTokens);
+              const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+              const subject = "SWFT — Payment Failed";
+              const htmlBody = `
+                <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+                  <h2 style="color:#0a0a0a;">Payment Failed</h2>
+                  <p>Hi${userName ? " " + userName : ""},</p>
+                  <p>We were unable to process your latest payment for your SWFT subscription. Please update your payment method to keep your account active.</p>
+                  <p><a href="${billingUrl}" style="display:inline-block;padding:12px 24px;background:#0a0a0a;color:#c8f135;text-decoration:none;border-radius:6px;font-weight:600;">Update Payment Method</a></p>
+                  <p style="color:#888;font-size:13px;">If you believe this is an error, please reply to this email.</p>
+                  <p style="color:#888;font-size:12px;">— The SWFT Team</p>
+                </div>`;
+
+              const boundary = "swft_billing_" + Date.now();
+              let mime = `From: SWFT <${admin.gmailAddress || ADMIN_EMAIL}>\r\n`;
+              mime += `To: ${userEmail}\r\n`;
+              mime += `Subject: ${subject}\r\n`;
+              mime += `MIME-Version: 1.0\r\n`;
+              mime += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
+              mime += htmlBody;
+
+              const encoded = Buffer.from(mime).toString("base64")
+                .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+              await gmail.users.messages.send({ userId: "me", requestBody: { raw: encoded } });
+              console.log("Payment-failed email sent to:", userEmail);
+            }
+          }
+        } catch (emailErr) {
+          console.error("Failed to send payment-failed email:", emailErr.message);
+        }
       }
     }
 

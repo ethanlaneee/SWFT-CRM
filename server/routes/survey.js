@@ -5,11 +5,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { sendSms } = require("../twilio");
-const postmark = require("postmark");
-
-const emailClient = new postmark.ServerClient(
-  process.env.POSTMARK_API_TOKEN || "32a85e4b-55e5-45e2-950e-6c120b001007"
-);
 
 /**
  * Resolve template variables.
@@ -65,19 +60,8 @@ async function sendFollowUpEmail(orgUser, to, subject, body) {
     return;
   }
 
-  // Fallback: Postmark
-  const INBOUND_ADDRESS =
-    process.env.POSTMARK_INBOUND_ADDRESS ||
-    "bd196517d8ffba85bb53831c50d00fb1@inbound.postmarkapp.com";
-  await emailClient.sendEmail({
-    From: `${fromName} <${fromEmail}>`,
-    To: to,
-    ReplyTo: INBOUND_ADDRESS,
-    Subject: subject,
-    TextBody: body,
-    HtmlBody: `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${body}</div>`,
-    MessageStream: "outbound",
-  });
+  // Gmail not connected — skip email
+  console.warn("Survey follow-up email skipped: Gmail not connected for org", orgUser.email || "unknown");
 }
 
 // GET /api/survey/:token — return survey metadata (customer name, company name)
