@@ -226,14 +226,32 @@ async function processScheduledMessages() {
 // GET /api/automations — list all automation rules for org
 router.get("/", async (req, res, next) => {
   try {
-    const snap = await db
+    console.log("[automations] GET list — uid:", req.uid, "orgId:", req.orgId);
+    // Query by orgId first, fall back to userId for backward compat
+    let snap = await db
       .collection("automations")
       .where("orgId", "==", req.orgId)
       .get();
+    // If nothing found by orgId and orgId !== uid, also check userId
+    if (snap.empty && req.orgId !== req.uid) {
+      snap = await db
+        .collection("automations")
+        .where("orgId", "==", req.uid)
+        .get();
+    }
+    // Also check for automations stored with userId field (legacy)
+    if (snap.empty) {
+      snap = await db
+        .collection("automations")
+        .where("userId", "==", req.uid)
+        .get();
+    }
     const results = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    console.log("[automations] Found", results.length, "rules");
     res.json({ automations: results });
   } catch (err) {
+    console.error("[automations] GET error:", err.message);
     next(err);
   }
 });
@@ -250,7 +268,9 @@ router.get("/pending", async (req, res, next) => {
     results = results.slice(0, 50);
     res.json({ messages: results });
   } catch (err) {
-    next(err);
+    // If scheduledMessages collection doesn't exist yet, return empty
+    console.error("[automations] pending error:", err.message);
+    res.json({ messages: [] });
   }
 });
 
@@ -275,8 +295,10 @@ router.post("/", async (req, res, next) => {
     }
 
     const now = Date.now();
+    console.log("[automations] POST create — uid:", req.uid, "orgId:", req.orgId, "name:", name);
     const data = {
       orgId: req.orgId,
+      userId: req.uid,
       name: name || "",
       trigger: trigger || "quote_sent",
       delayDays: Number(delayDays) || 0,

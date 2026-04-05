@@ -314,16 +314,26 @@ let _surveyOn = false;
 let _enabledOn = true;
 
 async function init() {
-  try { await requireAuth(); loadUser && loadUser(); } catch(e) { return; }
+  try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
+  try { loadUser && loadUser(); } catch(e) { console.error('loadUser error:', e); }
   await loadAll();
 }
 
 async function loadAll() {
   try {
-    const [rulesData, pendingData] = await Promise.all([
-      API.automations.list(),
-      API.automations.pending(),
-    ]);
+    // Load rules and pending separately so one failing doesn't block the other
+    let rulesData = { automations: [] };
+    let pendingData = { messages: [] };
+    try {
+      rulesData = await API.automations.list();
+    } catch(e) {
+      console.error('Failed to load automations:', e);
+    }
+    try {
+      pendingData = await API.automations.pending();
+    } catch(e) {
+      console.error('Failed to load pending:', e);
+    }
     _rules = rulesData.automations || [];
     renderRules(_rules);
     renderPending(pendingData.messages || []);
