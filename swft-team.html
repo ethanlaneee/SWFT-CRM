@@ -401,11 +401,9 @@ async function changeRole(memberId, newRole){
 }
 
 async function cancelInvite(memberId, name){
-  var ok = await swftConfirm(
-    'Cancel the invite for <strong>' + name + '</strong>? They will no longer be able to join using the invite link.',
-    'CANCEL INVITE',
-    '✉️'
-  );
+  var ok = typeof swftConfirm === 'function'
+    ? await swftConfirm('Cancel the invite for <strong>' + name + '</strong>? They will no longer be able to join using the invite link.', 'CANCEL INVITE', '✉️')
+    : window.confirm('Cancel invite for ' + name + '?');
   if(!ok) return;
   try{
     await API.team.remove(memberId);
@@ -415,11 +413,9 @@ async function cancelInvite(memberId, name){
 }
 
 async function removeMember(memberId, name){
-  var ok = await swftConfirm(
-    'Remove <strong>' + name + '</strong> from your team?',
-    'REMOVE MEMBER',
-    '👤'
-  );
+  var ok = typeof swftConfirm === 'function'
+    ? await swftConfirm('Remove <strong>' + name + '</strong> from your team?', 'REMOVE MEMBER', '👤')
+    : window.confirm('Remove ' + name + ' from your team?');
   if(!ok) return;
   try{
     await API.team.remove(memberId);
@@ -557,17 +553,25 @@ async function createCustomRole(){
 }
 
 async function deleteCustomRole(roleId, name){
-  var ok = await swftConfirm(
-    'Delete the <strong>' + name + '</strong> role? Any team members assigned to it must be reassigned first.',
-    'DELETE ROLE',
-    '🗑️'
-  );
+  var ok;
+  if(typeof swftConfirm === 'function'){
+    ok = await swftConfirm(
+      'Delete the <strong>' + name + '</strong> role? Any team members assigned to it must be reassigned first.',
+      'DELETE ROLE',
+      '🗑️'
+    );
+  } else {
+    ok = window.confirm('Delete the "' + name + '" role?');
+  }
   if(!ok) return;
   try{
     await API.team.deleteRole(roleId);
     showToast(name + ' role deleted');
     await loadRoles();
-  } catch(e){ showToast('Error: ' + e.message); }
+  } catch(e){
+    showToast('Error: ' + e.message);
+    console.error('deleteCustomRole error:', roleId, e);
+  }
 }
 
 function updateInviteRoleDropdown(){
