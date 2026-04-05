@@ -161,10 +161,10 @@ app.listen(PORT, () => {
 });
 
 // ── Automation worker ──
-// Process pending scheduled messages every 5 minutes
+// Process pending scheduled messages every 30 seconds
 setInterval(() => {
   processScheduledMessages().catch(err => console.error("Automation worker error:", err));
-}, 5 * 60 * 1000);
+}, 30 * 1000);
 
-// Run once on startup after 30 seconds (gives server time to fully initialize)
-setTimeout(() => processScheduledMessages().catch(console.error), 30000);
+// Run once on startup after 5 seconds
+setTimeout(() => processScheduledMessages().catch(console.error), 5000);
