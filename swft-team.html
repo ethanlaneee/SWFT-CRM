@@ -467,7 +467,7 @@ function renderRoles(){
 
     var headerHtml = '<div class="role-card-header">' +
       '<div class="role-card-name">' + (role.name || roleId);
-    if(isBuiltIn) headerHtml += ' <span class="role-card-badge">built-in</span>';
+    if(isOwnerRole) headerHtml += ' <span class="role-card-badge">built-in</span>';
     headerHtml += '</div>';
     if(!isOwnerRole){
       headerHtml += '<div class="role-card-actions">';

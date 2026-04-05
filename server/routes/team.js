@@ -478,8 +478,8 @@ router.delete("/roles/:roleId", async (req, res, next) => {
       // For built-in roles: store in a hiddenRoles list so GET filters them out
       await orgRef.set({ hiddenRoles: FieldValue.arrayUnion(roleId) }, { merge: true });
     } else {
-      // For custom roles: delete the field atomically
-      await orgRef.set({ [`roles.${roleId}`]: FieldValue.delete() }, { merge: true });
+      // For custom roles: use update() to atomically delete the nested field
+      await orgRef.update({ [`roles.${roleId}`]: FieldValue.delete() });
     }
 
     res.json({ success: true });
