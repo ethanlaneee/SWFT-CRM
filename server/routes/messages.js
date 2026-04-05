@@ -133,11 +133,32 @@ function generateDocumentPdf(doc, docType, user) {
     const items = doc.items || [];
     const GREEN = "#8ab800";
 
-    // ── Company header ──
+    // ── Company header (logo or text) ──
     let y = 50;
-    pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
-    pdf.fill(GREEN).text(".", { continued: false });
-    y += 36;
+    if (user.companyLogo) {
+      try {
+        // companyLogo is a data URL like "data:image/png;base64,..."
+        const matches = user.companyLogo.match(/^data:image\/\w+;base64,(.+)$/);
+        if (matches) {
+          const imgBuffer = Buffer.from(matches[1], "base64");
+          pdf.image(imgBuffer, 50, y, { height: 50, fit: [180, 50] });
+          y += 58;
+        } else {
+          pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
+          pdf.fill(GREEN).text(".", { continued: false });
+          y += 36;
+        }
+      } catch (e) {
+        // Fallback to text if image fails
+        pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
+        pdf.fill(GREEN).text(".", { continued: false });
+        y += 36;
+      }
+    } else {
+      pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
+      pdf.fill(GREEN).text(".", { continued: false });
+      y += 36;
+    }
     pdf.fontSize(9).fill("#999999").text(tagline, 50, y);
     y += 24;
 
