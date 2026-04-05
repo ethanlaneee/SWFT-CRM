@@ -47,6 +47,7 @@ router.post("/", async (req, res, next) => {
       name: data.name,
       phone: data.phone,
       email: data.email,
+      tags: data.tags || [],
     }).catch(console.error);
 
     res.status(201).json({ id: ref.id, ...data });

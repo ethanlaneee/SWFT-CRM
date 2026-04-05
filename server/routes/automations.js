@@ -296,7 +296,7 @@ async function processScheduledMessages() {
           read: false,
           createdAt: Date.now(),
         });
-      } else {
+      } else if (msg.messageType === "email") {
         if (!msg.email) throw new Error("No email address for email");
         const companyName = orgUser.company || orgUser.name || "SWFT";
         const emailSubject = msg.subject || `Message from ${companyName}`;
@@ -306,6 +306,8 @@ async function processScheduledMessages() {
           emailSubject,
           msg.message
         );
+      } else {
+        throw new Error(`Unknown message type: ${msg.messageType}`);
       }
 
       // ── Success ──
@@ -313,25 +315,28 @@ async function processScheduledMessages() {
       console.log(`[automation worker] Sent ${msgDoc.id} (${msg.messageType}) to ${msg.phone || msg.email}`);
 
       // Create a record in the messages collection so it shows in the chat thread
-      const msgRecord = {
-        userId: ownerUid,
-        orgId: msg.orgId,
-        to: msg.messageType === "sms" ? msg.phone : msg.email,
-        body: msg.message,
-        customerId: msg.customerId || "",
-        customerName: msg.customerName || "",
-        type: msg.messageType,
-        status: "sent",
-        sentVia: msg.messageType === "sms" ? "twilio" : "gmail",
-        sentAt: Date.now(),
-        scheduledMessageId: msgDoc.id,
-        isAutomation: !!msg.automationId,
-      };
-      if (msg.messageType === "email") {
-        const companyName = orgUser.company || orgUser.name || "SWFT";
-        msgRecord.subject = msg.subject || `Message from ${companyName}`;
+      // Only for sms/email — notifications and tags aren't messages
+      if (msg.messageType === "sms" || msg.messageType === "email") {
+        const msgRecord = {
+          userId: ownerUid,
+          orgId: msg.orgId,
+          to: msg.messageType === "sms" ? msg.phone : msg.email,
+          body: msg.message,
+          customerId: msg.customerId || "",
+          customerName: msg.customerName || "",
+          type: msg.messageType,
+          status: "sent",
+          sentVia: msg.messageType === "sms" ? "twilio" : "gmail",
+          sentAt: Date.now(),
+          scheduledMessageId: msgDoc.id,
+          isAutomation: !!msg.automationId,
+        };
+        if (msg.messageType === "email") {
+          const companyName = orgUser.company || orgUser.name || "SWFT";
+          msgRecord.subject = msg.subject || `Message from ${companyName}`;
+        }
+        await db.collection("messages").add(msgRecord);
       }
-      await db.collection("messages").add(msgRecord);
 
     } catch (err) {
       console.error(`[automation worker] Failed ${msgDoc.id} (attempt ${retryCount + 1}):`, err.message);

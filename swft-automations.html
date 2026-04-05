@@ -615,6 +615,15 @@ window.editRule = function(id) {
   document.getElementById('f-type').value = r.messageType || 'sms';
   document.getElementById('f-subject').value = r.emailSubject || '';
   document.getElementById('f-subject-field').style.display = (r.messageType || 'sms') === 'email' ? '' : 'none';
+  const lbl2 = document.getElementById('template-label');
+  const sub2 = document.getElementById('template-sub');
+  if ((r.messageType || 'sms') === 'tag_customer') {
+    if (lbl2) lbl2.textContent = 'Tags to Add';
+    if (sub2) sub2.textContent = 'Comma-separated tags, e.g. "VIP, Repeat Customer, Priority"';
+  } else {
+    if (lbl2) lbl2.textContent = 'Message Template';
+    if (sub2) sub2.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
+  }
   document.getElementById('f-template').value = r.messageTemplate || '';
   _surveyOn = !!r.isSurvey;
   document.getElementById('f-survey-toggle').className = 'toggle' + (_surveyOn ? ' on' : '');
@@ -742,6 +751,10 @@ window.openModal = function() {
   document.getElementById('f-type').value = 'sms';
   document.getElementById('f-subject').value = '';
   document.getElementById('f-subject-field').style.display = 'none';
+  const lbl = document.getElementById('template-label');
+  const sub = document.getElementById('template-sub');
+  if (lbl) lbl.textContent = 'Message Template';
+  if (sub) sub.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
   document.getElementById('f-template').value = _defaultTemplates[trigger].template;
   _surveyOn = false;
   document.getElementById('f-survey-toggle').className = 'toggle';

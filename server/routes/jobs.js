@@ -103,6 +103,8 @@ router.post("/:id/complete", async (req, res, next) => {
           name: cust.name || jobData.customerName || "",
           phone: cust.phone || "",
           email: cust.email || "",
+          total: jobData.cost || 0,
+          service: jobData.service || "",
         }).catch(console.error);
       } catch (e) { console.error("job_completed automation error:", e); }
     }
