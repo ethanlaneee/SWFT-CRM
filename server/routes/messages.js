@@ -141,6 +141,7 @@ function generateDocumentPdf(doc, docType, user) {
     const tagline = taglineParts.length ? taglineParts.join("     ") : "simple. smart. swft.";
     const title = docType === "quote" ? "QUOTE" : "INVOICE";
     const items = doc.items || [];
+    console.log("[PDF] Generating", docType, "- items:", JSON.stringify(items));
     const GREEN = "#8ab800";
     const pageW = 612; // LETTER width
     const left = 50;
@@ -244,8 +245,11 @@ function generateDocumentPdf(doc, docType, user) {
     // ═══════════════════════════════════════════
     for (const item of items) {
       const qty = Number(item.qty) || 1;
+      const rawRate = item.rate;
+      const rawTotal = item.total;
       const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
       const total = Number(item.total) || (qty * rate) || 0;
+      console.log("[PDF] Item:", item.desc, "rawRate:", rawRate, "rawTotal:", rawTotal, "computed rate:", rate, "computed total:", total);
 
       const descText = item.desc || item.description || "";
       const qtyText = String(qty);
