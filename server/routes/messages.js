@@ -723,4 +723,4 @@ async function twilioIncomingHandler(req, res) {
   }
 }
 
-module.exports = { router, twilioIncomingHandler };
+module.exports = { router, twilioIncomingHandler, sendViaGmail, generateDocumentPdf };

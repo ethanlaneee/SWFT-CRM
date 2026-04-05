@@ -248,6 +248,10 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
         Square Link
       </button>
       <button class="pdf-btn primary" onclick="saveInvoice()">Save Invoice</button>
+      <button class="pdf-btn" id="btn-send-email" onclick="sendInvoiceEmail()" style="background:#111;color:#fff;border-color:#111;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        Send to Customer
+      </button>
     </div>
   </div>
 </div>
@@ -402,6 +406,29 @@ async function saveInvoice(){
   try{
     if(_currentInv&&_currentInv.id){await API.invoices.update(_currentInv.id,data);showToast('Invoice saved');}
     else{await API.invoices.create(data);showToast('Invoice created');}
+    closeModal();loadInvoices();
+  }catch(e){showToast('Error: '+e.message);}
+}
+
+async function sendInvoiceEmail(){
+  var custSel=document.getElementById('f-customer');
+  if(!custSel.value){showToast('Select a customer first');return;}
+  var total=_items.reduce(function(s,i){return s+i.total;},0);
+  var data={customerId:custSel.value,customerName:custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'',items:_items,total:total,status:document.getElementById('f-status').value,service:document.getElementById('f-service').value,sqft:document.getElementById('f-sqft').value,address:document.getElementById('f-address').value,finish:document.getElementById('f-finish').value,notes:document.getElementById('f-notes').value,dueDate:document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).getTime():null};
+
+  try{
+    if(_currentInv&&_currentInv.id){
+      await API.invoices.update(_currentInv.id,data);
+    }else{
+      var created=await API.invoices.create(data);
+      _currentInv={id:created.id,...data};
+    }
+  }catch(e){showToast('Error saving: '+e.message);return;}
+
+  try{
+    showToast('Sending invoice...');
+    await API.invoices.email(_currentInv.id);
+    showToast('Invoice sent to customer!');
     closeModal();loadInvoices();
   }catch(e){showToast('Error: '+e.message);}
 }
