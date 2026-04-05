@@ -244,12 +244,23 @@ let allUsers = [];
 let expandedUserId = null;
 
 /* ── RENDER ── */
-function renderDashboard(stats) {
+// Platform totals are computed by summing per-user counts from the users
+// endpoint so they always match the table and stay accurate after deletes.
+function renderDashboard(stats, users) {
   const u = stats.users || {};
-  const p = stats.platform || {};
   const r = stats.revenue || {};
   const plans = stats.plans || {};
   const totalUsers = u.total || 0;
+
+  // Compute platform totals from actual per-user data
+  let totalCustomers = 0, totalJobs = 0, totalQuotes = 0, totalInvoices = 0;
+  (users || []).forEach(usr => {
+    const c = usr.counts || {};
+    totalCustomers += c.customers || 0;
+    totalJobs += c.jobs || 0;
+    totalQuotes += c.quotes || 0;
+    totalInvoices += c.invoices || 0;
+  });
 
   const body = document.getElementById('pageBody');
   body.innerHTML = `
@@ -257,22 +268,21 @@ function renderDashboard(stats) {
     <div class="section-label">User Metrics</div>
     <div class="kpi-grid" id="kpiGrid1">
       ${kpiCard('Total Users', fmt(u.total), u.monthlySignups ? `+${u.monthlySignups} last 30d` : '', 'green', 0)}
-      ${kpiCard('Paid Users', fmt(u.paid), '', 'green', 1)}
-      ${kpiCard('Trial Users', fmt(u.trial), '', 'blue', 2)}
-      ${kpiCard('Expired / Canceled', fmt(u.expired), '', 'amber', 3)}
-      ${kpiCard('Stripe MRR', fmtCurrency(r.stripeMRR), '', 'green', 4)}
-      ${kpiCard('User Revenue (30d)', fmtCurrency(r.monthlyRevenue), 'paid invoices', 'blue', 5)}
-      ${kpiCard('User Revenue (All)', fmtCurrency(r.totalRevenue), 'paid invoices', 'white', 6)}
-      ${kpiCard('Trial Conversion', fmtPct(u.trialConversionRate), '', 'amber', 7)}
+      ${kpiCard('Subscribed', fmt(u.subscribed), '', 'green', 1)}
+      ${kpiCard('Paying (Stripe)', fmt(u.paid), 'actually paying > $0', 'green', 2)}
+      ${kpiCard('Trial Users', fmt(u.trial), '', 'blue', 3)}
+      ${kpiCard('Expired / Canceled', fmt(u.expired), '', 'amber', 4)}
+      ${kpiCard('Stripe MRR', fmtCurrency(r.stripeMRR), '', 'green', 5)}
+      ${kpiCard('Trial Conversion', fmtPct(u.trialConversionRate), '', 'amber', 6)}
     </div>
 
-    <!-- KPI ROW 2 -->
+    <!-- KPI ROW 2 — derived from per-user data -->
     <div class="section-label">Platform Totals</div>
     <div class="kpi-grid" id="kpiGrid2">
-      ${kpiCard('Total Customers', fmt(p.totalCustomers), '', 'green', 8)}
-      ${kpiCard('Total Jobs', fmt(p.totalJobs), p.activeJobs ? `${fmt(p.activeJobs)} active` : '', 'blue', 9)}
-      ${kpiCard('Total Quotes', fmt(p.totalQuotes), '', 'amber', 10)}
-      ${kpiCard('Total Invoices', fmt(p.totalInvoices), '', 'white', 11)}
+      ${kpiCard('Total Customers', fmt(totalCustomers), '', 'green', 7)}
+      ${kpiCard('Total Jobs', fmt(totalJobs), '', 'blue', 8)}
+      ${kpiCard('Total Quotes', fmt(totalQuotes), '', 'amber', 9)}
+      ${kpiCard('Total Invoices', fmt(totalInvoices), '', 'white', 10)}
     </div>
 
     <!-- PLAN BREAKDOWN -->
@@ -299,7 +309,7 @@ function renderDashboard(stats) {
           <thead>
             <tr>
               <th>Name</th><th>Email</th><th>Company</th><th>Plan</th><th>Status</th>
-              <th>AI Msgs</th><th>SMS</th><th>Customers</th><th>Jobs</th><th>Invoices</th><th>Joined</th>
+              <th>AI Msgs</th><th>SMS</th><th>Customers</th><th>Jobs</th><th>Quotes</th><th>Invoices</th><th>Joined</th>
             </tr>
           </thead>
           <tbody id="userTableBody"></tbody>
@@ -351,6 +361,7 @@ function renderUserTable(users) {
       <td style="font-family:'JetBrains Mono',monospace;">${fmt(usage.smsCount)}</td>
       <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.customers)}</td>
       <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.jobs)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.quotes)}</td>
       <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.invoices)}</td>
       <td style="font-size:11px;">${timeAgo(u.createdAt)}</td>
     </tr>`;
@@ -376,7 +387,7 @@ window._toggleUserDetail = async function(uid, rowEl) {
   const detailRow = document.createElement('tr');
   detailRow.className = 'detail-row';
   detailRow.setAttribute('data-uid', uid);
-  detailRow.innerHTML = `<td colspan="11"><div class="detail-loading"><div class="spinner" style="width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 8px;"></div>Loading user detail...</div></td>`;
+  detailRow.innerHTML = `<td colspan="12"><div class="detail-loading"><div class="spinner" style="width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 8px;"></div>Loading user detail...</div></td>`;
   rowEl.insertAdjacentElement('afterend', detailRow);
 
   try {
@@ -389,7 +400,7 @@ window._toggleUserDetail = async function(uid, rowEl) {
     const limits = u.planLimits || {};
     const jobs = u.jobBreakdown || {};
 
-    detailRow.innerHTML = `<td colspan="11"><div class="detail-content">
+    detailRow.innerHTML = `<td colspan="12"><div class="detail-content">
       <div class="detail-grid">
         <!-- PROFILE -->
         <div class="detail-card">
@@ -463,7 +474,7 @@ window._toggleUserDetail = async function(uid, rowEl) {
     </div></td>`;
   } catch (e) {
     console.error('Detail fetch error:', e);
-    detailRow.innerHTML = `<td colspan="11"><div class="detail-content" style="text-align:center;color:var(--red);padding:20px;">Failed to load user detail</div></td>`;
+    detailRow.innerHTML = `<td colspan="12"><div class="detail-content" style="text-align:center;color:var(--red);padding:20px;">Failed to load user detail</div></td>`;
     showToast('Failed to load user detail', 'error');
   }
 };
@@ -524,7 +535,7 @@ window.loadAllData = async function() {
     if (!stats || !users) return;
 
     allUsers = users;
-    renderDashboard(stats);
+    renderDashboard(stats, users);
     renderUserTable(users);
     showToast('Data loaded successfully', 'success');
   } catch (e) {

@@ -27,34 +27,64 @@ function monthKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// ── Helper: normalize Firestore timestamp to ms ──
+function normTs(val) {
+  if (!val) return null;
+  if (typeof val === "number") return val;
+  if (val._seconds) return val._seconds * 1000;
+  return new Date(val).getTime();
+}
+
 // ── GET /api/dev/stats — platform-wide aggregate metrics ──
+// Platform totals are NOT computed here — they come from summing per-user
+// counts in the /users endpoint so numbers are always consistent.
 router.get("/stats", async (req, res, next) => {
   try {
-    const [usersSnap, customersSnap, jobsSnap, quotesSnap, invoicesSnap] = await Promise.all([
-      db.collection("users").get(),
-      db.collection("customers").get(),
-      db.collection("jobs").get(),
-      db.collection("quotes").get(),
-      db.collection("invoices").get(),
-    ]);
-
+    const usersSnap = await db.collection("users").get();
     const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const jobs = jobsSnap.docs.map(d => d.data());
-    const invoices = invoicesSnap.docs.map(d => d.data());
 
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
 
-    // User stats — categories must be mutually exclusive and sum to totalUsers
+    // ── User stats — mutually exclusive categories ──
     const totalUsers = users.length;
-    const paidUsers = users.filter(u => u.isSubscribed).length;
+    const subscribedUsers = users.filter(u => u.isSubscribed).length;
     const trialUsers = users.filter(u => !u.isSubscribed && u.accountStatus === "trialing").length;
     const expiredUsers = users.filter(u => !u.isSubscribed && (u.accountStatus === "expired" || u.accountStatus === "canceled")).length;
-    // "active" here means accountStatus is "active" but NOT subscribed (edge case — should not happen normally)
-    const activeNotPaid = users.filter(u => !u.isSubscribed && u.accountStatus === "active").length;
-    // Unknown = users that don't fit any bucket (no accountStatus set, etc.)
-    const unknownUsers = totalUsers - paidUsers - trialUsers - expiredUsers - activeNotPaid;
+
+    // ── Paid users from Stripe (actually paying > $0) ──
+    let paidUsers = 0;
+    let stripeMRR = 0;
+    try {
+      const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+      let hasMore = true;
+      let startingAfter = undefined;
+      while (hasMore) {
+        const params = { status: "active", limit: 100, expand: ["data.discount"] };
+        if (startingAfter) params.starting_after = startingAfter;
+        const subs = await stripe.subscriptions.list(params);
+        for (const sub of subs.data) {
+          let subTotal = 0;
+          for (const item of sub.items.data) {
+            const amount = item.price.unit_amount || 0; // cents
+            const interval = item.price.recurring?.interval;
+            if (interval === "year") subTotal += amount / 12;
+            else subTotal += amount;
+          }
+          // Apply coupon discount if present
+          if (sub.discount?.coupon) {
+            const coupon = sub.discount.coupon;
+            if (coupon.percent_off) subTotal = subTotal * (1 - coupon.percent_off / 100);
+            else if (coupon.amount_off) subTotal = Math.max(0, subTotal - coupon.amount_off);
+          }
+          stripeMRR += subTotal;
+          if (subTotal > 0) paidUsers++;
+        }
+        hasMore = subs.has_more;
+        if (subs.data.length) startingAfter = subs.data[subs.data.length - 1].id;
+      }
+      stripeMRR = Math.round(stripeMRR) / 100; // cents → dollars
+    } catch (_) { /* Stripe unavailable */ }
 
     // Plan breakdown
     const planBreakdown = {};
@@ -63,68 +93,11 @@ router.get("/stats", async (req, res, next) => {
       planBreakdown[plan] = (planBreakdown[plan] || 0) + 1;
     });
 
-    // Signups last 7 days
-    const recentSignups = users.filter(u => {
-      const created = u.createdAt;
-      if (!created) return false;
-      const ts = typeof created === "number" ? created : created._seconds ? created._seconds * 1000 : new Date(created).getTime();
-      return ts >= sevenDaysAgo;
-    }).length;
-
     // Signups last 30 days
     const monthlySignups = users.filter(u => {
-      const created = u.createdAt;
-      if (!created) return false;
-      const ts = typeof created === "number" ? created : created._seconds ? created._seconds * 1000 : new Date(created).getTime();
-      return ts >= thirtyDaysAgo;
+      const ts = normTs(u.createdAt);
+      return ts && ts >= thirtyDaysAgo;
     }).length;
-
-    // Platform data totals
-    const totalCustomers = customersSnap.size;
-    const totalJobs = jobsSnap.size;
-    const totalQuotes = quotesSnap.size;
-    const totalInvoices = invoicesSnap.size;
-
-    // Job status breakdown
-    const activeJobs = jobs.filter(j => j.status === "active").length;
-    const scheduledJobs = jobs.filter(j => j.status === "scheduled").length;
-    const completedJobs = jobs.filter(j => j.status === "complete").length;
-
-    // Invoice / revenue stats
-    const paidInvoices = invoices.filter(i => i.status === "paid");
-    const totalRevenue = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
-    const monthlyRevenue = paidInvoices
-      .filter(i => {
-        const ts = i.paidAt || 0;
-        const paidTime = typeof ts === "number" ? ts : ts._seconds ? ts._seconds * 1000 : new Date(ts).getTime();
-        return paidTime >= thirtyDaysAgo;
-      })
-      .reduce((sum, i) => sum + (i.total || 0), 0);
-
-    // MRR from Stripe (real active subscriptions)
-    let stripeMRR = 0;
-    try {
-      const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-      let hasMore = true;
-      let startingAfter = undefined;
-      while (hasMore) {
-        const params = { status: "active", limit: 100 };
-        if (startingAfter) params.starting_after = startingAfter;
-        const subs = await stripe.subscriptions.list(params);
-        for (const sub of subs.data) {
-          for (const item of sub.items.data) {
-            const amount = item.price.unit_amount || 0; // cents
-            const interval = item.price.recurring?.interval;
-            // Normalize to monthly
-            if (interval === "year") stripeMRR += amount / 12;
-            else stripeMRR += amount; // monthly or default
-          }
-        }
-        hasMore = subs.has_more;
-        if (subs.data.length) startingAfter = subs.data[subs.data.length - 1].id;
-      }
-      stripeMRR = Math.round(stripeMRR) / 100; // cents → dollars
-    } catch (_) { /* Stripe unavailable — leave at 0 */ }
 
     // Trial conversion rate
     const convertedFromTrial = users.filter(u => u.isSubscribed && u.trialStartDate).length;
@@ -134,10 +107,9 @@ router.get("/stats", async (req, res, next) => {
       : 0;
 
     res.json({
-      users: { total: totalUsers, paid: paidUsers, trial: trialUsers, expired: expiredUsers, activeNotPaid, unknown: unknownUsers, recentSignups, monthlySignups, trialConversionRate },
+      users: { total: totalUsers, subscribed: subscribedUsers, paid: paidUsers, trial: trialUsers, expired: expiredUsers, monthlySignups, trialConversionRate },
       plans: planBreakdown,
-      platform: { totalCustomers, totalJobs, totalQuotes, totalInvoices, activeJobs, scheduledJobs, completedJobs },
-      revenue: { totalRevenue, monthlyRevenue, stripeMRR },
+      revenue: { stripeMRR },
     });
   } catch (err) { next(err); }
 });
@@ -163,16 +135,18 @@ router.get("/users", async (req, res, next) => {
       } catch (_) { /* ignore */ }
 
       // Count user's data
-      let customerCount = 0, jobCount = 0, invoiceCount = 0;
+      let customerCount = 0, jobCount = 0, quoteCount = 0, invoiceCount = 0;
       try {
         const orgId = data.orgId || uid;
-        const [custSnap, jobSnap, invSnap] = await Promise.all([
+        const [custSnap, jobSnap, quoteSnap, invSnap] = await Promise.all([
           db.collection("customers").where("orgId", "==", orgId).get(),
           db.collection("jobs").where("orgId", "==", orgId).get(),
+          db.collection("quotes").where("orgId", "==", orgId).get(),
           db.collection("invoices").where("orgId", "==", orgId).get(),
         ]);
         customerCount = custSnap.size;
         jobCount = jobSnap.size;
+        quoteCount = quoteSnap.size;
         invoiceCount = invSnap.size;
       } catch (_) { /* ignore */ }
 
@@ -199,7 +173,7 @@ router.get("/users", async (req, res, next) => {
         trialEndDate,
         gmailConnected: !!data.gmailConnected,
         usage,
-        counts: { customers: customerCount, jobs: jobCount, invoices: invoiceCount },
+        counts: { customers: customerCount, jobs: jobCount, quotes: quoteCount, invoices: invoiceCount },
       };
     }));
 
