@@ -132,6 +132,21 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .page-loader .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;}
 .page-loader span{font-size:12px;color:var(--gray);}
 
+/* LOGIN GATE */
+.login-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:380px;animation:fadeUp 0.45s ease both;}
+.login-box .logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;text-align:center;margin-bottom:4px;}
+.login-box .logo em{color:var(--green);font-style:normal;}
+.login-box .login-subtitle{text-align:center;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:28px;}
+.login-box label{display:block;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:6px;}
+.login-box input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.14s;margin-bottom:16px;}
+.login-box input:focus{border-color:var(--green);}
+.login-box input::placeholder{color:var(--gray2);}
+.login-btn{width:100%;padding:12px;background:var(--green);color:var(--bg);font-weight:600;font-size:13px;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity 0.14s;margin-top:4px;}
+.login-btn:hover{opacity:0.88;}
+.login-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.login-error{color:var(--red);font-size:11.5px;text-align:center;margin-top:12px;min-height:18px;}
+
 /* RESPONSIVE */
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.detail-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:640px){.kpi-grid{grid-template-columns:1fr;}.page-body{padding:20px 16px;}.header{padding:0 16px;}.detail-grid{grid-template-columns:1fr;}.search-input{width:160px;}.table-scroll{max-height:none;}}
@@ -139,28 +154,51 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="logo-mark">SWFT<em>.</em></div>
-  <span class="header-slash">/</span>
-  <span class="header-title">DEVELOPER DASHBOARD</span>
-  <div class="header-right">
-    <button class="refresh-btn" id="refreshBtn" onclick="loadAllData()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      Refresh
-    </button>
-    <a href="/swft-dashboard" class="back-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      Back to Dashboard
-    </a>
+<!-- LOGIN GATE (shown when not authenticated) -->
+<div class="login-gate" id="loginGate" style="display:none;">
+  <div class="login-box">
+    <div class="logo">SWFT<em>.</em></div>
+    <div class="login-subtitle">Developer Dashboard</div>
+    <form id="loginForm" onsubmit="return false;">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@goswft.com" autocomplete="email" required/>
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required/>
+      <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
   </div>
 </div>
 
-<!-- BODY -->
-<div class="page-body" id="pageBody">
-  <div class="page-loader" id="pageLoader">
-    <div class="spinner"></div>
-    <span>Loading developer data...</span>
+<!-- DASHBOARD (shown after auth) -->
+<div id="dashboardWrap" style="display:none;">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-mark">SWFT<em>.</em></div>
+    <span class="header-slash">/</span>
+    <span class="header-title">DEVELOPER DASHBOARD</span>
+    <div class="header-right">
+      <button class="refresh-btn" id="refreshBtn" onclick="loadAllData()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <button class="back-btn" id="logoutBtn" onclick="window._devLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+      <a href="/swft-dashboard" class="back-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="page-body" id="pageBody">
+    <div class="page-loader" id="pageLoader">
+      <div class="spinner"></div>
+      <span>Loading developer data...</span>
+    </div>
   </div>
 </div>
 
@@ -169,7 +207,7 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
@@ -548,18 +586,66 @@ window.loadAllData = async function() {
   }
 };
 
+/* ── LOGIN FORM ── */
+const loginForm = document.getElementById('loginForm');
+const loginBtn = document.getElementById('loginBtn');
+const loginError = document.getElementById('loginError');
+
+loginForm.addEventListener('submit', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  loginError.textContent = '';
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Signing in...';
+
+  if (email.toLowerCase() !== ALLOWED_EMAIL) {
+    loginError.textContent = 'Access denied — unauthorized account.';
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    const msg = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
+      ? 'Invalid password.'
+      : e.code === 'auth/user-not-found'
+      ? 'Account not found.'
+      : e.code === 'auth/too-many-requests'
+      ? 'Too many attempts. Try again later.'
+      : 'Sign in failed.';
+    loginError.textContent = msg;
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
+  }
+});
+
+/* ── LOGOUT ── */
+window._devLogout = async function() {
+  await signOut(auth);
+};
+
 /* ── AUTH GUARD ── */
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.href = 'swft-login';
-    return;
-  }
-  if (user.email !== ALLOWED_EMAIL) {
+  const loginGate = document.getElementById('loginGate');
+  const dashboardWrap = document.getElementById('dashboardWrap');
+
+  if (!user || user.email !== ALLOWED_EMAIL) {
+    // Show login form
+    loginGate.style.display = '';
+    dashboardWrap.style.display = 'none';
     document.body.style.visibility = 'visible';
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff5252;font-size:20px;font-family:DM Sans,sans-serif;">Access Denied</div>';
-    setTimeout(() => { window.location.href = 'swft-dashboard'; }, 2000);
+    if (user && user.email !== ALLOWED_EMAIL) {
+      loginError.textContent = 'Access denied — unauthorized account.';
+      signOut(auth);
+    }
     return;
   }
+
+  // Authorized — show dashboard
+  loginGate.style.display = 'none';
+  dashboardWrap.style.display = '';
   document.body.style.visibility = 'visible';
   loadAllData();
 });
