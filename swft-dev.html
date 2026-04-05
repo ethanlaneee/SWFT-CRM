@@ -256,13 +256,13 @@ function renderDashboard(stats) {
     <!-- KPI ROW 1 -->
     <div class="section-label">User Metrics</div>
     <div class="kpi-grid" id="kpiGrid1">
-      ${kpiCard('Total Users', fmt(u.total), u.recentSignups ? `+${u.recentSignups} this month` : '', 'green', 0)}
+      ${kpiCard('Total Users', fmt(u.total), u.monthlySignups ? `+${u.monthlySignups} this month` : '', 'green', 0)}
       ${kpiCard('Paid Users', fmt(u.paid), '', 'green', 1)}
       ${kpiCard('Trial Users', fmt(u.trial), '', 'blue', 2)}
       ${kpiCard('Expired Users', fmt(u.expired), '', 'amber', 3)}
       ${kpiCard('Stripe MRR', fmtCurrency(r.stripeMRR), '', 'green', 4)}
-      ${kpiCard('Monthly Revenue', fmtCurrency(r.monthlyRevenue), '', 'blue', 5)}
-      ${kpiCard('Total Revenue', fmtCurrency(r.totalRevenue), '', 'white', 6)}
+      ${kpiCard('User Revenue (30d)', fmtCurrency(r.monthlyRevenue), 'paid invoices', 'blue', 5)}
+      ${kpiCard('User Revenue (All)', fmtCurrency(r.totalRevenue), 'paid invoices', 'white', 6)}
       ${kpiCard('Trial Conversion', fmtPct(u.trialConversionRate), '', 'amber', 7)}
     </div>
 
@@ -380,17 +380,14 @@ window._toggleUserDetail = async function(uid, rowEl) {
   rowEl.insertAdjacentElement('afterend', detailRow);
 
   try {
-    const data = await devFetch(`/api/dev/user/${uid}`);
-    if (!data) return;
+    const u = await devFetch(`/api/dev/user/${uid}`);
+    if (!u) return;
     if (expandedUserId !== uid) return; // user clicked away
 
-    const u = data;
     const usage = u.usage || {};
     const counts = u.counts || {};
-    const sub = u.subscription || {};
     const limits = u.planLimits || {};
     const jobs = u.jobBreakdown || {};
-    const integrations = u.integrations || {};
 
     detailRow.innerHTML = `<td colspan="11"><div class="detail-content">
       <div class="detail-grid">
@@ -414,27 +411,24 @@ window._toggleUserDetail = async function(uid, rowEl) {
           ${detailItem('Status', u.accountStatus, u.accountStatus === 'active' ? 'green' : u.accountStatus === 'trialing' ? 'blue' : 'amber')}
           ${detailItem('Subscribed', u.isSubscribed ? 'Yes' : 'No', u.isSubscribed ? 'green' : 'red')}
           ${detailItem('Trial End', formatDate(u.trialEndDate))}
-          ${detailItem('Stripe Customer', sub.stripeCustomerId || '—')}
-          ${detailItem('Stripe Sub', sub.stripeSubscriptionId || '—')}
-          ${detailItem('Period End', formatDate(sub.currentPeriodEnd))}
+          ${detailItem('Stripe Customer', u.stripeCustomerId || '—')}
+          ${detailItem('Stripe Sub', u.stripeSubscriptionId || '—')}
         </div>
 
         <!-- INTEGRATIONS -->
         <div class="detail-card">
           <div class="detail-card-title">Integrations</div>
-          ${detailItem('Gmail', integrations.gmailConnected || u.gmailConnected ? 'Connected' : 'Not connected', integrations.gmailConnected || u.gmailConnected ? 'green' : 'red')}
-          ${detailItem('Google Calendar', integrations.calendarConnected ? 'Connected' : 'Not connected', integrations.calendarConnected ? 'green' : 'red')}
-          ${detailItem('Stripe', integrations.stripeConnected ? 'Connected' : 'Not connected', integrations.stripeConnected ? 'green' : 'red')}
-          ${detailItem('QuickBooks', integrations.quickbooksConnected ? 'Connected' : 'Not connected', integrations.quickbooksConnected ? 'green' : 'red')}
+          ${detailItem('Gmail', u.gmailConnected ? 'Connected' : 'Not connected', u.gmailConnected ? 'green' : 'red')}
+          ${u.gmailAddress ? detailItem('Gmail Address', u.gmailAddress) : ''}
+          ${detailItem('Google Calendar', u.calendarConnected ? 'Connected' : 'Not connected', u.calendarConnected ? 'green' : 'red')}
+          ${detailItem('QuickBooks', u.quickbooksConnected ? 'Connected' : 'Not connected', u.quickbooksConnected ? 'green' : 'red')}
         </div>
 
         <!-- USAGE -->
         <div class="detail-card">
           <div class="detail-card-title">Usage This Month</div>
-          ${detailItem('AI Messages', `${fmt(usage.aiMessageCount || 0)} / ${fmt(limits.aiMessages || '∞')}`)}
-          ${detailItem('SMS Sent', `${fmt(usage.smsCount || 0)} / ${fmt(limits.sms || '∞')}`)}
-          ${detailItem('Customers', `${fmt(counts.customers || 0)} / ${fmt(limits.customers || '∞')}`)}
-          ${detailItem('Team Members', `${fmt(usage.teamMembers || 0)} / ${fmt(limits.teamMembers || '∞')}`)}
+          ${detailItem('AI Messages', `${fmt(usage.aiMessageCount)} / ${limits.aiMessages === 'unlimited' ? '∞' : fmt(limits.aiMessages)}`)}
+          ${detailItem('SMS Sent', `${fmt(usage.smsCount)} / ${limits.sms === 'unlimited' ? '∞' : fmt(limits.sms)}`)}
         </div>
 
         <!-- DATA COUNTS -->
@@ -442,10 +436,11 @@ window._toggleUserDetail = async function(uid, rowEl) {
           <div class="detail-card-title">Data Counts</div>
           ${detailItem('Customers', fmt(counts.customers))}
           ${detailItem('Jobs', fmt(counts.jobs))}
-          ${detailItem('Invoices', fmt(counts.invoices))}
           ${detailItem('Quotes', fmt(counts.quotes))}
-          ${detailItem('Contacts', fmt(counts.contacts))}
-          ${detailItem('Templates', fmt(counts.templates))}
+          ${detailItem('Invoices', fmt(counts.invoices))}
+          ${detailItem('Team Members', fmt(counts.team))}
+          ${detailItem('Schedule Entries', fmt(counts.schedule))}
+          ${detailItem('Messages', fmt(counts.messages))}
         </div>
 
         <!-- JOBS + REVENUE -->
@@ -453,11 +448,17 @@ window._toggleUserDetail = async function(uid, rowEl) {
           <div class="detail-card-title">Jobs &amp; Revenue</div>
           ${detailItem('Active Jobs', fmt(jobs.active), 'green')}
           ${detailItem('Scheduled', fmt(jobs.scheduled), 'blue')}
-          ${detailItem('Completed', fmt(jobs.completed), 'green')}
-          ${detailItem('Canceled', fmt(jobs.canceled), 'red')}
+          ${detailItem('Completed', fmt(jobs.complete), 'green')}
           <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
-          ${detailItem('Revenue Generated', fmtCurrency(u.revenueGenerated), 'green')}
+          ${detailItem('Invoice Revenue', fmtCurrency(u.revenue), 'green')}
         </div>
+      </div>
+      <!-- DELETE USER -->
+      <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+        <button onclick="window._deleteUser('${u.id}', '${escHtml(u.email || u.name || u.id)}')" style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.25);color:var(--red);font-size:11.5px;font-weight:600;padding:8px 18px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,82,82,0.2)'" onmouseout="this.style.background='rgba(255,82,82,0.1)'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Delete User &amp; All Data
+        </button>
       </div>
     </div></td>`;
   } catch (e) {
@@ -471,6 +472,34 @@ function detailItem(label, value, colorClass) {
   const cls = colorClass ? ` ${colorClass}` : '';
   return `<div class="detail-item"><span class="dlabel">${label}</span><span class="dvalue${cls}">${escHtml(value != null ? String(value) : '—')}</span></div>`;
 }
+
+/* ── DELETE USER ── */
+window._deleteUser = async function(uid, label) {
+  if (!confirm(`Permanently delete user "${label}" and ALL their data?\n\nThis will delete:\n- Firestore profile & all collections\n- Usage & conversation history\n- Stripe subscription (if active)\n- Firebase Auth account\n\nThis cannot be undone.`)) return;
+  if (!confirm(`Are you absolutely sure? Type OK to confirm.`)) return;
+
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const user = getAuth().currentUser;
+    const token = await user.getIdToken();
+    const res = await fetch(`/api/dev/user/${uid}`, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Delete failed');
+    showToast(`User ${label} deleted`, 'success');
+    // Remove from local state and re-render
+    allUsers = allUsers.filter(u => u.id !== uid);
+    renderUserTable(allUsers);
+    // Close detail row
+    const detailRow = document.querySelector(`.detail-row[data-uid="${uid}"]`);
+    if (detailRow) detailRow.remove();
+    expandedUserId = null;
+  } catch (e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+};
 
 /* ── FILTER ── */
 window._filterUsers = function(query) {

@@ -217,15 +217,18 @@ router.get("/user/:id", async (req, res, next) => {
     const data = userDoc.data();
     const orgId = data.orgId || uid;
     const mk = monthKey();
+    const plan = getPlan(data.plan);
 
     // Parallel fetch all related data
-    const [usageDoc, custSnap, jobSnap, quoteSnap, invSnap, teamSnap] = await Promise.all([
+    const [usageDoc, custSnap, jobSnap, quoteSnap, invSnap, teamSnap, schedSnap, msgSnap] = await Promise.all([
       db.collection("usage").doc(uid).collection("months").doc(mk).get(),
       db.collection("customers").where("orgId", "==", orgId).get(),
       db.collection("jobs").where("orgId", "==", orgId).get(),
       db.collection("quotes").where("orgId", "==", orgId).get(),
       db.collection("invoices").where("orgId", "==", orgId).get(),
       db.collection("team").where("orgId", "==", orgId).get(),
+      db.collection("schedule").where("orgId", "==", orgId).get(),
+      db.collection("messages").doc(uid).collection("history").get().catch(() => ({ size: 0 })),
     ]);
 
     const usage = usageDoc.exists
@@ -238,32 +241,47 @@ router.get("/user/:id", async (req, res, next) => {
 
     const jobs = jobSnap.docs.map(d => d.data());
 
+    // Normalize timestamps
+    function normTs(val) {
+      if (!val) return null;
+      if (typeof val === "number") return val;
+      if (val._seconds) return val._seconds * 1000;
+      return new Date(val).getTime();
+    }
+
     res.json({
       id: uid,
-      profile: {
-        name: data.name, email: data.email, company: data.company,
-        phone: data.phone, address: data.address, website: data.website,
-      },
-      subscription: {
-        plan: data.plan || "starter",
-        accountStatus: data.accountStatus,
-        isSubscribed: !!data.isSubscribed,
-        stripeCustomerId: data.stripeCustomerId || null,
-        stripeSubscriptionId: data.stripeSubscriptionId || null,
-        trialStartDate: data.trialStartDate || null,
-        trialEndDate: data.trialEndDate || null,
-      },
-      integrations: {
-        gmail: !!data.gmailConnected,
-        gmailAddress: data.gmailAddress || null,
-      },
+      name: data.name || null,
+      email: data.email || null,
+      phone: data.phone || null,
+      company: data.company || null,
+      address: data.address || null,
+      website: data.website || null,
+      role: data.role || "owner",
+      plan: data.plan || "starter",
+      accountStatus: data.accountStatus || "unknown",
+      isSubscribed: !!data.isSubscribed,
+      stripeCustomerId: data.stripeCustomerId || null,
+      stripeSubscriptionId: data.stripeSubscriptionId || null,
+      trialEndDate: normTs(data.trialEndDate),
+      createdAt: normTs(data.createdAt),
+      gmailConnected: !!data.gmailConnected,
+      gmailAddress: data.gmailAddress || null,
+      calendarConnected: !!data.calendarConnected,
+      quickbooksConnected: !!data.quickbooksConnected,
       usage,
+      planLimits: {
+        sms: plan.smsLimit === Infinity ? "unlimited" : plan.smsLimit,
+        aiMessages: plan.aiMessageLimit === Infinity ? "unlimited" : plan.aiMessageLimit,
+      },
       counts: {
         customers: custSnap.size,
         jobs: jobSnap.size,
         quotes: quoteSnap.size,
         invoices: invSnap.size,
         team: teamSnap.size,
+        schedule: schedSnap.size,
+        messages: msgSnap.size || 0,
       },
       jobBreakdown: {
         active: jobs.filter(j => j.status === "active").length,
@@ -271,9 +289,89 @@ router.get("/user/:id", async (req, res, next) => {
         complete: jobs.filter(j => j.status === "complete").length,
       },
       revenue: totalRevenue,
-      role: data.role || "owner",
-      createdAt: data.createdAt || null,
     });
+  } catch (err) { next(err); }
+});
+
+// ── DELETE /api/dev/user/:id — permanently delete a user and all their data ──
+router.delete("/user/:id", async (req, res, next) => {
+  try {
+    const uid = req.params.id;
+
+    // Don't allow deleting yourself
+    if (uid === req.uid) {
+      return res.status(400).json({ error: "Cannot delete your own account from dev dashboard." });
+    }
+
+    const userDoc = await db.collection("users").doc(uid).get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+
+    const data = userDoc.data();
+    const orgId = data.orgId || uid;
+
+    // Cancel Stripe subscription if active
+    if (data.stripeSubscriptionId) {
+      try {
+        const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+        await stripe.subscriptions.cancel(data.stripeSubscriptionId);
+      } catch (_) { /* subscription may already be canceled */ }
+    }
+
+    // Delete all org-scoped data
+    const orgCollections = ["customers", "jobs", "quotes", "invoices", "schedule", "team"];
+    for (const colName of orgCollections) {
+      const snap = await db.collection(colName).where("orgId", "==", orgId).get();
+      const batch = db.batch();
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+      if (snap.docs.length > 0) await batch.commit();
+    }
+
+    // Delete usage subcollection
+    try {
+      const usageMonths = await db.collection("usage").doc(uid).collection("months").get();
+      const batch = db.batch();
+      usageMonths.docs.forEach(doc => batch.delete(doc.ref));
+      if (usageMonths.docs.length > 0) await batch.commit();
+      await db.collection("usage").doc(uid).delete();
+    } catch (_) { /* may not exist */ }
+
+    // Delete conversation history
+    try {
+      const convSnap = await db.collection("conversations").doc(uid).collection("messages").get();
+      const batch = db.batch();
+      convSnap.docs.forEach(doc => batch.delete(doc.ref));
+      if (convSnap.docs.length > 0) await batch.commit();
+      await db.collection("conversations").doc(uid).delete();
+    } catch (_) { /* may not exist */ }
+
+    // Delete notifications
+    try {
+      const notifSnap = await db.collection("notifications").doc(uid).collection("items").get();
+      const batch = db.batch();
+      notifSnap.docs.forEach(doc => batch.delete(doc.ref));
+      if (notifSnap.docs.length > 0) await batch.commit();
+      await db.collection("notifications").doc(uid).delete();
+    } catch (_) { /* may not exist */ }
+
+    // Delete messages subcollection
+    try {
+      const msgSnap = await db.collection("messages").doc(uid).collection("history").get();
+      const batch = db.batch();
+      msgSnap.docs.forEach(doc => batch.delete(doc.ref));
+      if (msgSnap.docs.length > 0) await batch.commit();
+      await db.collection("messages").doc(uid).delete();
+    } catch (_) { /* may not exist */ }
+
+    // Delete user profile
+    await db.collection("users").doc(uid).delete();
+
+    // Delete Firebase Auth account
+    try {
+      const { authAdmin } = require("../firebase");
+      await authAdmin.deleteUser(uid);
+    } catch (_) { /* auth may already be deleted */ }
+
+    res.json({ success: true, message: "User and all data permanently deleted" });
   } catch (err) { next(err); }
 });
 
