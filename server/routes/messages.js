@@ -190,24 +190,28 @@ function generateDocumentPdf(doc, docType, user) {
     // ═══════════════════════════════════════════
     //  INFO FIELDS  (label left, value right)
     // ═══════════════════════════════════════════
+    // Matches the printQuotePdf / printInvoicePdf layout exactly
     const fields = [
       { label: "Customer", value: doc.customerName || "—" },
-      { label: "Service", value: doc.service || "" },
-      { label: "Address", value: doc.address || "" },
-      { label: "Sqft", value: doc.sqft || "" },
-      { label: "Finish", value: doc.finish || "" },
+      { label: "Service", value: doc.service || "—" },
+      { label: "Address", value: doc.address || "—" },
     ];
     if (docType === "quote") {
-      if (doc.scheduledDate) fields.push({ label: "Scheduled", value: new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
+      const sched = doc.scheduledDate
+        ? new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "—";
+      fields.push({ label: "Scheduled", value: sched });
     }
     if (docType === "invoice") {
-      if (doc.dueDate) fields.push({ label: "Due Date", value: new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
+      const due = doc.dueDate
+        ? new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "—";
+      fields.push({ label: "Due Date", value: due });
     }
 
     for (const f of fields) {
-      if (!f.value) continue;
-      pdf.font("DM").fontSize(12).fill("#666").text(f.label, left, y);
-      pdf.font("DM-Medium").fontSize(12).fill("#111").text(f.value, left, y, { width: contentW, align: "right" });
+      pdf.font("DM").fontSize(13).fill("#666").text(f.label, left, y);
+      pdf.font("DM-Medium").fontSize(13).fill("#111").text(f.value, left, y, { width: contentW, align: "right" });
       y += 20;
     }
     y += 16;
@@ -243,15 +247,18 @@ function generateDocumentPdf(doc, docType, user) {
       const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
       const total = Number(item.total) || (qty * rate) || 0;
 
-      pdf.font("DM").fontSize(12).fill("#111");
-      pdf.text(item.desc || item.description || "", c1, y, { width: 240 });
-      pdf.font("DM").fontSize(12).fill("#111");
-      pdf.text(String(qty), c2, y, { width: 80, align: "center" });
-      pdf.text("$" + rate.toFixed(2), c3, y, { width: 70, align: "right" });
-      pdf.font("DM-Medium").fontSize(12).fill("#111");
-      pdf.text("$" + total.toFixed(2), c4, y, { width: c4End - c4, align: "right" });
+      const descText = item.desc || item.description || "";
+      const qtyText = String(qty);
+      const rateText = "$" + rate.toFixed(2);
+      const totalText = "$" + total.toFixed(2);
 
-      y += 26;
+      // All columns rendered at same y, font-size 13 to match print PDF
+      pdf.font("DM").fontSize(13).fill("#111").text(descText, c1, y, { width: 240 });
+      pdf.font("DM").fontSize(13).fill("#111").text(qtyText, c2, y, { width: 80, align: "center" });
+      pdf.font("DM").fontSize(13).fill("#111").text(rateText, c3, y, { width: 70, align: "right" });
+      pdf.font("DM-Medium").fontSize(13).fill("#111").text(totalText, c4, y, { width: c4End - c4, align: "right" });
+
+      y += 28;
       pdf.moveTo(left, y).lineTo(right, y).strokeColor("#f0f0f0").lineWidth(0.5).stroke();
       y += 10;
     }
@@ -273,16 +280,6 @@ function generateDocumentPdf(doc, docType, user) {
     y += 10;
     pdf.font("DM-Bold").fontSize(18).fill("#111").text("Total", left, y, { width: contentW - 130, align: "right" });
     pdf.font("DM-Bold").fontSize(18).fill("#111").text(totalFormatted, left, y, { width: contentW, align: "right" });
-    y += 36;
-
-    // ═══════════════════════════════════════════
-    //  NOTES
-    // ═══════════════════════════════════════════
-    if (doc.notes) {
-      pdf.font("DM").fontSize(10).fill("#999").text("NOTES", left, y, { characterSpacing: 1.2 });
-      y += 16;
-      pdf.font("DM").fontSize(12).fill("#555").text(doc.notes, left, y, { width: contentW, lineGap: 4 });
-    }
 
     pdf.end();
   });
