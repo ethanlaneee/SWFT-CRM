@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Privacy Policy — SWFT</title>
+<meta name="description" content="SWFT Privacy Policy. Learn how we collect, use, and protect your personal information."/>
+<meta name="robots" content="noindex, nofollow"/>
+<link rel="canonical" href="https://goswft.com/swft-privacy"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--green-dim:rgba(200,241,53,0.12);
+  --white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{width:100%;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden;line-height:1.7;}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+/* NAV */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(10,10,10,0.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--white);text-decoration:none;}
+.nav-logo span{color:var(--green);}
+.back-link{color:var(--gray);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;display:flex;align-items:center;gap:6px;}
+.back-link:hover{color:var(--white);}
+
+/* CONTENT */
+.page-wrap{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:120px 32px 80px;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,56px);line-height:1;letter-spacing:1px;margin-bottom:8px;}
+.page-title .accent{color:var(--green);}
+.page-meta{color:var(--gray);font-size:14px;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border);}
+
+h2{font-size:20px;font-weight:700;margin:40px 0 16px;color:var(--white);}
+h3{font-size:16px;font-weight:600;margin:24px 0 12px;color:var(--white);}
+p{color:var(--gray);font-size:15px;margin-bottom:16px;}
+ul,ol{color:var(--gray);font-size:15px;margin:0 0 16px 24px;}
+li{margin-bottom:8px;}
+a{color:var(--green);text-decoration:none;}
+a:hover{text-decoration:underline;}
+strong{color:var(--white);font-weight:600;}
+
+.contact-box{
+  margin-top:48px;padding:24px;border-radius:12px;
+  background:var(--surface);border:1px solid var(--border);
+}
+.contact-box p{margin:0;}
+
+@media(max-width:600px){
+  .nav{padding:14px 20px;}
+  .page-wrap{padding:100px 20px 60px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">SWFT<span>.</span></a>
+  <a href="/" class="back-link">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Back to Home
+  </a>
+</nav>
+
+<div class="page-wrap">
+
+  <h1 class="page-title">Privacy <span class="accent">Policy</span></h1>
+  <p class="page-meta">Effective Date: April 5, 2026 &nbsp;|&nbsp; Last Updated: April 5, 2026</p>
+
+  <p>SWFT ("we," "us," or "our") operates the SWFT platform at <a href="https://goswft.com">goswft.com</a>. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our web application and related services (collectively, the "Service"). By using the Service, you agree to the practices described in this policy.</p>
+
+  <h2>1. Information We Collect</h2>
+
+  <h3>1.1 Personal Information You Provide</h3>
+  <p>When you create an account or use our Service, we may collect:</p>
+  <ul>
+    <li><strong>Account information:</strong> name, email address, phone number, business name, and password.</li>
+    <li><strong>Customer data:</strong> names, email addresses, phone numbers, and physical addresses of your customers that you enter into the platform.</li>
+    <li><strong>Payment information:</strong> billing details processed securely through Stripe. We do not store full credit card numbers on our servers.</li>
+    <li><strong>Communications:</strong> SMS messages sent through Twilio, emails sent through Gmail API integration, and in-app messages.</li>
+    <li><strong>Job and business data:</strong> quotes, invoices, job details, scheduling information, photos, and notes.</li>
+    <li><strong>AI interactions:</strong> messages and prompts you send to our AI chat feature.</li>
+  </ul>
+
+  <h3>1.2 Information Collected Automatically</h3>
+  <ul>
+    <li><strong>Usage data:</strong> pages visited, features used, click patterns, session duration, and interaction data.</li>
+    <li><strong>Device information:</strong> browser type, operating system, device type, screen resolution, and IP address.</li>
+    <li><strong>Cookies and similar technologies:</strong> we use cookies, localStorage, and sessionStorage to maintain your session, authenticate your account, and analyze usage patterns. See our <a href="/swft-cookies">Cookie Policy</a> for details.</li>
+  </ul>
+
+  <h3>1.3 Information from Third-Party Integrations</h3>
+  <p>When you connect third-party services, we may receive data from those services:</p>
+  <ul>
+    <li><strong>Google (Gmail, Calendar):</strong> email content and calendar events you authorize us to access.</li>
+    <li><strong>QuickBooks:</strong> financial and accounting data you authorize us to sync.</li>
+  </ul>
+
+  <h2>2. How We Use Your Information</h2>
+  <p>We use the information we collect to:</p>
+  <ul>
+    <li>Provide, operate, and maintain the Service.</li>
+    <li>Process transactions and send billing-related communications via Stripe.</li>
+    <li>Send SMS messages on your behalf via Twilio.</li>
+    <li>Send and receive emails on your behalf via Gmail API integration.</li>
+    <li>Sync scheduling data with Google Calendar.</li>
+    <li>Sync financial data with QuickBooks when authorized.</li>
+    <li>Power AI-assisted features using Anthropic Claude to help you draft messages, generate quotes, and manage your business.</li>
+    <li>Analyze usage patterns and improve the Service using Google Analytics and Firebase Analytics.</li>
+    <li>Communicate with you about your account, updates, and support requests.</li>
+    <li>Detect, prevent, and address fraud, abuse, or technical issues.</li>
+    <li>Comply with legal obligations.</li>
+  </ul>
+
+  <h2>3. Third-Party Services</h2>
+  <p>We share data with the following third-party service providers, each of which has its own privacy policy:</p>
+  <ul>
+    <li><strong>Stripe</strong> — payment processing. <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe Privacy Policy</a></li>
+    <li><strong>Twilio</strong> — SMS messaging. <a href="https://www.twilio.com/legal/privacy" target="_blank" rel="noopener">Twilio Privacy Policy</a></li>
+    <li><strong>Google (Firebase, Gmail API, Google Calendar, Google Analytics)</strong> — authentication, email, scheduling, and analytics. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a></li>
+    <li><strong>Anthropic</strong> — AI chat and content generation via Claude. <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Anthropic Privacy Policy</a></li>
+    <li><strong>Square</strong> — additional payment processing. <a href="https://squareup.com/legal/privacy" target="_blank" rel="noopener">Square Privacy Policy</a></li>
+  </ul>
+  <p>We only share the minimum data necessary for each service to function. We do not sell your personal information to third parties.</p>
+
+  <h2>4. Cookies and Tracking</h2>
+  <p>We use cookies and similar technologies for the following purposes:</p>
+  <ul>
+    <li><strong>Essential cookies:</strong> Firebase Authentication cookies to keep you signed in and manage your session.</li>
+    <li><strong>Analytics cookies:</strong> Google Analytics (Measurement ID: G-B8BEW7E87V) to understand how users interact with the Service.</li>
+    <li><strong>Payment cookies:</strong> Stripe sets cookies to enable secure payment processing and fraud prevention.</li>
+    <li><strong>Local storage:</strong> we use localStorage and sessionStorage in your browser to store application state and preferences.</li>
+  </ul>
+  <p>For more information, see our <a href="/swft-cookies">Cookie Policy</a>.</p>
+
+  <h2>5. SMS/TCPA Compliance</h2>
+  <p>Our Service enables you to send SMS messages to your customers via Twilio. In connection with this feature:</p>
+  <ul>
+    <li>You are responsible for obtaining proper consent from your customers before sending them SMS messages, as required by the Telephone Consumer Protection Act (TCPA) and applicable state laws.</li>
+    <li>All SMS recipients must have the ability to opt out of receiving messages. Standard "STOP" opt-out functionality is supported.</li>
+    <li>Message and data rates may apply. Message frequency varies based on your usage.</li>
+    <li>We do not send marketing SMS messages on our own behalf to your customers without your direction.</li>
+    <li>You agree to comply with all applicable laws and regulations governing SMS communications, including the TCPA, CAN-SPAM Act, and any applicable state consumer protection laws.</li>
+  </ul>
+
+  <h2>6. Data Retention and Deletion</h2>
+  <p>We retain your personal information for as long as your account is active or as needed to provide the Service. Specifically:</p>
+  <ul>
+    <li><strong>Account data:</strong> retained while your account is active and for a reasonable period thereafter for legal and business purposes.</li>
+    <li><strong>Customer data:</strong> retained as long as your account is active. When you delete your account, your customer data is permanently deleted.</li>
+    <li><strong>Usage and analytics data:</strong> retained in aggregated, anonymized form and may be kept indefinitely for analytical purposes.</li>
+    <li><strong>Payment records:</strong> retained as required by applicable tax and financial regulations.</li>
+  </ul>
+  <p>You may delete your account at any time through the account settings within the Service. Upon account deletion, we will permanently remove your personal data and customer data from our active systems within 30 days. Some data may persist in encrypted backups for up to 90 days before being permanently purged.</p>
+
+  <h2>7. Your Rights</h2>
+  <p>Depending on your location, you may have the following rights regarding your personal information:</p>
+  <ul>
+    <li><strong>Access:</strong> request a copy of the personal data we hold about you.</li>
+    <li><strong>Correction:</strong> request that we correct inaccurate or incomplete personal data.</li>
+    <li><strong>Deletion:</strong> request that we delete your personal data (you may also use the delete account feature in the app).</li>
+    <li><strong>Portability:</strong> request a machine-readable copy of your data.</li>
+    <li><strong>Objection:</strong> object to certain processing of your personal data.</li>
+  </ul>
+  <p>To exercise any of these rights, contact us at <a href="mailto:ethan@goswft.com">ethan@goswft.com</a>. We will respond to your request within 30 days.</p>
+
+  <h2>8. California Residents — CCPA Rights</h2>
+  <p>If you are a California resident, the California Consumer Privacy Act (CCPA) provides you with additional rights:</p>
+  <ul>
+    <li><strong>Right to Know:</strong> you may request that we disclose the categories and specific pieces of personal information we have collected about you, the categories of sources, the business purpose for collecting the information, and the categories of third parties with whom we share it.</li>
+    <li><strong>Right to Delete:</strong> you may request that we delete your personal information, subject to certain exceptions.</li>
+    <li><strong>Right to Opt-Out of Sale:</strong> we do not sell personal information. If this changes, we will provide an opt-out mechanism.</li>
+    <li><strong>Right to Non-Discrimination:</strong> we will not discriminate against you for exercising your CCPA rights.</li>
+  </ul>
+  <p>To exercise your CCPA rights, contact us at <a href="mailto:ethan@goswft.com">ethan@goswft.com</a>. We may ask you to verify your identity before processing your request.</p>
+
+  <h2>9. EU Residents — GDPR Rights</h2>
+  <p>If you are located in the European Economic Area (EEA), the General Data Protection Regulation (GDPR) provides you with the following rights:</p>
+  <ul>
+    <li><strong>Lawful basis:</strong> we process your data based on contractual necessity (to provide the Service), legitimate interest (to improve and secure the Service), and consent (where applicable, such as for marketing communications).</li>
+    <li><strong>Right of access:</strong> obtain confirmation that your data is being processed and request a copy.</li>
+    <li><strong>Right to rectification:</strong> request correction of inaccurate data.</li>
+    <li><strong>Right to erasure:</strong> request deletion of your data under certain circumstances.</li>
+    <li><strong>Right to restrict processing:</strong> request that we limit how we use your data.</li>
+    <li><strong>Right to data portability:</strong> receive your data in a structured, commonly used format.</li>
+    <li><strong>Right to object:</strong> object to processing based on legitimate interest.</li>
+    <li><strong>Right to withdraw consent:</strong> withdraw consent at any time where processing is based on consent.</li>
+  </ul>
+  <p>To exercise your GDPR rights, contact us at <a href="mailto:ethan@goswft.com">ethan@goswft.com</a>. You also have the right to lodge a complaint with a supervisory authority in your member state.</p>
+
+  <h2>10. Data Security</h2>
+  <p>We implement commercially reasonable technical and organizational measures to protect your personal information, including:</p>
+  <ul>
+    <li>Encryption of data in transit (TLS/SSL) and at rest.</li>
+    <li>Firebase Authentication for secure account management.</li>
+    <li>Role-based access controls.</li>
+    <li>Regular security reviews.</li>
+  </ul>
+  <p>However, no method of transmission or storage is 100% secure. We cannot guarantee absolute security of your data.</p>
+
+  <h2>11. Children's Privacy</h2>
+  <p>The Service is not intended for individuals under the age of 18. We do not knowingly collect personal information from children under 18. If we become aware that we have collected personal data from a child under 18, we will take steps to delete that information promptly. If you believe we have inadvertently collected information from a minor, please contact us at <a href="mailto:ethan@goswft.com">ethan@goswft.com</a>.</p>
+
+  <h2>12. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. When we make material changes, we will notify you by email or through a notice within the Service. Your continued use of the Service after the changes take effect constitutes your acceptance of the revised policy. We encourage you to review this page periodically.</p>
+
+  <h2>13. Contact Us</h2>
+  <div class="contact-box">
+    <p>If you have any questions about this Privacy Policy or our data practices, please contact us:</p>
+    <p style="margin-top:12px;"><strong>Email:</strong> <a href="mailto:ethan@goswft.com">ethan@goswft.com</a></p>
+    <p><strong>Website:</strong> <a href="https://goswft.com">goswft.com</a></p>
+  </div>
+
+</div>
+
+</body>
+</html>
