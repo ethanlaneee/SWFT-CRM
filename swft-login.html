@@ -215,6 +215,13 @@ font-weight:500;
 .terms{
 font-size:11px;color:var(--gray2);line-height:1.5;text-align:center;margin-top:4px;
 }
+.terms-check{
+display:flex;align-items:flex-start;gap:8px;margin-top:8px;text-align:left;
+}
+.terms-check input[type="checkbox"]{
+width:16px;height:16px;margin-top:1px;accent-color:var(--green);cursor:pointer;flex-shrink:0;
+}
+.terms-check label{font-size:11px;color:var(--gray2);line-height:1.5;cursor:pointer;}
 .terms a{color:var(--green);text-decoration:none;}
 .terms a:hover{text-decoration:underline;}
 
@@ -414,8 +421,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     </button>
 
     <div class="terms">
-      By creating an account you agree to our
-      <a href="/swft-terms">Terms of Service</a> and <a href="/swft-privacy">Privacy Policy</a>.
+      <div class="terms-check">
+        <input type="checkbox" id="terms-agree"/>
+        <label for="terms-agree">I agree to the <a href="/swft-terms" target="_blank">Terms of Service</a> and <a href="/swft-privacy" target="_blank">Privacy Policy</a></label>
+      </div>
     </div>
 
   </div>
@@ -555,6 +564,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     if (!biz)   { showFieldError('signup-biz-err',   'signup-biz');   valid = false; }
     if (!email || !/\S+@\S+\.\S+/.test(email)) { showFieldError('signup-email-err', 'signup-email'); valid = false; }
     if (password.length < 8) { showFieldError('signup-pwd-err', 'signup-password'); valid = false; }
+    if (!document.getElementById('terms-agree').checked) {
+      showGlobalError('You must agree to the Terms of Service and Privacy Policy.');
+      valid = false;
+    }
     if (!valid) return;
 
     const btn = document.getElementById('signup-btn');
@@ -590,6 +603,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // ── GOOGLE SIGN-IN ──
   window.handleGoogleSignIn = async function() {
     clearErrors();
+    if (currentTab === 'signup' && !document.getElementById('terms-agree').checked) {
+      showGlobalError('You must agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
     try {
       const result = await signInWithPopup(auth, provider);
       await saveUserToFirestore(result.user);

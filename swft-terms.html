@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Terms of Service — SWFT</title>
+<meta name="description" content="SWFT Terms of Service. Read the terms and conditions governing your use of the SWFT platform."/>
+<meta name="robots" content="noindex, nofollow"/>
+<link rel="canonical" href="https://goswft.com/swft-terms"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--green-dim:rgba(200,241,53,0.12);
+  --white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{width:100%;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden;line-height:1.7;}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+/* NAV */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(10,10,10,0.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--white);text-decoration:none;}
+.nav-logo span{color:var(--green);}
+.back-link{color:var(--gray);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;display:flex;align-items:center;gap:6px;}
+.back-link:hover{color:var(--white);}
+
+/* CONTENT */
+.page-wrap{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:120px 32px 80px;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,56px);line-height:1;letter-spacing:1px;margin-bottom:8px;}
+.page-title .accent{color:var(--green);}
+.page-meta{color:var(--gray);font-size:14px;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border);}
+
+h2{font-size:20px;font-weight:700;margin:40px 0 16px;color:var(--white);}
+h3{font-size:16px;font-weight:600;margin:24px 0 12px;color:var(--white);}
+p{color:var(--gray);font-size:15px;margin-bottom:16px;}
+ul,ol{color:var(--gray);font-size:15px;margin:0 0 16px 24px;}
+li{margin-bottom:8px;}
+a{color:var(--green);text-decoration:none;}
+a:hover{text-decoration:underline;}
+strong{color:var(--white);font-weight:600;}
+
+.contact-box{
+  margin-top:48px;padding:24px;border-radius:12px;
+  background:var(--surface);border:1px solid var(--border);
+}
+.contact-box p{margin:0;}
+
+@media(max-width:600px){
+  .nav{padding:14px 20px;}
+  .page-wrap{padding:100px 20px 60px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">SWFT<span>.</span></a>
+  <a href="/" class="back-link">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Back to Home
+  </a>
+</nav>
+
+<div class="page-wrap">
+
+  <h1 class="page-title">Terms of <span class="accent">Service</span></h1>
+  <p class="page-meta">Effective Date: April 5, 2026 &nbsp;|&nbsp; Last Updated: April 5, 2026</p>
+
+  <p>These Terms of Service ("Terms") govern your access to and use of the SWFT platform and related services (collectively, the "Service") operated by SWFT ("we," "us," or "our") at <a href="https://goswft.com">goswft.com</a>. Please read these Terms carefully before using the Service. By creating an account or using the Service, you agree to be bound by these Terms.</p>
+
+  <h2>1. Acceptance of Terms</h2>
+  <p>By accessing or using the Service, you acknowledge that you have read, understood, and agree to be bound by these Terms and our <a href="/swft-privacy">Privacy Policy</a>. If you are using the Service on behalf of a business or other legal entity, you represent that you have the authority to bind that entity to these Terms. If you do not agree to these Terms, you may not use the Service.</p>
+
+  <h2>2. Description of Service</h2>
+  <p>SWFT is a cloud-based customer relationship management (CRM) platform designed for home service businesses, including but not limited to contractors, plumbers, HVAC technicians, landscapers, and similar professionals. The Service includes:</p>
+  <ul>
+    <li>Customer management and contact database.</li>
+    <li>Job tracking, scheduling, and calendar integration (Google Calendar).</li>
+    <li>Quote and invoice creation and management.</li>
+    <li>SMS messaging via Twilio integration.</li>
+    <li>Email communication via Gmail API integration.</li>
+    <li>AI-powered assistant features via Anthropic Claude.</li>
+    <li>Payment processing via Stripe.</li>
+    <li>QuickBooks accounting integration.</li>
+    <li>Job photo storage and management.</li>
+    <li>Team management and collaboration tools.</li>
+  </ul>
+  <p>We reserve the right to modify, suspend, or discontinue any part of the Service at any time, with or without notice.</p>
+
+  <h2>3. Account Registration and Security</h2>
+  <p>To use the Service, you must create an account by providing accurate and complete information. You are responsible for:</p>
+  <ul>
+    <li>Maintaining the confidentiality of your account credentials.</li>
+    <li>All activities that occur under your account.</li>
+    <li>Notifying us immediately of any unauthorized use of your account.</li>
+    <li>Ensuring that your account information remains current and accurate.</li>
+  </ul>
+  <p>You must be at least 18 years of age to create an account. We reserve the right to suspend or terminate accounts that violate these Terms or that we reasonably believe are being used fraudulently.</p>
+
+  <h2>4. Subscription Plans and Billing</h2>
+  <h3>4.1 Plans and Pricing</h3>
+  <p>SWFT offers the following subscription plans, billed monthly:</p>
+  <ul>
+    <li><strong>Starter Plan:</strong> $49 per month</li>
+    <li><strong>Pro Plan:</strong> $99 per month</li>
+    <li><strong>Business Plan:</strong> $149 per month</li>
+  </ul>
+  <p>Each plan includes different levels of access to features, SMS message allotments, and AI message limits. Full plan details are available on our pricing page. We reserve the right to change pricing with 30 days' advance notice to active subscribers.</p>
+
+  <h3>4.2 Free Trial</h3>
+  <p>New users may be eligible for a 14-day free trial. During the trial period, you will have access to the Service without charge. At the end of the trial, your account will require an active paid subscription to continue accessing the Service. If you do not subscribe, your account will be deactivated, but your data will be retained for a reasonable period in case you choose to subscribe later.</p>
+
+  <h3>4.3 Payment</h3>
+  <p>All payments are processed securely through <strong>Stripe</strong>. By subscribing to a paid plan, you authorize us to charge your payment method on a recurring monthly basis. You are responsible for keeping your payment information current. If a payment fails, we may suspend access to the Service until the payment issue is resolved.</p>
+
+  <h3>4.4 Refunds</h3>
+  <p>Subscription fees are generally non-refundable. However, if you believe you are entitled to a refund due to a billing error or service issue, please contact us at <a href="mailto:ethan@goswft.com">ethan@goswft.com</a> and we will review your request on a case-by-case basis.</p>
+
+  <h2>5. Acceptable Use Policy</h2>
+  <p>You agree to use the Service only for lawful purposes and in accordance with these Terms. You agree not to:</p>
+  <ul>
+    <li>Use the Service for any illegal, fraudulent, or unauthorized purpose.</li>
+    <li>Send unsolicited or unauthorized SMS messages, spam, or other bulk communications in violation of the Telephone Consumer Protection Act (TCPA) or any other applicable law.</li>
+    <li>Upload, transmit, or store any content that is harmful, threatening, abusive, defamatory, obscene, or otherwise objectionable.</li>
+    <li>Attempt to gain unauthorized access to the Service, other accounts, or any related systems or networks.</li>
+    <li>Interfere with or disrupt the integrity or performance of the Service.</li>
+    <li>Reverse engineer, decompile, disassemble, or otherwise attempt to derive the source code of the Service.</li>
+    <li>Use the Service to compete with or replicate the Service.</li>
+    <li>Violate any applicable local, state, national, or international law or regulation.</li>
+    <li>Impersonate any person or entity or misrepresent your affiliation with any person or entity.</li>
+  </ul>
+  <p>We reserve the right to investigate and take appropriate action, including suspending or terminating your account, if we reasonably believe you have violated this Acceptable Use Policy.</p>
+
+  <h2>6. Intellectual Property</h2>
+  <p>The Service, including its original content, features, functionality, design, logos, and trademarks, is and will remain the exclusive property of SWFT and its licensors. The Service is protected by copyright, trademark, and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of the Service without our prior written consent.</p>
+  <p>"SWFT" and the SWFT logo are trademarks of SWFT. You may not use these marks without our prior written permission.</p>
+
+  <h2>7. Data Ownership</h2>
+  <p>You retain full ownership of all data, content, and information that you submit, upload, or create through the Service ("Your Data"). By using the Service, you grant us a limited, non-exclusive license to use, process, and store Your Data solely for the purpose of providing and improving the Service.</p>
+  <ul>
+    <li>We will not sell, share, or use Your Data for advertising purposes.</li>
+    <li>You may export Your Data at any time using the export features available within the Service.</li>
+    <li>Upon account deletion, we will delete Your Data in accordance with our <a href="/swft-privacy">Privacy Policy</a>.</li>
+  </ul>
+  <p>You are solely responsible for the accuracy, legality, and appropriateness of Your Data. You represent and warrant that you have all necessary rights and permissions to submit Your Data to the Service.</p>
+
+  <h2>8. Third-Party Integrations</h2>
+  <p>The Service integrates with third-party services including Stripe, Twilio, Google (Gmail, Calendar, Firebase, Analytics), Anthropic, Square, and QuickBooks. Your use of these integrations is subject to the respective third-party terms and privacy policies. We are not responsible for the availability, accuracy, or practices of any third-party services.</p>
+
+  <h2>9. Limitation of Liability</h2>
+  <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL SWFT, ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, OR LICENSORS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM:</p>
+  <ul>
+    <li>YOUR ACCESS TO OR USE OF (OR INABILITY TO ACCESS OR USE) THE SERVICE.</li>
+    <li>ANY CONDUCT OR CONTENT OF ANY THIRD PARTY ON THE SERVICE.</li>
+    <li>ANY CONTENT OBTAINED FROM THE SERVICE.</li>
+    <li>UNAUTHORIZED ACCESS, USE, OR ALTERATION OF YOUR TRANSMISSIONS OR CONTENT.</li>
+  </ul>
+  <p>IN NO EVENT SHALL OUR TOTAL AGGREGATE LIABILITY TO YOU EXCEED THE GREATER OF (A) THE AMOUNT YOU HAVE PAID US IN THE TWELVE (12) MONTHS PRIOR TO THE EVENT GIVING RISE TO THE CLAIM, OR (B) ONE HUNDRED DOLLARS ($100.00).</p>
+
+  <h2>10. Warranty Disclaimer</h2>
+  <p>THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.</p>
+  <p>WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, TIMELY, SECURE, OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. WE DO NOT WARRANT THE ACCURACY OR RELIABILITY OF ANY INFORMATION OBTAINED THROUGH THE SERVICE, INCLUDING AI-GENERATED CONTENT.</p>
+  <p>YOU EXPRESSLY AGREE THAT YOUR USE OF THE SERVICE IS AT YOUR SOLE RISK. AI-GENERATED CONTENT PROVIDED THROUGH THE SERVICE IS FOR INFORMATIONAL PURPOSES ONLY AND SHOULD NOT BE RELIED UPON AS LEGAL, FINANCIAL, OR PROFESSIONAL ADVICE.</p>
+
+  <h2>11. Indemnification</h2>
+  <p>You agree to indemnify, defend, and hold harmless SWFT and its officers, directors, employees, agents, and licensors from and against any and all claims, damages, obligations, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising from:</p>
+  <ul>
+    <li>Your use of the Service.</li>
+    <li>Your violation of these Terms.</li>
+    <li>Your violation of any third-party right, including any intellectual property, privacy, or proprietary right.</li>
+    <li>Any content or data you submit through the Service.</li>
+    <li>Your SMS messaging practices, including any TCPA violations.</li>
+  </ul>
+
+  <h2>12. Termination and Account Deletion</h2>
+  <p>You may terminate your account at any time by using the delete account feature in the Service settings or by contacting us at <a href="mailto:ethan@goswft.com">ethan@goswft.com</a>. Upon termination:</p>
+  <ul>
+    <li>Your right to access and use the Service will immediately cease.</li>
+    <li>We will delete your personal data and customer data from our active systems within 30 days.</li>
+    <li>Some data may persist in encrypted backups for up to 90 days before being permanently purged.</li>
+    <li>Outstanding payment obligations remain due and payable.</li>
+  </ul>
+  <p>We may terminate or suspend your account at any time, with or without cause and with or without notice, if we reasonably believe you have violated these Terms. In the event of termination for cause, you will not be entitled to any refund of prepaid fees.</p>
+
+  <h2>13. Changes to Terms</h2>
+  <p>We reserve the right to modify these Terms at any time. When we make material changes, we will notify you by email or through a prominent notice within the Service at least 30 days before the changes take effect. Your continued use of the Service after the effective date of the revised Terms constitutes your acceptance of the changes. If you do not agree to the updated Terms, you must stop using the Service and delete your account.</p>
+
+  <h2>14. Governing Law</h2>
+  <p>These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to its conflict of law provisions. Any legal action or proceeding arising out of or relating to these Terms shall be brought exclusively in the federal or state courts located within the United States.</p>
+
+  <h2>15. Dispute Resolution</h2>
+  <p>In the event of any dispute arising out of or relating to these Terms or the Service, the parties agree to first attempt to resolve the dispute through good-faith informal negotiation. If the dispute cannot be resolved informally within 30 days, either party may pursue formal legal remedies as provided herein.</p>
+  <p>You agree that any claim or dispute must be brought in your individual capacity and not as a plaintiff or class member in any purported class, collective, or representative proceeding. You expressly waive any right to participate in a class action lawsuit or class-wide arbitration.</p>
+
+  <h2>16. Miscellaneous</h2>
+  <ul>
+    <li><strong>Entire Agreement:</strong> These Terms, together with the Privacy Policy and Cookie Policy, constitute the entire agreement between you and SWFT regarding the Service.</li>
+    <li><strong>Severability:</strong> If any provision of these Terms is found to be unenforceable, the remaining provisions shall continue in full force and effect.</li>
+    <li><strong>Waiver:</strong> Our failure to enforce any right or provision of these Terms shall not constitute a waiver of that right or provision.</li>
+    <li><strong>Assignment:</strong> You may not assign or transfer your rights under these Terms without our prior written consent. We may assign our rights and obligations without restriction.</li>
+    <li><strong>Force Majeure:</strong> We shall not be liable for any failure or delay in performance resulting from circumstances beyond our reasonable control, including but not limited to natural disasters, acts of government, internet outages, or third-party service failures.</li>
+  </ul>
+
+  <h2>17. Contact Us</h2>
+  <div class="contact-box">
+    <p>If you have any questions about these Terms of Service, please contact us:</p>
+    <p style="margin-top:12px;"><strong>Email:</strong> <a href="mailto:ethan@goswft.com">ethan@goswft.com</a></p>
+    <p><strong>Website:</strong> <a href="https://goswft.com">goswft.com</a></p>
+  </div>
+
+</div>
+
+</body>
+</html>
