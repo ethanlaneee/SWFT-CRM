@@ -387,12 +387,12 @@ async function loadData(){
       banner.style.display='flex';
       if(_gmailConnected){
         bannerText.innerHTML='✉️ <span style="color:var(--green);">Gmail connected</span> — '+esc(user.gmailAddress||'');
-        bannerBtn.textContent='Disconnect';
-        bannerBtn.onclick=disconnectGmail;
+        bannerBtn.textContent='Manage';
+        bannerBtn.onclick=goToIntegrations;
       }else{
-        bannerText.textContent='Connect Gmail to send emails from your own address';
+        bannerText.textContent='Connect Gmail to send emails directly from SWFT';
         bannerBtn.textContent='Connect Gmail';
-        bannerBtn.onclick=connectGmail;
+        bannerBtn.onclick=goToIntegrations;
       }
     }
 

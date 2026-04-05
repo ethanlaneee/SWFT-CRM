@@ -41,7 +41,13 @@ async function apiFetch(path, options = {}) {
   try { data = JSON.parse(text); } catch (e) {
     throw new Error(res.ok ? "Empty response from server" : `Server error (${res.status})`);
   }
-  if (!res.ok) throw new Error(data.error || "API error");
+  if (!res.ok) {
+    const msg = data.error || "API error";
+    if (res.status === 403 && typeof window !== "undefined" && typeof window.swftNoPermission === "function") {
+      window.swftNoPermission(msg);
+    }
+    throw new Error(msg);
+  }
   return data;
 }
 

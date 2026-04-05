@@ -407,17 +407,20 @@ async function loadIntegrations() {
     var container = document.getElementById('integrations-list');
     if (!container) return;
 
-    var icons = { gmail: '📧', google_calendar: '📅', quickbooks: '💰' };
+    var icons = { gmail: '📧', google_calendar: '📅', google_sheets: '📊', quickbooks: '💰', stripe: '💳', square: '🟦' };
     container.innerHTML = data.integrations.map(function(i) {
-      return '<div class="settings-row">' +
+      return '<div class="settings-row" style="' + (i.connected ? 'border-left:2px solid var(--green);padding-left:14px;' : '') + '">' +
         '<div class="settings-row-info">' +
-          '<div class="settings-row-label">' + (icons[i.id] || '🔗') + ' ' + i.name + '</div>' +
+          '<div class="settings-row-label" style="display:flex;align-items:center;gap:8px;">' +
+            (icons[i.id] || '🔗') + ' ' + i.name +
+            (i.connected ? '<span style="background:rgba(200,241,53,0.12);color:var(--green);font-size:9.5px;font-weight:700;letter-spacing:1.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase;">Connected</span>' : '') +
+          '</div>' +
           '<div class="settings-row-desc">' + i.description +
-            (i.connected ? ' <span style="color:var(--green);font-weight:600;">Connected' + (i.account ? ' — ' + i.account : '') + '</span>' : '') +
+            (i.connected && i.account ? ' — <span style="color:var(--green);">' + i.account + '</span>' : '') +
           '</div>' +
         '</div>' +
         (i.connected
-          ? '<button class="settings-btn danger" onclick="disconnectIntegration(\'' + i.id + '\')">Disconnect</button>'
+          ? '<button class="settings-btn danger" onclick="disconnectIntegration(\'' + i.id + '\',\'' + i.name + '\')">Disconnect</button>'
           : '<button class="settings-btn primary" onclick="connectIntegration(\'' + i.id + '\')">Connect</button>') +
       '</div>';
     }).join('');
@@ -446,8 +449,11 @@ async function connectIntegration(id) {
   }
 }
 
-async function disconnectIntegration(id) {
-  if (!confirm('Disconnect this integration?')) return;
+async function disconnectIntegration(id, name) {
+  var ok = typeof swftConfirm === 'function'
+    ? await swftConfirm('Disconnect <strong>' + (name || id) + '</strong>? You can reconnect at any time.', 'DISCONNECT', '🔌')
+    : confirm('Disconnect ' + (name || id) + '?');
+  if (!ok) return;
   try {
     var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
     var token = await getAuth().currentUser.getIdToken();
@@ -455,7 +461,7 @@ async function disconnectIntegration(id) {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token },
     });
-    showToast('Disconnected');
+    showToast(name + ' disconnected');
     loadIntegrations();
   } catch(e) {
     showToast('Error disconnecting');

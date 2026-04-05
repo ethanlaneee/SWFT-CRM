@@ -7,6 +7,86 @@
 (function () {
   const API_BASE = "";
 
+  // ── Permission denied modal ───────────────────────────────────────────────
+  const permStyle = document.createElement("style");
+  permStyle.textContent = `
+    .perm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .perm-overlay.open { opacity: 1; pointer-events: all; }
+    .perm-modal {
+      background: #111111;
+      border: 1px solid #2c2c2c;
+      border-radius: 16px;
+      width: 100%; max-width: 380px;
+      padding: 32px 28px 24px;
+      text-align: center;
+      transform: scale(0.95) translateY(10px);
+      transition: transform 0.22s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .perm-overlay.open .perm-modal { transform: scale(1) translateY(0); }
+    .perm-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(255,82,82,0.1);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    }
+    .perm-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px; letter-spacing: 2px;
+      color: #f0f0f0; margin: 0 0 8px;
+    }
+    .perm-body {
+      font-size: 13px; color: #7a7a7a;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    .perm-close {
+      background: #181818; border: 1px solid #2c2c2c;
+      border-radius: 10px; padding: 10px 28px;
+      color: #f0f0f0; font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all 0.14s;
+    }
+    .perm-close:hover { background: #222; }
+  `;
+  document.head.appendChild(permStyle);
+
+  const permOverlay = document.createElement("div");
+  permOverlay.className = "perm-overlay";
+  permOverlay.innerHTML = `
+    <div class="perm-modal">
+      <div class="perm-icon">🔒</div>
+      <div class="perm-title">ACCESS DENIED</div>
+      <div class="perm-body" id="perm-msg">You don't have permission to perform this action. Contact your admin to request access.</div>
+      <button class="perm-close" onclick="swftPermClose()">Got it</button>
+    </div>
+  `;
+  document.body.appendChild(permOverlay);
+  permOverlay.addEventListener("click", function (e) { if (e.target === permOverlay) swftPermClose(); });
+
+  window.swftNoPermission = function (msg) {
+    document.getElementById("perm-msg").textContent = msg || "You don't have permission to perform this action.";
+    permOverlay.classList.add("open");
+  };
+  window.swftPermClose = function () { permOverlay.classList.remove("open"); };
+
+  // ── Permissions cache ─────────────────────────────────────────────────────
+  window.SWFT_PERMS = null; // Set after auth, array of permission IDs
+
+  window.can = function (perm) {
+    if (window.SWFT_PERMS === undefined) return true; // not loaded yet — don't block
+    if (window.SWFT_PERMS === null) return true;      // owner — unrestricted
+    return window.SWFT_PERMS.includes(perm);
+  };
+
   const style = document.createElement("style");
   style.textContent = `
     .account-overlay {
@@ -271,32 +351,84 @@
     }
   };
 
-  // ── Role guard ────────────────────────────────────────────────────────────
-  // Pages technicians cannot access
-  const RESTRICTED_FOR_TECHNICIAN = [
-    "swft-customers", "swft-billing", "swft-quotes", "swft-invoices",
-    "swft-team", "swft-settings", "swft-ai-agents",
-  ];
+  // ── Role / permission guard ───────────────────────────────────────────────
 
-  function applyRoleGuard(role) {
-    if (role !== "technician") return;
+  // Page-level restrictions: if user lacks the permission, redirect to dashboard
+  const PAGE_PERM = {
+    "swft-customers":  "customers.view",
+    "swft-billing":    "invoices.view",
+    "swft-invoices":   "invoices.view",
+    "swft-quotes":     "quotes.view",
+    "swft-team":       "team.manage",
+    "swft-settings":   "settings.manage",
+    "swft-ai-agents":  "ai.use",
+  };
 
-    // Hide restricted nav items in sidebar
+  // onclick → permission needed to run it (used to intercept or hide buttons)
+  const ONCLICK_PERM = {
+    "openNewJob":      "jobs.add",
+    "openNewCustomer": "customers.add",
+    "openNewQuote":    "quotes.add",
+    "openNewInvoice":  "invoices.add",
+    "deleteJob":       "jobs.delete",
+    "deleteJobRow":    "jobs.delete",
+    "deleteCustomer":  "customers.delete",
+    "deleteQuote":     "quotes.delete",
+    "deleteInvoice":   "invoices.delete",
+  };
+
+  // Nav item onclick patterns → permission needed to see that nav item
+  const NAV_PERM = {
+    "swft-customers": "customers.view",
+    "swft-billing":   "invoices.view",
+    "swft-invoices":  "invoices.view",
+    "swft-quotes":    "quotes.view",
+    "swft-team":      "team.manage",
+    "swft-settings":  "settings.manage",
+    "swft-ai-agents": "ai.use",
+  };
+
+  function applyPermGuard(perms) {
+    window.SWFT_PERMS = perms; // null = owner (unrestricted)
+    if (perms === null) return; // owner — skip all restrictions
+
+    // ── Page redirect ────────────────────────────────────────────────────
+    var page = window.location.pathname.split("/").pop().replace(/\.html$/, "");
+    var pageReq = PAGE_PERM[page];
+    if (pageReq && !window.SWFT_PERMS.includes(pageReq)) {
+      window.swftNoPermission("You don't have permission to access this area.");
+      setTimeout(function () { window.location.href = "swft-dashboard"; }, 1800);
+      return;
+    }
+
+    // ── Hide restricted nav items ────────────────────────────────────────
     document.querySelectorAll(".nav-item[onclick]").forEach(function (el) {
-      var onclick = el.getAttribute("onclick") || "";
-      for (var i = 0; i < RESTRICTED_FOR_TECHNICIAN.length; i++) {
-        if (onclick.indexOf(RESTRICTED_FOR_TECHNICIAN[i]) > -1) {
+      var oc = el.getAttribute("onclick") || "";
+      for (var key in NAV_PERM) {
+        if (oc.indexOf(key) > -1 && !window.SWFT_PERMS.includes(NAV_PERM[key])) {
           el.style.display = "none";
           break;
         }
       }
     });
 
-    // Redirect if currently on a restricted page
-    var page = window.location.pathname.split("/").pop().split(".")[0];
-    if (RESTRICTED_FOR_TECHNICIAN.indexOf(page) > -1) {
-      window.location.href = "swft-dashboard";
-    }
+    // ── Intercept restricted action buttons ─────────────────────────────
+    // Instead of hiding, replace onclick so they show the permission popup
+    document.querySelectorAll("[onclick]").forEach(function (el) {
+      var oc = el.getAttribute("onclick") || "";
+      for (var fn in ONCLICK_PERM) {
+        if (oc.indexOf(fn + "(") > -1 && !window.SWFT_PERMS.includes(ONCLICK_PERM[fn])) {
+          (function (perm, label) {
+            el.setAttribute("onclick", "");
+            el.onclick = function (e) {
+              e.stopPropagation();
+              window.swftNoPermission("You don't have permission to " + label + ".");
+            };
+          })(ONCLICK_PERM[fn], ONCLICK_PERM[fn].replace(".", " "));
+          break;
+        }
+      }
+    });
   }
 
   async function initRoleGuard() {
@@ -310,7 +442,21 @@
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
-          if (data.role) applyRoleGuard(data.role);
+          // Build permissions array from role + BUILT_IN defaults
+          var BUILT_IN = {
+            owner: null, // null = all
+            admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","team.manage","integrations.manage","settings.manage"],
+            office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use"],
+            technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use"],
+          };
+          var role = data.role || "owner";
+          var perms;
+          if (role === "owner" || !BUILT_IN[role]) {
+            perms = null; // unrestricted
+          } else {
+            perms = data.permissions || BUILT_IN[role];
+          }
+          applyPermGuard(perms);
         } catch (e) { /* fail silently — backend enforces anyway */ }
       });
     } catch (e) {}
