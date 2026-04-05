@@ -198,8 +198,10 @@ async function processScheduledMessages() {
         .get();
 
       let orgUser = {};
+      let ownerUid = msg.userId || msg.orgId;
       if (!usersSnap.empty) {
         orgUser = usersSnap.docs[0].data();
+        ownerUid = usersSnap.docs[0].id;
       } else {
         const ownerDoc = await db.collection("users").doc(msg.orgId).get();
         if (ownerDoc.exists) orgUser = ownerDoc.data();
@@ -222,22 +224,25 @@ async function processScheduledMessages() {
 
       await ref.update({ status: "sent", sentAt: Date.now(), error: null });
 
-      // For manual scheduled messages, also create a record in the messages collection
-      if (msg.isManual && msg.userId) {
-        const msgRecord = {
-          userId: msg.userId,
-          to: msg.messageType === "sms" ? msg.phone : msg.email,
-          body: msg.message,
-          customerId: msg.customerId || "",
-          customerName: msg.customerName || "",
-          type: msg.messageType,
-          status: "sent",
-          sentVia: msg.messageType === "sms" ? "twilio" : "gmail",
-          sentAt: Date.now(),
-        };
-        if (msg.messageType === "email" && msg.subject) msgRecord.subject = msg.subject;
-        await db.collection("messages").add(msgRecord);
+      // Create a record in the messages collection so it shows in the chat thread
+      const msgRecord = {
+        userId: ownerUid,
+        to: msg.messageType === "sms" ? msg.phone : msg.email,
+        body: msg.message,
+        customerId: msg.customerId || "",
+        customerName: msg.customerName || "",
+        type: msg.messageType,
+        status: "sent",
+        sentVia: msg.messageType === "sms" ? "twilio" : "gmail",
+        sentAt: Date.now(),
+        scheduledMessageId: msgDoc.id,
+        isAutomation: !msg.isManual,
+      };
+      if (msg.messageType === "email") {
+        const companyName = orgUser.company || orgUser.name || "SWFT";
+        msgRecord.subject = msg.subject || `Message from ${companyName}`;
       }
+      await db.collection("messages").add(msgRecord);
     } catch (err) {
       console.error(`Failed to send scheduled message ${msgDoc.id}:`, err);
       await ref.update({ status: "failed", error: err.message || "Unknown error" }).catch(() => {});

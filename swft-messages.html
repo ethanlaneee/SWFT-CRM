@@ -129,6 +129,16 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .schedule-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.2);border-radius:6px;padding:4px 8px;font-size:10.5px;color:var(--blue);font-family:'JetBrains Mono',monospace;}
 .schedule-chip .remove{cursor:pointer;opacity:0.6;font-size:13px;margin-left:2px;}
 .schedule-chip .remove:hover{opacity:1;}
+.sched-bar{border-top:1px solid var(--border);padding:8px 16px;background:var(--surface);display:none;}
+.sched-bar.visible{display:block;}
+.sched-bar-title{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.sched-bar-title svg{color:var(--blue);}
+.sched-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;}
+.sched-item .sched-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--blue);white-space:nowrap;}
+.sched-item .sched-body{color:var(--gray);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sched-item .sched-tag{font-size:9.5px;padding:2px 6px;border-radius:8px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.sched-tag.auto{background:rgba(200,241,53,0.08);color:var(--green);}
+.sched-tag.manual{background:rgba(77,159,255,0.08);color:var(--blue);}
 
 /* Attach */
 .attach-dropdown{position:relative;}
@@ -312,6 +322,13 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
         </button>
       </div>
+    </div>
+    <div class="sched-bar" id="sched-bar">
+      <div class="sched-bar-title">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Scheduled Messages
+      </div>
+      <div id="sched-items"></div>
     </div>
   </div>
 </div>
@@ -681,6 +698,36 @@ function renderChat(){
 
   area.innerHTML=html;
   area.scrollTop=area.scrollHeight;
+  loadScheduledForContact();
+}
+
+async function loadScheduledForContact(){
+  var bar=document.getElementById('sched-bar');
+  var container=document.getElementById('sched-items');
+  bar.classList.remove('visible');
+  container.innerHTML='';
+  if(!_activeContact)return;
+  try{
+    var res=await API.messages.scheduled();
+    var msgs=res.messages||[];
+    // Filter to current contact
+    var custId=_activeContact.customerId;
+    var to=_activeContact.channel==='sms'?(_activeContact.phone||_activeContact.to):(_activeContact.email||_activeContact.to);
+    var filtered=msgs.filter(function(m){
+      if(custId&&m.customerId===custId)return true;
+      if(m.phone===to||m.email===to)return true;
+      return false;
+    });
+    if(!filtered.length)return;
+    bar.classList.add('visible');
+    container.innerHTML=filtered.map(function(m){
+      var dt=new Date(m.sendAt);
+      var timeStr=dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      var tag=m.isManual?'<span class="sched-tag manual">Scheduled</span>':'<span class="sched-tag auto">Automation</span>';
+      var preview=(m.message||'').substring(0,60)+(m.message&&m.message.length>60?'...':'');
+      return '<div class="sched-item">'+tag+'<span class="sched-time">'+timeStr+'</span><span class="sched-body">'+esc(preview)+'</span></div>';
+    }).join('');
+  }catch(e){/* ignore */}
 }
 
 function showCompose(){

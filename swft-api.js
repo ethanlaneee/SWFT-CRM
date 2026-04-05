@@ -139,10 +139,11 @@ const API = {
 
   // ── Messages ──
   messages: {
-    list:     ()     => apiFetch("/api/messages"),
-    send:     (data) => apiFetch("/api/messages/send", { method: "POST", body: JSON.stringify(data) }),
-    schedule: (data) => apiFetch("/api/messages/schedule", { method: "POST", body: JSON.stringify(data) }),
-    delete:   (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
+    list:      ()     => apiFetch("/api/messages"),
+    send:      (data) => apiFetch("/api/messages/send", { method: "POST", body: JSON.stringify(data) }),
+    schedule:  (data) => apiFetch("/api/messages/schedule", { method: "POST", body: JSON.stringify(data) }),
+    scheduled: ()     => apiFetch("/api/messages/scheduled"),
+    delete:    (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
   },
 
   // ── Notifications ──
