@@ -69,6 +69,14 @@ const INTEGRATIONS = [
     provider: "quickbooks",
     scopes: ["com.intuit.quickbooks.accounting"],
   },
+  {
+    id: "stripe",
+    name: "Stripe",
+    icon: "credit-card",
+    description: "Accept payments on invoices via Stripe",
+    provider: "stripe",
+    scopes: [],
+  },
 ];
 
 function getOAuthClient() {
