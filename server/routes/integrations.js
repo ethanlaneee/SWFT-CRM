@@ -58,6 +58,14 @@ const INTEGRATIONS = [
     provider: "quickbooks",
     scopes: ["com.intuit.quickbooks.accounting"],
   },
+  {
+    id: "stripe",
+    name: "Stripe",
+    icon: "credit-card",
+    description: "Accept online payments via payment links on invoices",
+    provider: "stripe",
+    scopes: [],
+  },
 ];
 
 function getOAuthClient() {
@@ -71,11 +79,17 @@ router.get("/", async (req, res, next) => {
     const userData = userDoc.exists ? userDoc.data() : {};
     const connections = userData.integrations || {};
 
-    const result = INTEGRATIONS.map(integration => ({
-      ...integration,
-      connected: !!connections[integration.id]?.connected,
-      account: connections[integration.id]?.account || null,
-    }));
+    const result = INTEGRATIONS.map(integration => {
+      // Stripe is platform-level: connected if the server has the key configured
+      if (integration.id === "stripe") {
+        return { ...integration, connected: !!process.env.STRIPE_SECRET_KEY, account: null };
+      }
+      return {
+        ...integration,
+        connected: !!connections[integration.id]?.connected,
+        account: connections[integration.id]?.account || null,
+      };
+    });
 
     res.json({ integrations: result });
   } catch (err) { next(err); }
