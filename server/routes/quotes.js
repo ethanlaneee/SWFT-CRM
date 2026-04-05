@@ -90,6 +90,8 @@ router.post("/:id/send", async (req, res, next) => {
           name: cust.name || quoteData.customerName || "",
           phone: cust.phone || "",
           email: cust.email || "",
+          total: quoteData.total || 0,
+          service: quoteData.service || "",
         }).catch(console.error);
       } catch (autoErr) {
         console.error("quote_sent automation lookup error:", autoErr);
@@ -194,6 +196,8 @@ router.post("/:id/email", async (req, res, next) => {
         name: cust.name || quoteData.customerName || "",
         phone: cust.phone || "",
         email: cust.email || "",
+        total: quoteData.total || 0,
+        service: quoteData.service || "",
       }).catch(console.error);
     }
 

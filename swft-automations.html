@@ -104,6 +104,13 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .tpl-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid;flex-shrink:0;}
 .tpl-text{font-size:12px;color:var(--white);font-weight:500;}
 
+/* Condition rows */
+.cond-row{display:grid;grid-template-columns:1fr 1fr 1fr 28px;gap:8px;align-items:center;margin-bottom:8px;}
+.cond-row select,.cond-row input{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
+.cond-row select{appearance:none;cursor:pointer;}
+.cond-del{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.cond-del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
+
 /* Empty state */
 .empty{text-align:center;padding:50px 20px;color:var(--gray);}
 .empty-icon{font-size:36px;margin-bottom:12px;}
@@ -296,6 +303,19 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
       <input class="form-input" id="f-subject" placeholder="e.g. Follow-up from {{company_name}}"/>
     </div>
 
+    <!-- Conditions / Filters -->
+    <div class="form-field">
+      <div class="toggle-row">
+        <label class="form-label" style="margin-bottom:0;">Conditions (filters)</label>
+        <button class="toggle" id="f-conditions-toggle" onclick="toggleConditions()" type="button"></button>
+      </div>
+      <div class="form-sub">Only trigger when all conditions are met (e.g. total &gt; $500)</div>
+    </div>
+    <div id="conditions-section" style="display:none;">
+      <div id="conditions-list"></div>
+      <button class="btn-cancel" onclick="addCondition()" type="button" style="font-size:11px;padding:6px 12px;margin-top:6px;">+ Add Condition</button>
+    </div>
+
     <div class="form-field">
       <label class="form-label">Message Template</label>
       <div class="form-sub">Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}</div>
@@ -383,6 +403,8 @@ let _rules = [];
 let _editId = null;
 let _surveyOn = false;
 let _enabledOn = true;
+let _conditionsOn = false;
+let _conditions = [];
 
 async function init() {
   try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
@@ -456,6 +478,17 @@ function renderRules(rules) {
     const surveyBadge = r.isSurvey ? ' + Survey' : '';
 
     const waitIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8"/></svg>';
+    const filterIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+    const hasConditions = r.conditions && r.conditions.length > 0;
+    const condCount = hasConditions ? r.conditions.length : 0;
+    const condNode = hasConditions ? `<div class="flow-connector"></div>
+        <div class="flow-node">
+          <div class="flow-node-circle" style="background:rgba(162,89,255,0.1);border-color:#a259ff;"><span style="color:#a259ff;">${filterIcon}</span></div>
+          <div class="flow-node-text">
+            <div class="flow-node-label" style="color:#a259ff;">FILTER</div>
+            <div class="flow-node-value">${condCount} condition${condCount>1?'s':''}</div>
+          </div>
+        </div>` : '';
 
     return `<div class="scenario${r.enabled?'':' disabled'}" id="rule-${r.id}">
       <div class="scenario-header">
@@ -473,7 +506,7 @@ function renderRules(rules) {
             <div class="flow-node-label trigger">TRIGGER</div>
             <div class="flow-node-value">${trigLabel}</div>
           </div>
-        </div>
+        </div>${condNode}
         <div class="flow-connector"></div>
         <div class="flow-node">
           <div class="flow-node-circle wait">${waitIcon}</div>
@@ -581,6 +614,11 @@ window.editRule = function(id) {
   document.getElementById('f-threshold').value = r.surveyThreshold || 7;
   document.getElementById('f-followup-type').value = r.followUpType || 'sms';
   document.getElementById('f-followup-template').value = r.followUpTemplate || '';
+  _conditions = Array.isArray(r.conditions) ? JSON.parse(JSON.stringify(r.conditions)) : [];
+  _conditionsOn = _conditions.length > 0;
+  document.getElementById('f-conditions-toggle').className = 'toggle' + (_conditionsOn ? ' on' : '');
+  document.getElementById('conditions-section').style.display = _conditionsOn ? 'block' : 'none';
+  renderConditions();
   _enabledOn = r.enabled !== false;
   document.getElementById('f-enabled-toggle').className = 'toggle' + (_enabledOn ? ' on' : '');
   document.getElementById('modal-overlay').classList.add('open');
@@ -629,6 +667,51 @@ const _defaultTemplates = {
   }
 };
 
+window.toggleConditions = function() {
+  _conditionsOn = !_conditionsOn;
+  document.getElementById('f-conditions-toggle').className = 'toggle' + (_conditionsOn ? ' on' : '');
+  document.getElementById('conditions-section').style.display = _conditionsOn ? 'block' : 'none';
+  if (_conditionsOn && _conditions.length === 0) addCondition();
+};
+
+window.addCondition = function() {
+  _conditions.push({ field: 'total', operator: 'gt', value: '' });
+  renderConditions();
+};
+
+window.removeCondition = function(idx) {
+  _conditions.splice(idx, 1);
+  renderConditions();
+  if (_conditions.length === 0) {
+    _conditionsOn = false;
+    document.getElementById('f-conditions-toggle').className = 'toggle';
+    document.getElementById('conditions-section').style.display = 'none';
+  }
+};
+
+function renderConditions() {
+  const wrap = document.getElementById('conditions-list');
+  wrap.innerHTML = _conditions.map((c, i) => `<div class="cond-row">
+    <select onchange="_conditions[${i}].field=this.value">
+      <option value="total"${c.field==='total'?' selected':''}>Total ($)</option>
+      <option value="service"${c.field==='service'?' selected':''}>Service</option>
+      <option value="name"${c.field==='name'?' selected':''}>Customer Name</option>
+      <option value="tags"${c.field==='tags'?' selected':''}>Tags</option>
+    </select>
+    <select onchange="_conditions[${i}].operator=this.value">
+      <option value="gt"${c.operator==='gt'?' selected':''}>Greater than</option>
+      <option value="gte"${c.operator==='gte'?' selected':''}>Greater or equal</option>
+      <option value="lt"${c.operator==='lt'?' selected':''}>Less than</option>
+      <option value="lte"${c.operator==='lte'?' selected':''}>Less or equal</option>
+      <option value="eq"${c.operator==='eq'?' selected':''}>Equals</option>
+      <option value="neq"${c.operator==='neq'?' selected':''}>Not equals</option>
+      <option value="contains"${c.operator==='contains'?' selected':''}>Contains</option>
+    </select>
+    <input value="${esc(c.value)}" placeholder="Value" oninput="_conditions[${i}].value=this.value"/>
+    <button class="cond-del" onclick="removeCondition(${i})" type="button">&times;</button>
+  </div>`).join('');
+}
+
 window.quickCreate = function(trigger) {
   openModal();
   document.getElementById('f-trigger').value = trigger;
@@ -658,6 +741,11 @@ window.openModal = function() {
   document.getElementById('f-threshold').value = '7';
   document.getElementById('f-followup-type').value = 'sms';
   document.getElementById('f-followup-template').value = _defaultTemplates[trigger].followup;
+  _conditionsOn = false;
+  _conditions = [];
+  document.getElementById('f-conditions-toggle').className = 'toggle';
+  document.getElementById('conditions-section').style.display = 'none';
+  document.getElementById('conditions-list').innerHTML = '';
   _enabledOn = true;
   document.getElementById('f-enabled-toggle').className = 'toggle on';
   document.getElementById('modal-overlay').classList.add('open');
@@ -692,6 +780,7 @@ window.saveAutomation = async function() {
     messageType: document.getElementById('f-type').value,
     emailSubject: document.getElementById('f-subject').value.trim() || '',
     messageTemplate: template,
+    conditions: _conditionsOn ? _conditions.filter(c => c.value !== '') : [],
     isSurvey: _surveyOn,
     surveyThreshold: _surveyOn ? parseInt(document.getElementById('f-threshold').value) : null,
     followUpType: _surveyOn ? document.getElementById('f-followup-type').value : null,

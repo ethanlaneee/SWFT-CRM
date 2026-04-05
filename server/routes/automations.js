@@ -68,12 +68,35 @@ async function sendAutomationEmail(orgUser, to, subject, body) {
 // ── Exported worker functions ────────────────────────────────────────────────
 
 /**
+ * Evaluate conditions against event context.
+ * Returns true if all conditions pass (AND logic).
+ */
+function evaluateConditions(conditions, context) {
+  if (!conditions || !Array.isArray(conditions) || conditions.length === 0) return true;
+  for (const c of conditions) {
+    const actual = context[c.field];
+    const expected = c.value;
+    switch (c.operator) {
+      case "gt":   if (!(Number(actual) > Number(expected))) return false; break;
+      case "gte":  if (!(Number(actual) >= Number(expected))) return false; break;
+      case "lt":   if (!(Number(actual) < Number(expected))) return false; break;
+      case "lte":  if (!(Number(actual) <= Number(expected))) return false; break;
+      case "eq":   if (String(actual).toLowerCase() !== String(expected).toLowerCase()) return false; break;
+      case "neq":  if (String(actual).toLowerCase() === String(expected).toLowerCase()) return false; break;
+      case "contains": if (!String(actual).toLowerCase().includes(String(expected).toLowerCase())) return false; break;
+      default: break;
+    }
+  }
+  return true;
+}
+
+/**
  * Called when a quote is sent or invoice is paid.
  * Creates scheduledMessages for every matching enabled automation rule.
  *
  * @param {string} orgId
  * @param {string} trigger  "quote_sent" | "invoice_sent" | "invoice_paid"
- * @param {{ id: string, name: string, phone: string, email: string }} customer
+ * @param {{ id: string, name: string, phone: string, email: string, total?: number, service?: string, tags?: string[] }} customer
  */
 async function triggerAutomation(orgId, trigger, customer) {
   try {
@@ -109,6 +132,23 @@ async function triggerAutomation(orgId, trigger, customer) {
 
     for (const autoDoc of snap.docs) {
       const rule = autoDoc.data();
+
+      // Evaluate conditions — skip this rule if conditions don't match
+      if (rule.conditions && rule.conditions.length > 0) {
+        const ctx = {
+          total: customer.total || 0,
+          amount: customer.total || 0,
+          service: customer.service || "",
+          name: customer.name || "",
+          email: customer.email || "",
+          tags: (customer.tags || []).join(","),
+        };
+        if (!evaluateConditions(rule.conditions, ctx)) {
+          console.log(`[automation] Skipping "${rule.name}" — conditions not met`);
+          continue;
+        }
+      }
+
       // Calculate sendAt: delayDays from now, at the configured time (default 9:00 AM)
       const sendAtTime = rule.sendAtTime || "09:00";
       const [hours, minutes] = sendAtTime.split(":").map(Number);
@@ -380,6 +420,7 @@ router.post("/", async (req, res, next) => {
       emailSubject: req.body.emailSubject || "",
       messageTemplate: messageTemplate || "",
       enabled: enabled !== undefined ? Boolean(enabled) : true,
+      conditions: Array.isArray(req.body.conditions) ? req.body.conditions : [],
       isSurvey: Boolean(isSurvey),
       surveyThreshold: Number(surveyThreshold) || 8,
       followUpTemplate: followUpTemplate || "",
@@ -406,7 +447,7 @@ router.put("/:id", async (req, res, next) => {
     const updates = {};
     const allowed = [
       "name", "trigger", "delayDays", "sendAtTime", "messageType", "emailSubject", "messageTemplate",
-      "enabled", "isSurvey", "surveyThreshold", "followUpTemplate", "followUpType",
+      "enabled", "conditions", "isSurvey", "surveyThreshold", "followUpTemplate", "followUpType",
     ];
     for (const key of allowed) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
