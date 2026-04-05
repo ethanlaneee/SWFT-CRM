@@ -94,6 +94,7 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;}
 .badge-sms{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
 .badge-email{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
+.badge-notif{background:rgba(162,89,255,0.1);color:#a259ff;border:1px solid rgba(162,89,255,0.2);}
 
 /* Templates bar */
 .templates-bar{margin-bottom:24px;}
@@ -295,6 +296,7 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
       <select class="form-select" id="f-type">
         <option value="sms">SMS</option>
         <option value="email">Email</option>
+        <option value="notification">Internal Notification</option>
       </select>
     </div>
 
@@ -473,6 +475,8 @@ function renderRules(rules) {
     const actionType = (r.messageType || 'sms').toUpperCase();
     const actionIcon = r.messageType === 'email'
       ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>'
+      : r.messageType === 'notification'
+      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>'
       : '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
     const preview = (r.messageTemplate || '').substring(0, 50) + ((r.messageTemplate||'').length > 50 ? '...' : '');
     const surveyBadge = r.isSurvey ? ' + Survey' : '';
@@ -528,7 +532,7 @@ function renderRules(rules) {
       </div>
       <div class="scenario-footer">
         <div class="scenario-meta">
-          <span><span class="badge ${r.messageType==='sms'?'badge-sms':'badge-email'}">${actionType}</span></span>
+          <span><span class="badge ${r.messageType==='sms'?'badge-sms':r.messageType==='notification'?'badge-notif':'badge-email'}">${actionType}</span></span>
           <span style="color:${r.enabled?'var(--green)':'var(--gray)'};">${r.enabled?'Active':'Paused'}</span>
         </div>
       </div>
@@ -825,6 +829,9 @@ function esc(s) {
 // Show/hide email subject field when message type changes
 document.getElementById('f-type').addEventListener('change', function() {
   document.getElementById('f-subject-field').style.display = this.value === 'email' ? '' : 'none';
+  // Show notification hint
+  const notifHint = document.getElementById('notif-hint');
+  if (notifHint) notifHint.style.display = this.value === 'notification' ? '' : 'none';
 });
 
 let _toastTimer;
