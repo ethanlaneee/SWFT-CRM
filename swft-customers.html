@@ -464,7 +464,7 @@ user-select:none;
   <header class="topbar">
     <div class="topbar-page">CUSTOMERS</div>
     <span class="topbar-slash">/</span>
-    <div class="topbar-sub">14 contacts</div>
+    <div class="topbar-sub" id="cust-count">0 contacts</div>
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
       <div class="icon-btn" onclick="" title="Notifications" style="position:relative;">
@@ -719,6 +719,8 @@ async function loadCustomers() {
   try {
     const list = await API.customers.list();
     window._customers = {};
+    const countEl = document.getElementById('cust-count');
+    if (countEl) countEl.textContent = list.length + ' contact' + (list.length !== 1 ? 's' : '');
     const tbody = document.getElementById('table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
