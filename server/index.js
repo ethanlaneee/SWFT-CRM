@@ -24,6 +24,7 @@ const { router: googleAuthRouter, googleCallback } = require("./routes/googleAut
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
 const surveyRouter = require("./routes/survey");
+const publicChatRouter = require("./routes/publicChat");
 
 // ── Validate required environment variables on startup ──
 const REQUIRED_ENV = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "ANTHROPIC_API_KEY"];
@@ -98,6 +99,15 @@ app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
 
 // ── Public routes (no auth) ──
 app.use("/api/survey", surveyRouter);
+const publicChatLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many messages. Please wait a moment." },
+});
+app.use("/api/public/chat", publicChatLimiter);
+app.use("/api/public/chat", publicChatRouter);
 
 // ── Serve frontend files ──
 const staticRoot = path.join(__dirname, "..");
