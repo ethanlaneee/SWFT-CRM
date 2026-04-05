@@ -256,10 +256,10 @@ function renderDashboard(stats) {
     <!-- KPI ROW 1 -->
     <div class="section-label">User Metrics</div>
     <div class="kpi-grid" id="kpiGrid1">
-      ${kpiCard('Total Users', fmt(u.total), u.monthlySignups ? `+${u.monthlySignups} this month` : '', 'green', 0)}
+      ${kpiCard('Total Users', fmt(u.total), u.monthlySignups ? `+${u.monthlySignups} last 30d` : '', 'green', 0)}
       ${kpiCard('Paid Users', fmt(u.paid), '', 'green', 1)}
       ${kpiCard('Trial Users', fmt(u.trial), '', 'blue', 2)}
-      ${kpiCard('Expired Users', fmt(u.expired), '', 'amber', 3)}
+      ${kpiCard('Expired / Canceled', fmt(u.expired), '', 'amber', 3)}
       ${kpiCard('Stripe MRR', fmtCurrency(r.stripeMRR), '', 'green', 4)}
       ${kpiCard('User Revenue (30d)', fmtCurrency(r.monthlyRevenue), 'paid invoices', 'blue', 5)}
       ${kpiCard('User Revenue (All)', fmtCurrency(r.totalRevenue), 'paid invoices', 'white', 6)}
@@ -489,13 +489,9 @@ window._deleteUser = async function(uid, label) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Delete failed');
     showToast(`User ${label} deleted`, 'success');
-    // Remove from local state and re-render
-    allUsers = allUsers.filter(u => u.id !== uid);
-    renderUserTable(allUsers);
-    // Close detail row
-    const detailRow = document.querySelector(`.detail-row[data-uid="${uid}"]`);
-    if (detailRow) detailRow.remove();
     expandedUserId = null;
+    // Full refresh — re-fetch stats + users so all KPIs and platform totals are accurate
+    await loadAllData();
   } catch (e) {
     showToast('Delete failed: ' + e.message, 'error');
   }

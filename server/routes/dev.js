@@ -46,12 +46,15 @@ router.get("/stats", async (req, res, next) => {
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
 
-    // User stats
+    // User stats — categories must be mutually exclusive and sum to totalUsers
     const totalUsers = users.length;
-    const activeUsers = users.filter(u => u.accountStatus === "active" || u.isSubscribed).length;
-    const trialUsers = users.filter(u => u.accountStatus === "trialing" && !u.isSubscribed).length;
-    const expiredUsers = users.filter(u => u.accountStatus === "expired" || u.accountStatus === "canceled").length;
     const paidUsers = users.filter(u => u.isSubscribed).length;
+    const trialUsers = users.filter(u => !u.isSubscribed && u.accountStatus === "trialing").length;
+    const expiredUsers = users.filter(u => !u.isSubscribed && (u.accountStatus === "expired" || u.accountStatus === "canceled")).length;
+    // "active" here means accountStatus is "active" but NOT subscribed (edge case — should not happen normally)
+    const activeNotPaid = users.filter(u => !u.isSubscribed && u.accountStatus === "active").length;
+    // Unknown = users that don't fit any bucket (no accountStatus set, etc.)
+    const unknownUsers = totalUsers - paidUsers - trialUsers - expiredUsers - activeNotPaid;
 
     // Plan breakdown
     const planBreakdown = {};
@@ -131,7 +134,7 @@ router.get("/stats", async (req, res, next) => {
       : 0;
 
     res.json({
-      users: { total: totalUsers, active: activeUsers, trial: trialUsers, expired: expiredUsers, paid: paidUsers, recentSignups, monthlySignups, trialConversionRate },
+      users: { total: totalUsers, paid: paidUsers, trial: trialUsers, expired: expiredUsers, activeNotPaid, unknown: unknownUsers, recentSignups, monthlySignups, trialConversionRate },
       plans: planBreakdown,
       platform: { totalCustomers, totalJobs, totalQuotes, totalInvoices, activeJobs, scheduledJobs, completedJobs },
       revenue: { totalRevenue, monthlyRevenue, stripeMRR },
