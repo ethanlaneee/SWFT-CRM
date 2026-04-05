@@ -215,6 +215,10 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
         <label class="form-label">Delay (days after trigger)</label>
         <input class="form-input" id="f-delay" type="number" min="0" max="365" value="3" placeholder="3"/>
       </div>
+      <div class="form-field">
+        <label class="form-label">Send at time</label>
+        <input class="form-input" id="f-time" type="time" value="09:00"/>
+      </div>
     </div>
 
     <div class="form-field">
@@ -343,6 +347,13 @@ async function loadAll() {
   }
 }
 
+function formatTime12(t) {
+  const [h, m] = (t || '09:00').split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2,'0')}${ampm}`;
+}
+
 function updateStats(rules, pending) {
   document.getElementById('st-active').textContent = rules.filter(r=>r.enabled).length;
   document.getElementById('st-pending').textContent = pending.filter(m=>m.status==='pending').length;
@@ -363,7 +374,7 @@ function renderRules(rules) {
         <div class="rule-name">${esc(r.name)}</div>
         <div class="rule-badges">
           <span class="badge ${trigClass}">${trigLabel}</span>
-          <span class="badge badge-delay">+${r.delayDays} day${r.delayDays===1?'':'s'}</span>
+          <span class="badge badge-delay">+${r.delayDays} day${r.delayDays===1?'':'s'} at ${formatTime12(r.sendAtTime||'09:00')}</span>
           <span class="badge ${r.messageType==='sms'?'badge-sms':'badge-email'}">${(r.messageType||'sms').toUpperCase()}</span>
           ${r.isSurvey ? '<span class="badge badge-survey">Survey</span>' : ''}
         </div>
@@ -420,6 +431,7 @@ window.editRule = function(id) {
   document.getElementById('f-name').value = r.name || '';
   document.getElementById('f-trigger').value = r.trigger || 'quote_sent';
   document.getElementById('f-delay').value = r.delayDays ?? 3;
+  document.getElementById('f-time').value = r.sendAtTime || '09:00';
   document.getElementById('f-type').value = r.messageType || 'sms';
   document.getElementById('f-template').value = r.messageTemplate || '';
   _surveyOn = !!r.isSurvey;
@@ -468,6 +480,7 @@ window.openModal = function() {
   document.getElementById('f-trigger').value = trigger;
   document.getElementById('f-name').value = _defaultTemplates[trigger].name;
   document.getElementById('f-delay').value = '3';
+  document.getElementById('f-time').value = '09:00';
   document.getElementById('f-type').value = 'sms';
   document.getElementById('f-template').value = _defaultTemplates[trigger].template;
   _surveyOn = false;
@@ -505,7 +518,8 @@ window.saveAutomation = async function() {
   const data = {
     name,
     trigger: document.getElementById('f-trigger').value,
-    delayDays: parseInt(document.getElementById('f-delay').value) || 0,
+    delayDays: parseInt(document.getElementById('f-delay').value) || 3,
+    sendAtTime: document.getElementById('f-time').value || '09:00',
     messageType: document.getElementById('f-type').value,
     messageTemplate: template,
     isSurvey: _surveyOn,

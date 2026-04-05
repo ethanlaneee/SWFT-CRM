@@ -109,7 +109,13 @@ async function triggerAutomation(orgId, trigger, customer) {
 
     for (const autoDoc of snap.docs) {
       const rule = autoDoc.data();
-      const sendAt = now + (rule.delayDays || 0) * 86400000;
+      // Calculate sendAt: delayDays from now, at the configured time (default 9:00 AM)
+      const sendAtTime = rule.sendAtTime || "09:00";
+      const [hours, minutes] = sendAtTime.split(":").map(Number);
+      const targetDate = new Date(now + (rule.delayDays ?? 3) * 86400000);
+      targetDate.setHours(hours, minutes, 0, 0);
+      // If the computed time is already in the past (e.g. 0 delay, past 9am), send next day at that time
+      const sendAt = targetDate.getTime() <= now ? targetDate.getTime() + 86400000 : targetDate.getTime();
 
       let surveyToken = null;
       let resolvedMessage = rule.messageTemplate || "";
@@ -301,7 +307,8 @@ router.post("/", async (req, res, next) => {
       userId: req.uid,
       name: name || "",
       trigger: trigger || "quote_sent",
-      delayDays: Number(delayDays) || 0,
+      delayDays: Number(delayDays) ?? 3,
+      sendAtTime: req.body.sendAtTime || "09:00",
       messageType: messageType || "sms",
       messageTemplate: messageTemplate || "",
       enabled: enabled !== undefined ? Boolean(enabled) : true,
@@ -330,7 +337,7 @@ router.put("/:id", async (req, res, next) => {
 
     const updates = {};
     const allowed = [
-      "name", "trigger", "delayDays", "messageType", "messageTemplate",
+      "name", "trigger", "delayDays", "sendAtTime", "messageType", "messageTemplate",
       "enabled", "isSurvey", "surveyThreshold", "followUpTemplate", "followUpType",
     ];
     for (const key of allowed) {
