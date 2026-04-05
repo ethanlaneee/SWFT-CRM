@@ -94,6 +94,8 @@ router.post("/:id/pay", async (req, res, next) => {
           name: cust.name || invoiceData.customerName || "",
           phone: cust.phone || "",
           email: cust.email || "",
+          total: invoiceData.total || 0,
+          service: invoiceData.service || "",
         }).catch(console.error);
       } catch (autoErr) {
         console.error("invoice_paid automation lookup error:", autoErr);
@@ -173,6 +175,8 @@ router.post("/:id/email", async (req, res, next) => {
         name: cust.name || invData.customerName || "",
         phone: cust.phone || "",
         email: cust.email || "",
+        total: invData.total || 0,
+        service: invData.service || "",
       }).catch(console.error);
     }
 
