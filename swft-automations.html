@@ -50,24 +50,37 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .stat-n{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);}
 .stat-l{font-size:11px;color:var(--gray);margin-top:2px;}
 
-/* Scenario cards */
+/* Scenario cards — Make.com style */
 .rules-list{display:flex;flex-direction:column;gap:16px;margin-bottom:32px;}
 .scenario{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color 0.15s;}
 .scenario:hover{border-color:var(--border2);}
-.scenario.disabled{opacity:0.5;}
+.scenario.disabled{opacity:0.45;}
 .scenario-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
 .scenario-name{font-size:14px;font-weight:600;color:var(--white);}
 .scenario-actions{display:flex;align-items:center;gap:8px;}
-.scenario-flow{display:flex;align-items:center;gap:0;padding:18px 18px 16px;overflow-x:auto;}
-.flow-node{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;min-width:120px;flex-shrink:0;}
-.flow-node-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+.scenario-flow{display:flex;align-items:center;gap:0;padding:24px 24px 20px;overflow-x:auto;}
+/* Circular nodes */
+.flow-node{position:relative;display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:90px;}
+.flow-node-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid;transition:box-shadow 0.2s;}
+.flow-node-circle.trigger{background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);}
+.flow-node-circle.trigger svg{stroke:var(--blue);}
+.flow-node-circle.wait{background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);}
+.flow-node-circle.wait svg{stroke:var(--amber);}
+.flow-node-circle.action{background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);}
+.flow-node-circle.action svg{stroke:var(--green);}
+.scenario:hover .flow-node-circle.trigger{box-shadow:0 0 12px rgba(77,159,255,0.25);}
+.scenario:hover .flow-node-circle.wait{box-shadow:0 0 12px rgba(245,166,35,0.2);}
+.scenario:hover .flow-node-circle.action{box-shadow:0 0 12px rgba(200,241,53,0.2);}
+.flow-node-text{text-align:center;margin-top:8px;}
+.flow-node-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;margin-bottom:2px;}
 .flow-node-label.trigger{color:var(--blue);}
 .flow-node-label.wait{color:var(--amber);}
 .flow-node-label.action{color:var(--green);}
-.flow-node-value{font-size:12.5px;color:var(--white);font-weight:500;}
-.flow-node-sub{font-size:10.5px;color:var(--gray);margin-top:2px;}
-.flow-arrow{color:var(--gray2);font-size:18px;padding:0 8px;flex-shrink:0;display:flex;align-items:center;}
-.flow-arrow svg{width:20px;height:20px;}
+.flow-node-value{font-size:11.5px;color:var(--white);font-weight:500;}
+.flow-node-sub{font-size:10px;color:var(--gray);margin-top:1px;}
+/* Connector line between nodes */
+.flow-connector{width:40px;height:2px;background:var(--border2);flex-shrink:0;position:relative;margin:0 2px;margin-bottom:28px;}
+.flow-connector::after{content:'';position:absolute;right:-3px;top:-3px;width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid var(--border2);}
 .scenario-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,0.15);}
 .scenario-meta{display:flex;gap:12px;font-size:11px;color:var(--gray);}
 .scenario-meta span{display:flex;align-items:center;gap:4px;}
@@ -81,6 +94,15 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;}
 .badge-sms{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
 .badge-email{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
+
+/* Templates bar */
+.templates-bar{margin-bottom:24px;}
+.templates-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:10px;}
+.templates-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.tpl-btn{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+.tpl-btn:hover{border-color:var(--border2);background:var(--surface2);}
+.tpl-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid;flex-shrink:0;}
+.tpl-text{font-size:12px;color:var(--white);font-weight:500;}
 
 /* Empty state */
 .empty{text-align:center;padding:50px 20px;color:var(--gray);}
@@ -181,6 +203,33 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
     <div class="stat"><div class="stat-n" id="st-pending">—</div><div class="stat-l">Queued</div></div>
     <div class="stat"><div class="stat-n" id="st-sent">—</div><div class="stat-l">Delivered</div></div>
     <div class="stat"><div class="stat-n" id="st-failed" style="color:var(--red);">—</div><div class="stat-l">Failed</div></div>
+  </div>
+
+  <!-- Quick-start templates -->
+  <div class="templates-bar" id="templates-bar">
+    <div class="templates-label">Quick Start</div>
+    <div class="templates-scroll">
+      <button class="tpl-btn" onclick="quickCreate('quote_sent')">
+        <span class="tpl-icon" style="background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Quote Follow-up</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('invoice_sent')">
+        <span class="tpl-icon" style="background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg></span>
+        <span class="tpl-text">Invoice Reminder</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('invoice_paid')">
+        <span class="tpl-icon" style="background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Payment Thank You</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('job_completed')">
+        <span class="tpl-icon" style="background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Job Follow-up</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('customer_created')">
+        <span class="tpl-icon" style="background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Welcome Message</span>
+      </button>
+    </div>
   </div>
 
   <div class="rules-list" id="rules-list">
@@ -381,13 +430,12 @@ function updateStats(rules, pending) {
 
 const TRIG_LABELS = {quote_sent:'Quote Sent', invoice_sent:'Invoice Sent', invoice_paid:'Invoice Paid', job_completed:'Job Completed', customer_created:'Customer Created'};
 const TRIG_ICONS = {
-  quote_sent:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>',
-  invoice_sent:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg>',
-  invoice_paid:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg>',
-  job_completed:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>',
-  customer_created:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg>',
+  quote_sent:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>',
+  invoice_sent:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg>',
+  invoice_paid:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg>',
+  job_completed:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>',
+  customer_created:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg>',
 };
-const ARROW_SVG = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12" stroke-width="1.5"/><polyline points="15,8 19,12 15,16" stroke-width="1.5"/></svg>';
 
 function renderRules(rules) {
   const list = document.getElementById('rules-list');
@@ -402,10 +450,12 @@ function renderRules(rules) {
     const time = formatTime12(r.sendAtTime || '09:00');
     const actionType = (r.messageType || 'sms').toUpperCase();
     const actionIcon = r.messageType === 'email'
-      ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>'
-      : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
+      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>'
+      : '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
     const preview = (r.messageTemplate || '').substring(0, 50) + ((r.messageTemplate||'').length > 50 ? '...' : '');
     const surveyBadge = r.isSurvey ? ' + Survey' : '';
+
+    const waitIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8"/></svg>';
 
     return `<div class="scenario${r.enabled?'':' disabled'}" id="rule-${r.id}">
       <div class="scenario-header">
@@ -418,20 +468,29 @@ function renderRules(rules) {
       </div>
       <div class="scenario-flow">
         <div class="flow-node">
-          <div class="flow-node-label trigger">${trigIcon} TRIGGER</div>
-          <div class="flow-node-value">${trigLabel}</div>
+          <div class="flow-node-circle trigger">${trigIcon}</div>
+          <div class="flow-node-text">
+            <div class="flow-node-label trigger">TRIGGER</div>
+            <div class="flow-node-value">${trigLabel}</div>
+          </div>
         </div>
-        <div class="flow-arrow">${ARROW_SVG}</div>
+        <div class="flow-connector"></div>
         <div class="flow-node">
-          <div class="flow-node-label wait"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8"/></svg> WAIT</div>
-          <div class="flow-node-value">${delay} day${delay===1?'':'s'}</div>
-          <div class="flow-node-sub">at ${time}</div>
+          <div class="flow-node-circle wait">${waitIcon}</div>
+          <div class="flow-node-text">
+            <div class="flow-node-label wait">WAIT</div>
+            <div class="flow-node-value">${delay} day${delay===1?'':'s'}</div>
+            <div class="flow-node-sub">at ${time}</div>
+          </div>
         </div>
-        <div class="flow-arrow">${ARROW_SVG}</div>
+        <div class="flow-connector"></div>
         <div class="flow-node">
-          <div class="flow-node-label action">${actionIcon} ACTION</div>
-          <div class="flow-node-value">Send ${actionType}${surveyBadge}</div>
-          <div class="flow-node-sub">${esc(preview)}</div>
+          <div class="flow-node-circle action">${actionIcon}</div>
+          <div class="flow-node-text">
+            <div class="flow-node-label action">ACTION</div>
+            <div class="flow-node-value">Send ${actionType}${surveyBadge}</div>
+            <div class="flow-node-sub">${esc(preview)}</div>
+          </div>
         </div>
       </div>
       <div class="scenario-footer">
@@ -567,6 +626,17 @@ const _defaultTemplates = {
     name: 'Welcome Message',
     template: 'Hi {{customer_name}}, welcome to {{company_name}}! We\'re excited to work with you. If you have any questions, feel free to reach out anytime.',
     followup: ''
+  }
+};
+
+window.quickCreate = function(trigger) {
+  openModal();
+  document.getElementById('f-trigger').value = trigger;
+  const t = _defaultTemplates[trigger];
+  if (t) {
+    document.getElementById('f-name').value = t.name;
+    document.getElementById('f-template').value = t.template;
+    document.getElementById('f-followup-template').value = t.followup;
   }
 };
 
