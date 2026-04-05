@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { triggerAutomation } = require("./automations");
 
 const col = () => db.collection("invoices");
 
@@ -80,6 +81,24 @@ router.post("/:id/pay", async (req, res, next) => {
       paidAt: Date.now(),
       paymentMethod: req.body.paymentMethod || "other",
     });
+
+    // Trigger automations for invoice_paid
+    const invoiceData = doc.data();
+    if (invoiceData.customerId) {
+      try {
+        const custDoc = await db.collection("customers").doc(invoiceData.customerId).get();
+        const cust = custDoc.exists ? custDoc.data() : {};
+        triggerAutomation(req.orgId, "invoice_paid", {
+          id: invoiceData.customerId,
+          name: cust.name || invoiceData.customerName || "",
+          phone: cust.phone || "",
+          email: cust.email || "",
+        }).catch(console.error);
+      } catch (autoErr) {
+        console.error("invoice_paid automation lookup error:", autoErr);
+      }
+    }
+
     res.json({ success: true, status: "paid" });
   } catch (err) { next(err); }
 });

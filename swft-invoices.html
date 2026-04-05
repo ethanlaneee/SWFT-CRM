@@ -237,9 +237,13 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
         Print / Save PDF
       </button>
       <button class="pdf-btn" id="btn-paid" onclick="markPaid()" style="display:none;">Mark Paid</button>
-      <button class="pdf-btn" id="btn-paylink" onclick="getPaymentLink()" style="display:none;background:rgba(200,241,53,0.08);color:#c8f135;border-color:rgba(200,241,53,0.25);">
+      <button class="pdf-btn" id="btn-paylink" onclick="getPaymentLink('stripe')" style="display:none;background:rgba(200,241,53,0.08);color:#c8f135;border-color:rgba(200,241,53,0.25);">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round"/></svg>
-        Payment Link
+        Stripe Link
+      </button>
+      <button class="pdf-btn" id="btn-square-link" onclick="getPaymentLink('square')" style="display:none;background:rgba(0,120,255,0.08);color:#4d9fff;border-color:rgba(77,159,255,0.25);">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" stroke-width="1.8"/><path d="M9 9h6v6H9z" stroke-width="1.8"/></svg>
+        Square Link
       </button>
       <button class="pdf-btn primary" onclick="saveInvoice()">Save Invoice</button>
     </div>
@@ -315,11 +319,12 @@ async function openInvoice(id){
     var isOpen=inv.status!=='paid';
     document.getElementById('btn-paid').style.display=isOpen?'':'none';
     document.getElementById('btn-paylink').style.display=isOpen?'':'none';
+    document.getElementById('btn-square-link').style.display=isOpen?'':'none';
     document.getElementById('modal-overlay').classList.add('open');
   }catch(e){showToast('Error loading invoice');}
 }
 
-function openNewInvoice(){_currentInv=null;_items=[];populateModal({});document.getElementById('btn-delete').style.display='none';document.getElementById('btn-paid').style.display='none';document.getElementById('btn-paylink').style.display='none';document.getElementById('modal-overlay').classList.add('open');}
+function openNewInvoice(){_currentInv=null;_items=[];populateModal({});document.getElementById('btn-delete').style.display='none';document.getElementById('btn-paid').style.display='none';document.getElementById('btn-paylink').style.display='none';document.getElementById('btn-square-link').style.display='none';document.getElementById('modal-overlay').classList.add('open');}
 
 function populateModal(inv){
   // Render company brand header
@@ -404,25 +409,30 @@ async function markPaid(){
   try{await API.invoices.pay(_currentInv.id,{});showToast('Invoice marked as paid');closeModal();loadInvoices();}catch(e){showToast('Error: '+e.message);}
 }
 
-async function getPaymentLink(){
+async function getPaymentLink(processor){
   if(!_currentInv||!_currentInv.id)return;
-  var btn=document.getElementById('btn-paylink');
-  btn.textContent='Getting link...';
+  var isSquare = processor === 'square';
+  var btn = document.getElementById(isSquare ? 'btn-square-link' : 'btn-paylink');
+  var origHtml = btn.innerHTML;
+  btn.textContent = 'Getting link...';
   try{
-    var res=await API.payments.invoiceLink(_currentInv.id);
+    var res = isSquare
+      ? await API.square.invoiceLink(_currentInv.id)
+      : await API.payments.invoiceLink(_currentInv.id);
     if(res.url){
-      // Copy to clipboard
       try{await navigator.clipboard.writeText(res.url);}catch(e){
         var ta=document.createElement('textarea');ta.value=res.url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
       }
-      showToast(res.existing?'Payment link copied!':'Payment link created & copied!');
-      _currentInv.paymentLinkUrl=res.url;
+      showToast((isSquare?'Square':'Stripe') + ' link ' + (res.existing?'copied!':'created & copied!'));
+      if(isSquare) _currentInv.squarePaymentLinkUrl=res.url;
+      else _currentInv.paymentLinkUrl=res.url;
       btn.textContent='Link Copied!';
-      setTimeout(function(){
-        btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round"/></svg> Payment Link';
-      },2000);
+      setTimeout(function(){ btn.innerHTML=origHtml; }, 2000);
     }
-  }catch(e){showToast('Error: '+e.message);btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round"/></svg> Payment Link';}
+  }catch(e){
+    showToast('Error: '+e.message);
+    btn.innerHTML=origHtml;
+  }
 }
 
 async function deleteInvoice(){

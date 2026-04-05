@@ -166,6 +166,25 @@ const API = {
     invoiceLink: (id) => apiFetch(`/api/payments/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
   },
 
+  // ── Square ──
+  square: {
+    invoiceLink: (id) => apiFetch(`/api/square/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
+  },
+
+  // ── Google Business Profile ──
+  googleBusiness: {
+    accounts: ()                             => apiFetch("/api/google-business/accounts"),
+    reviews:  (accountId, locationId)        => apiFetch(`/api/google-business/reviews?accountId=${accountId}&locationId=${locationId}`),
+    reply:    (reviewId, accountId, locationId, comment) => apiFetch(`/api/google-business/reviews/${reviewId}/reply`, { method: "POST", body: JSON.stringify({ accountId, locationId, comment }) }),
+    deleteReply: (reviewId, accountId, locationId) => apiFetch(`/api/google-business/reviews/${reviewId}/reply?accountId=${accountId}&locationId=${locationId}`, { method: "DELETE" }),
+  },
+
+  // ── Import ──
+  import: {
+    customers: (rows) => apiFetch("/api/import/customers", { method: "POST", body: JSON.stringify({ rows }) }),
+    jobs:      (rows) => apiFetch("/api/import/jobs",      { method: "POST", body: JSON.stringify({ rows }) }),
+  },
+
   // ── Team ──
   team: {
     list:         ()           => apiFetch("/api/team"),
@@ -177,6 +196,21 @@ const API = {
     getRoles:     ()           => apiFetch("/api/team/roles"),
     saveRole:     (data)       => apiFetch("/api/team/roles", { method: "POST", body: JSON.stringify(data) }),
     deleteRole:   (roleId)     => apiFetch(`/api/team/roles/${roleId}`, { method: "DELETE" }),
+  },
+
+  // ── Automations ──
+  automations: {
+    list:    ()         => apiFetch("/api/automations"),
+    create:  (data)     => apiFetch("/api/automations", { method: "POST", body: JSON.stringify(data) }),
+    update:  (id, data) => apiFetch(`/api/automations/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete:  (id)       => apiFetch(`/api/automations/${id}`, { method: "DELETE" }),
+    pending: ()         => apiFetch("/api/automations/pending"),
+  },
+
+  // ── Survey (public — no auth) ──
+  survey: {
+    get:    (token) => fetch(`/api/survey/${token}`).then(r => r.json()),
+    submit: (token, rating) => fetch(`/api/survey/${token}`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ rating }) }).then(r => r.json()),
   },
 
 };

@@ -51,6 +51,17 @@ const INTEGRATIONS = [
     ],
   },
   {
+    id: "google_business",
+    name: "Google Business Profile",
+    icon: "star",
+    description: "View and respond to Google reviews",
+    provider: "google",
+    scopes: [
+      "https://www.googleapis.com/auth/business.manage",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
+  },
+  {
     id: "quickbooks",
     name: "QuickBooks",
     icon: "dollar-sign",
@@ -71,11 +82,17 @@ router.get("/", async (req, res, next) => {
     const userData = userDoc.exists ? userDoc.data() : {};
     const connections = userData.integrations || {};
 
-    const result = INTEGRATIONS.map(integration => ({
-      ...integration,
-      connected: !!connections[integration.id]?.connected,
-      account: connections[integration.id]?.account || null,
-    }));
+    const result = INTEGRATIONS.map(integration => {
+      // Stripe is platform-level: connected if the server has the key configured
+      if (integration.id === "stripe") {
+        return { ...integration, connected: !!process.env.STRIPE_SECRET_KEY, account: null };
+      }
+      return {
+        ...integration,
+        connected: !!connections[integration.id]?.connected,
+        account: connections[integration.id]?.account || null,
+      };
+    });
 
     res.json({ integrations: result });
   } catch (err) { next(err); }

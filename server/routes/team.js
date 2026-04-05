@@ -391,17 +391,19 @@ router.get("/roles", async (req, res, next) => {
     const doc = await db.collection("orgRoles").doc(req.orgId).get();
     const customRoles = doc.exists ? doc.data().roles || {} : {};
 
-    // Merge built-in with any custom overrides, skipping deleted ones
+    const hiddenRoles = new Set(doc.exists ? (doc.data().hiddenRoles || []) : []);
+
+    // Merge built-in with any custom overrides, skipping hidden ones
     const roles = {};
     for (const [id, role] of Object.entries(BUILT_IN_ROLES)) {
-      if (customRoles[id]?.deleted) continue; // deleted by org owner
+      if (hiddenRoles.has(id)) continue;
       roles[id] = customRoles[id]
         ? { ...role, permissions: customRoles[id].permissions }
         : { ...role };
     }
-    // Add custom roles (skip deleted)
+    // Add custom roles
     for (const [id, role] of Object.entries(customRoles)) {
-      if (!BUILT_IN_ROLES[id] && !role.deleted) {
+      if (!BUILT_IN_ROLES[id]) {
         roles[id] = { ...role, builtIn: false };
       }
     }
@@ -435,13 +437,18 @@ router.post("/roles", async (req, res, next) => {
       updatedAt: Date.now(),
     };
 
-    await db.collection("orgRoles").doc(req.orgId).set({ roles: existing }, { merge: true });
+    const { FieldValue: FV } = require("firebase-admin/firestore");
+    await db.collection("orgRoles").doc(req.orgId).set({
+      roles: existing,
+      // If role was previously hidden, un-hide it when explicitly saved
+      hiddenRoles: FV.arrayRemove(roleId),
+    }, { merge: true });
 
     res.json({ success: true, roleId, permissions: filtered });
   } catch (err) { next(err); }
 });
 
-// DELETE /api/team/roles/:roleId — delete a custom role
+// DELETE /api/team/roles/:roleId — delete a role
 router.delete("/roles/:roleId", async (req, res, next) => {
   try {
     if (req.userRole !== "owner") {
@@ -464,15 +471,16 @@ router.delete("/roles/:roleId", async (req, res, next) => {
       return res.status(409).json({ error: "Cannot delete a role that is assigned to team members. Reassign them first." });
     }
 
-    const doc = await db.collection("orgRoles").doc(req.orgId).get();
-    const roles = doc.exists ? (doc.data().roles || {}) : {};
+    const { FieldValue } = require("firebase-admin/firestore");
+    const orgRef = db.collection("orgRoles").doc(req.orgId);
+
     if (BUILT_IN_ROLES[roleId]) {
-      // Mark built-in role as deleted for this org so it stops appearing
-      roles[roleId] = { ...BUILT_IN_ROLES[roleId], deleted: true };
+      // For built-in roles: store in a hiddenRoles list so GET filters them out
+      await orgRef.set({ hiddenRoles: FieldValue.arrayUnion(roleId) }, { merge: true });
     } else {
-      delete roles[roleId];
+      // For custom roles: use update() to atomically delete the nested field
+      await orgRef.update({ [`roles.${roleId}`]: FieldValue.delete() });
     }
-    await db.collection("orgRoles").doc(req.orgId).set({ roles }, { merge: true });
 
     res.json({ success: true });
   } catch (err) { next(err); }

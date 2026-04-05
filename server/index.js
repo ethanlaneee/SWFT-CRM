@@ -15,10 +15,13 @@ const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
 const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = require("./routes/payments");
+const { router: squareRouter, squareWebhookHandler } = require("./routes/square");
 const { router: notificationsRouter } = require("./routes/notifications");
 const { router: messagesRouter, twilioIncomingHandler, postmarkIncomingHandler } = require("./routes/messages");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
+const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
+const surveyRouter = require("./routes/survey");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +32,7 @@ app.use(cors());
 // Stripe requires the raw request body to verify the webhook signature.
 app.post("/api/billing/webhook", express.raw({ type: "application/json" }), webhookHandler);
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), paymentsWebhookHandler);
+app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded webhooks
@@ -41,6 +45,9 @@ app.post("/api/webhooks/postmark/inbound", postmarkIncomingHandler);
 app.get("/api/auth/google/callback", googleCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
+
+// ── Public routes (no auth) ──
+app.use("/api/survey", surveyRouter);
 
 // ── Serve frontend files ──
 const staticRoot = path.join(__dirname, "..");
@@ -84,6 +91,10 @@ app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
+app.use("/api/square",        auth, checkAccess,  squareRouter);
+app.use("/api/import",        auth, checkAccess,  require("./routes/import"));
+app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
+app.use("/api/automations",   auth, checkAccess,  automationsRouter);
 app.use("/api/dev",           auth,               require("./routes/dev"));
 
 // ── Health check ──
@@ -98,3 +109,12 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`SWFT server running on port ${PORT}`);
 });
+
+// ── Automation worker ──
+// Process pending scheduled messages every 5 minutes
+setInterval(() => {
+  processScheduledMessages().catch(err => console.error("Automation worker error:", err));
+}, 5 * 60 * 1000);
+
+// Run once on startup after 30 seconds (gives server time to fully initialize)
+setTimeout(() => processScheduledMessages().catch(console.error), 30000);
