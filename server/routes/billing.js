@@ -221,7 +221,7 @@ async function webhookHandler(req, res) {
                 .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
               await gmail.users.messages.send({ userId: "me", requestBody: { raw: encoded } });
-              console.log("Payment-failed email sent to:", userEmail);
+              console.log("Payment-failed email sent successfully");
             }
           }
         } catch (emailErr) {

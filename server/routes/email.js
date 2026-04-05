@@ -1,6 +1,29 @@
 const router = require("express").Router();
+const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { db } = require("../firebase");
+
+const ENCRYPT_KEY = process.env.ENCRYPT_KEY || "swft_default_encrypt_key_change_me!";
+
+function encrypt(text) {
+  const iv = crypto.randomBytes(16);
+  const key = crypto.scryptSync(ENCRYPT_KEY, "salt", 32);
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return iv.toString("hex") + ":" + encrypted;
+}
+
+function decrypt(text) {
+  const [ivHex, encrypted] = text.split(":");
+  if (!ivHex || !encrypted) return text; // plaintext fallback for old data
+  const iv = Buffer.from(ivHex, "hex");
+  const key = crypto.scryptSync(ENCRYPT_KEY, "salt", 32);
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
 
 // POST /api/email/send — send a quote or invoice via email
 router.post("/send", async (req, res, next) => {
@@ -11,7 +34,6 @@ router.post("/send", async (req, res, next) => {
       return res.status(400).json({ error: "Recipient email and subject are required" });
     }
 
-    // Get user's Gmail credentials from Firestore
     const userDoc = await db.collection("users").doc(req.uid).get();
     const userData = userDoc.exists ? userDoc.data() : {};
 
@@ -29,7 +51,7 @@ router.post("/send", async (req, res, next) => {
       service: "gmail",
       auth: {
         user: gmailUser,
-        pass: gmailAppPassword,
+        pass: decrypt(gmailAppPassword),
       },
     });
 
@@ -42,7 +64,6 @@ router.post("/send", async (req, res, next) => {
 
     await transporter.sendMail(mailOptions);
 
-    // Update document status if applicable
     if (documentId && type) {
       const collection = type === "quote" ? "quotes" : "invoices";
       await db.collection(collection).doc(documentId).update({
@@ -63,7 +84,7 @@ router.post("/send", async (req, res, next) => {
   }
 });
 
-// POST /api/email/configure — save Gmail credentials
+// POST /api/email/configure — save Gmail credentials (encrypted)
 router.post("/configure", async (req, res, next) => {
   try {
     const { gmailAddress, gmailAppPassword } = req.body;
@@ -72,7 +93,7 @@ router.post("/configure", async (req, res, next) => {
     }
 
     await db.collection("users").doc(req.uid).set(
-      { gmailAddress, gmailAppPassword, updatedAt: Date.now() },
+      { gmailAddress, gmailAppPassword: encrypt(gmailAppPassword), updatedAt: Date.now() },
       { merge: true }
     );
 

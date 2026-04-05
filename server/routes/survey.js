@@ -61,7 +61,7 @@ async function sendFollowUpEmail(orgUser, to, subject, body) {
   }
 
   // Gmail not connected — skip email
-  console.warn("Survey follow-up email skipped: Gmail not connected for org", orgUser.email || "unknown");
+  console.warn("Survey follow-up email skipped: Gmail not connected for org");
 }
 
 // GET /api/survey/:token — return survey metadata (customer name, company name)
