@@ -95,6 +95,7 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .badge-sms{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
 .badge-email{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
 .badge-notif{background:rgba(162,89,255,0.1);color:#a259ff;border:1px solid rgba(162,89,255,0.2);}
+.badge-tag{background:rgba(255,159,67,0.1);color:#ff9f43;border:1px solid rgba(255,159,67,0.2);}
 
 /* Templates bar */
 .templates-bar{margin-bottom:24px;}
@@ -297,6 +298,7 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
         <option value="sms">SMS</option>
         <option value="email">Email</option>
         <option value="notification">Internal Notification</option>
+        <option value="tag_customer">Tag Customer</option>
       </select>
     </div>
 
@@ -319,8 +321,8 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
     </div>
 
     <div class="form-field">
-      <label class="form-label">Message Template</label>
-      <div class="form-sub">Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}</div>
+      <label class="form-label" id="template-label">Message Template</label>
+      <div class="form-sub" id="template-sub">Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}</div>
       <textarea class="form-textarea" id="f-template" placeholder="Hi {{customer_name}}, just a reminder that your quote is waiting for your review. Reply to confirm or ask any questions!"></textarea>
     </div>
 
@@ -477,6 +479,8 @@ function renderRules(rules) {
       ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>'
       : r.messageType === 'notification'
       ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>'
+      : r.messageType === 'tag_customer'
+      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke-width="1.8"/><line x1="7" y1="7" x2="7.01" y2="7" stroke-width="2" stroke-linecap="round"/></svg>'
       : '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
     const preview = (r.messageTemplate || '').substring(0, 50) + ((r.messageTemplate||'').length > 50 ? '...' : '');
     const surveyBadge = r.isSurvey ? ' + Survey' : '';
@@ -525,14 +529,14 @@ function renderRules(rules) {
           <div class="flow-node-circle action">${actionIcon}</div>
           <div class="flow-node-text">
             <div class="flow-node-label action">ACTION</div>
-            <div class="flow-node-value">Send ${actionType}${surveyBadge}</div>
+            <div class="flow-node-value">${r.messageType==='tag_customer'?'Add Tags':r.messageType==='notification'?'Notify Team':'Send '+actionType}${surveyBadge}</div>
             <div class="flow-node-sub">${esc(preview)}</div>
           </div>
         </div>
       </div>
       <div class="scenario-footer">
         <div class="scenario-meta">
-          <span><span class="badge ${r.messageType==='sms'?'badge-sms':r.messageType==='notification'?'badge-notif':'badge-email'}">${actionType}</span></span>
+          <span><span class="badge ${r.messageType==='sms'?'badge-sms':r.messageType==='notification'?'badge-notif':r.messageType==='tag_customer'?'badge-tag':'badge-email'}">${actionType==='TAG_CUSTOMER'?'TAG':actionType}</span></span>
           <span style="color:${r.enabled?'var(--green)':'var(--gray)'};">${r.enabled?'Active':'Paused'}</span>
         </div>
       </div>
@@ -826,12 +830,18 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Show/hide email subject field when message type changes
+// Show/hide fields when message type changes
 document.getElementById('f-type').addEventListener('change', function() {
   document.getElementById('f-subject-field').style.display = this.value === 'email' ? '' : 'none';
-  // Show notification hint
-  const notifHint = document.getElementById('notif-hint');
-  if (notifHint) notifHint.style.display = this.value === 'notification' ? '' : 'none';
+  const lbl = document.getElementById('template-label');
+  const sub = document.getElementById('template-sub');
+  if (this.value === 'tag_customer') {
+    if (lbl) lbl.textContent = 'Tags to Add';
+    if (sub) sub.textContent = 'Comma-separated tags, e.g. "VIP, Repeat Customer, Priority"';
+  } else {
+    if (lbl) lbl.textContent = 'Message Template';
+    if (sub) sub.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
+  }
 });
 
 let _toastTimer;

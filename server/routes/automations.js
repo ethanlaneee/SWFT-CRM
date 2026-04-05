@@ -268,7 +268,18 @@ async function processScheduledMessages() {
         if (ownerDoc.exists) orgUser = ownerDoc.data();
       }
 
-      if (msg.messageType === "sms") {
+      if (msg.messageType === "tag_customer") {
+        // Add tags to the customer document
+        if (!msg.customerId) throw new Error("No customer ID for tagging");
+        const tags = (msg.message || "").split(",").map(t => t.trim()).filter(Boolean);
+        if (tags.length === 0) throw new Error("No tags specified");
+        const custDoc = await db.collection("customers").doc(msg.customerId).get();
+        if (custDoc.exists) {
+          const existing = custDoc.data().tags || [];
+          const merged = [...new Set([...existing, ...tags])];
+          await db.collection("customers").doc(msg.customerId).update({ tags: merged });
+        }
+      } else if (msg.messageType === "sms") {
         if (!msg.phone) throw new Error("No phone number for SMS");
         await sendSms(msg.phone, msg.message);
       } else if (msg.messageType === "notification") {
