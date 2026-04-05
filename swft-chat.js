@@ -722,6 +722,7 @@
   if (micBtn) {
     micBtn.addEventListener('click', function() {
       if (_chatListening) {
+        // Toggle OFF — stop recording and send
         if (_chatRecognition) _chatRecognition.stop();
         return;
       }
@@ -735,36 +736,43 @@
       _chatRecognition = new SpeechRecognition();
       _chatRecognition.lang = 'en-US';
       _chatRecognition.interimResults = true;
-      _chatRecognition.continuous = false;
+      _chatRecognition.continuous = true;
       _chatRecognition.maxAlternatives = 1;
+
+      let finalTranscript = '';
 
       _chatRecognition.onstart = function() {
         _chatListening = true;
+        finalTranscript = '';
         micBtn.classList.add('recording');
       };
 
       _chatRecognition.onresult = function(e) {
-        let transcript = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          transcript += e.results[i][0].transcript;
+        let interim = '';
+        finalTranscript = '';
+        for (let i = 0; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            finalTranscript += e.results[i][0].transcript;
+          } else {
+            interim += e.results[i][0].transcript;
+          }
         }
-        input.value = transcript;
-        sendBtn.disabled = !transcript.trim();
+        input.value = finalTranscript + interim;
+        sendBtn.disabled = !input.value.trim();
       };
 
       _chatRecognition.onend = function() {
         _chatListening = false;
         micBtn.classList.remove('recording');
-        // Auto-send if we got text
-        if (input.value.trim() && !isSending) {
-          sendMessage(input.value.trim());
+        const text = (finalTranscript || input.value).trim();
+        if (text && !isSending) {
+          sendMessage(text);
         }
       };
 
       _chatRecognition.onerror = function(e) {
         _chatListening = false;
         micBtn.classList.remove('recording');
-        // Only show error for real problems, not just no-speech
         if (e.error === 'not-allowed') {
           if (typeof showToast === 'function') showToast('Microphone blocked - check browser settings');
         } else if (e.error === 'network') {

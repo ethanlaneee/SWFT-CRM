@@ -670,14 +670,24 @@ async function loadAttachDocs(){
       html+='<div class="attach-list-header">Quotes</div>';
       quotes.forEach(function(q){
         var label=(q.customerName||'Quote')+' — '+(q.service||'');
-        html+='<div class="attach-option" onclick="selectAttachment(\'quote\',\''+q.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(q.total||0).toFixed(2)+'</span></div>';
+        var sent=q.status==='sent';
+        if(sent){
+          html+='<div class="attach-option" style="opacity:0.4;cursor:not-allowed;"><span>'+esc(label)+'</span><span class="doc-total" style="color:var(--blue);">Sent</span></div>';
+        }else{
+          html+='<div class="attach-option" onclick="selectAttachment(\'quote\',\''+q.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(q.total||0).toFixed(2)+'</span></div>';
+        }
       });
     }
     if(invoices.length){
       html+='<div class="attach-list-header">Invoices</div>';
       invoices.forEach(function(inv){
         var label=(inv.customerName||'Invoice')+' — '+(inv.service||'');
-        html+='<div class="attach-option" onclick="selectAttachment(\'invoice\',\''+inv.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(inv.total||0).toFixed(2)+'</span></div>';
+        var sent=inv.status==='sent';
+        if(sent){
+          html+='<div class="attach-option" style="opacity:0.4;cursor:not-allowed;"><span>'+esc(label)+'</span><span class="doc-total" style="color:var(--blue);">Sent</span></div>';
+        }else{
+          html+='<div class="attach-option" onclick="selectAttachment(\'invoice\',\''+inv.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(inv.total||0).toFixed(2)+'</span></div>';
+        }
       });
     }
     if(!html)html='<div style="padding:16px;text-align:center;color:var(--gray);font-size:12px;">No quotes or invoices yet</div>';

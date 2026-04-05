@@ -115,6 +115,7 @@ const upload = multer({
 
 /**
  * Generate a PDF buffer for a quote or invoice.
+ * Matches the frontend preview style: clean white layout, #8ab800 green accent.
  */
 function generateDocumentPdf(doc, docType, user) {
   return new Promise((resolve, reject) => {
@@ -125,84 +126,102 @@ function generateDocumentPdf(doc, docType, user) {
     pdf.on("error", reject);
 
     const companyName = user.company || user.name || "SWFT";
-    const title = docType === "quote" ? "Quote" : "Invoice";
+    const tagline = user.phone
+      ? `${user.phone}     ${user.address || ""}`
+      : "simple. smart. swft.";
+    const title = docType === "quote" ? "QUOTE" : "INVOICE";
     const items = doc.items || [];
+    const GREEN = "#8ab800";
 
-    // Header
-    pdf.rect(0, 0, pdf.page.width, 80).fill("#0a0a0a");
-    pdf.fontSize(22).fill("#c8f135").text(companyName, 50, 25, { width: 300 });
-    pdf.fontSize(11).fill("#999999").text(title, 50, 52);
+    // ── Company header ──
+    let y = 50;
+    pdf.fontSize(28).fill("#111111").text(companyName, 50, y, { continued: true });
+    pdf.fill(GREEN).text(".", { continued: false });
+    y += 36;
+    pdf.fontSize(9).fill("#999999").text(tagline, 50, y);
+    y += 24;
 
-    let y = 110;
-
-    // Customer info
-    pdf.fontSize(10).fill("#888888").text("Customer", 50, y);
-    const dateLabel = docType === "quote" ? "Expires" : "Due Date";
-    pdf.text(dateLabel, 400, y, { width: 160, align: "right" });
+    // ── Document type with green underline ──
+    pdf.fontSize(18).fill("#111111").text(title, 50, y);
+    y += 26;
+    pdf.moveTo(50, y).lineTo(560, y).strokeColor(GREEN).lineWidth(2).stroke();
     y += 16;
-    pdf.fontSize(14).fill("#222222").text(doc.customerName || "—", 50, y);
-    const dateValue = docType === "quote"
-      ? (doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString() : "—")
-      : (doc.dueDate ? new Date(doc.dueDate).toLocaleDateString() : "—");
-    pdf.fontSize(12).fill("#222222").text(dateValue, 400, y, { width: 160, align: "right" });
-    y += 28;
 
-    if (doc.service) {
-      pdf.fontSize(10).fill("#666666").text("Service: " + doc.service, 50, y);
-      y += 18;
+    // ── Info fields ──
+    const fields = [
+      { label: "Customer", value: doc.customerName || "—" },
+      { label: "Service", value: doc.service || "—" },
+      { label: "Address", value: doc.address || "—" },
+    ];
+    if (docType === "quote" && doc.scheduledDate) {
+      fields.push({ label: "Scheduled", value: new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
     }
-    if (doc.address) {
-      pdf.fontSize(10).fill("#666666").text("Address: " + doc.address, 50, y);
-      y += 18;
+    if (docType === "quote" && doc.expiresAt) {
+      fields.push({ label: "Expires", value: new Date(doc.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
     }
-    y += 10;
+    if (docType === "invoice" && doc.dueDate) {
+      fields.push({ label: "Due Date", value: new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
+    }
 
-    // Table header
-    const colX = { desc: 50, qty: 310, rate: 390, total: 480 };
-    pdf.rect(50, y, 510, 22).fill("#f5f5f5");
-    pdf.fontSize(9).fill("#888888");
-    pdf.text("DESCRIPTION", colX.desc + 8, y + 6);
-    pdf.text("QTY", colX.qty, y + 6, { width: 60, align: "center" });
-    pdf.text("RATE", colX.rate, y + 6, { width: 70, align: "right" });
-    pdf.text("TOTAL", colX.total, y + 6, { width: 80, align: "right" });
-    y += 22;
+    for (const f of fields) {
+      if (f.value === "—" && f.label !== "Customer") continue;
+      pdf.fontSize(11).fill("#666666").text(f.label, 50, y);
+      pdf.fontSize(12).fill("#111111").text(f.value, 200, y, { width: 360, align: "right" });
+      y += 22;
+    }
+    y += 12;
 
-    // Table rows
+    // ── Line Items header ──
+    pdf.fontSize(9).fill("#999999").text("LINE ITEMS", 50, y);
+    y += 16;
+    const colX = { desc: 50, qty: 310, rate: 400, total: 490 };
+    // Column headers
+    pdf.fontSize(9).fill("#999999");
+    pdf.text("DESCRIPTION", colX.desc, y);
+    pdf.text("QTY", colX.qty, y, { width: 70, align: "center" });
+    pdf.text("RATE", colX.rate, y, { width: 70, align: "right" });
+    pdf.text("TOTAL", colX.total, y, { width: 70, align: "right" });
+    y += 14;
+    pdf.moveTo(50, y).lineTo(560, y).strokeColor("#e0e0e0").lineWidth(1).stroke();
+    y += 8;
+
+    // ── Line item rows ──
     for (const item of items) {
       const qty = Number(item.qty) || 1;
       const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
       const total = Number(item.total) || (qty * rate) || 0;
 
-      pdf.fontSize(11).fill("#333333");
-      pdf.text(item.desc || item.description || "", colX.desc + 8, y + 8, { width: 240 });
-      pdf.fill("#555555");
-      pdf.text(String(qty), colX.qty, y + 8, { width: 60, align: "center" });
-      pdf.text("$" + rate.toFixed(2), colX.rate, y + 8, { width: 70, align: "right" });
-      pdf.fontSize(11).fill("#333333");
-      pdf.text("$" + total.toFixed(2), colX.total, y + 8, { width: 80, align: "right" });
+      pdf.fontSize(12).fill("#111111");
+      pdf.text(item.desc || item.description || "", colX.desc, y, { width: 250 });
+      pdf.fill("#333333");
+      pdf.text(String(qty), colX.qty, y, { width: 70, align: "center" });
+      pdf.text("$" + rate.toFixed(2), colX.rate, y, { width: 70, align: "right" });
+      pdf.fontSize(12).fill("#111111");
+      pdf.text("$" + total.toFixed(2), colX.total, y, { width: 70, align: "right" });
 
-      y += 30;
-      pdf.moveTo(50, y).lineTo(560, y).strokeColor("#eeeeee").lineWidth(0.5).stroke();
+      y += 26;
+      pdf.moveTo(50, y).lineTo(560, y).strokeColor("#f0f0f0").lineWidth(0.5).stroke();
+      y += 8;
     }
 
-    y += 16;
-    // Total line
-    pdf.moveTo(50, y).lineTo(560, y).strokeColor("#0a0a0a").lineWidth(1.5).stroke();
-    y += 12;
+    // ── Totals ──
+    y += 8;
     const grandTotal = Number(doc.total) || 0;
-    pdf.fontSize(11).fill("#888888").text("Total", 400, y, { width: 60, align: "right" });
-    pdf.fontSize(18).fill("#0a0a0a").text("$" + grandTotal.toFixed(2), 470, y - 3, { width: 90, align: "right" });
+    pdf.fontSize(12).fill("#333333").text("Subtotal", 400, y, { width: 90, align: "right" });
+    pdf.text("$" + grandTotal.toFixed(2), 490, y, { width: 70, align: "right" });
+    y += 24;
+    pdf.moveTo(400, y).lineTo(560, y).strokeColor("#111111").lineWidth(2).stroke();
+    y += 10;
+    pdf.fontSize(18).fill("#111111").text("Total", 400, y, { width: 80, align: "right" });
+    pdf.text("$" + grandTotal.toFixed(2), 480, y, { width: 80, align: "right" });
     y += 36;
 
-    // Notes
+    // ── Notes ──
     if (doc.notes) {
-      pdf.rect(50, y, 510, 60).fill("#f9f9f9");
-      pdf.fontSize(10).fill("#555555").text(doc.notes, 62, y + 12, { width: 486 });
-      y += 70;
+      pdf.fontSize(9).fill("#999999").text("NOTES", 50, y);
+      y += 14;
+      pdf.fontSize(11).fill("#555555").text(doc.notes, 50, y, { width: 510 });
     }
-
-    // Footer
-    pdf.fontSize(9).fill("#aaaaaa").text("Sent via SWFT", 50, y + 20, { width: 510, align: "center" });
 
     pdf.end();
   });
@@ -357,6 +376,9 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       const quoteDoc = await db.collection("quotes").doc(quoteId).get();
       if (quoteDoc.exists && quoteDoc.data().userId === req.uid) {
         const quoteData = { id: quoteDoc.id, ...quoteDoc.data() };
+        if (quoteData.status === "sent") {
+          return res.status(400).json({ error: "This quote has already been sent. Duplicate sends are not allowed." });
+        }
         const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
         const custName = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
         pdfFiles.push({
@@ -371,6 +393,9 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       const invDoc = await db.collection("invoices").doc(invoiceId).get();
       if (invDoc.exists && invDoc.data().userId === req.uid) {
         const invData = { id: invDoc.id, ...invDoc.data() };
+        if (invData.status === "sent") {
+          return res.status(400).json({ error: "This invoice has already been sent. Duplicate sends are not allowed." });
+        }
         const pdfBuffer = await generateDocumentPdf(invData, "invoice", user);
         const custName = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
         pdfFiles.push({
