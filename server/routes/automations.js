@@ -271,6 +271,20 @@ async function processScheduledMessages() {
       if (msg.messageType === "sms") {
         if (!msg.phone) throw new Error("No phone number for SMS");
         await sendSms(msg.phone, msg.message);
+      } else if (msg.messageType === "notification") {
+        // Internal notification — create in notifications collection
+        await db.collection("notifications").add({
+          orgId: msg.orgId,
+          userId: ownerUid,
+          type: "automation",
+          title: msg.subject || "Automation Alert",
+          message: msg.message,
+          customerId: msg.customerId || "",
+          customerName: msg.customerName || "",
+          automationId: msg.automationId || "",
+          read: false,
+          createdAt: Date.now(),
+        });
       } else {
         if (!msg.email) throw new Error("No email address for email");
         const companyName = orgUser.company || orgUser.name || "SWFT";
