@@ -5,6 +5,7 @@ const { google } = require("googleapis");
 const { sendSms } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
+const PDFDocument = require("pdfkit");
 
 /**
  * Send email via user's connected Gmail account.
@@ -113,6 +114,101 @@ const upload = multer({
 });
 
 /**
+ * Generate a PDF buffer for a quote or invoice.
+ */
+function generateDocumentPdf(doc, docType, user) {
+  return new Promise((resolve, reject) => {
+    const pdf = new PDFDocument({ size: "LETTER", margin: 50 });
+    const chunks = [];
+    pdf.on("data", (chunk) => chunks.push(chunk));
+    pdf.on("end", () => resolve(Buffer.concat(chunks)));
+    pdf.on("error", reject);
+
+    const companyName = user.company || user.name || "SWFT";
+    const title = docType === "quote" ? "Quote" : "Invoice";
+    const items = doc.items || [];
+
+    // Header
+    pdf.rect(0, 0, pdf.page.width, 80).fill("#0a0a0a");
+    pdf.fontSize(22).fill("#c8f135").text(companyName, 50, 25, { width: 300 });
+    pdf.fontSize(11).fill("#999999").text(title, 50, 52);
+
+    let y = 110;
+
+    // Customer info
+    pdf.fontSize(10).fill("#888888").text("Customer", 50, y);
+    const dateLabel = docType === "quote" ? "Expires" : "Due Date";
+    pdf.text(dateLabel, 400, y, { width: 160, align: "right" });
+    y += 16;
+    pdf.fontSize(14).fill("#222222").text(doc.customerName || "—", 50, y);
+    const dateValue = docType === "quote"
+      ? (doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString() : "—")
+      : (doc.dueDate ? new Date(doc.dueDate).toLocaleDateString() : "—");
+    pdf.fontSize(12).fill("#222222").text(dateValue, 400, y, { width: 160, align: "right" });
+    y += 28;
+
+    if (doc.service) {
+      pdf.fontSize(10).fill("#666666").text("Service: " + doc.service, 50, y);
+      y += 18;
+    }
+    if (doc.address) {
+      pdf.fontSize(10).fill("#666666").text("Address: " + doc.address, 50, y);
+      y += 18;
+    }
+    y += 10;
+
+    // Table header
+    const colX = { desc: 50, qty: 310, rate: 390, total: 480 };
+    pdf.rect(50, y, 510, 22).fill("#f5f5f5");
+    pdf.fontSize(9).fill("#888888");
+    pdf.text("DESCRIPTION", colX.desc + 8, y + 6);
+    pdf.text("QTY", colX.qty, y + 6, { width: 60, align: "center" });
+    pdf.text("RATE", colX.rate, y + 6, { width: 70, align: "right" });
+    pdf.text("TOTAL", colX.total, y + 6, { width: 80, align: "right" });
+    y += 22;
+
+    // Table rows
+    for (const item of items) {
+      const qty = Number(item.qty) || 1;
+      const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
+      const total = Number(item.total) || (qty * rate) || 0;
+
+      pdf.fontSize(11).fill("#333333");
+      pdf.text(item.desc || item.description || "", colX.desc + 8, y + 8, { width: 240 });
+      pdf.fill("#555555");
+      pdf.text(String(qty), colX.qty, y + 8, { width: 60, align: "center" });
+      pdf.text("$" + rate.toFixed(2), colX.rate, y + 8, { width: 70, align: "right" });
+      pdf.fontSize(11).fill("#333333");
+      pdf.text("$" + total.toFixed(2), colX.total, y + 8, { width: 80, align: "right" });
+
+      y += 30;
+      pdf.moveTo(50, y).lineTo(560, y).strokeColor("#eeeeee").lineWidth(0.5).stroke();
+    }
+
+    y += 16;
+    // Total line
+    pdf.moveTo(50, y).lineTo(560, y).strokeColor("#0a0a0a").lineWidth(1.5).stroke();
+    y += 12;
+    const grandTotal = Number(doc.total) || 0;
+    pdf.fontSize(11).fill("#888888").text("Total", 400, y, { width: 60, align: "right" });
+    pdf.fontSize(18).fill("#0a0a0a").text("$" + grandTotal.toFixed(2), 470, y - 3, { width: 90, align: "right" });
+    y += 36;
+
+    // Notes
+    if (doc.notes) {
+      pdf.rect(50, y, 510, 60).fill("#f9f9f9");
+      pdf.fontSize(10).fill("#555555").text(doc.notes, 62, y + 12, { width: 486 });
+      y += 70;
+    }
+
+    // Footer
+    pdf.fontSize(9).fill("#aaaaaa").text("Sent via SWFT", 50, y + 20, { width: 510, align: "center" });
+
+    pdf.end();
+  });
+}
+
+/**
  * Generate HTML email body for a quote or invoice attachment.
  */
 function generateDocumentHtml(doc, docType, user) {
@@ -122,13 +218,18 @@ function generateDocumentHtml(doc, docType, user) {
 
   const itemRows = items
     .map(
-      (item) => `
+      (item) => {
+        const qty = Number(item.qty) || 1;
+        const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
+        const total = Number(item.total) || (qty * rate) || 0;
+        return `
     <tr>
       <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${item.desc || item.description || ""}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${item.qty || 1}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${Number(item.rate || 0).toFixed(2)}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${Number(item.total || 0).toFixed(2)}</td>
-    </tr>`
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${qty}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${rate.toFixed(2)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${total.toFixed(2)}</td>
+    </tr>`;
+      }
     )
     .join("");
 
@@ -249,11 +350,20 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     let attachedDocType = "";
     let attachedDocId = "";
 
+    // Build PDF file attachments for quotes/invoices
+    const pdfFiles = [];
+
     if (quoteId) {
       const quoteDoc = await db.collection("quotes").doc(quoteId).get();
       if (quoteDoc.exists && quoteDoc.data().userId === req.uid) {
         const quoteData = { id: quoteDoc.id, ...quoteDoc.data() };
-        htmlBody += generateDocumentHtml(quoteData, "quote", user);
+        const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
+        const custName = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
+        pdfFiles.push({
+          buffer: pdfBuffer,
+          mimetype: "application/pdf",
+          originalname: `Quote-${custName}.pdf`,
+        });
         attachedDocType = "quote";
         attachedDocId = quoteId;
       }
@@ -261,7 +371,13 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       const invDoc = await db.collection("invoices").doc(invoiceId).get();
       if (invDoc.exists && invDoc.data().userId === req.uid) {
         const invData = { id: invDoc.id, ...invDoc.data() };
-        htmlBody += generateDocumentHtml(invData, "invoice", user);
+        const pdfBuffer = await generateDocumentPdf(invData, "invoice", user);
+        const custName = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
+        pdfFiles.push({
+          buffer: pdfBuffer,
+          mimetype: "application/pdf",
+          originalname: `Invoice-${custName}.pdf`,
+        });
         attachedDocType = "invoice";
         attachedDocId = invoiceId;
       }
@@ -270,18 +386,16 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     if (!htmlBody) htmlBody = "<p>No content</p>";
     const textBody = body ? body.replace(/<[^>]*>/g, "") : "No content";
 
-    // Collect attachment file names
-    const attachmentNames = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(f => attachmentNames.push(f.originalname));
-    }
+    // Merge uploaded files + generated PDF attachments
+    const allFiles = [...(req.files || []), ...pdfFiles];
+    const attachmentNames = allFiles.map(f => f.originalname);
 
     if (!user.gmailConnected || !user.gmailTokens) {
       return res.status(400).json({ error: "Gmail not connected. Connect your Gmail account in Settings to send emails." });
     }
 
     user._uid = req.uid;
-    const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, req.files || []);
+    const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, allFiles);
 
     const msgRecord = {
       userId: req.uid,
