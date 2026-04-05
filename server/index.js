@@ -25,6 +25,22 @@ const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallbac
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
 const surveyRouter = require("./routes/survey");
 
+// ── Validate required environment variables on startup ──
+const REQUIRED_ENV = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "ANTHROPIC_API_KEY"];
+const RECOMMENDED_ENV = ["APP_URL", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ENCRYPT_KEY"];
+
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`FATAL: Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
+}
+for (const key of RECOMMENDED_ENV) {
+  if (!process.env[key]) {
+    console.warn(`WARNING: Missing recommended environment variable: ${key}`);
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -69,8 +85,8 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), webh
 app.post("/api/payments/webhook", express.raw({ type: "application/json" }), paymentsWebhookHandler);
 app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded webhooks
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 
 // ── Incoming message webhooks (no auth — called by Twilio) ──
 app.post("/api/webhooks/twilio/sms", twilioIncomingHandler);

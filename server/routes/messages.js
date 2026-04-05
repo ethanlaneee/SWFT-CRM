@@ -92,10 +92,24 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files) {
   return { messageId: result.data.id, threadId: result.data.threadId };
 }
 
-// Multer — store files in memory (max 10MB total)
+// Multer — store files in memory (max 10MB per file)
+const ALLOWED_MIMES = new Set([
+  "image/jpeg", "image/png", "image/gif", "image/webp",
+  "application/pdf",
+  "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain", "text/csv",
+]);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIMES.has(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("File type not allowed"), false);
+    }
+  },
 });
 
 /**
@@ -487,7 +501,7 @@ async function twilioIncomingHandler(req, res) {
     }
 
     if (!matched) {
-      console.log("Incoming SMS from unknown number:", from);
+      console.log("Incoming SMS from unknown number (not matched to customer)");
       return res.type("text/xml").send("<Response></Response>");
     }
 

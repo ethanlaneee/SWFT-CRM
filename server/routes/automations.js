@@ -62,7 +62,7 @@ async function sendAutomationEmail(orgUser, to, subject, body) {
   }
 
   // Gmail not connected — skip email
-  console.warn("Automation email skipped: Gmail not connected for org", orgUser.email || "unknown");
+  console.warn("Automation email skipped: Gmail not connected for org");
 }
 
 // ── Exported worker functions ────────────────────────────────────────────────

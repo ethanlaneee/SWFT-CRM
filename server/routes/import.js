@@ -29,18 +29,33 @@ router.post("/customers", async (req, res, next) => {
       const batch = db.batch();
       const chunk = rows.slice(i, i + BATCH_SIZE);
       for (const row of chunk) {
-        const name = (row.name || "").trim();
+        const name = (row.name || "").trim().substring(0, 200);
         if (!name) { skipped++; continue; }
+
+        const email = (row.email || "").trim().toLowerCase().substring(0, 254);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errors.push(`Invalid email: ${email}`);
+          skipped++;
+          continue;
+        }
+
+        const phone = (row.phone || "").trim().substring(0, 30);
+        if (phone && !/^[0-9\-+() .ext]+$/i.test(phone)) {
+          errors.push(`Invalid phone: ${phone}`);
+          skipped++;
+          continue;
+        }
+
         const ref = col.doc();
         batch.set(ref, {
           orgId: req.orgId,
           userId: req.uid,
           name,
-          email: (row.email || "").trim().toLowerCase(),
-          phone: (row.phone || "").trim(),
-          address: (row.address || "").trim(),
-          notes: (row.notes || "").trim(),
-          tags: row.tags ? row.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
+          email,
+          phone,
+          address: (row.address || "").trim().substring(0, 500),
+          notes: (row.notes || "").trim().substring(0, 2000),
+          tags: row.tags ? row.tags.split(",").map(t => t.trim().substring(0, 50)).filter(Boolean).slice(0, 20) : [],
           importedFrom: row.source || "csv",
           createdAt: now,
         });
@@ -82,11 +97,14 @@ router.post("/jobs", async (req, res, next) => {
       const batch = db.batch();
       const chunk = rows.slice(i, i + BATCH_SIZE);
       for (const row of chunk) {
-        const title = (row.title || row.name || "").trim();
+        const title = (row.title || row.name || "").trim().substring(0, 300);
         if (!title) { skipped++; continue; }
 
-        const customerName = (row.customerName || row.client || "").trim();
+        const customerName = (row.customerName || row.client || "").trim().substring(0, 200);
         const customerId = custMap[customerName.toLowerCase()] || null;
+
+        const cost = parseFloat(row.cost || row.total || 0) || 0;
+        if (cost < 0 || cost > 10000000) { skipped++; continue; }
 
         const ref = jobCol.doc();
         batch.set(ref, {
@@ -96,12 +114,12 @@ router.post("/jobs", async (req, res, next) => {
           customerName,
           customerId,
           status: normalizeStatus(row.status) || "scheduled",
-          service: (row.service || row.workType || "").trim(),
-          description: (row.description || row.notes || "").trim(),
-          address: (row.address || "").trim(),
-          cost: parseFloat(row.cost || row.total || 0) || 0,
-          scheduledDate: row.scheduledDate ? row.scheduledDate.trim() : null,
-          crew: (row.crew || row.assignedTo || "Unassigned").trim(),
+          service: (row.service || row.workType || "").trim().substring(0, 200),
+          description: (row.description || row.notes || "").trim().substring(0, 5000),
+          address: (row.address || "").trim().substring(0, 500),
+          cost,
+          scheduledDate: row.scheduledDate ? row.scheduledDate.trim().substring(0, 30) : null,
+          crew: (row.crew || row.assignedTo || "Unassigned").trim().substring(0, 100),
           importedFrom: row.source || "csv",
           createdAt: now,
         });
