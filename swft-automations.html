@@ -50,28 +50,37 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .stat-n{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);}
 .stat-l{font-size:11px;color:var(--gray);margin-top:2px;}
 
-/* Rule cards */
-.rules-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px;}
-.rule-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 20px;display:flex;align-items:center;gap:16px;}
-.rule-card.disabled{opacity:0.55;}
-.rule-info{flex:1;min-width:0;}
-.rule-name{font-size:14px;font-weight:600;color:var(--white);margin-bottom:6px;}
-.rule-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;}
-.badge-trigger{background:rgba(77,159,255,0.12);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
-.badge-invoice{background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.2);}
-.badge-delay{background:var(--surface2);color:var(--gray);border:1px solid var(--border2);}
-.badge-sms{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
-.badge-email{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
-.badge-survey{background:rgba(200,241,53,0.08);color:var(--green);border:1px solid rgba(200,241,53,0.15);}
-.rule-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+/* Scenario cards */
+.rules-list{display:flex;flex-direction:column;gap:16px;margin-bottom:32px;}
+.scenario{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color 0.15s;}
+.scenario:hover{border-color:var(--border2);}
+.scenario.disabled{opacity:0.5;}
+.scenario-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+.scenario-name{font-size:14px;font-weight:600;color:var(--white);}
+.scenario-actions{display:flex;align-items:center;gap:8px;}
+.scenario-flow{display:flex;align-items:center;gap:0;padding:18px 18px 16px;overflow-x:auto;}
+.flow-node{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;min-width:120px;flex-shrink:0;}
+.flow-node-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+.flow-node-label.trigger{color:var(--blue);}
+.flow-node-label.wait{color:var(--amber);}
+.flow-node-label.action{color:var(--green);}
+.flow-node-value{font-size:12.5px;color:var(--white);font-weight:500;}
+.flow-node-sub{font-size:10.5px;color:var(--gray);margin-top:2px;}
+.flow-arrow{color:var(--gray2);font-size:18px;padding:0 8px;flex-shrink:0;display:flex;align-items:center;}
+.flow-arrow svg{width:20px;height:20px;}
+.scenario-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,0.15);}
+.scenario-meta{display:flex;gap:12px;font-size:11px;color:var(--gray);}
+.scenario-meta span{display:flex;align-items:center;gap:4px;}
 .toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0;}
 .toggle.on{background:var(--green);}
 .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
 .toggle.on::after{transform:translateX(16px);}
-.btn-icon{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.btn-icon{width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
 .btn-icon:hover{background:var(--surface2);color:var(--white);}
 .btn-icon.del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.badge-sms{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
+.badge-email{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
 
 /* Empty state */
 .empty{text-align:center;padding:50px 20px;color:var(--gray);}
@@ -162,15 +171,16 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
   <div class="page-header">
     <div>
       <h1>Automations</h1>
-      <p class="subtitle">Auto-send messages based on job and billing events</p>
+      <p class="subtitle">Create scenarios that automatically send messages when events happen</p>
     </div>
-    <button class="btn-new" onclick="openModal()">+ New Automation</button>
+    <button class="btn-new" onclick="openModal()">+ New Scenario</button>
   </div>
 
   <div class="stats-strip" id="stats-strip">
-    <div class="stat"><div class="stat-n" id="st-active">—</div><div class="stat-l">Active Rules</div></div>
-    <div class="stat"><div class="stat-n" id="st-pending">—</div><div class="stat-l">Pending Messages</div></div>
-    <div class="stat"><div class="stat-n" id="st-sent">—</div><div class="stat-l">Sent (All Time)</div></div>
+    <div class="stat"><div class="stat-n" id="st-active">—</div><div class="stat-l">Active Scenarios</div></div>
+    <div class="stat"><div class="stat-n" id="st-pending">—</div><div class="stat-l">Queued</div></div>
+    <div class="stat"><div class="stat-n" id="st-sent">—</div><div class="stat-l">Delivered</div></div>
+    <div class="stat"><div class="stat-n" id="st-failed" style="color:var(--red);">—</div><div class="stat-l">Failed</div></div>
   </div>
 
   <div class="rules-list" id="rules-list">
@@ -210,6 +220,8 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
           <option value="quote_sent">Quote Sent</option>
           <option value="invoice_sent">Invoice Sent</option>
           <option value="invoice_paid">Invoice Paid</option>
+          <option value="job_completed">Job Completed</option>
+          <option value="customer_created">Customer Created</option>
         </select>
       </div>
       <div class="form-field">
@@ -228,6 +240,11 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
         <option value="sms">SMS</option>
         <option value="email">Email</option>
       </select>
+    </div>
+
+    <div class="form-field" id="f-subject-field" style="display:none;">
+      <label class="form-label">Email Subject</label>
+      <input class="form-input" id="f-subject" placeholder="e.g. Follow-up from {{company_name}}"/>
     </div>
 
     <div class="form-field">
@@ -357,38 +374,71 @@ function formatTime12(t) {
 
 function updateStats(rules, pending) {
   document.getElementById('st-active').textContent = rules.filter(r=>r.enabled).length;
-  document.getElementById('st-pending').textContent = pending.filter(m=>m.status==='pending').length;
+  document.getElementById('st-pending').textContent = pending.filter(m=>m.status==='pending'||m.status==='retrying').length;
   document.getElementById('st-sent').textContent = pending.filter(m=>m.status==='sent').length;
+  document.getElementById('st-failed').textContent = pending.filter(m=>m.status==='failed').length;
 }
+
+const TRIG_LABELS = {quote_sent:'Quote Sent', invoice_sent:'Invoice Sent', invoice_paid:'Invoice Paid', job_completed:'Job Completed', customer_created:'Customer Created'};
+const TRIG_ICONS = {
+  quote_sent:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>',
+  invoice_sent:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg>',
+  invoice_paid:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg>',
+  job_completed:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>',
+  customer_created:'<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg>',
+};
+const ARROW_SVG = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12" stroke-width="1.5"/><polyline points="15,8 19,12 15,16" stroke-width="1.5"/></svg>';
 
 function renderRules(rules) {
   const list = document.getElementById('rules-list');
   if (!rules.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">No automations yet</div><div style="font-size:13px;color:var(--gray);">Create your first rule to start sending automated messages.</div></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">No scenarios yet</div><div style="font-size:13px;color:var(--gray);">Create your first automation to start sending messages automatically.</div></div>`;
     return;
   }
   list.innerHTML = rules.map(r => {
-    const trigLabels = {quote_sent:'Quote Sent', invoice_sent:'Invoice Sent', invoice_paid:'Invoice Paid'};
-    const trigLabel = trigLabels[r.trigger] || r.trigger;
-    const trigClass = r.trigger === 'quote_sent' ? 'badge-trigger' : 'badge-invoice';
-    return `<div class="rule-card${r.enabled?'':' disabled'}" id="rule-${r.id}">
-      <div class="rule-info">
-        <div class="rule-name">${esc(r.name)}</div>
-        <div class="rule-badges">
-          <span class="badge ${trigClass}">${trigLabel}</span>
-          <span class="badge badge-delay">+${r.delayDays} day${r.delayDays===1?'':'s'} at ${formatTime12(r.sendAtTime||'09:00')}</span>
-          <span class="badge ${r.messageType==='sms'?'badge-sms':'badge-email'}">${(r.messageType||'sms').toUpperCase()}</span>
-          ${r.isSurvey ? '<span class="badge badge-survey">Survey</span>' : ''}
+    const trigLabel = TRIG_LABELS[r.trigger] || r.trigger;
+    const trigIcon = TRIG_ICONS[r.trigger] || TRIG_ICONS.quote_sent;
+    const delay = r.delayDays ?? 3;
+    const time = formatTime12(r.sendAtTime || '09:00');
+    const actionType = (r.messageType || 'sms').toUpperCase();
+    const actionIcon = r.messageType === 'email'
+      ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>'
+      : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
+    const preview = (r.messageTemplate || '').substring(0, 50) + ((r.messageTemplate||'').length > 50 ? '...' : '');
+    const surveyBadge = r.isSurvey ? ' + Survey' : '';
+
+    return `<div class="scenario${r.enabled?'':' disabled'}" id="rule-${r.id}">
+      <div class="scenario-header">
+        <div class="scenario-name">${esc(r.name)}</div>
+        <div class="scenario-actions">
+          <button class="toggle${r.enabled?' on':''}" onclick="toggleRule('${r.id}',${r.enabled})" title="${r.enabled?'Disable':'Enable'}"></button>
+          <button class="btn-icon" onclick="editRule('${r.id}')" title="Edit"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg></button>
+          <button class="btn-icon del" onclick="deleteRule('${r.id}')" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="1.8"/></svg></button>
         </div>
       </div>
-      <div class="rule-actions">
-        <button class="toggle${r.enabled?' on':''}" onclick="toggleRule('${r.id}',${r.enabled})" title="${r.enabled?'Disable':'Enable'}"></button>
-        <button class="btn-icon" onclick="editRule('${r.id}')" title="Edit">
-          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
-        </button>
-        <button class="btn-icon del" onclick="deleteRule('${r.id}')" title="Delete">
-          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="1.8"/><path d="M10,11v6" stroke-width="1.8"/><path d="M14,11v6" stroke-width="1.8"/></svg>
-        </button>
+      <div class="scenario-flow">
+        <div class="flow-node">
+          <div class="flow-node-label trigger">${trigIcon} TRIGGER</div>
+          <div class="flow-node-value">${trigLabel}</div>
+        </div>
+        <div class="flow-arrow">${ARROW_SVG}</div>
+        <div class="flow-node">
+          <div class="flow-node-label wait"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8"/></svg> WAIT</div>
+          <div class="flow-node-value">${delay} day${delay===1?'':'s'}</div>
+          <div class="flow-node-sub">at ${time}</div>
+        </div>
+        <div class="flow-arrow">${ARROW_SVG}</div>
+        <div class="flow-node">
+          <div class="flow-node-label action">${actionIcon} ACTION</div>
+          <div class="flow-node-value">Send ${actionType}${surveyBadge}</div>
+          <div class="flow-node-sub">${esc(preview)}</div>
+        </div>
+      </div>
+      <div class="scenario-footer">
+        <div class="scenario-meta">
+          <span><span class="badge ${r.messageType==='sms'?'badge-sms':'badge-email'}">${actionType}</span></span>
+          <span style="color:${r.enabled?'var(--green)':'var(--gray)'};">${r.enabled?'Active':'Paused'}</span>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -397,20 +447,39 @@ function renderRules(rules) {
 function renderPending(msgs) {
   const count = msgs.length;
   document.getElementById('pending-count').textContent = count;
-  if (!count) return;
+  if (!count) {
+    document.getElementById('pending-body').innerHTML = `<tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">No messages</td></tr>`;
+    return;
+  }
   const tbody = document.getElementById('pending-body');
   tbody.innerHTML = msgs.slice(0, 50).map(m => {
     const d = m.sendAt ? new Date(m.sendAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
-    const cls = m.status === 'sent' ? 'status-sent' : m.status === 'failed' ? 'status-failed' : 'status-pending';
-    const delBtn = m.status === 'pending' ? `<button class="btn-icon del" onclick="deletePending('${m.id}')" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="1.8"/></svg></button>` : '';
-    return `<tr><td>${esc(m.customerName||'—')}</td><td style="text-transform:uppercase;font-size:11px;color:var(--gray);">${m.messageType||'sms'}</td><td style="font-size:12px;color:var(--gray);">${d}</td><td><span class="status-badge ${cls}">${m.status}</span></td><td>${delBtn}</td></tr>`;
+    const statusMap = {pending:'status-pending',sent:'status-sent',failed:'status-failed',retrying:'status-pending'};
+    const cls = statusMap[m.status] || 'status-pending';
+    const statusLabel = m.status === 'retrying' ? `retry ${m.retryCount||1}/3` : m.status;
+    const errorTip = m.error ? ` title="${esc(m.error)}"` : '';
+    const canDelete = m.status === 'pending' || m.status === 'retrying';
+    const canRetry = m.status === 'failed';
+    let actions = '';
+    if (canRetry) actions += `<button class="btn-icon" onclick="retryPending('${m.id}')" title="Retry now" style="color:var(--amber);border-color:rgba(245,166,35,0.3);"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="23,4 23,10 17,10" stroke-width="2"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke-width="2"/></svg></button>`;
+    if (canDelete) actions += `<button class="btn-icon del" onclick="deletePending('${m.id}')" title="Cancel"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="1.8"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="1.8"/></svg></button>`;
+    const nameCol = m.automationName ? `${esc(m.customerName||'—')}<div style="font-size:10px;color:var(--gray);margin-top:1px;">${esc(m.automationName)}</div>` : esc(m.customerName||'—');
+    return `<tr><td>${nameCol}</td><td style="text-transform:uppercase;font-size:11px;color:var(--gray);">${m.messageType||'sms'}</td><td style="font-size:12px;color:var(--gray);">${d}</td><td${errorTip}><span class="status-badge ${cls}">${statusLabel}</span>${m.error?'<div style="font-size:10px;color:var(--red);margin-top:2px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(m.error)+'</div>':''}</td><td style="white-space:nowrap;">${actions}</td></tr>`;
   }).join('');
 }
 
 window.deletePending = async function(id) {
   try {
     await API.automations.deletePending(id);
-    toast('Scheduled message deleted');
+    toast('Scheduled message cancelled');
+    loadAll();
+  } catch(e) { toast(e.message, true); }
+};
+
+window.retryPending = async function(id) {
+  try {
+    await API.automations.retryPending(id);
+    toast('Retrying message...');
     loadAll();
   } catch(e) { toast(e.message, true); }
 };
@@ -444,6 +513,8 @@ window.editRule = function(id) {
   document.getElementById('f-delay').value = r.delayDays ?? 3;
   document.getElementById('f-time').value = r.sendAtTime || '09:00';
   document.getElementById('f-type').value = r.messageType || 'sms';
+  document.getElementById('f-subject').value = r.emailSubject || '';
+  document.getElementById('f-subject-field').style.display = (r.messageType || 'sms') === 'email' ? '' : 'none';
   document.getElementById('f-template').value = r.messageTemplate || '';
   _surveyOn = !!r.isSurvey;
   document.getElementById('f-survey-toggle').className = 'toggle' + (_surveyOn ? ' on' : '');
@@ -483,9 +554,19 @@ const _defaultTemplates = {
     followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
   },
   invoice_paid: {
-    name: 'Post-Service Thank You',
-    template: 'Hi {{customer_name}}, thank you for choosing {{company_name}}! We hope you\'re happy with the work. If you ever need anything, don\'t hesitate to reach out.',
+    name: 'Post-Payment Thank You',
+    template: 'Hi {{customer_name}}, thank you for your payment to {{company_name}}! We appreciate your business. If you ever need anything, don\'t hesitate to reach out.',
     followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
+  },
+  job_completed: {
+    name: 'Job Completion Follow-up',
+    template: 'Hi {{customer_name}}, we\'ve completed your job! Thank you for choosing {{company_name}}. We hope everything looks great — let us know if you have any questions.',
+    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
+  },
+  customer_created: {
+    name: 'Welcome Message',
+    template: 'Hi {{customer_name}}, welcome to {{company_name}}! We\'re excited to work with you. If you have any questions, feel free to reach out anytime.',
+    followup: ''
   }
 };
 
@@ -498,6 +579,8 @@ window.openModal = function() {
   document.getElementById('f-delay').value = '3';
   document.getElementById('f-time').value = '09:00';
   document.getElementById('f-type').value = 'sms';
+  document.getElementById('f-subject').value = '';
+  document.getElementById('f-subject-field').style.display = 'none';
   document.getElementById('f-template').value = _defaultTemplates[trigger].template;
   _surveyOn = false;
   document.getElementById('f-survey-toggle').className = 'toggle';
@@ -537,6 +620,7 @@ window.saveAutomation = async function() {
     delayDays: parseInt(document.getElementById('f-delay').value) || 3,
     sendAtTime: document.getElementById('f-time').value || '09:00',
     messageType: document.getElementById('f-type').value,
+    emailSubject: document.getElementById('f-subject').value.trim() || '',
     messageTemplate: template,
     isSurvey: _surveyOn,
     surveyThreshold: _surveyOn ? parseInt(document.getElementById('f-threshold').value) : null,
@@ -578,6 +662,11 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// Show/hide email subject field when message type changes
+document.getElementById('f-type').addEventListener('change', function() {
+  document.getElementById('f-subject-field').style.display = this.value === 'email' ? '' : 'none';
+});
 
 let _toastTimer;
 window.toast = function(msg, err) {

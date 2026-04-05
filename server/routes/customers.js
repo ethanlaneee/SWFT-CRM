@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { triggerAutomation } = require("./automations");
 
 const col = () => db.collection("customers");
 
@@ -39,6 +40,15 @@ router.post("/", async (req, res, next) => {
       createdAt: Date.now(),
     };
     const ref = await col().add(data);
+
+    // Trigger automations for customer_created
+    triggerAutomation(req.orgId, "customer_created", {
+      id: ref.id,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+    }).catch(console.error);
+
     res.status(201).json({ id: ref.id, ...data });
   } catch (err) { next(err); }
 });

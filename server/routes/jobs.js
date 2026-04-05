@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { triggerAutomation } = require("./automations");
 
 const col = () => db.collection("jobs");
 
@@ -90,6 +91,22 @@ router.post("/:id/complete", async (req, res, next) => {
       return res.status(404).json({ error: "Job not found" });
     }
     await col().doc(req.params.id).update({ status: "complete", completedAt: Date.now() });
+
+    // Trigger automations for job_completed
+    const jobData = doc.data();
+    if (jobData.customerId) {
+      try {
+        const custDoc = await db.collection("customers").doc(jobData.customerId).get();
+        const cust = custDoc.exists ? custDoc.data() : {};
+        triggerAutomation(req.orgId, "job_completed", {
+          id: jobData.customerId,
+          name: cust.name || jobData.customerName || "",
+          phone: cust.phone || "",
+          email: cust.email || "",
+        }).catch(console.error);
+      } catch (e) { console.error("job_completed automation error:", e); }
+    }
+
     res.json({ success: true, status: "complete" });
   } catch (err) { next(err); }
 });

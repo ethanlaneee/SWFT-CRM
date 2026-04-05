@@ -136,15 +136,22 @@ async function triggerAutomation(orgId, trigger, customer) {
 
       resolvedMessage = resolveTemplate(resolvedMessage, vars);
 
+      // Resolve subject template too
+      const resolvedSubject = rule.emailSubject
+        ? resolveTemplate(rule.emailSubject, vars)
+        : "";
+
       const msgData = {
         orgId,
         automationId: autoDoc.id,
+        automationName: rule.name || "",
         trigger,
         customerId: customer.id || "",
         customerName: customer.name || "",
         phone: customer.phone || "",
         email: customer.email || "",
         message: resolvedMessage,
+        subject: resolvedSubject,
         messageType: rule.messageType || "sms",
         sendAt,
         status: "pending",
@@ -169,24 +176,38 @@ async function triggerAutomation(orgId, trigger, customer) {
 }
 
 /**
- * Background worker — called every 5 minutes.
- * Processes up to 20 pending scheduled messages whose sendAt has passed.
+ * Background worker — runs every 30 seconds.
+ * Picks up pending + retryable messages whose sendAt has passed.
+ * Retries failed messages up to 3 times with exponential backoff.
  */
 async function processScheduledMessages() {
   const now = Date.now();
 
-  const snap = await db
+  // Pick up pending messages ready to send
+  const pendingSnap = await db
     .collection("scheduledMessages")
     .where("status", "==", "pending")
     .where("sendAt", "<=", now)
     .limit(20)
     .get();
 
-  if (snap.empty) return;
+  // Pick up failed messages eligible for retry (retryCount < 3, retryAfter <= now)
+  const retrySnap = await db
+    .collection("scheduledMessages")
+    .where("status", "==", "retrying")
+    .where("retryAfter", "<=", now)
+    .limit(10)
+    .get();
 
-  for (const msgDoc of snap.docs) {
+  const allDocs = [...pendingSnap.docs, ...retrySnap.docs];
+  if (!allDocs.length) return;
+
+  console.log(`[automation worker] Processing ${allDocs.length} messages`);
+
+  for (const msgDoc of allDocs) {
     const msg = msgDoc.data();
     const ref = msgDoc.ref;
+    const retryCount = msg.retryCount || 0;
 
     try {
       // Fetch org user for email sending
@@ -222,7 +243,9 @@ async function processScheduledMessages() {
         );
       }
 
+      // ── Success ──
       await ref.update({ status: "sent", sentAt: Date.now(), error: null });
+      console.log(`[automation worker] Sent ${msgDoc.id} (${msg.messageType}) to ${msg.phone || msg.email}`);
 
       // Create a record in the messages collection so it shows in the chat thread
       const msgRecord = {
@@ -244,9 +267,29 @@ async function processScheduledMessages() {
         msgRecord.subject = msg.subject || `Message from ${companyName}`;
       }
       await db.collection("messages").add(msgRecord);
+
     } catch (err) {
-      console.error(`Failed to send scheduled message ${msgDoc.id}:`, err);
-      await ref.update({ status: "failed", error: err.message || "Unknown error" }).catch(() => {});
+      console.error(`[automation worker] Failed ${msgDoc.id} (attempt ${retryCount + 1}):`, err.message);
+
+      if (retryCount < 2) {
+        // Retry with exponential backoff: 1min, 5min, then fail
+        const backoffMs = retryCount === 0 ? 60000 : 300000;
+        await ref.update({
+          status: "retrying",
+          retryCount: retryCount + 1,
+          retryAfter: Date.now() + backoffMs,
+          error: err.message || "Unknown error",
+          lastAttempt: Date.now(),
+        }).catch(() => {});
+      } else {
+        // Final failure after 3 attempts
+        await ref.update({
+          status: "failed",
+          retryCount: retryCount + 1,
+          error: err.message || "Unknown error",
+          lastAttempt: Date.now(),
+        }).catch(() => {});
+      }
     }
   }
 }
@@ -334,6 +377,7 @@ router.post("/", async (req, res, next) => {
       delayDays: Number(delayDays) ?? 3,
       sendAtTime: req.body.sendAtTime || "09:00",
       messageType: messageType || "sms",
+      emailSubject: req.body.emailSubject || "",
       messageTemplate: messageTemplate || "",
       enabled: enabled !== undefined ? Boolean(enabled) : true,
       isSurvey: Boolean(isSurvey),
@@ -361,7 +405,7 @@ router.put("/:id", async (req, res, next) => {
 
     const updates = {};
     const allowed = [
-      "name", "trigger", "delayDays", "sendAtTime", "messageType", "messageTemplate",
+      "name", "trigger", "delayDays", "sendAtTime", "messageType", "emailSubject", "messageTemplate",
       "enabled", "isSurvey", "surveyThreshold", "followUpTemplate", "followUpType",
     ];
     for (const key of allowed) {
@@ -398,6 +442,25 @@ router.delete("/pending/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Scheduled message not found" });
     }
     await db.collection("scheduledMessages").doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/automations/pending/:id/retry — retry a failed scheduled message
+router.post("/pending/:id/retry", async (req, res, next) => {
+  try {
+    const doc = await db.collection("scheduledMessages").doc(req.params.id).get();
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Scheduled message not found" });
+    }
+    await db.collection("scheduledMessages").doc(req.params.id).update({
+      status: "pending",
+      sendAt: Date.now(), // Send immediately on next worker cycle
+      retryCount: 0,
+      error: null,
+    });
     res.json({ success: true });
   } catch (err) {
     next(err);

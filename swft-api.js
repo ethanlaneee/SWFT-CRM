@@ -210,6 +210,7 @@ const API = {
     delete:        (id) => apiFetch(`/api/automations/${id}`, { method: "DELETE" }),
     pending:        ()  => apiFetch("/api/automations/pending"),
     deletePending: (id) => apiFetch(`/api/automations/pending/${id}`, { method: "DELETE" }),
+    retryPending:  (id) => apiFetch(`/api/automations/pending/${id}/retry`, { method: "POST" }),
   },
 
   // ── Survey (public — no auth) ──
