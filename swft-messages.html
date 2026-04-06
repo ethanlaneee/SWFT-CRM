@@ -95,7 +95,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .msg-bubble-subject{font-weight:600;color:var(--white);margin-bottom:4px;font-size:12.5px;}
 .msg-bubble-body{color:var(--white);}
 .msg-bubble-body.preview{color:var(--gray);}
-.msg-bubble-time{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--gray2);margin-top:6px;text-align:right;}
+.msg-bubble-time{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--gray2);margin-top:6px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:10px;}
+.msg-reply-btn{font-size:10px;color:var(--gray);cursor:pointer;padding:2px 7px;border-radius:5px;border:1px solid var(--border2);background:transparent;transition:all 0.12s;font-family:'DM Sans',sans-serif;}
+.msg-reply-btn:hover{background:var(--surface2);color:var(--white);}
 .msg-bubble-attach{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--amber);margin-top:4px;}
 .msg-date-sep{text-align:center;font-size:10px;color:var(--gray2);letter-spacing:1px;padding:8px 0;}
 
@@ -297,6 +299,10 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     </div>
     <div class="compose-bar" id="compose-bar" style="display:none;">
       <div class="compose-dropzone" id="compose-dropzone">Drop files here to attach</div>
+      <div id="reply-indicator" style="display:none;align-items:center;gap:8px;padding:6px 10px;background:rgba(200,241,53,0.06);border-radius:7px;border:1px solid rgba(200,241,53,0.15);margin-bottom:4px;font-size:11.5px;color:var(--gray);">
+        <span style="color:var(--green);">↩</span> Replying to: <span class="reply-subject" style="color:var(--white);font-weight:500;"></span>
+        <span onclick="_replyContext=null;this.parentElement.style.display='none';" style="margin-left:auto;cursor:pointer;color:var(--gray2);font-size:14px;">&times;</span>
+      </div>
       <div class="compose-subject-row" id="subject-row">
         <input type="text" id="compose-subject" placeholder="Subject..."/>
       </div>
@@ -395,6 +401,7 @@ var _allMessages = [];       // all messages from API
 var _customers = [];         // all customers
 var _contacts = [];          // computed contact list with last message
 var _activeContact = null;   // { customerId, customerName, channel, email, phone }
+var _replyContext = null;    // { inReplyTo, threadId, subject } when replying to an email
 var _attachedDoc = null;
 var _searchQuery = '';
 
@@ -715,12 +722,19 @@ function renderChat(){
     var aiBadge='';
     if(m.isReceptionist) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(200,241,53,0.12);border:1px solid rgba(200,241,53,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#c8f135;letter-spacing:0.5px;">📞 AI RECEPTIONIST</div>';
     if(m.isFollowup) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;">🔔 AI FOLLOW-UP</div>';
+    var replyBtn='';
+    if(_activeContact&&_activeContact.channel==='email'){
+      var msgId=m.gmailMessageId||'';
+      var threadId=m.gmailThreadId||'';
+      var origSubject=m.subject||'';
+      replyBtn='<div class="msg-reply-btn" onclick="replyToEmail(\''+esc(msgId)+'\',\''+esc(threadId)+'\',\''+esc(origSubject)+'\',\''+esc(m.body||'')+'\')">↩ Reply</div>';
+    }
     html+='<div class="msg-bubble '+dir+'">'+
       aiBadge+
       subjectHtml+
       '<div class="msg-bubble-body">'+esc(bodyText||'(no content)')+'</div>'+
       attachHtml+
-      '<div class="msg-bubble-time">'+(dir==='inbound'?'↙ ':'')+time+'</div>'+
+      '<div class="msg-bubble-time">'+(dir==='inbound'?'↙ ':'')+time+replyBtn+'</div>'+
     '</div>';
   });
 
@@ -760,9 +774,27 @@ async function loadScheduledForContact(){
 
 function showCompose(){
   document.getElementById('compose-bar').style.display='';
+  _replyContext = null;
   if(_activeContact&&_activeContact.channel==='email'){
     loadAttachDocs();
   }
+}
+
+function replyToEmail(msgId, threadId, origSubject, origBody) {
+  _replyContext = { inReplyTo: msgId, threadId: threadId };
+  var subject = origSubject ? (origSubject.startsWith('Re:') ? origSubject : 'Re: ' + origSubject) : 'Re: (no subject)';
+  document.getElementById('compose-bar').style.display = '';
+  document.getElementById('compose-subject').value = subject;
+  // Quote the original message in the body
+  var textarea = document.getElementById('compose-body');
+  var quoted = origBody ? '\n\n---\n' + origBody.replace(/<[^>]*>/g,'').substring(0,300) : '';
+  textarea.value = quoted;
+  textarea.focus();
+  textarea.setSelectionRange(0, 0);
+  // Show a reply indicator
+  var indicator = document.getElementById('reply-indicator');
+  if(indicator) { indicator.style.display='flex'; indicator.querySelector('.reply-subject').textContent = origSubject || '(no subject)'; }
+  loadAttachDocs();
 }
 
 // ── Attachments ──
@@ -905,6 +937,11 @@ async function sendMessage(){
       fd.append('subject',subject);
       fd.append('customerId',c.customerId||'');
       fd.append('customerName',c.customerName||'');
+      if(_replyContext){
+        fd.append('inReplyTo',_replyContext.inReplyTo||'');
+        fd.append('replyThreadId',_replyContext.threadId||'');
+        fd.append('replyReferences',_replyContext.inReplyTo||'');
+      }
       if(_attachedDoc){
         if(_attachedDoc.type==='quote')fd.append('quoteId',_attachedDoc.id);
         else fd.append('invoiceId',_attachedDoc.id);
@@ -921,6 +958,11 @@ async function sendMessage(){
       var payload={to:to,body:body,type:c.channel,customerId:c.customerId,customerName:c.customerName};
       if(c.channel==='email'){
         payload.subject=subject;
+        if(_replyContext){
+          payload.inReplyTo=_replyContext.inReplyTo||'';
+          payload.replyThreadId=_replyContext.threadId||'';
+          payload.replyReferences=_replyContext.inReplyTo||'';
+        }
         if(_attachedDoc){
           if(_attachedDoc.type==='quote')payload.quoteId=_attachedDoc.id;
           else payload.invoiceId=_attachedDoc.id;
@@ -930,6 +972,9 @@ async function sendMessage(){
     }
 
     showToast('Message sent');
+    _replyContext=null;
+    var ri=document.getElementById('reply-indicator');
+    if(ri)ri.style.display='none';
     document.getElementById('compose-body').value='';
     document.getElementById('compose-body').style.height='auto';
     if(c.channel==='email')document.getElementById('compose-subject').value='';

@@ -11,7 +11,7 @@ const { handleInboundMessage } = require("../ai/receptionist-agent");
 /**
  * Send email via user's connected Gmail account.
  */
-async function sendViaGmail(user, to, subject, htmlBody, textBody, files) {
+async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyHeaders = {}) {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -37,6 +37,8 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files) {
   mime += `From: ${fromName} <${fromAddr}>\r\n`;
   mime += `To: ${to}\r\n`;
   mime += `Subject: ${subject}\r\n`;
+  if (replyHeaders.inReplyTo) mime += `In-Reply-To: ${replyHeaders.inReplyTo}\r\n`;
+  if (replyHeaders.references) mime += `References: ${replyHeaders.references}\r\n`;
   mime += `MIME-Version: 1.0\r\n`;
 
   const hasAttachments = files && files.length > 0;
@@ -88,7 +90,10 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files) {
 
   const result = await gmail.users.messages.send({
     userId: "me",
-    requestBody: { raw: encodedMessage },
+    requestBody: {
+      raw: encodedMessage,
+      ...(replyHeaders.threadId ? { threadId: replyHeaders.threadId } : {}),
+    },
   });
 
   return { messageId: result.data.id, threadId: result.data.threadId };
@@ -377,7 +382,7 @@ function generateDocumentHtml(doc, docType, user) {
 // POST /api/messages/send — send email (with file attachments) or SMS
 router.post("/send", upload.array("files", 10), async (req, res, next) => {
   try {
-    const { to, subject, body, customerId, customerName, type, quoteId, invoiceId } = req.body;
+    const { to, subject, body, customerId, customerName, type, quoteId, invoiceId, inReplyTo, replyThreadId, replyReferences } = req.body;
     const msgType = type || "email";
 
     // Get user profile
@@ -483,7 +488,8 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     }
 
     user._uid = req.uid;
-    const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, allFiles);
+    const replyHeaders = inReplyTo ? { inReplyTo, references: replyReferences || inReplyTo, threadId: replyThreadId } : {};
+    const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, allFiles, replyHeaders);
 
     const msgRecord = {
       userId: req.uid,
@@ -498,6 +504,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       gmailMessageId: sendResult.messageId,
       gmailThreadId: sendResult.threadId,
       sentAt: Date.now(),
+      ...(inReplyTo ? { isReply: true, inReplyTo, replyThreadId } : {}),
     };
     if (attachedDocType) {
       msgRecord.attachedDocType = attachedDocType;
