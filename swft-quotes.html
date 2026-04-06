@@ -517,6 +517,7 @@ async function saveQuote(action){
   if(!custSel.value){showToast('Select a customer');return;}
 
   var total=_items.reduce(function(s,i){return s+i.total;},0);
+  if(total===0&&_currentQuote&&_currentQuote.total>0)total=_currentQuote.total;
   var data={
     customerId:custSel.value,
     customerName:custOpt.textContent,
@@ -571,6 +572,8 @@ async function sendQuoteEmail(){
   } else {
     // Save latest changes first
     var total=_items.reduce(function(s,i){return s+i.total;},0);
+    // If items all have $0 totals, preserve the existing doc total to prevent data loss
+    if(total===0&&_currentQuote&&_currentQuote.total>0)total=_currentQuote.total;
     var custSel=document.getElementById('f-customer');
     var data={
       customerId:custSel.value,

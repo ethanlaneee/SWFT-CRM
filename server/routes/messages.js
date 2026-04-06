@@ -266,44 +266,44 @@ function generateDocumentPdf(doc, docType, user) {
     y += 10;
 
     // ═══════════════════════════════════════════
-    //  LINE ITEM ROWS
+    //  LINE ITEM ROWS — pre-process to handle corrupted data
     // ═══════════════════════════════════════════
-    for (const rawItem of items) {
-      // Normalize: support {desc,rate,total}, {description,amount}, {name,price}, or any combo
+    function numVal(v) { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; }
+
+    // First pass: normalize all items and check if any have amounts
+    const parsed = items.map(rawItem => {
       const item = typeof rawItem === "string" ? { desc: rawItem } : (rawItem || {});
       const descText = item.desc || item.description || item.name || item.label || item.service || "";
       const qty = Math.max(1, parseInt(item.qty || item.quantity, 10) || 1);
+      const nRate = numVal(item.rate), nAmount = numVal(item.amount), nTotal = numVal(item.total), nPrice = numVal(item.price);
 
-      // Parse every possible numeric field; use null for "not present"
-      function num(v) { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; }
-      const nRate   = num(item.rate);
-      const nAmount = num(item.amount);
-      const nTotal  = num(item.total);
-      const nPrice  = num(item.price);
+      let total = (nTotal != null && nTotal > 0) ? nTotal : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (nRate != null && nRate > 0) ? nRate * qty : 0;
+      let rate = (nRate != null && nRate > 0) ? nRate : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (total > 0) ? total / qty : 0;
 
-      // Determine total: prefer total > amount > price > rate*qty
-      let total, rate;
-      if (nTotal != null && nTotal > 0)        { total = nTotal; }
-      else if (nAmount != null && nAmount > 0)  { total = nAmount; }
-      else if (nPrice != null && nPrice > 0)    { total = nPrice; }
-      else if (nRate != null && nRate > 0)      { total = nRate * qty; }
-      else                                      { total = 0; }
+      return { descText, qty, rate, total };
+    });
 
-      // Determine rate: prefer rate > amount > price > total/qty
-      if (nRate != null && nRate > 0)           { rate = nRate; }
-      else if (nAmount != null && nAmount > 0)  { rate = nAmount; }
-      else if (nPrice != null && nPrice > 0)    { rate = nPrice; }
-      else if (total > 0)                       { rate = total / qty; }
-      else                                      { rate = 0; }
+    // Fallback: if ALL items are $0 but doc.total > 0, distribute total evenly
+    const itemSum = parsed.reduce((s, p) => s + p.total, 0);
+    const grandTotalCheck = Number(doc.total) || 0;
+    if (itemSum === 0 && grandTotalCheck > 0 && parsed.length > 0) {
+      console.log("[PDF] All items $0 but doc.total is", grandTotalCheck, "— distributing evenly across", parsed.length, "items");
+      const share = grandTotalCheck / parsed.length;
+      for (const p of parsed) {
+        p.total = share;
+        p.rate = share / p.qty;
+      }
+    }
 
-      console.log("[PDF item]", JSON.stringify({ descText, qty, rate, total, raw: { rate: item.rate, amount: item.amount, total: item.total, price: item.price } }));
+    for (const p of parsed) {
+      console.log("[PDF item]", JSON.stringify(p));
 
-      const qtyText = String(qty);
-      const rateText = "$" + rate.toFixed(2);
-      const totalText = "$" + total.toFixed(2);
+      const qtyText = String(p.qty);
+      const rateText = "$" + p.rate.toFixed(2);
+      const totalText = "$" + p.total.toFixed(2);
 
       // All columns rendered at same y, font-size 13 to match print PDF
-      pdf.font("DM").fontSize(13).fill("#111").text(descText, c1, y, { width: 240 });
+      pdf.font("DM").fontSize(13).fill("#111").text(p.descText, c1, y, { width: 240 });
       pdf.font("DM").fontSize(13).fill("#111").text(qtyText, c2, y, { width: 80, align: "center" });
       pdf.font("DM").fontSize(13).fill("#111").text(rateText, c3, y, { width: 70, align: "right" });
       pdf.font("DM-Medium").fontSize(13).fill("#111").text(totalText, c4, y, { width: c4End - c4, align: "right" });
@@ -343,26 +343,31 @@ function generateDocumentHtml(doc, docType, user) {
   const title = docType === "quote" ? "Quote" : "Invoice";
   const items = doc.items || [];
 
-  const itemRows = items
-    .map(
-      (item) => {
-        const i = typeof item === "string" ? { desc: item } : (item || {});
-        const desc = i.desc || i.description || i.name || i.label || i.service || "";
-        const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
-        function n(v) { if (v === undefined || v === null || v === "") return null; const x = Number(v); return isNaN(x) ? null : x; }
-        const _r = n(i.rate), _a = n(i.amount), _t = n(i.total), _p = n(i.price);
-        const total = (_t != null && _t > 0) ? _t : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (_r != null && _r > 0) ? _r * qty : 0;
-        const rate = (_r != null && _r > 0) ? _r : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (total > 0) ? total / qty : 0;
-        return `
+  // Pre-process items with fallback for corrupted data
+  function nv(v) { if (v === undefined || v === null || v === "") return null; const x = Number(v); return isNaN(x) ? null : x; }
+  const parsedHtml = items.map(item => {
+    const i = typeof item === "string" ? { desc: item } : (item || {});
+    const desc = i.desc || i.description || i.name || i.label || i.service || "";
+    const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
+    const _r = nv(i.rate), _a = nv(i.amount), _t = nv(i.total), _p = nv(i.price);
+    let total = (_t != null && _t > 0) ? _t : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (_r != null && _r > 0) ? _r * qty : 0;
+    let rate = (_r != null && _r > 0) ? _r : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (total > 0) ? total / qty : 0;
+    return { desc, qty, rate, total };
+  });
+  // Fallback: if ALL items are $0 but doc.total > 0, distribute total evenly
+  const htmlItemSum = parsedHtml.reduce((s, p) => s + p.total, 0);
+  const htmlDocTotal = Number(doc.total) || 0;
+  if (htmlItemSum === 0 && htmlDocTotal > 0 && parsedHtml.length > 0) {
+    const share = htmlDocTotal / parsedHtml.length;
+    for (const p of parsedHtml) { p.total = share; p.rate = share / p.qty; }
+  }
+  const itemRows = parsedHtml.map(p => `
     <tr>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${desc}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${qty}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${rate.toFixed(2)}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${total.toFixed(2)}</td>
-    </tr>`;
-      }
-    )
-    .join("");
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${p.desc}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${p.qty}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${p.rate.toFixed(2)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${p.total.toFixed(2)}</td>
+    </tr>`).join("");
 
   const total = doc.total || 0;
   const dateLabel = docType === "quote" ? "Expires" : "Due Date";
