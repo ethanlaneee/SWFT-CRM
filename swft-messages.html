@@ -257,6 +257,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="ch-tab" onclick="setChannel('email')">Email</div>
       <div class="ch-tab" onclick="setChannel('sms')">SMS</div>
       <div class="ch-tab" onclick="setChannel('ai')" style="color:#c8f135;">AI</div>
+      <div class="ch-tab" onclick="setChannel('deleted')" style="color:var(--red);">Deleted</div>
     </div>
     <div class="contact-list" id="contact-list">
       <div class="chat-empty" style="padding:30px;font-size:12px;">Loading contacts...</div>
@@ -462,7 +463,8 @@ function autoResize(el){
 function setChannel(ch){
   _channel=ch;
   document.querySelectorAll('.ch-tab').forEach(function(t){
-    t.classList.toggle('active',t.textContent.toLowerCase()===ch);
+    var label=t.textContent.toLowerCase().trim();
+    t.classList.toggle('active',label===ch);
   });
   buildContacts();
   renderContacts();
@@ -603,10 +605,16 @@ function showConnectEmailPopup(){
 function buildContacts(){
   var map={};
   var msgs=_allMessages;
-  if(_channel==='ai'){
-    msgs=msgs.filter(function(m){return m.isReceptionist||m.isFollowup;});
-  } else if(_channel!=='all'){
-    msgs=msgs.filter(function(m){return(m.type||'email')===_channel;});
+  if(_channel==='deleted'){
+    msgs=msgs.filter(function(m){return m.deleted;});
+  } else {
+    // Normal views: exclude deleted messages
+    msgs=msgs.filter(function(m){return !m.deleted;});
+    if(_channel==='ai'){
+      msgs=msgs.filter(function(m){return m.isReceptionist||m.isFollowup;});
+    } else if(_channel!=='all'){
+      msgs=msgs.filter(function(m){return(m.type||'email')===_channel;});
+    }
   }
   msgs.forEach(function(m){
     // For inbound SMS without a customerId, group by the sender's phone number
@@ -678,13 +686,16 @@ function renderContacts(){
     var isActive=_activeContact&&_activeContact.customerId===c.customerId&&_activeContact.channel===c.channel&&_activeContact.to===c.to;
     var chIcon=c.channel==='sms'?'<span style="color:var(--green);font-size:10px;">SMS</span>':'<span style="color:var(--blue);font-size:10px;">Email</span>';
 
+    var actionBtn=_channel==='deleted'
+      ? '<div class="c-delete" onclick="event.stopPropagation();restoreThread(\''+escape(JSON.stringify(c))+'\')" title="Restore thread" style="color:var(--green);opacity:1;font-size:11px;font-weight:600;">Restore</div>'
+      : '<div class="c-delete" onclick="event.stopPropagation();deleteThread(\''+escape(JSON.stringify(c))+'\')" title="Delete thread">&times;</div>';
     return '<div class="contact-item'+(isActive?' active':'')+'" onclick="selectContact(\''+escape(JSON.stringify(c))+'\')">' +
       '<div class="c-avatar">'+initials+'</div>' +
       '<div class="c-info">' +
         '<div class="c-name">'+esc(c.customerName)+' '+chIcon+'</div>' +
         '<div class="c-preview">'+esc(preview)+'</div>' +
       '</div>' +
-      '<div class="c-meta"><div class="c-time">'+time+'</div><div class="c-delete" onclick="event.stopPropagation();deleteThread(\''+escape(JSON.stringify(c))+'\')" title="Delete thread">&times;</div></div>' +
+      '<div class="c-meta"><div class="c-time">'+time+'</div>'+actionBtn+'</div>' +
     '</div>';
   }).join('');
 }
@@ -699,25 +710,40 @@ async function deleteThread(escaped){
   var c=JSON.parse(unescape(escaped));
   var name=c.customerName||'this contact';
   if(typeof swftConfirm==='function'){
-    var ok=await swftConfirm('Delete all messages with <strong>'+name+'</strong> ('+c.channel+')?','DELETE THREAD','🗑️');
+    var ok=await swftConfirm('Move conversation with <strong>'+name+'</strong> to Recently Deleted?','DELETE THREAD','🗑️');
     if(!ok)return;
   }else{
-    if(!confirm('Delete all messages with '+name+' ('+c.channel+')?'))return;
+    if(!confirm('Move conversation with '+name+' to Recently Deleted?'))return;
   }
   try{
     var ids=c.messages.map(function(m){return m.id;}).filter(Boolean);
     await Promise.all(ids.map(function(id){return API.messages.delete(id);}));
-    // Clear active if deleting current thread
     if(_activeContact&&_activeContact.customerId===c.customerId&&_activeContact.channel===c.channel){
       _activeContact=null;
       clearChat();
     }
-    // Reload
     var messages=await API.messages.list();
     _allMessages=messages;
     buildContacts();
     renderContacts();
-    showToast('Thread deleted');
+    showToast('Moved to Recently Deleted');
+  }catch(e){showToast('Error: '+e.message);}
+}
+
+async function restoreThread(escaped){
+  var c=JSON.parse(unescape(escaped));
+  try{
+    var token=await getAuthToken();
+    var ids=c.messages.map(function(m){return m.id;}).filter(Boolean);
+    await Promise.all(ids.map(function(id){
+      return fetch('/api/messages/'+id+'/restore',{method:'POST',headers:{'Authorization':'Bearer '+token}});
+    }));
+    var messages=await API.messages.list();
+    _allMessages=messages;
+    buildContacts();
+    renderContacts();
+    if(_activeContact){_activeContact=null;clearChat();}
+    showToast('Conversation restored');
   }catch(e){showToast('Error: '+e.message);}
 }
 

@@ -557,13 +557,28 @@ router.post("/sync-gmail", async (req, res, next) => {
 });
 
 // DELETE /api/messages/:id
+// Soft-delete a message (marks as deleted, recoverable)
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await db.collection("messages").doc(req.params.id).get();
     if (!doc.exists || doc.data().userId !== req.uid) {
       return res.status(404).json({ error: "Message not found" });
     }
-    await db.collection("messages").doc(req.params.id).delete();
+    await db.collection("messages").doc(req.params.id).update({ deleted: true, deletedAt: Date.now() });
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Restore a soft-deleted message
+router.post("/:id/restore", async (req, res, next) => {
+  try {
+    const doc = await db.collection("messages").doc(req.params.id).get();
+    if (!doc.exists || doc.data().userId !== req.uid) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+    await db.collection("messages").doc(req.params.id).update({ deleted: false, deletedAt: null });
     res.json({ success: true });
   } catch (err) {
     next(err);
