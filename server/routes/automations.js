@@ -428,6 +428,7 @@ router.post("/", async (req, res, next) => {
       name,
       trigger,
       delayDays,
+      delayHours,
       messageType,
       messageTemplate,
       enabled,
@@ -448,7 +449,8 @@ router.post("/", async (req, res, next) => {
       userId: req.uid,
       name: name || "",
       trigger: trigger || "quote_sent",
-      delayDays: Number(delayDays) ?? 3,
+      delayDays: Number(delayDays) || 0,
+      delayHours: Number(delayHours) || 0,
       sendAtTime: req.body.sendAtTime || "09:00",
       messageType: messageType || "sms",
       emailSubject: req.body.emailSubject || "",
@@ -480,7 +482,7 @@ router.put("/:id", async (req, res, next) => {
 
     const updates = {};
     const allowed = [
-      "name", "trigger", "delayDays", "sendAtTime", "messageType", "emailSubject", "messageTemplate",
+      "name", "trigger", "delayDays", "delayHours", "sendAtTime", "messageType", "emailSubject", "messageTemplate",
       "enabled", "conditions", "isSurvey", "surveyThreshold", "followUpTemplate", "followUpType",
     ];
     for (const key of allowed) {

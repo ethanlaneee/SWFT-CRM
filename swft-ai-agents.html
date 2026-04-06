@@ -257,13 +257,14 @@
     }
     container.innerHTML = list.map(a => {
       const triggerLabel = TRIGGERS[a.trigger] || a.trigger || '—';
-      const channelLabel = CHANNELS[a.channel] || a.channel || 'SMS';
+      const ch = a.messageType || a.channel || 'sms';
+      const channelLabel = CHANNELS[ch] || ch || 'SMS';
       const delayLabel = a.delayDays ? a.delayDays + ' day' + (a.delayDays > 1 ? 's' : '') + ' after' : a.delayHours ? a.delayHours + 'h after' : 'Immediate';
       const statusColor = a.enabled ? 'var(--green)' : 'var(--gray2)';
       const statusBg = a.enabled ? 'rgba(200,241,53,0.1)' : 'rgba(100,100,100,0.1)';
       const statusText = a.enabled ? 'Active' : 'Paused';
       return '<div class="table-row" onclick="openEditModal(\'' + a.id + '\')">' +
-        '<div class="td"><div style="font-weight:500;color:var(--white);">' + esc(a.name || 'Untitled') + '</div><div style="font-size:11px;color:var(--gray2);margin-top:2px;">' + esc((a.message || '').substring(0, 60)) + (a.message && a.message.length > 60 ? '...' : '') + '</div></div>' +
+        '<div class="td"><div style="font-weight:500;color:var(--white);">' + esc(a.name || 'Untitled') + '</div><div style="font-size:11px;color:var(--gray2);margin-top:2px;">' + esc(((a.messageTemplate || a.message || '').substring(0, 60))) + ((a.messageTemplate || a.message || '').length > 60 ? '...' : '') + '</div></div>' +
         '<div class="td">' + esc(triggerLabel) + '</div>' +
         '<div class="td">' + esc(channelLabel) + '</div>' +
         '<div class="td">' + esc(delayLabel) + '</div>' +
@@ -353,13 +354,14 @@
     document.getElementById('m-id').value = a.id;
     document.getElementById('m-name').value = a.name || '';
     document.getElementById('m-trigger').value = a.trigger || 'quote_sent';
-    document.getElementById('m-channel').value = a.channel || 'sms';
+    var ch = a.messageType || a.channel || 'sms';
+    document.getElementById('m-channel').value = ch;
     document.getElementById('m-delay-days').value = a.delayDays || '';
     document.getElementById('m-delay-hours').value = a.delayHours || '';
-    document.getElementById('m-message').value = a.message || '';
-    document.getElementById('m-subject').value = a.subject || '';
+    document.getElementById('m-message').value = a.messageTemplate || a.message || '';
+    document.getElementById('m-subject').value = a.emailSubject || a.subject || '';
     document.getElementById('m-enabled').checked = !!a.enabled;
-    document.getElementById('m-subject-row').style.display = (a.channel === 'email' || a.channel === 'both') ? '' : 'none';
+    document.getElementById('m-subject-row').style.display = (ch === 'email' || ch === 'both') ? '' : 'none';
     document.getElementById('delete-btn').style.display = '';
     document.getElementById('modal-overlay').classList.add('open');
   }
@@ -378,15 +380,15 @@
     const data = {
       name: document.getElementById('m-name').value.trim(),
       trigger: document.getElementById('m-trigger').value,
-      channel: document.getElementById('m-channel').value,
+      messageType: document.getElementById('m-channel').value,
       delayDays: parseInt(document.getElementById('m-delay-days').value) || 0,
       delayHours: parseInt(document.getElementById('m-delay-hours').value) || 0,
-      message: document.getElementById('m-message').value.trim(),
-      subject: document.getElementById('m-subject').value.trim(),
+      messageTemplate: document.getElementById('m-message').value.trim(),
+      emailSubject: document.getElementById('m-subject').value.trim(),
       enabled: document.getElementById('m-enabled').checked,
     };
     if (!data.name) { showToast('Name is required'); return; }
-    if (!data.message) { showToast('Message is required'); return; }
+    if (!data.messageTemplate) { showToast('Message is required'); return; }
 
     const btn = document.getElementById('save-btn');
     btn.textContent = 'Saving...'; btn.disabled = true;
