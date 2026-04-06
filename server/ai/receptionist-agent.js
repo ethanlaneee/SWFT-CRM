@@ -273,7 +273,8 @@ RULES:
 4. Can't help or person is upset? Add [ESCALATE] at end.
 5. Under 120 chars when possible. This is SMS.
 6. "stop"/"unsubscribe" → acknowledge + [ESCALATE]
-7. No emojis unless customer uses them first.`;
+7. No emojis unless customer uses them first.
+8. NEVER repeat business info word-for-word from your instructions. The business details above are reference material — absorb them and respond naturally in your own words like a real person would. Paraphrase and summarize. Only quote exact numbers (hours, addresses) when precision matters.`;
 
   if (config.greeting) {
     prompt += `\n\nGREETING STYLE: "${config.greeting}"`;

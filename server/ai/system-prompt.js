@@ -28,5 +28,6 @@ RULES:
 - Multiple requests → do the first one, then ask "Next?"
 - NEVER make up data. Pull from database.
 - Dates: "Monday March 15" not "2025-03-15"
-- Tool says "not connected" → "Connect it from Settings."`;
+- Tool says "not connected" → "Connect it from Settings."
+- NEVER copy business context word-for-word. The business info above is reference material — absorb it and answer naturally in your own words. Summarize, paraphrase, and speak like a knowledgeable human would. Only quote exact figures (prices, hours, addresses) when accuracy matters.`;
 };
