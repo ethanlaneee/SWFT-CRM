@@ -5,6 +5,22 @@ const { sendViaGmail, generateDocumentPdf } = require("./messages");
 
 const col = () => db.collection("invoices");
 
+// Normalize line items to {desc, qty, rate, total} regardless of input format
+function normalizeItems(items) {
+  return (items || []).map(i => {
+    if (typeof i === "string") return { desc: i, qty: 1, rate: 0, total: 0 };
+    const desc = i.desc || i.description || i.name || i.label || i.service || "";
+    const qty = Number(i.qty || i.quantity) || 1;
+    const rawRate = (i.rate !== undefined && i.rate !== null && i.rate !== "") ? Number(i.rate) : null;
+    const rawAmount = (i.amount !== undefined && i.amount !== null && i.amount !== "") ? Number(i.amount) : null;
+    const rawTotal = (i.total !== undefined && i.total !== null && i.total !== "") ? Number(i.total) : null;
+    const rawPrice = (i.price !== undefined && i.price !== null && i.price !== "") ? Number(i.price) : null;
+    const total = rawTotal || rawAmount || rawPrice || (rawRate ? rawRate * qty : 0);
+    const rate = rawRate || rawAmount || rawPrice || (total / qty) || 0;
+    return { desc, qty, rate, total };
+  });
+}
+
 // List invoices
 router.get("/", async (req, res, next) => {
   try {
@@ -36,7 +52,7 @@ router.post("/", async (req, res, next) => {
       customerId: req.body.customerId || "",
       customerName: req.body.customerName || "",
       quoteId: req.body.quoteId || null,
-      items: req.body.items || [],
+      items: normalizeItems(req.body.items),
       total: req.body.total || 0,
       notes: req.body.notes || "",
       status: req.body.status || "open",
@@ -64,6 +80,7 @@ router.put("/:id", async (req, res, next) => {
     for (const key of ["customerId", "customerName", "quoteId", "items", "total", "notes", "status", "dueDate", "address", "service", "sqft", "finish", "scheduledDate"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
+    if (updates.items) updates.items = normalizeItems(updates.items);
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
     res.json({ id: req.params.id, ...doc.data(), ...updates });

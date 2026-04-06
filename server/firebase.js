@@ -17,11 +17,37 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   }
 }
 
-const storageBucket = "swft-ai26.firebasestorage.app";
+const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || "swft-ai26.firebasestorage.app";
 admin.initializeApp({ credential, storageBucket });
 
 const db = admin.firestore();
 const authAdmin = admin.auth();
-const bucket = admin.storage().bucket();
 
-module.exports = { admin, db, authAdmin, bucket };
+// Resolve the correct Storage bucket at startup (try primary, then fallback)
+const BUCKET_CANDIDATES = [
+  storageBucket,
+  "swft-ai26.appspot.com",
+];
+let _resolvedBucket = admin.storage().bucket(); // default
+
+(async () => {
+  for (const name of BUCKET_CANDIDATES) {
+    try {
+      const b = admin.storage().bucket(name);
+      const [exists] = await b.exists();
+      if (exists) {
+        _resolvedBucket = b;
+        console.log("[firebase] Storage bucket resolved:", name);
+        return;
+      }
+    } catch (e) {
+      console.warn("[firebase] Bucket check failed for", name, ":", e.message);
+    }
+  }
+  console.error("[firebase] No valid storage bucket found. Photo uploads will fail.");
+})();
+
+// Getter so photo routes always use the resolved bucket
+function getStorageBucket() { return _resolvedBucket; }
+
+module.exports = { admin, db, authAdmin, get bucket() { return _resolvedBucket; }, getStorageBucket };
