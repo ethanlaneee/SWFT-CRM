@@ -132,6 +132,14 @@ const API = {
     clearHistory: ()        => apiFetch("/api/ai/history", { method: "DELETE" }),
   },
 
+  // ── AI Agents (Receptionist, Estimator, Follow-up) ──
+  agents: {
+    list:   ()           => apiFetch("/api/agents"),
+    get:    (id)         => apiFetch(`/api/agents/${id}`),
+    update: (id, data)   => apiFetch(`/api/agents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    toggle: (id)         => apiFetch(`/api/agents/${id}/toggle`, { method: "POST", body: JSON.stringify({}) }),
+  },
+
   // ── Email ──
   email: {
     send:      (data) => apiFetch("/api/email/send", { method: "POST", body: JSON.stringify(data) }),

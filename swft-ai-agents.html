@@ -571,18 +571,80 @@ Google review would mean a lot to us 🙏
 </div>
 
 <script>
+  // ── Agent config state ──
+  let _agentConfigs = {};
+
   function toggleCard(id) {
     const card = document.getElementById('card-' + id);
     card.classList.toggle('expanded');
   }
 
-  function toggleAgent(id) {
+  async function toggleAgent(id) {
     const toggle = document.getElementById('toggle-' + id);
     const label  = document.getElementById('toggle-label-' + id);
+    // Optimistic UI update
     toggle.classList.toggle('on');
-    label.textContent = toggle.classList.contains('on') ? 'On' : 'Off';
-    label.style.color = toggle.classList.contains('on') ? 'var(--gray)' : 'var(--gray2)';
+    const isOn = toggle.classList.contains('on');
+    label.textContent = isOn ? 'On' : 'Off';
+    label.style.color = isOn ? 'var(--gray)' : 'var(--gray2)';
+    try {
+      const result = await API.agents.toggle(id);
+      _agentConfigs[id] = _agentConfigs[id] || {};
+      _agentConfigs[id].enabled = result.enabled;
+      showToast(result.enabled ? `${id} agent enabled` : `${id} agent disabled`);
+      updateTopbarCounts();
+    } catch (err) {
+      // Revert on failure
+      toggle.classList.toggle('on');
+      label.textContent = toggle.classList.contains('on') ? 'On' : 'Off';
+      label.style.color = toggle.classList.contains('on') ? 'var(--gray)' : 'var(--gray2)';
+      showToast('Failed to toggle agent');
+    }
   }
+
+  function updateTopbarCounts() {
+    const onCount = ['receptionist','estimator','followup'].filter(id => _agentConfigs[id]?.enabled).length;
+    const topSub = document.querySelector('.topbar-sub');
+    const aiPill = document.querySelector('.ai-pill');
+    if (topSub) topSub.textContent = `${onCount} agent${onCount !== 1 ? 's' : ''} active`;
+    if (aiPill) aiPill.innerHTML = `<div class="pulse"></div>${onCount} / 3 Online`;
+  }
+
+  function applyAgentState(id, enabled) {
+    const toggle = document.getElementById('toggle-' + id);
+    const label  = document.getElementById('toggle-label-' + id);
+    if (!toggle || !label) return;
+    if (enabled) {
+      toggle.classList.add('on');
+      label.textContent = 'On';
+      label.style.color = 'var(--gray)';
+    } else {
+      toggle.classList.remove('on');
+      label.textContent = 'Off';
+      label.style.color = 'var(--gray2)';
+    }
+  }
+
+  // ── Load agent configs on page ready ──
+  async function loadAgentConfigs() {
+    try {
+      _agentConfigs = await API.agents.list();
+      for (const id of ['receptionist', 'estimator', 'followup']) {
+        applyAgentState(id, _agentConfigs[id]?.enabled);
+      }
+      updateTopbarCounts();
+    } catch (err) {
+      console.error('Failed to load agent configs:', err);
+    }
+  }
+
+  // Wait for auth then load
+  const _configInterval = setInterval(() => {
+    if (window.__swftUser) {
+      clearInterval(_configInterval);
+      loadAgentConfigs();
+    }
+  }, 200);
 
   function toggleSidebar(){
     document.querySelector('.sidebar').classList.toggle('collapsed');
@@ -634,6 +696,7 @@ Google review would mean a lot to us 🙏
   });
 </script>
 
+<script src="swft-api.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
 <script src="swft-chat.js"></script>

@@ -143,6 +143,7 @@ app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
 app.use("/api/payments",  auth, checkAccess,  paymentsRouter);
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
+app.use("/api/agents",    auth, checkAccess,  require("./routes/agents"));
 const { router: teamRouter, publicRouter: teamPublicRouter } = require("./routes/team");
 app.use("/api/team",        teamPublicRouter);                        // validate invite (no auth), join (has own auth)
 app.use("/api/team",        auth, checkAccess, teamRouter);           // full auth — manage team
