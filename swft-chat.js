@@ -766,17 +766,24 @@
       };
 
       _chatRecognition.onend = function() {
-        _chatListening = false;
-        micBtn.classList.remove('recording');
         if (_userStoppedMic) {
           // User clicked mic to stop — send the message
+          _chatListening = false;
+          micBtn.classList.remove('recording');
           const text = (finalTranscript || input.value).trim();
           if (text && !isSending) {
             sendMessage(text);
           }
         } else {
-          // Browser stopped on its own (silence timeout, etc.) — restart
-          try { _chatRecognition.start(); } catch(e) {}
+          // Browser stopped on its own (silence timeout) — restart seamlessly
+          // Keep button red and listening flag true
+          try {
+            _chatRecognition.start();
+          } catch(e) {
+            // If restart fails, truly stop
+            _chatListening = false;
+            micBtn.classList.remove('recording');
+          }
         }
       };
 
