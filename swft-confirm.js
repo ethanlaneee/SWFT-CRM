@@ -164,7 +164,7 @@
       <div class="swft-pdf-footer">
         <button class="swft-pdf-btn" onclick="closePdfPreview()">Close</button>
         <button class="swft-pdf-btn" onclick="printPdf()">Print / Save PDF</button>
-        <button class="swft-pdf-btn primary" id="swft-pdf-send-btn" onclick="closePdfPreview();if(typeof showToast==='function')showToast('Send feature coming soon');">Review & Send</button>
+        <button class="swft-pdf-btn primary" id="swft-pdf-send-btn" onclick="closePdfPreview();if(typeof sendQuote==='function')sendQuote();">Send to Customer</button>
       </div>
     </div>`;
   document.body.appendChild(pdfOverlay);

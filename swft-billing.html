@@ -420,7 +420,7 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
         Print / Save PDF
       </button>
       <div class="pdf-spacer"></div>
-      <button class="pdf-btn primary" id="send-btn" onclick="sendQuote()">Send Quote</button>
+      <button class="pdf-btn primary" id="send-btn" onclick="sendQuote()">Send to Customer</button>
       <button class="pdf-btn primary" onclick="saveEdit()">Save</button>
     </div>
   </div>
@@ -581,7 +581,7 @@ function openInvoiceModal(inv) {
       sb.textContent = 'Paid';
       sb.disabled = true;
     } else {
-      sb.textContent = 'Send Invoice';
+      sb.textContent = 'Send to Customer';
       sb.disabled = false;
     }
   }
@@ -684,9 +684,9 @@ function openModalById(id) {
     if (_q.status === 'approved' || _q.status === 'Approved') {
       sb.textContent = 'Convert to Invoice';
     } else if (_q.status === 'sent' || _q.status === 'Sent') {
-      sb.textContent = 'Resend Quote';
+      sb.textContent = 'Send to Customer';
     } else {
-      sb.textContent = 'Send Quote';
+      sb.textContent = 'Send to Customer';
     }
   }
 
@@ -704,7 +704,7 @@ function openModal(id) {
   populateEditForm();
   renderLineItems(q.lines);
   const sb = document.getElementById('send-btn');
-  sb.textContent = q.status === 'Approved' ? 'Convert to Invoice' : q.status === 'Draft' ? 'Send Quote' : 'Resend Quote';
+  sb.textContent = q.status === 'Approved' ? 'Convert to Invoice' : 'Send to Customer';
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -928,19 +928,52 @@ async function sendQuote(){
     } catch(e) { showToast('Error: ' + e.message); }
     return;
   }
-  // Send quote or invoice (triggers automations)
+
+  // Save first, then generate PDF and email it
+  try { await saveEdit(); } catch(e) {}
+
+  if(!_q || !_q.id) { showToast('Save the document first'); return; }
+
+  showToast('Generating PDF and sending...');
   try {
-    if(_q.id) {
-      if (_q.isInvoice) {
-        await API.invoices.send(_q.id);
-      } else {
-        await API.quotes.send(_q.id);
-      }
-    }
+    // Build the print HTML from the preview
+    var type = _q.isInvoice ? 'invoice' : 'quote';
+    previewCurrentDoc();
+    var bodyEl = document.getElementById('swft-pdf-body');
+    var htmlContent = bodyEl.innerHTML;
+    closePdfPreview();
+
+    // Create an offscreen container for html2pdf
+    var container = document.createElement('div');
+    container.style.cssText = 'font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;';
+    container.innerHTML = htmlContent;
+    document.body.appendChild(container);
+
+    var pdfBlob = await html2pdf().set({
+      margin: [10, 10, 10, 10],
+      filename: type + '.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+    }).from(container).outputPdf('blob');
+    document.body.removeChild(container);
+
+    var token = await getAuthToken();
+    var form = new FormData();
+    form.append('pdf', pdfBlob, type + '.pdf');
+
+    var endpoint = _q.isInvoice ? '/api/invoices/' : '/api/quotes/';
+    var resp = await fetch(endpoint + _q.id + '/email', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: form
+    });
+    var result = await resp.json();
+    if (result.error) { showToast('Error: ' + result.error); return; }
+    showToast((_q.isInvoice ? 'Invoice' : 'Quote') + ' sent to customer!');
     closeModal();
     if (_q.isInvoice) { loadInvoices(); } else { loadQuotes(); }
-    showToast(_q.isInvoice ? 'Invoice sent' : 'Quote sent');
-  } catch(e) { showToast('Error: ' + e.message); }
+  } catch(e) { showToast('Error sending: ' + e.message); }
 }
 
 function populateEditForm(){
@@ -1212,6 +1245,7 @@ function filterInvoices(q) {
 </script>
 
 <script type="module" src="swft-user-sync.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="swft-api.js"></script>
 <script src="swft-confirm.js"></script>
 <script src="swft-settings-loader.js"></script>
