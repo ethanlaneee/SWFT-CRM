@@ -6,21 +6,8 @@ const { sendViaGmail, generateDocumentPdf } = require("./messages");
 
 const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
+const { normalizeItems } = require("../utils/normalizeItems");
 const col = () => db.collection("invoices");
-
-// Normalize line items to {desc, qty, rate, total} regardless of input format
-function normalizeItems(items) {
-  function num(v) { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; }
-  return (items || []).map(i => {
-    if (typeof i === "string") return { desc: i, qty: 1, rate: 0, total: 0 };
-    const desc = i.desc || i.description || i.name || i.label || i.service || "";
-    const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
-    const nRate = num(i.rate), nAmount = num(i.amount), nTotal = num(i.total), nPrice = num(i.price);
-    const total = (nTotal != null && nTotal > 0) ? nTotal : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (nRate != null && nRate > 0) ? nRate * qty : 0;
-    const rate = (nRate != null && nRate > 0) ? nRate : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (total > 0) ? total / qty : 0;
-    return { desc, qty, rate, total };
-  });
-}
 
 // List invoices
 router.get("/", async (req, res, next) => {

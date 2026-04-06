@@ -3,12 +3,12 @@ const multer = require("multer");
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
 const { sendViaGmail, generateDocumentPdf } = require("./messages");
+const { normalizeItems } = require("../utils/normalizeItems");
 
 const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
-
 const col = () => db.collection("quotes");
 
-// List quotes
+// List
 router.get("/", async (req, res, next) => {
   try {
     const snap = await col().where("orgId", "==", req.orgId).get();
@@ -19,37 +19,20 @@ router.get("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Get single quote
+// Get
 router.get("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Quote not found" });
-    }
+    if (!doc.exists || doc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
     res.json({ id: doc.id, ...doc.data() });
   } catch (err) { next(err); }
 });
 
-// Normalize line items to {desc, qty, rate, total} regardless of input format
-function normalizeItems(items) {
-  function num(v) { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; }
-  return (items || []).map(i => {
-    if (typeof i === "string") return { desc: i, qty: 1, rate: 0, total: 0 };
-    const desc = i.desc || i.description || i.name || i.label || i.service || "";
-    const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
-    const nRate = num(i.rate), nAmount = num(i.amount), nTotal = num(i.total), nPrice = num(i.price);
-    const total = (nTotal != null && nTotal > 0) ? nTotal : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (nRate != null && nRate > 0) ? nRate * qty : 0;
-    const rate = (nRate != null && nRate > 0) ? nRate : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (total > 0) ? total / qty : 0;
-    return { desc, qty, rate, total };
-  });
-}
-
-// Create quote
+// Create
 router.post("/", async (req, res, next) => {
   try {
     const data = {
-      orgId: req.orgId,
-      userId: req.uid,
+      orgId: req.orgId, userId: req.uid,
       customerId: req.body.customerId || "",
       customerName: req.body.customerName || "",
       items: normalizeItems(req.body.items),
@@ -70,18 +53,15 @@ router.post("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Update quote
+// Update
 router.put("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Quote not found" });
-    }
+    if (!doc.exists || doc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
     const updates = {};
     for (const key of ["customerId", "customerName", "items", "total", "notes", "status", "address", "service", "sqft", "finish", "scheduledDate", "sentAt", "expiresAt"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
-    // Always normalize items to {desc, qty, rate, total}
     if (updates.items) updates.items = normalizeItems(updates.items);
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
@@ -89,151 +69,90 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Send quote
+// Send (mark as sent)
 router.post("/:id/send", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Quote not found" });
-    }
+    if (!doc.exists || doc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
-
-    // Trigger automations for quote_sent
-    const quoteData = doc.data();
-    if (quoteData.customerId) {
-      try {
-        const custDoc = await db.collection("customers").doc(quoteData.customerId).get();
-        const cust = custDoc.exists ? custDoc.data() : {};
-        triggerAutomation(req.orgId, "quote_sent", {
-          id: quoteData.customerId,
-          name: cust.name || quoteData.customerName || "",
-          phone: cust.phone || "",
-          email: cust.email || "",
-          total: quoteData.total || 0,
-          service: quoteData.service || "",
-        }).catch(console.error);
-      } catch (autoErr) {
-        console.error("quote_sent automation lookup error:", autoErr);
-      }
+    const q = doc.data();
+    if (q.customerId) {
+      const custDoc = await db.collection("customers").doc(q.customerId).get();
+      const cust = custDoc.exists ? custDoc.data() : {};
+      triggerAutomation(req.orgId, "quote_sent", { id: q.customerId, name: cust.name || q.customerName || "", phone: cust.phone || "", email: cust.email || "", total: q.total || 0, service: q.service || "" }).catch(console.error);
     }
-
     res.json({ success: true, status: "sent" });
   } catch (err) { next(err); }
 });
 
-// Approve quote
+// Approve
 router.post("/:id/approve", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Quote not found" });
-    }
+    if (!doc.exists || doc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
     await col().doc(req.params.id).update({ status: "approved", approvedAt: Date.now() });
     res.json({ success: true, status: "approved" });
   } catch (err) { next(err); }
 });
 
-// Email quote — accept client-generated PDF or fall back to server-generated
+// Email quote with PDF
 router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
   try {
     const quoteDoc = await col().doc(req.params.id).get();
-    if (!quoteDoc.exists || quoteDoc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Quote not found" });
-    }
+    if (!quoteDoc.exists || quoteDoc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
     const quoteData = { id: quoteDoc.id, ...quoteDoc.data() };
+    if (!quoteData.customerId) return res.status(400).json({ error: "No customer linked to this quote" });
 
-    // Get customer email
-    if (!quoteData.customerId) {
-      return res.status(400).json({ error: "No customer linked to this quote" });
-    }
     const custDoc = await db.collection("customers").doc(quoteData.customerId).get();
-    if (!custDoc.exists) {
-      return res.status(404).json({ error: "Customer not found" });
-    }
+    if (!custDoc.exists) return res.status(404).json({ error: "Customer not found" });
     const cust = custDoc.data();
-    if (!cust.email) {
-      return res.status(400).json({ error: "Customer has no email address. Add an email in their profile first." });
-    }
+    if (!cust.email) return res.status(400).json({ error: "Customer has no email address." });
 
-    // Get user profile for Gmail + PDF branding
     const userDoc = await db.collection("users").doc(req.uid).get();
     const user = userDoc.exists ? userDoc.data() : {};
-    if (!user.gmailConnected || !user.gmailTokens) {
-      return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
-    }
+    if (!user.gmailConnected || !user.gmailTokens) return res.status(400).json({ error: "Gmail not connected." });
 
-    // Use client-uploaded PDF if provided, otherwise generate server-side
     const custNameClean = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
     let pdfFile;
     if (req.file && req.file.buffer && req.file.buffer.length > 0) {
-      console.log("[quote email] Using client-generated PDF,", req.file.buffer.length, "bytes");
       pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
     } else {
-      console.log("[quote email] Generating server PDF. Items:", JSON.stringify(quoteData.items));
       const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
       pdfFile = { buffer: pdfBuffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
     }
 
-    // Build email
     const fromName = user.company || user.name || "SWFT";
     const subject = `Quote from ${fromName}`;
     const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nPlease find your quote attached.\n\nBest,\n${fromName}`;
     const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
 
-    // Send
     user._uid = req.uid;
     const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, [pdfFile]);
 
-    // Save message record so it shows in messaging thread
-    const msgRecord = {
-      userId: req.uid,
-      orgId: req.orgId,
-      to: cust.email,
-      subject,
-      body: bodyText,
-      customerId: quoteData.customerId,
-      customerName: quoteData.customerName || cust.name || "",
-      type: "email",
-      status: "sent",
-      sentVia: "gmail",
-      gmailMessageId: sendResult.messageId,
-      gmailThreadId: sendResult.threadId,
-      attachedDocType: "quote",
-      attachedDocId: req.params.id,
-      attachments: [pdfFile.originalname],
-      sentAt: Date.now(),
-    };
-    await db.collection("messages").add(msgRecord);
+    await db.collection("messages").add({
+      userId: req.uid, orgId: req.orgId, to: cust.email, subject, body: bodyText,
+      customerId: quoteData.customerId, customerName: quoteData.customerName || cust.name || "",
+      type: "email", status: "sent", sentVia: "gmail",
+      gmailMessageId: sendResult.messageId, gmailThreadId: sendResult.threadId,
+      attachedDocType: "quote", attachedDocId: req.params.id,
+      attachments: [pdfFile.originalname], sentAt: Date.now(),
+    });
 
-    // Update quote status to sent
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
 
-    // Trigger automations
     if (quoteData.customerId) {
-      triggerAutomation(req.orgId, "quote_sent", {
-        id: quoteData.customerId,
-        name: cust.name || quoteData.customerName || "",
-        phone: cust.phone || "",
-        email: cust.email || "",
-        total: quoteData.total || 0,
-        service: quoteData.service || "",
-      }).catch(console.error);
+      triggerAutomation(req.orgId, "quote_sent", { id: quoteData.customerId, name: cust.name || quoteData.customerName || "", phone: cust.phone || "", email: cust.email || "", total: quoteData.total || 0, service: quoteData.service || "" }).catch(console.error);
     }
 
     res.json({ success: true, messageId: sendResult.messageId });
-  } catch (err) {
-    console.error("[quote email] Error:", err);
-    next(err);
-  }
+  } catch (err) { console.error("[quote email]", err); next(err); }
 });
 
-// Delete quote
+// Delete
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Quote not found" });
-    }
+    if (!doc.exists || doc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
     await col().doc(req.params.id).delete();
     res.json({ success: true });
   } catch (err) { next(err); }

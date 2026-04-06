@@ -7,6 +7,7 @@ const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const PDFDocument = require("pdfkit");
 const { handleInboundMessage } = require("../ai/receptionist-agent");
+const { normalizeItems, fixZeroItems } = require("../utils/normalizeItems");
 
 /**
  * Send email via user's connected Gmail account.
@@ -266,44 +267,17 @@ function generateDocumentPdf(doc, docType, user) {
     y += 10;
 
     // ═══════════════════════════════════════════
-    //  LINE ITEM ROWS — pre-process to handle corrupted data
+    //  LINE ITEM ROWS — normalize via shared utility
     // ═══════════════════════════════════════════
-    function numVal(v) { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; }
-
-    // First pass: normalize all items and check if any have amounts
-    const parsed = items.map(rawItem => {
-      const item = typeof rawItem === "string" ? { desc: rawItem } : (rawItem || {});
-      const descText = item.desc || item.description || item.name || item.label || item.service || "";
-      const qty = Math.max(1, parseInt(item.qty || item.quantity, 10) || 1);
-      const nRate = numVal(item.rate), nAmount = numVal(item.amount), nTotal = numVal(item.total), nPrice = numVal(item.price);
-
-      let total = (nTotal != null && nTotal > 0) ? nTotal : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (nRate != null && nRate > 0) ? nRate * qty : 0;
-      let rate = (nRate != null && nRate > 0) ? nRate : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (total > 0) ? total / qty : 0;
-
-      return { descText, qty, rate, total };
-    });
-
-    // Fallback: if ALL items are $0 but doc.total > 0, distribute total evenly
-    const itemSum = parsed.reduce((s, p) => s + p.total, 0);
-    const grandTotalCheck = Number(doc.total) || 0;
-    if (itemSum === 0 && grandTotalCheck > 0 && parsed.length > 0) {
-      console.log("[PDF] All items $0 but doc.total is", grandTotalCheck, "— distributing evenly across", parsed.length, "items");
-      const share = grandTotalCheck / parsed.length;
-      for (const p of parsed) {
-        p.total = share;
-        p.rate = share / p.qty;
-      }
-    }
+    const parsed = fixZeroItems(normalizeItems(items), Number(doc.total) || 0);
 
     for (const p of parsed) {
-      console.log("[PDF item]", JSON.stringify(p));
-
       const qtyText = String(p.qty);
       const rateText = "$" + p.rate.toFixed(2);
       const totalText = "$" + p.total.toFixed(2);
 
       // All columns rendered at same y, font-size 13 to match print PDF
-      pdf.font("DM").fontSize(13).fill("#111").text(p.descText, c1, y, { width: 240 });
+      pdf.font("DM").fontSize(13).fill("#111").text(p.desc, c1, y, { width: 240 });
       pdf.font("DM").fontSize(13).fill("#111").text(qtyText, c2, y, { width: 80, align: "center" });
       pdf.font("DM").fontSize(13).fill("#111").text(rateText, c3, y, { width: 70, align: "right" });
       pdf.font("DM-Medium").fontSize(13).fill("#111").text(totalText, c4, y, { width: c4End - c4, align: "right" });
@@ -343,24 +317,8 @@ function generateDocumentHtml(doc, docType, user) {
   const title = docType === "quote" ? "Quote" : "Invoice";
   const items = doc.items || [];
 
-  // Pre-process items with fallback for corrupted data
-  function nv(v) { if (v === undefined || v === null || v === "") return null; const x = Number(v); return isNaN(x) ? null : x; }
-  const parsedHtml = items.map(item => {
-    const i = typeof item === "string" ? { desc: item } : (item || {});
-    const desc = i.desc || i.description || i.name || i.label || i.service || "";
-    const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
-    const _r = nv(i.rate), _a = nv(i.amount), _t = nv(i.total), _p = nv(i.price);
-    let total = (_t != null && _t > 0) ? _t : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (_r != null && _r > 0) ? _r * qty : 0;
-    let rate = (_r != null && _r > 0) ? _r : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (total > 0) ? total / qty : 0;
-    return { desc, qty, rate, total };
-  });
-  // Fallback: if ALL items are $0 but doc.total > 0, distribute total evenly
-  const htmlItemSum = parsedHtml.reduce((s, p) => s + p.total, 0);
-  const htmlDocTotal = Number(doc.total) || 0;
-  if (htmlItemSum === 0 && htmlDocTotal > 0 && parsedHtml.length > 0) {
-    const share = htmlDocTotal / parsedHtml.length;
-    for (const p of parsedHtml) { p.total = share; p.rate = share / p.qty; }
-  }
+  // Normalize items via shared utility
+  const parsedHtml = fixZeroItems(normalizeItems(items), Number(doc.total) || 0);
   const itemRows = parsedHtml.map(p => `
     <tr>
       <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${p.desc}</td>
