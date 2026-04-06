@@ -30,5 +30,17 @@ services:
         sync: false
       - key: GOOGLE_REDIRECT_URI
         sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_API_KEY_SID
+        sync: false
+      - key: TWILIO_API_KEY_SECRET
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: ENCRYPT_KEY
+        sync: false
       - key: NODE_ENV
         value: production
