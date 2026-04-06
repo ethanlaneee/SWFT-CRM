@@ -836,12 +836,9 @@ function replyToEmail(msgId, threadId, origSubject, origBody) {
   var subject = origSubject ? (origSubject.startsWith('Re:') ? origSubject : 'Re: ' + origSubject) : 'Re: (no subject)';
   document.getElementById('compose-bar').style.display = '';
   document.getElementById('compose-subject').value = subject;
-  // Quote the original message in the body
   var textarea = document.getElementById('compose-body');
-  var quoted = origBody ? '\n\n---\n' + origBody.replace(/<[^>]*>/g,'').substring(0,300) : '';
-  textarea.value = quoted;
+  textarea.value = '';
   textarea.focus();
-  textarea.setSelectionRange(0, 0);
   // Show a reply indicator
   var indicator = document.getElementById('reply-indicator');
   if(indicator) { indicator.style.display='flex'; indicator.querySelector('.reply-subject').textContent = origSubject || '(no subject)'; }
