@@ -132,13 +132,26 @@ async function executeIntegrationTool(toolName, input, uid) {
 
     case "create_calendar_event": {
       const gcal = integrations.google_calendar;
-      if (!gcal?.connected || !gcal?.tokens) return { error: "Google Calendar not connected" };
+      console.log("Calendar integration data:", JSON.stringify({ connected: gcal?.connected, hasTokens: !!gcal?.tokens, hasRefresh: !!gcal?.tokens?.refresh_token }));
+      if (!gcal?.connected || !gcal?.tokens) return { error: "Google Calendar not connected. Please connect it in Settings > Integrations." };
 
       const auth = getOAuthClient(gcal.tokens);
+      // Persist refreshed tokens back to Firestore
+      auth.on("tokens", async (newTokens) => {
+        try {
+          const updated = { ...gcal.tokens, ...newTokens };
+          await db.collection("users").doc(uid).set({
+            "integrations.google_calendar.tokens": updated,
+          }, { merge: true });
+          console.log("Refreshed Google Calendar tokens for", uid);
+        } catch (e) { console.error("Failed to save refreshed tokens:", e.message); }
+      });
       const calendar = google.calendar({ version: "v3", auth });
 
       const startDateTime = `${input.date}T${input.start_time}:00`;
       const endDateTime = `${input.date}T${input.end_time}:00`;
+
+      console.log("Creating calendar event:", input.title, startDateTime, "to", endDateTime);
 
       const res = await calendar.events.insert({
         calendarId: "primary",
@@ -146,10 +159,12 @@ async function executeIntegrationTool(toolName, input, uid) {
           summary: input.title,
           description: input.description || "",
           location: input.location || "",
-          start: { dateTime: startDateTime, timeZone: "America/Chicago" },
-          end: { dateTime: endDateTime, timeZone: "America/Chicago" },
+          start: { dateTime: startDateTime, timeZone: "America/Edmonton" },
+          end: { dateTime: endDateTime, timeZone: "America/Edmonton" },
         },
       });
+
+      console.log("Calendar event created:", res.data.id);
 
       return {
         success: true,
@@ -343,8 +358,8 @@ async function syncJobToCalendar(uid, jobData) {
           jobData.service ? `Service: ${jobData.service}` : "",
         ].filter(Boolean).join("\n"),
         location: jobData.address || jobData.location || "",
-        start: { dateTime: startDateTime, timeZone: "America/Chicago" },
-        end: { dateTime: endDateTime, timeZone: "America/Chicago" },
+        start: { dateTime: startDateTime, timeZone: "America/Edmonton" },
+        end: { dateTime: endDateTime, timeZone: "America/Edmonton" },
       },
     });
 

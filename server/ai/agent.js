@@ -424,6 +424,7 @@ async function runAgent(uid, userMessage, userProfile, orgId) {
   // Dynamically add integration tools based on user's connected services
   const integrationTools = await getIntegrationTools(uid);
   const allTools = [...crmTools, ...integrationTools];
+  console.log("Agent tools for", uid, ":", allTools.map(t => t.name).join(", "));
 
   // Agent loop — keep calling Claude until it stops using tools
   let response;
@@ -451,9 +452,15 @@ async function runAgent(uid, userMessage, userProfile, orgId) {
     for (const block of assistantContent) {
       if (block.type === "tool_use") {
         // Route to integration handler or CRM handler
-        const result = INTEGRATION_TOOL_NAMES.includes(block.name)
-          ? await executeIntegrationTool(block.name, block.input, uid)
-          : await executeTool(block.name, block.input, uid, orgId);
+        let result;
+        try {
+          result = INTEGRATION_TOOL_NAMES.includes(block.name)
+            ? await executeIntegrationTool(block.name, block.input, uid)
+            : await executeTool(block.name, block.input, uid, orgId);
+        } catch (toolErr) {
+          console.error(`Tool ${block.name} failed:`, toolErr.message);
+          result = { error: `Tool failed: ${toolErr.message}` };
+        }
         actionsTaken.push({ tool: block.name, input: block.input, result });
         toolResults.push({
           type: "tool_result",
