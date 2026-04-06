@@ -1014,56 +1014,41 @@ async function confirmSendEmail() {
   sendBtn.disabled = true;
 
   try {
-    // Build the PDF content HTML directly from _q data (no overlay needed)
-    var settings = window._swftSettings || {};
-    var lines = (_q.lines || []);
-    var linesHtml = lines.map(function(l){
-      return '<div class="pdf-line"><div>'+(l.desc||'')+'</div><div>'+(l.qty||1)+'</div><div>'+(l.rate||'-')+'</div><div class="amt">'+(l.total||'$0')+'</div></div>';
-    }).join('');
-    var pdfTotal = lines.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[\$,]/g,''))||0);},0);
-    var logoHtml = settings.companyLogo
-      ? '<img src="'+settings.companyLogo+'" style="max-height:50px;max-width:180px;object-fit:contain;margin-bottom:8px;"/>'
-      : '<div class="pdf-company">'+(settings.company||'SWFT')+'<em>.</em></div>';
-    var tagline = settings.company ? (settings.phone||'')+' &nbsp; '+(settings.address||'') : 'simple. smart. swft.';
-    var bodyHtml = logoHtml +
-      '<div class="pdf-tagline">'+tagline+'</div>' +
-      '<div class="pdf-type">'+(type==='invoice'?'INVOICE':'QUOTE')+' '+(_q.num||'')+'</div>' +
-      '<div class="pdf-row"><span class="label">Customer</span><span class="value">'+(_q.customer||'—')+'</span></div>' +
-      '<div class="pdf-row"><span class="label">Job</span><span class="value">'+(_q.job||'—')+'</span></div>' +
-      '<div class="pdf-row"><span class="label">Address</span><span class="value">'+(_q.address||'—')+'</span></div>' +
-      (_q.service?'<div class="pdf-row"><span class="label">Service</span><span class="value">'+_q.service+(_q.sqft?' &nbsp;·&nbsp; '+_q.sqft+' sqft':'')+'</span></div>':'') +
-      '<div class="pdf-row"><span class="label">Date</span><span class="value">'+(_q.created||_q.start||'—')+'</span></div>' +
-      (_q.finish?'<div class="pdf-row"><span class="label">Finish</span><span class="value">'+_q.finish+'</span></div>':'') +
-      '<div class="pdf-section">Line Items</div>' +
-      '<div class="pdf-line-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div></div>' +
-      (linesHtml||'<div style="padding:12px 0;color:#999;">No line items</div>') +
-      '<div style="margin-top:12px;">' +
-      '<div class="pdf-total-row"><span>Subtotal</span><span>$'+pdfTotal.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>' +
-      '<div class="pdf-total-row grand"><span>Total</span><span>$'+pdfTotal.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>' +
-      '</div>';
+    // Use the EXACT same preview content as Print/Save PDF
+    var previewType = _q.isInvoice ? 'invoice' : 'quote';
+    showPdfPreview(previewType, _q);
+    // Immediately hide the overlay (showPdfPreview opens it)
+    document.querySelector('.swft-pdf-overlay').classList.remove('open');
 
-    // Build offscreen container with embedded styles
+    // Grab the preview body HTML (same content Print/Save uses)
+    var bodyContent = document.getElementById('swft-pdf-body').innerHTML;
+
+    // Create an offscreen div with white background and all PDF styles embedded
+    // This is identical to what buildFullPrintHtml() produces, but as a DOM element
     var container = document.createElement('div');
-    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;background:#fff;';
-    container.innerHTML = '<style>' +
-      '.pdf-company{font-family:"Bebas Neue",sans-serif;font-size:28px;letter-spacing:3px;color:#111;}' +
-      '.pdf-company em{color:#8ab800;font-style:normal;}' +
-      'img{max-height:50px;max-width:180px;object-fit:contain;}' +
-      '.pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}' +
-      '.pdf-type{font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #8ab800;margin-bottom:16px;color:#111;}' +
-      '.pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}' +
-      '.label{color:#666;} .value{font-weight:500;color:#111;}' +
-      '.pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}' +
-      '.pdf-line-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}' +
-      '.pdf-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 0;font-size:13px;border-bottom:1px solid #f0f0f0;color:#111;}' +
-      '.amt{font-weight:500;}' +
-      '.pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;color:#111;}' +
-      '.pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;}' +
-      '</style>' + bodyHtml;
+    container.id = 'pdf-render-container';
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;background:#fff;z-index:-1;';
+    container.innerHTML =
+      '<style>#pdf-render-container{font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}' +
+      '#pdf-render-container *{color:#111;}' +
+      '#pdf-render-container .pdf-company{font-family:"Bebas Neue",sans-serif;font-size:28px;letter-spacing:3px;color:#111;}' +
+      '#pdf-render-container .pdf-company em{color:#8ab800;font-style:normal;}' +
+      '#pdf-render-container img{max-height:50px;max-width:180px;object-fit:contain;}' +
+      '#pdf-render-container .pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}' +
+      '#pdf-render-container .pdf-type{font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #8ab800;margin-bottom:16px;color:#111;}' +
+      '#pdf-render-container .pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}' +
+      '#pdf-render-container .label{color:#666;} #pdf-render-container .value{font-weight:500;color:#111;}' +
+      '#pdf-render-container .pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}' +
+      '#pdf-render-container .pdf-line-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}' +
+      '#pdf-render-container .pdf-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 0;font-size:13px;border-bottom:1px solid #f0f0f0;color:#111;}' +
+      '#pdf-render-container .amt{font-weight:500;color:#111;}' +
+      '#pdf-render-container .pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;color:#111;}' +
+      '#pdf-render-container .pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;color:#111;}' +
+      '</style>' + bodyContent;
     document.body.appendChild(container);
 
-    // Small delay for fonts
-    await new Promise(function(r){ setTimeout(r, 300); });
+    // Wait for fonts and images to render
+    await new Promise(function(r){ setTimeout(r, 500); });
 
     var pdfBlob = await html2pdf().set({
       margin: [10, 10, 10, 10],
