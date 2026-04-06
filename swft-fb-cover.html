@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>SWFT Facebook Cover</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+
+.cover{
+  width:820px;height:312px;
+  background:#0a0a0a;
+  position:relative;overflow:hidden;
+  font-family:'DM Sans',sans-serif;
+  display:flex;
+}
+
+/* Background texture */
+.cover::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+}
+.cover::after{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 80% at 75% 50%, rgba(200,241,53,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 20% 30%, rgba(77,159,255,0.03) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+/* Left side — branding */
+.left{
+  flex:0 0 340px;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:40px 0 40px 48px;
+  position:relative;z-index:2;
+}
+.logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;letter-spacing:4px;color:#f0f0f0;
+  margin-bottom:6px;line-height:1;
+}
+.logo span{color:#c8f135;}
+.tagline{
+  font-size:14px;color:#7a7a7a;font-weight:500;
+  margin-bottom:20px;
+}
+.headline{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:1px;
+  color:#f0f0f0;line-height:1.15;
+  margin-bottom:16px;
+}
+.headline em{font-style:normal;color:#c8f135;}
+.pills{display:flex;flex-wrap:wrap;gap:6px;}
+.pill{
+  padding:5px 12px;border-radius:100px;
+  background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.12);
+  font-size:10px;font-weight:600;color:#c8f135;
+  letter-spacing:0.3px;
+}
+
+/* Right side — mini dashboard */
+.right{
+  flex:1;position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px 32px 24px 0;
+}
+.mini-dash{
+  width:100%;height:100%;
+  background:#111111;
+  border:1px solid #1f1f1f;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  display:flex;
+}
+
+/* Mini sidebar */
+.mini-side{
+  width:48px;flex-shrink:0;
+  background:#0e0e0e;border-right:1px solid #1f1f1f;
+  padding:12px 0;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.mini-side-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:10px;
+  letter-spacing:1px;color:#f0f0f0;margin-bottom:4px;
+}
+.mini-dot{width:6px;height:6px;border-radius:50%;background:#2c2c2c;}
+.mini-dot.active{background:#c8f135;}
+
+/* Mini main */
+.mini-main{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.mini-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:6px;border-bottom:1px solid #1f1f1f;
+}
+.mini-topbar span{font-size:8px;font-weight:600;color:#f0f0f0;letter-spacing:0.5px;}
+.mini-ai{
+  display:flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:100px;
+  background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.12);
+  font-size:7px;color:#c8f135;font-weight:600;
+}
+.mini-ai-dot{width:4px;height:4px;border-radius:50%;background:#c8f135;}
+
+/* KPIs */
+.mini-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.mini-kpi{
+  background:#181818;border:1px solid #1f1f1f;border-radius:6px;
+  padding:8px 8px;
+}
+.mini-kpi-label{font-size:6px;color:#7a7a7a;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:2px;}
+.mini-kpi-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#f0f0f0;display:block;}
+.mini-kpi-delta{font-size:7px;font-weight:600;color:#c8f135;}
+
+/* Rows */
+.mini-rows{display:flex;flex-direction:column;gap:4px;flex:1;}
+.mini-row{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 8px;
+  background:#181818;border:1px solid #1f1f1f;border-radius:6px;
+  font-size:7px;color:#7a7a7a;
+}
+.mini-status{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.mini-row-right{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:7px;color:#f0f0f0;}
+
+/* Divider line between left and right */
+.divider{
+  position:absolute;left:340px;top:40px;bottom:40px;
+  width:1px;background:linear-gradient(to bottom, transparent, #2c2c2c, transparent);
+  z-index:2;
+}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="divider"></div>
+
+  <!-- Left: Brand -->
+  <div class="left">
+    <div class="logo">SWFT<span>.</span></div>
+    <div class="tagline">AI-Powered CRM for Home Service Pros</div>
+    <div class="headline">ONE APP TO RUN YOUR<br/>ENTIRE <em>HOME SERVICE</em> BUSINESS.</div>
+    <div class="pills">
+      <span class="pill">CUSTOMERS</span>
+      <span class="pill">QUOTES</span>
+      <span class="pill">INVOICES</span>
+      <span class="pill">SCHEDULING</span>
+      <span class="pill">AI ASSISTANT</span>
+      <span class="pill">SMS & EMAIL</span>
+    </div>
+  </div>
+
+  <!-- Right: Mini Dashboard -->
+  <div class="right">
+    <div class="mini-dash">
+      <div class="mini-side">
+        <div class="mini-side-logo">S.</div>
+        <div class="mini-dot active"></div>
+        <div class="mini-dot"></div>
+        <div class="mini-dot"></div>
+        <div class="mini-dot"></div>
+        <div class="mini-dot"></div>
+        <div class="mini-dot"></div>
+      </div>
+      <div class="mini-main">
+        <div class="mini-topbar">
+          <span>DASHBOARD</span>
+          <div class="mini-ai"><span class="mini-ai-dot"></span> AI ASSISTANT</div>
+        </div>
+        <div class="mini-kpis">
+          <div class="mini-kpi">
+            <span class="mini-kpi-label">Revenue</span>
+            <span class="mini-kpi-val">$24,850</span>
+            <span class="mini-kpi-delta">+18%</span>
+          </div>
+          <div class="mini-kpi">
+            <span class="mini-kpi-label">Active Jobs</span>
+            <span class="mini-kpi-val">12</span>
+            <span class="mini-kpi-delta">+3 this week</span>
+          </div>
+          <div class="mini-kpi">
+            <span class="mini-kpi-label">Quotes Sent</span>
+            <span class="mini-kpi-val">7</span>
+            <span class="mini-kpi-delta">$18.4k pending</span>
+          </div>
+        </div>
+        <div class="mini-rows">
+          <div class="mini-row">
+            <span class="mini-status" style="background:#c8f135"></span>
+            9:00 AM — Kitchen remodel @ Johnson
+            <span class="mini-row-right">$3,200</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-status" style="background:#4d9fff"></span>
+            1:30 PM — Estimate @ 412 Oak St
+            <span class="mini-row-right">$1,800</span>
+          </div>
+          <div class="mini-row">
+            <span class="mini-status" style="background:#f5a623"></span>
+            4:00 PM — Follow-up call — Garcia
+            <span class="mini-row-right">$4,500</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
