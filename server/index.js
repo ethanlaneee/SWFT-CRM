@@ -93,6 +93,18 @@ app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 // ── Incoming message webhooks (no auth — called by Twilio) ──
 app.post("/api/webhooks/twilio/sms", twilioIncomingHandler);
 
+// GET version — lets you verify the endpoint is reachable in a browser
+app.get("/api/webhooks/twilio/sms", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Twilio SMS webhook endpoint is reachable. POST to this URL from Twilio.",
+    twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+    twilioPhone: process.env.TWILIO_PHONE_NUMBER ? "configured" : "missing",
+    anthropicKey: process.env.ANTHROPIC_API_KEY ? "configured" : "missing",
+    appUrl: process.env.APP_URL || "not set",
+  });
+});
+
 // ── OAuth callbacks (no auth — providers redirect here directly) ──
 app.get("/api/auth/google/callback", googleCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
@@ -160,7 +172,12 @@ app.use("/api/automations",   auth, checkAccess,  automationsRouter);
 app.use("/api/dev",           auth,               require("./routes/dev"));
 
 // ── Health check ──
-app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.get("/health", (req, res) => res.json({
+  status: "ok",
+  twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+  twilioPhone: process.env.TWILIO_PHONE_NUMBER || "not set",
+  appUrl: process.env.APP_URL || "not set",
+}));
 
 // ── Error handler ──
 app.use((err, req, res, next) => {
