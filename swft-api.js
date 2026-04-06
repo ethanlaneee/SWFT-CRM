@@ -22,7 +22,7 @@ async function getAuthToken() {
     window.location.href = "swft-login";
     throw new Error("Not authenticated");
   }
-  return user.getIdToken(true);
+  return user.getIdToken();
 }
 
 // ── Base fetch wrapper ──
@@ -43,17 +43,6 @@ async function apiFetch(path, options = {}) {
   }
   if (!res.ok) {
     const msg = data.error || "API error";
-    if (res.status === 401) {
-      console.error("[SWFT Auth Debug] 401 on", path, "| detail:", data.detail || "none", "| token length:", token?.length);
-      // Auto-call debug endpoint once per session
-      if (!window._swftAuthDebugDone) {
-        window._swftAuthDebugDone = true;
-        fetch("/api/auth-debug", { headers: { "Authorization": `Bearer ${token}` } })
-          .then(r => r.json())
-          .then(d => console.error("[SWFT Auth Debug] /api/auth-debug result:", JSON.stringify(d, null, 2)))
-          .catch(e => console.error("[SWFT Auth Debug] debug endpoint failed:", e));
-      }
-    }
     if (res.status === 403 && typeof window !== "undefined" && typeof window.swftNoPermission === "function") {
       window.swftNoPermission(msg);
     }
