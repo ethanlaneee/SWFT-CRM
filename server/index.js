@@ -205,7 +205,7 @@ app.get("/api/webhooks/twilio/test", async (req, res) => {
 });
 
 // ── OAuth callbacks (no auth — providers redirect here directly) ──
-app.get("/api/auth/google/callback", googleCallback);
+app.get("/api/auth/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
 
