@@ -792,15 +792,21 @@ async function twilioIncomingHandler(req, res) {
       if (userDoc.exists) orgId = userDoc.data().orgId || matched.userId;
     }
 
-    // If still no orgId (unknown sender), find the first org owner as fallback
+    // If still no orgId (unknown sender), find any user as fallback
     // This works for single-tenant setups with one business on the Twilio number
     if (!orgId) {
-      const anyOwner = await db.collection("users").where("role", "==", "owner").limit(1).get();
+      // Try owner first, then any user
+      let anyOwner = await db.collection("users").where("role", "==", "owner").limit(1).get();
+      if (anyOwner.empty) {
+        anyOwner = await db.collection("users").limit(1).get();
+      }
       if (!anyOwner.empty) {
         ownerUid = anyOwner.docs[0].id;
         ownerData = anyOwner.docs[0].data();
         orgId = ownerData.orgId || ownerUid;
-        console.log("[twilio-webhook] No customer match — using fallback org:", orgId, "owner:", ownerData.name);
+        console.log("[twilio-webhook] No customer match — using fallback org:", orgId, "owner:", ownerData.name || ownerData.email);
+      } else {
+        console.warn("[twilio-webhook] No users found in database at all!");
       }
     }
 
@@ -812,11 +818,18 @@ async function twilioIncomingHandler(req, res) {
         ownerUid = ownerSnap.docs[0].id;
         ownerData = ownerSnap.docs[0].data();
       } else {
-        // Fallback: orgId might be the owner's uid directly
-        const ownerDoc = await db.collection("users").doc(orgId).get();
-        if (ownerDoc.exists) {
-          ownerUid = orgId;
-          ownerData = ownerDoc.data();
+        // Fallback: try orgId-based query without role filter
+        const anyOrgUser = await db.collection("users").where("orgId", "==", orgId).limit(1).get();
+        if (!anyOrgUser.empty) {
+          ownerUid = anyOrgUser.docs[0].id;
+          ownerData = anyOrgUser.docs[0].data();
+        } else {
+          // Last resort: orgId might be the owner's uid directly
+          const ownerDoc = await db.collection("users").doc(orgId).get();
+          if (ownerDoc.exists) {
+            ownerUid = orgId;
+            ownerData = ownerDoc.data();
+          }
         }
       }
     }
