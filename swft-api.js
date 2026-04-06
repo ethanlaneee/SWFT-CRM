@@ -15,6 +15,11 @@ const API_BASE = ""; // Uses same origin (works for both localhost and deployed)
 
 // ── Get the Firebase ID token for the current user ──
 // Requires Firebase SDK to be loaded on the page
+// Caches token and reuses for 5 minutes to avoid hammering Firebase
+let _cachedToken = null;
+let _cachedTokenTime = 0;
+const TOKEN_CACHE_MS = 5 * 60 * 1000; // 5 minutes
+
 async function getAuthToken() {
   const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
   const user = getAuth().currentUser;
@@ -22,11 +27,18 @@ async function getAuthToken() {
     window.location.href = "swft-login";
     throw new Error("Not authenticated");
   }
-  return user.getIdToken();
+  const now = Date.now();
+  if (_cachedToken && (now - _cachedTokenTime) < TOKEN_CACHE_MS) {
+    return _cachedToken;
+  }
+  const token = await user.getIdToken();
+  _cachedToken = token;
+  _cachedTokenTime = now;
+  return token;
 }
 
 // ── Base fetch wrapper ──
-async function apiFetch(path, options = {}) {
+async function apiFetch(path, options = {}, _retried) {
   const token = await getAuthToken();
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -42,6 +54,19 @@ async function apiFetch(path, options = {}) {
     throw new Error(res.ok ? "Empty response from server" : `Server error (${res.status})`);
   }
   if (!res.ok) {
+    // On 401, force-refresh the token and retry once
+    if (res.status === 401 && !_retried) {
+      _cachedToken = null;
+      _cachedTokenTime = 0;
+      const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+      const user = getAuth().currentUser;
+      if (user) {
+        const freshToken = await user.getIdToken(true);
+        _cachedToken = freshToken;
+        _cachedTokenTime = Date.now();
+        return apiFetch(path, options, true);
+      }
+    }
     const msg = data.error || "API error";
     if (res.status === 403 && typeof window !== "undefined" && typeof window.swftNoPermission === "function") {
       window.swftNoPermission(msg);
