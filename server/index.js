@@ -209,6 +209,42 @@ app.get("/api/auth/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
 
+// ── Diagnostic: test calendar event creation ──
+app.get("/api/debug/calendar-test", async (req, res) => {
+  try {
+    const { db } = require("./firebase");
+    const { google } = require("googleapis");
+    const snap = await db.collection("users").limit(1).get();
+    if (snap.empty) return res.json({ error: "No users" });
+    const data = snap.docs[0].data();
+    const gcal = (data.integrations || {}).google_calendar;
+    if (!gcal?.tokens) return res.json({ error: "No calendar tokens" });
+
+    const client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    client.setCredentials(gcal.tokens);
+
+    const calendar = google.calendar({ version: "v3", auth: client });
+    const now = new Date();
+    const later = new Date(now.getTime() + 60 * 60 * 1000);
+
+    const event = await calendar.events.insert({
+      calendarId: "primary",
+      requestBody: {
+        summary: "SWFT Test Event",
+        start: { dateTime: now.toISOString(), timeZone: "America/Edmonton" },
+        end: { dateTime: later.toISOString(), timeZone: "America/Edmonton" },
+      },
+    });
+    res.json({ success: true, eventId: event.data.id, link: event.data.htmlLink });
+  } catch (e) {
+    res.json({ error: e.message, code: e.code, status: e.status });
+  }
+});
+
 // ── Diagnostic: check integration status ──
 app.get("/api/debug/integrations", async (req, res) => {
   try {
