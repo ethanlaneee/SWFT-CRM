@@ -7,6 +7,7 @@ const { getIntegrationTools, executeIntegrationTool, syncJobToCalendar } = requi
 const { sendSms } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms, incrementAiMessage } = require("../usage");
+const { generateEstimate } = require("./estimator-agent");
 
 const client = new Anthropic();
 
@@ -378,6 +379,11 @@ async function executeTool(toolName, input, uid, orgId) {
       const member = teamSnap.docs[0].data();
       await db.collection("jobs").doc(input.jobId).update({ assignedTo: input.assigneeUid, updatedAt: Date.now() });
       return { success: true, jobId: input.jobId, assignedTo: input.assigneeUid, assigneeName: member.name || member.email };
+    }
+
+    case "generate_estimate": {
+      const estimate = await generateEstimate(oid, input);
+      return estimate;
     }
 
     default:

@@ -256,6 +256,22 @@ const tools = [
     },
   },
   {
+    name: "generate_estimate",
+    description: "Generate an AI-powered quote estimate for a job. Uses past job data and pricing config to calculate. Use when the user asks to 'estimate', 'price out', 'how much would it cost', or 'generate a quote for'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        description: { type: "string", description: "Description of the job (e.g., 'new driveway with broom finish')" },
+        service: { type: "string", description: "Service type (e.g., 'driveway', 'patio', 'walkway')" },
+        sqft: { type: "string", description: "Square footage (e.g., '500')" },
+        finish: { type: "string", description: "Finish type (e.g., 'broom', 'stamped', 'exposed aggregate')" },
+        customerId: { type: "string", description: "Customer ID if known" },
+        customerName: { type: "string", description: "Customer name if known" },
+        address: { type: "string", description: "Job site address" },
+      },
+    },
+  },
+  {
     name: "assign_job",
     description: "Assign a job to a specific team member. Use when the user says 'assign [job] to [person]' or 'give [job] to [technician]'.",
     input_schema: {

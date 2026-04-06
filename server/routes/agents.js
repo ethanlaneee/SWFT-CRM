@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { generateEstimate } = require("../ai/estimator-agent");
 
 // ── Firestore path helper ──
 function agentsRef(orgId) {
@@ -167,6 +168,20 @@ router.get("/followup/stats", async (req, res, next) => {
       pendingCount: pendingSnap.size,
       totalSentMTD: sentSnap.size,
     });
+  } catch (err) { next(err); }
+});
+
+// POST /api/agents/estimator/estimate — generate a quote estimate via AI
+router.post("/estimator/estimate", async (req, res, next) => {
+  try {
+    const { description, service, sqft, finish, customerId, customerName, address } = req.body;
+    if (!description && !service) {
+      return res.status(400).json({ error: "Provide a description or service type" });
+    }
+    const estimate = await generateEstimate(req.orgId, {
+      description, service, sqft, finish, customerId, customerName, address,
+    });
+    res.json(estimate);
   } catch (err) { next(err); }
 });
 

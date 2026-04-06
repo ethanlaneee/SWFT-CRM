@@ -140,6 +140,7 @@ const API = {
     toggle:   (id)         => apiFetch(`/api/agents/${id}/toggle`, { method: "POST", body: JSON.stringify({}) }),
     activity: (id)         => apiFetch(`/api/agents/${id}/activity`),
     followupStats: ()      => apiFetch("/api/agents/followup/stats"),
+    estimate:  (data)      => apiFetch("/api/agents/estimator/estimate", { method: "POST", body: JSON.stringify(data) }),
   },
 
   // ── Email ──

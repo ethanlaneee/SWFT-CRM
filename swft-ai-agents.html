@@ -374,10 +374,10 @@ or something else today?”</div>
   </div>
 
   <div class="agent-stats">
-    <div class="astat"><div class="astat-val">41</div><div class="astat-label">Quotes generated MTD</div></div>
-    <div class="astat"><div class="astat-val">±6%</div><div class="astat-label">Avg estimate accuracy</div></div>
-    <div class="astat"><div class="astat-val">67%</div><div class="astat-label">Quote close rate</div></div>
-    <div class="astat"><div class="astat-val">3 min</div><div class="astat-label">Avg quote time</div></div>
+    <div class="astat"><div class="astat-val" id="estimator-stat-generated">0</div><div class="astat-label">Quotes generated MTD</div></div>
+    <div class="astat"><div class="astat-val" id="estimator-stat-confidence">--</div><div class="astat-label">Avg confidence</div></div>
+    <div class="astat"><div class="astat-val" id="estimator-stat-pastjobs">0</div><div class="astat-label">Past jobs (training)</div></div>
+    <div class="astat"><div class="astat-val" id="estimator-stat-avg">$0</div><div class="astat-label">Avg estimate</div></div>
   </div>
 
   <div class="agent-detail" id="detail-estimator">
@@ -386,53 +386,32 @@ or something else today?”</div>
       <div class="detail-cols">
         <div class="config-panel">
           <div class="config-title">Configuration</div>
-          <div class="config-row"><span class="config-label">Input types</span><span class="config-val">Photos + text</span></div>
-          <div class="config-row"><span class="config-label">Base price / sqft</span><span class="config-val">$9--$17 <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
-          <div class="config-row"><span class="config-label">Markup</span><span class="config-val">22% <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
-          <div class="config-row"><span class="config-label">Auto-send quotes</span><span class="config-val">After owner review</span></div>
-          <div class="config-row"><span class="config-label">Training data</span><span class="config-val">41 past jobs ✓</span></div>
+          <div class="config-row"><span class="config-label">Input types</span><span class="config-val">Text descriptions</span></div>
+          <div class="config-row"><span class="config-label">Base price / sqft</span><span class="config-val" id="estimator-cfg-price">$9-$17</span></div>
+          <div class="config-row"><span class="config-label">Markup</span><span class="config-val" id="estimator-cfg-markup">22%</span></div>
+          <div class="config-row"><span class="config-label">Auto-send quotes</span><span class="config-val" id="estimator-cfg-autosend">After owner review</span></div>
+          <div class="config-row"><span class="config-label">Training data</span><span class="config-val" id="estimator-cfg-training">Loading...</span></div>
         </div>
 
         <div class="config-panel">
-          <div class="config-title">Accuracy by Service</div>
-          <div class="perf-row"><span class="perf-label">Broom finish</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:96%;"></div></div><span class="perf-pct">96%</span></div>
-          <div class="perf-row"><span class="perf-label">Exposed aggregate</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:91%;"></div></div><span class="perf-pct">91%</span></div>
-          <div class="perf-row"><span class="perf-label">Stamped concrete</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:88%;"></div></div><span class="perf-pct">88%</span></div>
-          <div class="perf-row"><span class="perf-label">Epoxy coating</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:94%;"></div></div><span class="perf-pct">94%</span></div>
+          <div class="config-title">Quick Estimate</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <input type="text" id="est-service" placeholder="Service type (e.g. driveway, patio)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-size:12px;font-family:inherit;outline:none;">
+            <input type="text" id="est-sqft" placeholder="Square footage (e.g. 500)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-size:12px;font-family:inherit;outline:none;">
+            <input type="text" id="est-description" placeholder="Description / details" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-size:12px;font-family:inherit;outline:none;">
+            <button onclick="runQuickEstimate()" id="est-btn" style="background:var(--green);color:#0a0a0a;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Generate Estimate</button>
+            <div id="est-result" style="display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--white);line-height:1.6;"></div>
+          </div>
         </div>
       </div>
 
       <div class="activity-log">
         <div class="log-header">
           <div class="log-title">Recent Activity</div>
-          <span class="log-link">View all →</span>
         </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--blue);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Generated quote #1047</strong> for Flores — backyard patio 520 sqft · estimated $6,240 · awaiting review</div>
-            <div class="log-time">22 min ago</div>
-          </div>
-        </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--green);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Quote approved & sent</strong> — #1046 Nguyen Walkway $2,250 · customer opened after 14 min</div>
-            <div class="log-time">2 hrs ago</div>
-          </div>
-        </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--blue);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Photo analysis complete</strong> — Pham driveway · detected 880 sqft + 2 obstacles · quote draft ready</div>
-            <div class="log-time">4 hrs ago</div>
-          </div>
-        </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--amber);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Low confidence flag</strong> — Martinez patio photo quality poor, recommended on-site estimate instead</div>
-            <div class="log-time">Yesterday</div>
+        <div id="estimator-activity-list">
+          <div class="log-item" style="justify-content:center;">
+            <div class="log-body"><div class="log-text" style="color:var(--gray2);">No estimator activity yet. Use the quick estimate form or ask the AI chat to generate a quote.</div></div>
           </div>
         </div>
       </div>
@@ -614,6 +593,122 @@ Google review would mean a lot to us 🙏
     }
   }
 
+  // ── Estimator: quick estimate ──
+  async function runQuickEstimate() {
+    const service = document.getElementById('est-service').value.trim();
+    const sqft = document.getElementById('est-sqft').value.trim();
+    const description = document.getElementById('est-description').value.trim();
+    const btn = document.getElementById('est-btn');
+    const resultEl = document.getElementById('est-result');
+
+    if (!service && !description) {
+      showToast('Enter a service type or description');
+      return;
+    }
+
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    resultEl.style.display = 'none';
+
+    try {
+      const estimate = await API.agents.estimate({ service, sqft, description });
+      let html = `<strong style="color:var(--green);">Estimated Total: $${(estimate.total || 0).toLocaleString()}</strong>`;
+      html += `<span style="color:var(--gray);margin-left:8px;font-size:11px;">(${estimate.confidence} confidence)</span><br>`;
+      if (estimate.items && estimate.items.length) {
+        html += '<div style="margin-top:6px;">';
+        for (const item of estimate.items) {
+          html += `<div style="color:var(--gray);font-size:11px;">• ${item.description} — $${(item.amount || 0).toLocaleString()}</div>`;
+        }
+        html += '</div>';
+      }
+      if (estimate.notes) {
+        html += `<div style="margin-top:6px;color:var(--gray2);font-size:11px;font-style:italic;">${estimate.notes}</div>`;
+      }
+      resultEl.innerHTML = html;
+      resultEl.style.display = 'block';
+      showToast('Estimate generated');
+      loadEstimatorData(); // Refresh activity
+    } catch (err) {
+      showToast('Failed to generate estimate');
+    } finally {
+      btn.textContent = 'Generate Estimate';
+      btn.disabled = false;
+    }
+  }
+
+  // ── Load estimator data ──
+  async function loadEstimatorData() {
+    try {
+      const activity = await API.agents.activity('estimator');
+      const config = _agentConfigs.estimator || {};
+
+      // Update config display
+      const priceEl = document.getElementById('estimator-cfg-price');
+      const markupEl = document.getElementById('estimator-cfg-markup');
+      const autosendEl = document.getElementById('estimator-cfg-autosend');
+      if (priceEl) priceEl.textContent = `$${config.basePriceMin || 9}-$${config.basePriceMax || 17}`;
+      if (markupEl) markupEl.textContent = `${config.markupPct || 22}%`;
+      if (autosendEl) autosendEl.textContent = config.autoSend ? 'Auto-send enabled' : 'After owner review';
+
+      // Count estimates this month
+      const monthStart = new Date();
+      monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+      const estimates = activity.filter(a => a.type === 'estimate_generated' && a.createdAt >= monthStart.getTime());
+
+      const genEl = document.getElementById('estimator-stat-generated');
+      const confEl = document.getElementById('estimator-stat-confidence');
+      const avgEl = document.getElementById('estimator-stat-avg');
+      const trainEl = document.getElementById('estimator-cfg-training');
+
+      if (genEl) genEl.textContent = estimates.length;
+
+      // Avg confidence
+      if (confEl && estimates.length > 0) {
+        const confMap = { high: 3, medium: 2, low: 1 };
+        const avg = estimates.reduce((s, e) => s + (confMap[e.estimate?.confidence] || 2), 0) / estimates.length;
+        confEl.textContent = avg >= 2.5 ? 'High' : avg >= 1.5 ? 'Medium' : 'Low';
+      }
+
+      // Avg estimate total
+      if (avgEl && estimates.length > 0) {
+        const avgTotal = estimates.reduce((s, e) => s + (e.estimate?.total || 0), 0) / estimates.length;
+        avgEl.textContent = '$' + Math.round(avgTotal).toLocaleString();
+      }
+
+      // Training data count (past jobs)
+      if (trainEl) {
+        try {
+          const jobs = await API.jobs.list('complete');
+          const pastEl = document.getElementById('estimator-stat-pastjobs');
+          if (pastEl) pastEl.textContent = Array.isArray(jobs) ? jobs.length : 0;
+          trainEl.textContent = (Array.isArray(jobs) ? jobs.length : 0) + ' past jobs';
+        } catch { trainEl.textContent = 'N/A'; }
+      }
+
+      // Activity log
+      const listEl = document.getElementById('estimator-activity-list');
+      if (listEl && activity.length > 0) {
+        listEl.innerHTML = activity.slice(0, 10).map(a => {
+          const conf = a.estimate?.confidence || 'medium';
+          const color = conf === 'high' ? 'var(--green)' : conf === 'low' ? 'var(--amber)' : 'var(--blue)';
+          const total = a.estimate?.total ? ` · $${a.estimate.total.toLocaleString()}` : '';
+          const svc = a.request?.service || a.request?.description?.slice(0, 30) || 'estimate';
+          const cust = a.request?.customerName ? ` for ${a.request.customerName}` : '';
+          const time = a.createdAt ? timeAgo(a.createdAt) : '';
+          return `<div class="log-item">
+            <div class="log-dot" style="background:${color};"></div>
+            <div class="log-body">
+              <div class="log-text"><strong>Generated estimate</strong>${cust} — ${svc}${total} (${conf} confidence)</div>
+              <div class="log-time">${time}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    } catch (err) {
+      console.error('Failed to load estimator data:', err);
+    }
+  }
+
   // ── Load follow-up agent real data ──
   async function loadFollowupData() {
     try {
@@ -683,6 +778,7 @@ Google review would mean a lot to us 🙏
       clearInterval(_configInterval);
       loadAgentConfigs();
       loadFollowupData();
+      loadEstimatorData();
     }
   }, 200);
 
