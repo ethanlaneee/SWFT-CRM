@@ -585,8 +585,19 @@ router.get("/scheduled", async (req, res, next) => {
 // GET /api/messages — list sent messages
 router.get("/", async (req, res, next) => {
   try {
+    // Query by userId first
     const snap = await db.collection("messages").where("userId", "==", req.uid).get();
+    const byId = new Set(snap.docs.map(d => d.id));
     let results = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Also query by orgId to catch inbound messages routed to the org
+    if (req.orgId) {
+      const orgSnap = await db.collection("messages").where("orgId", "==", req.orgId).get();
+      for (const d of orgSnap.docs) {
+        if (!byId.has(d.id)) results.push({ id: d.id, ...d.data() });
+      }
+    }
+
     results.sort((a, b) => (b.sentAt || 0) - (a.sentAt || 0));
     res.json(results);
   } catch (err) {
@@ -781,58 +792,21 @@ async function twilioIncomingHandler(req, res) {
       console.log("[twilio-webhook] No customer matched for phone:", from, "- checked", custSnap.size, "customers");
     }
 
-    // Resolve orgId — from matched customer, or find any org (single-tenant fallback)
-    let orgId = matched?.orgId || matched?.userId || "";
+    // Resolve the account owner — always find an actual user to route the message to.
+    // For single-tenant setups, just get the first user in the database.
     let ownerUid = null;
     let ownerData = null;
+    let orgId = "";
 
-    // If orgId is empty, try to get it from the user doc
-    if (!orgId && matched?.userId) {
-      const userDoc = await db.collection("users").doc(matched.userId).get();
-      if (userDoc.exists) orgId = userDoc.data().orgId || matched.userId;
+    // Try to find account owner: first by customer data, then any user as fallback
+    const userSnap = await db.collection("users").limit(1).get();
+    if (!userSnap.empty) {
+      ownerUid = userSnap.docs[0].id;
+      ownerData = userSnap.docs[0].data();
+      orgId = ownerData.orgId || ownerUid;
     }
 
-    // If still no orgId (unknown sender), find any user as fallback
-    // This works for single-tenant setups with one business on the Twilio number
-    if (!orgId) {
-      // Try owner first, then any user
-      let anyOwner = await db.collection("users").where("role", "==", "owner").limit(1).get();
-      if (anyOwner.empty) {
-        anyOwner = await db.collection("users").limit(1).get();
-      }
-      if (!anyOwner.empty) {
-        ownerUid = anyOwner.docs[0].id;
-        ownerData = anyOwner.docs[0].data();
-        orgId = ownerData.orgId || ownerUid;
-        console.log("[twilio-webhook] No customer match — using fallback org:", orgId, "owner:", ownerData.name || ownerData.email);
-      } else {
-        console.warn("[twilio-webhook] No users found in database at all!");
-      }
-    }
-
-    // Find org owner (if not already found via fallback)
-    if (orgId && !ownerUid) {
-      const ownerSnap = await db.collection("users")
-        .where("orgId", "==", orgId).where("role", "==", "owner").limit(1).get();
-      if (!ownerSnap.empty) {
-        ownerUid = ownerSnap.docs[0].id;
-        ownerData = ownerSnap.docs[0].data();
-      } else {
-        // Fallback: try orgId-based query without role filter
-        const anyOrgUser = await db.collection("users").where("orgId", "==", orgId).limit(1).get();
-        if (!anyOrgUser.empty) {
-          ownerUid = anyOrgUser.docs[0].id;
-          ownerData = anyOrgUser.docs[0].data();
-        } else {
-          // Last resort: orgId might be the owner's uid directly
-          const ownerDoc = await db.collection("users").doc(orgId).get();
-          if (ownerDoc.exists) {
-            ownerUid = orgId;
-            ownerData = ownerDoc.data();
-          }
-        }
-      }
-    }
+    console.log("[twilio-webhook] Resolved owner:", ownerUid, "orgId:", orgId, "name:", ownerData?.name || "unknown");
 
     if (!orgId || !ownerUid) {
       console.warn("[twilio-webhook] Could not resolve org/owner for inbound SMS from:", from);
