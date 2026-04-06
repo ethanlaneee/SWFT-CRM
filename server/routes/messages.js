@@ -498,13 +498,61 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
 
     user._uid = req.uid;
 
-    // Build reply headers.
-    // threadId is always used if available (Gmail-side thread grouping).
-    // In-Reply-To/References require a valid RFC 2822 Message-ID (angle-bracket format).
-    // If we only have a bare Gmail internal ID, look up the real Message-ID first.
-    let resolvedInReplyTo = (inReplyTo && inReplyTo.includes("<")) ? inReplyTo : null;
-    if (!resolvedInReplyTo && inReplyTo && replyThreadId) {
-      // inReplyTo is a Gmail internal ID — fetch the real RFC 2822 Message-ID header
+    // ── Build reply headers for Gmail threading ──
+    // Gmail requires BOTH threadId AND valid In-Reply-To/References headers.
+    // Strategy: use frontend-provided context first, then fall back to
+    // looking up the most recent message in this conversation from Firestore.
+    const replyHeaders = {};
+
+    // Step 1: Try to find threading info from the conversation history
+    let threadId = replyThreadId || null;
+    let messageIdForReply = (inReplyTo && inReplyTo.includes("<")) ? inReplyTo : null;
+
+    // If frontend didn't provide a valid RFC Message-ID, look up from Firestore
+    if (!messageIdForReply || !threadId) {
+      try {
+        // Find the most recent email to/from this address with threading info
+        const prevSnap = await db.collection("messages")
+          .where("userId", "==", req.uid)
+          .where("type", "==", "email")
+          .get();
+        const prevMsgs = prevSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(m => {
+            const msgAddr = (m.to || m.from || "").toLowerCase();
+            return msgAddr === to.toLowerCase() || msgAddr === "inbound";
+          })
+          .filter(m => m.gmailThreadId || m.rfcMessageId || m.gmailMessageId)
+          .sort((a, b) => (b.sentAt || 0) - (a.sentAt || 0));
+
+        // Also check by customerId for more reliable matching
+        if (customerId) {
+          const custSnap = await db.collection("messages")
+            .where("userId", "==", req.uid)
+            .where("customerId", "==", customerId)
+            .where("type", "==", "email")
+            .get();
+          custSnap.docs.forEach(d => {
+            const data = { id: d.id, ...d.data() };
+            if ((data.gmailThreadId || data.rfcMessageId) && !prevMsgs.find(m => m.id === data.id)) {
+              prevMsgs.push(data);
+            }
+          });
+          prevMsgs.sort((a, b) => (b.sentAt || 0) - (a.sentAt || 0));
+        }
+
+        const lastMsg = prevMsgs[0];
+        if (lastMsg) {
+          if (!threadId && lastMsg.gmailThreadId) threadId = lastMsg.gmailThreadId;
+          if (!messageIdForReply && lastMsg.rfcMessageId) messageIdForReply = lastMsg.rfcMessageId;
+        }
+      } catch (e) {
+        console.error("[send] Error looking up previous messages:", e.message);
+      }
+    }
+
+    // Step 2: If we still only have a Gmail internal ID, look up the real RFC Message-ID
+    if (!messageIdForReply && inReplyTo && threadId) {
       try {
         const oauth2Client = new google.auth.OAuth2(
           process.env.GOOGLE_CLIENT_ID,
@@ -513,29 +561,28 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
         );
         oauth2Client.setCredentials(user.gmailTokens);
         const gmailApi = google.gmail({ version: "v1", auth: oauth2Client });
+        const lookupId = inReplyTo || threadId;
         const msg = await gmailApi.users.messages.get({
           userId: "me",
-          id: inReplyTo,
+          id: lookupId,
           format: "metadata",
           metadataHeaders: ["Message-ID"],
         });
         const hdr = (msg.data.payload?.headers || []).find(h => h.name === "Message-ID");
-        if (hdr?.value && hdr.value.includes("<")) resolvedInReplyTo = hdr.value;
+        if (hdr?.value && hdr.value.includes("<")) messageIdForReply = hdr.value;
       } catch (e) {
-        console.error("Could not fetch RFC Message-ID for reply:", e.message);
+        console.error("[send] Could not fetch RFC Message-ID:", e.message);
       }
     }
 
-    // Always thread by threadId; only add MIME headers when we have a valid Message-ID
-    const replyHeaders = {};
-    if (replyThreadId) replyHeaders.threadId = replyThreadId;
-    if (resolvedInReplyTo) {
-      replyHeaders.inReplyTo = resolvedInReplyTo;
-      replyHeaders.references = (replyReferences && replyReferences.includes("<"))
-        ? replyReferences
-        : resolvedInReplyTo;
+    // Step 3: Build final headers
+    if (threadId) replyHeaders.threadId = threadId;
+    if (messageIdForReply) {
+      replyHeaders.inReplyTo = messageIdForReply;
+      replyHeaders.references = messageIdForReply;
     }
-    console.log("[send] replyHeaders:", JSON.stringify(replyHeaders));
+    console.log("[send] to:", to, "inReplyTo:", inReplyTo, "replyThreadId:", replyThreadId);
+    console.log("[send] resolved replyHeaders:", JSON.stringify(replyHeaders));
     const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, allFiles, replyHeaders);
 
     const msgRecord = {

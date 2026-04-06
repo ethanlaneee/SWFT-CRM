@@ -297,6 +297,40 @@ app.get("/api/debug/integrations", async (req, res) => {
   }
 });
 
+// Debug: check email threading data for messages
+app.get("/api/debug/email-threading", async (req, res) => {
+  try {
+    const { db } = require("./firebase");
+    const snap = await db.collection("users").limit(1).get();
+    if (snap.empty) return res.json({ error: "No users" });
+    const uid = snap.docs[0].id;
+    const msgSnap = await db.collection("messages")
+      .where("userId", "==", uid)
+      .where("type", "==", "email")
+      .get();
+    const msgs = msgSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.sentAt || 0) - (a.sentAt || 0))
+      .slice(0, 20)
+      .map(m => ({
+        id: m.id,
+        direction: m.direction || "outbound",
+        to: m.to,
+        from: m.from,
+        subject: (m.subject || "").substring(0, 50),
+        gmailMessageId: m.gmailMessageId || null,
+        gmailThreadId: m.gmailThreadId || null,
+        rfcMessageId: m.rfcMessageId || null,
+        isReply: m.isReply || false,
+        inReplyTo: m.inReplyTo || null,
+        sentAt: m.sentAt,
+      }));
+    res.json({ count: msgs.length, messages: msgs });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
 // ── Public routes (no auth) ──
 app.use("/api/survey", surveyRouter);
 const publicChatLimiter = rateLimit({
