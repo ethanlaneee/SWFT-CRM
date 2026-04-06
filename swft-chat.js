@@ -720,9 +720,12 @@
   const micBtn = document.getElementById('swft-chat-mic');
 
   if (micBtn) {
+    let _userStoppedMic = false;
+
     micBtn.addEventListener('click', function() {
       if (_chatListening) {
         // Toggle OFF — stop recording and send
+        _userStoppedMic = true;
         if (_chatRecognition) _chatRecognition.stop();
         return;
       }
@@ -738,6 +741,7 @@
       _chatRecognition.interimResults = true;
       _chatRecognition.continuous = true;
       _chatRecognition.maxAlternatives = 1;
+      _userStoppedMic = false;
 
       let finalTranscript = '';
 
@@ -764,20 +768,32 @@
       _chatRecognition.onend = function() {
         _chatListening = false;
         micBtn.classList.remove('recording');
-        const text = (finalTranscript || input.value).trim();
-        if (text && !isSending) {
-          sendMessage(text);
+        if (_userStoppedMic) {
+          // User clicked mic to stop — send the message
+          const text = (finalTranscript || input.value).trim();
+          if (text && !isSending) {
+            sendMessage(text);
+          }
+        } else {
+          // Browser stopped on its own (silence timeout, etc.) — restart
+          try { _chatRecognition.start(); } catch(e) {}
         }
       };
 
       _chatRecognition.onerror = function(e) {
-        _chatListening = false;
-        micBtn.classList.remove('recording');
         if (e.error === 'not-allowed') {
+          _chatListening = false;
+          micBtn.classList.remove('recording');
           if (typeof showToast === 'function') showToast('Microphone blocked - check browser settings');
         } else if (e.error === 'network') {
+          _chatListening = false;
+          micBtn.classList.remove('recording');
           if (typeof showToast === 'function') showToast('Voice needs internet connection');
-        } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        } else if (e.error === 'aborted') {
+          // User stopped — handled in onend
+        } else if (e.error !== 'no-speech') {
+          _chatListening = false;
+          micBtn.classList.remove('recording');
           if (typeof showToast === 'function') showToast('Voice error: ' + e.error);
         }
       };
