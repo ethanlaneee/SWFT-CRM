@@ -105,31 +105,50 @@ app.get("/api/webhooks/twilio/sms", (req, res) => {
   });
 });
 
-// Test endpoint — simulate inbound SMS to verify the webhook pipeline
+// Diagnostic endpoint — check database state for inbound SMS routing
 app.get("/api/webhooks/twilio/test", async (req, res) => {
   try {
-    const testFrom = req.query.from || "+15551234567";
-    const testBody = req.query.body || "Test message from webhook diagnostic";
-    const testSid = "TEST_" + Date.now();
-    // Simulate what Twilio sends
-    req.body = { From: testFrom, Body: testBody, MessageSid: testSid };
-    console.log("[twilio-test] Simulating inbound SMS from:", testFrom);
-    let responseData = null;
-    await twilioIncomingHandler(req, {
-      type: () => ({ send: (d) => { responseData = d; } }),
-    });
-    // Check if message was saved by looking up the test SID
     const { db } = require("./firebase");
-    const recent = await db.collection("messages")
-      .where("twilioMessageSid", "==", testSid).limit(1).get();
-    if (!recent.empty) {
-      const msg = recent.docs[0].data();
-      res.json({ success: true, message: "Inbound SMS pipeline works!", savedAs: { userId: msg.userId, orgId: msg.orgId, customerName: msg.customerName, body: msg.body, direction: msg.direction } });
-    } else {
-      res.json({ success: false, message: "Handler ran but no message found in Firestore. TwiML response: " + responseData });
+    const diag = {};
+
+    // Check users
+    const allUsers = await db.collection("users").limit(5).get();
+    diag.usersCount = allUsers.size;
+    diag.users = allUsers.docs.map(d => ({
+      id: d.id,
+      role: d.data().role || "none",
+      orgId: d.data().orgId || "none",
+      name: d.data().name || d.data().email || "unknown",
+    }));
+
+    // Check owners specifically
+    const owners = await db.collection("users").where("role", "==", "owner").limit(5).get();
+    diag.ownersCount = owners.size;
+
+    // Check customers
+    const custs = await db.collection("customers").limit(3).get();
+    diag.customersCount = custs.size;
+    if (custs.size > 0) {
+      diag.sampleCustomer = { id: custs.docs[0].id, phone: custs.docs[0].data().phone || "none", orgId: custs.docs[0].data().orgId || "none", userId: custs.docs[0].data().userId || "none" };
     }
+
+    // Check recent messages
+    const msgs = await db.collection("messages").orderBy("sentAt", "desc").limit(3).get();
+    diag.recentMessagesCount = msgs.size;
+    diag.recentMessages = msgs.docs.map(d => ({
+      id: d.id,
+      from: d.data().from || "",
+      to: d.data().to || "",
+      direction: d.data().direction || "",
+      type: d.data().type || "",
+      userId: d.data().userId || "",
+      body: (d.data().body || "").slice(0, 50),
+      sentAt: d.data().sentAt,
+    }));
+
+    res.json(diag);
   } catch (err) {
-    res.json({ success: false, error: err.message, stack: err.stack?.split("\n").slice(0, 3) });
+    res.json({ error: err.message, stack: err.stack?.split("\n").slice(0, 3) });
   }
 });
 
