@@ -3,7 +3,7 @@ const twilio = require("twilio");
 const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const API_KEY_SID = process.env.TWILIO_API_KEY_SID;
 const API_KEY_SECRET = process.env.TWILIO_API_KEY_SECRET;
-const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER || "+16812812146";
+const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER || "+15873153452";
 
 function getClient() {
   if (!ACCOUNT_SID || !API_KEY_SID || !API_KEY_SECRET) {
