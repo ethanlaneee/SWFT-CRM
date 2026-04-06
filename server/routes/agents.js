@@ -106,6 +106,20 @@ router.post("/:agentId/toggle", async (req, res, next) => {
     } else {
       await ref.update({ enabled: newEnabled, updatedAt: Date.now() });
     }
+    // When follow-up agent is disabled, cancel all its pending followups
+    if (!newEnabled && agentId === "followup") {
+      const pendingSnap = await db.collection("followups")
+        .where("orgId", "==", req.orgId)
+        .where("status", "==", "pending")
+        .get();
+      if (!pendingSnap.empty) {
+        const batch = db.batch();
+        pendingSnap.docs.forEach(d => batch.update(d.ref, { status: "skipped", reason: "agent_disabled", updatedAt: Date.now() }));
+        await batch.commit();
+        console.log(`[agents] Cancelled ${pendingSnap.docs.length} pending followups for disabled follow-up agent`);
+      }
+    }
+
     res.json({ enabled: newEnabled });
   } catch (err) { next(err); }
 });

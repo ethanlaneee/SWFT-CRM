@@ -961,8 +961,8 @@ async function sendQuote(){
     return;
   }
 
-  // Save first
-  try { await saveEdit(); } catch(e) {}
+  // Save first (silent = don't close modal or reload)
+  try { await saveEdit(true); } catch(e) {}
   if(!_q || !_q.id) { showToast('Save the document first'); return; }
 
   // Populate the preview so buildFullPrintHtml() has content
@@ -1106,7 +1106,7 @@ function cancelEdit(){
   showToast('Changes discarded');
 }
 
-async function saveEdit(){
+async function saveEdit(silent){
   if(!_q){showToast('Error: no quote data');return;}
   var custEl = document.getElementById('e-customer');
   var dropdownCust = custEl.options[custEl.selectedIndex] ? custEl.options[custEl.selectedIndex].textContent : '';
@@ -1160,22 +1160,20 @@ async function saveEdit(){
       if (_q.id && !_q.id.toString().startsWith('new_') && !_q.id.toString().startsWith('#')) {
         await API.invoices.update(_q.id, data);
       } else {
-        await API.invoices.create(data);
+        var created = await API.invoices.create(data);
+        if (created && created.id) _q.id = created.id;
       }
-      loadInvoices();
-      switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
-      closeModal();
+      if (!silent) { loadInvoices(); switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]); closeModal(); }
       showToast('Invoice for ' + _q.customer + ' saved — $' + total.toLocaleString());
     } else {
       // Save as quote
       if (_q.id && !_q.id.toString().startsWith('new_') && !_q.id.toString().startsWith('#')) {
         await API.quotes.update(_q.id, data);
       } else {
-        await API.quotes.create(data);
+        var created = await API.quotes.create(data);
+        if (created && created.id) _q.id = created.id;
       }
-
-      loadQuotes();
-      closeModal();
+      if (!silent) { loadQuotes(); closeModal(); }
       showToast('Quote for ' + _q.customer + ' saved — $' + total.toLocaleString());
     }
   } catch(e) {

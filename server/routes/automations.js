@@ -452,6 +452,21 @@ router.put("/:id", async (req, res, next) => {
     updates.updatedAt = Date.now();
 
     await db.collection("automations").doc(req.params.id).update(updates);
+
+    // If automation was disabled, cancel its pending scheduled messages
+    if (updates.enabled === false) {
+      const pendingSnap = await db.collection("scheduledMessages")
+        .where("automationId", "==", req.params.id)
+        .where("status", "==", "pending")
+        .get();
+      if (!pendingSnap.empty) {
+        const batch = db.batch();
+        pendingSnap.docs.forEach(d => batch.update(d.ref, { status: "cancelled", updatedAt: Date.now() }));
+        await batch.commit();
+        console.log(`[automation] Cancelled ${pendingSnap.docs.length} pending messages for disabled automation ${req.params.id}`);
+      }
+    }
+
     res.json({ id: req.params.id, ...doc.data(), ...updates });
   } catch (err) {
     next(err);
@@ -465,6 +480,17 @@ router.delete("/:id", async (req, res, next) => {
     if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Automation not found" });
     }
+    // Cancel pending scheduled messages for this automation before deleting
+    const pendingSnap = await db.collection("scheduledMessages")
+      .where("automationId", "==", req.params.id)
+      .where("status", "==", "pending")
+      .get();
+    if (!pendingSnap.empty) {
+      const batch = db.batch();
+      pendingSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+
     await db.collection("automations").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (err) {
