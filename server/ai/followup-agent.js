@@ -21,36 +21,30 @@ const { getUsage, incrementSms } = require("../usage");
 const { google } = require("googleapis");
 
 /**
+ * Convert hours:minutes in Eastern Time to a UTC timestamp for the given date.
+ * Handles EDT (UTC-4) vs EST (UTC-5) automatically.
+ */
+function easternToUtc(year, month, day, hours, minutes) {
+  // Build a UTC date for 9 AM, then adjust by ET offset
+  // Determine if date is in EDT or EST by checking the timezone abbreviation
+  const testDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const tzName = testDate.toLocaleString('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' });
+  const isDST = tzName.includes('EDT');
+  const offsetHours = isDST ? 4 : 5; // EDT = UTC-4, EST = UTC-5
+  return Date.UTC(year, month - 1, day, hours + offsetHours, minutes, 0);
+}
+
+/**
  * Get the next 9:00 AM Eastern Time timestamp.
- * Server runs in UTC, so we calculate 9 AM ET properly.
  */
 function nextNineAm() {
-  // Build "now" in Eastern time using Intl
-  const eastern = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false
+  const etParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
   }).formatToParts(new Date());
+  const p = {}; etParts.forEach(x => { p[x.type] = parseInt(x.value, 10); });
 
-  const parts = {};
-  eastern.forEach(p => { parts[p.type] = p.value; });
-  const etHour = parseInt(parts.hour, 10);
-  const etNow = new Date(`${parts.year}-${parts.month}-${parts.day}T09:00:00`);
-
-  // Convert 9 AM ET to UTC: figure out the current ET→UTC offset
-  const utcNow = new Date();
-  const etString = utcNow.toLocaleString('en-US', { timeZone: 'America/New_York' });
-  const etDate = new Date(etString);
-  const offsetMs = utcNow.getTime() - etDate.getTime();
-
-  // Target 9 AM ET today, converted to UTC
-  const todayStr = `${parts.year}-${parts.month}-${parts.day}T09:00:00`;
-  let target = new Date(todayStr).getTime() + offsetMs;
-
-  // If 9 AM ET already passed today, schedule for tomorrow
-  if (target <= Date.now()) {
-    target += 24 * 60 * 60 * 1000;
-  }
+  let target = easternToUtc(p.year, p.month, p.day, 9, 0);
+  if (target <= Date.now()) target += 86400000;
   return target;
 }
 

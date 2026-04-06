@@ -119,19 +119,18 @@ async function triggerAutomation(orgId, trigger, customer) {
       // Calculate sendAt: delayDays from now, at the configured time (default 9:00 AM Eastern)
       const sendAtTime = rule.sendAtTime || "09:00";
       const [hours, minutes] = sendAtTime.split(":").map(Number);
-      // Get current date in Eastern timezone
+      // Get the target date in Eastern timezone
+      const futureDate = new Date(now + (rule.delayDays ?? 3) * 86400000);
       const etParts = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', hour12: false
-      }).formatToParts(new Date(now + (rule.delayDays ?? 3) * 86400000));
-      const ep = {}; etParts.forEach(p => { ep[p.type] = p.value; });
-      // Calculate ET→UTC offset
-      const _utcNow = new Date();
-      const _etStr = _utcNow.toLocaleString('en-US', { timeZone: 'America/New_York' });
-      const _offsetMs = _utcNow.getTime() - new Date(_etStr).getTime();
-      // Build target time in ET then convert to UTC
-      const etTarget = new Date(`${ep.year}-${ep.month}-${ep.day}T${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:00`);
-      let sendAt = etTarget.getTime() + _offsetMs;
+        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(futureDate);
+      const ep = {}; etParts.forEach(p => { ep[p.type] = parseInt(p.value, 10); });
+      // Determine EDT vs EST for correct UTC offset
+      const testDate = new Date(Date.UTC(ep.year, ep.month - 1, ep.day, 12, 0, 0));
+      const tzName = testDate.toLocaleString('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' });
+      const isDST = tzName.includes('EDT');
+      const offsetHours = isDST ? 4 : 5;
+      let sendAt = Date.UTC(ep.year, ep.month - 1, ep.day, hours + offsetHours, minutes, 0);
       // If the computed time is already in the past, send next day at that time
       if (sendAt <= now) sendAt += 86400000;
 
