@@ -844,15 +844,10 @@ Google review would mean a lot to us 🙏
   // ── Receptionist Edit Modal ──
   function openReceptionistEditModal() {
     const cfg = _agentConfigs.receptionist || {};
-    const toneMap = { professional: 'professional', casual: 'casual', friendly_professional: 'friendly_professional' };
-    document.getElementById('edit-receptionist-tone').value = toneMap[cfg.tone] || 'friendly_professional';
+    document.getElementById('edit-receptionist-tone').value = cfg.tone || 'friendly_professional';
     document.getElementById('edit-receptionist-greeting').value = cfg.greeting || cfg.greetingMessage || '';
     document.getElementById('edit-receptionist-bizname').value = cfg.businessName || '';
     document.getElementById('edit-receptionist-bizdesc').value = cfg.businessDescription || '';
-    document.getElementById('edit-receptionist-services').value = cfg.services || '';
-    document.getElementById('edit-receptionist-area').value = cfg.serviceArea || '';
-    document.getElementById('edit-receptionist-hours').value = cfg.businessHoursText || '';
-    document.getElementById('edit-receptionist-website').value = cfg.website || '';
     document.getElementById('edit-receptionist-overlay').style.opacity = '1';
     document.getElementById('edit-receptionist-overlay').style.pointerEvents = 'all';
     document.getElementById('edit-receptionist-modal').style.opacity = '1';
@@ -871,15 +866,11 @@ Google review would mean a lot to us 🙏
     const greeting = document.getElementById('edit-receptionist-greeting').value.trim();
     const businessName = document.getElementById('edit-receptionist-bizname').value.trim();
     const businessDescription = document.getElementById('edit-receptionist-bizdesc').value.trim();
-    const services = document.getElementById('edit-receptionist-services').value.trim();
-    const serviceArea = document.getElementById('edit-receptionist-area').value.trim();
-    const businessHoursText = document.getElementById('edit-receptionist-hours').value.trim();
-    const website = document.getElementById('edit-receptionist-website').value.trim();
     const btn = document.getElementById('save-receptionist-btn');
     btn.textContent = 'Saving...';
     btn.disabled = true;
     try {
-      const updated = await API.agents.update('receptionist', { tone, greeting, businessName, businessDescription, services, serviceArea, businessHoursText, website });
+      const updated = await API.agents.update('receptionist', { tone, greeting, businessName, businessDescription });
       _agentConfigs.receptionist = Object.assign(_agentConfigs.receptionist || {}, updated);
       const toneLabels = { professional: 'Professional', casual: 'Casual', friendly_professional: 'Friendly, professional' };
       const toneLabel = toneLabels[tone] || tone;
@@ -955,35 +946,6 @@ Google review would mean a lot to us 🙏
     <button onclick="closeReceptionistEditModal()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);">✕</button>
   </div>
   <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto;">
-    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--green);font-weight:600;margin-bottom:-4px;">Business Info (what the AI knows)</div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Business Name</label>
-      <input id="edit-receptionist-bizname" type="text" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="e.g. Lane's Exterior Cleaning">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Business Description</label>
-      <textarea id="edit-receptionist-bizdesc" rows="2" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="e.g. We are a family-owned exterior cleaning company serving the Edmonton area since 2020."></textarea>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Services Offered</label>
-      <textarea id="edit-receptionist-services" rows="3" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="e.g. Pressure washing, soft washing, window cleaning, gutter cleaning, deck/fence restoration"></textarea>
-      <span style="font-size:10px;color:var(--gray2);">The AI will ONLY mention these services. Be specific.</span>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <div style="display:flex;flex-direction:column;gap:3px;flex:1;">
-        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Service Area</label>
-        <input id="edit-receptionist-area" type="text" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="e.g. Edmonton & surrounding areas">
-      </div>
-      <div style="display:flex;flex-direction:column;gap:3px;flex:1;">
-        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Business Hours</label>
-        <input id="edit-receptionist-hours" type="text" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="e.g. Mon-Sat 8am-6pm">
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Website</label>
-      <input id="edit-receptionist-website" type="text" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="e.g. https://yoursite.com">
-    </div>
-    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--green);font-weight:600;margin-top:4px;margin-bottom:-4px;">AI Behavior</div>
     <div style="display:flex;flex-direction:column;gap:3px;">
       <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Tone</label>
       <select id="edit-receptionist-tone" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
@@ -994,7 +956,15 @@ Google review would mean a lot to us 🙏
     </div>
     <div style="display:flex;flex-direction:column;gap:3px;">
       <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Greeting Message</label>
-      <textarea id="edit-receptionist-greeting" rows="2" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="e.g. Hi! Thanks for reaching out..."></textarea>
+      <textarea id="edit-receptionist-greeting" rows="2" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="e.g. Hey! Thanks for reaching out..."></textarea>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Business Name</label>
+      <input id="edit-receptionist-bizname" type="text" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="e.g. Lane's Exterior Cleaning">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Extra Info <span style="color:var(--gray2);font-weight:400;text-transform:none;letter-spacing:0;">(optional — services are auto-learned from your jobs)</span></label>
+      <textarea id="edit-receptionist-bizdesc" rows="2" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="Anything extra you want the AI to know (e.g. We don't do roofs, we're closed Sundays)"></textarea>
     </div>
   </div>
   <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">

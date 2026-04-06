@@ -98,8 +98,11 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   }));
   messages.push({ role: "user", content: messageBody });
 
+  // Auto-discover business context from job history
+  const bizContext = await getBusinessContext(orgId, ownerUid);
+
   // Build system prompt
-  const systemPrompt = buildReceptionistPrompt(config, owner, customer);
+  const systemPrompt = buildReceptionistPrompt(config, owner, customer, bizContext);
 
   // Call Claude
   const response = await anthropic.messages.create({
@@ -172,63 +175,107 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
 }
 
 /**
- * Build the system prompt for the receptionist.
- * Pulls business info from the agent config and owner profile.
+ * Auto-discover business info from job history, quotes, and customers.
+ * Cached per org for 10 minutes to avoid hitting Firestore on every SMS.
  */
-function buildReceptionistPrompt(config, owner, customer) {
+const _bizCache = {};
+const BIZ_CACHE_TTL = 10 * 60 * 1000;
+
+async function getBusinessContext(orgId, ownerUid) {
+  const cached = _bizCache[orgId];
+  if (cached && Date.now() - cached.ts < BIZ_CACHE_TTL) return cached.data;
+
+  // Pull recent jobs to learn services, pricing, and areas
+  const jobSnap = await db.collection("jobs")
+    .where("userId", "==", ownerUid).limit(50).get();
+  const jobs = jobSnap.docs.map(d => d.data());
+
+  // Pull recent quotes
+  const quoteSnap = await db.collection("quotes")
+    .where("userId", "==", ownerUid).limit(30).get();
+  const quotes = quoteSnap.docs.map(d => d.data());
+
+  // Extract unique services
+  const serviceSet = new Set();
+  jobs.forEach(j => { if (j.service) serviceSet.add(j.service); if (j.title) serviceSet.add(j.title); });
+  quotes.forEach(q => { if (q.title) serviceSet.add(q.title); });
+
+  // Extract addresses for service area
+  const areas = new Set();
+  jobs.forEach(j => {
+    if (j.address) {
+      const parts = j.address.split(",");
+      if (parts.length >= 2) areas.add(parts[parts.length - 2].trim());
+    }
+  });
+
+  // Price ranges
+  const prices = jobs.filter(j => j.cost && j.cost > 0).map(j => j.cost);
+  const priceRange = prices.length > 0
+    ? `$${Math.min(...prices)} - $${Math.max(...prices)}`
+    : "";
+
+  const data = {
+    services: [...serviceSet].filter(Boolean).join(", "),
+    serviceArea: [...areas].filter(Boolean).join(", "),
+    jobCount: jobs.length,
+    priceRange,
+  };
+
+  _bizCache[orgId] = { ts: Date.now(), data };
+  return data;
+}
+
+/**
+ * Build the system prompt for the receptionist.
+ * Auto-discovers business info from actual job/quote data.
+ */
+function buildReceptionistPrompt(config, owner, customer, bizContext) {
   const companyName = config.businessName || owner.company || owner.name || "our company";
   const ownerName = owner.name || "the owner";
   const tone = config.tone === "casual" ? "casual and friendly" : "friendly and professional";
 
-  // Business details from config (set via AI Agents settings page)
-  const businessDescription = config.businessDescription || "";
-  const services = config.services || "";
-  const serviceArea = config.serviceArea || "";
-  const businessHoursText = config.businessHoursText || "";
-  const website = config.website || "";
+  let prompt = `You are an AI receptionist for ${companyName}. You respond to inbound text messages.`;
 
-  let prompt = `You are an AI receptionist for ${companyName}. You respond to inbound text messages from customers and potential leads.`;
+  // Auto-discovered business context
+  if (bizContext.services) {
+    prompt += `\n\nSERVICES (from past jobs): ${bizContext.services}`;
+  }
+  if (bizContext.serviceArea) {
+    prompt += `\nSERVICE AREA: ${bizContext.serviceArea}`;
+  }
+  if (bizContext.priceRange) {
+    prompt += `\nTYPICAL PRICE RANGE: ${bizContext.priceRange} (but always say ${ownerName} will send a custom quote)`;
+  }
+  if (bizContext.jobCount > 0) {
+    prompt += `\nCOMPLETED JOBS: ${bizContext.jobCount}+`;
+  }
 
-  // Add business context if configured
-  if (businessDescription) {
-    prompt += `\n\nABOUT THE BUSINESS:\n${businessDescription}`;
-  }
-  if (services) {
-    prompt += `\n\nSERVICES WE OFFER:\n${services}`;
-  }
-  if (serviceArea) {
-    prompt += `\n\nSERVICE AREA: ${serviceArea}`;
-  }
-  if (businessHoursText) {
-    prompt += `\n\nBUSINESS HOURS: ${businessHoursText}`;
-  }
-  if (website) {
-    prompt += `\n\nWEBSITE: ${website}`;
-  }
+  // Manual overrides from config (if user added extra info)
+  if (config.businessDescription) prompt += `\n\nABOUT: ${config.businessDescription}`;
+  if (config.website) prompt += `\nWEBSITE: ${config.website}`;
 
   prompt += `
 
-STYLE: ${tone}. Extremely short and direct. One sentence, maybe two max. No fluff. No filler. Text like a busy person would.
+STYLE: ${tone}. Extremely short. One sentence, two max. No fluff. Text like a busy person.
 
 RULES:
-1. ONLY mention info listed above. NEVER invent services, prices, or details.
-2. Don't know something? Just say "${ownerName} will get back to you on that."
-3. Never make up prices. Say "${ownerName} will send you a quote."
-4. Upset person or can't help? Add [ESCALATE] at the end (gets stripped before sending).
-5. Keep under 120 characters when possible. SMS = short.
+1. Only mention services from the list above. Never invent services.
+2. Never quote specific prices. Always say "${ownerName} will send a custom quote."
+3. Don't know? Say "${ownerName} will get back to you."
+4. Can't help or person is upset? Add [ESCALATE] at end.
+5. Under 120 chars when possible. This is SMS.
 6. "stop"/"unsubscribe" → acknowledge + [ESCALATE]
-7. No emojis unless the customer uses them first.`;
+7. No emojis unless customer uses them first.`;
 
   if (config.greeting) {
-    prompt += `\n\nSUGGESTED GREETING STYLE: "${config.greeting}"`;
+    prompt += `\n\nGREETING STYLE: "${config.greeting}"`;
   }
 
   if (customer) {
-    prompt += `\n\nTHIS IS AN EXISTING CUSTOMER:
-- Name: ${customer.customerName || "Unknown"}
-- They are already in our system, so be more familiar and helpful.`;
+    prompt += `\n\nEXISTING CUSTOMER: ${customer.customerName || "Unknown"}. Be familiar.`;
   } else {
-    prompt += `\n\nTHIS IS A NEW/UNKNOWN NUMBER — treat them as a potential lead. Try to get their name and what service they need.`;
+    prompt += `\n\nNEW LEAD. Get their name and what they need.`;
   }
 
   return prompt;
