@@ -161,8 +161,40 @@ app.get("/api/webhooks/twilio/test", async (req, res) => {
       diag.steps.push("OK: Anthropic API key configured");
     }
 
-    // Step 6: Try sending a test (dry run — don't actually send)
-    diag.steps.push("INFO: All checks passed. The receptionist should auto-reply to inbound SMS.");
+    // Step 6: Actually test the receptionist (dry run with Claude, skip SMS send)
+    if (req.query.run === "1") {
+      try {
+        const Anthropic = require("@anthropic-ai/sdk");
+        const anthropic = new Anthropic();
+        diag.steps.push("INFO: Testing Claude API call...");
+        const testReply = await anthropic.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 100,
+          system: "You are a test. Reply with exactly: TEST_OK",
+          messages: [{ role: "user", content: "ping" }],
+        });
+        const replyText = testReply.content[0]?.text || "";
+        diag.steps.push(`OK: Claude replied: "${replyText.slice(0, 50)}"`);
+
+        // Test Twilio send
+        try {
+          const { sendSms } = require("./twilio");
+          const testPhone = req.query.to || "";
+          if (testPhone) {
+            await sendSms(testPhone, "SWFT AI Receptionist test - this confirms SMS sending works!");
+            diag.steps.push(`OK: Test SMS sent to ${testPhone}`);
+          } else {
+            diag.steps.push("SKIP: Add ?to=+1XXXXXXXXXX to test SMS sending");
+          }
+        } catch (smsErr) {
+          diag.steps.push(`FAIL: SMS send error: ${smsErr.message}`);
+        }
+      } catch (aiErr) {
+        diag.steps.push(`FAIL: Claude API error: ${aiErr.message}`);
+      }
+    } else {
+      diag.steps.push("INFO: Add ?run=1 to actually test Claude + SMS. Add &to=+1XXXXXXXXXX to test sending.");
+    }
 
     res.json(diag);
   } catch (err) {
