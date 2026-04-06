@@ -332,7 +332,14 @@ async function changeInvoiceStatus(id,val,el){
   if(inv)inv.status=val;
   try{
     if(val==='paid'){await API.invoices.pay(id,{paymentMethod:'other'});}
-    else if(val==='sent'){await API.invoices.send(id);}
+    else if(val==='sent'){
+      // Redirect to messaging to actually send the invoice via email
+      var s=window._swftSettings||{};
+      var fromName=s.company||s.name||'SWFT';
+      var subject=encodeURIComponent('Invoice from '+fromName);
+      window.location.href='swft-messages.html?invoiceId='+id+'&subject='+subject;
+      return;
+    }
     else{await API.invoices.update(id,{status:val});}
     renderStats();showToast('Status updated');
   }

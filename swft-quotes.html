@@ -381,7 +381,14 @@ async function changeQuoteStatus(id,val,el){
   var prev=q?q.status:'draft';
   if(q)q.status=val;
   try{
-    if(val==='sent'){await API.quotes.send(id);}
+    if(val==='sent'){
+      // Redirect to messaging to actually send the quote via email
+      var s=window._swftSettings||{};
+      var fromName=s.company||s.name||'SWFT';
+      var subject=encodeURIComponent('Quote from '+fromName);
+      window.location.href='swft-messages.html?quoteId='+id+'&subject='+subject;
+      return;
+    }
     else if(val==='approved'){await API.quotes.approve(id);}
     else{await API.quotes.update(id,{status:val});}
     renderStats();showToast('Status updated');
