@@ -4,7 +4,9 @@
  */
 function num(v) {
   if (v === undefined || v === null || v === "") return null;
-  const n = Number(v);
+  // Strip currency symbols and commas before parsing (e.g. "$1,500.00" → "1500.00")
+  const cleaned = typeof v === "string" ? v.replace(/[$,]/g, "").trim() : v;
+  const n = Number(cleaned);
   return isNaN(n) ? null : n;
 }
 
