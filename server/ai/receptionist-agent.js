@@ -24,7 +24,13 @@ const MAX_HISTORY = 20;
  */
 async function getReceptionistConfig(orgId) {
   const doc = await db.collection("orgs").doc(orgId).collection("agentConfigs").doc("receptionist").get();
-  if (!doc.exists) return null;
+  if (!doc.exists) {
+    // Auto-create default config as enabled
+    const defaultConfig = { enabled: true, tone: "professional", greeting: "", channels: "voice_sms" };
+    await db.collection("orgs").doc(orgId).collection("agentConfigs").doc("receptionist").set(defaultConfig);
+    console.log("[receptionist] Auto-created config for org:", orgId);
+    return defaultConfig;
+  }
   const config = doc.data();
   if (!config.enabled) return null;
   return config;
