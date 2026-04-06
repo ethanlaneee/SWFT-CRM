@@ -1014,50 +1014,40 @@ async function confirmSendEmail() {
   sendBtn.disabled = true;
 
   try {
-    // Use the EXACT same preview content as Print/Save PDF
+    // Use the EXACT same approach as Print/Save PDF — open a new window with the
+    // full standalone HTML, then render to PDF inside that window where styles work perfectly.
     var previewType = _q.isInvoice ? 'invoice' : 'quote';
     showPdfPreview(previewType, _q);
-    // Immediately hide the overlay (showPdfPreview opens it)
     document.querySelector('.swft-pdf-overlay').classList.remove('open');
+    var fullHtml = buildFullPrintHtml();
 
-    // Grab the preview body HTML (same content Print/Save uses)
-    var bodyContent = document.getElementById('swft-pdf-body').innerHTML;
+    // Generate the PDF in a hidden popup window (same rendering as Print/Save)
+    var pdfBlob = await new Promise(function(resolve, reject) {
+      var win = window.open('', '_blank', 'width=816,height=1056,left=-9999,top=0');
+      if (!win) { reject(new Error('Popup blocked — please allow popups')); return; }
+      win.document.write(fullHtml);
+      win.document.close();
 
-    // Create a render container ON SCREEN (html2canvas can't capture offscreen elements)
-    // It sits behind the email compose modal (z-index 9600) so user won't see it
-    var container = document.createElement('div');
-    container.id = 'pdf-render-container';
-    container.style.cssText = 'position:absolute;left:0;top:0;width:700px;background:#fff;z-index:1;overflow:hidden;';
-    container.innerHTML =
-      '<style>#pdf-render-container{font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}' +
-      '#pdf-render-container *{color:#111;}' +
-      '#pdf-render-container .pdf-company{font-family:"Bebas Neue",sans-serif;font-size:28px;letter-spacing:3px;color:#111;}' +
-      '#pdf-render-container .pdf-company em{color:#8ab800;font-style:normal;}' +
-      '#pdf-render-container img{max-height:50px;max-width:180px;object-fit:contain;}' +
-      '#pdf-render-container .pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}' +
-      '#pdf-render-container .pdf-type{font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #8ab800;margin-bottom:16px;color:#111;}' +
-      '#pdf-render-container .pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}' +
-      '#pdf-render-container .label{color:#666;} #pdf-render-container .value{font-weight:500;color:#111;}' +
-      '#pdf-render-container .pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}' +
-      '#pdf-render-container .pdf-line-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}' +
-      '#pdf-render-container .pdf-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 0;font-size:13px;border-bottom:1px solid #f0f0f0;color:#111;}' +
-      '#pdf-render-container .amt{font-weight:500;color:#111;}' +
-      '#pdf-render-container .pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;color:#111;}' +
-      '#pdf-render-container .pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;color:#111;}' +
-      '</style>' + bodyContent;
-    document.body.appendChild(container);
-
-    // Wait for fonts and images to render
-    await new Promise(function(r){ setTimeout(r, 500); });
-
-    var pdfBlob = await html2pdf().set({
-      margin: [10, 10, 10, 10],
-      filename: type + '.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, scrollY: 0, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
-    }).from(container).outputPdf('blob');
-    document.body.removeChild(container);
+      // Load html2pdf.js in the popup window
+      var script = win.document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = function() {
+        // Wait for fonts to render, then generate PDF
+        setTimeout(function() {
+          win.html2pdf().set({
+            margin: [10, 10, 10, 10],
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+          }).from(win.document.body).outputPdf('blob').then(function(blob) {
+            win.close();
+            resolve(blob);
+          }).catch(function(err) { win.close(); reject(err); });
+        }, 1200);
+      };
+      script.onerror = function() { win.close(); reject(new Error('Failed to load PDF library')); };
+      win.document.head.appendChild(script);
+    });
 
     // Upload PDF + message to server
     var token = await getAuthToken();
