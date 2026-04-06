@@ -322,7 +322,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="settings-row-info"><div class="settings-row-label">AI Processing</div><div class="settings-row-desc">SWFT AI uses Anthropic's Claude to process your requests. Your data is sent to Claude only when you interact with the AI agent. Claude does not store or train on your data.</div></div>
     </div>
     <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Calendar Integration</div><div class="settings-row-desc">When connected, job dates are synced to your Google or Apple Calendar. Only job titles, dates, times, and addresses are shared — no financial data.</div></div>
+      <div class="settings-row-info"><div class="settings-row-label">Apple Calendar</div><div class="settings-row-desc">Subscribe to your SWFT jobs in Apple Calendar (or any calendar app that supports ICS). Updates automatically every hour.</div></div>
+      <button class="settings-btn primary" id="apple-cal-btn" onclick="subscribeAppleCalendar()">Get Link</button>
     </div>
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Delete Account</div><div class="settings-row-desc">Permanently delete your account and all associated data</div></div>
@@ -595,6 +596,36 @@ async function disconnectIntegration(id, name) {
     loadIntegrations();
   } catch(e) {
     showToast('Error disconnecting');
+  }
+}
+
+// ── Apple Calendar ICS subscription ──
+async function subscribeAppleCalendar() {
+  try {
+    var btn = document.getElementById('apple-cal-btn');
+    btn.textContent = 'Generating...';
+    var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    var token = await getAuth().currentUser.getIdToken();
+    var res = await fetch('/api/calendar/token', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    var data = await res.json();
+    if (data.error) { showToast('Error: ' + data.error); btn.textContent = 'Get Link'; return; }
+    var feedUrl = 'https://goswft.com/api/calendar/' + data.token + '/feed.ics';
+    var webcalUrl = feedUrl.replace('https://', 'webcal://');
+
+    // Show the link
+    btn.textContent = 'Copied!';
+    navigator.clipboard.writeText(webcalUrl).catch(function() {});
+    setTimeout(function() { btn.textContent = 'Get Link'; }, 3000);
+
+    // Try to open Apple Calendar directly
+    window.open(webcalUrl, '_blank');
+    showToast('Calendar link copied — opening Apple Calendar');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+    document.getElementById('apple-cal-btn').textContent = 'Get Link';
   }
 }
 

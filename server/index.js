@@ -354,6 +354,9 @@ app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
 app.use("/api/square",        auth, checkAccess,  squareRouter);
 app.use("/api/import",        auth, checkAccess,  require("./routes/import"));
+// Calendar: token generation needs auth, ICS feed is public (uses calendar token)
+app.post("/api/calendar/token", auth, checkAccess, require("./routes/calendar").tokenHandler);
+app.use("/api/calendar",      require("./routes/calendar"));
 app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
 app.use("/api/automations",   auth, checkAccess,  automationsRouter);
 app.use("/api/dev",           auth,               require("./routes/dev"));
