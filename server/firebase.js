@@ -5,6 +5,7 @@ let credential;
 if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   // Production: load from environment variable (Render, Railway, etc.)
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  console.log("[firebase] Service account project:", serviceAccount.project_id || "MISSING");
   credential = admin.credential.cert(serviceAccount);
 } else {
   // Local dev: load from file

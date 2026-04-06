@@ -407,12 +407,22 @@ app.use("/api/automations",   auth, checkAccess,  automationsRouter);
 app.use("/api/dev",           auth,               require("./routes/dev"));
 
 // ── Health check ──
-app.get("/health", (req, res) => res.json({
-  status: "ok",
-  twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
-  twilioPhone: process.env.TWILIO_PHONE_NUMBER || "not set",
-  appUrl: process.env.APP_URL || "not set",
-}));
+app.get("/health", async (req, res) => {
+  let firebaseOk = false;
+  try {
+    await require("./firebase").authAdmin.listUsers(1);
+    firebaseOk = true;
+  } catch (e) {
+    console.error("[health] Firebase auth check failed:", e.message);
+  }
+  res.json({
+    status: "ok",
+    firebaseAuth: firebaseOk,
+    twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+    twilioPhone: process.env.TWILIO_PHONE_NUMBER || "not set",
+    appUrl: process.env.APP_URL || "not set",
+  });
+});
 
 // ── Error handler ──
 app.use((err, req, res, next) => {
