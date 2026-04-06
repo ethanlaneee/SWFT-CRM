@@ -547,16 +547,22 @@ function buildContacts(){
     msgs=msgs.filter(function(m){return(m.type||'email')===_channel;});
   }
   msgs.forEach(function(m){
+    // For inbound SMS without a customerId, group by the sender's phone number
+    var isInbound = m.direction==='inbound';
+    var contactPhone = isInbound ? (m.from||'') : (m.to||'');
     var key=(m.customerId||'')+'_'+(m.type||'email');
-    if(!key||key==='_email'&&!m.customerId){
-      key='unknown_'+(m.type||'email')+'_'+m.to;
+    if(!m.customerId || key==='_email'){
+      // Group unknown contacts by phone/email so inbound + outbound to same number stay together
+      var identifier = contactPhone || m.to || m.from || 'unknown';
+      key='unknown_'+(m.type||'email')+'_'+identifier.replace(/\D/g,'');
     }
     if(!map[key]){
       map[key]={
         customerId:m.customerId||'',
-        customerName:m.customerName||m.to,
+        customerName:m.customerName||(isInbound?m.from:m.to)||'Unknown',
         channel:m.type||'email',
-        to:m.to,
+        to:isInbound?(m.from||m.to):m.to,
+        phone:isInbound?m.from:(m.to||''),
         messages:[],
         lastTime:0
       };
@@ -1094,9 +1100,39 @@ function esc(s){
   return d.innerHTML;
 }
 
+// ── Auto-refresh polling — check for new messages every 5 seconds ──
+var _refreshTimer=null;
+async function refreshMessages(){
+  try{
+    var fresh=await API.messages.list();
+    if(fresh.length!==_allMessages.length||JSON.stringify(fresh.map(function(m){return m.id;}))!==JSON.stringify(_allMessages.map(function(m){return m.id;}))){
+      _allMessages=fresh;
+      var activeKey=_activeContact?(_activeContact.customerId||'')+'_'+_activeContact.channel+'_'+(_activeContact.to||''):'';
+      buildContacts();
+      renderContacts();
+      // Re-select the active contact if we had one open
+      if(_activeContact&&activeKey){
+        var match=_contacts.find(function(c){
+          return (c.customerId||'')+'_'+c.channel+'_'+(c.to||'')===activeKey;
+        });
+        if(match){
+          _activeContact=match;
+          renderChat();
+        }
+      }
+    }
+  }catch(e){}
+}
+
+function startAutoRefresh(){
+  if(_refreshTimer) clearInterval(_refreshTimer);
+  _refreshTimer=setInterval(refreshMessages,5000);
+}
+
 // ── Init ──
 async function loadMessages(){
   await loadData();
+  startAutoRefresh();
   // Auto-sync Gmail inbox if connected (non-blocking)
   if(_gmailConnected){
     apiFetch('/api/messages/sync-gmail',{method:'POST'}).then(function(r){
