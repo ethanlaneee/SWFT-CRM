@@ -209,6 +209,37 @@ app.get("/api/auth/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
 
+// ── Diagnostic: check integration status ──
+app.get("/api/debug/integrations", async (req, res) => {
+  try {
+    const { db } = require("./firebase");
+    const snap = await db.collection("users").limit(1).get();
+    if (snap.empty) return res.json({ error: "No users" });
+    const data = snap.docs[0].data();
+    const integrations = data.integrations || {};
+    const result = {};
+    for (const [key, val] of Object.entries(integrations)) {
+      result[key] = {
+        connected: val.connected,
+        account: val.account,
+        hasTokens: !!val.tokens,
+        hasAccessToken: !!val.tokens?.access_token,
+        hasRefreshToken: !!val.tokens?.refresh_token,
+        connectedAt: val.connectedAt,
+      };
+    }
+    // Also check legacy gmail fields
+    result._legacyGmail = {
+      gmailConnected: data.gmailConnected,
+      gmailAddress: data.gmailAddress,
+      hasGmailTokens: !!data.gmailTokens,
+    };
+    res.json({ uid: snap.docs[0].id, integrations: result });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
 // ── Public routes (no auth) ──
 app.use("/api/survey", surveyRouter);
 const publicChatLimiter = rateLimit({
