@@ -1,7 +1,10 @@
 const router = require("express").Router();
+const multer = require("multer");
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
 const { sendViaGmail, generateDocumentPdf } = require("./messages");
+
+const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const col = () => db.collection("quotes");
 
@@ -130,8 +133,8 @@ router.post("/:id/approve", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Email quote — generate PDF and send via Gmail, add to message thread
-router.post("/:id/email", async (req, res, next) => {
+// Email quote — accept client-generated PDF or fall back to server-generated
+router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
   try {
     const quoteDoc = await col().doc(req.params.id).get();
     if (!quoteDoc.exists || quoteDoc.data().orgId !== req.orgId) {
@@ -159,17 +162,17 @@ router.post("/:id/email", async (req, res, next) => {
       return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
     }
 
-    // Log the items for debugging
-    console.log("[quote email] Items:", JSON.stringify(quoteData.items));
-
-    // Generate PDF
-    const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
-    const custName = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
-    const pdfFile = {
-      buffer: pdfBuffer,
-      mimetype: "application/pdf",
-      originalname: `Quote-${custName}.pdf`,
-    };
+    // Use client-uploaded PDF if provided, otherwise generate server-side
+    const custNameClean = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
+    let pdfFile;
+    if (req.file && req.file.buffer && req.file.buffer.length > 0) {
+      console.log("[quote email] Using client-generated PDF,", req.file.buffer.length, "bytes");
+      pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
+    } else {
+      console.log("[quote email] Generating server PDF. Items:", JSON.stringify(quoteData.items));
+      const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
+      pdfFile = { buffer: pdfBuffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
+    }
 
     // Build email
     const fromName = user.company || user.name || "SWFT";

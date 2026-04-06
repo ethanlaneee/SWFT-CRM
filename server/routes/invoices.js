@@ -1,7 +1,10 @@
 const router = require("express").Router();
+const multer = require("multer");
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
 const { sendViaGmail, generateDocumentPdf } = require("./messages");
+
+const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const col = () => db.collection("invoices");
 
@@ -151,8 +154,8 @@ router.post("/:id/pay", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Email invoice — generate PDF and send via Gmail, add to message thread
-router.post("/:id/email", async (req, res, next) => {
+// Email invoice — accept client-generated PDF or fall back to server-generated
+router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
   try {
     const invDoc = await col().doc(req.params.id).get();
     if (!invDoc.exists || invDoc.data().orgId !== req.orgId) {
@@ -176,13 +179,16 @@ router.post("/:id/email", async (req, res, next) => {
       return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
     }
 
-    const pdfBuffer = await generateDocumentPdf(invData, "invoice", user);
-    const custName = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
-    const pdfFile = {
-      buffer: pdfBuffer,
-      mimetype: "application/pdf",
-      originalname: `Invoice-${custName}.pdf`,
-    };
+    const custNameClean = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
+    let pdfFile;
+    if (req.file && req.file.buffer && req.file.buffer.length > 0) {
+      console.log("[invoice email] Using client-generated PDF,", req.file.buffer.length, "bytes");
+      pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Invoice-${custNameClean}.pdf` };
+    } else {
+      console.log("[invoice email] Generating server PDF. Items:", JSON.stringify(invData.items));
+      const pdfBuffer = await generateDocumentPdf(invData, "invoice", user);
+      pdfFile = { buffer: pdfBuffer, mimetype: "application/pdf", originalname: `Invoice-${custNameClean}.pdf` };
+    }
 
     const fromName = user.company || user.name || "SWFT";
     const subject = `Invoice from ${fromName}`;

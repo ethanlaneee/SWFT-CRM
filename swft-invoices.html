@@ -419,16 +419,21 @@ function renderTotals(){
     '<div class="pdf-total-line grand"><span>Total</span><span>$'+subtotal.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>';
 }
 
-function printInvoicePdf(){
+function buildInvoiceHtml(){
   var s=window._swftSettings||{};
   var brandHtml=s.companyLogo?'<img src="'+s.companyLogo+'" style="max-height:50px;max-width:180px;object-fit:contain;margin-bottom:8px;"/>':'<div class="pdf-company">'+(s.company||'SWFT')+'<em>.</em></div>';
   var tagline=s.company?(s.phone||'')+' &nbsp; '+(s.address||''):'simple. smart. swft.';
   var custSel=document.getElementById('f-customer');var custName=custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'—';
   var lines=_items.map(function(l){return'<div class="pdf-line"><div>'+esc(l.desc)+'</div><div>'+(l.qty||1)+'</div><div>$'+l.rate.toFixed(2)+'</div><div class="amt">$'+l.total.toFixed(2)+'</div></div>';}).join('');
   var total=_items.reduce(function(s,i){return s+i.total;},0);
+  if(total===0&&_currentInv&&_currentInv.total>0)total=_currentInv.total;
   var due=document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+  return '<html><head><title>Invoice</title><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"><style>body{font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}.pdf-company{font-family:"Bebas Neue",sans-serif;font-size:28px;letter-spacing:3px;}.pdf-company em{color:#8ab800;font-style:normal;}img{max-height:50px;max-width:180px;object-fit:contain;}.pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}.pdf-type{font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #8ab800;margin-bottom:16px;}.pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}.label{color:#666;}.value{font-weight:500;}.pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}.pdf-line-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}.pdf-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 0;font-size:13px;border-bottom:1px solid #f0f0f0;}.amt{font-weight:500;}.pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;}.pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;}</style></head><body>'+brandHtml+'<div class="pdf-tagline">'+tagline+'</div><div class="pdf-type">INVOICE</div><div class="pdf-row"><span class="label">Customer</span><span class="value">'+esc(custName)+'</span></div><div class="pdf-row"><span class="label">Service</span><span class="value">'+esc(document.getElementById('f-service').value||'—')+'</span></div><div class="pdf-row"><span class="label">Address</span><span class="value">'+esc(document.getElementById('f-address').value||'—')+'</span></div><div class="pdf-row"><span class="label">Due Date</span><span class="value">'+due+'</span></div><div class="pdf-section">Line Items</div><div class="pdf-line-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div></div>'+lines+'<div style="margin-top:12px;"><div class="pdf-total-row"><span>Subtotal</span><span>$'+total.toFixed(2)+'</span></div><div class="pdf-total-row grand"><span>Total</span><span>$'+total.toFixed(2)+'</span></div></div></body></html>';
+}
+
+function printInvoicePdf(){
   var win=window.open('','_blank');
-  win.document.write('<html><head><title>Invoice</title><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"><style>body{font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}.pdf-company{font-family:"Bebas Neue",sans-serif;font-size:28px;letter-spacing:3px;}.pdf-company em{color:#8ab800;font-style:normal;}img{max-height:50px;max-width:180px;object-fit:contain;}.pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}.pdf-type{font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #8ab800;margin-bottom:16px;}.pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}.label{color:#666;}.value{font-weight:500;}.pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}.pdf-line-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}.pdf-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 0;font-size:13px;border-bottom:1px solid #f0f0f0;}.amt{font-weight:500;}.pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;}.pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;}</style></head><body>'+brandHtml+'<div class="pdf-tagline">'+tagline+'</div><div class="pdf-type">INVOICE</div><div class="pdf-row"><span class="label">Customer</span><span class="value">'+esc(custName)+'</span></div><div class="pdf-row"><span class="label">Service</span><span class="value">'+esc(document.getElementById('f-service').value||'—')+'</span></div><div class="pdf-row"><span class="label">Address</span><span class="value">'+esc(document.getElementById('f-address').value||'—')+'</span></div><div class="pdf-row"><span class="label">Due Date</span><span class="value">'+due+'</span></div><div class="pdf-section">Line Items</div><div class="pdf-line-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div></div>'+lines+'<div style="margin-top:12px;"><div class="pdf-total-row"><span>Subtotal</span><span>$'+total.toFixed(2)+'</span></div><div class="pdf-total-row grand"><span>Total</span><span>$'+total.toFixed(2)+'</span></div></div></body></html>');
+  win.document.write(buildInvoiceHtml());
   win.document.close();setTimeout(function(){win.print();},500);
 }
 
@@ -448,6 +453,7 @@ async function sendInvoiceEmail(){
   var custSel=document.getElementById('f-customer');
   if(!custSel.value){showToast('Select a customer first');return;}
   var total=_items.reduce(function(s,i){return s+i.total;},0);
+  if(total===0&&_currentInv&&_currentInv.total>0)total=_currentInv.total;
   var data={customerId:custSel.value,customerName:custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'',items:_items,total:total,status:document.getElementById('f-status').value,service:document.getElementById('f-service').value,sqft:document.getElementById('f-sqft').value,address:document.getElementById('f-address').value,finish:document.getElementById('f-finish').value,notes:document.getElementById('f-notes').value,dueDate:document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).getTime():null};
 
   try{
@@ -459,12 +465,39 @@ async function sendInvoiceEmail(){
     }
   }catch(e){showToast('Error saving: '+e.message);return;}
 
+  // Generate PDF client-side using same HTML as Print/Save
+  showToast('Generating PDF...');
   try{
+    var html=buildInvoiceHtml();
+    var container=document.createElement('div');
+    container.style.cssText='position:fixed;left:-9999px;top:0;width:700px;background:#fff;';
+    container.innerHTML=html.replace(/<html>.*?<body>/s,'').replace(/<\/body>.*<\/html>/s,'');
+    document.body.appendChild(container);
+    await new Promise(function(r){setTimeout(r,500);});
+
+    var pdfBlob=await html2pdf().set({
+      margin:[10,10,10,10],
+      filename:'invoice.pdf',
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true,letterRendering:true},
+      jsPDF:{unit:'mm',format:'letter',orientation:'portrait'}
+    }).from(container).outputPdf('blob');
+
+    document.body.removeChild(container);
+
     showToast('Sending invoice...');
-    await API.invoices.email(_currentInv.id);
+    var result=await API.invoices.emailWithPdf(_currentInv.id,pdfBlob);
+    if(result.error){showToast('Error: '+result.error);return;}
     showToast('Invoice sent to customer!');
     closeModal();loadInvoices();
-  }catch(e){showToast('Error: '+e.message);}
+  }catch(e){
+    showToast('Error: '+e.message);
+    try{
+      await API.invoices.email(_currentInv.id);
+      showToast('Invoice sent (server PDF)');
+      closeModal();loadInvoices();
+    }catch(e2){showToast('Send failed: '+e2.message);}
+  }
 }
 
 async function markPaid(){
@@ -507,6 +540,7 @@ async function deleteInvoice(){
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="swft-api.js"></script>
 <script type="module">
   import{initializeApp}from"https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
