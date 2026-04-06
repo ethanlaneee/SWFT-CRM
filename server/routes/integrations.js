@@ -6,8 +6,9 @@
 
 const router = require("express").Router();
 const { google } = require("googleapis");
-const { db } = require("../firebase");
+const { admin, db } = require("../firebase");
 const { getOAuthClient } = require("../utils/email");
+const FieldValue = admin.firestore.FieldValue;
 
 // All available integrations and their metadata
 const INTEGRATIONS = [
@@ -88,11 +89,17 @@ router.get("/", async (req, res, next) => {
       if (integration.id === "stripe") {
         return { ...integration, connected: !!process.env.STRIPE_SECRET_KEY, account: null };
       }
-      return {
-        ...integration,
-        connected: !!connections[integration.id]?.connected,
-        account: connections[integration.id]?.account || null,
-      };
+      // Check both new integrations map and legacy fields
+      let connected = !!connections[integration.id]?.connected;
+      let account = connections[integration.id]?.account || null;
+      if (!connected && integration.id === "gmail" && userData.gmailConnected) {
+        connected = true;
+        account = userData.gmailAddress || null;
+      }
+      if (!connected && integration.id === "google_calendar" && userData.googleCalendarConnected) {
+        connected = true;
+      }
+      return { ...integration, connected, account };
     });
 
     res.json({ integrations: result });
@@ -155,26 +162,38 @@ router.post("/:id/connect", (req, res, next) => {
 router.post("/:id/disconnect", async (req, res, next) => {
   try {
     const integrationId = req.params.id;
+    const userRef = db.collection("users").doc(req.uid);
 
-    await db.collection("users").doc(req.uid).set({
-      [`integrations.${integrationId}`]: {
-        connected: false,
-        account: null,
-        tokens: null,
-      },
-    }, { merge: true });
+    // Clear the integration data
+    await userRef.update({
+      [`integrations.${integrationId}.connected`]: false,
+      [`integrations.${integrationId}.account`]: FieldValue.delete(),
+      [`integrations.${integrationId}.tokens`]: FieldValue.delete(),
+    });
 
     // Also clear legacy Gmail fields if disconnecting Gmail
     if (integrationId === "gmail") {
-      await db.collection("users").doc(req.uid).set({
+      await userRef.update({
         gmailConnected: false,
-        gmailAddress: "",
-        gmailTokens: null,
-      }, { merge: true });
+        gmailAddress: FieldValue.delete(),
+        gmailTokens: FieldValue.delete(),
+      });
     }
 
+    // Also clear legacy Google Calendar fields
+    if (integrationId === "google_calendar") {
+      await userRef.update({
+        googleCalendarConnected: false,
+        googleCalendarTokens: FieldValue.delete(),
+      }).catch(() => {}); // ignore if fields don't exist
+    }
+
+    console.log(`[integrations] Disconnected ${integrationId} for user ${req.uid}`);
     res.json({ success: true });
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error(`[integrations] Disconnect error:`, err);
+    next(err);
+  }
 });
 
 // ── Google OAuth callback (handles both Gmail and Calendar) ──

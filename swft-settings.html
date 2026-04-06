@@ -641,20 +641,25 @@ async function connectIntegration(id) {
 
 async function disconnectIntegration(id, name) {
   var ok = typeof swftConfirm === 'function'
-    ? await swftConfirm('Disconnect <strong>' + (name || id) + '</strong>? You can reconnect at any time.', 'DISCONNECT', '🔌')
+    ? await swftConfirm('Disconnect <strong>' + (name || id) + '</strong>? You can reconnect at any time.', 'DISCONNECT', '🔌', 'Disconnect')
     : confirm('Disconnect ' + (name || id) + '?');
   if (!ok) return;
   try {
     var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
     var token = await getAuth().currentUser.getIdToken();
-    await fetch('/api/integrations/' + id + '/disconnect', {
+    var resp = await fetch('/api/integrations/' + id + '/disconnect', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token },
     });
+    if (!resp.ok) {
+      var errData = await resp.json().catch(function(){ return {}; });
+      throw new Error(errData.error || 'Server error ' + resp.status);
+    }
     showToast(name + ' disconnected');
     loadIntegrations();
   } catch(e) {
-    showToast('Error disconnecting');
+    console.error('Disconnect error:', e);
+    showToast('Error disconnecting: ' + (e.message || 'Unknown'));
   }
 }
 

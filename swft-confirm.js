@@ -131,17 +131,19 @@
       <div class="swft-confirm-msg" id="swft-confirm-msg">Are you sure?</div>
       <div class="swft-confirm-btns">
         <button class="swft-confirm-btn cancel" onclick="swftConfirmClose(false)">Cancel</button>
-        <button class="swft-confirm-btn danger" onclick="swftConfirmClose(true)">Delete</button>
+        <button class="swft-confirm-btn danger" id="swft-confirm-action-btn" onclick="swftConfirmClose(true)">Delete</button>
       </div>
     </div>`;
   document.body.appendChild(confirmOverlay);
 
   let _confirmResolve = null;
 
-  window.swftConfirm = function (msg, title, icon) {
+  window.swftConfirm = function (msg, title, icon, actionLabel) {
     document.getElementById("swft-confirm-icon").textContent = icon || "🗑️";
     document.getElementById("swft-confirm-title").textContent = title || "DELETE ITEM";
     document.getElementById("swft-confirm-msg").innerHTML = msg;
+    var actionBtn = document.getElementById("swft-confirm-action-btn");
+    if (actionBtn) actionBtn.textContent = actionLabel || title || "Delete";
     confirmOverlay.classList.add("open");
     return new Promise((resolve) => { _confirmResolve = resolve; });
   };
