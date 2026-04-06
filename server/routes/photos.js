@@ -33,7 +33,6 @@ router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) =>
 
       await fileRef.save(file.buffer, {
         metadata: { contentType: file.mimetype },
-        public: true,
       });
 
       // Try to make public — fall back gracefully if Storage rules block it

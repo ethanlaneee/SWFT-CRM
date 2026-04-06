@@ -167,7 +167,7 @@ function generateDocumentPdf(doc, docType, user) {
     const tagline = taglineParts.length ? taglineParts.join("     ") : "simple. smart. swft.";
     const title = docType === "quote" ? "QUOTE" : "INVOICE";
     const items = doc.items || [];
-    console.log("[PDF] Generating", docType, "- items:", JSON.stringify(items));
+    console.log("[PDF] Generating", docType, "- items:", JSON.stringify(items), "- item keys:", items.map(i => Object.keys(i || {})));
     const GREEN = "#8ab800";
     const pageW = 612; // LETTER width
     const left = 50;
@@ -268,12 +268,19 @@ function generateDocumentPdf(doc, docType, user) {
     // ═══════════════════════════════════════════
     //  LINE ITEM ROWS
     // ═══════════════════════════════════════════
-    for (const item of items) {
-      const qty = Number(item.qty) || 1;
-      // Support both {desc,rate,total} (from UI) and {description,amount} (from AI tool)
-      const descText = item.desc || item.description || "";
-      const rate = Number(item.rate ?? item.amount ?? (Number(item.total) / qty)) || 0;
-      const total = Number(item.total ?? item.amount ?? (qty * rate)) || 0;
+    for (const rawItem of items) {
+      // Normalize: support {desc,rate,total}, {description,amount}, {name,price}, or any combo
+      const item = typeof rawItem === "string" ? { desc: rawItem } : (rawItem || {});
+      const qty = Number(item.qty || item.quantity) || 1;
+      const descText = item.desc || item.description || item.name || item.label || item.service || "";
+      const rawRate = item.rate !== undefined && item.rate !== null && item.rate !== "" ? Number(item.rate) : null;
+      const rawAmount = item.amount !== undefined && item.amount !== null && item.amount !== "" ? Number(item.amount) : null;
+      const rawTotal = item.total !== undefined && item.total !== null && item.total !== "" ? Number(item.total) : null;
+      const rawPrice = item.price !== undefined && item.price !== null && item.price !== "" ? Number(item.price) : null;
+      // Pick whichever value is actually present
+      const bestAmount = rawTotal || rawAmount || rawPrice || (rawRate ? rawRate * qty : 0);
+      const rate = rawRate || rawAmount || rawPrice || (bestAmount / qty) || 0;
+      const total = bestAmount || (qty * rate) || 0;
       const qtyText = String(qty);
       const rateText = "$" + rate.toFixed(2);
       const totalText = "$" + total.toFixed(2);
@@ -322,12 +329,19 @@ function generateDocumentHtml(doc, docType, user) {
   const itemRows = items
     .map(
       (item) => {
-        const qty = Number(item.qty) || 1;
-        const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
-        const total = Number(item.total) || (qty * rate) || 0;
+        const i = typeof item === "string" ? { desc: item } : (item || {});
+        const qty = Number(i.qty || i.quantity) || 1;
+        const desc = i.desc || i.description || i.name || i.label || i.service || "";
+        const rR = i.rate !== undefined && i.rate !== null && i.rate !== "" ? Number(i.rate) : null;
+        const rA = i.amount !== undefined && i.amount !== null && i.amount !== "" ? Number(i.amount) : null;
+        const rT = i.total !== undefined && i.total !== null && i.total !== "" ? Number(i.total) : null;
+        const rP = i.price !== undefined && i.price !== null && i.price !== "" ? Number(i.price) : null;
+        const best = rT || rA || rP || (rR ? rR * qty : 0);
+        const rate = rR || rA || rP || (best / qty) || 0;
+        const total = best || (qty * rate) || 0;
         return `
     <tr>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${item.desc || item.description || ""}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${desc}</td>
       <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${qty}</td>
       <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${rate.toFixed(2)}</td>
       <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${total.toFixed(2)}</td>
