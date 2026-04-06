@@ -281,6 +281,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
         <div class="chat-header-detail" id="chat-detail"></div>
       </div>
       <span class="chat-channel-pill" id="chat-channel-pill" style="display:none;"></span>
+      <button id="add-contact-btn" onclick="openAddToContact()" style="display:none;margin-left:auto;padding:6px 14px;border-radius:8px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">+ Add to Customer</button>
     </div>
     <!-- Connect email inline banner (hidden by default) -->
     <div id="connect-email-bar" style="display:none;padding:10px 16px;background:rgba(200,241,53,0.04);border-bottom:1px solid rgba(200,241,53,0.12);font-size:12.5px;color:var(--gray);align-items:center;gap:12px;">
@@ -392,6 +393,34 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div class="ncm-footer">
       <button class="ncm-btn" onclick="closeNewConversation()">Cancel</button>
       <button class="ncm-btn primary" onclick="startConversation()">Start Conversation</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add to Customer Modal -->
+<div id="add-contact-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:9600;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeAddToContact()">
+  <div style="background:#111;border:1px solid #2c2c2c;border-radius:16px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="padding:20px 24px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#f0f0f0;letter-spacing:1.5px;">ADD TO CUSTOMER</h3>
+      <div style="cursor:pointer;color:#7a7a7a;font-size:22px;" onclick="closeAddToContact()">&times;</div>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:12px;color:#7a7a7a;">Phone: <span id="atc-phone" style="color:#f0f0f0;font-weight:500;"></span></div>
+      <div>
+        <label style="font-size:11px;color:#7a7a7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:block;">Link to existing customer</label>
+        <select id="atc-customer" style="width:100%;padding:10px 14px;background:#181818;border:1px solid #2c2c2c;border-radius:8px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;">
+          <option value="">Select a customer...</option>
+        </select>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#444;letter-spacing:1px;">— OR —</div>
+      <div>
+        <label style="font-size:11px;color:#7a7a7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:block;">Create new customer</label>
+        <input id="atc-name" type="text" placeholder="Customer name" style="width:100%;padding:10px 14px;background:#181818;border:1px solid #2c2c2c;border-radius:8px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;"/>
+      </div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #1f1f1f;display:flex;gap:10px;">
+      <button onclick="closeAddToContact()" style="flex:1;padding:12px;border-radius:9px;border:1px solid #2c2c2c;background:transparent;color:#7a7a7a;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="saveAddToContact()" style="flex:1;padding:12px;border-radius:9px;border:none;background:#c8f135;color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Save</button>
     </div>
   </div>
 </div>
@@ -723,6 +752,9 @@ function renderChat(){
   pill.style.display='';
   pill.className='chat-channel-pill '+c.channel;
   pill.textContent=c.channel==='sms'?'SMS':'Email';
+  // Show "Add to Customer" button for unknown contacts
+  var addBtn=document.getElementById('add-contact-btn');
+  if(addBtn) addBtn.style.display=c.customerId?'none':'';
 
   // Subject row visibility
   document.getElementById('subject-row').style.display=c.channel==='email'?'flex':'none';
@@ -784,6 +816,53 @@ function renderChat(){
   area.innerHTML=html;
   area.scrollTop=area.scrollHeight;
   loadScheduledForContact();
+}
+
+function openAddToContact(){
+  if(!_activeContact) return;
+  var phone=_activeContact.phone||_activeContact.to||'';
+  document.getElementById('atc-phone').textContent=phone;
+  document.getElementById('atc-name').value='';
+  // Populate customer dropdown
+  var sel=document.getElementById('atc-customer');
+  sel.innerHTML='<option value="">Select a customer...</option>';
+  _customers.forEach(function(c){
+    sel.innerHTML+='<option value="'+c.id+'">'+esc(c.name||'Unnamed')+'</option>';
+  });
+  document.getElementById('add-contact-overlay').style.display='flex';
+}
+
+function closeAddToContact(){
+  document.getElementById('add-contact-overlay').style.display='none';
+}
+
+async function saveAddToContact(){
+  if(!_activeContact) return;
+  var phone=_activeContact.phone||_activeContact.to||'';
+  var existingId=document.getElementById('atc-customer').value;
+  var newName=document.getElementById('atc-name').value.trim();
+  if(!existingId && !newName){ showToast('Select a customer or enter a name'); return; }
+
+  try{
+    var token=await getAuthToken();
+    if(existingId){
+      // Update existing customer with this phone number
+      await fetch('/api/customers/'+existingId,{method:'PUT',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:phone})});
+      showToast('Phone number linked to customer');
+    } else {
+      // Create new customer with this phone and name
+      await fetch('/api/customers',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({name:newName,phone:phone})});
+      showToast('Customer "'+newName+'" created');
+    }
+    closeAddToContact();
+    // Reload customers and rebuild contacts so name updates
+    var r=await fetch('/api/customers',{headers:{'Authorization':'Bearer '+token}});
+    var data=await r.json();
+    _customers=data.customers||data||[];
+    buildContacts();
+    renderContacts();
+    if(_activeContact) renderChat();
+  }catch(e){ showToast('Error: '+e.message); }
 }
 
 async function loadScheduledForContact(){
