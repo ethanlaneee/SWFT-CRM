@@ -344,7 +344,9 @@
     document.getElementById('m-enabled').checked = true;
     document.getElementById('m-subject-row').style.display = 'none';
     document.getElementById('delete-btn').style.display = 'none';
-    document.getElementById('modal-overlay').classList.add('open');
+    var overlay = document.getElementById('modal-overlay');
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function(){ overlay.classList.add('open'); });
   }
 
   function openEditModal(id) {
@@ -363,11 +365,15 @@
     document.getElementById('m-enabled').checked = !!a.enabled;
     document.getElementById('m-subject-row').style.display = (ch === 'email' || ch === 'both') ? '' : 'none';
     document.getElementById('delete-btn').style.display = '';
-    document.getElementById('modal-overlay').classList.add('open');
+    var overlay = document.getElementById('modal-overlay');
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function(){ overlay.classList.add('open'); });
   }
 
   function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('open');
+    var overlay = document.getElementById('modal-overlay');
+    overlay.classList.remove('open');
+    setTimeout(function(){ overlay.style.display = 'none'; }, 260);
   }
 
   function onChannelChange() {
@@ -472,7 +478,7 @@
 </script>
 
 <!-- Create/Edit Automation Modal -->
-<div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;" onclick="if(event.target===this)closeModal()">
+<div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;" onclick="if(event.target===this)closeModal()">
   <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:520px;max-width:94vw;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
     <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);" id="modal-title">NEW AUTOMATION</div>
@@ -538,7 +544,7 @@
   </div>
 </div>
 <style>
-#modal-overlay.open{opacity:1;pointer-events:all;}
+#modal-overlay.open{display:flex;opacity:1;pointer-events:all;}
 .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp 0.4s ease both;}
 .stat-card:nth-child(1){animation-delay:.04s;}.stat-card:nth-child(2){animation-delay:.09s;}.stat-card:nth-child(3){animation-delay:.14s;}.stat-card:nth-child(4){animation-delay:.19s;}
@@ -603,6 +609,7 @@
 </script>
 
 <script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
 <script src="swft-account.js"></script>
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-notifications.js"></script>
