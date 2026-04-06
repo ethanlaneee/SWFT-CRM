@@ -322,10 +322,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="settings-row-info"><div class="settings-row-label">AI Processing</div><div class="settings-row-desc">SWFT AI uses Anthropic's Claude to process your requests. Your data is sent to Claude only when you interact with the AI agent. Claude does not store or train on your data.</div></div>
     </div>
     <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Apple Calendar</div><div class="settings-row-desc">Subscribe to your SWFT jobs in Apple Calendar (or any calendar app that supports ICS). Updates automatically every hour.</div></div>
-      <button class="settings-btn primary" id="apple-cal-btn" onclick="subscribeAppleCalendar()">Get Link</button>
-    </div>
-    <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Delete Account</div><div class="settings-row-desc">Permanently delete your account and all associated data</div></div>
       <button class="settings-btn danger" onclick="deleteAccount()">Delete Account</button>
     </div>
@@ -539,7 +535,7 @@ async function loadIntegrations() {
     if (!container) return;
 
     var icons = { gmail: '📧', google_calendar: '📅', google_sheets: '📊', quickbooks: '💰', square: '🟦', stripe: '💳', google_business: '⭐' };
-    container.innerHTML = data.integrations.map(function(i) {
+    var rows = data.integrations.map(function(i) {
       return '<div class="settings-row" style="' + (i.connected ? 'border-left:2px solid var(--green);padding-left:14px;' : '') + '">' +
         '<div class="settings-row-info">' +
           '<div class="settings-row-label" style="display:flex;align-items:center;gap:8px;">' +
@@ -554,7 +550,18 @@ async function loadIntegrations() {
           ? '<button class="settings-btn danger" onclick="disconnectIntegration(\'' + i.id + '\',\'' + i.name + '\')">Disconnect</button>'
           : '<button class="settings-btn primary" onclick="connectIntegration(\'' + i.id + '\')">Connect</button>') +
       '</div>';
-    }).join('');
+    });
+    // Append Apple Calendar as a static ICS entry (no OAuth)
+    rows.push(
+      '<div class="settings-row">' +
+        '<div class="settings-row-info">' +
+          '<div class="settings-row-label" style="display:flex;align-items:center;gap:8px;">🍎 Apple Calendar</div>' +
+          '<div class="settings-row-desc">Subscribe to your SWFT jobs in Apple Calendar or any ICS-compatible app. Syncs automatically.</div>' +
+        '</div>' +
+        '<button class="settings-btn primary" id="apple-cal-btn" onclick="subscribeAppleCalendar()">Get Link</button>' +
+      '</div>'
+    );
+    container.innerHTML = rows.join('');
   } catch(e) {
     var c = document.getElementById('integrations-list');
     if (c) c.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px;">Could not load integrations</div>';
