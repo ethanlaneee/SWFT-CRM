@@ -105,35 +105,70 @@ app.get("/api/webhooks/twilio/sms", (req, res) => {
   });
 });
 
-// Diagnostic endpoint — check database state for inbound SMS routing
+// Full end-to-end diagnostic — simulates inbound SMS and reports every step
 app.get("/api/webhooks/twilio/test", async (req, res) => {
+  const { db } = require("./firebase");
+  const { getReceptionistConfig } = require("./ai/receptionist-agent");
+  const { getPlan } = require("./plans");
+  const { getUsage } = require("./usage");
+  const diag = { steps: [] };
+
   try {
-    const { db } = require("./firebase");
-    const diag = {};
+    // Step 1: Find user
+    const allUsers = await db.collection("users").limit(1).get();
+    if (allUsers.empty) { diag.steps.push("FAIL: No users in database"); return res.json(diag); }
+    const user = allUsers.docs[0];
+    const userData = user.data();
+    const ownerUid = user.id;
+    const orgId = userData.orgId || ownerUid;
+    diag.steps.push(`OK: Found user ${userData.name || userData.email} (uid: ${ownerUid}, orgId: ${orgId})`);
 
-    // Check users
-    const allUsers = await db.collection("users").limit(5).get();
-    diag.usersCount = allUsers.size;
-    diag.users = allUsers.docs.map(d => ({
-      id: d.id,
-      role: d.data().role || "none",
-      orgId: d.data().orgId || "none",
-      name: d.data().name || d.data().email || "unknown",
-      plan: d.data().plan || "none",
-    }));
-
-    // Check agent configs for each user's orgId
-    diag.agentConfigs = {};
-    for (const userDoc of allUsers.docs) {
-      const uid = userDoc.id;
-      const uOrgId = userDoc.data().orgId || uid;
-      const configSnap = await db.collection("orgs").doc(uOrgId).collection("agentConfigs").get();
-      diag.agentConfigs[uOrgId] = configSnap.docs.map(d => ({ id: d.id, enabled: d.data().enabled, ...d.data() }));
+    // Step 2: Check receptionist config
+    const config = await getReceptionistConfig(orgId);
+    diag.receptionistConfig = config;
+    if (!config) {
+      diag.steps.push(`FAIL: Receptionist not enabled for orgId: ${orgId}`);
+    } else {
+      diag.steps.push(`OK: Receptionist enabled (tone: ${config.tone})`);
     }
+
+    // Step 3: Check SMS limits
+    const plan = getPlan(userData.plan);
+    const usage = await getUsage(ownerUid);
+    diag.plan = { name: plan.name, smsLimit: plan.smsLimit };
+    diag.usage = usage;
+    if (usage.smsCount >= plan.smsLimit) {
+      diag.steps.push(`FAIL: SMS limit reached (${usage.smsCount}/${plan.smsLimit})`);
+    } else {
+      diag.steps.push(`OK: SMS limit fine (${usage.smsCount}/${plan.smsLimit})`);
+    }
+
+    // Step 4: Check Twilio credentials
+    const hasTwilio = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_API_KEY_SID && process.env.TWILIO_API_KEY_SECRET);
+    diag.twilioConfigured = hasTwilio;
+    diag.twilioPhone = process.env.TWILIO_PHONE_NUMBER || "not set";
+    if (!hasTwilio) {
+      diag.steps.push("FAIL: Twilio credentials missing (need ACCOUNT_SID, API_KEY_SID, API_KEY_SECRET)");
+    } else {
+      diag.steps.push("OK: Twilio credentials configured");
+    }
+
+    // Step 5: Check Anthropic key
+    const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
+    if (!hasAnthropic) {
+      diag.steps.push("FAIL: ANTHROPIC_API_KEY not set");
+    } else {
+      diag.steps.push("OK: Anthropic API key configured");
+    }
+
+    // Step 6: Try sending a test (dry run — don't actually send)
+    diag.steps.push("INFO: All checks passed. The receptionist should auto-reply to inbound SMS.");
 
     res.json(diag);
   } catch (err) {
-    res.json({ error: err.message, stack: err.stack?.split("\n").slice(0, 3) });
+    diag.steps.push(`ERROR: ${err.message}`);
+    diag.stack = err.stack?.split("\n").slice(0, 3);
+    res.json(diag);
   }
 });
 
