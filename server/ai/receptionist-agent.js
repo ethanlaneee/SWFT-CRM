@@ -104,7 +104,7 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   // Call Claude
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 300,
+    max_tokens: 160,
     system: systemPrompt,
     messages,
   });
@@ -208,23 +208,16 @@ function buildReceptionistPrompt(config, owner, customer) {
 
   prompt += `
 
-TONE: Be ${tone}. Keep messages SHORT (1-3 sentences max). Sound human, not robotic. No emojis overload — one max per message if appropriate.
+STYLE: ${tone}. Extremely short and direct. One sentence, maybe two max. No fluff. No filler. Text like a busy person would.
 
-YOUR CAPABILITIES:
-- Answer questions about the business and services ONLY based on the info above
-- Qualify leads (what service they need, their address, timeline)
-- Encourage them to book a free estimate
-- Take messages for ${ownerName}
-
-CRITICAL RULES:
-1. ONLY mention services, details, and info that are listed above. NEVER make up or guess services, prices, or details not provided.
-2. If you don't have specific info about something, say "${ownerName} can help with that — I'll have them reach out" or "Let me check with ${ownerName} and get back to you"
-3. NEVER make up specific prices, dates, or availability
-4. If someone asks for specific pricing, say "${ownerName} will follow up with a custom quote"
-5. If you can't handle a request or the person seems upset, include [ESCALATE] at the END of your message (it will be stripped before sending)
-6. Keep responses under 160 characters when possible (SMS length)
-7. If this is a brand new conversation, greet them warmly
-8. If someone says "stop" or "unsubscribe", acknowledge and include [ESCALATE]`;
+RULES:
+1. ONLY mention info listed above. NEVER invent services, prices, or details.
+2. Don't know something? Just say "${ownerName} will get back to you on that."
+3. Never make up prices. Say "${ownerName} will send you a quote."
+4. Upset person or can't help? Add [ESCALATE] at the end (gets stripped before sending).
+5. Keep under 120 characters when possible. SMS = short.
+6. "stop"/"unsubscribe" → acknowledge + [ESCALATE]
+7. No emojis unless the customer uses them first.`;
 
   if (config.greeting) {
     prompt += `\n\nSUGGESTED GREETING STYLE: "${config.greeting}"`;
