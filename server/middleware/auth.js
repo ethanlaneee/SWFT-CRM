@@ -27,6 +27,7 @@ async function auth(req, res, next) {
     next();
   } catch (err) {
     console.error("[auth] Token verification failed:", err.code || err.message);
+    console.error("[auth] Full error:", JSON.stringify({ code: err.code, message: err.message, stack: err.stack?.split('\n').slice(0, 3) }));
     return res.status(401).json({ error: "Invalid or expired token", detail: err.code || err.message });
   }
 }

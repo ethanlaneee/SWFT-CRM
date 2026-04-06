@@ -353,6 +353,27 @@ app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
 // ── Root → landing page (must be before static middleware) ──
 app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
 
+// ── Health check (before URL rewrite so /health doesn't become /health.html) ──
+app.get("/health", async (req, res) => {
+  let firebaseOk = false;
+  let firebaseError = null;
+  try {
+    await require("./firebase").authAdmin.listUsers(1);
+    firebaseOk = true;
+  } catch (e) {
+    firebaseError = e.message;
+    console.error("[health] Firebase auth check failed:", e.message);
+  }
+  res.json({
+    status: "ok",
+    firebaseAuth: firebaseOk,
+    firebaseError,
+    twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+    twilioPhone: process.env.TWILIO_PHONE_NUMBER || "not set",
+    appUrl: process.env.APP_URL || "not set",
+  });
+});
+
 // Rewrite clean URLs → .html before static lookup (e.g. /swft-customers → /swft-customers.html)
 app.use((req, res, next) => {
   if (req.method === "GET" && !req.path.startsWith("/api/") && !path.extname(req.path) && req.path !== "/") {
@@ -406,23 +427,6 @@ app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusin
 app.use("/api/automations",   auth, checkAccess,  automationsRouter);
 app.use("/api/dev",           auth,               require("./routes/dev"));
 
-// ── Health check ──
-app.get("/health", async (req, res) => {
-  let firebaseOk = false;
-  try {
-    await require("./firebase").authAdmin.listUsers(1);
-    firebaseOk = true;
-  } catch (e) {
-    console.error("[health] Firebase auth check failed:", e.message);
-  }
-  res.json({
-    status: "ok",
-    firebaseAuth: firebaseOk,
-    twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
-    twilioPhone: process.env.TWILIO_PHONE_NUMBER || "not set",
-    appUrl: process.env.APP_URL || "not set",
-  });
-});
 
 // ── Error handler ──
 app.use((err, req, res, next) => {
