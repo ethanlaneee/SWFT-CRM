@@ -5,7 +5,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-<title>SWFT — AI Agents</title>
+<title>SWFT — Automations</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   :root {
@@ -76,89 +76,7 @@
 .hstat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:var(--green);}
 .hstat-label{font-size:10px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
 
-/* ── AGENT CARD ── */
-.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color 0.2s;animation:fadeUp 0.4s ease both;}
-.agent-card:nth-child(1){animation-delay:.06s;}
-.agent-card:nth-child(2){animation-delay:.13s;}
-.agent-card:nth-child(3){animation-delay:.20s;}
-.agent-card.expanded{border-color:var(--border2);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-
-/* Card header — always visible */
-.agent-header{display:flex;align-items:center;gap:16px;padding:20px 22px;cursor:pointer;user-select:none;}
-.agent-header:hover .agent-name{color:var(--white);}
-
-.agent-icon-wrap{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-
-.agent-info{flex:1;min-width:0;}
-.agent-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--white);transition:color 0.14s;}
-.agent-desc{font-size:12px;color:var(--gray);margin-top:3px;}
-
-.agent-meta{display:flex;align-items:center;gap:10px;flex-shrink:0;}
-
-/* Toggle switch */
-.toggle-wrap{display:flex;align-items:center;gap:8px;}
-.toggle-label{font-size:11px;color:var(--gray);}
-.toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
-.toggle.on{background:var(--green);}
-.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
-.toggle.on::after{transform:translateX(16px);}
-
-.activity-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(200,241,53,0.1);color:var(--green);}
-.activity-badge.amber{background:rgba(245,166,35,0.1);color:var(--amber);}
-
-.expand-chevron{color:var(--gray2);transition:transform 0.25s;flex-shrink:0;}
-.agent-card.expanded .expand-chevron{transform:rotate(180deg);}
-
-/* Stat row inside header */
-.agent-stats{display:flex;gap:20px;padding:0 22px 16px;border-bottom:1px solid var(--border);}
-.astat{display:flex;flex-direction:column;}
-.astat-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;color:var(--white);}
-.astat-label{font-size:10px;color:var(--gray2);letter-spacing:0.5px;margin-top:2px;}
-
-/* Expandable detail panel */
-.agent-detail{max-height:0;overflow:hidden;transition:max-height 0.35s cubic-bezier(0.22,1,0.36,1);}
-.agent-card.expanded .agent-detail{max-height:900px;}
-
-.detail-inner{padding:20px 22px;display:flex;flex-direction:column;gap:18px;border-top:1px solid var(--border);}
-
-/* Two-col layout inside detail */
-.detail-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-
-/* Config panel */
-.config-panel{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;}
-.config-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:12px;}
-.config-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
-.config-row:last-child{border-bottom:none;}
-.config-label{font-size:12.5px;color:var(--gray);}
-.config-val{font-size:12.5px;color:var(--white);font-weight:500;}
-.config-edit{font-size:11px;color:var(--green);cursor:pointer;font-weight:500;}
-.config-edit:hover{text-decoration:underline;}
-
-/* Activity log */
-.activity-log{background:var(--surface2);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
-.log-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
-.log-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);}
-.log-link{font-size:11px;color:var(--green);cursor:pointer;font-weight:500;}
-.log-item{display:flex;align-items:flex-start;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);}
-.log-item:last-child{border-bottom:none;}
-.log-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
-.log-body{flex:1;}
-.log-text{font-size:12.5px;color:#c8c8c8;line-height:1.4;}
-.log-text strong{color:var(--white);}
-.log-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray2);margin-top:3px;}
-
-/* Performance bar */
-.perf-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
-.perf-row:last-child{border-bottom:none;}
-.perf-label{font-size:12px;color:var(--gray);flex:1;}
-.perf-bar-track{width:100px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0;}
-.perf-bar-fill{height:100%;border-radius:2px;background:var(--green);}
-.perf-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--white);width:36px;text-align:right;flex-shrink:0;}
-
-/* Prompt/script preview */
-.prompt-box{background:#0d0d0d;border:1px solid var(--border2);border-radius:9px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8aab1f;line-height:1.6;}
-.prompt-box .comment{color:var(--gray2);}
 
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -212,7 +130,7 @@
     </div>
     <div class="nav-label">Tools</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
-    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 12 2z" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/><path d="M10 17h4" stroke-width="1.8" stroke-linecap="round"/></svg>AI Agents</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
@@ -231,257 +149,71 @@
 
 <div class="main" id="main">
   <header class="topbar">
-    <div class="topbar-page">AI AGENTS</div>
+    <div class="topbar-page">AUTOMATIONS</div>
     <span class="topbar-slash">/</span>
-    <div class="topbar-sub">3 agents active</div>
+    <div class="topbar-sub">3 automations active</div>
     <div class="topbar-right">
-      <div class="ai-pill"><div class="pulse"></div>3 / 3 Online</div>
+      <div class="ai-pill"><div class="pulse"></div>3 / 3 Active</div>
     </div>
   </header>
 
   <div class="page-body">
 
-<!-- Hero -->
-<div class="hero-strip">
-  <div class="hero-icon">🤖</div>
-  <div class="hero-text">
-    <h2>YOUR AI WORKFORCE</h2>
-    <p>These agents run 24/7 in the background — booking jobs, sending quotes, chasing payments, and requesting reviews so you don't have to.</p>
+<!-- Stat Strip -->
+<div class="stat-strip">
+  <div class="stat-card c-green"><div class="stat-label">Follow-ups sent MTD</div><div class="stat-value" id="stat-sent">0</div><div class="stat-sub" id="stat-sent-sub">this month</div></div>
+  <div class="stat-card c-blue"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">0</div><div class="stat-sub">scheduled to send</div></div>
+  <div class="stat-card c-amber"><div class="stat-label">Invoices collected</div><div class="stat-value" id="stat-invoices">$0</div><div class="stat-sub">via follow-up</div></div>
+  <div class="stat-card c-green"><div class="stat-label">Reviews requested</div><div class="stat-value" id="stat-reviews">0</div><div class="stat-sub" id="stat-reviews-sub">this month</div></div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="2"/></svg>
+    <input class="search-input" id="search" placeholder="Search automations..." oninput="renderAutomations()"/>
   </div>
-  <div class="hero-stats">
-    <div class="hstat">
-      <div class="hstat-val" id="hero-actions-week">--</div>
-      <div class="hstat-label">Actions this week</div>
-    </div>
-    <div class="hstat">
-      <div class="hstat-val" id="hero-time-saved">--</div>
-      <div class="hstat-label">Time saved</div>
-    </div>
+  <div class="filter-group">
+    <div class="ftab active" data-filter="all" onclick="setFilter('all')">All</div>
+    <div class="ftab" data-filter="active" onclick="setFilter('active')">Active</div>
+    <div class="ftab" data-filter="paused" onclick="setFilter('paused')">Paused</div>
+  </div>
+  <button class="btn-primary" onclick="openCreateModal()">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
+    New Automation
+  </button>
+</div>
+
+<!-- Automations Table -->
+<div class="table-wrap">
+  <div class="table-head">
+    <div class="th">Name</div>
+    <div class="th">Trigger</div>
+    <div class="th">Channel</div>
+    <div class="th">Delay</div>
+    <div class="th">Status</div>
+    <div class="th" style="text-align:right;">Actions</div>
+  </div>
+  <div id="automations-list">
+    <div style="padding:40px;text-align:center;color:var(--gray2);font-size:13px;">Loading automations...</div>
   </div>
 </div>
 
-<!-- ── AGENT 1: RECEPTIONIST ── -->
-<div class="agent-card" id="card-receptionist">
-  <div class="agent-header" onclick="toggleCard('receptionist')">
-    <div class="agent-icon-wrap" style="background:rgba(200,241,53,0.1);">📞</div>
-    <div class="agent-info">
-      <div class="agent-name">AI RECEPTIONIST</div>
-      <div class="agent-desc">Answers inbound calls & texts 24/7 — qualifies leads, books estimates, and sends confirmations automatically.</div>
-    </div>
-    <div class="agent-meta">
-      <div class="toggle-wrap">
-        <div class="toggle on" id="toggle-receptionist" onclick="event.stopPropagation();toggleAgent('receptionist')"></div>
-        <span class="toggle-label" id="toggle-label-receptionist">On</span>
-      </div>
-      <span class="activity-badge" id="receptionist-badge">0 today</span>
-      <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
-    </div>
+<!-- Recent Activity -->
+<div class="table-wrap" style="margin-top:8px;">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--white);">RECENT ACTIVITY</div>
   </div>
-
-  <div class="agent-stats">
-    <div class="astat"><div class="astat-val" id="receptionist-stat-replies">0</div><div class="astat-label">Replies sent MTD</div></div>
-    <div class="astat"><div class="astat-val" id="receptionist-stat-leads">0</div><div class="astat-label">New leads engaged</div></div>
-    <div class="astat"><div class="astat-val" id="receptionist-stat-escalations">0</div><div class="astat-label">Escalations</div></div>
-    <div class="astat"><div class="astat-val" id="receptionist-stat-customers">0</div><div class="astat-label">Customer replies</div></div>
-  </div>
-
-  <div class="agent-detail" id="detail-receptionist">
-    <div class="detail-inner">
-
-      <div class="detail-cols">
-        <div class="config-panel">
-          <div class="config-title">Configuration</div>
-          <div class="config-row"><span class="config-label">Business hours</span><span class="config-val">24/7</span></div>
-          <div class="config-row"><span class="config-label">Voice / SMS</span><span class="config-val">Both enabled</span></div>
-          <div class="config-row"><span class="config-label">Escalate to owner</span><span class="config-val">If confused</span></div>
-          <div class="config-row"><span class="config-label">Booking calendar</span><span class="config-val">Connected ✓</span></div>
-          <div class="config-row"><span class="config-label">Tone</span><span class="config-val" id="receptionist-tone-val">Friendly, professional <span class="config-edit" onclick="openReceptionistEditModal()">Edit</span></span></div>
-        </div>
-
-        <div class="config-panel">
-          <div class="config-title">Performance</div>
-          <div id="receptionist-perf" style="font-size:12px;color:var(--gray2);padding:12px 0;">Performance metrics will appear here once the receptionist has handled enough conversations.</div>
-        </div>
-      </div>
-
-      <div class=”activity-log”>
-        <div class=”log-header”>
-          <div class=”log-title”>Recent Activity</div>
-        </div>
-        <div id=”receptionist-activity-list”>
-          <div class=”log-item” style=”justify-content:center;”>
-            <div class=”log-body”><div class=”log-text” style=”color:var(--gray2);”>No receptionist activity yet. Enable the agent and it will auto-reply to inbound texts.</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class=”config-title” style=”font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;”>How It Works</div>
-        <div class=”prompt-box”><span class=”comment”>// Inbound SMS auto-reply flow</span>
-
-1. Customer texts your SWFT number
-2. AI reads the message + conversation history
-3. Qualifies leads, answers questions
-4. Replies instantly via SMS
-5. Escalates to you if it can’t help</div>
-</div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ── AGENT 2: ESTIMATOR ── -->
-<div class="agent-card" id="card-estimator">
-  <div class="agent-header" onclick="toggleCard('estimator')">
-    <div class="agent-icon-wrap" style="background:rgba(77,159,255,0.1);">📐</div>
-    <div class="agent-info">
-      <div class="agent-name">AI ESTIMATOR</div>
-      <div class="agent-desc">Generates quotes from customer photos or job descriptions — learns from your past jobs to improve accuracy over time.</div>
-    </div>
-    <div class="agent-meta">
-      <div class="toggle-wrap">
-        <div class="toggle on" id="toggle-estimator" onclick="event.stopPropagation();toggleAgent('estimator')"></div>
-        <span class="toggle-label" id="toggle-label-estimator">On</span>
-      </div>
-      <span class="activity-badge" id="estimator-badge">0 today</span>
-      <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
-    </div>
-  </div>
-
-  <div class="agent-stats">
-    <div class="astat"><div class="astat-val" id="estimator-stat-generated">0</div><div class="astat-label">Quotes generated MTD</div></div>
-    <div class="astat"><div class="astat-val" id="estimator-stat-confidence">--</div><div class="astat-label">Avg confidence</div></div>
-    <div class="astat"><div class="astat-val" id="estimator-stat-pastjobs">0</div><div class="astat-label">Past jobs (training)</div></div>
-    <div class="astat"><div class="astat-val" id="estimator-stat-avg">$0</div><div class="astat-label">Avg estimate</div></div>
-  </div>
-
-  <div class="agent-detail" id="detail-estimator">
-    <div class="detail-inner">
-
-      <div class="detail-cols">
-        <div class="config-panel">
-          <div class="config-title">Configuration</div>
-          <div class="config-row"><span class="config-label">Input types</span><span class="config-val">Text descriptions</span></div>
-          <div class="config-row"><span class="config-label">Base price / sqft</span><span class="config-val" id="estimator-cfg-price">$9-$17</span></div>
-          <div class="config-row"><span class="config-label">Markup</span><span class="config-val" id="estimator-cfg-markup">22%</span></div>
-          <div class="config-row"><span class="config-label">Auto-send quotes</span><span class="config-val" id="estimator-cfg-autosend">After owner review</span></div>
-          <div class="config-row"><span class="config-label">Training data</span><span class="config-val" id="estimator-cfg-training">Loading...</span></div>
-        </div>
-
-        <div class="config-panel">
-          <div class="config-title">Quick Estimate</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <input type="text" id="est-service" placeholder="Service type (e.g. driveway, patio)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-size:12px;font-family:inherit;outline:none;">
-            <input type="text" id="est-sqft" placeholder="Square footage (e.g. 500)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-size:12px;font-family:inherit;outline:none;">
-            <input type="text" id="est-description" placeholder="Description / details" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-size:12px;font-family:inherit;outline:none;">
-            <button onclick="runQuickEstimate()" id="est-btn" style="background:var(--green);color:#0a0a0a;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Generate Estimate</button>
-            <div id="est-result" style="display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--white);line-height:1.6;"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="activity-log">
-        <div class="log-header">
-          <div class="log-title">Recent Activity</div>
-        </div>
-        <div id="estimator-activity-list">
-          <div class="log-item" style="justify-content:center;">
-            <div class="log-body"><div class="log-text" style="color:var(--gray2);">No estimator activity yet. Use the quick estimate form or ask the AI chat to generate a quote.</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="config-title" style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;">Estimation Logic Preview</div>
-        <div class="prompt-box"><span class="comment">// Price calculation — editable per service type</span>
-
-sqft × base_rate[service_type]
-
-- complexity_factor(obstacles, grade)
-- material_upcharge[finish]
-  × (1 + markup_pct)
-  <span class="comment">// Rounded to nearest $50, min margin 18%</span></div>
-  </div>
-  
-  </div>
-  
-    </div>
-  </div>
-  
-  <!-- ── AGENT 3: FOLLOW-UP ── -->
-  
-  <div class="agent-card" id="card-followup">
-    <div class="agent-header" onclick="toggleCard('followup')">
-      <div class="agent-icon-wrap" style="background:rgba(245,166,35,0.1);">🔔</div>
-      <div class="agent-info">
-        <div class="agent-name">AI FOLLOW-UP AGENT</div>
-        <div class="agent-desc">Automatically follows up on unsigned quotes, overdue invoices, and completed jobs to request Google reviews.</div>
-      </div>
-      <div class="agent-meta">
-        <div class="toggle-wrap">
-          <div class="toggle on" id="toggle-followup" onclick="event.stopPropagation();toggleAgent('followup')"></div>
-          <span class="toggle-label" id="toggle-label-followup">On</span>
-        </div>
-        <span class="activity-badge amber" id="followup-pending-badge">0 pending</span>
-        <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
-      </div>
-    </div>
-
-    <div class="agent-stats">
-      <div class="astat"><div class="astat-val" id="followup-stat-invoices">$0</div><div class="astat-label">Invoices collected via follow-up</div></div>
-      <div class="astat"><div class="astat-val" id="followup-stat-reviews">0</div><div class="astat-label">Reviews requested MTD</div></div>
-      <div class="astat"><div class="astat-val" id="followup-stat-total">0</div><div class="astat-label">Follow-ups sent MTD</div></div>
-      <div class="astat"><div class="astat-val" id="followup-stat-quotes">0</div><div class="astat-label">Quote follow-ups MTD</div></div>
-    </div>
-  
-    <div class="agent-detail" id="detail-followup">
-      <div class="detail-inner">
-  
-    <div class="detail-cols">
-      <div class="config-panel">
-        <div class="config-title">Follow-up Sequences</div>
-        <div class="config-row"><span class="config-label">Unsigned quote</span><span class="config-val" id="followup-quote-seq-val">Day 1, 3, 7 <span class="config-edit" onclick="openFollowupEditModal()">Edit</span></span></div>
-        <div class="config-row"><span class="config-label">Overdue invoice</span><span class="config-val" id="followup-invoice-seq-val">Day 1, 3, 7 <span class="config-edit" onclick="openFollowupEditModal()">Edit</span></span></div>
-        <div class="config-row"><span class="config-label">Review request</span><span class="config-val">24h after complete</span></div>
-        <div class="config-row"><span class="config-label">Re-engagement</span><span class="config-val">12 months inactive</span></div>
-        <div class="config-row"><span class="config-label">Channel</span><span class="config-val">SMS (primary)</span></div>
-      </div>
-  
-      <div class="config-panel">
-        <div class="config-title">Pending Actions</div>
-        <div id="followup-pending-list" style="font-size:12px;color:var(--gray2);padding:8px 0;">No pending follow-up actions. Actions will appear here when the agent schedules reminders.</div>
-      </div>
-    </div>
-  
-    <div class="activity-log">
-      <div class="log-header">
-        <div class="log-title">Recent Activity</div>
-      </div>
-      <div id="followup-activity-list">
-        <div class="log-item" style="justify-content:center;">
-          <div class="log-body"><div class="log-text" style="color:var(--gray2);">No follow-up activity yet. Enable the agent and it will start working automatically.</div></div>
-        </div>
-      </div>
-    </div>
-  
-    <div>
-      <div class="config-title" style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;">Review Request Message Preview</div>
-      <div class="prompt-box"><span class="comment">// Sent 24hrs after job marked complete</span>
-
-“Hey [first name]! It was great working
-on your [service] at [address]. If you’re
-happy with how it turned out, a quick
-Google review would mean a lot to us 🙏
-[google_review_link]
-— The SWFT team”</div>
-</div>
-
-    </div>
+  <div id="activity-list" style="max-height:300px;overflow-y:auto;">
+    <div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No activity yet. Create an automation to get started.</div>
   </div>
 </div>
 
   </div>
 </div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
 <!-- Floating re-open btn -->
 
@@ -490,344 +222,238 @@ Google review would mean a lot to us 🙏
 </div>
 
 <script>
-  // ── Agent config state ──
-  let _agentConfigs = {};
+  // ── Automations State ──
+  let _automations = [];
+  let _filter = 'all';
+  let _followupStats = {};
 
-  function toggleCard(id) {
-    const card = document.getElementById('card-' + id);
-    card.classList.toggle('expanded');
+  const TRIGGERS = {
+    quote_sent: 'Quote sent',
+    invoice_sent: 'Invoice sent',
+    invoice_overdue: 'Invoice overdue',
+    job_completed: 'Job completed',
+    new_customer: 'New customer',
+    custom: 'Custom / manual',
+  };
+  const CHANNELS = { sms: 'SMS', email: 'Email', both: 'Both' };
+
+  function setFilter(f) {
+    _filter = f;
+    document.querySelectorAll('.ftab').forEach(t => t.classList.toggle('active', t.dataset.filter === f));
+    renderAutomations();
   }
 
-  async function toggleAgent(id) {
-    const toggle = document.getElementById('toggle-' + id);
-    const label  = document.getElementById('toggle-label-' + id);
-    // Optimistic UI update
-    toggle.classList.toggle('on');
-    const isOn = toggle.classList.contains('on');
-    label.textContent = isOn ? 'On' : 'Off';
-    label.style.color = isOn ? 'var(--gray)' : 'var(--gray2)';
-    try {
-      const result = await API.agents.toggle(id);
-      _agentConfigs[id] = _agentConfigs[id] || {};
-      _agentConfigs[id].enabled = result.enabled;
-      showToast(result.enabled ? `${id} agent enabled` : `${id} agent disabled`);
-      updateTopbarCounts();
-    } catch (err) {
-      // Revert on failure
-      toggle.classList.toggle('on');
-      label.textContent = toggle.classList.contains('on') ? 'On' : 'Off';
-      label.style.color = toggle.classList.contains('on') ? 'var(--gray)' : 'var(--gray2)';
-      showToast('Failed to toggle agent');
-    }
-  }
+  function renderAutomations() {
+    const search = (document.getElementById('search').value || '').toLowerCase();
+    let list = _automations;
+    if (_filter === 'active') list = list.filter(a => a.enabled);
+    if (_filter === 'paused') list = list.filter(a => !a.enabled);
+    if (search) list = list.filter(a => (a.name || '').toLowerCase().includes(search) || (TRIGGERS[a.trigger] || '').toLowerCase().includes(search));
 
-  function updateTopbarCounts() {
-    const onCount = ['receptionist','estimator','followup'].filter(id => _agentConfigs[id]?.enabled).length;
-    const topSub = document.querySelector('.topbar-sub');
-    const aiPill = document.querySelector('.ai-pill');
-    if (topSub) topSub.textContent = `${onCount} agent${onCount !== 1 ? 's' : ''} active`;
-    if (aiPill) aiPill.innerHTML = `<div class="pulse"></div>${onCount} / 3 Online`;
-  }
-
-  function applyAgentState(id, enabled) {
-    const toggle = document.getElementById('toggle-' + id);
-    const label  = document.getElementById('toggle-label-' + id);
-    if (!toggle || !label) return;
-    if (enabled) {
-      toggle.classList.add('on');
-      label.textContent = 'On';
-      label.style.color = 'var(--gray)';
-    } else {
-      toggle.classList.remove('on');
-      label.textContent = 'Off';
-      label.style.color = 'var(--gray2)';
-    }
-  }
-
-  // ── Load agent configs on page ready ──
-  async function loadAgentConfigs() {
-    try {
-      _agentConfigs = await API.agents.list();
-      for (const id of ['receptionist', 'estimator', 'followup']) {
-        applyAgentState(id, _agentConfigs[id]?.enabled);
-      }
-      updateTopbarCounts();
-    } catch (err) {
-      console.error('Failed to load agent configs:', err);
-    }
-  }
-
-  // ── Load receptionist data ──
-  async function loadReceptionistData() {
-    try {
-      const activity = await API.agents.activity('receptionist');
-      const monthStart = new Date();
-      monthStart.setDate(1); monthStart.setHours(0,0,0,0);
-      const mtd = activity.filter(a => a.createdAt >= monthStart.getTime());
-
-      // Stats
-      const replies = mtd.filter(a => a.type === 'replied_customer' || a.type === 'replied_lead').length;
-      const leads = mtd.filter(a => a.type === 'replied_lead').length;
-      const escalations = mtd.filter(a => a.type === 'escalated').length;
-      const customers = mtd.filter(a => a.type === 'replied_customer').length;
-
-      const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
-      el('receptionist-stat-replies', replies);
-      el('receptionist-stat-leads', leads);
-      el('receptionist-stat-escalations', escalations);
-      el('receptionist-stat-customers', customers);
-
-      // Today count for badge
-      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-      const today = activity.filter(a => a.createdAt >= todayStart.getTime()).length;
-      el('receptionist-badge', today + ' today');
-
-      // Activity log
-      const listEl = document.getElementById('receptionist-activity-list');
-      if (listEl && activity.length > 0) {
-        listEl.innerHTML = activity.slice(0, 10).map(a => {
-          const colors = { replied_customer: 'var(--green)', replied_lead: 'var(--blue)', escalated: 'var(--amber)' };
-          const labels = { replied_customer: 'Replied to customer', replied_lead: 'Replied to new lead', escalated: 'Escalated to owner' };
-          const color = colors[a.type] || 'var(--gray)';
-          const label = labels[a.type] || a.type;
-          const who = a.customerName || a.phone || '';
-          const msg = a.inboundMessage ? ` — "${a.inboundMessage.slice(0, 60)}${a.inboundMessage.length > 60 ? '...' : ''}"` : '';
-          const time = a.createdAt ? timeAgo(a.createdAt) : '';
-          return `<div class="log-item">
-            <div class="log-dot" style="background:${color};"></div>
-            <div class="log-body">
-              <div class="log-text"><strong>${label}</strong>${who ? ' — ' + who : ''}${msg}</div>
-              <div class="log-time">${time}</div>
-            </div>
-          </div>`;
-        }).join('');
-      }
-    } catch (err) {
-      console.error('Failed to load receptionist data:', err);
-    }
-  }
-
-  // ── Estimator: quick estimate ──
-  async function runQuickEstimate() {
-    const service = document.getElementById('est-service').value.trim();
-    const sqft = document.getElementById('est-sqft').value.trim();
-    const description = document.getElementById('est-description').value.trim();
-    const btn = document.getElementById('est-btn');
-    const resultEl = document.getElementById('est-result');
-
-    if (!service && !description) {
-      showToast('Enter a service type or description');
+    const container = document.getElementById('automations-list');
+    if (!list.length) {
+      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray2);font-size:13px;">No automations found. Click "New Automation" to create one.</div>';
       return;
     }
-
-    btn.textContent = 'Generating...';
-    btn.disabled = true;
-    resultEl.style.display = 'none';
-
-    try {
-      const estimate = await API.agents.estimate({ service, sqft, description });
-      let html = `<strong style="color:var(--green);">Estimated Total: $${(estimate.total || 0).toLocaleString()}</strong>`;
-      html += `<span style="color:var(--gray);margin-left:8px;font-size:11px;">(${estimate.confidence} confidence)</span><br>`;
-      if (estimate.items && estimate.items.length) {
-        html += '<div style="margin-top:6px;">';
-        for (const item of estimate.items) {
-          html += `<div style="color:var(--gray);font-size:11px;">• ${item.description} — $${(item.amount || 0).toLocaleString()}</div>`;
-        }
-        html += '</div>';
-      }
-      if (estimate.notes) {
-        html += `<div style="margin-top:6px;color:var(--gray2);font-size:11px;font-style:italic;">${estimate.notes}</div>`;
-      }
-      resultEl.innerHTML = html;
-      resultEl.style.display = 'block';
-      showToast('Estimate generated');
-      loadEstimatorData(); // Refresh activity
-    } catch (err) {
-      showToast('Failed to generate estimate');
-    } finally {
-      btn.textContent = 'Generate Estimate';
-      btn.disabled = false;
-    }
+    container.innerHTML = list.map(a => {
+      const triggerLabel = TRIGGERS[a.trigger] || a.trigger || '—';
+      const channelLabel = CHANNELS[a.channel] || a.channel || 'SMS';
+      const delayLabel = a.delayDays ? a.delayDays + ' day' + (a.delayDays > 1 ? 's' : '') + ' after' : a.delayHours ? a.delayHours + 'h after' : 'Immediate';
+      const statusColor = a.enabled ? 'var(--green)' : 'var(--gray2)';
+      const statusBg = a.enabled ? 'rgba(200,241,53,0.1)' : 'rgba(100,100,100,0.1)';
+      const statusText = a.enabled ? 'Active' : 'Paused';
+      return '<div class="table-row" onclick="openEditModal(\'' + a.id + '\')">' +
+        '<div class="td"><div style="font-weight:500;color:var(--white);">' + esc(a.name || 'Untitled') + '</div><div style="font-size:11px;color:var(--gray2);margin-top:2px;">' + esc((a.message || '').substring(0, 60)) + (a.message && a.message.length > 60 ? '...' : '') + '</div></div>' +
+        '<div class="td">' + esc(triggerLabel) + '</div>' +
+        '<div class="td">' + esc(channelLabel) + '</div>' +
+        '<div class="td">' + esc(delayLabel) + '</div>' +
+        '<div class="td"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;color:' + statusColor + ';background:' + statusBg + ';">' + statusText + '</span></div>' +
+        '<div class="td" style="text-align:right;display:flex;gap:6px;justify-content:flex-end;">' +
+          '<button class="icon-btn" onclick="event.stopPropagation();toggleAutomation(\'' + a.id + '\')" title="' + (a.enabled ? 'Pause' : 'Enable') + '"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + (a.enabled ? '<rect x="6" y="4" width="4" height="16" rx="1" stroke-width="2"/><rect x="14" y="4" width="4" height="16" rx="1" stroke-width="2"/>' : '<polygon points="5,3 19,12 5,21" stroke-width="2" stroke-linejoin="round"/>') + '</svg></button>' +
+          '<button class="icon-btn" onclick="event.stopPropagation();deleteAutomation(\'' + a.id + '\')" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2"/></svg></button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
   }
 
-  // ── Load estimator data ──
-  async function loadEstimatorData() {
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  async function loadAutomations() {
     try {
-      const activity = await API.agents.activity('estimator');
-      const config = _agentConfigs.estimator || {};
-
-      // Update config display
-      const priceEl = document.getElementById('estimator-cfg-price');
-      const markupEl = document.getElementById('estimator-cfg-markup');
-      const autosendEl = document.getElementById('estimator-cfg-autosend');
-      if (priceEl) priceEl.textContent = `$${config.basePriceMin || 9}-$${config.basePriceMax || 17}`;
-      if (markupEl) markupEl.textContent = `${config.markupPct || 22}%`;
-      if (autosendEl) autosendEl.textContent = config.autoSend ? 'Auto-send enabled' : 'After owner review';
-
-      // Count estimates this month
-      const monthStart = new Date();
-      monthStart.setDate(1); monthStart.setHours(0,0,0,0);
-      const estimates = activity.filter(a => a.type === 'estimate_generated' && a.createdAt >= monthStart.getTime());
-
-      const genEl = document.getElementById('estimator-stat-generated');
-      const confEl = document.getElementById('estimator-stat-confidence');
-      const avgEl = document.getElementById('estimator-stat-avg');
-      const trainEl = document.getElementById('estimator-cfg-training');
-
-      if (genEl) genEl.textContent = estimates.length;
-
-      // Avg confidence
-      if (confEl && estimates.length > 0) {
-        const confMap = { high: 3, medium: 2, low: 1 };
-        const avg = estimates.reduce((s, e) => s + (confMap[e.estimate?.confidence] || 2), 0) / estimates.length;
-        confEl.textContent = avg >= 2.5 ? 'High' : avg >= 1.5 ? 'Medium' : 'Low';
-      }
-
-      // Avg estimate total
-      if (avgEl && estimates.length > 0) {
-        const avgTotal = estimates.reduce((s, e) => s + (e.estimate?.total || 0), 0) / estimates.length;
-        avgEl.textContent = '$' + Math.round(avgTotal).toLocaleString();
-      }
-
-      // Training data count (past jobs)
-      if (trainEl) {
-        try {
-          const jobs = await API.jobs.list('complete');
-          const pastEl = document.getElementById('estimator-stat-pastjobs');
-          if (pastEl) pastEl.textContent = Array.isArray(jobs) ? jobs.length : 0;
-          trainEl.textContent = (Array.isArray(jobs) ? jobs.length : 0) + ' past jobs';
-        } catch { trainEl.textContent = 'N/A'; }
-      }
-
-      // Activity log
-      const listEl = document.getElementById('estimator-activity-list');
-      if (listEl && activity.length > 0) {
-        listEl.innerHTML = activity.slice(0, 10).map(a => {
-          const conf = a.estimate?.confidence || 'medium';
-          const color = conf === 'high' ? 'var(--green)' : conf === 'low' ? 'var(--amber)' : 'var(--blue)';
-          const total = a.estimate?.total ? ` · $${a.estimate.total.toLocaleString()}` : '';
-          const svc = a.request?.service || a.request?.description?.slice(0, 30) || 'estimate';
-          const cust = a.request?.customerName ? ` for ${a.request.customerName}` : '';
-          const time = a.createdAt ? timeAgo(a.createdAt) : '';
-          return `<div class="log-item">
-            <div class="log-dot" style="background:${color};"></div>
-            <div class="log-body">
-              <div class="log-text"><strong>Generated estimate</strong>${cust} — ${svc}${total} (${conf} confidence)</div>
-              <div class="log-time">${time}</div>
-            </div>
-          </div>`;
-        }).join('');
-      }
-    } catch (err) {
-      console.error('Failed to load estimator data:', err);
-    }
+      const data = await API.automations.list();
+      _automations = Array.isArray(data) ? data : (data.automations || []);
+      renderAutomations();
+    } catch (e) { console.error('Failed to load automations:', e); }
   }
 
-  // ── Load follow-up agent real data ──
-  async function loadFollowupData() {
+  async function loadStats() {
     try {
-      const [stats, activity] = await Promise.all([
-        API.agents.followupStats(),
-        API.agents.activity('followup'),
-      ]);
+      _followupStats = await API.agents.followupStats();
+      document.getElementById('stat-sent').textContent = _followupStats.totalSentMTD || 0;
+      document.getElementById('stat-pending').textContent = _followupStats.pendingCount || 0;
+      document.getElementById('stat-invoices').textContent = '$' + (_followupStats.invoicesCollected || 0).toLocaleString();
+      document.getElementById('stat-reviews').textContent = _followupStats.reviewsSent || 0;
+    } catch (e) { console.error('Failed to load stats:', e); }
+  }
 
-      // Update stats
-      const invEl = document.getElementById('followup-stat-invoices');
-      const revEl = document.getElementById('followup-stat-reviews');
-      const totEl = document.getElementById('followup-stat-total');
-      const quoEl = document.getElementById('followup-stat-quotes');
-      const badge = document.getElementById('followup-pending-badge');
-
-      if (invEl) invEl.textContent = '$' + (stats.invoicesCollected || 0).toLocaleString();
-      if (revEl) revEl.textContent = stats.reviewsSent || 0;
-      if (totEl) totEl.textContent = stats.totalSentMTD || 0;
-      if (quoEl) quoEl.textContent = stats.quoteFollowups || 0;
-      if (badge) {
-        const pc = stats.pendingCount || 0;
-        badge.textContent = pc + ' pending';
-        badge.classList.toggle('amber', pc > 0);
-      }
-
-      // Update activity log
-      const listEl = document.getElementById('followup-activity-list');
-      if (listEl && activity.length > 0) {
-        listEl.innerHTML = activity.map(a => {
-          const colors = { review_request: 'var(--green)', overdue_invoice: 'var(--amber)', unsigned_quote: 'var(--blue)' };
-          const labels = { review_request: 'Review request sent', overdue_invoice: 'Invoice reminder sent', unsigned_quote: 'Quote follow-up sent' };
-          const color = colors[a.type] || 'var(--gray)';
-          const label = labels[a.type] || a.type;
-          const detail = a.customerName ? ` to ${a.customerName}` : '';
-          const totalStr = a.total ? ` · $${a.total.toLocaleString()}` : '';
-          const stepStr = a.step ? ` (${a.step.replace(/_/g,' ')})` : '';
-          const time = a.createdAt ? timeAgo(a.createdAt) : '';
-          return `<div class="log-item">
-            <div class="log-dot" style="background:${color};"></div>
-            <div class="log-body">
-              <div class="log-text"><strong>${label}</strong>${detail}${totalStr}${stepStr}</div>
-              <div class="log-time">${time}</div>
-            </div>
-          </div>`;
-        }).join('');
-      }
-    } catch (err) {
-      console.error('Failed to load follow-up data:', err);
-    }
+  async function loadActivity() {
+    try {
+      const activity = await API.agents.activity('followup');
+      const container = document.getElementById('activity-list');
+      if (!activity.length) return;
+      container.innerHTML = activity.slice(0, 15).map(a => {
+        const colors = { review_request: 'var(--green)', overdue_invoice: 'var(--amber)', unsigned_quote: 'var(--blue)', automation_send: 'var(--green)' };
+        const labels = { review_request: 'Review request sent', overdue_invoice: 'Invoice reminder', unsigned_quote: 'Quote follow-up', automation_send: 'Automation sent' };
+        const color = colors[a.type] || 'var(--gray)';
+        const label = labels[a.type] || a.type;
+        const who = a.customerName ? ' to ' + a.customerName : '';
+        const time = a.createdAt ? timeAgo(a.createdAt) : '';
+        return '<div style="padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0;"></div>' +
+          '<div style="flex:1;font-size:12.5px;color:var(--white);">' + esc(label) + esc(who) + '</div>' +
+          '<div style="font-size:10.5px;color:var(--gray2);font-family:\'JetBrains Mono\',monospace;">' + time + '</div>' +
+        '</div>';
+      }).join('');
+    } catch (e) {}
   }
 
   function timeAgo(ts) {
     const diff = Date.now() - ts;
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return 'just now';
-    if (mins < 60) return mins + ' min ago';
+    if (mins < 60) return mins + 'm ago';
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return hrs + ' hr' + (hrs > 1 ? 's' : '') + ' ago';
+    if (hrs < 24) return hrs + 'h ago';
     const days = Math.floor(hrs / 24);
-    if (days < 7) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+    if (days < 7) return days + 'd ago';
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // ── Load hero stats from real activity data ──
-  async function loadHeroStats() {
-    try {
-      const [recAct, estAct, fuAct] = await Promise.all([
-        API.agents.activity('receptionist'),
-        API.agents.activity('estimator'),
-        API.agents.activity('followup'),
-      ]);
-      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      const weekActions = [...recAct, ...estAct, ...fuAct].filter(a => a.createdAt >= weekAgo).length;
-      const heroEl = document.getElementById('hero-actions-week');
-      if (heroEl) heroEl.textContent = weekActions;
-      // Rough estimate: ~14 min saved per action
-      const minsSaved = weekActions * 14;
-      const timeEl = document.getElementById('hero-time-saved');
-      if (timeEl) {
-        if (minsSaved < 60) timeEl.textContent = minsSaved + 'm';
-        else timeEl.textContent = '~' + Math.round(minsSaved / 60) + 'h';
-      }
-      // Update estimator today badge
-      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-      const estToday = estAct.filter(a => a.createdAt >= todayStart.getTime()).length;
-      const estBadge = document.getElementById('estimator-badge');
-      if (estBadge) estBadge.textContent = estToday + ' today';
-    } catch (err) {
-      console.error('Failed to load hero stats:', err);
-    }
+  // ── CRUD ──
+  function openCreateModal() {
+    document.getElementById('modal-title').textContent = 'NEW AUTOMATION';
+    document.getElementById('m-id').value = '';
+    document.getElementById('m-name').value = '';
+    document.getElementById('m-trigger').value = 'quote_sent';
+    document.getElementById('m-channel').value = 'sms';
+    document.getElementById('m-delay-days').value = '1';
+    document.getElementById('m-delay-hours').value = '';
+    document.getElementById('m-message').value = '';
+    document.getElementById('m-subject').value = '';
+    document.getElementById('m-enabled').checked = true;
+    document.getElementById('m-subject-row').style.display = 'none';
+    document.getElementById('delete-btn').style.display = 'none';
+    document.getElementById('modal-overlay').classList.add('open');
   }
 
-  // Wait for auth then load
-  const _configInterval = setInterval(() => {
+  function openEditModal(id) {
+    const a = _automations.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('modal-title').textContent = 'EDIT AUTOMATION';
+    document.getElementById('m-id').value = a.id;
+    document.getElementById('m-name').value = a.name || '';
+    document.getElementById('m-trigger').value = a.trigger || 'quote_sent';
+    document.getElementById('m-channel').value = a.channel || 'sms';
+    document.getElementById('m-delay-days').value = a.delayDays || '';
+    document.getElementById('m-delay-hours').value = a.delayHours || '';
+    document.getElementById('m-message').value = a.message || '';
+    document.getElementById('m-subject').value = a.subject || '';
+    document.getElementById('m-enabled').checked = !!a.enabled;
+    document.getElementById('m-subject-row').style.display = (a.channel === 'email' || a.channel === 'both') ? '' : 'none';
+    document.getElementById('delete-btn').style.display = '';
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+
+  function onChannelChange() {
+    var ch = document.getElementById('m-channel').value;
+    document.getElementById('m-subject-row').style.display = (ch === 'email' || ch === 'both') ? '' : 'none';
+  }
+
+  async function saveAutomation() {
+    const id = document.getElementById('m-id').value;
+    const data = {
+      name: document.getElementById('m-name').value.trim(),
+      trigger: document.getElementById('m-trigger').value,
+      channel: document.getElementById('m-channel').value,
+      delayDays: parseInt(document.getElementById('m-delay-days').value) || 0,
+      delayHours: parseInt(document.getElementById('m-delay-hours').value) || 0,
+      message: document.getElementById('m-message').value.trim(),
+      subject: document.getElementById('m-subject').value.trim(),
+      enabled: document.getElementById('m-enabled').checked,
+    };
+    if (!data.name) { showToast('Name is required'); return; }
+    if (!data.message) { showToast('Message is required'); return; }
+
+    const btn = document.getElementById('save-btn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+    try {
+      if (id) {
+        await API.automations.update(id, data);
+        showToast('Automation updated');
+      } else {
+        await API.automations.create(data);
+        showToast('Automation created');
+      }
+      closeModal();
+      await loadAutomations();
+      await loadStats();
+    } catch (e) { showToast('Error: ' + (e.message || 'Failed')); }
+    finally { btn.textContent = 'Save Automation'; btn.disabled = false; }
+  }
+
+  async function toggleAutomation(id) {
+    try {
+      const a = _automations.find(x => x.id === id);
+      if (!a) return;
+      await API.automations.update(id, { enabled: !a.enabled });
+      a.enabled = !a.enabled;
+      renderAutomations();
+      updateTopbarCounts();
+      showToast(a.enabled ? 'Automation enabled' : 'Automation paused');
+    } catch (e) { showToast('Error toggling'); }
+  }
+
+  async function deleteAutomation(id) {
+    const ok = typeof swftConfirm === 'function'
+      ? await swftConfirm('Delete this automation? Any pending messages will be canceled.', 'DELETE', undefined, 'Delete')
+      : confirm('Delete this automation?');
+    if (!ok) return;
+    try {
+      await API.automations.delete(id);
+      showToast('Automation deleted');
+      await loadAutomations();
+    } catch (e) { showToast('Error deleting'); }
+  }
+
+  function deleteFromModal() {
+    const id = document.getElementById('m-id').value;
+    if (id) { closeModal(); deleteAutomation(id); }
+  }
+
+  function updateTopbarCounts() {
+    const onCount = _automations.filter(a => a.enabled).length;
+    const total = _automations.length;
+    const topSub = document.querySelector('.topbar-sub');
+    const aiPill = document.querySelector('.ai-pill');
+    if (topSub) topSub.textContent = onCount + ' automation' + (onCount !== 1 ? 's' : '') + ' active';
+    if (aiPill) aiPill.innerHTML = '<div class="pulse"></div>' + onCount + ' / ' + total + ' Active';
+  }
+
+  // ── Init ──
+  const _initInterval = setInterval(() => {
     if (window.__swftUser) {
-      clearInterval(_configInterval);
-      loadAgentConfigs();
-      loadReceptionistData();
-      loadEstimatorData();
-      loadFollowupData();
-      loadHeroStats();
+      clearInterval(_initInterval);
+      loadAutomations().then(updateTopbarCounts);
+      loadStats();
+      loadActivity();
     }
   }, 200);
 
-  function toggleSidebar(){
+  function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('collapsed');
     document.getElementById('main').classList.toggle('expanded');
     document.getElementById('sidebar-toggle').classList.toggle('visible');
@@ -841,165 +467,107 @@ Google review would mean a lot to us 🙏
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
-
-  // ── Receptionist Edit Modal ──
-  function openReceptionistEditModal() {
-    const cfg = _agentConfigs.receptionist || {};
-    document.getElementById('edit-receptionist-tone').value = cfg.tone || 'friendly_professional';
-    document.getElementById('edit-receptionist-greeting').value = cfg.greeting || cfg.greetingMessage || '';
-    document.getElementById('edit-receptionist-bizname').value = cfg.businessName || '';
-    document.getElementById('edit-receptionist-bizdesc').value = cfg.businessDescription || '';
-    document.getElementById('edit-receptionist-overlay').style.opacity = '1';
-    document.getElementById('edit-receptionist-overlay').style.pointerEvents = 'all';
-    document.getElementById('edit-receptionist-modal').style.opacity = '1';
-    document.getElementById('edit-receptionist-modal').style.pointerEvents = 'all';
-    document.getElementById('edit-receptionist-modal').style.transform = 'translate(-50%,-50%) scale(1)';
-  }
-  function closeReceptionistEditModal() {
-    document.getElementById('edit-receptionist-overlay').style.opacity = '0';
-    document.getElementById('edit-receptionist-overlay').style.pointerEvents = 'none';
-    document.getElementById('edit-receptionist-modal').style.opacity = '0';
-    document.getElementById('edit-receptionist-modal').style.pointerEvents = 'none';
-    document.getElementById('edit-receptionist-modal').style.transform = 'translate(-50%,-50%) scale(0.96)';
-  }
-  async function saveReceptionistConfig() {
-    const tone = document.getElementById('edit-receptionist-tone').value;
-    const greeting = document.getElementById('edit-receptionist-greeting').value.trim();
-    const businessName = document.getElementById('edit-receptionist-bizname').value.trim();
-    const businessDescription = document.getElementById('edit-receptionist-bizdesc').value.trim();
-    const btn = document.getElementById('save-receptionist-btn');
-    btn.textContent = 'Saving...';
-    btn.disabled = true;
-    try {
-      const updated = await API.agents.update('receptionist', { tone, greeting, businessName, businessDescription });
-      _agentConfigs.receptionist = Object.assign(_agentConfigs.receptionist || {}, updated);
-      const toneLabels = { professional: 'Professional', casual: 'Casual', friendly_professional: 'Friendly, professional' };
-      const toneLabel = toneLabels[tone] || tone;
-      const valEl = document.getElementById('receptionist-tone-val');
-      if (valEl) valEl.innerHTML = toneLabel + ' <span class="config-edit" onclick="openReceptionistEditModal()">Edit</span>';
-      closeReceptionistEditModal();
-      showToast('Receptionist config saved');
-    } catch (err) {
-      showToast('Failed to save config');
-    } finally {
-      btn.textContent = 'Save Changes';
-      btn.disabled = false;
-    }
-  }
-
-  // ── Follow-up Edit Modal ──
-  function openFollowupEditModal() {
-    const cfg = _agentConfigs.followup || {};
-    document.getElementById('edit-followup-quote-days').value = (cfg.quoteFollowupDays || [1, 3, 7]).join(', ');
-    document.getElementById('edit-followup-invoice-days').value = (cfg.invoiceFollowupDays || [1, 3, 7]).join(', ');
-    document.getElementById('edit-followup-overlay').style.opacity = '1';
-    document.getElementById('edit-followup-overlay').style.pointerEvents = 'all';
-    document.getElementById('edit-followup-modal').style.opacity = '1';
-    document.getElementById('edit-followup-modal').style.pointerEvents = 'all';
-    document.getElementById('edit-followup-modal').style.transform = 'translate(-50%,-50%) scale(1)';
-  }
-  function closeFollowupEditModal() {
-    document.getElementById('edit-followup-overlay').style.opacity = '0';
-    document.getElementById('edit-followup-overlay').style.pointerEvents = 'none';
-    document.getElementById('edit-followup-modal').style.opacity = '0';
-    document.getElementById('edit-followup-modal').style.pointerEvents = 'none';
-    document.getElementById('edit-followup-modal').style.transform = 'translate(-50%,-50%) scale(0.96)';
-  }
-  function parseDayList(str) {
-    return str.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
-  }
-  async function saveFollowupConfig() {
-    const quoteFollowupDays = parseDayList(document.getElementById('edit-followup-quote-days').value);
-    const invoiceFollowupDays = parseDayList(document.getElementById('edit-followup-invoice-days').value);
-    if (!quoteFollowupDays.length || !invoiceFollowupDays.length) {
-      showToast('Enter at least one day for each sequence');
-      return;
-    }
-    const btn = document.getElementById('save-followup-btn');
-    btn.textContent = 'Saving...';
-    btn.disabled = true;
-    try {
-      const updated = await API.agents.update('followup', { quoteFollowupDays, invoiceFollowupDays });
-      _agentConfigs.followup = Object.assign(_agentConfigs.followup || {}, updated);
-      const qLabel = 'Day ' + quoteFollowupDays.join(', ');
-      const iLabel = 'Day ' + invoiceFollowupDays.join(', ');
-      const qEl = document.getElementById('followup-quote-seq-val');
-      const iEl = document.getElementById('followup-invoice-seq-val');
-      if (qEl) qEl.innerHTML = qLabel + ' <span class="config-edit" onclick="openFollowupEditModal()">Edit</span>';
-      if (iEl) iEl.innerHTML = iLabel + ' <span class="config-edit" onclick="openFollowupEditModal()">Edit</span>';
-      closeFollowupEditModal();
-      showToast('Follow-up sequences saved');
-    } catch (err) {
-      showToast('Failed to save config');
-    } finally {
-      btn.textContent = 'Save Changes';
-      btn.disabled = false;
-    }
-  }
-
 </script>
 
-<!-- ── Edit Receptionist Modal ── -->
-<div class="nj-overlay" id="edit-receptionist-overlay" onclick="closeReceptionistEditModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;"></div>
-<div class="nj-modal" id="edit-receptionist-modal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:420px;max-width:92vw;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;">
-  <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);">EDIT RECEPTIONIST</div>
-    <button onclick="closeReceptionistEditModal()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);">✕</button>
-  </div>
-  <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto;">
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Tone</label>
-      <select id="edit-receptionist-tone" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-        <option value="professional">Professional</option>
-        <option value="casual">Casual</option>
-        <option value="friendly_professional" selected>Friendly Professional</option>
-      </select>
+<!-- Create/Edit Automation Modal -->
+<div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;" onclick="if(event.target===this)closeModal()">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:520px;max-width:94vw;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+    <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);" id="modal-title">NEW AUTOMATION</div>
+      <button onclick="closeModal()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);">✕</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Greeting Message</label>
-      <textarea id="edit-receptionist-greeting" rows="2" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="e.g. Hey! Thanks for reaching out..."></textarea>
+    <input type="hidden" id="m-id"/>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Name</label>
+        <input id="m-name" type="text" placeholder="e.g. Quote follow-up Day 1" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Trigger</label>
+          <select id="m-trigger" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+            <option value="quote_sent">Quote sent</option>
+            <option value="invoice_sent">Invoice sent</option>
+            <option value="invoice_overdue">Invoice overdue</option>
+            <option value="job_completed">Job completed</option>
+            <option value="new_customer">New customer</option>
+            <option value="custom">Custom / manual</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Channel</label>
+          <select id="m-channel" onchange="onChannelChange()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+            <option value="sms">SMS</option>
+            <option value="email">Email</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Delay (days)</label>
+          <input id="m-delay-days" type="number" min="0" placeholder="e.g. 1" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Delay (hours)</label>
+          <input id="m-delay-hours" type="number" min="0" placeholder="e.g. 0" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+        </div>
+      </div>
+      <div id="m-subject-row" style="display:none;flex-direction:column;gap:3px;">
+        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Email Subject</label>
+        <input id="m-subject" type="text" placeholder="e.g. Following up on your quote" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Message</label>
+        <textarea id="m-message" rows="4" placeholder="Hey {firstName}, just following up on..." style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.6;"></textarea>
+        <span style="font-size:10px;color:var(--gray2);">Variables: {firstName}, {customerName}, {service}, {total}, {address}, {companyName}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Enabled</label>
+        <input id="m-enabled" type="checkbox" checked style="accent-color:var(--green);width:16px;height:16px;">
+      </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Business Name</label>
-      <input id="edit-receptionist-bizname" type="text" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;" placeholder="e.g. Lane's Exterior Cleaning">
+    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button id="delete-btn" onclick="deleteFromModal()" style="display:none;padding:10px 16px;border-radius:9px;border:1px solid var(--red);background:transparent;color:var(--red);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Delete</button>
+      <div style="flex:1;"></div>
+      <button onclick="closeModal()" style="padding:10px 16px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
+      <button onclick="saveAutomation()" id="save-btn" style="padding:10px 20px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#0a0a0a;font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Save Automation</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Extra Info <span style="color:var(--gray2);font-weight:400;text-transform:none;letter-spacing:0;">(optional — services are auto-learned from your jobs)</span></label>
-      <textarea id="edit-receptionist-bizdesc" rows="2" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="Anything extra you want the AI to know (e.g. We don't do roofs, we're closed Sundays)"></textarea>
-    </div>
-  </div>
-  <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
-    <button onclick="closeReceptionistEditModal()" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
-    <button onclick="saveReceptionistConfig()" id="save-receptionist-btn" style="flex:2;padding:10px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#0a0a0a;font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Save Changes</button>
   </div>
 </div>
+<style>
+#modal-overlay.open{opacity:1;pointer-events:all;}
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp 0.4s ease both;}
+.stat-card:nth-child(1){animation-delay:.04s;}.stat-card:nth-child(2){animation-delay:.09s;}.stat-card:nth-child(3){animation-delay:.14s;}.stat-card:nth-child(4){animation-delay:.19s;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c);border-radius:12px 12px 0 0;}
+.stat-card.c-green{--c:var(--green);}.stat-card.c-blue{--c:var(--blue);}.stat-card.c-amber{--c:var(--amber);}.stat-card.c-red{--c:var(--red);}
+.stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:5px;}
+.stat-sub{font-size:11px;color:var(--gray2);margin-top:4px;}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.search-wrap{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:9px 14px;flex:1;max-width:320px;transition:border-color 0.15s;}
+.search-wrap:focus-within{border-color:var(--green);}
+.search-input{background:transparent;border:none;outline:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;flex:1;}
+.search-input::placeholder{color:var(--gray2);}
+.filter-group{display:flex;gap:4px;}
+.ftab{font-size:11.5px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
+.ftab:hover{color:var(--white);border-color:var(--gray2);}
+.ftab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+.btn-primary{display:flex;align-items:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s;margin-left:auto;}
+.btn-primary:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 4px 18px rgba(200,241,53,0.22);}
+.icon-btn{width:30px;height:30px;border-radius:7px;background:transparent;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
+.icon-btn:hover{background:var(--surface2);color:var(--white);}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.table-head{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 1fr 0.8fr 100px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:500;}
+.table-row{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 1fr 0.8fr 100px;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;align-items:center;}
+.table-row:hover{background:var(--surface2);}
+.table-row:last-child{border-bottom:none;}
+.td{font-size:12.5px;color:var(--gray);overflow:hidden;text-overflow:ellipsis;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+</style>
 
-<!-- ── Edit Follow-up Modal ── -->
-<div class="nj-overlay" id="edit-followup-overlay" onclick="closeFollowupEditModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;"></div>
-<div class="nj-modal" id="edit-followup-modal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:420px;max-width:92vw;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;">
-  <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);">EDIT FOLLOW-UP SEQUENCES</div>
-    <button onclick="closeFollowupEditModal()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);">✕</button>
-  </div>
-  <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;">
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Unsigned Quote Days</label>
-      <input id="edit-followup-quote-days" type="text" placeholder="e.g. 1, 3, 7" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-      <span style="font-size:10px;color:var(--gray2);">Comma-separated days after quote sent</span>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Overdue Invoice Days</label>
-      <input id="edit-followup-invoice-days" type="text" placeholder="e.g. 1, 3, 7" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-      <span style="font-size:10px;color:var(--gray2);">Comma-separated days after invoice overdue</span>
-    </div>
-  </div>
-  <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
-    <button onclick="closeFollowupEditModal()" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
-    <button onclick="saveFollowupConfig()" id="save-followup-btn" style="flex:2;padding:10px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#0a0a0a;font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Save Changes</button>
-  </div>
-</div>
-
-<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
 <!-- ── FIREBASE AUTH GUARD ── -->
 

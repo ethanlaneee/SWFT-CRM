@@ -45,7 +45,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
 /* Contact list (left panel) */
 .contact-panel{width:320px;min-width:320px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;}
-.contact-header{padding:18px 16px 12px;border-bottom:1px solid var(--border);}
+.contact-header{padding:18px 16px 12px;border-bottom:1px solid var(--border);transition:padding-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded .contact-header{padding-left:52px;}
 .contact-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);}
 .contact-search{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:8px 12px;margin-top:10px;transition:border-color 0.15s;}
 .contact-search:focus-within{border-color:var(--green);}
@@ -225,7 +226,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     </div>
     <div class="nav-label">Tools</div>
     <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 12 2z" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/><path d="M10 17h4" stroke-width="1.8" stroke-linecap="round"/></svg>AI Agents</div>
+    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
@@ -1242,6 +1243,8 @@ async function scheduleMessage(){
     document.getElementById('compose-body').style.height='auto';
     if(c.channel==='email')document.getElementById('compose-subject').value='';
     closeSchedulePopover();
+    loadScheduledForContact();
+    loadScheduledInThread();
   }catch(e){showToast('Error: '+e.message);}
 }
 
