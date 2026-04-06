@@ -965,9 +965,6 @@ async function sendQuote(){
   try { await saveEdit(true); } catch(e) {}
   if(!_q || !_q.id) { showToast('Save the document first'); return; }
 
-  // Populate the preview so buildFullPrintHtml() has content
-  previewCurrentDoc();
-
   // Fetch customer email to pre-fill the compose popup
   var custEmail = '';
   if (_q.customerId) {
@@ -1017,13 +1014,35 @@ async function confirmSendEmail() {
   sendBtn.disabled = true;
 
   try {
-    // Populate the preview so we can grab styled content
-    previewCurrentDoc();
-    var bodyEl = document.getElementById('swft-pdf-body');
-    var previewHtml = bodyEl.innerHTML;
-    closePdfPreview();
+    // Build the PDF content HTML directly from _q data (no overlay needed)
+    var settings = window._swftSettings || {};
+    var lines = (_q.lines || []);
+    var linesHtml = lines.map(function(l){
+      return '<div class="pdf-line"><div>'+(l.desc||'')+'</div><div>'+(l.qty||1)+'</div><div>'+(l.rate||'-')+'</div><div class="amt">'+(l.total||'$0')+'</div></div>';
+    }).join('');
+    var pdfTotal = lines.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[\$,]/g,''))||0);},0);
+    var logoHtml = settings.companyLogo
+      ? '<img src="'+settings.companyLogo+'" style="max-height:50px;max-width:180px;object-fit:contain;margin-bottom:8px;"/>'
+      : '<div class="pdf-company">'+(settings.company||'SWFT')+'<em>.</em></div>';
+    var tagline = settings.company ? (settings.phone||'')+' &nbsp; '+(settings.address||'') : 'simple. smart. swft.';
+    var bodyHtml = logoHtml +
+      '<div class="pdf-tagline">'+tagline+'</div>' +
+      '<div class="pdf-type">'+(type==='invoice'?'INVOICE':'QUOTE')+' '+(_q.num||'')+'</div>' +
+      '<div class="pdf-row"><span class="label">Customer</span><span class="value">'+(_q.customer||'—')+'</span></div>' +
+      '<div class="pdf-row"><span class="label">Job</span><span class="value">'+(_q.job||'—')+'</span></div>' +
+      '<div class="pdf-row"><span class="label">Address</span><span class="value">'+(_q.address||'—')+'</span></div>' +
+      (_q.service?'<div class="pdf-row"><span class="label">Service</span><span class="value">'+_q.service+(_q.sqft?' &nbsp;·&nbsp; '+_q.sqft+' sqft':'')+'</span></div>':'') +
+      '<div class="pdf-row"><span class="label">Date</span><span class="value">'+(_q.created||_q.start||'—')+'</span></div>' +
+      (_q.finish?'<div class="pdf-row"><span class="label">Finish</span><span class="value">'+_q.finish+'</span></div>':'') +
+      '<div class="pdf-section">Line Items</div>' +
+      '<div class="pdf-line-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div></div>' +
+      (linesHtml||'<div style="padding:12px 0;color:#999;">No line items</div>') +
+      '<div style="margin-top:12px;">' +
+      '<div class="pdf-total-row"><span>Subtotal</span><span>$'+pdfTotal.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>' +
+      '<div class="pdf-total-row grand"><span>Total</span><span>$'+pdfTotal.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>' +
+      '</div>';
 
-    // Build an offscreen container with all the same styles as print/save PDF
+    // Build offscreen container with embedded styles
     var container = document.createElement('div');
     container.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;background:#fff;';
     container.innerHTML = '<style>' +
@@ -1040,7 +1059,7 @@ async function confirmSendEmail() {
       '.amt{font-weight:500;}' +
       '.pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;color:#111;}' +
       '.pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;}' +
-      '</style>' + previewHtml;
+      '</style>' + bodyHtml;
     document.body.appendChild(container);
 
     // Small delay for fonts
@@ -1163,8 +1182,7 @@ async function saveEdit(silent){
         var created = await API.invoices.create(data);
         if (created && created.id) _q.id = created.id;
       }
-      if (!silent) { loadInvoices(); switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]); closeModal(); }
-      showToast('Invoice for ' + _q.customer + ' saved — $' + total.toLocaleString());
+      if (!silent) { loadInvoices(); switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]); closeModal(); showToast('Invoice for ' + _q.customer + ' saved — $' + total.toLocaleString()); }
     } else {
       // Save as quote
       if (_q.id && !_q.id.toString().startsWith('new_') && !_q.id.toString().startsWith('#')) {
@@ -1173,8 +1191,7 @@ async function saveEdit(silent){
         var created = await API.quotes.create(data);
         if (created && created.id) _q.id = created.id;
       }
-      if (!silent) { loadQuotes(); closeModal(); }
-      showToast('Quote for ' + _q.customer + ' saved — $' + total.toLocaleString());
+      if (!silent) { loadQuotes(); closeModal(); showToast('Quote for ' + _q.customer + ' saved — $' + total.toLocaleString()); }
     }
   } catch(e) {
     showToast('Save error: ' + e.message);
