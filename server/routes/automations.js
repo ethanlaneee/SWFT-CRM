@@ -239,10 +239,14 @@ async function processScheduledMessages() {
       let ownerUid = msg.userId || msg.orgId;
       if (!usersSnap.empty) {
         orgUser = usersSnap.docs[0].data();
+        orgUser._uid = usersSnap.docs[0].id;
         ownerUid = usersSnap.docs[0].id;
       } else {
         const ownerDoc = await db.collection("users").doc(msg.orgId).get();
-        if (ownerDoc.exists) orgUser = ownerDoc.data();
+        if (ownerDoc.exists) {
+          orgUser = ownerDoc.data();
+          orgUser._uid = msg.orgId;
+        }
       }
 
       if (msg.messageType === "tag_customer") {
@@ -313,6 +317,21 @@ async function processScheduledMessages() {
           msgRecord.subject = msg.subject || `Message from ${companyName}`;
         }
         await db.collection("messages").add(msgRecord);
+      }
+
+      // Log to agentActivity so stats show on AI agents page
+      if (msg.automationId) {
+        try {
+          await db.collection("orgs").doc(msg.orgId).collection("agentActivity").add({
+            agent: "followup",
+            type: msg.automationType || "automation_send",
+            targetId: msg.automationId,
+            customerId: msg.customerId || "",
+            customerName: msg.customerName || "",
+            messageType: msg.messageType,
+            createdAt: Date.now(),
+          });
+        } catch (actErr) { console.error("[automation worker] Activity log error:", actErr.message); }
       }
 
     } catch (err) {

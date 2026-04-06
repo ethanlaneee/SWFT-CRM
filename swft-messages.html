@@ -100,6 +100,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .msg-reply-btn:hover{background:var(--surface2);color:var(--white);}
 .msg-bubble-attach{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--amber);margin-top:4px;}
 .msg-date-sep{text-align:center;font-size:10px;color:var(--gray2);letter-spacing:1px;padding:8px 0;}
+.msg-bubble.scheduled{background:rgba(245,166,35,0.06);border:1px dashed rgba(245,166,35,0.25);align-self:flex-end;border-bottom-right-radius:4px;opacity:0.8;}
+.msg-sched-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;}
 
 /* Compose bar */
 .compose-bar{padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;gap:8px;}
@@ -842,6 +844,42 @@ function renderChat(){
   area.innerHTML=html;
   area.scrollTop=area.scrollHeight;
   loadScheduledForContact();
+  loadScheduledInThread();
+}
+
+async function loadScheduledInThread(){
+  if(!_activeContact)return;
+  try{
+    var res=await API.messages.scheduled();
+    var msgs=res.messages||[];
+    var custId=_activeContact.customerId;
+    var to=_activeContact.channel==='sms'?(_activeContact.phone||_activeContact.to):(_activeContact.email||_activeContact.to);
+    var filtered=msgs.filter(function(m){
+      if(custId&&m.customerId===custId)return true;
+      if(m.phone===to||m.email===to)return true;
+      return false;
+    });
+    if(!filtered.length)return;
+    filtered.sort(function(a,b){return(a.sendAt||0)-(b.sendAt||0);});
+    var area=document.getElementById('chat-messages');
+    var schedHtml='';
+    filtered.forEach(function(m){
+      var dt=new Date(m.sendAt);
+      var dateStr=dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      var timeStr=dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      var subjectHtml=m.subject?'<div class="msg-bubble-subject">'+esc(m.subject)+'</div>':'';
+      var bodyText=(m.message||'').substring(0,500);
+      var tag=m.isManual?'SCHEDULED':'AUTOMATION';
+      schedHtml+='<div class="msg-date-sep">Scheduled — '+dateStr+'</div>';
+      schedHtml+='<div class="msg-bubble scheduled">'+
+        '<div class="msg-sched-badge">&#9200; '+tag+'</div>'+
+        subjectHtml+
+        '<div class="msg-bubble-body">'+esc(bodyText||'(no content)')+'</div>'+
+        '<div class="msg-bubble-time">Sends '+timeStr+'</div>'+
+      '</div>';
+    });
+    area.innerHTML+=schedHtml;
+  }catch(e){/* ignore */}
 }
 
 function openAddToContact(){

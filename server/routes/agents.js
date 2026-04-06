@@ -151,7 +151,7 @@ router.get("/followup/stats", async (req, res, next) => {
     monthStart.setHours(0, 0, 0, 0);
     const monthMs = monthStart.getTime();
 
-    // Count follow-ups sent this month
+    // Count follow-ups sent this month from followups collection
     const sentSnap = await db.collection("followups")
       .where("orgId", "==", orgId)
       .where("status", "==", "sent")
@@ -169,8 +169,23 @@ router.get("/followup/stats", async (req, res, next) => {
       if (f.type === "unsigned_quote") quoteFollowups++;
     }
 
+    // Also count sent scheduled messages from automations this month
+    const schedSentSnap = await db.collection("scheduledMessages")
+      .where("orgId", "==", orgId)
+      .where("status", "==", "sent")
+      .where("sentAt", ">=", monthMs)
+      .get();
+
+    const automationsSentMTD = schedSentSnap.size;
+
     // Count pending follow-ups
     const pendingSnap = await db.collection("followups")
+      .where("orgId", "==", orgId)
+      .where("status", "==", "pending")
+      .get();
+
+    // Count pending scheduled messages
+    const schedPendingSnap = await db.collection("scheduledMessages")
       .where("orgId", "==", orgId)
       .where("status", "==", "pending")
       .get();
@@ -179,8 +194,8 @@ router.get("/followup/stats", async (req, res, next) => {
       invoicesCollected,
       reviewsSent,
       quoteFollowups,
-      pendingCount: pendingSnap.size,
-      totalSentMTD: sentSnap.size,
+      pendingCount: pendingSnap.size + schedPendingSnap.size,
+      totalSentMTD: sentSnap.size + automationsSentMTD,
     });
   } catch (err) { next(err); }
 });
