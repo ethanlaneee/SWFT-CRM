@@ -18,6 +18,35 @@ const { db } = require("../firebase");
 const { sendSms } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
+const { google } = require("googleapis");
+
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback";
+
+async function sendFollowupEmail(ownerUid, toEmail, subject, body) {
+  const userDoc = await db.collection("users").doc(ownerUid).get();
+  if (!userDoc.exists) return;
+  const userData = userDoc.data();
+  const gmail = userData.integrations?.gmail;
+  const tokens = gmail?.tokens || userData.gmailTokens;
+  const connected = gmail?.connected || userData.gmailConnected;
+  if (!connected || !tokens) return; // Gmail not connected — skip silently
+
+  const client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+  client.setCredentials(tokens);
+
+  const gmailApi = google.gmail({ version: "v1", auth: client });
+  const raw = Buffer.from(
+    `To: ${toEmail}\r\n` +
+    `Subject: ${subject}\r\n` +
+    `Content-Type: text/plain; charset=utf-8\r\n\r\n` +
+    body
+  ).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+  await gmailApi.users.messages.send({ userId: "me", requestBody: { raw } });
+  console.log(`[followup-agent] Email sent to ${toEmail}: ${subject}`);
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -164,10 +193,11 @@ async function scanUnsignedQuotes(orgId, config) {
           targetId: doc.id,
           customerId: quote.customerId,
           customerName: quote.customerName || customer.name || "",
-          phone: customer.phone,
+          phone: customer.phone || null,
+          email: customer.email || null,
           step,
           message,
-          sendAt: Date.now(), // Ready to send immediately
+          sendAt: Date.now(),
         });
       }
     }
@@ -209,7 +239,8 @@ async function scanOverdueInvoices(orgId, config) {
           targetId: doc.id,
           customerId: invoice.customerId,
           customerName: invoice.customerName || customer.name || "",
-          phone: customer.phone,
+          phone: customer.phone || null,
+          email: customer.email || null,
           step,
           message,
           total: invoice.total || 0,
@@ -259,7 +290,8 @@ async function scanReviewRequests(orgId, config) {
       targetId: doc.id,
       customerId: job.customerId,
       customerName: job.customerName || customer.name || "",
-      phone: customer.phone,
+      phone: customer.phone || null,
+      email: customer.email || null,
       step,
       message,
       sendAt: Date.now(),
@@ -327,9 +359,21 @@ async function processFollowups() {
         continue;
       }
 
-      // Send SMS
-      await sendSms(followup.phone, followup.message);
-      await incrementSms(owner.uid);
+      // Send SMS (if phone on file)
+      if (followup.phone) {
+        await sendSms(followup.phone, followup.message);
+        await incrementSms(owner.uid);
+      }
+
+      // Send email (if email on file and Gmail connected)
+      if (followup.email) {
+        const subject = buildEmailSubject(followup.type);
+        try {
+          await sendFollowupEmail(owner.uid, followup.email, subject, followup.message);
+        } catch (emailErr) {
+          console.error(`[followup-agent] Email failed for ${fDoc.id}:`, emailErr.message);
+        }
+      }
 
       // Mark as sent
       await ref.update({ status: "sent", sentAt: Date.now(), error: null });
@@ -440,6 +484,13 @@ function buildInvoiceFollowup(customer, invoice, day) {
   return `Hi ${name}, your ${total} invoice is now ${day} days past due. Please let us know if there's anything we can help with regarding payment.`;
 }
 
+function buildEmailSubject(type) {
+  if (type === "unsigned_quote") return "Following up on your quote";
+  if (type === "overdue_invoice") return "Invoice payment reminder";
+  if (type === "review_request") return "How did we do?";
+  return "Following up";
+}
+
 function buildReviewRequest(customer, job, companyName, reviewLink, config) {
   // Use custom template if provided in config
   if (config.reviewMessage) {
@@ -477,4 +528,4 @@ async function runFollowupAgent() {
   }
 }
 
-module.exports = { runFollowupAgent, scanForFollowups, processFollowups };
+module.exports = { runFollowupAgent, scanForFollowups, processFollowups, sendFollowupEmail };

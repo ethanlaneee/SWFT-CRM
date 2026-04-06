@@ -209,6 +209,27 @@ app.get("/api/auth/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
 
+// ── Diagnostic: test follow-up email ──
+app.get("/api/debug/followup-test", async (req, res) => {
+  try {
+    const { sendFollowupEmail } = require("./ai/followup-agent");
+    const { db } = require("./firebase");
+    const snap = await db.collection("users").limit(1).get();
+    if (snap.empty) return res.json({ error: "No users found" });
+    const ownerUid = snap.docs[0].id;
+    const to = req.query.to || "ethanmlane@gmail.com";
+    await sendFollowupEmail(
+      ownerUid,
+      to,
+      "SWFT Follow-up Agent — Test Email",
+      `Hi Ethan,\n\nThis is a test from the SWFT Follow-up Agent. If you're seeing this, the email pipeline is working!\n\nThe agent will automatically send follow-ups for:\n- Unsigned quotes (day 1, 3, 7)\n- Overdue invoices (day 1, 3, 7)\n- Review requests (24h after job completion)\n\n— SWFT AI`
+    );
+    res.json({ success: true, sentTo: to });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
 // ── Diagnostic: test calendar event creation ──
 app.get("/api/debug/calendar-test", async (req, res) => {
   try {
