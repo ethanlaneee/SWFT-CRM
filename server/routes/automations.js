@@ -88,6 +88,18 @@ async function triggerAutomation(orgId, trigger, customer) {
     for (const autoDoc of snap.docs) {
       const rule = autoDoc.data();
 
+      // Deduplicate: skip if a pending scheduled message already exists for this automation + customer
+      const existingSnap = await db.collection("scheduledMessages")
+        .where("automationId", "==", autoDoc.id)
+        .where("customerId", "==", customer.id || "")
+        .where("status", "==", "pending")
+        .limit(1)
+        .get();
+      if (!existingSnap.empty) {
+        console.log(`[automation] Skipping "${rule.name}" — pending message already exists for customer ${customer.id}`);
+        continue;
+      }
+
       // Evaluate conditions — skip this rule if conditions don't match
       if (rule.conditions && rule.conditions.length > 0) {
         const ctx = {
@@ -458,6 +470,21 @@ router.delete("/:id", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// DELETE /api/automations/pending — clear ALL pending scheduled messages for this org
+router.delete("/pending", async (req, res, next) => {
+  try {
+    const snap = await db.collection("scheduledMessages")
+      .where("orgId", "==", req.orgId)
+      .where("status", "==", "pending")
+      .get();
+    if (snap.empty) return res.json({ success: true, deleted: 0 });
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    res.json({ success: true, deleted: snap.docs.length });
+  } catch (err) { next(err); }
 });
 
 // DELETE /api/automations/pending/:id — delete a scheduled message

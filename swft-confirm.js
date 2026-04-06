@@ -178,9 +178,17 @@
   };
 
   window.printPdf = function () {
-    const body = document.getElementById("swft-pdf-body");
+    const html = buildFullPrintHtml();
     const win = window.open("", "_blank");
-    win.document.write(`<html><head><title>SWFT Document</title>
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  };
+
+  // Build a full standalone HTML doc for PDF generation / printing
+  window.buildFullPrintHtml = function () {
+    const body = document.getElementById("swft-pdf-body");
+    return `<html><head><title>SWFT Document</title>
       <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
       <style>
         body{font-family:'DM Sans',sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}
@@ -197,9 +205,7 @@
         .amt{font-weight:500;}
         .pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;}
         .pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;}
-      </style></head><body>${body.innerHTML}</body></html>`);
-    win.document.close();
-    setTimeout(() => win.print(), 500);
+      </style></head><body>${body.innerHTML}</body></html>`;
   };
 
   window.showPdfPreview = function (type, data) {

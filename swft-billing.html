@@ -426,6 +426,38 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
   </div>
 </div>
 
+<!-- Email Compose Modal -->
+<div id="email-compose-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:9600;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#111;border:1px solid #2c2c2c;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="padding:20px 24px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#f0f0f0;letter-spacing:1.5px;" id="email-compose-title">SEND QUOTE</h3>
+      <div style="cursor:pointer;color:#7a7a7a;font-size:22px;" onclick="closeEmailCompose()">&times;</div>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:11px;color:#7a7a7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:block;">To</label>
+        <input id="email-to" type="email" style="width:100%;padding:10px 14px;background:#181818;border:1px solid #2c2c2c;border-radius:8px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;" readonly/>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#7a7a7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:block;">Subject</label>
+        <input id="email-subject" type="text" style="width:100%;padding:10px 14px;background:#181818;border:1px solid #2c2c2c;border-radius:8px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;"/>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#7a7a7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:block;">Message</label>
+        <textarea id="email-body" rows="5" style="width:100%;padding:10px 14px;background:#181818;border:1px solid #2c2c2c;border-radius:8px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical;line-height:1.5;"></textarea>
+      </div>
+      <div style="font-size:12px;color:#7a7a7a;display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.5"/></svg>
+        <span id="email-attachment-name">PDF will be attached</span>
+      </div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #1f1f1f;display:flex;gap:10px;">
+      <button onclick="closeEmailCompose()" style="flex:1;padding:12px;border-radius:9px;border:1px solid #2c2c2c;background:transparent;color:#7a7a7a;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Cancel</button>
+      <button id="email-send-btn" onclick="confirmSendEmail()" style="flex:1;padding:12px;border-radius:9px;border:none;background:#8ab800;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Send Email</button>
+    </div>
+  </div>
+</div>
+
 <!-- Sidebar toggle -->
 
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
@@ -929,38 +961,92 @@ async function sendQuote(){
     return;
   }
 
-  // Save first, then generate PDF and email it
+  // Save first
   try { await saveEdit(); } catch(e) {}
-
   if(!_q || !_q.id) { showToast('Save the document first'); return; }
 
-  showToast('Generating PDF and sending...');
+  // Populate the preview so buildFullPrintHtml() has content
+  previewCurrentDoc();
+
+  // Fetch customer email to pre-fill the compose popup
+  var custEmail = '';
+  if (_q.customerId) {
+    try {
+      var token = await getAuthToken();
+      var r = await fetch('/api/customers/' + _q.customerId, { headers: { 'Authorization': 'Bearer ' + token } });
+      var c = await r.json();
+      custEmail = c.email || '';
+    } catch(e) {}
+  }
+
+  var type = _q.isInvoice ? 'invoice' : 'quote';
+  var docLabel = _q.isInvoice ? 'Invoice' : 'Quote';
+  var companyName = (window._swftSettings && window._swftSettings.company) || 'SWFT';
+  var custName = _q.customer || 'Customer';
+
+  // Pre-fill email compose fields
+  document.getElementById('email-compose-title').textContent = 'SEND ' + docLabel.toUpperCase();
+  document.getElementById('email-to').value = custEmail;
+  document.getElementById('email-subject').value = docLabel + ' from ' + companyName;
+  document.getElementById('email-body').value = 'Hi ' + custName + ',\n\nPlease find your ' + type + ' attached.\n\nBest,\n' + companyName;
+  document.getElementById('email-attachment-name').textContent = docLabel + '-' + (custName.replace(/[^a-zA-Z0-9 ]/g,'').trim().replace(/\s+/g,'-')) + '.pdf will be attached';
+
+  // Close preview, open compose popup
+  closePdfPreview();
+  var overlay = document.getElementById('email-compose-overlay');
+  overlay.style.display = 'flex';
+}
+
+function closeEmailCompose() {
+  document.getElementById('email-compose-overlay').style.display = 'none';
+}
+
+async function confirmSendEmail() {
+  if (!_q || !_q.id) { showToast('No document to send'); return; }
+
+  var toEmail = document.getElementById('email-to').value.trim();
+  if (!toEmail) { showToast('Customer has no email address'); return; }
+
+  var subject = document.getElementById('email-subject').value.trim();
+  var message = document.getElementById('email-body').value.trim();
+  var type = _q.isInvoice ? 'invoice' : 'quote';
+
+  // Disable send button
+  var sendBtn = document.getElementById('email-send-btn');
+  sendBtn.textContent = 'Sending...';
+  sendBtn.disabled = true;
+
   try {
-    // Build the print HTML from the preview
-    var type = _q.isInvoice ? 'invoice' : 'quote';
+    // Build the full standalone HTML (same as Print/Save PDF) for high-quality PDF
     previewCurrentDoc();
-    var bodyEl = document.getElementById('swft-pdf-body');
-    var htmlContent = bodyEl.innerHTML;
+    var fullHtml = buildFullPrintHtml();
     closePdfPreview();
 
-    // Create an offscreen container for html2pdf
-    var container = document.createElement('div');
-    container.style.cssText = 'font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;';
-    container.innerHTML = htmlContent;
+    // Render the standalone HTML into a proper PDF via html2pdf
+    var container = document.createElement('iframe');
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;height:1000px;border:none;';
     document.body.appendChild(container);
+    container.contentDocument.open();
+    container.contentDocument.write(fullHtml);
+    container.contentDocument.close();
+
+    // Wait for fonts to load in iframe
+    await new Promise(function(r){ setTimeout(r, 800); });
 
     var pdfBlob = await html2pdf().set({
       margin: [10, 10, 10, 10],
       filename: type + '.pdf',
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
-    }).from(container).outputPdf('blob');
+    }).from(container.contentDocument.body).outputPdf('blob');
     document.body.removeChild(container);
 
+    // Upload PDF + message to server
     var token = await getAuthToken();
     var form = new FormData();
     form.append('pdf', pdfBlob, type + '.pdf');
+    form.append('message', message);
 
     var endpoint = _q.isInvoice ? '/api/invoices/' : '/api/quotes/';
     var resp = await fetch(endpoint + _q.id + '/email', {
@@ -969,11 +1055,17 @@ async function sendQuote(){
       body: form
     });
     var result = await resp.json();
-    if (result.error) { showToast('Error: ' + result.error); return; }
-    showToast((_q.isInvoice ? 'Invoice' : 'Quote') + ' sent to customer!');
+    if (result.error) { showToast('Error: ' + result.error); sendBtn.textContent = 'Send Email'; sendBtn.disabled = false; return; }
+
+    closeEmailCompose();
     closeModal();
+    showToast((_q.isInvoice ? 'Invoice' : 'Quote') + ' emailed to ' + toEmail + '!');
     if (_q.isInvoice) { loadInvoices(); } else { loadQuotes(); }
-  } catch(e) { showToast('Error sending: ' + e.message); }
+  } catch(e) {
+    showToast('Error sending: ' + e.message);
+  }
+  sendBtn.textContent = 'Send Email';
+  sendBtn.disabled = false;
 }
 
 function populateEditForm(){
