@@ -321,6 +321,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
             <div class="compose-icon-btn" onclick="document.getElementById('file-input').click()" title="Attach files or photos" id="file-attach-btn">
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.8"/><circle cx="8.5" cy="8.5" r="1.5" stroke-width="1.5"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" stroke-width="1.8"/></svg>
             </div>
+            <div class="compose-icon-btn" id="template-btn" onclick="openTemplatePicker()" title="Use email template" style="display:none;">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.8"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.8"/><polyline points="10,9 9,9 8,9" stroke-width="1.8"/></svg>
+            </div>
             <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" style="display:none;" onchange="handleFileSelect(this.files)"/>
           </div>
         </div>
@@ -692,6 +695,7 @@ function renderChat(){
   // Attach area
   document.getElementById('attach-area').style.display=c.channel==='email'?'':'none';
   document.getElementById('file-attach-btn').style.display=c.channel==='email'?'':'none';
+  document.getElementById('template-btn').style.display=c.channel==='email'?'':'none';
 
   // Messages
   var msgs=c.messages.slice().sort(function(a,b){return(a.sentAt||0)-(b.sentAt||0);});
@@ -1223,6 +1227,106 @@ async function loadMessages(){
       loadMessages();
     }
   });
+</script>
+<!-- Template Picker Modal -->
+<div id="tmpl-picker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:#111;border:1px solid #2c2c2c;border-radius:16px;width:100%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:18px 20px 12px;border-bottom:1px solid #1f1f1f;display:flex;align-items:center;gap:12px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#f0f0f0;flex:1;">EMAIL TEMPLATES</div>
+      <span onclick="closeTemplatePicker()" style="cursor:pointer;color:#7a7a7a;font-size:20px;">&times;</span>
+    </div>
+    <div style="padding:10px 16px;border-bottom:1px solid #1f1f1f;display:flex;gap:6px;flex-wrap:wrap;" id="tmpl-cat-filters">
+      <button class="tmpl-cat-btn active" data-cat="all" onclick="filterTemplates('all')">All</button>
+      <button class="tmpl-cat-btn" data-cat="follow-up" onclick="filterTemplates('follow-up')">Follow-up</button>
+      <button class="tmpl-cat-btn" data-cat="retention" onclick="filterTemplates('retention')">Retention</button>
+      <button class="tmpl-cat-btn" data-cat="offer" onclick="filterTemplates('offer')">Offer</button>
+      <button class="tmpl-cat-btn" data-cat="review" onclick="filterTemplates('review')">Review</button>
+      <button class="tmpl-cat-btn" data-cat="general" onclick="filterTemplates('general')">General</button>
+    </div>
+    <div id="tmpl-picker-list" style="overflow-y:auto;flex:1;padding:8px 0;"></div>
+  </div>
+</div>
+<style>
+.tmpl-cat-btn{padding:4px 12px;border-radius:20px;border:1px solid #2c2c2c;background:transparent;color:#7a7a7a;font-size:11.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.13s;}
+.tmpl-cat-btn.active,.tmpl-cat-btn:hover{background:rgba(200,241,53,0.1);border-color:rgba(200,241,53,0.3);color:#c8f135;}
+.tmpl-item{padding:12px 16px;border-bottom:1px solid #1a1a1a;cursor:pointer;transition:background 0.12s;}
+.tmpl-item:hover{background:#181818;}
+.tmpl-item-name{font-size:13px;font-weight:500;color:#f0f0f0;margin-bottom:2px;}
+.tmpl-item-subject{font-size:11.5px;color:#7a7a7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+</style>
+<script>
+var _allTemplates = [];
+var _tmplFilterCat = 'all';
+
+async function openTemplatePicker() {
+  document.getElementById('tmpl-picker-modal').style.display = 'flex';
+  await fetchTemplates();
+  renderTemplatePicker();
+}
+
+function closeTemplatePicker() {
+  document.getElementById('tmpl-picker-modal').style.display = 'none';
+}
+
+async function fetchTemplates() {
+  try {
+    var token = await getAuthToken();
+    var res = await fetch('/api/email-templates', { headers: { 'Authorization': 'Bearer ' + token } });
+    _allTemplates = await res.json();
+  } catch(e) { _allTemplates = []; }
+}
+
+function filterTemplates(cat) {
+  _tmplFilterCat = cat;
+  document.querySelectorAll('.tmpl-cat-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.cat === cat); });
+  renderTemplatePicker();
+}
+
+function renderTemplatePicker() {
+  var list = document.getElementById('tmpl-picker-list');
+  var filtered = _tmplFilterCat === 'all' ? _allTemplates : _allTemplates.filter(function(t){ return t.category === _tmplFilterCat; });
+  if (!filtered.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#7a7a7a;font-size:13px;">No templates in this category.<br><a href="swft-settings#email-templates" style="color:#c8f135;font-size:12px;">Create templates in Settings</a></div>';
+    return;
+  }
+  var catColors = { 'follow-up': '#4d9fff', 'retention': '#c8f135', 'offer': '#f5a623', 'review': '#a855f7', 'general': '#7a7a7a' };
+  list.innerHTML = filtered.map(function(t) {
+    var color = catColors[t.category] || '#7a7a7a';
+    return '<div class="tmpl-item" onclick="applyTemplate(' + JSON.stringify(t).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026') + ')">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+        '<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:' + color + ';background:' + color + '18;border:1px solid ' + color + '33;border-radius:4px;padding:2px 6px;">' + escHtml2(t.category||'general') + '</span>' +
+        '<div class="tmpl-item-name">' + escHtml2(t.name) + '</div>' +
+      '</div>' +
+      '<div class="tmpl-item-subject">' + escHtml2(t.subject) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function applyTemplate(t) {
+  // Substitute placeholders with active contact info
+  var c = _activeContact || {};
+  var name = (c.customerName || '').trim();
+  var parts = name.split(' ');
+  var firstName = parts[0] || '';
+  var lastName = parts.slice(1).join(' ') || '';
+  function sub(s) {
+    return (s || '')
+      .replace(/\{firstName\}/g, firstName)
+      .replace(/\{lastName\}/g, lastName)
+      .replace(/\{company\}/g, c.customerName || '')
+      .replace(/\{amount\}/g, '')
+      .replace(/\{jobTitle\}/g, '');
+  }
+  document.getElementById('compose-subject').value = sub(t.subject);
+  document.getElementById('compose-body').value = sub(t.body);
+  autoResize(document.getElementById('compose-body'));
+  closeTemplatePicker();
+}
+
+function escHtml2(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-settings-loader.js"></script>

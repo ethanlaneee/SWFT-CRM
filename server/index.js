@@ -348,7 +348,8 @@ const { router: teamRouter, publicRouter: teamPublicRouter } = require("./routes
 app.use("/api/team",        teamPublicRouter);                        // validate invite (no auth), join (has own auth)
 app.use("/api/team",        auth, checkAccess, teamRouter);           // full auth — manage team
 app.use("/api/integrations", auth, checkAccess, integrationsRouter);
-app.use("/api/email",     auth, checkAccess,  require("./routes/email"));
+app.use("/api/email",           auth, checkAccess,  require("./routes/email"));
+app.use("/api/email-templates", auth, checkAccess,  require("./routes/emailTemplates"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);

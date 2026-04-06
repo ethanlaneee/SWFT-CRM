@@ -210,23 +210,22 @@ function generateDocumentPdf(doc, docType, user) {
     // ═══════════════════════════════════════════
     //  INFO FIELDS  (label left, value right)
     // ═══════════════════════════════════════════
-    // Matches the printQuotePdf / printInvoicePdf layout exactly
+    const serviceValue = [doc.service, doc.sqft ? doc.sqft + " sqft" : ""].filter(Boolean).join(" · ") || "—";
     const fields = [
       { label: "Customer", value: doc.customerName || "—" },
-      { label: "Service", value: doc.service || "—" },
-      { label: "Address", value: doc.address || "—" },
     ];
+    if (doc.address) fields.push({ label: "Address", value: doc.address });
+    fields.push({ label: "Service", value: serviceValue });
+    if (doc.finish) fields.push({ label: "Finish", value: doc.finish });
+
     if (docType === "quote") {
-      const sched = doc.scheduledDate
-        ? new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-        : "—";
-      fields.push({ label: "Scheduled", value: sched });
+      if (doc.scheduledDate) {
+        fields.push({ label: "Scheduled", value: new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
+      }
+      fields.push({ label: "Expires", value: doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—" });
     }
     if (docType === "invoice") {
-      const due = doc.dueDate
-        ? new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-        : "—";
-      fields.push({ label: "Due Date", value: due });
+      fields.push({ label: "Due Date", value: doc.dueDate ? new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—" });
     }
 
     for (const f of fields) {
@@ -264,13 +263,10 @@ function generateDocumentPdf(doc, docType, user) {
     // ═══════════════════════════════════════════
     for (const item of items) {
       const qty = Number(item.qty) || 1;
-      const rawRate = item.rate;
-      const rawTotal = item.total;
-      const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
-      const total = Number(item.total) || (qty * rate) || 0;
-      console.log("[PDF] Item:", item.desc, "rawRate:", rawRate, "rawTotal:", rawTotal, "computed rate:", rate, "computed total:", total);
-
+      // Support both {desc,rate,total} (from UI) and {description,amount} (from AI tool)
       const descText = item.desc || item.description || "";
+      const rate = Number(item.rate ?? item.amount ?? (Number(item.total) / qty)) || 0;
+      const total = Number(item.total ?? item.amount ?? (qty * rate)) || 0;
       const qtyText = String(qty);
       const rateText = "$" + rate.toFixed(2);
       const totalText = "$" + total.toFixed(2);
@@ -502,11 +498,13 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
 
     user._uid = req.uid;
 
-    // Build reply headers — if inReplyTo looks like a Gmail internal ID (no angle brackets),
-    // look up the actual RFC 2822 Message-ID from Gmail before sending
-    let resolvedInReplyTo = inReplyTo || null;
-    if (replyThreadId && inReplyTo && !inReplyTo.includes("<")) {
-      // inReplyTo is a Gmail internal ID — fetch the real Message-ID header
+    // Build reply headers.
+    // threadId is always used if available (Gmail-side thread grouping).
+    // In-Reply-To/References require a valid RFC 2822 Message-ID (angle-bracket format).
+    // If we only have a bare Gmail internal ID, look up the real Message-ID first.
+    let resolvedInReplyTo = (inReplyTo && inReplyTo.includes("<")) ? inReplyTo : null;
+    if (!resolvedInReplyTo && inReplyTo && replyThreadId) {
+      // inReplyTo is a Gmail internal ID — fetch the real RFC 2822 Message-ID header
       try {
         const oauth2Client = new google.auth.OAuth2(
           process.env.GOOGLE_CLIENT_ID,
@@ -522,15 +520,22 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
           metadataHeaders: ["Message-ID"],
         });
         const hdr = (msg.data.payload?.headers || []).find(h => h.name === "Message-ID");
-        if (hdr?.value) resolvedInReplyTo = hdr.value;
+        if (hdr?.value && hdr.value.includes("<")) resolvedInReplyTo = hdr.value;
       } catch (e) {
         console.error("Could not fetch RFC Message-ID for reply:", e.message);
       }
     }
 
-    const replyHeaders = resolvedInReplyTo
-      ? { inReplyTo: resolvedInReplyTo, references: resolvedInReplyTo, threadId: replyThreadId }
-      : {};
+    // Always thread by threadId; only add MIME headers when we have a valid Message-ID
+    const replyHeaders = {};
+    if (replyThreadId) replyHeaders.threadId = replyThreadId;
+    if (resolvedInReplyTo) {
+      replyHeaders.inReplyTo = resolvedInReplyTo;
+      replyHeaders.references = (replyReferences && replyReferences.includes("<"))
+        ? replyReferences
+        : resolvedInReplyTo;
+    }
+    console.log("[send] replyHeaders:", JSON.stringify(replyHeaders));
     const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, allFiles, replyHeaders);
 
     const msgRecord = {

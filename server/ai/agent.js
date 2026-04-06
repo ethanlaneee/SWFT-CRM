@@ -65,13 +65,20 @@ async function executeTool(toolName, input, uid, orgId) {
     }
 
     case "create_quote": {
-      const total = (input.items || []).reduce((sum, i) => sum + (i.amount || 0), 0);
+      const normalizedItems = (input.items || []).map(i => {
+        const desc = i.desc || i.description || "";
+        const qty = Number(i.qty) || 1;
+        const rate = Number(i.rate || i.amount || i.total || 0);
+        const total = Number(i.total || i.amount || (qty * rate) || 0);
+        return { desc, qty, rate, total };
+      });
+      const total = normalizedItems.reduce((sum, i) => sum + i.total, 0);
       const data = {
         orgId: oid,
         userId: uid,
         customerId: input.customerId || "",
         customerName: input.customerName || "",
-        items: input.items || [],
+        items: normalizedItems,
         total,
         notes: input.notes || "",
         status: "draft",
@@ -97,14 +104,21 @@ async function executeTool(toolName, input, uid, orgId) {
     }
 
     case "create_invoice": {
-      const total = (input.items || []).reduce((sum, i) => sum + (i.amount || 0), 0);
+      const normalizedInvItems = (input.items || []).map(i => {
+        const desc = i.desc || i.description || "";
+        const qty = Number(i.qty) || 1;
+        const rate = Number(i.rate || i.amount || i.total || 0);
+        const total = Number(i.total || i.amount || (qty * rate) || 0);
+        return { desc, qty, rate, total };
+      });
+      const total = normalizedInvItems.reduce((sum, i) => sum + i.total, 0);
       const data = {
         orgId: oid,
         userId: uid,
         customerId: input.customerId || "",
         customerName: input.customerName || "",
         quoteId: input.quoteId || null,
-        items: input.items || [],
+        items: normalizedInvItems,
         total,
         notes: input.notes || "",
         status: "open",

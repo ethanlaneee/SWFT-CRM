@@ -252,6 +252,58 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   </div>
 </div>
 
+<!-- Email Templates -->
+<div class="settings-section" id="email-templates">
+  <div class="settings-header"><span class="settings-header-icon">📝</span><h3>EMAIL TEMPLATES</h3></div>
+  <div class="settings-body" style="gap:0;">
+    <div class="settings-row" style="padding-bottom:12px;">
+      <div class="settings-row-info"><div class="settings-row-label">Saved Templates</div><div class="settings-row-desc">Create reusable email templates for follow-ups, offers, retention, and more. Use {firstName}, {lastName}, {company}, {amount} as placeholders.</div></div>
+      <button class="settings-btn primary" onclick="openTemplateModal()">+ New Template</button>
+    </div>
+    <div id="templates-list" style="display:flex;flex-direction:column;gap:0;"></div>
+  </div>
+</div>
+
+<!-- Template Edit Modal -->
+<div id="template-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:#111;border:1px solid #2c2c2c;border-radius:16px;width:100%;max-width:560px;padding:28px;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#f0f0f0;" id="template-modal-title">NEW TEMPLATE</div>
+      <span onclick="closeTemplateModal()" style="cursor:pointer;color:#7a7a7a;font-size:20px;">&times;</span>
+    </div>
+    <input type="hidden" id="template-id"/>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#f0f0f0;font-weight:600;">Template Name</label>
+        <input id="template-name" placeholder="e.g. Quote Follow-up Day 1" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#f0f0f0;font-weight:600;">Category</label>
+        <select id="template-category" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+          <option value="follow-up">Follow-up</option>
+          <option value="retention">Retention</option>
+          <option value="offer">Offer</option>
+          <option value="review">Review Request</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#f0f0f0;font-weight:600;">Subject Line</label>
+      <input id="template-subject" placeholder="e.g. Following up on your quote" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;"/>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#f0f0f0;font-weight:600;">Body</label>
+      <textarea id="template-body" rows="8" placeholder="Hi {firstName}, ..." style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;line-height:1.6;"></textarea>
+      <div style="font-size:10.5px;color:#7a7a7a;">Placeholders: <span style="color:#c8f135;">{firstName}</span> <span style="color:#c8f135;">{lastName}</span> <span style="color:#c8f135;">{company}</span> <span style="color:#c8f135;">{amount}</span> <span style="color:#c8f135;">{jobTitle}</span></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button onclick="closeTemplateModal()" style="flex:1;padding:10px;border-radius:10px;border:1px solid #2c2c2c;background:transparent;color:#7a7a7a;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
+      <button onclick="saveTemplate()" style="flex:1;padding:10px;border-radius:10px;border:none;background:#c8f135;color:#0a0a0a;font-size:12.5px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;">Save Template</button>
+    </div>
+  </div>
+</div>
+
 <!-- Integrations -->
 <div class="settings-section" id="integrations">
   <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
@@ -648,6 +700,100 @@ async function subscribeAppleCalendar() {
     window.history.replaceState({}, '', window.location.pathname);
   }
 })();
+
+// ── Email Templates ──
+async function loadTemplates() {
+  var list = document.getElementById('templates-list');
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/email-templates', { headers: { 'Authorization': 'Bearer ' + token } });
+    var templates = await res.json();
+    if (!templates.length) {
+      list.innerHTML = '<div style="padding:16px 0;color:var(--gray);font-size:13px;">No templates yet. Click "+ New Template" to create one.</div>';
+      return;
+    }
+    var catColors = { 'follow-up': '#4d9fff', 'retention': '#c8f135', 'offer': '#f5a623', 'review': '#a855f7', 'general': '#7a7a7a' };
+    list.innerHTML = templates.map(function(t) {
+      var color = catColors[t.category] || '#7a7a7a';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #1f1f1f;">' +
+        '<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:' + color + ';background:' + color + '18;border:1px solid ' + color + '33;border-radius:5px;padding:3px 7px;white-space:nowrap;">' + escHtml(t.category || 'general') + '</span>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:500;color:#f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(t.name) + '</div>' +
+          '<div style="font-size:11.5px;color:#7a7a7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(t.subject) + '</div>' +
+        '</div>' +
+        '<button onclick="editTemplate(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')" style="padding:5px 12px;border-radius:7px;border:1px solid #2c2c2c;background:transparent;color:#f0f0f0;font-size:11.5px;cursor:pointer;">Edit</button>' +
+        '<button onclick="deleteTemplate(\'' + t.id + '\')" style="padding:5px 12px;border-radius:7px;border:1px solid #2c2c2c;background:transparent;color:#ff5252;font-size:11.5px;cursor:pointer;">Delete</button>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="padding:16px 0;color:#ff5252;font-size:13px;">Failed to load templates.</div>';
+  }
+}
+
+function openTemplateModal(template) {
+  document.getElementById('template-id').value = '';
+  document.getElementById('template-name').value = '';
+  document.getElementById('template-category').value = 'follow-up';
+  document.getElementById('template-subject').value = '';
+  document.getElementById('template-body').value = '';
+  document.getElementById('template-modal-title').textContent = 'NEW TEMPLATE';
+  document.getElementById('template-modal').style.display = 'flex';
+}
+
+function closeTemplateModal() {
+  document.getElementById('template-modal').style.display = 'none';
+}
+
+function editTemplate(t) {
+  document.getElementById('template-id').value = t.id;
+  document.getElementById('template-name').value = t.name || '';
+  document.getElementById('template-category').value = t.category || 'general';
+  document.getElementById('template-subject').value = t.subject || '';
+  document.getElementById('template-body').value = t.body || '';
+  document.getElementById('template-modal-title').textContent = 'EDIT TEMPLATE';
+  document.getElementById('template-modal').style.display = 'flex';
+}
+
+async function saveTemplate() {
+  var id = document.getElementById('template-id').value;
+  var name = document.getElementById('template-name').value.trim();
+  var category = document.getElementById('template-category').value;
+  var subject = document.getElementById('template-subject').value.trim();
+  var body = document.getElementById('template-body').value.trim();
+  if (!name || !subject || !body) { showToast('Name, subject, and body are required'); return; }
+  try {
+    var token = await getToken();
+    var url = '/api/email-templates' + (id ? '/' + id : '');
+    var method = id ? 'PUT' : 'POST';
+    var res = await fetch(url, {
+      method: method,
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, category, subject, body })
+    });
+    if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'Save failed'); }
+    closeTemplateModal();
+    showToast(id ? 'Template updated' : 'Template saved');
+    loadTemplates();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function deleteTemplate(id) {
+  var ok = typeof swftConfirm === 'function'
+    ? await swftConfirm('Delete this template?')
+    : confirm('Delete this template?');
+  if (!ok) return;
+  try {
+    var token = await getToken();
+    await fetch('/api/email-templates/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+    showToast('Template deleted');
+    loadTemplates();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 
 <!-- Firebase Auth -->
@@ -677,6 +823,7 @@ async function subscribeAppleCalendar() {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
       loadSettings();
+      loadTemplates();
       loadIntegrations().then(function(){
         if(window.location.hash){
           var el=document.querySelector(window.location.hash);
