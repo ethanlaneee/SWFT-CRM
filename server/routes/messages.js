@@ -102,12 +102,19 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyH
     const sent = await gmail.users.messages.get({
       userId: "me",
       id: result.data.id,
-      format: "metadata",
-      metadataHeaders: ["Message-ID"],
+      format: "full",
     });
-    const msgIdHeader = (sent.data.payload?.headers || []).find(h => h.name === "Message-ID");
+    const headers = sent.data.payload?.headers || [];
+    // Case-insensitive search for Message-ID header
+    const msgIdHeader = headers.find(h => h.name.toLowerCase() === "message-id");
     rfcMessageId = msgIdHeader?.value || null;
-  } catch (e) { /* non-critical */ }
+    console.log("[sendViaGmail] Message-ID captured:", rfcMessageId, "from", headers.length, "headers");
+    if (!rfcMessageId) {
+      console.log("[sendViaGmail] Available headers:", headers.map(h => h.name).join(", "));
+    }
+  } catch (e) {
+    console.error("[sendViaGmail] Failed to fetch Message-ID:", e.message);
+  }
 
   return { messageId: result.data.id, threadId: result.data.threadId, rfcMessageId };
 }
@@ -551,8 +558,9 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       }
     }
 
-    // Step 2: If we still only have a Gmail internal ID, look up the real RFC Message-ID
-    if (!messageIdForReply && inReplyTo && threadId) {
+    // Step 2: If we don't have an RFC Message-ID yet, look it up from Gmail API
+    // Use the gmailMessageId from the previous message in the conversation
+    if (!messageIdForReply && threadId) {
       try {
         const oauth2Client = new google.auth.OAuth2(
           process.env.GOOGLE_CLIENT_ID,
@@ -561,15 +569,56 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
         );
         oauth2Client.setCredentials(user.gmailTokens);
         const gmailApi = google.gmail({ version: "v1", auth: oauth2Client });
-        const lookupId = inReplyTo || threadId;
-        const msg = await gmailApi.users.messages.get({
-          userId: "me",
-          id: lookupId,
-          format: "metadata",
-          metadataHeaders: ["Message-ID"],
-        });
-        const hdr = (msg.data.payload?.headers || []).find(h => h.name === "Message-ID");
-        if (hdr?.value && hdr.value.includes("<")) messageIdForReply = hdr.value;
+
+        // Try the inReplyTo (Gmail internal ID) first, then fall back to listing thread messages
+        const lookupIds = [];
+        if (inReplyTo && !inReplyTo.includes("<")) lookupIds.push(inReplyTo);
+
+        // Also try to find a message in the thread
+        if (lookupIds.length === 0) {
+          try {
+            const threadData = await gmailApi.users.threads.get({
+              userId: "me",
+              id: threadId,
+              format: "metadata",
+              metadataHeaders: ["Message-ID"],
+            });
+            const threadMsgs = threadData.data.messages || [];
+            // Get the last message in the thread
+            if (threadMsgs.length > 0) {
+              const lastThreadMsg = threadMsgs[threadMsgs.length - 1];
+              const hdr = (lastThreadMsg.payload?.headers || []).find(h => h.name.toLowerCase() === "message-id");
+              if (hdr?.value && hdr.value.includes("<")) {
+                messageIdForReply = hdr.value;
+                console.log("[send] Got Message-ID from thread:", messageIdForReply);
+              }
+            }
+          } catch (te) {
+            console.error("[send] Thread lookup failed:", te.message);
+          }
+        }
+
+        // Direct message lookup as fallback
+        if (!messageIdForReply) {
+          for (const lid of lookupIds) {
+            try {
+              const msg = await gmailApi.users.messages.get({
+                userId: "me",
+                id: lid,
+                format: "full",
+              });
+              const headers = msg.data.payload?.headers || [];
+              const hdr = headers.find(h => h.name.toLowerCase() === "message-id");
+              if (hdr?.value && hdr.value.includes("<")) {
+                messageIdForReply = hdr.value;
+                console.log("[send] Got Message-ID from message lookup:", messageIdForReply);
+                break;
+              }
+            } catch (me) {
+              console.error("[send] Message lookup failed for", lid, ":", me.message);
+            }
+          }
+        }
       } catch (e) {
         console.error("[send] Could not fetch RFC Message-ID:", e.message);
       }
