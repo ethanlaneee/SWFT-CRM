@@ -1,8 +1,11 @@
 const router = require("express").Router();
+const multer = require("multer");
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
-const { sendViaGmail, generateDocumentHtml } = require("./messages");
+const { sendViaGmail } = require("./messages");
 const { normalizeItems } = require("../utils/normalizeItems");
+
+const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const col = () => db.collection("invoices");
 
@@ -138,8 +141,8 @@ router.post("/:id/pay", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Email invoice with inline HTML (no PDF attachment)
-router.post("/:id/email", async (req, res, next) => {
+// Email invoice with client-generated PDF attached
+router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
   try {
     const invDoc = await col().doc(req.params.id).get();
     if (!invDoc.exists || invDoc.data().orgId !== req.orgId) {
@@ -163,15 +166,20 @@ router.post("/:id/email", async (req, res, next) => {
       return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
     }
 
+    if (!req.file || !req.file.buffer || req.file.buffer.length === 0) {
+      return res.status(400).json({ error: "PDF file is required." });
+    }
+
+    const custNameClean = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
+    const pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Invoice-${custNameClean}.pdf` };
+
     const fromName = user.company || user.name || "SWFT";
     const subject = `Invoice from ${fromName}`;
-    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nHere's your invoice.\n\nBest,\n${fromName}`;
-    const msgHtml = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
-    const docHtml = generateDocumentHtml(invData, "invoice", user);
-    const htmlBody = msgHtml + "<br/>" + docHtml;
+    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nPlease find your invoice attached.\n\nBest,\n${fromName}`;
+    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
 
     user._uid = req.uid;
-    const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, []);
+    const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, [pdfFile]);
 
     await db.collection("messages").add({
       userId: req.uid, orgId: req.orgId, to: cust.email, subject, body: bodyText,
@@ -179,7 +187,7 @@ router.post("/:id/email", async (req, res, next) => {
       type: "email", status: "sent", sentVia: "gmail",
       gmailMessageId: sendResult.messageId, gmailThreadId: sendResult.threadId,
       attachedDocType: "invoice", attachedDocId: req.params.id,
-      sentAt: Date.now(),
+      attachments: [pdfFile.originalname], sentAt: Date.now(),
     });
 
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });

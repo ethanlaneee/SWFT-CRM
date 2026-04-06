@@ -6,7 +6,6 @@ const { sendSms } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const { handleInboundMessage } = require("../ai/receptionist-agent");
-const { normalizeItems, fixZeroItems } = require("../utils/normalizeItems");
 const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email");
 
 /**
@@ -120,85 +119,6 @@ const upload = multer({
   },
 });
 
-/**
- * Generate HTML email body for a quote or invoice.
- * Embedded directly in the email — no PDF attachment needed.
- * Customer sees the formatted quote/invoice right in their inbox.
- */
-function generateDocumentHtml(doc, docType, user) {
-  const companyName = user.company || user.name || "SWFT";
-  const title = docType === "quote" ? "Quote" : "Invoice";
-  const items = doc.items || [];
-
-  // Normalize items via shared utility
-  const parsedHtml = fixZeroItems(normalizeItems(items), Number(doc.total) || 0);
-  const itemRows = parsedHtml.map(p => `
-    <tr>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${p.desc}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${p.qty}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${p.rate.toFixed(2)}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${p.total.toFixed(2)}</td>
-    </tr>`).join("");
-
-  const total = doc.total || 0;
-  const dateLabel = docType === "quote" ? "Expires" : "Due Date";
-  const dateValue =
-    docType === "quote"
-      ? doc.expiresAt
-        ? new Date(doc.expiresAt).toLocaleDateString()
-        : "—"
-      : doc.dueDate
-      ? new Date(doc.dueDate).toLocaleDateString()
-      : "—";
-
-  return `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"/></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
-  <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-    <div style="background:#0a0a0a;padding:24px 32px;">
-      <h1 style="margin:0;color:#c8f135;font-size:24px;letter-spacing:2px;">${companyName}</h1>
-      <p style="margin:4px 0 0;color:#999;font-size:12px;letter-spacing:1px;">${title}</p>
-    </div>
-    <div style="padding:28px 32px;">
-      <table style="width:100%;margin-bottom:16px;">
-        <tr>
-          <td style="font-size:13px;color:#888;">Customer</td>
-          <td style="font-size:13px;color:#888;text-align:right;">${dateLabel}</td>
-        </tr>
-        <tr>
-          <td style="font-size:16px;color:#222;font-weight:600;padding-top:4px;">${doc.customerName || "—"}</td>
-          <td style="font-size:14px;color:#222;text-align:right;padding-top:4px;">${dateValue}</td>
-        </tr>
-      </table>
-      ${doc.address ? `<p style="font-size:13px;color:#666;margin:0 0 20px;">Address: ${doc.address}</p>` : ""}
-      ${doc.service ? `<p style="font-size:13px;color:#666;margin:0 0 20px;">Service: ${doc.service}</p>` : ""}
-      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-        <thead>
-          <tr style="background:#f9f9f9;">
-            <th style="padding:10px 12px;text-align:left;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Description</th>
-            <th style="padding:10px 12px;text-align:center;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Qty</th>
-            <th style="padding:10px 12px;text-align:right;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Rate</th>
-            <th style="padding:10px 12px;text-align:right;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Total</th>
-          </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-      <div style="text-align:right;padding:16px 0;border-top:2px solid #0a0a0a;">
-        <span style="font-size:13px;color:#888;margin-right:16px;">Total</span>
-        <span style="font-size:22px;font-weight:700;color:#0a0a0a;">$${Number(total).toFixed(2)}</span>
-      </div>
-      ${doc.notes ? `<div style="margin-top:16px;padding:14px;background:#f9f9f9;border-radius:6px;font-size:13px;color:#555;line-height:1.5;">${doc.notes}</div>` : ""}
-    </div>
-    <div style="padding:16px 32px;background:#f9f9f9;text-align:center;">
-      <p style="margin:0;font-size:11px;color:#aaa;">Sent via SWFT</p>
-    </div>
-  </div>
-</body>
-</html>`;
-}
-
 // POST /api/messages/send — send email (with file attachments) or SMS
 router.post("/send", upload.array("files", 10), async (req, res, next) => {
   try {
@@ -257,32 +177,8 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     let attachedDocType = "";
     let attachedDocId = "";
 
-    // Embed quote/invoice as formatted HTML in the email body
-    if (quoteId) {
-      const quoteDoc = await db.collection("quotes").doc(quoteId).get();
-      if (quoteDoc.exists && quoteDoc.data().userId === req.uid) {
-        const quoteData = { id: quoteDoc.id, ...quoteDoc.data() };
-        if (quoteData.status === "sent") {
-          return res.status(400).json({ error: "This quote has already been sent. Duplicate sends are not allowed." });
-        }
-        const docHtml = generateDocumentHtml(quoteData, "quote", user);
-        htmlBody = (htmlBody ? htmlBody + "<br/><hr/><br/>" : "") + docHtml;
-        attachedDocType = "quote";
-        attachedDocId = quoteId;
-      }
-    } else if (invoiceId) {
-      const invDoc = await db.collection("invoices").doc(invoiceId).get();
-      if (invDoc.exists && invDoc.data().userId === req.uid) {
-        const invData = { id: invDoc.id, ...invDoc.data() };
-        if (invData.status === "sent") {
-          return res.status(400).json({ error: "This invoice has already been sent. Duplicate sends are not allowed." });
-        }
-        const docHtml = generateDocumentHtml(invData, "invoice", user);
-        htmlBody = (htmlBody ? htmlBody + "<br/><hr/><br/>" : "") + docHtml;
-        attachedDocType = "invoice";
-        attachedDocId = invoiceId;
-      }
-    }
+    if (quoteId) { attachedDocType = "quote"; attachedDocId = quoteId; }
+    else if (invoiceId) { attachedDocType = "invoice"; attachedDocId = invoiceId; }
 
     if (!htmlBody) htmlBody = "<p>No content</p>";
     const textBody = body ? body.replace(/<[^>]*>/g, "") : "No content";
@@ -787,4 +683,4 @@ async function twilioIncomingHandler(req, res) {
   }
 }
 
-module.exports = { router, twilioIncomingHandler, sendViaGmail, generateDocumentHtml };
+module.exports = { router, twilioIncomingHandler, sendViaGmail };

@@ -333,11 +333,9 @@ async function changeInvoiceStatus(id,val,el){
   try{
     if(val==='paid'){await API.invoices.pay(id,{paymentMethod:'other'});}
     else if(val==='sent'){
-      // Redirect to messaging to actually send the invoice via email
-      var s=window._swftSettings||{};
-      var fromName=s.company||s.name||'SWFT';
-      var subject=encodeURIComponent('Invoice from '+fromName);
-      window.location.href='swft-messages.html?invoiceId='+id+'&subject='+subject;
+      // Open the invoice modal so user can send via the "Send to Customer" button
+      openInvoice(id);
+      showToast('Click "Send to Customer" to email the invoice');
       return;
     }
     else{await API.invoices.update(id,{status:val});}
@@ -472,11 +470,33 @@ async function sendInvoiceEmail(){
     }
   }catch(e){showToast('Error saving: '+e.message);return;}
 
-  // Redirect to messaging page with the invoice pre-attached
-  var s=window._swftSettings||{};
-  var fromName=s.company||s.name||'SWFT';
-  var subject=encodeURIComponent('Invoice from '+fromName);
-  window.location.href='swft-messages.html?invoiceId='+_currentInv.id+'&subject='+subject;
+  // Generate PDF from the same print template, then email it
+  showToast('Generating PDF and sending...');
+  try{
+    var htmlStr=buildInvoiceHtml();
+    var container=document.createElement('div');
+    container.innerHTML=htmlStr.replace(/<\/?html>|<\/?head>|<title>.*?<\/title>/gi,'');
+    var styleMatch=htmlStr.match(/<style>([\s\S]*?)<\/style>/);
+    if(styleMatch){var st=document.createElement('style');st.textContent=styleMatch[1];container.prepend(st);}
+    document.body.appendChild(container);
+    var pdfBlob=await html2pdf().set({
+      margin:[10,10,10,10],
+      filename:'invoice.pdf',
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true},
+      jsPDF:{unit:'mm',format:'letter',orientation:'portrait'}
+    }).from(container).outputPdf('blob');
+    document.body.removeChild(container);
+
+    var token=await getAuthToken();
+    var form=new FormData();
+    form.append('pdf',pdfBlob,'invoice.pdf');
+    var resp=await fetch('/api/invoices/'+_currentInv.id+'/email',{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
+    var result=await resp.json();
+    if(result.error){showToast('Error: '+result.error);return;}
+    showToast('Invoice sent to customer!');
+    closeModal();loadInvoices();
+  }catch(e){showToast('Error sending: '+e.message);}
 }
 
 async function markPaid(){
@@ -519,6 +539,7 @@ async function deleteInvoice(){
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="swft-api.js"></script>
 <script type="module">
   import{initializeApp}from"https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";

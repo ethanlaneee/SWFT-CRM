@@ -143,7 +143,7 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .pdf-notes-label{margin-top:24px;margin-bottom:6px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}
 .pdf-notes-area{background:#fafafa;border:1px solid #e8e8e8;border-radius:8px;padding:12px 14px;color:#111;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;min-height:60px;resize:vertical;line-height:1.5;width:100%;transition:border-color 0.15s;}
 .pdf-notes-area:focus{border-color:#8ab800;}
-.pdf-doc-footer{padding:14px 24px;border-top:1px solid #e8e8e8;display:flex;gap:8px;background:#fafafa;border-radius:0 0 14px 14px;}
+.pdf-doc-footer{padding:14px 24px;border-top:1px solid #e8e8e8;display:flex;flex-wrap:wrap;gap:8px;background:#fafafa;border-radius:0 0 14px 14px;}
 .pdf-btn{padding:9px 16px;border-radius:9px;border:1px solid #ddd;background:#fff;color:#555;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;transition:all 0.14s;display:flex;align-items:center;gap:6px;}
 .pdf-btn:hover{background:#f0f0f0;color:#111;}
 .pdf-btn.primary{background:#8ab800;color:#fff;font-weight:700;border-color:#8ab800;}
@@ -382,11 +382,9 @@ async function changeQuoteStatus(id,val,el){
   if(q)q.status=val;
   try{
     if(val==='sent'){
-      // Redirect to messaging to actually send the quote via email
-      var s=window._swftSettings||{};
-      var fromName=s.company||s.name||'SWFT';
-      var subject=encodeURIComponent('Quote from '+fromName);
-      window.location.href='swft-messages.html?quoteId='+id+'&subject='+subject;
+      // Open the quote modal so user can send via the "Send to Customer" button
+      openQuote(id);
+      showToast('Click "Send to Customer" to email the quote');
       return;
     }
     else if(val==='approved'){await API.quotes.approve(id);}
@@ -603,11 +601,34 @@ async function sendQuoteEmail(){
     try{await API.quotes.update(_currentQuote.id,data);}catch(e){showToast('Error saving: '+e.message);return;}
   }
 
-  // Redirect to messaging page with the quote pre-attached
-  var s=window._swftSettings||{};
-  var fromName=s.company||s.name||'SWFT';
-  var subject=encodeURIComponent('Quote from '+fromName);
-  window.location.href='swft-messages.html?quoteId='+_currentQuote.id+'&subject='+subject;
+  // Generate PDF from the same print template, then email it
+  showToast('Generating PDF and sending...');
+  try{
+    var htmlStr=buildQuoteHtml();
+    var container=document.createElement('div');
+    container.innerHTML=htmlStr.replace(/<\/?html>|<\/?head>|<title>.*?<\/title>/gi,'');
+    // Extract style and body
+    var styleMatch=htmlStr.match(/<style>([\s\S]*?)<\/style>/);
+    if(styleMatch){var st=document.createElement('style');st.textContent=styleMatch[1];container.prepend(st);}
+    document.body.appendChild(container);
+    var pdfBlob=await html2pdf().set({
+      margin:[10,10,10,10],
+      filename:'quote.pdf',
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true},
+      jsPDF:{unit:'mm',format:'letter',orientation:'portrait'}
+    }).from(container).outputPdf('blob');
+    document.body.removeChild(container);
+
+    var token=await getAuthToken();
+    var form=new FormData();
+    form.append('pdf',pdfBlob,'quote.pdf');
+    var resp=await fetch('/api/quotes/'+_currentQuote.id+'/email',{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
+    var result=await resp.json();
+    if(result.error){showToast('Error: '+result.error);return;}
+    showToast('Quote sent to customer!');
+    closeModal();loadQuotes();
+  }catch(e){showToast('Error sending: '+e.message);}
 }
 
 async function deleteQuote(){
@@ -717,6 +738,7 @@ async function createQuoteFromEstimate(){
 }
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="swft-api.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
