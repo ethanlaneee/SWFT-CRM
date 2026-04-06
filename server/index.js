@@ -110,23 +110,23 @@ app.get("/api/webhooks/twilio/test", async (req, res) => {
   try {
     const testFrom = req.query.from || "+15551234567";
     const testBody = req.query.body || "Test message from webhook diagnostic";
+    const testSid = "TEST_" + Date.now();
     // Simulate what Twilio sends
-    req.body = { From: testFrom, Body: testBody, MessageSid: "TEST_" + Date.now() };
+    req.body = { From: testFrom, Body: testBody, MessageSid: testSid };
     console.log("[twilio-test] Simulating inbound SMS from:", testFrom);
+    let responseData = null;
     await twilioIncomingHandler(req, {
-      type: (t) => ({ send: (d) => {} }),
-      _testResult: null,
+      type: () => ({ send: (d) => { responseData = d; } }),
     });
-    // Check if message was saved
+    // Check if message was saved by looking up the test SID
     const { db } = require("./firebase");
     const recent = await db.collection("messages")
-      .where("from", "==", testFrom)
-      .orderBy("sentAt", "desc").limit(1).get();
+      .where("twilioMessageSid", "==", testSid).limit(1).get();
     if (!recent.empty) {
       const msg = recent.docs[0].data();
-      res.json({ success: true, message: "Inbound SMS saved successfully", savedAs: { userId: msg.userId, orgId: msg.orgId, customerName: msg.customerName, body: msg.body } });
+      res.json({ success: true, message: "Inbound SMS pipeline works!", savedAs: { userId: msg.userId, orgId: msg.orgId, customerName: msg.customerName, body: msg.body, direction: msg.direction } });
     } else {
-      res.json({ success: false, message: "Handler ran but no message found in Firestore" });
+      res.json({ success: false, message: "Handler ran but no message found in Firestore. TwiML response: " + responseData });
     }
   } catch (err) {
     res.json({ success: false, error: err.message, stack: err.stack?.split("\n").slice(0, 3) });
