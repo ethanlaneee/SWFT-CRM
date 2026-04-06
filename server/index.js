@@ -105,6 +105,34 @@ app.get("/api/webhooks/twilio/sms", (req, res) => {
   });
 });
 
+// Test endpoint — simulate inbound SMS to verify the webhook pipeline
+app.get("/api/webhooks/twilio/test", async (req, res) => {
+  try {
+    const testFrom = req.query.from || "+15551234567";
+    const testBody = req.query.body || "Test message from webhook diagnostic";
+    // Simulate what Twilio sends
+    req.body = { From: testFrom, Body: testBody, MessageSid: "TEST_" + Date.now() };
+    console.log("[twilio-test] Simulating inbound SMS from:", testFrom);
+    await twilioIncomingHandler(req, {
+      type: (t) => ({ send: (d) => {} }),
+      _testResult: null,
+    });
+    // Check if message was saved
+    const { db } = require("./firebase");
+    const recent = await db.collection("messages")
+      .where("from", "==", testFrom)
+      .orderBy("sentAt", "desc").limit(1).get();
+    if (!recent.empty) {
+      const msg = recent.docs[0].data();
+      res.json({ success: true, message: "Inbound SMS saved successfully", savedAs: { userId: msg.userId, orgId: msg.orgId, customerName: msg.customerName, body: msg.body } });
+    } else {
+      res.json({ success: false, message: "Handler ran but no message found in Firestore" });
+    }
+  } catch (err) {
+    res.json({ success: false, error: err.message, stack: err.stack?.split("\n").slice(0, 3) });
+  }
+});
+
 // ── OAuth callbacks (no auth — providers redirect here directly) ──
 app.get("/api/auth/google/callback", googleCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
