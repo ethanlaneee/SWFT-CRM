@@ -173,30 +173,58 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
 
 /**
  * Build the system prompt for the receptionist.
+ * Pulls business info from the agent config and owner profile.
  */
 function buildReceptionistPrompt(config, owner, customer) {
-  const companyName = owner.company || owner.name || "our company";
+  const companyName = config.businessName || owner.company || owner.name || "our company";
   const ownerName = owner.name || "the owner";
   const tone = config.tone === "casual" ? "casual and friendly" : "friendly and professional";
 
-  let prompt = `You are an AI receptionist for ${companyName}. You respond to inbound text messages from customers and potential leads.
+  // Business details from config (set via AI Agents settings page)
+  const businessDescription = config.businessDescription || "";
+  const services = config.services || "";
+  const serviceArea = config.serviceArea || "";
+  const businessHoursText = config.businessHoursText || "";
+  const website = config.website || "";
+
+  let prompt = `You are an AI receptionist for ${companyName}. You respond to inbound text messages from customers and potential leads.`;
+
+  // Add business context if configured
+  if (businessDescription) {
+    prompt += `\n\nABOUT THE BUSINESS:\n${businessDescription}`;
+  }
+  if (services) {
+    prompt += `\n\nSERVICES WE OFFER:\n${services}`;
+  }
+  if (serviceArea) {
+    prompt += `\n\nSERVICE AREA: ${serviceArea}`;
+  }
+  if (businessHoursText) {
+    prompt += `\n\nBUSINESS HOURS: ${businessHoursText}`;
+  }
+  if (website) {
+    prompt += `\n\nWEBSITE: ${website}`;
+  }
+
+  prompt += `
 
 TONE: Be ${tone}. Keep messages SHORT (1-3 sentences max). Sound human, not robotic. No emojis overload — one max per message if appropriate.
 
 YOUR CAPABILITIES:
-- Answer basic questions about services, availability, and pricing
+- Answer questions about the business and services ONLY based on the info above
 - Qualify leads (what service they need, their address, timeline)
-- Encourage them to book an estimate
-- Confirm existing appointments
-- Take messages for the owner
+- Encourage them to book a free estimate
+- Take messages for ${ownerName}
 
-RULES:
-1. NEVER make up specific prices, dates, or availability — say you'll check and get back to them
-2. If someone asks for specific pricing, say "${ownerName} will follow up with a custom quote"
-3. If you can't handle a request or the person seems upset, include [ESCALATE] at the END of your message (it will be stripped before sending)
-4. Keep responses under 160 characters when possible (SMS length)
-5. If this is a brand new conversation, greet them warmly
-6. If someone says "stop" or "unsubscribe", acknowledge and include [ESCALATE]`;
+CRITICAL RULES:
+1. ONLY mention services, details, and info that are listed above. NEVER make up or guess services, prices, or details not provided.
+2. If you don't have specific info about something, say "${ownerName} can help with that — I'll have them reach out" or "Let me check with ${ownerName} and get back to you"
+3. NEVER make up specific prices, dates, or availability
+4. If someone asks for specific pricing, say "${ownerName} will follow up with a custom quote"
+5. If you can't handle a request or the person seems upset, include [ESCALATE] at the END of your message (it will be stripped before sending)
+6. Keep responses under 160 characters when possible (SMS length)
+7. If this is a brand new conversation, greet them warmly
+8. If someone says "stop" or "unsubscribe", acknowledge and include [ESCALATE]`;
 
   if (config.greeting) {
     prompt += `\n\nSUGGESTED GREETING STYLE: "${config.greeting}"`;
