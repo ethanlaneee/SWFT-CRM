@@ -473,32 +473,8 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-// DELETE /api/automations/:id — delete automation rule
-router.delete("/:id", async (req, res, next) => {
-  try {
-    const doc = await db.collection("automations").doc(req.params.id).get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Automation not found" });
-    }
-    // Cancel pending scheduled messages for this automation before deleting
-    const pendingSnap = await db.collection("scheduledMessages")
-      .where("automationId", "==", req.params.id)
-      .where("status", "==", "pending")
-      .get();
-    if (!pendingSnap.empty) {
-      const batch = db.batch();
-      pendingSnap.docs.forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    }
-
-    await db.collection("automations").doc(req.params.id).delete();
-    res.json({ success: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
 // DELETE /api/automations/pending — clear ALL pending scheduled messages for this org
+// IMPORTANT: must be before /:id route so "pending" isn't matched as :id
 router.delete("/pending", async (req, res, next) => {
   try {
     const snap = await db.collection("scheduledMessages")
@@ -521,6 +497,31 @@ router.delete("/pending/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Scheduled message not found" });
     }
     await db.collection("scheduledMessages").doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/automations/:id — delete automation rule
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const doc = await db.collection("automations").doc(req.params.id).get();
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Automation not found" });
+    }
+    // Cancel pending scheduled messages for this automation before deleting
+    const pendingSnap = await db.collection("scheduledMessages")
+      .where("automationId", "==", req.params.id)
+      .where("status", "==", "pending")
+      .get();
+    if (!pendingSnap.empty) {
+      const batch = db.batch();
+      pendingSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+
+    await db.collection("automations").doc(req.params.id).delete();
     res.json({ success: true });
   } catch (err) {
     next(err);
