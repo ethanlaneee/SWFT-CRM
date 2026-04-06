@@ -4,7 +4,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <title>SWFT — Sign In</title>
+<meta name="robots" content="noindex, nofollow"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -214,6 +216,13 @@ font-weight:500;
 .terms{
 font-size:11px;color:var(--gray2);line-height:1.5;text-align:center;margin-top:4px;
 }
+.terms-check{
+display:flex;align-items:flex-start;gap:8px;margin-top:8px;text-align:left;
+}
+.terms-check input[type="checkbox"]{
+width:16px;height:16px;margin-top:1px;accent-color:var(--green);cursor:pointer;flex-shrink:0;
+}
+.terms-check label{font-size:11px;color:var(--gray2);line-height:1.5;cursor:pointer;}
 .terms a{color:var(--green);text-decoration:none;}
 .terms a:hover{text-decoration:underline;}
 
@@ -413,8 +422,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     </button>
 
     <div class="terms">
-      By creating an account you agree to our
-      <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      <div class="terms-check">
+        <input type="checkbox" id="terms-agree"/>
+        <label for="terms-agree">I agree to the <a href="/swft-terms" target="_blank">Terms of Service</a> and <a href="/swft-privacy" target="_blank">Privacy Policy</a></label>
+      </div>
     </div>
 
   </div>
@@ -492,12 +503,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // Make page visible immediately — no hiding on login page
   document.body.style.visibility = 'visible';
 
-  // Only redirect away if user is already logged in AND their account is in good standing
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      await goToDashboard();
-    }
-  });
+  // Do not auto-redirect — wait for the user to sign in manually
 
   // ── SAVE USER TO FIRESTORE ──
   async function saveUserToFirestore(user, extraData = {}) {
@@ -559,6 +565,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     if (!biz)   { showFieldError('signup-biz-err',   'signup-biz');   valid = false; }
     if (!email || !/\S+@\S+\.\S+/.test(email)) { showFieldError('signup-email-err', 'signup-email'); valid = false; }
     if (password.length < 8) { showFieldError('signup-pwd-err', 'signup-password'); valid = false; }
+    if (!document.getElementById('terms-agree').checked) {
+      showGlobalError('You must agree to the Terms of Service and Privacy Policy.');
+      valid = false;
+    }
     if (!valid) return;
 
     const btn = document.getElementById('signup-btn');
@@ -582,8 +592,9 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
         stripeCustomerId: '',
         accountStatus:   'trialing',
       });
-      // Send new users to billing to pick a Stripe plan
-      showSuccessState(`Welcome to SWFT, ${fname}! Choose a plan to get started.`, true);
+      // Send new users to checkout to pick a Stripe plan
+      const urlPlan = new URLSearchParams(window.location.search).get('plan') || '';
+      showSuccessState(`Welcome to SWFT, ${fname}! Choose a plan to get started.`, `swft-checkout?plan=${urlPlan}`);
     } catch (err) {
       setLoading(btn, false);
       showGlobalError(firebaseErrorMsg(err.code));
@@ -593,6 +604,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // ── GOOGLE SIGN-IN ──
   window.handleGoogleSignIn = async function() {
     clearErrors();
+    if (currentTab === 'signup' && !document.getElementById('terms-agree').checked) {
+      showGlobalError('You must agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
     try {
       const result = await signInWithPopup(auth, provider);
       await saveUserToFirestore(result.user);
@@ -657,7 +672,7 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     el.classList.add('show');
   }
 
-  function showSuccessState(sub, toBilling = false) {
+  function showSuccessState(sub, redirectUrl = false) {
     document.getElementById('form-login').classList.remove('active');
     document.getElementById('form-signup').classList.remove('active');
     document.getElementById('global-error').classList.remove('show');
@@ -666,10 +681,10 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
     document.getElementById('card-footer').style.display = 'none';
     document.getElementById('success-sub').textContent = sub;
     document.getElementById('success-state').classList.add('show');
-    // New signups go to billing to pick a Stripe plan; returning users go to dashboard
+    // New signups go to checkout to pick a Stripe plan; returning users go to dashboard
     setTimeout(() => {
-      if (toBilling) {
-        window.location.href = 'swft-billing';
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
       } else {
         goToDashboard();
       }
@@ -687,10 +702,21 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
   // the check by navigating directly to swft-dashboard.
   window.goToDashboard = async function() {
     const user = auth.currentUser;
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get('redirect');
+    const planParam = urlParams.get('plan');
+
+    // Build the destination URL — respect ?redirect= if present
+    function getDestination() {
+      if (redirect && redirect.startsWith('swft-')) {
+        return planParam ? `${redirect}?plan=${planParam}` : redirect;
+      }
+      return 'swft-dashboard';
+    }
 
     // Admin accounts skip the status check entirely
     if (user?.email && ADMIN_EMAILS.includes(user.email)) {
-      window.location.href = 'swft-dashboard';
+      window.location.href = getDestination();
       return;
     }
 
@@ -705,12 +731,12 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
         // Invalidate the Firebase session — prevents direct-URL bypass
         await auth.signOut();
         showGlobalError(message || 'Your trial has ended. Please upgrade to continue.');
-        setTimeout(() => { window.location.href = 'swft-billing'; }, 2000);
+        setTimeout(() => { window.location.href = 'swft-checkout'; }, 2000);
         return;
       }
 
       // 200 — active or trialing
-      window.location.href = 'swft-dashboard';
+      window.location.href = getDestination();
     } catch {
       // Network error or unexpected failure — fail safe: stay on login page
       showGlobalError('Unable to verify account status. Please try again.');

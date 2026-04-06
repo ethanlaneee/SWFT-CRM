@@ -1,5 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { triggerAutomation } = require("./automations");
+const { sendViaGmail, generateDocumentPdf } = require("./messages");
 
 const col = () => db.collection("quotes");
 
@@ -72,10 +74,30 @@ router.put("/:id", async (req, res, next) => {
 router.post("/:id/send", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
+
+    // Trigger automations for quote_sent
+    const quoteData = doc.data();
+    if (quoteData.customerId) {
+      try {
+        const custDoc = await db.collection("customers").doc(quoteData.customerId).get();
+        const cust = custDoc.exists ? custDoc.data() : {};
+        triggerAutomation(req.orgId, "quote_sent", {
+          id: quoteData.customerId,
+          name: cust.name || quoteData.customerName || "",
+          phone: cust.phone || "",
+          email: cust.email || "",
+          total: quoteData.total || 0,
+          service: quoteData.service || "",
+        }).catch(console.error);
+      } catch (autoErr) {
+        console.error("quote_sent automation lookup error:", autoErr);
+      }
+    }
+
     res.json({ success: true, status: "sent" });
   } catch (err) { next(err); }
 });
@@ -84,7 +106,7 @@ router.post("/:id/send", async (req, res, next) => {
 router.post("/:id/approve", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).update({ status: "approved", approvedAt: Date.now() });
@@ -92,11 +114,105 @@ router.post("/:id/approve", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Email quote — generate PDF and send via Gmail, add to message thread
+router.post("/:id/email", async (req, res, next) => {
+  try {
+    const quoteDoc = await col().doc(req.params.id).get();
+    if (!quoteDoc.exists || quoteDoc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Quote not found" });
+    }
+    const quoteData = { id: quoteDoc.id, ...quoteDoc.data() };
+
+    // Get customer email
+    if (!quoteData.customerId) {
+      return res.status(400).json({ error: "No customer linked to this quote" });
+    }
+    const custDoc = await db.collection("customers").doc(quoteData.customerId).get();
+    if (!custDoc.exists) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+    const cust = custDoc.data();
+    if (!cust.email) {
+      return res.status(400).json({ error: "Customer has no email address. Add an email in their profile first." });
+    }
+
+    // Get user profile for Gmail + PDF branding
+    const userDoc = await db.collection("users").doc(req.uid).get();
+    const user = userDoc.exists ? userDoc.data() : {};
+    if (!user.gmailConnected || !user.gmailTokens) {
+      return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
+    }
+
+    // Log the items for debugging
+    console.log("[quote email] Items:", JSON.stringify(quoteData.items));
+
+    // Generate PDF
+    const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
+    const custName = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
+    const pdfFile = {
+      buffer: pdfBuffer,
+      mimetype: "application/pdf",
+      originalname: `Quote-${custName}.pdf`,
+    };
+
+    // Build email
+    const fromName = user.company || user.name || "SWFT";
+    const subject = `Quote from ${fromName}`;
+    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nPlease find your quote attached.\n\nBest,\n${fromName}`;
+    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
+
+    // Send
+    user._uid = req.uid;
+    const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, [pdfFile]);
+
+    // Save message record so it shows in messaging thread
+    const msgRecord = {
+      userId: req.uid,
+      orgId: req.orgId,
+      to: cust.email,
+      subject,
+      body: bodyText,
+      customerId: quoteData.customerId,
+      customerName: quoteData.customerName || cust.name || "",
+      type: "email",
+      status: "sent",
+      sentVia: "gmail",
+      gmailMessageId: sendResult.messageId,
+      gmailThreadId: sendResult.threadId,
+      attachedDocType: "quote",
+      attachedDocId: req.params.id,
+      attachments: [pdfFile.originalname],
+      sentAt: Date.now(),
+    };
+    await db.collection("messages").add(msgRecord);
+
+    // Update quote status to sent
+    await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
+
+    // Trigger automations
+    if (quoteData.customerId) {
+      triggerAutomation(req.orgId, "quote_sent", {
+        id: quoteData.customerId,
+        name: cust.name || quoteData.customerName || "",
+        phone: cust.phone || "",
+        email: cust.email || "",
+        total: quoteData.total || 0,
+        service: quoteData.service || "",
+      }).catch(console.error);
+    }
+
+    res.json({ success: true, messageId: sendResult.messageId });
+  } catch (err) {
+    console.error("[quote email] Error:", err);
+    next(err);
+  }
+});
+
 // Delete quote
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().userId !== req.uid) {
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
     }
     await col().doc(req.params.id).delete();

@@ -41,7 +41,13 @@ async function apiFetch(path, options = {}) {
   try { data = JSON.parse(text); } catch (e) {
     throw new Error(res.ok ? "Empty response from server" : `Server error (${res.status})`);
   }
-  if (!res.ok) throw new Error(data.error || "API error");
+  if (!res.ok) {
+    const msg = data.error || "API error";
+    if (res.status === 403 && typeof window !== "undefined" && typeof window.swftNoPermission === "function") {
+      window.swftNoPermission(msg);
+    }
+    throw new Error(msg);
+  }
   return data;
 }
 
@@ -54,6 +60,13 @@ const API = {
   // ── Dashboard ──
   dashboard: {
     stats: () => apiFetch("/api/dashboard"),
+  },
+
+  // ── Dev (admin only) ──
+  dev: {
+    stats:  ()   => apiFetch("/api/dev/stats"),
+    users:  ()   => apiFetch("/api/dev/users"),
+    user:   (id) => apiFetch(`/api/dev/user/${id}`),
   },
 
   // ── User ──
@@ -88,6 +101,7 @@ const API = {
     create:  (data)   => apiFetch("/api/quotes",         { method: "POST",   body: JSON.stringify(data) }),
     update:  (id, data) => apiFetch(`/api/quotes/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
     send:    (id)     => apiFetch(`/api/quotes/${id}/send`,    { method: "POST", body: JSON.stringify({}) }),
+    email:   (id, msg) => apiFetch(`/api/quotes/${id}/email`,  { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
     approve: (id)     => apiFetch(`/api/quotes/${id}/approve`, { method: "POST", body: JSON.stringify({}) }),
     delete:  (id)     => apiFetch(`/api/quotes/${id}`,   { method: "DELETE" }),
   },
@@ -98,6 +112,7 @@ const API = {
     get:    (id)     => apiFetch(`/api/invoices/${id}`),
     create: (data)   => apiFetch("/api/invoices",         { method: "POST",   body: JSON.stringify(data) }),
     update: (id, data) => apiFetch(`/api/invoices/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
+    email:  (id, msg) => apiFetch(`/api/invoices/${id}/email`, { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
     pay:    (id, data) => apiFetch(`/api/invoices/${id}/pay`, { method: "POST", body: JSON.stringify(data) }),
     delete: (id)     => apiFetch(`/api/invoices/${id}`,   { method: "DELETE" }),
   },
@@ -124,9 +139,54 @@ const API = {
 
   // ── Messages ──
   messages: {
-    list:   ()     => apiFetch("/api/messages"),
-    send:   (data) => apiFetch("/api/messages/send", { method: "POST", body: JSON.stringify(data) }),
-    delete: (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
+    list:      ()     => apiFetch("/api/messages"),
+    send:      (data) => apiFetch("/api/messages/send", { method: "POST", body: JSON.stringify(data) }),
+    schedule:  (data) => apiFetch("/api/messages/schedule", { method: "POST", body: JSON.stringify(data) }),
+    scheduled: ()     => apiFetch("/api/messages/scheduled"),
+    delete:    (id)   => apiFetch(`/api/messages/${id}`, { method: "DELETE" }),
+  },
+
+  // ── Notifications ──
+  notifications: {
+    list:    ()   => apiFetch("/api/notifications"),
+    readAll: ()   => apiFetch("/api/notifications/read-all", { method: "POST", body: JSON.stringify({}) }),
+    read:    (id) => apiFetch(`/api/notifications/${id}/read`, { method: "POST", body: JSON.stringify({}) }),
+    delete:  (id) => apiFetch(`/api/notifications/${id}`, { method: "DELETE" }),
+  },
+
+  // ── Photos ──
+  photos: {
+    list:   (jobId)        => apiFetch(`/api/photos/job/${jobId}`),
+    upload: (jobId, form)  => getAuthToken().then(t => fetch(`/api/photos/job/${jobId}`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${t}` },
+      body: form,
+    }).then(r => r.json())),
+    delete: (photoId)      => apiFetch(`/api/photos/${photoId}`, { method: "DELETE" }),
+  },
+
+  // ── Payments (Stripe) ──
+  payments: {
+    invoiceLink: (id) => apiFetch(`/api/payments/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
+  },
+
+  // ── Square ──
+  square: {
+    invoiceLink: (id) => apiFetch(`/api/square/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
+  },
+
+  // ── Google Business Profile ──
+  googleBusiness: {
+    accounts: ()                             => apiFetch("/api/google-business/accounts"),
+    reviews:  (accountId, locationId)        => apiFetch(`/api/google-business/reviews?accountId=${accountId}&locationId=${locationId}`),
+    reply:    (reviewId, accountId, locationId, comment) => apiFetch(`/api/google-business/reviews/${reviewId}/reply`, { method: "POST", body: JSON.stringify({ accountId, locationId, comment }) }),
+    deleteReply: (reviewId, accountId, locationId) => apiFetch(`/api/google-business/reviews/${reviewId}/reply?accountId=${accountId}&locationId=${locationId}`, { method: "DELETE" }),
+  },
+
+  // ── Import ──
+  import: {
+    customers: (rows) => apiFetch("/api/import/customers", { method: "POST", body: JSON.stringify({ rows }) }),
+    jobs:      (rows) => apiFetch("/api/import/jobs",      { method: "POST", body: JSON.stringify({ rows }) }),
   },
 
   // ── Team ──
@@ -137,6 +197,26 @@ const API = {
     remove:       (id)         => apiFetch(`/api/team/${id}`, { method: "DELETE" }),
     join:         (token)      => apiFetch("/api/team/join", { method: "POST", body: JSON.stringify({ token }) }),
     validateInvite: (token)    => fetch(`/api/team/invite/${token}`).then(r => r.json()),
+    getRoles:     ()           => apiFetch("/api/team/roles"),
+    saveRole:     (data)       => apiFetch("/api/team/roles", { method: "POST", body: JSON.stringify(data) }),
+    deleteRole:   (roleId)     => apiFetch(`/api/team/roles/${roleId}`, { method: "DELETE" }),
+  },
+
+  // ── Automations ──
+  automations: {
+    list:    ()         => apiFetch("/api/automations"),
+    create:  (data)     => apiFetch("/api/automations", { method: "POST", body: JSON.stringify(data) }),
+    update:  (id, data) => apiFetch(`/api/automations/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete:        (id) => apiFetch(`/api/automations/${id}`, { method: "DELETE" }),
+    pending:        ()  => apiFetch("/api/automations/pending"),
+    deletePending: (id) => apiFetch(`/api/automations/pending/${id}`, { method: "DELETE" }),
+    retryPending:  (id) => apiFetch(`/api/automations/pending/${id}/retry`, { method: "POST" }),
+  },
+
+  // ── Survey (public — no auth) ──
+  survey: {
+    get:    (token) => fetch(`/api/survey/${token}`).then(r => r.json()),
+    submit: (token, rating) => fetch(`/api/survey/${token}`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ rating }) }).then(r => r.json()),
   },
 
 };

@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <title>SWFT — Customers</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -440,6 +441,8 @@ user-select:none;
       Schedule
     </div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item" onclick="window.location.href='swft-automations'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Automations</div>
+    <div class="nav-item" onclick="window.location.href='swft-reviews'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Reviews</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
   <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
@@ -462,7 +465,7 @@ user-select:none;
   <header class="topbar">
     <div class="topbar-page">CUSTOMERS</div>
     <span class="topbar-slash">/</span>
-    <div class="topbar-sub">14 contacts</div>
+    <div class="topbar-sub" id="cust-count">0 contacts</div>
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
       <div class="icon-btn" onclick="" title="Notifications" style="position:relative;">
@@ -711,11 +714,14 @@ user-select:none;
 <script>
 
 window._customers = {};
+function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
 async function loadCustomers() {
   try {
     const list = await API.customers.list();
     window._customers = {};
+    const countEl = document.getElementById('cust-count');
+    if (countEl) countEl.textContent = list.length + ' contact' + (list.length !== 1 ? 's' : '');
     const tbody = document.getElementById('table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -733,10 +739,10 @@ async function loadCustomers() {
       row.className = 'cust-row';
       row.dataset.status = 'active';
       row.onclick = function(){ openDrawer(cust.id); };
-      row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + initials + '</div><div><div class="cust-name">' + (cust.name||'') + '</div></div></div>' +
-        '<div class="cust-addr" style="font-size:12px;color:var(--gray);align-self:center;">' + (cust.address||'—') + '</div>' +
-        '<div class="cust-phone">' + (cust.phone||'—') + '</div>' +
-        '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (cust.email||'—') + '</div>' +
+      row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + esc(initials) + '</div><div><div class="cust-name">' + esc(cust.name||'') + '</div></div></div>' +
+        '<div class="cust-addr" style="font-size:12px;color:var(--gray);align-self:center;">' + esc(cust.address||'—') + '</div>' +
+        '<div class="cust-phone">' + esc(cust.phone||'—') + '</div>' +
+        '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(cust.email||'—') + '</div>' +
         '<div class="cust-status"><span class="status-active">Active</span></div>' +
         '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">x</div><div class="row-btn">→</div></div>';
       tbody.appendChild(row);
@@ -905,7 +911,7 @@ function renderCustomerTabs(cust) {
     if (!cust.tags || cust.tags.length === 0) {
       tagsEl.innerHTML = '<span style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No tags</span>';
     } else {
-      tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + t + '</span>'; }).join('');
+      tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + esc(t) + '</span>'; }).join('');
     }
   }
 

@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>Automations — SWFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--sidebar-w:228px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{background:#0a0a0a;}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
+.logo-mark em{color:var(--green);font-style:normal;}
+.logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(--surface2);}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--white);}
+.user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
+
+.main{margin-left:var(--sidebar-w);flex:1;padding:32px 36px;max-width:900px;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white);margin-bottom:4px;}
+.subtitle{color:var(--gray);font-size:13px;}
+.btn-new{background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 20px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.15s;}
+.btn-new:hover{background:#d5ff40;}
+
+/* Stats */
+.stats-strip{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:14px 20px;min-width:130px;}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);}
+.stat-l{font-size:11px;color:var(--gray);margin-top:2px;}
+
+/* Scenario cards — Make.com style */
+.rules-list{display:flex;flex-direction:column;gap:16px;margin-bottom:32px;}
+.scenario{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color 0.15s;}
+.scenario:hover{border-color:var(--border2);}
+.scenario.disabled{opacity:0.45;}
+.scenario-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+.scenario-name{font-size:14px;font-weight:600;color:var(--white);}
+.scenario-actions{display:flex;align-items:center;gap:8px;}
+.scenario-flow{display:flex;align-items:center;gap:0;padding:24px 24px 20px;overflow-x:auto;}
+/* Circular nodes */
+.flow-node{position:relative;display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:90px;}
+.flow-node-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid;transition:box-shadow 0.2s;}
+.flow-node-circle.trigger{background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);}
+.flow-node-circle.trigger svg{stroke:var(--blue);}
+.flow-node-circle.wait{background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);}
+.flow-node-circle.wait svg{stroke:var(--amber);}
+.flow-node-circle.action{background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);}
+.flow-node-circle.action svg{stroke:var(--green);}
+.scenario:hover .flow-node-circle.trigger{box-shadow:0 0 12px rgba(77,159,255,0.25);}
+.scenario:hover .flow-node-circle.wait{box-shadow:0 0 12px rgba(245,166,35,0.2);}
+.scenario:hover .flow-node-circle.action{box-shadow:0 0 12px rgba(200,241,53,0.2);}
+.flow-node-text{text-align:center;margin-top:8px;}
+.flow-node-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;margin-bottom:2px;}
+.flow-node-label.trigger{color:var(--blue);}
+.flow-node-label.wait{color:var(--amber);}
+.flow-node-label.action{color:var(--green);}
+.flow-node-value{font-size:11.5px;color:var(--white);font-weight:500;}
+.flow-node-sub{font-size:10px;color:var(--gray);margin-top:1px;}
+/* Connector line between nodes */
+.flow-connector{width:40px;height:2px;background:var(--border2);flex-shrink:0;position:relative;margin:0 2px;margin-bottom:28px;}
+.flow-connector::after{content:'';position:absolute;right:-3px;top:-3px;width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid var(--border2);}
+.scenario-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,0.15);}
+.scenario-meta{display:flex;gap:12px;font-size:11px;color:var(--gray);}
+.scenario-meta span{display:flex;align-items:center;gap:4px;}
+.toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(16px);}
+.btn-icon{width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.btn-icon:hover{background:var(--surface2);color:var(--white);}
+.btn-icon.del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.badge-sms{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
+.badge-email{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
+.badge-notif{background:rgba(162,89,255,0.1);color:#a259ff;border:1px solid rgba(162,89,255,0.2);}
+.badge-tag{background:rgba(255,159,67,0.1);color:#ff9f43;border:1px solid rgba(255,159,67,0.2);}
+
+/* Templates bar */
+.templates-bar{margin-bottom:24px;}
+.templates-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:10px;}
+.templates-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.tpl-btn{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+.tpl-btn:hover{border-color:var(--border2);background:var(--surface2);}
+.tpl-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid;flex-shrink:0;}
+.tpl-text{font-size:12px;color:var(--white);font-weight:500;}
+
+/* Condition rows */
+.cond-row{display:grid;grid-template-columns:1fr 1fr 1fr 28px;gap:8px;align-items:center;margin-bottom:8px;}
+.cond-row select,.cond-row input{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
+.cond-row select{appearance:none;cursor:pointer;}
+.cond-del{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.cond-del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
+
+/* Empty state */
+.empty{text-align:center;padding:50px 20px;color:var(--gray);}
+.empty-icon{font-size:36px;margin-bottom:12px;}
+.empty-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:6px;}
+
+/* Pending section */
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer;user-select:none;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white);}
+.section-count{background:var(--surface2);color:var(--gray);font-size:11px;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;}
+.chevron{transition:transform 0.2s;color:var(--gray);}
+.chevron.open{transform:rotate(180deg);}
+.pending-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.pending-table th{text-align:left;padding:8px 12px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);border-bottom:1px solid var(--border);font-weight:600;}
+.pending-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--white);}
+.pending-table tr:last-child td{border-bottom:none;}
+.status-badge{padding:2px 8px;border-radius:10px;font-size:10.5px;font-family:'JetBrains Mono',monospace;}
+.status-pending{background:rgba(245,166,35,0.1);color:var(--amber);}
+.status-sent{background:rgba(200,241,53,0.1);color:var(--green);}
+.status-failed{background:rgba(255,82,82,0.1);color:var(--red);}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:24px;}
+.form-field{margin-bottom:18px;}
+.form-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;margin-bottom:6px;display:block;}
+.form-sub{font-size:11px;color:var(--gray);margin-bottom:6px;}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.form-input:focus{border-color:var(--green);}
+.form-input::placeholder{color:var(--gray2);}
+.form-select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;appearance:none;cursor:pointer;}
+.form-select option{background:var(--surface2);}
+.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:90px;transition:border-color 0.15s;}
+.form-textarea:focus{border-color:var(--green);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.survey-section{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:4px;display:none;}
+.survey-section.open{display:block;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
+.btn-save{background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 24px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-save:hover{background:#d5ff40;}
+.btn-cancel{padding:10px 18px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.toast-dot.red{background:var(--red);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div><div class="logo-mark">SWFT<em>.</em></div><div class="logo-sub">simple. smart. swft.</div></div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item" onclick="location.href='swft-dashboard'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>Dashboard</div>
+    <div class="nav-item" onclick="location.href='swft-customers'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/></svg>Customers</div>
+    <div class="nav-item" onclick="location.href='swft-jobs'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>Jobs</div>
+    <div class="nav-item" onclick="location.href='swft-billing'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>Billing</div>
+    <div class="nav-item" onclick="location.href='swft-schedule'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>Schedule</div>
+    <div class="nav-item" onclick="location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Automations</div>
+    <div class="nav-item" onclick="location.href='swft-reviews'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Reviews</div>
+    <div class="nav-item" onclick="location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
+    <div class="user-tile">
+      <div class="s-avatar"></div>
+      <div><div class="user-name"></div><div class="user-role"></div></div>
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<main class="main" id="main">
+  <div class="page-header">
+    <div>
+      <h1>Automations</h1>
+      <p class="subtitle">Create scenarios that automatically send messages when events happen</p>
+    </div>
+    <button class="btn-new" onclick="openModal()">+ New Scenario</button>
+  </div>
+
+  <div class="stats-strip" id="stats-strip">
+    <div class="stat"><div class="stat-n" id="st-active">—</div><div class="stat-l">Active Scenarios</div></div>
+    <div class="stat"><div class="stat-n" id="st-pending">—</div><div class="stat-l">Queued</div></div>
+    <div class="stat"><div class="stat-n" id="st-sent">—</div><div class="stat-l">Delivered</div></div>
+    <div class="stat"><div class="stat-n" id="st-failed" style="color:var(--red);">—</div><div class="stat-l">Failed</div></div>
+  </div>
+
+  <!-- Quick-start templates -->
+  <div class="templates-bar" id="templates-bar">
+    <div class="templates-label">Quick Start</div>
+    <div class="templates-scroll">
+      <button class="tpl-btn" onclick="quickCreate('quote_sent')">
+        <span class="tpl-icon" style="background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Quote Follow-up</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('invoice_sent')">
+        <span class="tpl-icon" style="background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg></span>
+        <span class="tpl-text">Invoice Reminder</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('invoice_paid')">
+        <span class="tpl-icon" style="background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Payment Thank You</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('job_completed')">
+        <span class="tpl-icon" style="background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Job Follow-up</span>
+      </button>
+      <button class="tpl-btn" onclick="quickCreate('customer_created')">
+        <span class="tpl-icon" style="background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg></span>
+        <span class="tpl-text">Welcome Message</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="rules-list" id="rules-list">
+    <div style="padding:20px;color:var(--gray);font-size:13px;">Loading...</div>
+  </div>
+
+  <!-- Pending messages -->
+  <div class="section-head" onclick="togglePending()">
+    <div class="section-title">Upcoming Messages</div>
+    <div class="section-count" id="pending-count">0</div>
+    <svg class="chevron" id="pending-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
+  </div>
+  <div id="pending-section" style="display:none;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;">
+      <table class="pending-table" id="pending-table">
+        <thead><tr><th>Customer</th><th>Type</th><th>Sends At</th><th>Status</th><th></th></tr></thead>
+        <tbody id="pending-body"><tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">No pending messages</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">NEW AUTOMATION</div>
+
+    <div class="form-field">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="f-name" placeholder="e.g. Quote Follow-up Reminder"/>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Trigger</label>
+        <select class="form-select" id="f-trigger">
+          <option value="quote_sent">Quote Sent</option>
+          <option value="invoice_sent">Invoice Sent</option>
+          <option value="invoice_paid">Invoice Paid</option>
+          <option value="job_completed">Job Completed</option>
+          <option value="customer_created">Customer Created</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Delay (days after trigger)</label>
+        <input class="form-input" id="f-delay" type="number" min="0" max="365" value="3" placeholder="3"/>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Send at time</label>
+        <input class="form-input" id="f-time" type="time" value="09:00"/>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Message Type</label>
+      <select class="form-select" id="f-type">
+        <option value="sms">SMS</option>
+        <option value="email">Email</option>
+        <option value="notification">Internal Notification</option>
+        <option value="tag_customer">Tag Customer</option>
+      </select>
+    </div>
+
+    <div class="form-field" id="f-subject-field" style="display:none;">
+      <label class="form-label">Email Subject</label>
+      <input class="form-input" id="f-subject" placeholder="e.g. Follow-up from {{company_name}}"/>
+    </div>
+
+    <!-- Conditions / Filters -->
+    <div class="form-field">
+      <div class="toggle-row">
+        <label class="form-label" style="margin-bottom:0;">Conditions (filters)</label>
+        <button class="toggle" id="f-conditions-toggle" onclick="toggleConditions()" type="button"></button>
+      </div>
+      <div class="form-sub">Only trigger when all conditions are met (e.g. total &gt; $500)</div>
+    </div>
+    <div id="conditions-section" style="display:none;">
+      <div id="conditions-list"></div>
+      <button class="btn-cancel" onclick="addCondition()" type="button" style="font-size:11px;padding:6px 12px;margin-top:6px;">+ Add Condition</button>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" id="template-label">Message Template</label>
+      <div class="form-sub" id="template-sub">Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}</div>
+      <textarea class="form-textarea" id="f-template" placeholder="Hi {{customer_name}}, just a reminder that your quote is waiting for your review. Reply to confirm or ask any questions!"></textarea>
+    </div>
+
+    <div class="form-field">
+      <div class="toggle-row">
+        <label class="form-label" style="margin-bottom:0;">This is a satisfaction survey</label>
+        <button class="toggle" id="f-survey-toggle" onclick="toggleSurvey()" type="button"></button>
+      </div>
+      <div class="form-sub">After sending, customer rates 1-10. High ratings trigger a Google review request.</div>
+    </div>
+
+    <div class="survey-section" id="survey-section">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Send follow-up if rating ≥</label>
+          <select class="form-select" id="f-threshold">
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Follow-up Type</label>
+          <select class="form-select" id="f-followup-type">
+            <option value="sms">SMS</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field" style="margin-bottom:0;">
+        <label class="form-label">Follow-up Template (Review Request)</label>
+        <div class="form-sub">Variables: {{customer_name}}, {{review_link}} (your Google Business Profile review URL)</div>
+        <textarea class="form-textarea" id="f-followup-template" placeholder="Hi {{customer_name}}, thanks for the great rating! Would you mind leaving us a quick Google review? It really helps: {{review_link}}"></textarea>
+        <div style="margin-top:6px;font-size:11px;color:var(--gray2);">Connect Google Business Profile in Settings → Integrations to enable review link.</div>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top:18px;">
+      <div class="toggle-row">
+        <label class="form-label" style="margin-bottom:0;">Enabled</label>
+        <button class="toggle on" id="f-enabled-toggle" onclick="toggleEnabled()" type="button"></button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveAutomation()">Save Automation</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('expanded');
+  document.getElementById('sidebar-toggle').classList.toggle('visible');
+}
+</script>
+<script src="swft-account.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+  authDomain: "swft-ai26.firebaseapp.com",
+  projectId: "swft-ai26",
+  storageBucket: "swft-ai26.firebasestorage.app",
+  messagingSenderId: "170879575187",
+  appId: "1:170879575187:web:e329382b0adf9518ead966",
+  measurementId: "G-B8BEW7E87V"
+};
+initializeApp(firebaseConfig);
+
+let _rules = [];
+let _editId = null;
+let _surveyOn = false;
+let _enabledOn = true;
+let _conditionsOn = false;
+let _conditions = [];
+
+async function init() {
+  try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
+  try { loadUser && loadUser(); } catch(e) { console.error('loadUser error:', e); }
+  await loadAll();
+}
+
+async function loadAll() {
+  try {
+    // Load rules and pending separately so one failing doesn't block the other
+    let rulesData = { automations: [] };
+    let pendingData = { messages: [] };
+    try {
+      rulesData = await API.automations.list();
+    } catch(e) {
+      console.error('Failed to load automations:', e);
+    }
+    try {
+      pendingData = await API.automations.pending();
+    } catch(e) {
+      console.error('Failed to load pending:', e);
+    }
+    _rules = rulesData.automations || [];
+    renderRules(_rules);
+    renderPending(pendingData.messages || []);
+    updateStats(_rules, pendingData.messages || []);
+  } catch(e) {
+    document.getElementById('rules-list').innerHTML = `<div style="padding:20px;color:var(--red);">${e.message}</div>`;
+  }
+}
+
+function formatTime12(t) {
+  const [h, m] = (t || '09:00').split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2,'0')}${ampm}`;
+}
+
+function updateStats(rules, pending) {
+  document.getElementById('st-active').textContent = rules.filter(r=>r.enabled).length;
+  document.getElementById('st-pending').textContent = pending.filter(m=>m.status==='pending'||m.status==='retrying').length;
+  document.getElementById('st-sent').textContent = pending.filter(m=>m.status==='sent').length;
+  document.getElementById('st-failed').textContent = pending.filter(m=>m.status==='failed').length;
+}
+
+const TRIG_LABELS = {quote_sent:'Quote Sent', invoice_sent:'Invoice Sent', invoice_paid:'Invoice Paid', job_completed:'Job Completed', customer_created:'Customer Created'};
+const TRIG_ICONS = {
+  quote_sent:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>',
+  invoice_sent:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg>',
+  invoice_paid:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg>',
+  job_completed:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>',
+  customer_created:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg>',
+};
+
+function renderRules(rules) {
+  const list = document.getElementById('rules-list');
+  if (!rules.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">No scenarios yet</div><div style="font-size:13px;color:var(--gray);">Create your first automation to start sending messages automatically.</div></div>`;
+    return;
+  }
+  list.innerHTML = rules.map(r => {
+    const trigLabel = TRIG_LABELS[r.trigger] || r.trigger;
+    const trigIcon = TRIG_ICONS[r.trigger] || TRIG_ICONS.quote_sent;
+    const delay = r.delayDays ?? 3;
+    const time = formatTime12(r.sendAtTime || '09:00');
+    const actionType = (r.messageType || 'sms').toUpperCase();
+    const actionIcon = r.messageType === 'email'
+      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>'
+      : r.messageType === 'notification'
+      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>'
+      : r.messageType === 'tag_customer'
+      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke-width="1.8"/><line x1="7" y1="7" x2="7.01" y2="7" stroke-width="2" stroke-linecap="round"/></svg>'
+      : '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
+    const preview = (r.messageTemplate || '').substring(0, 50) + ((r.messageTemplate||'').length > 50 ? '...' : '');
+    const surveyBadge = r.isSurvey ? ' + Survey' : '';
+
+    const waitIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8"/></svg>';
+    const filterIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+    const hasConditions = r.conditions && r.conditions.length > 0;
+    const condCount = hasConditions ? r.conditions.length : 0;
+    const condNode = hasConditions ? `<div class="flow-connector"></div>
+        <div class="flow-node">
+          <div class="flow-node-circle" style="background:rgba(162,89,255,0.1);border-color:#a259ff;"><span style="color:#a259ff;">${filterIcon}</span></div>
+          <div class="flow-node-text">
+            <div class="flow-node-label" style="color:#a259ff;">FILTER</div>
+            <div class="flow-node-value">${condCount} condition${condCount>1?'s':''}</div>
+          </div>
+        </div>` : '';
+
+    return `<div class="scenario${r.enabled?'':' disabled'}" id="rule-${r.id}">
+      <div class="scenario-header">
+        <div class="scenario-name">${esc(r.name)}</div>
+        <div class="scenario-actions">
+          <button class="toggle${r.enabled?' on':''}" onclick="toggleRule('${r.id}',${r.enabled})" title="${r.enabled?'Disable':'Enable'}"></button>
+          <button class="btn-icon" onclick="editRule('${r.id}')" title="Edit"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg></button>
+          <button class="btn-icon del" onclick="deleteRule('${r.id}')" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="1.8"/></svg></button>
+        </div>
+      </div>
+      <div class="scenario-flow">
+        <div class="flow-node">
+          <div class="flow-node-circle trigger">${trigIcon}</div>
+          <div class="flow-node-text">
+            <div class="flow-node-label trigger">TRIGGER</div>
+            <div class="flow-node-value">${trigLabel}</div>
+          </div>
+        </div>${condNode}
+        <div class="flow-connector"></div>
+        <div class="flow-node">
+          <div class="flow-node-circle wait">${waitIcon}</div>
+          <div class="flow-node-text">
+            <div class="flow-node-label wait">WAIT</div>
+            <div class="flow-node-value">${delay} day${delay===1?'':'s'}</div>
+            <div class="flow-node-sub">at ${time}</div>
+          </div>
+        </div>
+        <div class="flow-connector"></div>
+        <div class="flow-node">
+          <div class="flow-node-circle action">${actionIcon}</div>
+          <div class="flow-node-text">
+            <div class="flow-node-label action">ACTION</div>
+            <div class="flow-node-value">${r.messageType==='tag_customer'?'Add Tags':r.messageType==='notification'?'Notify Team':'Send '+actionType}${surveyBadge}</div>
+            <div class="flow-node-sub">${esc(preview)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="scenario-footer">
+        <div class="scenario-meta">
+          <span><span class="badge ${r.messageType==='sms'?'badge-sms':r.messageType==='notification'?'badge-notif':r.messageType==='tag_customer'?'badge-tag':'badge-email'}">${actionType==='TAG_CUSTOMER'?'TAG':actionType}</span></span>
+          <span style="color:${r.enabled?'var(--green)':'var(--gray)'};">${r.enabled?'Active':'Paused'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPending(msgs) {
+  const count = msgs.length;
+  document.getElementById('pending-count').textContent = count;
+  if (!count) {
+    document.getElementById('pending-body').innerHTML = `<tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">No messages</td></tr>`;
+    return;
+  }
+  const tbody = document.getElementById('pending-body');
+  tbody.innerHTML = msgs.slice(0, 50).map(m => {
+    const d = m.sendAt ? new Date(m.sendAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+    const statusMap = {pending:'status-pending',sent:'status-sent',failed:'status-failed',retrying:'status-pending'};
+    const cls = statusMap[m.status] || 'status-pending';
+    const statusLabel = m.status === 'retrying' ? `retry ${m.retryCount||1}/3` : m.status;
+    const errorTip = m.error ? ` title="${esc(m.error)}"` : '';
+    const canDelete = m.status === 'pending' || m.status === 'retrying';
+    const canRetry = m.status === 'failed';
+    let actions = '';
+    if (canRetry) actions += `<button class="btn-icon" onclick="retryPending('${m.id}')" title="Retry now" style="color:var(--amber);border-color:rgba(245,166,35,0.3);"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="23,4 23,10 17,10" stroke-width="2"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke-width="2"/></svg></button>`;
+    if (canDelete) actions += `<button class="btn-icon del" onclick="deletePending('${m.id}')" title="Cancel"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="1.8"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="1.8"/></svg></button>`;
+    const nameCol = m.automationName ? `${esc(m.customerName||'—')}<div style="font-size:10px;color:var(--gray);margin-top:1px;">${esc(m.automationName)}</div>` : esc(m.customerName||'—');
+    return `<tr><td>${nameCol}</td><td style="text-transform:uppercase;font-size:11px;color:var(--gray);">${m.messageType||'sms'}</td><td style="font-size:12px;color:var(--gray);">${d}</td><td${errorTip}><span class="status-badge ${cls}">${statusLabel}</span>${m.error?'<div style="font-size:10px;color:var(--red);margin-top:2px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(m.error)+'</div>':''}</td><td style="white-space:nowrap;">${actions}</td></tr>`;
+  }).join('');
+}
+
+window.deletePending = async function(id) {
+  try {
+    await API.automations.deletePending(id);
+    toast('Scheduled message cancelled');
+    loadAll();
+  } catch(e) { toast(e.message, true); }
+};
+
+window.retryPending = async function(id) {
+  try {
+    await API.automations.retryPending(id);
+    toast('Retrying message...');
+    loadAll();
+  } catch(e) { toast(e.message, true); }
+};
+
+window.togglePending = function() {
+  const sec = document.getElementById('pending-section');
+  const ch = document.getElementById('pending-chevron');
+  const open = sec.style.display !== 'none';
+  sec.style.display = open ? 'none' : 'block';
+  ch.classList.toggle('open', !open);
+};
+
+window.toggleRule = async function(id, currentEnabled) {
+  try {
+    await API.automations.update(id, { enabled: !currentEnabled });
+    const r = _rules.find(x => x.id === id);
+    if (r) r.enabled = !currentEnabled;
+    renderRules(_rules);
+    updateStats(_rules, []);
+    toast(!currentEnabled ? 'Automation enabled' : 'Automation disabled');
+  } catch(e) { toast(e.message, true); }
+};
+
+window.editRule = function(id) {
+  const r = _rules.find(x => x.id === id);
+  if (!r) return;
+  _editId = id;
+  document.getElementById('modal-title').textContent = 'EDIT AUTOMATION';
+  document.getElementById('f-name').value = r.name || '';
+  document.getElementById('f-trigger').value = r.trigger || 'quote_sent';
+  document.getElementById('f-delay').value = r.delayDays ?? 3;
+  document.getElementById('f-time').value = r.sendAtTime || '09:00';
+  document.getElementById('f-type').value = r.messageType || 'sms';
+  document.getElementById('f-subject').value = r.emailSubject || '';
+  document.getElementById('f-subject-field').style.display = (r.messageType || 'sms') === 'email' ? '' : 'none';
+  const lbl2 = document.getElementById('template-label');
+  const sub2 = document.getElementById('template-sub');
+  if ((r.messageType || 'sms') === 'tag_customer') {
+    if (lbl2) lbl2.textContent = 'Tags to Add';
+    if (sub2) sub2.textContent = 'Comma-separated tags, e.g. "VIP, Repeat Customer, Priority"';
+  } else {
+    if (lbl2) lbl2.textContent = 'Message Template';
+    if (sub2) sub2.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
+  }
+  document.getElementById('f-template').value = r.messageTemplate || '';
+  _surveyOn = !!r.isSurvey;
+  document.getElementById('f-survey-toggle').className = 'toggle' + (_surveyOn ? ' on' : '');
+  document.getElementById('survey-section').className = 'survey-section' + (_surveyOn ? ' open' : '');
+  document.getElementById('f-threshold').value = r.surveyThreshold || 7;
+  document.getElementById('f-followup-type').value = r.followUpType || 'sms';
+  document.getElementById('f-followup-template').value = r.followUpTemplate || '';
+  _conditions = Array.isArray(r.conditions) ? JSON.parse(JSON.stringify(r.conditions)) : [];
+  _conditionsOn = _conditions.length > 0;
+  document.getElementById('f-conditions-toggle').className = 'toggle' + (_conditionsOn ? ' on' : '');
+  document.getElementById('conditions-section').style.display = _conditionsOn ? 'block' : 'none';
+  renderConditions();
+  _enabledOn = r.enabled !== false;
+  document.getElementById('f-enabled-toggle').className = 'toggle' + (_enabledOn ? ' on' : '');
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+window.deleteRule = async function(id) {
+  const r = _rules.find(x => x.id === id);
+  const ok = typeof swftConfirm === 'function'
+    ? await swftConfirm(`Delete "<strong>${esc(r?.name||'this automation')}</strong>"?<br/>Any pending messages from this rule will not be sent.`, 'DELETE AUTOMATION', '🗑️')
+    : confirm('Delete this automation?');
+  if (!ok) return;
+  try {
+    await API.automations.delete(id);
+    _rules = _rules.filter(x => x.id !== id);
+    renderRules(_rules);
+    updateStats(_rules, []);
+    toast('Automation deleted');
+  } catch(e) { toast(e.message, true); }
+};
+
+const _defaultTemplates = {
+  quote_sent: {
+    name: 'Quote Follow-up Reminder',
+    template: 'Hi {{customer_name}}, this is {{company_name}}. Just following up on the quote we sent over — let us know if you have any questions or would like to move forward. We\'re happy to help!',
+    followup: 'Hi {{customer_name}}, thank you so much for the kind words! If you have a moment, we\'d really appreciate a quick Google review — it helps us a ton: {{review_link}}'
+  },
+  invoice_sent: {
+    name: 'Invoice Follow-up Reminder',
+    template: 'Hi {{customer_name}}, just a reminder that your invoice from {{company_name}} is ready for payment. Let us know if you have any questions!',
+    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
+  },
+  invoice_paid: {
+    name: 'Post-Payment Thank You',
+    template: 'Hi {{customer_name}}, thank you for your payment to {{company_name}}! We appreciate your business. If you ever need anything, don\'t hesitate to reach out.',
+    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
+  },
+  job_completed: {
+    name: 'Job Completion Follow-up',
+    template: 'Hi {{customer_name}}, we\'ve completed your job! Thank you for choosing {{company_name}}. We hope everything looks great — let us know if you have any questions.',
+    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
+  },
+  customer_created: {
+    name: 'Welcome Message',
+    template: 'Hi {{customer_name}}, welcome to {{company_name}}! We\'re excited to work with you. If you have any questions, feel free to reach out anytime.',
+    followup: ''
+  }
+};
+
+window.toggleConditions = function() {
+  _conditionsOn = !_conditionsOn;
+  document.getElementById('f-conditions-toggle').className = 'toggle' + (_conditionsOn ? ' on' : '');
+  document.getElementById('conditions-section').style.display = _conditionsOn ? 'block' : 'none';
+  if (_conditionsOn && _conditions.length === 0) addCondition();
+};
+
+window.addCondition = function() {
+  _conditions.push({ field: 'total', operator: 'gt', value: '' });
+  renderConditions();
+};
+
+window.removeCondition = function(idx) {
+  _conditions.splice(idx, 1);
+  renderConditions();
+  if (_conditions.length === 0) {
+    _conditionsOn = false;
+    document.getElementById('f-conditions-toggle').className = 'toggle';
+    document.getElementById('conditions-section').style.display = 'none';
+  }
+};
+
+function renderConditions() {
+  const wrap = document.getElementById('conditions-list');
+  wrap.innerHTML = _conditions.map((c, i) => `<div class="cond-row">
+    <select onchange="_conditions[${i}].field=this.value">
+      <option value="total"${c.field==='total'?' selected':''}>Total ($)</option>
+      <option value="service"${c.field==='service'?' selected':''}>Service</option>
+      <option value="name"${c.field==='name'?' selected':''}>Customer Name</option>
+      <option value="tags"${c.field==='tags'?' selected':''}>Tags</option>
+    </select>
+    <select onchange="_conditions[${i}].operator=this.value">
+      <option value="gt"${c.operator==='gt'?' selected':''}>Greater than</option>
+      <option value="gte"${c.operator==='gte'?' selected':''}>Greater or equal</option>
+      <option value="lt"${c.operator==='lt'?' selected':''}>Less than</option>
+      <option value="lte"${c.operator==='lte'?' selected':''}>Less or equal</option>
+      <option value="eq"${c.operator==='eq'?' selected':''}>Equals</option>
+      <option value="neq"${c.operator==='neq'?' selected':''}>Not equals</option>
+      <option value="contains"${c.operator==='contains'?' selected':''}>Contains</option>
+    </select>
+    <input value="${esc(c.value)}" placeholder="Value" oninput="_conditions[${i}].value=this.value"/>
+    <button class="cond-del" onclick="removeCondition(${i})" type="button">&times;</button>
+  </div>`).join('');
+}
+
+window.quickCreate = function(trigger) {
+  openModal();
+  document.getElementById('f-trigger').value = trigger;
+  const t = _defaultTemplates[trigger];
+  if (t) {
+    document.getElementById('f-name').value = t.name;
+    document.getElementById('f-template').value = t.template;
+    document.getElementById('f-followup-template').value = t.followup;
+  }
+};
+
+window.openModal = function() {
+  _editId = null;
+  document.getElementById('modal-title').textContent = 'NEW AUTOMATION';
+  const trigger = 'quote_sent';
+  document.getElementById('f-trigger').value = trigger;
+  document.getElementById('f-name').value = _defaultTemplates[trigger].name;
+  document.getElementById('f-delay').value = '3';
+  document.getElementById('f-time').value = '09:00';
+  document.getElementById('f-type').value = 'sms';
+  document.getElementById('f-subject').value = '';
+  document.getElementById('f-subject-field').style.display = 'none';
+  const lbl = document.getElementById('template-label');
+  const sub = document.getElementById('template-sub');
+  if (lbl) lbl.textContent = 'Message Template';
+  if (sub) sub.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
+  document.getElementById('f-template').value = _defaultTemplates[trigger].template;
+  _surveyOn = false;
+  document.getElementById('f-survey-toggle').className = 'toggle';
+  document.getElementById('survey-section').className = 'survey-section';
+  document.getElementById('f-threshold').value = '7';
+  document.getElementById('f-followup-type').value = 'sms';
+  document.getElementById('f-followup-template').value = _defaultTemplates[trigger].followup;
+  _conditionsOn = false;
+  _conditions = [];
+  document.getElementById('f-conditions-toggle').className = 'toggle';
+  document.getElementById('conditions-section').style.display = 'none';
+  document.getElementById('conditions-list').innerHTML = '';
+  _enabledOn = true;
+  document.getElementById('f-enabled-toggle').className = 'toggle on';
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+window.closeModal = function() {
+  document.getElementById('modal-overlay').classList.remove('open');
+};
+
+window.toggleSurvey = function() {
+  _surveyOn = !_surveyOn;
+  document.getElementById('f-survey-toggle').className = 'toggle' + (_surveyOn ? ' on' : '');
+  document.getElementById('survey-section').className = 'survey-section' + (_surveyOn ? ' open' : '');
+};
+
+window.toggleEnabled = function() {
+  _enabledOn = !_enabledOn;
+  document.getElementById('f-enabled-toggle').className = 'toggle' + (_enabledOn ? ' on' : '');
+};
+
+window.saveAutomation = async function() {
+  const name = document.getElementById('f-name').value.trim();
+  const template = document.getElementById('f-template').value.trim();
+  if (!name) { toast('Name is required', true); return; }
+  if (!template) { toast('Message template is required', true); return; }
+
+  const data = {
+    name,
+    trigger: document.getElementById('f-trigger').value,
+    delayDays: parseInt(document.getElementById('f-delay').value) || 3,
+    sendAtTime: document.getElementById('f-time').value || '09:00',
+    messageType: document.getElementById('f-type').value,
+    emailSubject: document.getElementById('f-subject').value.trim() || '',
+    messageTemplate: template,
+    conditions: _conditionsOn ? _conditions.filter(c => c.value !== '') : [],
+    isSurvey: _surveyOn,
+    surveyThreshold: _surveyOn ? parseInt(document.getElementById('f-threshold').value) : null,
+    followUpType: _surveyOn ? document.getElementById('f-followup-type').value : null,
+    followUpTemplate: _surveyOn ? document.getElementById('f-followup-template').value.trim() : null,
+    enabled: _enabledOn,
+  };
+
+  try {
+    if (_editId) {
+      const res = await API.automations.update(_editId, data);
+      const idx = _rules.findIndex(r => r.id === _editId);
+      if (idx >= 0) _rules[idx] = { ..._rules[idx], ...data };
+      toast('Automation updated');
+    } else {
+      const res = await API.automations.create(data);
+      _rules.push({ id: res.id, ...data });
+      toast('Automation created');
+    }
+    renderRules(_rules);
+    updateStats(_rules, []);
+    closeModal();
+  } catch(e) { toast(e.message || 'Failed to save', true); }
+};
+
+document.getElementById('f-trigger').addEventListener('change', function() {
+  if (_editId) return;
+  const t = _defaultTemplates[this.value];
+  if (!t) return;
+  document.getElementById('f-name').value = t.name;
+  document.getElementById('f-template').value = t.template;
+  document.getElementById('f-followup-template').value = t.followup;
+});
+
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Show/hide fields when message type changes
+document.getElementById('f-type').addEventListener('change', function() {
+  document.getElementById('f-subject-field').style.display = this.value === 'email' ? '' : 'none';
+  const lbl = document.getElementById('template-label');
+  const sub = document.getElementById('template-sub');
+  if (this.value === 'tag_customer') {
+    if (lbl) lbl.textContent = 'Tags to Add';
+    if (sub) sub.textContent = 'Comma-separated tags, e.g. "VIP, Repeat Customer, Priority"';
+  } else {
+    if (lbl) lbl.textContent = 'Message Template';
+    if (sub) sub.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
+  }
+});
+
+let _toastTimer;
+window.toast = function(msg, err) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-dot').className = 'toast-dot' + (err?' red':'');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+};
+
+init();
+</script>
+<script type="module" src="swft-user-sync.js"></script>
+</body>
+</html>

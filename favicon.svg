@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#000000" rx="80"/>
+  <text
+    x="256"
+    y="310"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="900"
+    font-size="158"
+    fill="#ffffff"
+    text-anchor="middle"
+    letter-spacing="6"
+  >SWFT</text>
+  <circle cx="390" cy="296" r="18" fill="#c8f135"/>
+</svg>

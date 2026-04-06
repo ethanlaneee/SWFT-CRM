@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { google } = require("googleapis");
 
 // Initialize lazily so a missing STRIPE_SECRET_KEY env var doesn't crash
 // the server at startup — the error surfaces only when a billing route is hit.
@@ -13,20 +14,26 @@ function getStripe() {
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
 
+// Stripe Price IDs for each plan
+const PRICE_IDS = {
+  starter:  "price_1TIc1URNPpAjdxw0uscz7ouv",
+  pro:      "price_1TIc1VRNPpAjdxw0fwN1bfEH",
+  business: "price_1TIc1VRNPpAjdxw05e9i863i",
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/billing/create-checkout-session
 //
 // Creates a Stripe Checkout Session and returns the hosted URL.
 // The frontend redirects the browser there directly.
 //
-// Body: { priceId: "price_xxx" }  ← your Stripe Price ID
+// Body: { plan: "starter"|"pro"|"business" }
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/create-checkout-session", async (req, res, next) => {
   try {
-    const { priceId } = req.body;
-    if (!priceId) {
-      return res.status(400).json({ error: "priceId is required." });
-    }
+    const { plan } = req.body;
+    const planKey = plan && PRICE_IDS[plan] ? plan : "starter";
+    const priceId = PRICE_IDS[planKey];
 
     // Fetch Firestore profile to reuse existing Stripe customer ID
     const doc  = await users().doc(req.uid).get();
@@ -46,19 +53,30 @@ router.post("/create-checkout-session", async (req, res, next) => {
     }
 
     const session = await stripe.checkout.sessions.create({
+      ui_mode:              "embedded",
       customer:             customerId,
-      payment_method_types: ["card"],
       line_items:           [{ price: priceId, quantity: 1 }],
       mode:                 "subscription",
-      // session_id token in the success URL lets the dashboard verify payment immediately
-      success_url: `${process.env.APP_URL}/swft-dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.APP_URL}/swft-billing?canceled=true`,
-      metadata:    { firebaseUid: req.uid },
-      subscription_data: { metadata: { firebaseUid: req.uid } },
+      allow_promotion_codes: true,
+      subscription_data: {
+        trial_period_days: 14,
+        metadata: { firebaseUid: req.uid, plan: planKey },
+      },
+      return_url: `${process.env.APP_URL}/swft-checkout?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
+      metadata:   { firebaseUid: req.uid, plan: planKey },
     });
 
-    res.json({ url: session.url });
+    res.json({ clientSecret: session.client_secret });
   } catch (err) { next(err); }
+});
+
+// GET /api/billing/plans — return plan info and Stripe price IDs (public-ish)
+router.get("/plans", (req, res) => {
+  res.json({
+    starter:  { name: "Starter",  price: 49,  priceId: PRICE_IDS.starter },
+    pro:      { name: "Pro",      price: 99,  priceId: PRICE_IDS.pro },
+    business: { name: "Business", price: 149, priceId: PRICE_IDS.business },
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -87,7 +105,7 @@ router.get("/verify-session", async (req, res, next) => {
       return res.status(403).json({ error: "Session does not belong to this account." });
     }
 
-    if (session.payment_status !== "paid") {
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
       return res.status(402).json({ error: "Payment not completed.", paymentStatus: session.payment_status });
     }
 
@@ -96,6 +114,7 @@ router.get("/verify-session", async (req, res, next) => {
     await users().doc(req.uid).set({
       accountStatus:        "active",
       isSubscribed:         true,
+      plan:                 session.metadata?.plan || "starter",
       stripeSubscriptionId: session.subscription,
     }, { merge: true });
 
@@ -136,6 +155,7 @@ async function webhookHandler(req, res) {
         await users().doc(uid).set({
           accountStatus:        "active",
           isSubscribed:         true,
+          plan:                 session.metadata?.plan || "starter",
           stripeCustomerId:     session.customer,
           stripeSubscriptionId: session.subscription,
         }, { merge: true });
@@ -154,13 +174,59 @@ async function webhookHandler(req, res) {
       }
     }
 
-    // Skip emails for the admin account
+    // Payment failed — notify the user via email
     if (event.type === "invoice.payment_failed") {
       const invoice = event.data.object;
       const snap    = await users().where("stripeCustomerId", "==", invoice.customer).limit(1).get();
       if (!snap.empty && snap.docs[0].data().email !== ADMIN_EMAIL) {
-        // TODO: send payment-failed email notification here
-        console.warn("Payment failed for customer:", invoice.customer);
+        const userData = snap.docs[0].data();
+        const userEmail = userData.email;
+        const userName = userData.name || "";
+        const billingUrl = `${process.env.APP_URL || "https://goswft.com"}/swft-billing`;
+
+        // Send via admin Gmail if tokens available
+        try {
+          const adminSnap = await users().where("email", "==", ADMIN_EMAIL).limit(1).get();
+          if (!adminSnap.empty) {
+            const admin = adminSnap.data ? adminSnap.data() : adminSnap.docs[0].data();
+            if (admin.gmailConnected && admin.gmailTokens) {
+              const oauth2Client = new google.auth.OAuth2(
+                process.env.GOOGLE_CLIENT_ID,
+                process.env.GOOGLE_CLIENT_SECRET,
+                process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
+              );
+              oauth2Client.setCredentials(admin.gmailTokens);
+              const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+              const subject = "SWFT — Payment Failed";
+              const htmlBody = `
+                <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+                  <h2 style="color:#0a0a0a;">Payment Failed</h2>
+                  <p>Hi${userName ? " " + userName : ""},</p>
+                  <p>We were unable to process your latest payment for your SWFT subscription. Please update your payment method to keep your account active.</p>
+                  <p><a href="${billingUrl}" style="display:inline-block;padding:12px 24px;background:#0a0a0a;color:#c8f135;text-decoration:none;border-radius:6px;font-weight:600;">Update Payment Method</a></p>
+                  <p style="color:#888;font-size:13px;">If you believe this is an error, please reply to this email.</p>
+                  <p style="color:#888;font-size:12px;">— The SWFT Team</p>
+                </div>`;
+
+              const boundary = "swft_billing_" + Date.now();
+              let mime = `From: SWFT <${admin.gmailAddress || ADMIN_EMAIL}>\r\n`;
+              mime += `To: ${userEmail}\r\n`;
+              mime += `Subject: ${subject}\r\n`;
+              mime += `MIME-Version: 1.0\r\n`;
+              mime += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
+              mime += htmlBody;
+
+              const encoded = Buffer.from(mime).toString("base64")
+                .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+              await gmail.users.messages.send({ userId: "me", requestBody: { raw: encoded } });
+              console.log("Payment-failed email sent successfully");
+            }
+          }
+        } catch (emailErr) {
+          console.error("Failed to send payment-failed email:", emailErr.message);
+        }
       }
     }
 

@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
+const { triggerAutomation } = require("./automations");
 
 const col = () => db.collection("jobs");
 
@@ -9,9 +10,14 @@ router.get("/", async (req, res, next) => {
     const snap = await col().where("orgId", "==", req.orgId).get();
     let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Technicians only see jobs assigned to them
+    // Technicians only see jobs explicitly assigned to them
+    // If NO jobs have assignedTo set yet, they see all (graceful migration)
     if (req.userRole === "technician") {
-      results = results.filter(r => r.assignedTo === req.uid);
+      const anyAssigned = results.some(r => r.assignedTo);
+      if (anyAssigned) {
+        results = results.filter(r => r.assignedTo === req.uid);
+      }
+      // If no jobs have assignedTo set at all yet, show all (zero-config rollout)
     }
 
     if (req.query.status) results = results.filter(r => r.status === req.query.status);
@@ -85,6 +91,24 @@ router.post("/:id/complete", async (req, res, next) => {
       return res.status(404).json({ error: "Job not found" });
     }
     await col().doc(req.params.id).update({ status: "complete", completedAt: Date.now() });
+
+    // Trigger automations for job_completed
+    const jobData = doc.data();
+    if (jobData.customerId) {
+      try {
+        const custDoc = await db.collection("customers").doc(jobData.customerId).get();
+        const cust = custDoc.exists ? custDoc.data() : {};
+        triggerAutomation(req.orgId, "job_completed", {
+          id: jobData.customerId,
+          name: cust.name || jobData.customerName || "",
+          phone: cust.phone || "",
+          email: cust.email || "",
+          total: jobData.cost || 0,
+          service: jobData.service || "",
+        }).catch(console.error);
+      } catch (e) { console.error("job_completed automation error:", e); }
+    }
+
     res.json({ success: true, status: "complete" });
   } catch (err) { next(err); }
 });

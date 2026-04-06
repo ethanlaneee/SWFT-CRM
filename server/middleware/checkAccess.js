@@ -5,40 +5,103 @@ const col = () => db.collection("users");
 // Admin accounts bypass all subscription/trial checks
 const ADMIN_EMAILS = ["ethan@goswft.com"];
 
+// Maps (baseUrl, HTTP method) → required permission key
+const METHOD_PERMISSION = {
+  "/api/dashboard":     { GET: "dashboard.view" },
+  "/api/customers":     { GET: "customers.view", POST: "customers.add",   PUT: "customers.edit",   DELETE: "customers.delete" },
+  "/api/jobs":          { GET: "jobs.view",       POST: "jobs.add",        PUT: "jobs.edit",        DELETE: "jobs.delete" },
+  "/api/quotes":        { GET: "quotes.view",     POST: "quotes.add",      PUT: "quotes.edit",      DELETE: "quotes.delete" },
+  "/api/invoices":      { GET: "invoices.view",   POST: "invoices.add",    PUT: "invoices.edit",    DELETE: "invoices.delete" },
+  "/api/schedule":      { GET: "schedule.view",   POST: "schedule.add",    PUT: "schedule.edit",    DELETE: "schedule.delete" },
+  "/api/messages":      { GET: "messages.view",   POST: "messages.send",   DELETE: "messages.view" },
+  "/api/payments":      { GET: "invoices.view",   POST: "invoices.edit" },
+  "/api/photos":        { GET: "jobs.view",        POST: "jobs.edit",       DELETE: "jobs.edit" },
+  "/api/ai":            { GET: "ai.use",           POST: "ai.use",          DELETE: "ai.use" },
+  "/api/notifications": { GET: "dashboard.view",  POST: "dashboard.view",  DELETE: "dashboard.view" },
+  "/api/team":          { GET: "team.manage",      POST: "team.manage",     PUT: "team.manage",      DELETE: "team.manage" },
+  "/api/integrations":  { GET: "integrations.manage", POST: "integrations.manage" },
+};
+
+// Human-readable labels for 403 messages
+const PERM_LABEL = {
+  "dashboard.view":        "view the dashboard",
+  "customers.view":        "view customers",
+  "customers.add":         "add customers",
+  "customers.edit":        "edit customers",
+  "customers.delete":      "delete customers",
+  "jobs.view":             "view jobs",
+  "jobs.add":              "add jobs",
+  "jobs.edit":             "edit jobs",
+  "jobs.delete":           "delete jobs",
+  "quotes.view":           "view quotes",
+  "quotes.add":            "create quotes",
+  "quotes.edit":           "edit quotes",
+  "quotes.delete":         "delete quotes",
+  "invoices.view":         "view invoices",
+  "invoices.add":          "create invoices",
+  "invoices.edit":         "edit invoices",
+  "invoices.delete":       "delete invoices",
+  "schedule.view":         "view the schedule",
+  "schedule.add":          "add schedule entries",
+  "schedule.edit":         "edit schedule entries",
+  "schedule.delete":       "delete schedule entries",
+  "messages.view":         "view messages",
+  "messages.send":         "send messages",
+  "ai.use":                "use the AI assistant",
+  "team.manage":           "manage team members",
+  "integrations.manage":   "manage integrations",
+  "settings.manage":       "change settings",
+};
+
+// Permissions per built-in role
+const ROLE_PERMISSIONS = {
+  owner: null, // unrestricted
+  admin: new Set([
+    "dashboard.view",
+    "customers.view","customers.add","customers.edit","customers.delete",
+    "jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete",
+    "quotes.view","quotes.add","quotes.edit","quotes.delete",
+    "invoices.view","invoices.add","invoices.edit","invoices.delete",
+    "schedule.view","schedule.add","schedule.edit","schedule.delete",
+    "messages.view","messages.send",
+    "ai.use",
+    "team.manage",
+    "integrations.manage",
+    "settings.manage",
+  ]),
+  office: new Set([
+    "dashboard.view",
+    "customers.view","customers.add","customers.edit","customers.delete",
+    "jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete",
+    "quotes.view","quotes.add","quotes.edit","quotes.delete",
+    "invoices.view","invoices.add","invoices.edit","invoices.delete",
+    "schedule.view","schedule.add","schedule.edit","schedule.delete",
+    "messages.view","messages.send",
+    "ai.use",
+  ]),
+  technician: new Set([
+    "dashboard.view",
+    "jobs.view",
+    "jobs.edit",
+    "schedule.view",
+    "messages.view","messages.send",
+    "ai.use",
+  ]),
+};
+
 /**
- * checkAccess middleware — runs after the `auth` middleware on all private routes.
+ * checkAccess middleware
  *
- * Step 1 — Authentication:
- *   Verifies the Firebase JWT in the Authorization header.
- *   Returns 401 + { redirect: "/login" } if missing, malformed, or invalid.
- *
- * Step 2 — Account status:
- *   Fetches the user's Firestore profile and (if needed) auto-expires a lapsed trial.
- *   • "active" | "trialing"  → next()
- *   • "expired" | "canceled" → 403 + { redirect: "/billing", message }
- *
- * Usage in index.js:
- *   const { auth } = require("./middleware/auth");
- *   const { checkAccess } = require("./middleware/checkAccess");
- *
- *   // Auth-only (user/billing profile always accessible):
- *   app.use("/api/me", auth, require("./routes/user"));
- *
- *   // Fully gated (requires active/trialing account):
- *   app.use("/api/dashboard", auth, checkAccess, require("./routes/dashboard"));
+ * Step 1 — Authentication: verifies Firebase JWT.
+ * Step 2 — Account status: trial / active / expired check.
+ * Step 3 — Role permissions: method-level granular enforcement.
  */
 async function checkAccess(req, res, next) {
   // ── Step 1: Authentication ────────────────────────────────────────────────
-  // If checkAccess is used standalone (without a preceding `auth` middleware),
-  // verify the token here. If `auth` already ran, req.uid is already set and
-  // this block is skipped.
   if (!req.uid) {
     const header = req.headers.authorization;
     if (!header || !header.startsWith("Bearer ")) {
-      return res.status(401).json({
-        error: "Authentication required.",
-        redirect: "/login",
-      });
+      return res.status(401).json({ error: "Authentication required.", redirect: "/login" });
     }
     try {
       const token = header.split("Bearer ")[1];
@@ -46,14 +109,11 @@ async function checkAccess(req, res, next) {
       req.uid = decoded.uid;
       req.user = decoded;
     } catch {
-      return res.status(401).json({
-        error: "Invalid or expired session. Please log in again.",
-        redirect: "/login",
-      });
+      return res.status(401).json({ error: "Invalid or expired session. Please log in again.", redirect: "/login" });
     }
   }
 
-  // ── Admin bypass ─────────────────────────────────────────────────────────
+  // ── Admin bypass ──────────────────────────────────────────────────────────
   if (req.user?.email && ADMIN_EMAILS.includes(req.user.email)) {
     return next();
   }
@@ -61,13 +121,10 @@ async function checkAccess(req, res, next) {
   // ── Step 2: Account status ────────────────────────────────────────────────
   try {
     const doc = await col().doc(req.uid).get();
-
-    // No profile yet — treat as trialing (GET /api/me will create it)
-    if (!doc.exists) return next();
+    if (!doc.exists) return next(); // new user — let them through
 
     let { accountStatus, isSubscribed, trialEndDate } = doc.data();
 
-    // Auto-expire: trial window has closed and user is not subscribed
     if (!isSubscribed && trialEndDate && Date.now() > trialEndDate) {
       if (accountStatus !== "expired") {
         await col().doc(req.uid).set({ accountStatus: "expired" }, { merge: true });
@@ -75,19 +132,36 @@ async function checkAccess(req, res, next) {
       accountStatus = "expired";
     }
 
-    if (!accountStatus || accountStatus === "active" || accountStatus === "trialing") {
-      return next();
+    if (accountStatus === "expired" || accountStatus === "canceled") {
+      return res.status(403).json({
+        error: "Access denied.",
+        message: "Your trial has ended. Please upgrade to continue.",
+        redirect: "/billing",
+      });
     }
 
-    // "expired" or "canceled"
-    return res.status(403).json({
-      error: "Access denied.",
-      message: "Your trial has ended. Please upgrade to continue.",
-      redirect: "/billing",
-    });
+    // ── Step 3: Role-based permission check ───────────────────────────────
+    const role = req.userRole || "owner";
+    const allowedPerms = ROLE_PERMISSIONS[role]; // null = owner (unrestricted)
+
+    if (allowedPerms) {
+      const routePerms = METHOD_PERMISSION[req.baseUrl];
+      if (routePerms) {
+        const requiredPerm = routePerms[req.method] || null;
+        if (requiredPerm && !allowedPerms.has(requiredPerm)) {
+          const label = PERM_LABEL[requiredPerm] || "perform this action";
+          return res.status(403).json({
+            error: `You don't have permission to ${label}.`,
+            permission: requiredPerm,
+          });
+        }
+      }
+    }
+
+    return next();
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { checkAccess };
+module.exports = { checkAccess, ROLE_PERMISSIONS, METHOD_PERMISSION };

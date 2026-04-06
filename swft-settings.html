@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <title>SWFT — Settings</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -102,6 +103,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div class="nav-item" onclick="window.location.href='swft-billing'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
     <div class="nav-item" onclick="window.location.href='swft-schedule'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>Schedule</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item" onclick="window.location.href='swft-automations'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Automations</div>
+    <div class="nav-item" onclick="window.location.href='swft-reviews'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Reviews</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
   <div class="sidebar-footer">
@@ -191,7 +194,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Integrations -->
-<div class="settings-section">
+<div class="settings-section" id="integrations">
   <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
   <div class="settings-body" id="integrations-list" style="gap:0;">
     <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
@@ -211,6 +214,17 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Notifications</div><div class="settings-row-desc">Show notification badge and dropdown</div></div>
       <div class="settings-toggle on" onclick="this.classList.toggle('on');showToast(this.classList.contains('on')?'Notifications on':'Notifications off')"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Data -->
+<div class="settings-section">
+  <div class="settings-header"><span class="settings-header-icon">📥</span><h3>IMPORT DATA</h3></div>
+  <div class="settings-body">
+    <div class="settings-row">
+      <div class="settings-row-info"><div class="settings-row-label">Import Customers & Jobs</div><div class="settings-row-desc">Migrate from Jobber, ServiceTitan, Housecall Pro, or any CSV export. Import up to 500 records at a time.</div></div>
+      <button class="settings-btn primary" onclick="window.location.href='swft-import'">Import CSV</button>
     </div>
   </div>
 </div>
@@ -407,17 +421,20 @@ async function loadIntegrations() {
     var container = document.getElementById('integrations-list');
     if (!container) return;
 
-    var icons = { gmail: '📧', google_calendar: '📅', quickbooks: '💰' };
+    var icons = { gmail: '📧', google_calendar: '📅', google_sheets: '📊', quickbooks: '💰', square: '🟦', stripe: '💳', google_business: '⭐' };
     container.innerHTML = data.integrations.map(function(i) {
-      return '<div class="settings-row">' +
+      return '<div class="settings-row" style="' + (i.connected ? 'border-left:2px solid var(--green);padding-left:14px;' : '') + '">' +
         '<div class="settings-row-info">' +
-          '<div class="settings-row-label">' + (icons[i.id] || '🔗') + ' ' + i.name + '</div>' +
+          '<div class="settings-row-label" style="display:flex;align-items:center;gap:8px;">' +
+            (icons[i.id] || '🔗') + ' ' + i.name +
+            (i.connected ? '<span style="background:rgba(200,241,53,0.12);color:var(--green);font-size:9.5px;font-weight:700;letter-spacing:1.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase;">Connected</span>' : '') +
+          '</div>' +
           '<div class="settings-row-desc">' + i.description +
-            (i.connected ? ' <span style="color:var(--green);font-weight:600;">Connected' + (i.account ? ' — ' + i.account : '') + '</span>' : '') +
+            (i.connected && i.account ? ' — <span style="color:var(--green);">' + i.account + '</span>' : '') +
           '</div>' +
         '</div>' +
         (i.connected
-          ? '<button class="settings-btn danger" onclick="disconnectIntegration(\'' + i.id + '\')">Disconnect</button>'
+          ? '<button class="settings-btn danger" onclick="disconnectIntegration(\'' + i.id + '\',\'' + i.name + '\')">Disconnect</button>'
           : '<button class="settings-btn primary" onclick="connectIntegration(\'' + i.id + '\')">Connect</button>') +
       '</div>';
     }).join('');
@@ -446,8 +463,11 @@ async function connectIntegration(id) {
   }
 }
 
-async function disconnectIntegration(id) {
-  if (!confirm('Disconnect this integration?')) return;
+async function disconnectIntegration(id, name) {
+  var ok = typeof swftConfirm === 'function'
+    ? await swftConfirm('Disconnect <strong>' + (name || id) + '</strong>? You can reconnect at any time.', 'DISCONNECT', '🔌')
+    : confirm('Disconnect ' + (name || id) + '?');
+  if (!ok) return;
   try {
     var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
     var token = await getAuth().currentUser.getIdToken();
@@ -455,7 +475,7 @@ async function disconnectIntegration(id) {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token },
     });
-    showToast('Disconnected');
+    showToast(name + ' disconnected');
     loadIntegrations();
   } catch(e) {
     showToast('Error disconnecting');
@@ -503,7 +523,12 @@ async function disconnectIntegration(id) {
       document.body.style.visibility = "visible";
       window.__swftUser = user;
       loadSettings();
-      loadIntegrations();
+      loadIntegrations().then(function(){
+        if(window.location.hash){
+          var el=document.querySelector(window.location.hash);
+          if(el) el.scrollIntoView({behavior:'smooth'});
+        }
+      });
     }
   });
 </script>

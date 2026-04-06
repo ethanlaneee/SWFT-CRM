@@ -1,13 +1,11 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
-const postmark = require("postmark");
 const multer = require("multer");
 const { google } = require("googleapis");
 const { sendSms } = require("../twilio");
-
-const emailClient = new postmark.ServerClient(
-  process.env.POSTMARK_API_TOKEN || "32a85e4b-55e5-45e2-950e-6c120b001007"
-);
+const { getPlan } = require("../plans");
+const { getUsage, incrementSms } = require("../usage");
+const PDFDocument = require("pdfkit");
 
 /**
  * Send email via user's connected Gmail account.
@@ -95,11 +93,201 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files) {
   return { messageId: result.data.id, threadId: result.data.threadId };
 }
 
-// Multer — store files in memory (max 10MB total for Postmark)
+// Multer — store files in memory (max 10MB per file)
+const ALLOWED_MIMES = new Set([
+  "image/jpeg", "image/png", "image/gif", "image/webp",
+  "application/pdf",
+  "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain", "text/csv",
+]);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIMES.has(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("File type not allowed"), false);
+    }
+  },
 });
+
+/**
+ * Generate a PDF buffer for a quote or invoice.
+ * Uses Bebas Neue + DM Sans fonts to match the SWFT frontend exactly.
+ */
+function generateDocumentPdf(doc, docType, user) {
+  const path = require("path");
+  const fontsDir = path.join(__dirname, "..", "fonts");
+
+  return new Promise((resolve, reject) => {
+    const pdf = new PDFDocument({ size: "LETTER", margins: { top: 40, bottom: 40, left: 50, right: 50 } });
+    const chunks = [];
+    pdf.on("data", (chunk) => chunks.push(chunk));
+    pdf.on("end", () => resolve(Buffer.concat(chunks)));
+    pdf.on("error", reject);
+
+    // Register fonts
+    pdf.registerFont("Bebas", path.join(fontsDir, "BebasNeue-Regular.ttf"));
+    pdf.registerFont("DM", path.join(fontsDir, "DMSans-Regular.woff"));
+    pdf.registerFont("DM-Medium", path.join(fontsDir, "DMSans-Medium.woff"));
+    pdf.registerFont("DM-Bold", path.join(fontsDir, "DMSans-Bold.woff"));
+
+    const companyName = user.company || user.name || "SWFT";
+    const taglineParts = [];
+    if (user.phone) taglineParts.push(user.phone);
+    if (user.address) taglineParts.push(user.address);
+    const tagline = taglineParts.length ? taglineParts.join("     ") : "simple. smart. swft.";
+    const title = docType === "quote" ? "QUOTE" : "INVOICE";
+    const items = doc.items || [];
+    console.log("[PDF] Generating", docType, "- items:", JSON.stringify(items));
+    const GREEN = "#8ab800";
+    const pageW = 612; // LETTER width
+    const left = 50;
+    const right = pageW - 50;
+    const contentW = right - left; // 512
+
+    let y = 40;
+
+    // ═══════════════════════════════════════════
+    //  COMPANY HEADER
+    // ═══════════════════════════════════════════
+    if (user.companyLogo) {
+      try {
+        const matches = user.companyLogo.match(/^data:image\/\w+;base64,(.+)$/);
+        if (matches) {
+          const imgBuffer = Buffer.from(matches[1], "base64");
+          pdf.image(imgBuffer, left, y, { fit: [180, 50] });
+          y += 58;
+        } else {
+          pdf.font("Bebas").fontSize(28).fill("#111").text(companyName + ".", left, y, { characterSpacing: 2.5 });
+          y += 34;
+        }
+      } catch (e) {
+        pdf.font("Bebas").fontSize(28).fill("#111").text(companyName + ".", left, y, { characterSpacing: 2.5 });
+        y += 34;
+      }
+    } else {
+      // Render company name in Bebas with green dot
+      const nameWidth = pdf.font("Bebas").fontSize(28).widthOfString(companyName, { characterSpacing: 2.5 });
+      pdf.fill("#111").text(companyName, left, y, { characterSpacing: 2.5, continued: false });
+      pdf.fill(GREEN).text(".", left + nameWidth + 1, y, { characterSpacing: 0 });
+      y += 34;
+    }
+
+    // Tagline
+    pdf.font("DM").fontSize(9).fill("#999").text(tagline, left, y, { characterSpacing: 1.2 });
+    y += 22;
+
+    // ═══════════════════════════════════════════
+    //  DOCUMENT TYPE + GREEN RULE
+    // ═══════════════════════════════════════════
+    pdf.font("Bebas").fontSize(18).fill("#111").text(title, left, y, { characterSpacing: 1.8 });
+    y += 24;
+    pdf.moveTo(left, y).lineTo(right, y).strokeColor(GREEN).lineWidth(2).stroke();
+    y += 18;
+
+    // ═══════════════════════════════════════════
+    //  INFO FIELDS  (label left, value right)
+    // ═══════════════════════════════════════════
+    // Matches the printQuotePdf / printInvoicePdf layout exactly
+    const fields = [
+      { label: "Customer", value: doc.customerName || "—" },
+      { label: "Service", value: doc.service || "—" },
+      { label: "Address", value: doc.address || "—" },
+    ];
+    if (docType === "quote") {
+      const sched = doc.scheduledDate
+        ? new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "—";
+      fields.push({ label: "Scheduled", value: sched });
+    }
+    if (docType === "invoice") {
+      const due = doc.dueDate
+        ? new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "—";
+      fields.push({ label: "Due Date", value: due });
+    }
+
+    for (const f of fields) {
+      pdf.font("DM").fontSize(13).fill("#666").text(f.label, left, y);
+      pdf.font("DM-Medium").fontSize(13).fill("#111").text(f.value, left, y, { width: contentW, align: "right" });
+      y += 20;
+    }
+    y += 16;
+
+    // ═══════════════════════════════════════════
+    //  LINE ITEMS SECTION LABEL
+    // ═══════════════════════════════════════════
+    pdf.font("DM").fontSize(10).fill("#999").text("LINE ITEMS", left, y, { characterSpacing: 1.2 });
+    y += 18;
+
+    // Column positions (grid: 2fr 1fr 1fr 1fr over 512pt)
+    const c1 = left;          // Description — 2/5 of width
+    const c2 = left + 256;    // Qty
+    const c3 = left + 358;    // Rate
+    const c4 = left + 440;    // Total
+    const c4End = right;
+
+    // Column headers
+    pdf.font("DM").fontSize(9).fill("#999");
+    pdf.text("DESCRIPTION", c1, y, { characterSpacing: 0.8 });
+    pdf.text("QTY", c2, y, { width: 80, align: "center", characterSpacing: 0.8 });
+    pdf.text("RATE", c3, y, { width: 70, align: "right", characterSpacing: 0.8 });
+    pdf.text("TOTAL", c4, y, { width: c4End - c4, align: "right", characterSpacing: 0.8 });
+    y += 16;
+    pdf.moveTo(left, y).lineTo(right, y).strokeColor("#e0e0e0").lineWidth(1).stroke();
+    y += 10;
+
+    // ═══════════════════════════════════════════
+    //  LINE ITEM ROWS
+    // ═══════════════════════════════════════════
+    for (const item of items) {
+      const qty = Number(item.qty) || 1;
+      const rawRate = item.rate;
+      const rawTotal = item.total;
+      const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
+      const total = Number(item.total) || (qty * rate) || 0;
+      console.log("[PDF] Item:", item.desc, "rawRate:", rawRate, "rawTotal:", rawTotal, "computed rate:", rate, "computed total:", total);
+
+      const descText = item.desc || item.description || "";
+      const qtyText = String(qty);
+      const rateText = "$" + rate.toFixed(2);
+      const totalText = "$" + total.toFixed(2);
+
+      // All columns rendered at same y, font-size 13 to match print PDF
+      pdf.font("DM").fontSize(13).fill("#111").text(descText, c1, y, { width: 240 });
+      pdf.font("DM").fontSize(13).fill("#111").text(qtyText, c2, y, { width: 80, align: "center" });
+      pdf.font("DM").fontSize(13).fill("#111").text(rateText, c3, y, { width: 70, align: "right" });
+      pdf.font("DM-Medium").fontSize(13).fill("#111").text(totalText, c4, y, { width: c4End - c4, align: "right" });
+
+      y += 28;
+      pdf.moveTo(left, y).lineTo(right, y).strokeColor("#f0f0f0").lineWidth(0.5).stroke();
+      y += 10;
+    }
+
+    // ═══════════════════════════════════════════
+    //  TOTALS
+    // ═══════════════════════════════════════════
+    y += 6;
+    const grandTotal = Number(doc.total) || 0;
+    const totalFormatted = "$" + grandTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Subtotal row
+    pdf.font("DM").fontSize(13).fill("#111").text("Subtotal", left, y, { width: contentW - 120, align: "right" });
+    pdf.font("DM").fontSize(13).fill("#111").text(totalFormatted, left, y, { width: contentW, align: "right" });
+    y += 24;
+
+    // Grand total row with top border
+    pdf.moveTo(right - 220, y).lineTo(right, y).strokeColor("#111").lineWidth(2).stroke();
+    y += 10;
+    pdf.font("DM-Bold").fontSize(18).fill("#111").text("Total", left, y, { width: contentW - 130, align: "right" });
+    pdf.font("DM-Bold").fontSize(18).fill("#111").text(totalFormatted, left, y, { width: contentW, align: "right" });
+
+    pdf.end();
+  });
+}
 
 /**
  * Generate HTML email body for a quote or invoice attachment.
@@ -111,13 +299,18 @@ function generateDocumentHtml(doc, docType, user) {
 
   const itemRows = items
     .map(
-      (item) => `
+      (item) => {
+        const qty = Number(item.qty) || 1;
+        const rate = Number(item.rate) || (Number(item.total) / qty) || 0;
+        const total = Number(item.total) || (qty * rate) || 0;
+        return `
     <tr>
       <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${item.desc || item.description || ""}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${item.qty || 1}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${Number(item.rate || 0).toFixed(2)}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${Number(item.total || 0).toFixed(2)}</td>
-    </tr>`
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:center;">${qty}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#555;text-align:right;">$${rate.toFixed(2)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;text-align:right;font-weight:600;">$${total.toFixed(2)}</td>
+    </tr>`;
+      }
     )
     .join("");
 
@@ -195,7 +388,20 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       if (!to) return res.status(400).json({ error: "Phone number is required" });
       if (!body) return res.status(400).json({ error: "Message body is required" });
 
+      // Enforce SMS cap based on user's plan
+      const plan = getPlan(user.plan);
+      if (plan.smsLimit !== Infinity) {
+        const usage = await getUsage(req.uid);
+        if (usage.smsCount >= plan.smsLimit) {
+          return res.status(429).json({
+            error: `SMS limit reached (${plan.smsLimit}/month on the ${plan.name} plan). Upgrade your plan for more SMS.`,
+          });
+        }
+      }
+
       const result = await sendSms(to, body);
+
+      await incrementSms(req.uid);
 
       const msgRecord = {
         userId: req.uid,
@@ -225,11 +431,23 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     let attachedDocType = "";
     let attachedDocId = "";
 
+    // Build PDF file attachments for quotes/invoices
+    const pdfFiles = [];
+
     if (quoteId) {
       const quoteDoc = await db.collection("quotes").doc(quoteId).get();
       if (quoteDoc.exists && quoteDoc.data().userId === req.uid) {
         const quoteData = { id: quoteDoc.id, ...quoteDoc.data() };
-        htmlBody += generateDocumentHtml(quoteData, "quote", user);
+        if (quoteData.status === "sent") {
+          return res.status(400).json({ error: "This quote has already been sent. Duplicate sends are not allowed." });
+        }
+        const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
+        const custName = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
+        pdfFiles.push({
+          buffer: pdfBuffer,
+          mimetype: "application/pdf",
+          originalname: `Quote-${custName}.pdf`,
+        });
         attachedDocType = "quote";
         attachedDocId = quoteId;
       }
@@ -237,7 +455,16 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       const invDoc = await db.collection("invoices").doc(invoiceId).get();
       if (invDoc.exists && invDoc.data().userId === req.uid) {
         const invData = { id: invDoc.id, ...invDoc.data() };
-        htmlBody += generateDocumentHtml(invData, "invoice", user);
+        if (invData.status === "sent") {
+          return res.status(400).json({ error: "This invoice has already been sent. Duplicate sends are not allowed." });
+        }
+        const pdfBuffer = await generateDocumentPdf(invData, "invoice", user);
+        const custName = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
+        pdfFiles.push({
+          buffer: pdfBuffer,
+          mimetype: "application/pdf",
+          originalname: `Invoice-${custName}.pdf`,
+        });
         attachedDocType = "invoice";
         attachedDocId = invoiceId;
       }
@@ -246,41 +473,16 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     if (!htmlBody) htmlBody = "<p>No content</p>";
     const textBody = body ? body.replace(/<[^>]*>/g, "") : "No content";
 
-    // Collect attachment file names
-    const attachmentNames = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(f => attachmentNames.push(f.originalname));
+    // Merge uploaded files + generated PDF attachments
+    const allFiles = [...(req.files || []), ...pdfFiles];
+    const attachmentNames = allFiles.map(f => f.originalname);
+
+    if (!user.gmailConnected || !user.gmailTokens) {
+      return res.status(400).json({ error: "Gmail not connected. Connect your Gmail account in Settings to send emails." });
     }
 
-    let sendResult;
-    let sentVia;
-
-    if (user.gmailConnected && user.gmailTokens) {
-      // ── Send via Gmail ──
-      user._uid = req.uid; // pass uid for token refresh
-      sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, req.files || []);
-      sentVia = "gmail";
-    } else {
-      // ── Fallback: send via Postmark ──
-      const attachments = (req.files || []).map(f => ({
-        Name: f.originalname,
-        Content: f.buffer.toString("base64"),
-        ContentType: f.mimetype,
-      }));
-      const INBOUND_ADDRESS = process.env.POSTMARK_INBOUND_ADDRESS || "bd196517d8ffba85bb53831c50d00fb1@inbound.postmarkapp.com";
-      const emailPayload = {
-        From: `${fromName} <${fromEmail}>`,
-        To: to,
-        ReplyTo: INBOUND_ADDRESS,
-        Subject: subject,
-        HtmlBody: htmlBody,
-        TextBody: textBody,
-        MessageStream: "outbound",
-      };
-      if (attachments.length) emailPayload.Attachments = attachments;
-      sendResult = await emailClient.sendEmail(emailPayload);
-      sentVia = "postmark";
-    }
+    user._uid = req.uid;
+    const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, allFiles);
 
     const msgRecord = {
       userId: req.uid,
@@ -291,15 +493,11 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       customerName: customerName || "",
       type: "email",
       status: "sent",
-      sentVia,
+      sentVia: "gmail",
+      gmailMessageId: sendResult.messageId,
+      gmailThreadId: sendResult.threadId,
       sentAt: Date.now(),
     };
-    if (sentVia === "gmail") {
-      msgRecord.gmailMessageId = sendResult.messageId;
-      msgRecord.gmailThreadId = sendResult.threadId;
-    } else {
-      msgRecord.postmarkId = sendResult.MessageID;
-    }
     if (attachedDocType) {
       msgRecord.attachedDocType = attachedDocType;
       msgRecord.attachedDocId = attachedDocId;
@@ -317,10 +515,69 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       await db.collection("invoices").doc(attachedDocId).update({ status: "sent", sentAt: Date.now() });
     }
 
-    res.json({ success: true, id: docRef.id, sentVia });
+    res.json({ success: true, id: docRef.id, sentVia: "gmail" });
   } catch (err) {
     console.error("Message send error:", err);
     res.status(500).json({ error: err.message || "Failed to send message" });
+  }
+});
+
+// POST /api/messages/schedule — schedule a message for later
+router.post("/schedule", async (req, res, next) => {
+  try {
+    const { to, body, type, subject, customerId, customerName, sendAt } = req.body;
+    const msgType = type || "sms";
+
+    if (!to) return res.status(400).json({ error: "Recipient is required" });
+    if (!body) return res.status(400).json({ error: "Message body is required" });
+    if (!sendAt) return res.status(400).json({ error: "Scheduled time is required" });
+
+    const sendAtMs = new Date(sendAt).getTime();
+    if (isNaN(sendAtMs) || sendAtMs <= Date.now()) {
+      return res.status(400).json({ error: "Scheduled time must be in the future" });
+    }
+
+    const msgData = {
+      orgId: req.orgId,
+      userId: req.uid,
+      customerId: customerId || "",
+      customerName: customerName || "",
+      phone: msgType === "sms" ? to : "",
+      email: msgType === "email" ? to : "",
+      message: body,
+      subject: msgType === "email" ? (subject || "") : "",
+      messageType: msgType,
+      sendAt: sendAtMs,
+      status: "pending",
+      sentAt: null,
+      error: null,
+      isManual: true,
+      createdAt: Date.now(),
+    };
+
+    const ref = await db.collection("scheduledMessages").add(msgData);
+    res.status(201).json({ id: ref.id, ...msgData });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/messages/scheduled — list pending scheduled messages for this user's org
+router.get("/scheduled", async (req, res, next) => {
+  try {
+    const now = Date.now();
+    const snap = await db
+      .collection("scheduledMessages")
+      .where("orgId", "==", req.orgId)
+      .where("status", "==", "pending")
+      .get();
+    let results = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    // Only return future scheduled messages
+    results = results.filter((m) => m.sendAt > now);
+    results.sort((a, b) => (a.sendAt || 0) - (b.sendAt || 0));
+    res.json({ messages: results });
+  } catch (err) {
+    res.json({ messages: [] });
   }
 });
 
@@ -473,6 +730,16 @@ router.delete("/:id", async (req, res, next) => {
  */
 async function twilioIncomingHandler(req, res) {
   try {
+    const twilio = require("twilio");
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    if (twilioAuthToken) {
+      const signature = req.headers['x-twilio-signature'] || '';
+      const url = `${process.env.APP_URL || 'https://goswft.com'}/api/webhooks/twilio/sms`;
+      if (!twilio.validateRequest(twilioAuthToken, signature, url, req.body)) {
+        return res.status(403).type("text/xml").send("<Response></Response>");
+      }
+    }
+
     const from = req.body.From;
     const body = req.body.Body;
     const msgSid = req.body.MessageSid;
@@ -494,7 +761,7 @@ async function twilioIncomingHandler(req, res) {
     }
 
     if (!matched) {
-      console.log("Incoming SMS from unknown number:", from);
+      console.log("Incoming SMS from unknown number (not matched to customer)");
       return res.type("text/xml").send("<Response></Response>");
     }
 
@@ -519,70 +786,4 @@ async function twilioIncomingHandler(req, res) {
   }
 }
 
-/**
- * Postmark inbound email webhook (no auth — called by Postmark directly).
- * Matches sender email to a customer, saves as inbound message.
- */
-async function postmarkIncomingHandler(req, res) {
-  try {
-    const from = req.body.FromFull ? req.body.FromFull.Email : (req.body.From || "");
-    const fromName = req.body.FromFull ? req.body.FromFull.Name : "";
-    const subject = req.body.Subject || "";
-    const textBody = req.body.TextBody || "";
-    const htmlBody = req.body.HtmlBody || "";
-    const msgId = req.body.MessageID || "";
-
-    if (!from) {
-      return res.json({ ok: true });
-    }
-
-    const fromLower = from.toLowerCase();
-
-    // Match sender email to a customer
-    const custSnap = await db.collection("customers").get();
-    let matched = null;
-    for (const doc of custSnap.docs) {
-      const data = doc.data();
-      if (data.email && data.email.toLowerCase() === fromLower) {
-        matched = { customerId: doc.id, customerName: data.name || fromName || from, userId: data.userId };
-        break;
-      }
-    }
-
-    if (!matched) {
-      console.log("Incoming email from unknown address:", from);
-      return res.json({ ok: true });
-    }
-
-    // Extract attachment names
-    const attachmentNames = [];
-    if (req.body.Attachments && req.body.Attachments.length) {
-      for (const att of req.body.Attachments) {
-        attachmentNames.push(att.Name || "file");
-      }
-    }
-
-    await db.collection("messages").add({
-      userId: matched.userId,
-      customerId: matched.customerId,
-      customerName: matched.customerName,
-      from: from,
-      to: "inbound",
-      subject: subject,
-      body: textBody || htmlBody.replace(/<[^>]*>/g, "").substring(0, 2000),
-      type: "email",
-      direction: "inbound",
-      status: "received",
-      postmarkId: msgId,
-      attachments: attachmentNames.length ? attachmentNames : [],
-      sentAt: Date.now(),
-    });
-
-    res.json({ ok: true });
-  } catch (err) {
-    console.error("Postmark incoming webhook error:", err);
-    res.json({ ok: true });
-  }
-}
-
-module.exports = { router, twilioIncomingHandler, postmarkIncomingHandler };
+module.exports = { router, twilioIncomingHandler, sendViaGmail, generateDocumentPdf };

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <title>SWFT — Messages</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -114,6 +115,31 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .send-btn{width:36px;height:36px;border-radius:9px;background:var(--green);border:none;color:#0a0a0a;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;flex-shrink:0;}
 .send-btn:hover{background:#d5ff40;transform:translateY(-1px);}
 .send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.schedule-btn{width:36px;height:36px;border-radius:9px;background:var(--surface2);border:1px solid var(--border2);color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;flex-shrink:0;}
+.schedule-btn:hover{border-color:var(--green);color:var(--green);}
+.schedule-popover{position:absolute;bottom:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;min-width:260px;z-index:20;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.schedule-popover.open{display:block;}
+.schedule-popover .sp-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:10px;}
+.schedule-popover .sp-row{display:flex;gap:8px;margin-bottom:10px;}
+.schedule-popover input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;outline:none;}
+.schedule-popover input:focus{border-color:var(--green);}
+.schedule-popover .sp-actions{display:flex;gap:8px;justify-content:flex-end;}
+.schedule-popover .sp-send{background:var(--green);color:#0a0a0a;font-weight:700;font-size:12px;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.schedule-popover .sp-send:hover{background:#d5ff40;}
+.schedule-popover .sp-cancel{background:transparent;border:1px solid var(--border2);color:var(--gray);font-size:12px;padding:7px 12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.schedule-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.2);border-radius:6px;padding:4px 8px;font-size:10.5px;color:var(--blue);font-family:'JetBrains Mono',monospace;}
+.schedule-chip .remove{cursor:pointer;opacity:0.6;font-size:13px;margin-left:2px;}
+.schedule-chip .remove:hover{opacity:1;}
+.sched-bar{border-top:1px solid var(--border);padding:8px 16px;background:var(--surface);display:none;}
+.sched-bar.visible{display:block;}
+.sched-bar-title{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.sched-bar-title svg{color:var(--blue);}
+.sched-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;}
+.sched-item .sched-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--blue);white-space:nowrap;}
+.sched-item .sched-body{color:var(--gray);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sched-item .sched-tag{font-size:9.5px;padding:2px 6px;border-radius:8px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.sched-tag.auto{background:rgba(200,241,53,0.08);color:var(--green);}
+.sched-tag.manual{background:rgba(77,159,255,0.08);color:var(--blue);}
 
 /* Attach */
 .attach-dropdown{position:relative;}
@@ -181,6 +207,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div class="nav-item" onclick="window.location.href='swft-billing'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
     <div class="nav-item" onclick="window.location.href='swft-schedule'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>Schedule</div>
     <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item" onclick="window.location.href='swft-automations'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Automations</div>
+    <div class="nav-item" onclick="window.location.href='swft-reviews'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Reviews</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
   <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
@@ -227,7 +255,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <!-- Gmail connection banner -->
     <div id="gmail-banner" style="display:none;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;color:var(--gray);display:flex;align-items:center;justify-content:space-between;">
       <div id="gmail-banner-text"></div>
-      <button id="gmail-banner-btn" onclick="connectGmail()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--white);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;">Connect Gmail</button>
+      <button id="gmail-banner-btn" onclick="goToIntegrations()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--white);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;">Connect Gmail</button>
     </div>
     <div class="chat-header" id="chat-header" style="display:none;">
       <div class="chat-header-avatar" id="chat-avatar">?</div>
@@ -241,7 +269,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div id="connect-email-bar" style="display:none;padding:10px 16px;background:rgba(200,241,53,0.04);border-bottom:1px solid rgba(200,241,53,0.12);font-size:12.5px;color:var(--gray);align-items:center;gap:12px;">
       <svg width="16" height="16" fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="1.8" style="flex-shrink:0;"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
       <span style="flex:1;">Connect your Gmail to send emails from your own address</span>
-      <button onclick="connectGmail()" style="padding:5px 14px;border-radius:7px;border:none;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Connect Gmail</button>
+      <button onclick="goToIntegrations()" style="padding:5px 14px;border-radius:7px;border:none;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Connect Gmail</button>
       <span onclick="document.getElementById('connect-email-bar').style.display='none'" style="cursor:pointer;color:var(--gray2);font-size:16px;line-height:1;">&times;</span>
     </div>
     <div class="chat-messages" id="chat-messages">
@@ -275,10 +303,33 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
             <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" style="display:none;" onchange="handleFileSelect(this.files)"/>
           </div>
         </div>
+        <div style="position:relative;">
+          <button class="schedule-btn" id="schedule-btn" onclick="toggleSchedulePopover()" title="Schedule message">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <div class="schedule-popover" id="schedule-popover">
+            <div class="sp-title">Schedule Message</div>
+            <div class="sp-row">
+              <input type="date" id="sched-date"/>
+              <input type="time" id="sched-time" value="09:00"/>
+            </div>
+            <div class="sp-actions">
+              <button class="sp-cancel" onclick="closeSchedulePopover()">Cancel</button>
+              <button class="sp-send" onclick="scheduleMessage()">Schedule</button>
+            </div>
+          </div>
+        </div>
         <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2"/><polygon points="22,2 15,22 11,13 2,9 22,2" stroke-width="2"/></svg>
         </button>
       </div>
+    </div>
+    <div class="sched-bar" id="sched-bar">
+      <div class="sched-bar-title">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Scheduled Messages
+      </div>
+      <div id="sched-items"></div>
     </div>
   </div>
 </div>
@@ -387,12 +438,12 @@ async function loadData(){
       banner.style.display='flex';
       if(_gmailConnected){
         bannerText.innerHTML='✉️ <span style="color:var(--green);">Gmail connected</span> — '+esc(user.gmailAddress||'');
-        bannerBtn.textContent='Disconnect';
-        bannerBtn.onclick=disconnectGmail;
+        bannerBtn.textContent='Manage';
+        bannerBtn.onclick=goToIntegrations;
       }else{
-        bannerText.textContent='Connect Gmail to send emails from your own address';
+        bannerText.textContent='Connect Gmail to send emails directly from SWFT';
         bannerBtn.textContent='Connect Gmail';
-        bannerBtn.onclick=connectGmail;
+        bannerBtn.onclick=goToIntegrations;
       }
     }
 
@@ -459,6 +510,10 @@ async function disconnectGmail(){
     showToast('Gmail disconnected');
     loadData();
   }catch(e){showToast('Error: '+e.message);}
+}
+
+function goToIntegrations(){
+  window.location.href='swft-settings#integrations';
 }
 
 function showConnectEmailPopup(){
@@ -644,6 +699,36 @@ function renderChat(){
 
   area.innerHTML=html;
   area.scrollTop=area.scrollHeight;
+  loadScheduledForContact();
+}
+
+async function loadScheduledForContact(){
+  var bar=document.getElementById('sched-bar');
+  var container=document.getElementById('sched-items');
+  bar.classList.remove('visible');
+  container.innerHTML='';
+  if(!_activeContact)return;
+  try{
+    var res=await API.messages.scheduled();
+    var msgs=res.messages||[];
+    // Filter to current contact
+    var custId=_activeContact.customerId;
+    var to=_activeContact.channel==='sms'?(_activeContact.phone||_activeContact.to):(_activeContact.email||_activeContact.to);
+    var filtered=msgs.filter(function(m){
+      if(custId&&m.customerId===custId)return true;
+      if(m.phone===to||m.email===to)return true;
+      return false;
+    });
+    if(!filtered.length)return;
+    bar.classList.add('visible');
+    container.innerHTML=filtered.map(function(m){
+      var dt=new Date(m.sendAt);
+      var timeStr=dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      var tag=m.isManual?'<span class="sched-tag manual">Scheduled</span>':'<span class="sched-tag auto">Automation</span>';
+      var preview=(m.message||'').substring(0,60)+(m.message&&m.message.length>60?'...':'');
+      return '<div class="sched-item">'+tag+'<span class="sched-time">'+timeStr+'</span><span class="sched-body">'+esc(preview)+'</span></div>';
+    }).join('');
+  }catch(e){/* ignore */}
 }
 
 function showCompose(){
@@ -664,14 +749,24 @@ async function loadAttachDocs(){
       html+='<div class="attach-list-header">Quotes</div>';
       quotes.forEach(function(q){
         var label=(q.customerName||'Quote')+' — '+(q.service||'');
-        html+='<div class="attach-option" onclick="selectAttachment(\'quote\',\''+q.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(q.total||0).toFixed(2)+'</span></div>';
+        var sent=q.status==='sent';
+        if(sent){
+          html+='<div class="attach-option" style="opacity:0.4;cursor:not-allowed;"><span>'+esc(label)+'</span><span class="doc-total" style="color:var(--blue);">Sent</span></div>';
+        }else{
+          html+='<div class="attach-option" onclick="selectAttachment(\'quote\',\''+q.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(q.total||0).toFixed(2)+'</span></div>';
+        }
       });
     }
     if(invoices.length){
       html+='<div class="attach-list-header">Invoices</div>';
       invoices.forEach(function(inv){
         var label=(inv.customerName||'Invoice')+' — '+(inv.service||'');
-        html+='<div class="attach-option" onclick="selectAttachment(\'invoice\',\''+inv.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(inv.total||0).toFixed(2)+'</span></div>';
+        var sent=inv.status==='sent';
+        if(sent){
+          html+='<div class="attach-option" style="opacity:0.4;cursor:not-allowed;"><span>'+esc(label)+'</span><span class="doc-total" style="color:var(--blue);">Sent</span></div>';
+        }else{
+          html+='<div class="attach-option" onclick="selectAttachment(\'invoice\',\''+inv.id+'\',\''+esc(label)+'\')"><span>'+esc(label)+'</span><span class="doc-total">$'+Number(inv.total||0).toFixed(2)+'</span></div>';
+        }
       });
     }
     if(!html)html='<div style="padding:16px;text-align:center;color:var(--gray);font-size:12px;">No quotes or invoices yet</div>';
@@ -824,6 +919,67 @@ async function sendMessage(){
   }catch(e){showToast('Error: '+e.message);}
 }
 
+// ── Schedule message ──
+function toggleSchedulePopover(){
+  var pop=document.getElementById('schedule-popover');
+  var isOpen=pop.classList.contains('open');
+  if(!isOpen){
+    // Default to 3 days from now at 9am
+    var d=new Date();
+    d.setDate(d.getDate()+3);
+    document.getElementById('sched-date').value=d.toISOString().slice(0,10);
+    document.getElementById('sched-time').value='09:00';
+  }
+  pop.classList.toggle('open');
+}
+function closeSchedulePopover(){document.getElementById('schedule-popover').classList.remove('open');}
+
+async function scheduleMessage(){
+  if(!_activeContact){showToast('Select a contact first');return;}
+  var body=document.getElementById('compose-body').value.trim();
+  if(!body){showToast('Enter a message');return;}
+
+  var date=document.getElementById('sched-date').value;
+  var time=document.getElementById('sched-time').value;
+  if(!date||!time){showToast('Pick a date and time');return;}
+
+  var sendAt=new Date(date+'T'+time).toISOString();
+  if(new Date(sendAt)<=new Date()){showToast('Scheduled time must be in the future');return;}
+
+  var c=_activeContact;
+  var to=c.channel==='sms'?(c.phone||c.to):(c.email||c.to);
+  var subject=c.channel==='email'?document.getElementById('compose-subject').value.trim():'';
+  if(c.channel==='email'&&!subject){showToast('Enter a subject');return;}
+
+  try{
+    await API.messages.schedule({
+      to:to,
+      body:body,
+      type:c.channel,
+      subject:subject,
+      customerId:c.customerId||'',
+      customerName:c.customerName||'',
+      sendAt:sendAt
+    });
+    var dt=new Date(sendAt);
+    var label=dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    showToast('Scheduled for '+label);
+    document.getElementById('compose-body').value='';
+    document.getElementById('compose-body').style.height='auto';
+    if(c.channel==='email')document.getElementById('compose-subject').value='';
+    closeSchedulePopover();
+  }catch(e){showToast('Error: '+e.message);}
+}
+
+// Close schedule popover on outside click
+document.addEventListener('click',function(e){
+  var pop=document.getElementById('schedule-popover');
+  var btn=document.getElementById('schedule-btn');
+  if(pop&&!pop.contains(e.target)&&btn&&!btn.contains(e.target)){
+    pop.classList.remove('open');
+  }
+});
+
 // ── New conversation modal ──
 function openNewConversation(){
   document.getElementById('new-conv-overlay').classList.add('open');
@@ -933,6 +1089,7 @@ async function loadMessages(){
 
 <!-- Firebase Auth -->
 <script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";

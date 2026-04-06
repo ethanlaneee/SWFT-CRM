@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>SWFT — Choose Your Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--green-dim:rgba(200,241,53,0.12);
+  --white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+  --blue:#4d9fff;--red:#ff5252;--amber:#f5a623;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;z-index:0;
+}
+
+.wrapper{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 20px;
+}
+
+.logo-top{
+  font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;
+  color:var(--white);text-decoration:none;margin-bottom:8px;
+}
+.logo-top span{color:var(--green);}
+.logo-tagline{
+  font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--gray2);margin-bottom:24px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+.page-title{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,42px);
+  letter-spacing:1px;text-align:center;margin-bottom:8px;
+}
+.page-title .accent{color:var(--green);}
+.page-sub{font-size:15px;color:var(--gray);text-align:center;margin-bottom:40px;}
+
+/* ── PRICING GRID ── */
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  max-width:1020px;width:100%;
+}
+
+.plan-card{
+  background:var(--surface);border:2px solid var(--border);border-radius:16px;
+  padding:32px 28px;display:flex;flex-direction:column;
+  cursor:pointer;transition:all 0.25s ease;position:relative;overflow:hidden;
+}
+.plan-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.plan-card.selected{border-color:var(--green);box-shadow:0 0 30px rgba(200,241,53,0.1);}
+.plan-card.featured{
+  background:linear-gradient(135deg, rgba(200,241,53,0.06), rgba(200,241,53,0.02));
+}
+.plan-card.featured::before{
+  content:'';position:absolute;top:-40%;left:50%;transform:translateX(-50%);
+  width:300px;height:200px;
+  background:radial-gradient(ellipse, rgba(200,241,53,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.plan-badge{
+  display:inline-block;width:fit-content;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--green);padding:5px 14px;border-radius:100px;
+  background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);
+  margin-bottom:16px;
+}
+
+.plan-name{
+  font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;
+  color:var(--white);margin-bottom:6px;
+}
+.plan-price{display:flex;align-items:baseline;gap:2px;margin-bottom:6px;}
+.plan-dollar{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--green);}
+.plan-amount{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--white);line-height:1;}
+.plan-period{font-size:16px;color:var(--gray);margin-left:2px;}
+.plan-desc{font-size:13px;color:var(--gray);line-height:1.5;margin-bottom:20px;}
+
+.plan-divider{height:1px;background:var(--border2);margin-bottom:18px;}
+
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:10px;flex:1;}
+.plan-features li{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:13px;color:var(--gray);line-height:1.4;
+}
+.plan-features li .ck{color:var(--green);font-weight:700;flex-shrink:0;}
+.plan-features li .hl{color:var(--white);font-weight:600;}
+
+/* selected indicator */
+.plan-radio{
+  position:absolute;top:16px;right:16px;
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.plan-card.selected .plan-radio{border-color:var(--green);background:var(--green);}
+.plan-radio::after{
+  content:'';width:8px;height:8px;border-radius:50%;
+  background:#0a0a0a;opacity:0;transition:opacity 0.2s;
+}
+.plan-card.selected .plan-radio::after{opacity:1;}
+
+/* ── CHECKOUT SECTION ── */
+.checkout-section{
+  max-width:1020px;width:100%;margin-top:32px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;
+}
+.trial-note{font-size:14px;color:var(--gray);line-height:1.5;}
+.trial-note strong{color:var(--white);}
+
+.checkout-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 48px;border-radius:12px;font-size:16px;font-weight:700;
+  text-decoration:none;cursor:pointer;border:none;
+  background:var(--green);color:#0a0a0a;
+  font-family:'DM Sans',sans-serif;
+  box-shadow:0 0 20px rgba(200,241,53,0.15);
+  transition:all 0.25s;
+}
+.checkout-btn:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(200,241,53,0.25);}
+.checkout-btn:disabled{background:var(--gray2);color:var(--border2);cursor:not-allowed;transform:none;box-shadow:none;}
+.checkout-btn svg{width:20px;height:20px;}
+.checkout-btn .spinner{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(0,0,0,0.3);border-top-color:#0a0a0a;
+  animation:spin 0.6s linear infinite;display:none;
+}
+.checkout-btn.loading .btn-text{display:none;}
+.checkout-btn.loading .spinner{display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── AUTH FORM (inline) ── */
+.auth-section{
+  display:none;max-width:480px;width:100%;margin-top:32px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:16px;
+  padding:32px;
+  animation:slideUp 0.35s ease;
+}
+.auth-section.show{display:block;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.auth-title{
+  font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;
+  margin-bottom:4px;
+}
+.auth-sub{font-size:13px;color:var(--gray);margin-bottom:20px;}
+
+.auth-form{display:flex;flex-direction:column;gap:14px;}
+.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;}
+.field input{
+  width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;
+  padding:11px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;transition:border-color 0.15s;
+}
+.field input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(200,241,53,0.08);}
+.field input::placeholder{color:var(--gray2);}
+
+.google-btn{
+  width:100%;padding:11px;background:transparent;
+  border:1px solid var(--border2);border-radius:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-size:13px;font-weight:500;color:var(--gray);
+  font-family:'DM Sans',sans-serif;transition:all 0.14s;
+}
+.google-btn:hover{background:var(--surface2);color:var(--white);border-color:var(--gray2);}
+
+.divider{
+  display:flex;align-items:center;gap:12px;
+  font-size:11px;color:var(--gray2);margin:4px 0;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.auth-toggle{
+  text-align:center;font-size:12px;color:var(--gray2);margin-top:8px;
+}
+.auth-toggle a{color:var(--green);cursor:pointer;font-weight:500;text-decoration:none;}
+.auth-toggle a:hover{text-decoration:underline;}
+
+/* ── ALERT ── */
+.alert{
+  max-width:1020px;width:100%;margin-top:16px;
+  padding:12px 16px;border-radius:10px;
+  font-size:13px;display:none;
+}
+.alert.show{display:flex;align-items:center;gap:8px;}
+.alert.error{background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);color:#ff8080;}
+
+/* ── PAYMENT STEP ── */
+.payment-step{
+  display:none;max-width:620px;width:100%;margin-top:32px;
+}
+.payment-step.show{display:block;}
+.payment-title{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,42px);
+  letter-spacing:1px;text-align:center;margin-bottom:8px;
+}
+.payment-title .accent{color:var(--green);}
+.payment-sub{font-size:14px;color:var(--gray);text-align:center;margin-bottom:28px;line-height:1.5;}
+.payment-sub strong{color:var(--white);}
+#stripe-checkout{
+  background:var(--surface);border:1px solid var(--border2);border-radius:16px;
+  padding:24px;min-height:300px;
+}
+
+.back-link{
+  margin-top:24px;font-size:13px;color:var(--gray);
+  text-decoration:none;transition:color 0.2s;
+}
+.back-link:hover{color:var(--white);}
+
+@media(max-width:768px){
+  .pricing-grid{grid-template-columns:1fr;max-width:400px;}
+  .checkout-section{flex-direction:column;text-align:center;}
+  .auth-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <a href="/" class="logo-top">SWFT<span>.</span></a>
+  <div class="logo-tagline">simple. smart. swft.</div>
+  <h1 class="page-title">CHOOSE YOUR <span class="accent">PLAN</span></h1>
+  <p class="page-sub">14-day free trial on every plan. You won't be charged until the trial ends.</p>
+
+  <div class="pricing-grid">
+    <!-- STARTER -->
+    <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
+      <div class="plan-radio"></div>
+      <div class="plan-name">STARTER</div>
+      <div class="plan-price">
+        <span class="plan-dollar">$</span>
+        <span class="plan-amount">49</span>
+        <span class="plan-period">/mo</span>
+      </div>
+      <p class="plan-desc">Everything you need to run your business from day one.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="ck">&#10003;</span> Full CRM & customer management</li>
+        <li><span class="ck">&#10003;</span> Quotes & invoicing</li>
+        <li><span class="ck">&#10003;</span> Job scheduling & calendar sync</li>
+        <li><span class="ck">&#10003;</span> Gmail & Google Calendar integration</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">200 SMS</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">100 AI messages</span> / month</li>
+      </ul>
+    </div>
+
+    <!-- PRO -->
+    <div class="plan-card featured" data-plan="pro" onclick="selectPlan('pro')">
+      <div class="plan-radio"></div>
+      <div class="plan-badge">MOST POPULAR</div>
+      <div class="plan-name">PRO</div>
+      <div class="plan-price">
+        <span class="plan-dollar">$</span>
+        <span class="plan-amount">99</span>
+        <span class="plan-period">/mo</span>
+      </div>
+      <p class="plan-desc">For growing teams that need more power and higher limits.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="ck">&#10003;</span> Everything in Starter</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">1,000 SMS</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">500 AI messages</span> / month</li>
+        <li><span class="ck">&#10003;</span> Priority support</li>
+        <li><span class="ck">&#10003;</span> Team management</li>
+        <li><span class="ck">&#10003;</span> Google Sheets export</li>
+      </ul>
+    </div>
+
+    <!-- BUSINESS -->
+    <div class="plan-card" data-plan="business" onclick="selectPlan('business')">
+      <div class="plan-radio"></div>
+      <div class="plan-name">BUSINESS</div>
+      <div class="plan-price">
+        <span class="plan-dollar">$</span>
+        <span class="plan-amount">149</span>
+        <span class="plan-period">/mo</span>
+      </div>
+      <p class="plan-desc">Unlimited everything. Built for high-volume operations.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="ck">&#10003;</span> Everything in Pro</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">Unlimited SMS</span></li>
+        <li><span class="ck">&#10003;</span> <span class="hl">Unlimited AI messages</span></li>
+        <li><span class="ck">&#10003;</span> Dedicated support</li>
+        <li><span class="ck">&#10003;</span> Multi-user access</li>
+        <li><span class="ck">&#10003;</span> QuickBooks integration (coming soon)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Checkout button (shown when logged in or before auth) -->
+  <div class="checkout-section" id="checkout-section">
+    <div class="trial-note">
+      <strong>14-day free trial</strong> — no charge today. Cancel anytime.<br/>
+      Have a discount code? You can enter it on the next step.
+    </div>
+    <button class="checkout-btn" id="checkout-btn" onclick="startCheckout()">
+      <span class="btn-text">Continue to Payment</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      <div class="spinner"></div>
+    </button>
+  </div>
+
+  <!-- Inline auth form (shown when not logged in and they click Continue) -->
+  <div class="auth-section" id="auth-section">
+
+    <!-- SIGNUP VIEW -->
+    <div id="auth-signup">
+      <div class="auth-title">CREATE YOUR ACCOUNT</div>
+      <div class="auth-sub">Then you'll go straight to payment.</div>
+      <div class="auth-form">
+        <div class="auth-row">
+          <div class="field">
+            <label>First Name</label>
+            <input type="text" id="s-fname" placeholder="Jake"/>
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <input type="text" id="s-lname" placeholder="Reynolds"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Business Name</label>
+          <input type="text" id="s-biz" placeholder="SWFT Concrete LLC"/>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="s-email" placeholder="jake@swftconcrete.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="s-password" placeholder="Min. 8 characters"/>
+        </div>
+        <button class="checkout-btn" id="signup-btn" onclick="handleSignup()" style="width:100%;justify-content:center;">
+          <span class="btn-text">Create Account & Continue</span>
+          <div class="spinner"></div>
+        </button>
+        <div class="divider">or</div>
+        <button class="google-btn" onclick="handleGoogle()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-toggle">Already have an account? <a onclick="showLogin()">Sign in</a></div>
+      </div>
+    </div>
+
+    <!-- LOGIN VIEW -->
+    <div id="auth-login" style="display:none;">
+      <div class="auth-title">SIGN IN</div>
+      <div class="auth-sub">Sign in to continue to payment.</div>
+      <div class="auth-form">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="l-email" placeholder="you@example.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="l-password" placeholder="Your password"/>
+        </div>
+        <button class="checkout-btn" id="login-btn" onclick="handleLogin()" style="width:100%;justify-content:center;">
+          <span class="btn-text">Sign In & Continue</span>
+          <div class="spinner"></div>
+        </button>
+        <div class="divider">or</div>
+        <button class="google-btn" onclick="handleGoogle()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-toggle">Don't have an account? <a onclick="showSignup()">Create one</a></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Payment step: Stripe Embedded Checkout -->
+  <div class="payment-step" id="payment-step">
+    <h1 class="payment-title">COMPLETE YOUR <span class="accent">PAYMENT</span></h1>
+    <p class="payment-sub"><strong>14-day free trial</strong> — you won't be charged today. Enter your payment details below.</p>
+    <div id="stripe-checkout"></div>
+  </div>
+
+  <div class="alert error" id="error-alert">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>
+    <span id="error-msg"></span>
+  </div>
+
+  <a href="/" class="back-link">&larr; Back to SWFT home</a>
+
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    signInWithPopup, GoogleAuthProvider, updateProfile
+  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import {
+    getFirestore, doc, setDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app      = initializeApp(firebaseConfig);
+  const auth     = getAuth(app);
+  const db       = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  // If already logged in, skip auth form
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window._firebaseUser = user;
+    }
+    document.getElementById('checkout-btn').disabled = false;
+  });
+
+  // ── Mount Stripe Embedded Checkout ──
+  async function goToStripe(user) {
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ plan: window._selectedPlan || 'starter' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create checkout session');
+
+      // Hide everything except the payment step
+      document.querySelector('.pricing-grid').style.display = 'none';
+      document.querySelector('.page-title').style.display = 'none';
+      document.querySelector('.page-sub').style.display = 'none';
+      document.getElementById('checkout-section').style.display = 'none';
+      document.getElementById('auth-section').classList.remove('show');
+      document.getElementById('payment-step').classList.add('show');
+
+      // Mount Stripe Embedded Checkout
+      const stripe = Stripe('pk_test_51THdAqRNPpAjdxw0hUyziBiAjBBJDXCTGFupwa90vVdBoY4wiu5eHsNGGoePiqlHdyNpbrm2ZL9lw3bOgSAotLUC00y739O6Ge');
+      const checkout = await stripe.initEmbeddedCheckout({ clientSecret: data.clientSecret });
+      checkout.mount('#stripe-checkout');
+    } catch (err) {
+      showError(err.message);
+      resetButtons();
+    }
+  }
+
+  // ── "Continue to Payment" — if logged in go to Stripe, else show auth form ──
+  window.startCheckout = function() {
+    if (window._firebaseUser) {
+      setLoading('checkout-btn');
+      goToStripe(window._firebaseUser);
+    } else {
+      // Show inline auth form, hide checkout button
+      document.getElementById('auth-section').classList.add('show');
+      document.getElementById('checkout-section').style.display = 'none';
+      document.getElementById('auth-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  // ── Signup ──
+  window.handleSignup = async function() {
+    const fname = document.getElementById('s-fname').value.trim();
+    const lname = document.getElementById('s-lname').value.trim();
+    const biz   = document.getElementById('s-biz').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    const pwd   = document.getElementById('s-password').value;
+
+    if (!fname || !lname || !biz) { showError('Please fill in all fields.'); return; }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { showError('Please enter a valid email.'); return; }
+    if (pwd.length < 8) { showError('Password must be at least 8 characters.'); return; }
+
+    setLoading('signup-btn');
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+      await updateProfile(cred.user, { displayName: `${fname} ${lname}` });
+      const now = Date.now();
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        uid: cred.user.uid,
+        email, name: `${fname} ${lname}`,
+        firstName: fname, lastName: lname,
+        displayName: `${fname} ${lname}`,
+        company: biz, businessName: biz,
+        trialStartDate: now,
+        trialEndDate: now + 14 * 24 * 60 * 60 * 1000,
+        isSubscribed: false, stripeCustomerId: '',
+        accountStatus: 'trialing', plan: 'starter',
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      window._firebaseUser = cred.user;
+      await goToStripe(cred.user);
+    } catch (err) {
+      showError(firebaseMsg(err.code));
+      resetButtons();
+    }
+  };
+
+  // ── Login ──
+  window.handleLogin = async function() {
+    const email = document.getElementById('l-email').value.trim();
+    const pwd   = document.getElementById('l-password').value;
+
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { showError('Please enter a valid email.'); return; }
+    if (!pwd) { showError('Please enter your password.'); return; }
+
+    setLoading('login-btn');
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, pwd);
+      window._firebaseUser = cred.user;
+      await goToStripe(cred.user);
+    } catch (err) {
+      showError(firebaseMsg(err.code));
+      resetButtons();
+    }
+  };
+
+  // ── Google ──
+  window.handleGoogle = async function() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid, email: user.email,
+        displayName: user.displayName || '',
+        name: user.displayName || '',
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      window._firebaseUser = user;
+      await goToStripe(user);
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user') showError(firebaseMsg(err.code));
+    }
+  };
+
+  // ── Helpers ──
+  function showError(msg) {
+    const el = document.getElementById('error-alert');
+    document.getElementById('error-msg').textContent = msg;
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function setLoading(id) {
+    const btn = document.getElementById(id);
+    btn.disabled = true;
+    btn.classList.add('loading');
+  }
+
+  function resetButtons() {
+    ['checkout-btn', 'signup-btn', 'login-btn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    });
+  }
+
+  function firebaseMsg(code) {
+    const map = {
+      'auth/email-already-in-use': 'An account with this email already exists. Try signing in.',
+      'auth/invalid-credential':   'Email or password is incorrect.',
+      'auth/user-not-found':       'No account found with that email.',
+      'auth/wrong-password':       'Incorrect password.',
+      'auth/weak-password':        'Password must be at least 6 characters.',
+      'auth/invalid-email':        'Please enter a valid email address.',
+      'auth/too-many-requests':    'Too many attempts. Please wait and try again.',
+      'auth/popup-blocked':        'Popup blocked. Allow popups for this site.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+
+  // Allow Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const signup = document.getElementById('auth-signup');
+    const login  = document.getElementById('auth-login');
+    if (signup.style.display !== 'none' && document.getElementById('auth-section').classList.contains('show')) {
+      window.handleSignup();
+    } else if (login.style.display !== 'none' && document.getElementById('auth-section').classList.contains('show')) {
+      window.handleLogin();
+    }
+  });
+</script>
+
+<script>
+  // ── Plan selection ──
+  let selectedPlan = 'starter';
+  const params = new URLSearchParams(window.location.search);
+  const urlPlan = params.get('plan');
+  if (urlPlan && ['starter', 'pro', 'business'].includes(urlPlan)) selectedPlan = urlPlan;
+
+  function selectPlan(plan) {
+    selectedPlan = plan;
+    window._selectedPlan = plan;
+    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector(`.plan-card[data-plan="${plan}"]`).classList.add('selected');
+  }
+  selectPlan(selectedPlan);
+
+  // Toggle signup/login views
+  function showLogin() {
+    document.getElementById('auth-signup').style.display = 'none';
+    document.getElementById('auth-login').style.display = 'block';
+    document.getElementById('error-alert').classList.remove('show');
+  }
+  function showSignup() {
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-signup').style.display = 'block';
+    document.getElementById('error-alert').classList.remove('show');
+  }
+
+  if (params.get('canceled') === 'true') {
+    const el = document.getElementById('error-alert');
+    document.getElementById('error-msg').textContent = 'Checkout was canceled. Select a plan and try again.';
+    el.classList.add('show');
+  }
+
+  // ── Handle return from Stripe Embedded Checkout ──
+  const sessionId = params.get('session_id');
+  if (sessionId) {
+    // Hide plan selection, show a loading state
+    document.querySelector('.pricing-grid').style.display = 'none';
+    document.querySelector('.page-title').innerHTML = 'SETTING UP YOUR <span class="accent">ACCOUNT</span>...';
+    document.querySelector('.page-sub').textContent = 'Please wait while we activate your subscription.';
+    document.getElementById('checkout-section').style.display = 'none';
+
+    // Wait for auth, then verify session
+    const checkAuth = setInterval(async () => {
+      if (!window._firebaseUser) return;
+      clearInterval(checkAuth);
+      try {
+        const token = await window._firebaseUser.getIdToken();
+        const res = await fetch(`/api/billing/verify-session?session_id=${sessionId}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (res.ok) {
+          window.location.href = '/swft-dashboard';
+        } else {
+          const data = await res.json();
+          // Trial subscriptions may not need immediate payment verification
+          // Redirect to dashboard anyway since checkout completed
+          window.location.href = '/swft-dashboard';
+        }
+      } catch {
+        window.location.href = '/swft-dashboard';
+      }
+    }, 500);
+  }
+</script>
+
+</body>
+</html>

@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <title>SWFT — Billing</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -111,6 +112,8 @@
 .s-draft    {background:rgba(100,100,100,0.12);color:var(--gray);}
 .s-sent     {background:rgba(77,159,255,0.12); color:var(--blue);}
 .s-approved {background:rgba(200,241,53,0.12); color:var(--green);}
+select.status-pill{cursor:pointer;border:none;-webkit-appearance:none;appearance:none;outline:none;font-family:inherit;}
+select.status-pill option{background:#141414;color:#e0e0e0;}
 .s-declined {background:rgba(255,82,82,0.12);  color:var(--red);}
 .row-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray2);transition:all 0.14s;}
 .row-btn:hover{background:var(--surface2);color:var(--green);border-color:var(--green);}
@@ -227,6 +230,8 @@
     <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
     <div class="nav-item" onclick="window.location.href='swft-schedule'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>Schedule</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item" onclick="window.location.href='swft-automations'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Automations</div>
+    <div class="nav-item" onclick="window.location.href='swft-reviews'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Reviews</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
   <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
@@ -442,7 +447,12 @@ async function loadQuotes() {
         '<div class="q-date">' + created + '</div>' +
         '<div class="q-expires exp-ok">—</div>' +
         '<div class="q-total">' + total + '</div>' +
-        '<div><span class="status-pill ' + (pillClass[q.status]||'s-draft') + '">' + (q.status||'draft') + '</span></div>' +
+        '<div><select class="status-pill ' + (pillClass[q.status]||'s-draft') + '" onclick="event.stopPropagation()" onchange="changeBillingQuoteStatus(\'' + q.id + '\',this.value,this)">' +
+        '<option value="draft"' + ((!q.status||q.status==='draft')?' selected':'') + '>draft</option>' +
+        '<option value="sent"' + (q.status==='sent'?' selected':'') + '>sent</option>' +
+        '<option value="approved"' + (q.status==='approved'?' selected':'') + '>approved</option>' +
+        '<option value="declined"' + (q.status==='declined'?' selected':'') + '>declined</option>' +
+        '</select></div>' +
         '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
         '<div class="row-btn" onclick="event.stopPropagation();deleteQuoteById(\'' + q.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div>' +
         '<div class="row-btn">→</div></div>';
@@ -492,7 +502,11 @@ async function loadInvoices() {
         '<div class="inv-total">' + total + '</div>' +
         '<div class="inv-date">' + paid + '</div>' +
         '<div class="inv-balance ' + balClass + '">$' + Math.abs(balance).toLocaleString() + '</div>' +
-        '<div><span class="status-pill" style="' + statusStyle + '">' + (inv.status||'open') + '</span></div>' +
+        '<div><select class="status-pill" style="' + statusStyle + '" onclick="event.stopPropagation()" onchange="changeBillingInvoiceStatus(\'' + inv.id + '\',this.value,this)">' +
+        '<option value="open"' + ((!inv.status||inv.status==='open')?' selected':'') + '>open</option>' +
+        '<option value="paid"' + (inv.status==='paid'?' selected':'') + '>paid</option>' +
+        '<option value="overdue"' + (inv.status==='overdue'?' selected':'') + '>overdue</option>' +
+        '</select></div>' +
         '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
         '<div class="row-btn" onclick="event.stopPropagation();deleteInvById(\'' + inv.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div>' +
         '<div class="row-btn">→</div></div>';
@@ -559,6 +573,26 @@ function openInvoiceModal(inv) {
   }
 
   document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function changeBillingQuoteStatus(id, val, el) {
+  const pillClass = {'draft':'s-draft','sent':'s-sent','approved':'s-approved','declined':'s-declined'};
+  el.className = 'status-pill ' + (pillClass[val]||'s-draft');
+  const q = window._quotes && window._quotes[id];
+  const prev = q ? q.status : 'draft';
+  if (q) q.status = val;
+  try { await API.quotes.update(id, {status: val}); showToast('Status updated'); }
+  catch(e) { showToast('Error updating status'); if (q) q.status = prev; el.className = 'status-pill ' + (pillClass[prev]||'s-draft'); }
+}
+
+async function changeBillingInvoiceStatus(id, val, el) {
+  const s = val === 'paid' ? 'background:rgba(200,241,53,0.1);color:#c8f135;' : val === 'overdue' ? 'background:rgba(255,82,82,0.1);color:#ff5252;' : 'background:rgba(245,166,35,0.1);color:#f5a623;';
+  el.style.cssText = s;
+  const inv = window._invoicesData && window._invoicesData[id];
+  const prev = inv ? inv.status : 'open';
+  if (inv) inv.status = val;
+  try { await API.invoices.update(id, {status: val}); showToast('Status updated'); }
+  catch(e) { showToast('Error updating status'); if (inv) inv.status = prev; const ps = prev === 'paid' ? 'background:rgba(200,241,53,0.1);color:#c8f135;' : prev === 'overdue' ? 'background:rgba(255,82,82,0.1);color:#ff5252;' : 'background:rgba(245,166,35,0.1);color:#f5a623;'; el.style.cssText = ps; }
 }
 
 async function deleteQuoteById(id) {
