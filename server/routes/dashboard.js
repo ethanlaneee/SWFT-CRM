@@ -17,9 +17,16 @@ router.get("/", async (req, res, next) => {
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
+    const today = new Date().toISOString().split("T")[0];
     const totalJobs = jobs.length;
-    const activeJobs = jobs.filter(j => j.status === "active").length;
-    const scheduledJobs = jobs.filter(j => j.status === "scheduled").length;
+    // Count both explicitly "active" AND scheduled jobs whose date has arrived
+    const activeJobs = jobs.filter(j =>
+      j.status !== "complete" && (
+        j.status === "active" ||
+        (j.scheduledDate && j.scheduledDate <= today)
+      )
+    ).length;
+    const scheduledJobs = jobs.filter(j => j.status === "scheduled" && j.scheduledDate > today).length;
     const completedJobs = jobs.filter(j => j.status === "complete").length;
 
     const monthlyRevenue = invoices

@@ -728,12 +728,14 @@ function renderChat(){
     if(m.isFollowup) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;">🔔 AI FOLLOW-UP</div>';
     var replyBtn='';
     if(_activeContact&&_activeContact.channel==='email'){
-      // Prefer RFC Message-ID; server will look up the real one if we only have the Gmail internal ID
       var msgId=m.rfcMessageId||m.gmailMessageId||'';
       var threadId=m.gmailThreadId||'';
-      var origSubject=m.subject||'';
       if(msgId||threadId){
-        replyBtn='<div class="msg-reply-btn" onclick="replyToEmail(\''+esc(msgId)+'\',\''+esc(threadId)+'\',\''+esc(origSubject)+'\',\''+esc(m.body||'')+'\')">↩ Reply</div>';
+        // Store data in map to avoid encoding issues in onclick attributes
+        var replyKey='msg_'+(m.id||m.gmailMessageId||Date.now());
+        window._replyDataMap=window._replyDataMap||{};
+        window._replyDataMap[replyKey]={inReplyTo:msgId,threadId:threadId,subject:m.subject||'',body:m.body||''};
+        replyBtn='<div class="msg-reply-btn" onclick="replyToEmailByKey(\''+replyKey+'\')">↩ Reply</div>';
       }
     }
     html+='<div class="msg-bubble '+dir+'">'+
@@ -787,8 +789,15 @@ function showCompose(){
   }
 }
 
+function replyToEmailByKey(key) {
+  var data = (window._replyDataMap || {})[key];
+  if (!data) return;
+  replyToEmail(data.inReplyTo, data.threadId, data.subject, data.body);
+}
+
 function replyToEmail(msgId, threadId, origSubject, origBody) {
   _replyContext = { inReplyTo: msgId, threadId: threadId };
+  console.log('[REPLY] context set:', JSON.stringify(_replyContext));
   var subject = origSubject ? (origSubject.startsWith('Re:') ? origSubject : 'Re: ' + origSubject) : 'Re: (no subject)';
   document.getElementById('compose-bar').style.display = '';
   document.getElementById('compose-subject').value = subject;
@@ -934,6 +943,7 @@ async function sendMessage(){
   }
 
   try{
+    console.log('[SEND] replyContext at send time:', JSON.stringify(_replyContext));
     var result;
     if(hasFiles){
       // Use FormData for file uploads

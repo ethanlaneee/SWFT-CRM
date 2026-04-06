@@ -7,8 +7,9 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB max
   fileFilter: (req, file, cb) => {
-    const ok = /image\/(jpeg|jpg|png|gif|webp|heic)|video\/mp4/.test(file.mimetype);
-    cb(ok ? null : new Error("Only images and MP4 videos are allowed"), ok);
+    // Accept all images (including HEIC/HEIF from iPhone) and videos
+    const ok = file.mimetype.startsWith("image/") || file.mimetype === "video/mp4" || file.mimetype === "video/quicktime";
+    cb(ok ? null : new Error("Only images and videos are allowed"), ok);
   },
 });
 
@@ -32,10 +33,22 @@ router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) =>
 
       await fileRef.save(file.buffer, {
         metadata: { contentType: file.mimetype },
+        public: true,
       });
 
-      await fileRef.makePublic();
-      const url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+      // Try to make public — fall back gracefully if Storage rules block it
+      let url;
+      try {
+        await fileRef.makePublic();
+        url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+      } catch (e) {
+        console.warn("[photos] makePublic failed, using signed URL:", e.message);
+        const [signedUrl] = await fileRef.getSignedUrl({
+          action: "read",
+          expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000, // 10 years
+        });
+        url = signedUrl;
+      }
 
       const photoData = {
         orgId: req.orgId,

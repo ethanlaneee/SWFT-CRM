@@ -427,10 +427,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
   <div class="drawer-tabs">
     <div class="dtab active" onclick="switchTab(this,'details')">Details</div>
     <div class="dtab" onclick="switchTab(this,'photos')">Photos</div>
-    <div class="dtab" onclick="switchTab(this,'payment')">Payment</div>
     <div class="dtab" onclick="switchTab(this,'notes')">Notes</div>
-      <div class="dtab" onclick="switchTab(this,'job-quotes')">Quotes</div>
-      <div class="dtab" onclick="switchTab(this,'job-invoices')">Invoices</div>
   </div>
 
   <div class="drawer-content">
@@ -650,7 +647,8 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
   function fmtDate(d) {
     if (!d) return 'TBD';
     try {
-      const dt = new Date(d);
+      // Treat date-only strings (YYYY-MM-DD) as local midnight, not UTC midnight
+      const dt = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d + 'T00:00:00') : new Date(d);
       if (isNaN(dt)) return d;
       return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch(e) { return d; }
@@ -822,7 +820,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
   function switchTab(el, tab) {
     document.querySelectorAll('.dtab').forEach(function(t) { t.classList.remove('active'); });
     el.classList.add('active');
-    ['details','photos','payment','notes','job-quotes','job-invoices'].forEach(function(t) {
+    ['details','photos','notes'].forEach(function(t) {
       document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
     });
     if (tab === 'photos' && _currentJobId) loadJobPhotos(_currentJobId);
