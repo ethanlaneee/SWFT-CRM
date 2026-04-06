@@ -293,15 +293,12 @@
           <div class="config-row"><span class="config-label">Voice / SMS</span><span class="config-val">Both enabled</span></div>
           <div class="config-row"><span class="config-label">Escalate to owner</span><span class="config-val">If confused</span></div>
           <div class="config-row"><span class="config-label">Booking calendar</span><span class="config-val">Connected ✓</span></div>
-          <div class="config-row"><span class="config-label">Tone</span><span class="config-val">Friendly, professional <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
+          <div class="config-row"><span class="config-label">Tone</span><span class="config-val" id="receptionist-tone-val">Friendly, professional <span class="config-edit" onclick="openReceptionistEditModal()">Edit</span></span></div>
         </div>
 
         <div class="config-panel">
           <div class="config-title">Performance</div>
-          <div class="perf-row"><span class="perf-label">Lead qualification</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:92%;"></div></div><span class="perf-pct">92%</span></div>
-          <div class="perf-row"><span class="perf-label">Booking conversion</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:78%;"></div></div><span class="perf-pct">78%</span></div>
-          <div class="perf-row"><span class="perf-label">Customer satisfaction</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:96%;"></div></div><span class="perf-pct">96%</span></div>
-          <div class="perf-row"><span class="perf-label">Correct escalations</span><div class="perf-bar-track"><div class="perf-bar-fill" style="width:100%;"></div></div><span class="perf-pct">100%</span></div>
+          <div id="receptionist-perf" style="font-size:12px;color:var(--gray2);padding:12px 0;">Performance metrics will appear here once the receptionist has handled enough conversations.</div>
         </div>
       </div>
 
@@ -441,8 +438,8 @@ sqft × base_rate[service_type]
     <div class="detail-cols">
       <div class="config-panel">
         <div class="config-title">Follow-up Sequences</div>
-        <div class="config-row"><span class="config-label">Unsigned quote</span><span class="config-val">Day 1, 3, 7 <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
-        <div class="config-row"><span class="config-label">Overdue invoice</span><span class="config-val">Day 1, 3, 7 <span class="config-edit" onclick="showToast('Config saved ✓')">Edit</span></span></div>
+        <div class="config-row"><span class="config-label">Unsigned quote</span><span class="config-val" id="followup-quote-seq-val">Day 1, 3, 7 <span class="config-edit" onclick="openFollowupEditModal()">Edit</span></span></div>
+        <div class="config-row"><span class="config-label">Overdue invoice</span><span class="config-val" id="followup-invoice-seq-val">Day 1, 3, 7 <span class="config-edit" onclick="openFollowupEditModal()">Edit</span></span></div>
         <div class="config-row"><span class="config-label">Review request</span><span class="config-val">24h after complete</span></div>
         <div class="config-row"><span class="config-label">Re-engagement</span><span class="config-val">12 months inactive</span></div>
         <div class="config-row"><span class="config-label">Channel</span><span class="config-val">SMS (primary)</span></div>
@@ -450,18 +447,7 @@ sqft × base_rate[service_type]
   
       <div class="config-panel">
         <div class="config-title">Pending Actions</div>
-        <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
-          <div style="font-size:12.5px;color:var(--white);font-weight:500;">Chen Invoice Reminder</div>
-          <div style="font-size:11px;color:var(--amber);">$2,600 overdue · sends in 2 hrs</div>
-        </div>
-        <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
-          <div style="font-size:12.5px;color:var(--white);font-weight:500;">Martinez Quote Follow-up</div>
-          <div style="font-size:11px;color:var(--gray);">Day 4 · sends tonight at 6 PM</div>
-        </div>
-        <div class="config-row">
-          <span class="config-label" style="font-size:11px;">Next review request</span>
-          <span class="config-val" style="font-size:11px;color:var(--gray2);">Henderson · tomorrow</span>
-        </div>
+        <div id="followup-pending-list" style="font-size:12px;color:var(--gray2);padding:8px 0;">No pending follow-up actions. Actions will appear here when the agent schedules reminders.</div>
       </div>
     </div>
   
@@ -824,7 +810,153 @@ Google review would mean a lot to us 🙏
     _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  // ── Receptionist Edit Modal ──
+  function openReceptionistEditModal() {
+    const cfg = _agentConfigs.receptionist || {};
+    const toneMap = { professional: 'professional', casual: 'casual', friendly_professional: 'friendly_professional' };
+    const toneEl = document.getElementById('edit-receptionist-tone');
+    const greetEl = document.getElementById('edit-receptionist-greeting');
+    toneEl.value = toneMap[cfg.tone] || 'friendly_professional';
+    greetEl.value = cfg.greetingMessage || '';
+    document.getElementById('edit-receptionist-overlay').style.opacity = '1';
+    document.getElementById('edit-receptionist-overlay').style.pointerEvents = 'all';
+    document.getElementById('edit-receptionist-modal').style.opacity = '1';
+    document.getElementById('edit-receptionist-modal').style.pointerEvents = 'all';
+    document.getElementById('edit-receptionist-modal').style.transform = 'translate(-50%,-50%) scale(1)';
+  }
+  function closeReceptionistEditModal() {
+    document.getElementById('edit-receptionist-overlay').style.opacity = '0';
+    document.getElementById('edit-receptionist-overlay').style.pointerEvents = 'none';
+    document.getElementById('edit-receptionist-modal').style.opacity = '0';
+    document.getElementById('edit-receptionist-modal').style.pointerEvents = 'none';
+    document.getElementById('edit-receptionist-modal').style.transform = 'translate(-50%,-50%) scale(0.96)';
+  }
+  async function saveReceptionistConfig() {
+    const tone = document.getElementById('edit-receptionist-tone').value;
+    const greetingMessage = document.getElementById('edit-receptionist-greeting').value.trim();
+    const btn = document.getElementById('save-receptionist-btn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+    try {
+      const updated = await API.agents.update('receptionist', { tone, greetingMessage });
+      _agentConfigs.receptionist = Object.assign(_agentConfigs.receptionist || {}, updated);
+      const toneLabels = { professional: 'Professional', casual: 'Casual', friendly_professional: 'Friendly, professional' };
+      const toneLabel = toneLabels[tone] || tone;
+      const valEl = document.getElementById('receptionist-tone-val');
+      if (valEl) valEl.innerHTML = toneLabel + ' <span class="config-edit" onclick="openReceptionistEditModal()">Edit</span>';
+      closeReceptionistEditModal();
+      showToast('Receptionist config saved');
+    } catch (err) {
+      showToast('Failed to save config');
+    } finally {
+      btn.textContent = 'Save Changes';
+      btn.disabled = false;
+    }
+  }
+
+  // ── Follow-up Edit Modal ──
+  function openFollowupEditModal() {
+    const cfg = _agentConfigs.followup || {};
+    document.getElementById('edit-followup-quote-days').value = (cfg.quoteFollowupDays || [1, 3, 7]).join(', ');
+    document.getElementById('edit-followup-invoice-days').value = (cfg.invoiceFollowupDays || [1, 3, 7]).join(', ');
+    document.getElementById('edit-followup-overlay').style.opacity = '1';
+    document.getElementById('edit-followup-overlay').style.pointerEvents = 'all';
+    document.getElementById('edit-followup-modal').style.opacity = '1';
+    document.getElementById('edit-followup-modal').style.pointerEvents = 'all';
+    document.getElementById('edit-followup-modal').style.transform = 'translate(-50%,-50%) scale(1)';
+  }
+  function closeFollowupEditModal() {
+    document.getElementById('edit-followup-overlay').style.opacity = '0';
+    document.getElementById('edit-followup-overlay').style.pointerEvents = 'none';
+    document.getElementById('edit-followup-modal').style.opacity = '0';
+    document.getElementById('edit-followup-modal').style.pointerEvents = 'none';
+    document.getElementById('edit-followup-modal').style.transform = 'translate(-50%,-50%) scale(0.96)';
+  }
+  function parseDayList(str) {
+    return str.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
+  }
+  async function saveFollowupConfig() {
+    const quoteFollowupDays = parseDayList(document.getElementById('edit-followup-quote-days').value);
+    const invoiceFollowupDays = parseDayList(document.getElementById('edit-followup-invoice-days').value);
+    if (!quoteFollowupDays.length || !invoiceFollowupDays.length) {
+      showToast('Enter at least one day for each sequence');
+      return;
+    }
+    const btn = document.getElementById('save-followup-btn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+    try {
+      const updated = await API.agents.update('followup', { quoteFollowupDays, invoiceFollowupDays });
+      _agentConfigs.followup = Object.assign(_agentConfigs.followup || {}, updated);
+      const qLabel = 'Day ' + quoteFollowupDays.join(', ');
+      const iLabel = 'Day ' + invoiceFollowupDays.join(', ');
+      const qEl = document.getElementById('followup-quote-seq-val');
+      const iEl = document.getElementById('followup-invoice-seq-val');
+      if (qEl) qEl.innerHTML = qLabel + ' <span class="config-edit" onclick="openFollowupEditModal()">Edit</span>';
+      if (iEl) iEl.innerHTML = iLabel + ' <span class="config-edit" onclick="openFollowupEditModal()">Edit</span>';
+      closeFollowupEditModal();
+      showToast('Follow-up sequences saved');
+    } catch (err) {
+      showToast('Failed to save config');
+    } finally {
+      btn.textContent = 'Save Changes';
+      btn.disabled = false;
+    }
+  }
+
 </script>
+
+<!-- ── Edit Receptionist Modal ── -->
+<div class="nj-overlay" id="edit-receptionist-overlay" onclick="closeReceptionistEditModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;"></div>
+<div class="nj-modal" id="edit-receptionist-modal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:420px;max-width:92vw;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;">
+  <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);">EDIT RECEPTIONIST</div>
+    <button onclick="closeReceptionistEditModal()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);">✕</button>
+  </div>
+  <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Tone</label>
+      <select id="edit-receptionist-tone" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+        <option value="professional">Professional</option>
+        <option value="casual">Casual</option>
+        <option value="friendly_professional" selected>Friendly Professional</option>
+      </select>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Greeting Message</label>
+      <textarea id="edit-receptionist-greeting" rows="3" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.5;" placeholder="e.g. Hi! Thanks for reaching out to SWFT..."></textarea>
+    </div>
+  </div>
+  <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
+    <button onclick="closeReceptionistEditModal()" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
+    <button onclick="saveReceptionistConfig()" id="save-receptionist-btn" style="flex:2;padding:10px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#0a0a0a;font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Save Changes</button>
+  </div>
+</div>
+
+<!-- ── Edit Follow-up Modal ── -->
+<div class="nj-overlay" id="edit-followup-overlay" onclick="closeFollowupEditModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.25s;"></div>
+<div class="nj-modal" id="edit-followup-modal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:420px;max-width:92vw;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;">
+  <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);">EDIT FOLLOW-UP SEQUENCES</div>
+    <button onclick="closeFollowupEditModal()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);">✕</button>
+  </div>
+  <div style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Unsigned Quote Days</label>
+      <input id="edit-followup-quote-days" type="text" placeholder="e.g. 1, 3, 7" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+      <span style="font-size:10px;color:var(--gray2);">Comma-separated days after quote sent</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Overdue Invoice Days</label>
+      <input id="edit-followup-invoice-days" type="text" placeholder="e.g. 1, 3, 7" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+      <span style="font-size:10px;color:var(--gray2);">Comma-separated days after invoice overdue</span>
+    </div>
+  </div>
+  <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
+    <button onclick="closeFollowupEditModal()" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
+    <button onclick="saveFollowupConfig()" id="save-followup-btn" style="flex:2;padding:10px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#0a0a0a;font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Save Changes</button>
+  </div>
+</div>
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
