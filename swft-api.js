@@ -102,12 +102,6 @@ const API = {
     update:  (id, data) => apiFetch(`/api/quotes/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
     send:    (id)     => apiFetch(`/api/quotes/${id}/send`,    { method: "POST", body: JSON.stringify({}) }),
     email:   (id, msg) => apiFetch(`/api/quotes/${id}/email`,  { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
-    emailWithPdf: (id, pdfBlob, msg) => getAuthToken().then(t => {
-      var form = new FormData();
-      form.append("pdf", pdfBlob, "quote.pdf");
-      if (msg) form.append("message", msg);
-      return fetch(`/api/quotes/${id}/email`, { method: "POST", headers: { "Authorization": "Bearer " + t }, body: form }).then(r => r.json());
-    }),
     approve: (id)     => apiFetch(`/api/quotes/${id}/approve`, { method: "POST", body: JSON.stringify({}) }),
     delete:  (id)     => apiFetch(`/api/quotes/${id}`,   { method: "DELETE" }),
   },
@@ -120,12 +114,6 @@ const API = {
     update: (id, data) => apiFetch(`/api/invoices/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
     send:   (id)     => apiFetch(`/api/invoices/${id}/send`,  { method: "POST", body: JSON.stringify({}) }),
     email:  (id, msg) => apiFetch(`/api/invoices/${id}/email`, { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
-    emailWithPdf: (id, pdfBlob, msg) => getAuthToken().then(t => {
-      var form = new FormData();
-      form.append("pdf", pdfBlob, "invoice.pdf");
-      if (msg) form.append("message", msg);
-      return fetch(`/api/invoices/${id}/email`, { method: "POST", headers: { "Authorization": "Bearer " + t }, body: form }).then(r => r.json());
-    }),
     pay:    (id, data) => apiFetch(`/api/invoices/${id}/pay`, { method: "POST", body: JSON.stringify(data) }),
     delete: (id)     => apiFetch(`/api/invoices/${id}`,   { method: "DELETE" }),
   },

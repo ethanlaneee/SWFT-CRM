@@ -5,7 +5,6 @@ const { google } = require("googleapis");
 const { sendSms } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
-const PDFDocument = require("pdfkit");
 const { handleInboundMessage } = require("../ai/receptionist-agent");
 const { normalizeItems, fixZeroItems } = require("../utils/normalizeItems");
 const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email");
@@ -122,176 +121,9 @@ const upload = multer({
 });
 
 /**
- * Generate a PDF buffer for a quote or invoice.
- * Uses Bebas Neue + DM Sans fonts to match the SWFT frontend exactly.
- */
-function generateDocumentPdf(doc, docType, user) {
-  const path = require("path");
-  const fontsDir = path.join(__dirname, "..", "fonts");
-
-  return new Promise((resolve, reject) => {
-    const pdf = new PDFDocument({ size: "LETTER", margins: { top: 40, bottom: 40, left: 50, right: 50 } });
-    const chunks = [];
-    pdf.on("data", (chunk) => chunks.push(chunk));
-    pdf.on("end", () => resolve(Buffer.concat(chunks)));
-    pdf.on("error", reject);
-
-    // Register fonts
-    pdf.registerFont("Bebas", path.join(fontsDir, "BebasNeue-Regular.ttf"));
-    pdf.registerFont("DM", path.join(fontsDir, "DMSans-Regular.woff"));
-    pdf.registerFont("DM-Medium", path.join(fontsDir, "DMSans-Medium.woff"));
-    pdf.registerFont("DM-Bold", path.join(fontsDir, "DMSans-Bold.woff"));
-
-    const companyName = user.company || user.name || "SWFT";
-    const taglineParts = [];
-    if (user.phone) taglineParts.push(user.phone);
-    if (user.address) taglineParts.push(user.address);
-    const tagline = taglineParts.length ? taglineParts.join("     ") : "simple. smart. swft.";
-    const title = docType === "quote" ? "QUOTE" : "INVOICE";
-    const items = doc.items || [];
-    console.log("[PDF] Generating", docType, "- items:", JSON.stringify(items), "- item keys:", items.map(i => Object.keys(i || {})));
-    const GREEN = "#8ab800";
-    const pageW = 612; // LETTER width
-    const left = 50;
-    const right = pageW - 50;
-    const contentW = right - left; // 512
-
-    let y = 40;
-
-    // ═══════════════════════════════════════════
-    //  COMPANY HEADER
-    // ═══════════════════════════════════════════
-    if (user.companyLogo) {
-      try {
-        const matches = user.companyLogo.match(/^data:image\/\w+;base64,(.+)$/);
-        if (matches) {
-          const imgBuffer = Buffer.from(matches[1], "base64");
-          pdf.image(imgBuffer, left, y, { fit: [180, 50] });
-          y += 58;
-        } else {
-          pdf.font("Bebas").fontSize(28).fill("#111").text(companyName + ".", left, y, { characterSpacing: 2.5 });
-          y += 34;
-        }
-      } catch (e) {
-        pdf.font("Bebas").fontSize(28).fill("#111").text(companyName + ".", left, y, { characterSpacing: 2.5 });
-        y += 34;
-      }
-    } else {
-      // Render company name in Bebas with green dot
-      const nameWidth = pdf.font("Bebas").fontSize(28).widthOfString(companyName, { characterSpacing: 2.5 });
-      pdf.fill("#111").text(companyName, left, y, { characterSpacing: 2.5, continued: false });
-      pdf.fill(GREEN).text(".", left + nameWidth + 1, y, { characterSpacing: 0 });
-      y += 34;
-    }
-
-    // Tagline
-    pdf.font("DM").fontSize(9).fill("#999").text(tagline, left, y, { characterSpacing: 1.2 });
-    y += 22;
-
-    // ═══════════════════════════════════════════
-    //  DOCUMENT TYPE + GREEN RULE
-    // ═══════════════════════════════════════════
-    pdf.font("Bebas").fontSize(18).fill("#111").text(title, left, y, { characterSpacing: 1.8 });
-    y += 24;
-    pdf.moveTo(left, y).lineTo(right, y).strokeColor(GREEN).lineWidth(2).stroke();
-    y += 18;
-
-    // ═══════════════════════════════════════════
-    //  INFO FIELDS  (label left, value right)
-    // ═══════════════════════════════════════════
-    const serviceValue = [doc.service, doc.sqft ? doc.sqft + " sqft" : ""].filter(Boolean).join(" · ") || "—";
-    const fields = [
-      { label: "Customer", value: doc.customerName || "—" },
-    ];
-    if (doc.address) fields.push({ label: "Address", value: doc.address });
-    fields.push({ label: "Service", value: serviceValue });
-    if (doc.finish) fields.push({ label: "Finish", value: doc.finish });
-
-    if (docType === "quote") {
-      if (doc.scheduledDate) {
-        fields.push({ label: "Scheduled", value: new Date(doc.scheduledDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
-      }
-      fields.push({ label: "Expires", value: doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—" });
-    }
-    if (docType === "invoice") {
-      fields.push({ label: "Due Date", value: doc.dueDate ? new Date(doc.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—" });
-    }
-
-    for (const f of fields) {
-      pdf.font("DM").fontSize(13).fill("#666").text(f.label, left, y);
-      pdf.font("DM-Medium").fontSize(13).fill("#111").text(f.value, left, y, { width: contentW, align: "right" });
-      y += 20;
-    }
-    y += 16;
-
-    // ═══════════════════════════════════════════
-    //  LINE ITEMS SECTION LABEL
-    // ═══════════════════════════════════════════
-    pdf.font("DM").fontSize(10).fill("#999").text("LINE ITEMS", left, y, { characterSpacing: 1.2 });
-    y += 18;
-
-    // Column positions (grid: 2fr 1fr 1fr 1fr over 512pt)
-    const c1 = left;          // Description — 2/5 of width
-    const c2 = left + 256;    // Qty
-    const c3 = left + 358;    // Rate
-    const c4 = left + 440;    // Total
-    const c4End = right;
-
-    // Column headers
-    pdf.font("DM").fontSize(9).fill("#999");
-    pdf.text("DESCRIPTION", c1, y, { characterSpacing: 0.8 });
-    pdf.text("QTY", c2, y, { width: 80, align: "center", characterSpacing: 0.8 });
-    pdf.text("RATE", c3, y, { width: 70, align: "right", characterSpacing: 0.8 });
-    pdf.text("TOTAL", c4, y, { width: c4End - c4, align: "right", characterSpacing: 0.8 });
-    y += 16;
-    pdf.moveTo(left, y).lineTo(right, y).strokeColor("#e0e0e0").lineWidth(1).stroke();
-    y += 10;
-
-    // ═══════════════════════════════════════════
-    //  LINE ITEM ROWS — normalize via shared utility
-    // ═══════════════════════════════════════════
-    const parsed = fixZeroItems(normalizeItems(items), Number(doc.total) || 0);
-
-    for (const p of parsed) {
-      const qtyText = String(p.qty);
-      const rateText = "$" + p.rate.toFixed(2);
-      const totalText = "$" + p.total.toFixed(2);
-
-      // All columns rendered at same y, font-size 13 to match print PDF
-      pdf.font("DM").fontSize(13).fill("#111").text(p.desc, c1, y, { width: 240 });
-      pdf.font("DM").fontSize(13).fill("#111").text(qtyText, c2, y, { width: 80, align: "center" });
-      pdf.font("DM").fontSize(13).fill("#111").text(rateText, c3, y, { width: 70, align: "right" });
-      pdf.font("DM-Medium").fontSize(13).fill("#111").text(totalText, c4, y, { width: c4End - c4, align: "right" });
-
-      y += 28;
-      pdf.moveTo(left, y).lineTo(right, y).strokeColor("#f0f0f0").lineWidth(0.5).stroke();
-      y += 10;
-    }
-
-    // ═══════════════════════════════════════════
-    //  TOTALS
-    // ═══════════════════════════════════════════
-    y += 6;
-    const grandTotal = Number(doc.total) || 0;
-    const totalFormatted = "$" + grandTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    // Subtotal row
-    pdf.font("DM").fontSize(13).fill("#111").text("Subtotal", left, y, { width: contentW - 120, align: "right" });
-    pdf.font("DM").fontSize(13).fill("#111").text(totalFormatted, left, y, { width: contentW, align: "right" });
-    y += 24;
-
-    // Grand total row with top border
-    pdf.moveTo(right - 220, y).lineTo(right, y).strokeColor("#111").lineWidth(2).stroke();
-    y += 10;
-    pdf.font("DM-Bold").fontSize(18).fill("#111").text("Total", left, y, { width: contentW - 130, align: "right" });
-    pdf.font("DM-Bold").fontSize(18).fill("#111").text(totalFormatted, left, y, { width: contentW, align: "right" });
-
-    pdf.end();
-  });
-}
-
-/**
- * Generate HTML email body for a quote or invoice attachment.
+ * Generate HTML email body for a quote or invoice.
+ * Embedded directly in the email — no PDF attachment needed.
+ * Customer sees the formatted quote/invoice right in their inbox.
  */
 function generateDocumentHtml(doc, docType, user) {
   const companyName = user.company || user.name || "SWFT";
@@ -425,9 +257,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     let attachedDocType = "";
     let attachedDocId = "";
 
-    // Build PDF file attachments for quotes/invoices
-    const pdfFiles = [];
-
+    // Embed quote/invoice as formatted HTML in the email body
     if (quoteId) {
       const quoteDoc = await db.collection("quotes").doc(quoteId).get();
       if (quoteDoc.exists && quoteDoc.data().userId === req.uid) {
@@ -435,13 +265,8 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
         if (quoteData.status === "sent") {
           return res.status(400).json({ error: "This quote has already been sent. Duplicate sends are not allowed." });
         }
-        const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
-        const custName = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
-        pdfFiles.push({
-          buffer: pdfBuffer,
-          mimetype: "application/pdf",
-          originalname: `Quote-${custName}.pdf`,
-        });
+        const docHtml = generateDocumentHtml(quoteData, "quote", user);
+        htmlBody = (htmlBody ? htmlBody + "<br/><hr/><br/>" : "") + docHtml;
         attachedDocType = "quote";
         attachedDocId = quoteId;
       }
@@ -452,13 +277,8 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
         if (invData.status === "sent") {
           return res.status(400).json({ error: "This invoice has already been sent. Duplicate sends are not allowed." });
         }
-        const pdfBuffer = await generateDocumentPdf(invData, "invoice", user);
-        const custName = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "-");
-        pdfFiles.push({
-          buffer: pdfBuffer,
-          mimetype: "application/pdf",
-          originalname: `Invoice-${custName}.pdf`,
-        });
+        const docHtml = generateDocumentHtml(invData, "invoice", user);
+        htmlBody = (htmlBody ? htmlBody + "<br/><hr/><br/>" : "") + docHtml;
         attachedDocType = "invoice";
         attachedDocId = invoiceId;
       }
@@ -467,8 +287,8 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     if (!htmlBody) htmlBody = "<p>No content</p>";
     const textBody = body ? body.replace(/<[^>]*>/g, "") : "No content";
 
-    // Merge uploaded files + generated PDF attachments
-    const allFiles = [...(req.files || []), ...pdfFiles];
+    // Only user-uploaded files (no generated PDFs)
+    const allFiles = req.files || [];
     const attachmentNames = allFiles.map(f => f.originalname);
 
     if (!user.gmailConnected || !user.gmailTokens) {
@@ -967,4 +787,4 @@ async function twilioIncomingHandler(req, res) {
   }
 }
 
-module.exports = { router, twilioIncomingHandler, sendViaGmail, generateDocumentPdf };
+module.exports = { router, twilioIncomingHandler, sendViaGmail, generateDocumentHtml };

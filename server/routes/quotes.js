@@ -1,11 +1,9 @@
 const router = require("express").Router();
-const multer = require("multer");
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
-const { sendViaGmail, generateDocumentPdf } = require("./messages");
+const { sendViaGmail, generateDocumentHtml } = require("./messages");
 const { normalizeItems } = require("../utils/normalizeItems");
 
-const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const col = () => db.collection("quotes");
 
 // List
@@ -95,8 +93,8 @@ router.post("/:id/approve", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Email quote with PDF
-router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
+// Email quote with inline HTML (no PDF attachment)
+router.post("/:id/email", async (req, res, next) => {
   try {
     const quoteDoc = await col().doc(req.params.id).get();
     if (!quoteDoc.exists || quoteDoc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
@@ -112,22 +110,15 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     const user = userDoc.exists ? userDoc.data() : {};
     if (!user.gmailConnected || !user.gmailTokens) return res.status(400).json({ error: "Gmail not connected." });
 
-    const custNameClean = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
-    let pdfFile;
-    if (req.file && req.file.buffer && req.file.buffer.length > 0) {
-      pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
-    } else {
-      const pdfBuffer = await generateDocumentPdf(quoteData, "quote", user);
-      pdfFile = { buffer: pdfBuffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
-    }
-
     const fromName = user.company || user.name || "SWFT";
     const subject = `Quote from ${fromName}`;
-    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nPlease find your quote attached.\n\nBest,\n${fromName}`;
-    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
+    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nHere's your quote.\n\nBest,\n${fromName}`;
+    const msgHtml = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
+    const docHtml = generateDocumentHtml(quoteData, "quote", user);
+    const htmlBody = msgHtml + "<br/>" + docHtml;
 
     user._uid = req.uid;
-    const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, [pdfFile]);
+    const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, []);
 
     await db.collection("messages").add({
       userId: req.uid, orgId: req.orgId, to: cust.email, subject, body: bodyText,
@@ -135,7 +126,7 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
       type: "email", status: "sent", sentVia: "gmail",
       gmailMessageId: sendResult.messageId, gmailThreadId: sendResult.threadId,
       attachedDocType: "quote", attachedDocId: req.params.id,
-      attachments: [pdfFile.originalname], sentAt: Date.now(),
+      sentAt: Date.now(),
     });
 
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
