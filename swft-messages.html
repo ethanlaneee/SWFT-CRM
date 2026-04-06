@@ -599,14 +599,24 @@ function buildContacts(){
         messages:[],
         lastTime:0
       };
-      // Find customer details
+      // Find customer details — by ID first, then by phone number
+      var cust=null;
       if(m.customerId){
-        var cust=_customers.find(function(c){return c.id===m.customerId;});
-        if(cust){
-          map[key].email=cust.email||m.to;
-          map[key].phone=cust.phone||'';
-          map[key].customerName=cust.name||m.customerName;
-        }
+        cust=_customers.find(function(c){return c.id===m.customerId;});
+      }
+      if(!cust && contactPhone){
+        var digits=contactPhone.replace(/\D/g,'');
+        cust=_customers.find(function(c){
+          if(!c.phone) return false;
+          var cd=c.phone.replace(/\D/g,'');
+          return cd===digits || cd===digits.slice(1) || '1'+cd===digits;
+        });
+      }
+      if(cust){
+        map[key].customerId=cust.id;
+        map[key].email=cust.email||m.to;
+        map[key].phone=cust.phone||contactPhone;
+        map[key].customerName=cust.name||m.customerName||'Unknown';
       }
     }
     map[key].messages.push(m);
