@@ -8,29 +8,14 @@ const { getUsage, incrementSms } = require("../usage");
 const PDFDocument = require("pdfkit");
 const { handleInboundMessage } = require("../ai/receptionist-agent");
 const { normalizeItems, fixZeroItems } = require("../utils/normalizeItems");
+const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email");
 
 /**
  * Send email via user's connected Gmail account.
+ * Full-featured: supports attachments and reply threading.
  */
 async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyHeaders = {}) {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
-  );
-  oauth2Client.setCredentials(user.gmailTokens);
-
-  // Refresh token if expired
-  const tokenInfo = await oauth2Client.getAccessToken();
-  if (tokenInfo.token !== user.gmailTokens.access_token) {
-    await db.collection("users").doc(user._uid).set({
-      gmailTokens: { ...user.gmailTokens, access_token: tokenInfo.token },
-    }, { merge: true });
-  }
-
-  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-  const fromAddr = user.gmailAddress || user.email;
-  const fromName = user.company || user.name || "SWFT";
+  const { gmail, fromAddr, fromName } = await getGmailClient(user);
 
   // Build MIME message
   const boundary = "swft_boundary_" + Date.now();
@@ -83,11 +68,7 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyH
     mime += `--${boundary}--`;
   }
 
-  const encodedMessage = Buffer.from(mime)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  const encodedMessage = encodeMime(mime);
 
   const result = await gmail.users.messages.send({
     userId: "me",
@@ -553,11 +534,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     // Use the gmailMessageId from the previous message in the conversation
     if (!messageIdForReply && threadId) {
       try {
-        const oauth2Client = new google.auth.OAuth2(
-          process.env.GOOGLE_CLIENT_ID,
-          process.env.GOOGLE_CLIENT_SECRET,
-          process.env.GOOGLE_REDIRECT_URI
-        );
+        const oauth2Client = getOAuthClient();
         oauth2Client.setCredentials(user.gmailTokens);
         const gmailApi = google.gmail({ version: "v1", auth: oauth2Client });
 
@@ -757,11 +734,7 @@ router.post("/sync-gmail", async (req, res, next) => {
       return res.json({ synced: 0, message: "Gmail not connected" });
     }
 
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
-    );
+    const oauth2Client = getOAuthClient();
     oauth2Client.setCredentials(user.gmailTokens);
 
     // Refresh token if needed

@@ -218,14 +218,6 @@ router.get("/user/:id", async (req, res, next) => {
 
     const jobs = jobSnap.docs.map(d => d.data());
 
-    // Normalize timestamps
-    function normTs(val) {
-      if (!val) return null;
-      if (typeof val === "number") return val;
-      if (val._seconds) return val._seconds * 1000;
-      return new Date(val).getTime();
-    }
-
     res.json({
       id: uid,
       name: data.name || null,

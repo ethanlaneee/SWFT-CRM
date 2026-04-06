@@ -2,67 +2,22 @@ const router = require("express").Router();
 const crypto = require("crypto");
 const { db } = require("../firebase");
 const { sendSms } = require("../twilio");
+const { sendSimpleGmail } = require("../utils/email");
+const { resolveTemplate } = require("../utils/templates");
 
 const APP_URL = process.env.APP_URL || "https://goswft.com";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Resolve template variables in a message string.
- */
-function resolveTemplate(template, vars) {
-  let msg = template || "";
-  for (const [key, val] of Object.entries(vars)) {
-    msg = msg.replace(new RegExp(`{{${key}}}`, "g"), val || "");
-  }
-  return msg;
-}
-
-/**
- * Send an email for an automated message.
- * Tries Gmail (nodemailer) if org user has gmailTokens, falls back to Postmark.
+ * Send an email for an automated message via Gmail.
  */
 async function sendAutomationEmail(orgUser, to, subject, body) {
-  const fromName = orgUser.company || orgUser.name || "SWFT";
-  const fromEmail = orgUser.email || "noreply@swft-crm.com";
-
-  if (orgUser.gmailConnected && orgUser.gmailTokens) {
-    const { google } = require("googleapis");
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
-    );
-    oauth2Client.setCredentials(orgUser.gmailTokens);
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-
-    const boundary = "swft_auto_" + Date.now();
-    let mime = "";
-    mime += `From: ${fromName} <${orgUser.gmailAddress || fromEmail}>\r\n`;
-    mime += `To: ${to}\r\n`;
-    mime += `Subject: ${subject}\r\n`;
-    mime += `MIME-Version: 1.0\r\n`;
-    mime += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
-    mime += `--${boundary}\r\n`;
-    mime += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
-    mime += body + "\r\n\r\n";
-    mime += `--${boundary}\r\n`;
-    mime += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
-    mime += `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${body}</div>\r\n\r\n`;
-    mime += `--${boundary}--`;
-
-    const encoded = Buffer.from(mime)
-      .toString("base64")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
-    await gmail.users.messages.send({ userId: "me", requestBody: { raw: encoded } });
-    return;
+  if (!orgUser.gmailConnected || !orgUser.gmailTokens) {
+    throw new Error("Gmail not connected. Connect Gmail in Settings to send automation emails.");
   }
-
-  // Gmail not connected — throw so message is marked failed, not sent
-  throw new Error("Gmail not connected. Connect Gmail in Settings to send automation emails.");
+  const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${body}</div>`;
+  await sendSimpleGmail(orgUser, to, subject, body, htmlBody);
 }
 
 // ── Exported worker functions ────────────────────────────────────────────────

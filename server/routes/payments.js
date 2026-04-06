@@ -1,11 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { pushNotification } = require("./notifications");
-
-function getStripe() {
-  if (!process.env.STRIPE_SECRET_KEY) throw new Error("STRIPE_SECRET_KEY is not set");
-  return require("stripe")(process.env.STRIPE_SECRET_KEY);
-}
+const { getStripe } = require("../utils/stripe");
 
 // POST /api/payments/invoice/:id/link
 // Creates (or retrieves) a Stripe Payment Link for an invoice

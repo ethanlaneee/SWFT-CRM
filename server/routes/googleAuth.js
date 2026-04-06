@@ -1,20 +1,13 @@
 const router = require("express").Router();
 const { google } = require("googleapis");
 const { db } = require("../firebase");
-
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback";
+const { getOAuthClient } = require("../utils/email");
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/userinfo.email",
 ];
-
-function getOAuthClient() {
-  return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-}
 
 // GET /api/auth/google/authorize — redirect user to Google consent screen
 // Requires auth middleware (user must be logged in)

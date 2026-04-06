@@ -5,31 +5,13 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const crypto = require("crypto");
-const { google } = require("googleapis");
+const { sendSimpleGmail } = require("../utils/email");
 
 const ROLES = ["owner", "admin", "technician", "office"];
 
 // ── Gmail helper for sending invite emails ──
 
 async function sendInviteViaGmail(ownerUser, toEmail, inviteUrl, orgName, role, companyLogo) {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback"
-  );
-  oauth2Client.setCredentials(ownerUser.gmailTokens);
-
-  // Refresh token if expired
-  const tokenInfo = await oauth2Client.getAccessToken();
-  if (tokenInfo.token !== ownerUser.gmailTokens.access_token) {
-    await db.collection("users").doc(ownerUser._uid).set({
-      gmailTokens: { ...ownerUser.gmailTokens, access_token: tokenInfo.token },
-    }, { merge: true });
-  }
-
-  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-  const fromAddr = ownerUser.gmailAddress || ownerUser.email;
-  const fromName = orgName;
   const subject = `You're invited to join ${orgName} on SWFT`;
 
   const logoHtml = companyLogo
@@ -82,32 +64,8 @@ async function sendInviteViaGmail(ownerUser, toEmail, inviteUrl, orgName, role, 
 
   const textBody = `You're invited to join ${orgName} on SWFT!\n\n${orgName} has invited you to join their team as a ${role}.\n\nAccept your invite: ${inviteUrl}\n\nThis invite expires in 7 days.\n\nSent via SWFT — goswft.com`;
 
-  // Build MIME message
-  const boundary = "swft_invite_" + Date.now();
-  let mime = "";
-  mime += `From: ${fromName} <${fromAddr}>\r\n`;
-  mime += `To: ${toEmail}\r\n`;
-  mime += `Subject: ${subject}\r\n`;
-  mime += `MIME-Version: 1.0\r\n`;
-  mime += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
-  mime += `--${boundary}\r\n`;
-  mime += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
-  mime += textBody + "\r\n\r\n";
-  mime += `--${boundary}\r\n`;
-  mime += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
-  mime += htmlBody + "\r\n\r\n";
-  mime += `--${boundary}--`;
-
-  const encodedMessage = Buffer.from(mime)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-
-  await gmail.users.messages.send({
-    userId: "me",
-    requestBody: { raw: encodedMessage },
-  });
+  ownerUser.company = orgName;
+  await sendSimpleGmail(ownerUser, toEmail, subject, textBody, htmlBody);
 }
 
 // ── Role permission helpers ──

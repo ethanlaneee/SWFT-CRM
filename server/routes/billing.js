@@ -1,15 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
-const { google } = require("googleapis");
-
-// Initialize lazily so a missing STRIPE_SECRET_KEY env var doesn't crash
-// the server at startup — the error surfaces only when a billing route is hit.
-function getStripe() {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("STRIPE_SECRET_KEY environment variable is not set.");
-  }
-  return require("stripe")(process.env.STRIPE_SECRET_KEY);
-}
+const { getStripe } = require("../utils/stripe");
 
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
