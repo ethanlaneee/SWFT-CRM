@@ -6,6 +6,7 @@ const { sendSms } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const PDFDocument = require("pdfkit");
+const { handleInboundMessage } = require("../ai/receptionist-agent");
 
 /**
  * Send email via user's connected Gmail account.
@@ -760,15 +761,12 @@ async function twilioIncomingHandler(req, res) {
       }
     }
 
-    if (!matched) {
-      console.log("Incoming SMS from unknown number (not matched to customer)");
-      return res.type("text/xml").send("<Response></Response>");
-    }
-
-    await db.collection("messages").add({
-      userId: matched.userId,
-      customerId: matched.customerId,
-      customerName: matched.customerName,
+    // Store inbound message (for both known and unknown senders)
+    const msgRecord = {
+      userId: matched?.userId || "",
+      orgId: matched?.orgId || "",
+      customerId: matched?.customerId || "",
+      customerName: matched?.customerName || "",
       from: from,
       to: "inbound",
       body: body,
@@ -777,7 +775,51 @@ async function twilioIncomingHandler(req, res) {
       status: "received",
       twilioMessageSid: msgSid || "",
       sentAt: Date.now(),
-    });
+    };
+
+    // Find the org to route to — use matched customer's org, or find org by phone
+    let orgId = null;
+    let ownerUid = null;
+    let ownerData = null;
+
+    if (matched) {
+      // Known customer — find their org
+      msgRecord.userId = matched.userId;
+      const custDoc = await db.collection("customers").doc(matched.customerId).get();
+      orgId = custDoc.exists ? custDoc.data().orgId : null;
+    }
+
+    if (!orgId) {
+      // For unknown numbers, we can't determine the org from a shared Twilio number.
+      // Log and return — future: per-org phone numbers will solve this.
+      if (!matched) {
+        console.log("Incoming SMS from unknown number (not matched to customer)");
+        return res.type("text/xml").send("<Response></Response>");
+      }
+    }
+
+    // Find org owner
+    if (orgId) {
+      const ownerSnap = await db.collection("users")
+        .where("orgId", "==", orgId).where("role", "==", "owner").limit(1).get();
+      if (!ownerSnap.empty) {
+        ownerUid = ownerSnap.docs[0].id;
+        ownerData = ownerSnap.docs[0].data();
+        msgRecord.orgId = orgId;
+        msgRecord.userId = ownerUid;
+      }
+    }
+
+    await db.collection("messages").add(msgRecord);
+
+    // ── AI Receptionist — auto-reply if enabled ──
+    if (orgId && ownerUid && ownerData) {
+      try {
+        await handleInboundMessage(orgId, ownerUid, ownerData, from, body, matched || null);
+      } catch (err) {
+        console.error("[receptionist] Error handling inbound:", err.message);
+      }
+    }
 
     res.type("text/xml").send("<Response></Response>");
   } catch (err) {

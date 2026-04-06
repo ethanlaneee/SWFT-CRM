@@ -271,16 +271,16 @@
         <div class="toggle on" id="toggle-receptionist" onclick="event.stopPropagation();toggleAgent('receptionist')"></div>
         <span class="toggle-label" id="toggle-label-receptionist">On</span>
       </div>
-      <span class="activity-badge">9 actions today</span>
+      <span class="activity-badge" id="receptionist-badge">0 today</span>
       <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
     </div>
   </div>
 
   <div class="agent-stats">
-    <div class="astat"><div class="astat-val">32</div><div class="astat-label">Calls handled MTD</div></div>
-    <div class="astat"><div class="astat-val">18</div><div class="astat-label">Estimates booked</div></div>
-    <div class="astat"><div class="astat-val">94%</div><div class="astat-label">Booking rate</div></div>
-    <div class="astat"><div class="astat-val">&lt;30s</div><div class="astat-label">Avg response time</div></div>
+    <div class="astat"><div class="astat-val" id="receptionist-stat-replies">0</div><div class="astat-label">Replies sent MTD</div></div>
+    <div class="astat"><div class="astat-val" id="receptionist-stat-leads">0</div><div class="astat-label">New leads engaged</div></div>
+    <div class="astat"><div class="astat-val" id="receptionist-stat-escalations">0</div><div class="astat-label">Escalations</div></div>
+    <div class="astat"><div class="astat-val" id="receptionist-stat-customers">0</div><div class="astat-label">Customer replies</div></div>
   </div>
 
   <div class="agent-detail" id="detail-receptionist">
@@ -305,50 +305,26 @@
         </div>
       </div>
 
-      <div class="activity-log">
-        <div class="log-header">
-          <div class="log-title">Recent Activity</div>
-          <span class="log-link">View all →</span>
+      <div class=”activity-log”>
+        <div class=”log-header”>
+          <div class=”log-title”>Recent Activity</div>
         </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--green);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Booked estimate</strong> for Nguyen — driveway resurface, 1,200 sqft · Mar 31 @ 11am</div>
-            <div class="log-time">9 min ago</div>
-          </div>
-        </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--blue);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Inbound SMS</strong> from (512) 441-8823 — qualified as driveway lead, sent booking link</div>
-            <div class="log-time">1 hr ago</div>
-          </div>
-        </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--green);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Confirmed appointment</strong> for Pham estimate · sent reminder SMS</div>
-            <div class="log-time">3 hrs ago</div>
-          </div>
-        </div>
-        <div class="log-item">
-          <div class="log-dot" style="background:var(--amber);"></div>
-          <div class="log-body">
-            <div class="log-text"><strong>Escalated to Jake</strong> — caller asked about commercial pricing, outside agent scope</div>
-            <div class="log-time">Yesterday, 2:14 PM</div>
+        <div id=”receptionist-activity-list”>
+          <div class=”log-item” style=”justify-content:center;”>
+            <div class=”log-body”><div class=”log-text” style=”color:var(--gray2);”>No receptionist activity yet. Enable the agent and it will auto-reply to inbound texts.</div></div>
           </div>
         </div>
       </div>
 
       <div>
-        <div class="config-title" style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;">Opening Script Preview</div>
-        <div class="prompt-box"><span class="comment">// Agent greeting — editable</span>
+        <div class=”config-title” style=”font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:8px;”>How It Works</div>
+        <div class=”prompt-box”><span class=”comment”>// Inbound SMS auto-reply flow</span>
 
-“Hi, thanks for calling SWFT Concrete!
-I’m the SWFT assistant. I can help you
-get a free estimate or answer questions.
-Are you looking for a driveway, patio,
-or something else today?”</div>
+1. Customer texts your SWFT number
+2. AI reads the message + conversation history
+3. Qualifies leads, answers questions
+4. Replies instantly via SMS
+5. Escalates to you if it can’t help</div>
 </div>
 
     </div>
@@ -593,6 +569,56 @@ Google review would mean a lot to us 🙏
     }
   }
 
+  // ── Load receptionist data ──
+  async function loadReceptionistData() {
+    try {
+      const activity = await API.agents.activity('receptionist');
+      const monthStart = new Date();
+      monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+      const mtd = activity.filter(a => a.createdAt >= monthStart.getTime());
+
+      // Stats
+      const replies = mtd.filter(a => a.type === 'replied_customer' || a.type === 'replied_lead').length;
+      const leads = mtd.filter(a => a.type === 'replied_lead').length;
+      const escalations = mtd.filter(a => a.type === 'escalated').length;
+      const customers = mtd.filter(a => a.type === 'replied_customer').length;
+
+      const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+      el('receptionist-stat-replies', replies);
+      el('receptionist-stat-leads', leads);
+      el('receptionist-stat-escalations', escalations);
+      el('receptionist-stat-customers', customers);
+
+      // Today count for badge
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      const today = activity.filter(a => a.createdAt >= todayStart.getTime()).length;
+      el('receptionist-badge', today + ' today');
+
+      // Activity log
+      const listEl = document.getElementById('receptionist-activity-list');
+      if (listEl && activity.length > 0) {
+        listEl.innerHTML = activity.slice(0, 10).map(a => {
+          const colors = { replied_customer: 'var(--green)', replied_lead: 'var(--blue)', escalated: 'var(--amber)' };
+          const labels = { replied_customer: 'Replied to customer', replied_lead: 'Replied to new lead', escalated: 'Escalated to owner' };
+          const color = colors[a.type] || 'var(--gray)';
+          const label = labels[a.type] || a.type;
+          const who = a.customerName || a.phone || '';
+          const msg = a.inboundMessage ? ` — "${a.inboundMessage.slice(0, 60)}${a.inboundMessage.length > 60 ? '...' : ''}"` : '';
+          const time = a.createdAt ? timeAgo(a.createdAt) : '';
+          return `<div class="log-item">
+            <div class="log-dot" style="background:${color};"></div>
+            <div class="log-body">
+              <div class="log-text"><strong>${label}</strong>${who ? ' — ' + who : ''}${msg}</div>
+              <div class="log-time">${time}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    } catch (err) {
+      console.error('Failed to load receptionist data:', err);
+    }
+  }
+
   // ── Estimator: quick estimate ──
   async function runQuickEstimate() {
     const service = document.getElementById('est-service').value.trim();
@@ -777,8 +803,9 @@ Google review would mean a lot to us 🙏
     if (window.__swftUser) {
       clearInterval(_configInterval);
       loadAgentConfigs();
-      loadFollowupData();
+      loadReceptionistData();
       loadEstimatorData();
+      loadFollowupData();
     }
   }, 200);
 
