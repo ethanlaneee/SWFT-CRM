@@ -353,6 +353,39 @@ app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
 // ── Root → landing page (must be before static middleware) ──
 app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
 
+// ── Auth debug endpoint (temporary — remove after fixing 401 issue) ──
+app.get("/api/auth-debug", async (req, res) => {
+  const header = req.headers.authorization;
+  const result = { hasHeader: !!header };
+  if (header && header.startsWith("Bearer ")) {
+    const token = header.split("Bearer ")[1];
+    result.tokenLength = token.length;
+    result.tokenPrefix = token.substring(0, 20) + "...";
+    try {
+      const decoded = await require("./firebase").authAdmin.verifyIdToken(token);
+      result.verified = true;
+      result.uid = decoded.uid;
+      result.email = decoded.email;
+      result.iss = decoded.iss;
+      result.aud = decoded.aud;
+    } catch (e) {
+      result.verified = false;
+      result.errorCode = e.code;
+      result.errorMessage = e.message;
+    }
+  }
+  // Also test basic Firebase Admin connectivity
+  try {
+    const listResult = await require("./firebase").authAdmin.listUsers(1);
+    result.adminSdkWorks = true;
+    result.sampleUserCount = listResult.users.length;
+  } catch (e) {
+    result.adminSdkWorks = false;
+    result.adminSdkError = e.message;
+  }
+  res.json(result);
+});
+
 // ── Health check (before URL rewrite so /health doesn't become /health.html) ──
 app.get("/health", async (req, res) => {
   let firebaseOk = false;
