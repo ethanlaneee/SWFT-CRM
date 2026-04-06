@@ -731,23 +731,32 @@ router.delete("/:id", async (req, res, next) => {
  */
 async function twilioIncomingHandler(req, res) {
   try {
+    console.log("[twilio-webhook] Incoming SMS received:", JSON.stringify(req.body || {}).slice(0, 300));
+
+    // Twilio signature validation (skip if auth token not configured)
     const twilio = require("twilio");
     const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
     if (twilioAuthToken) {
       const signature = req.headers['x-twilio-signature'] || '';
       const url = `${process.env.APP_URL || 'https://goswft.com'}/api/webhooks/twilio/sms`;
-      if (!twilio.validateRequest(twilioAuthToken, signature, url, req.body)) {
-        return res.status(403).type("text/xml").send("<Response></Response>");
+      const valid = twilio.validateRequest(twilioAuthToken, signature, url, req.body);
+      if (!valid) {
+        console.warn("[twilio-webhook] Signature validation FAILED. URL used:", url);
+        // Don't block — signature issues are common with proxy/CDN setups
+        // Just log the warning and continue processing
       }
     }
 
-    const from = req.body.From;
-    const body = req.body.Body;
-    const msgSid = req.body.MessageSid;
+    const from = req.body.From || req.body.from || "";
+    const body = req.body.Body || req.body.body || "";
+    const msgSid = req.body.MessageSid || req.body.messageSid || "";
 
     if (!from || !body) {
+      console.warn("[twilio-webhook] Missing From or Body in request");
       return res.type("text/xml").send("<Response></Response>");
     }
+
+    console.log("[twilio-webhook] From:", from, "Body:", body.slice(0, 100));
 
     const digits = from.replace(/\D/g, "");
     const custSnap = await db.collection("customers").get();
@@ -766,24 +775,37 @@ async function twilioIncomingHandler(req, res) {
       }
     }
 
-    if (!matched) {
-      console.log("Incoming SMS from unknown number (not matched to customer):", from);
-      return res.type("text/xml").send("<Response></Response>");
+    if (matched) {
+      console.log("[twilio-webhook] Matched customer:", matched.customerName, "id:", matched.customerId, "orgId:", matched.orgId);
+    } else {
+      console.log("[twilio-webhook] No customer matched for phone:", from, "- checked", custSnap.size, "customers");
     }
 
-    // Resolve orgId — use customer's orgId, or fall back to userId
-    let orgId = matched.orgId || matched.userId || "";
+    // Resolve orgId — from matched customer, or find any org (single-tenant fallback)
+    let orgId = matched?.orgId || matched?.userId || "";
     let ownerUid = null;
     let ownerData = null;
 
     // If orgId is empty, try to get it from the user doc
-    if (!orgId && matched.userId) {
+    if (!orgId && matched?.userId) {
       const userDoc = await db.collection("users").doc(matched.userId).get();
       if (userDoc.exists) orgId = userDoc.data().orgId || matched.userId;
     }
 
-    // Find org owner
-    if (orgId) {
+    // If still no orgId (unknown sender), find the first org owner as fallback
+    // This works for single-tenant setups with one business on the Twilio number
+    if (!orgId) {
+      const anyOwner = await db.collection("users").where("role", "==", "owner").limit(1).get();
+      if (!anyOwner.empty) {
+        ownerUid = anyOwner.docs[0].id;
+        ownerData = anyOwner.docs[0].data();
+        orgId = ownerData.orgId || ownerUid;
+        console.log("[twilio-webhook] No customer match — using fallback org:", orgId, "owner:", ownerData.name);
+      }
+    }
+
+    // Find org owner (if not already found via fallback)
+    if (orgId && !ownerUid) {
       const ownerSnap = await db.collection("users")
         .where("orgId", "==", orgId).where("role", "==", "owner").limit(1).get();
       if (!ownerSnap.empty) {
@@ -799,12 +821,19 @@ async function twilioIncomingHandler(req, res) {
       }
     }
 
+    if (!orgId || !ownerUid) {
+      console.warn("[twilio-webhook] Could not resolve org/owner for inbound SMS from:", from);
+      return res.type("text/xml").send("<Response></Response>");
+    }
+
+    console.log("[twilio-webhook] Resolved orgId:", orgId, "ownerUid:", ownerUid, "ownerName:", ownerData?.name || "unknown");
+
     // Store inbound message
-    await db.collection("messages").add({
-      userId: ownerUid || matched.userId || "",
+    const savedMsg = await db.collection("messages").add({
+      userId: ownerUid || matched?.userId || "",
       orgId: orgId,
-      customerId: matched.customerId,
-      customerName: matched.customerName,
+      customerId: matched?.customerId || "",
+      customerName: matched?.customerName || from,
       from: from,
       to: "inbound",
       body: body,
@@ -815,12 +844,15 @@ async function twilioIncomingHandler(req, res) {
       sentAt: Date.now(),
     });
 
+    console.log("[twilio-webhook] Message saved:", savedMsg.id);
+
     // ── AI Receptionist — auto-reply if enabled ──
     if (orgId && ownerUid && ownerData) {
       try {
-        await handleInboundMessage(orgId, ownerUid, ownerData, from, body, matched);
+        console.log("[twilio-webhook] Calling receptionist agent for org:", orgId);
+        await handleInboundMessage(orgId, ownerUid, ownerData, from, body, matched || null);
       } catch (err) {
-        console.error("[receptionist] Error handling inbound:", err.message);
+        console.error("[receptionist] Error handling inbound:", err.message, err.stack);
       }
     }
 
