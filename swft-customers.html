@@ -674,8 +674,6 @@ user-select:none;
   </div>
 </div>
 
-</div>
-
 <div id="tab-ai-activity" style="display:none;">
   <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px;">
     <span style="color:#c8f135;">AI Agent Activity</span>
@@ -684,6 +682,8 @@ user-select:none;
     <div style="font-size:12px;color:#444;text-align:center;padding:20px 0;">Loading AI activity...</div>
   </div>
 </div>
+
+</div> <!-- /drawer-content -->
 
   <!-- VIEW footer -->
 
@@ -857,7 +857,7 @@ function closeDrawer() {
 function switchTab(el, tab) {
   document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  ['contact','jobs','invoices','notes'].forEach(t => {
+  ['contact','jobs','invoices','notes','ai-activity'].forEach(t => {
     document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
   });
 }
