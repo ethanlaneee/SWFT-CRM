@@ -22,7 +22,7 @@ async function getAuthToken() {
     window.location.href = "swft-login";
     throw new Error("Not authenticated");
   }
-  return user.getIdToken();
+  return user.getIdToken(true);
 }
 
 // ── Base fetch wrapper ──
