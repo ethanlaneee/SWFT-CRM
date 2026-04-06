@@ -328,9 +328,9 @@ async function getIntegrationTools(uid) {
   return tools;
 }
 
-// ── Auto-sync: push a job/schedule entry to Google Calendar if connected ──
+// ── Auto-sync: push or update a job in Google Calendar ──
 
-async function syncJobToCalendar(uid, jobData) {
+async function syncJobToCalendar(uid, jobData, jobId) {
   try {
     const userDoc = await db.collection("users").doc(uid).get();
     if (!userDoc.exists) return null;
@@ -348,26 +348,70 @@ async function syncJobToCalendar(uid, jobData) {
     const startDateTime = `${date}T${startTime}:00`;
     const endDateTime = `${date}T${endTime}:00`;
 
-    const res = await calendar.events.insert({
-      calendarId: "primary",
-      requestBody: {
-        summary: jobData.title || jobData.customerName || "SWFT Job",
-        description: [
-          jobData.description || "",
-          jobData.customerName ? `Customer: ${jobData.customerName}` : "",
-          jobData.service ? `Service: ${jobData.service}` : "",
-        ].filter(Boolean).join("\n"),
-        location: jobData.address || jobData.location || "",
-        start: { dateTime: startDateTime, timeZone: "America/Edmonton" },
-        end: { dateTime: endDateTime, timeZone: "America/Edmonton" },
-      },
-    });
+    const eventBody = {
+      summary: jobData.title || jobData.customerName || "SWFT Job",
+      description: [
+        jobData.description || "",
+        jobData.customerName ? `Customer: ${jobData.customerName}` : "",
+        jobData.service ? `Service: ${jobData.service}` : "",
+        jobData.crew && jobData.crew !== "Unassigned" ? `Crew: ${jobData.crew}` : "",
+      ].filter(Boolean).join("\n"),
+      location: jobData.address || jobData.location || "",
+      start: { dateTime: startDateTime, timeZone: "America/Edmonton" },
+      end: { dateTime: endDateTime, timeZone: "America/Edmonton" },
+    };
 
-    return { eventId: res.data.id, link: res.data.htmlLink };
+    let res;
+    const existingEventId = jobData.googleCalendarEventId;
+
+    if (existingEventId) {
+      // Update existing event
+      try {
+        res = await calendar.events.update({
+          calendarId: "primary",
+          eventId: existingEventId,
+          requestBody: eventBody,
+        });
+      } catch (updateErr) {
+        // Event may have been deleted from calendar — create fresh
+        res = await calendar.events.insert({ calendarId: "primary", requestBody: eventBody });
+      }
+    } else {
+      // Create new event
+      res = await calendar.events.insert({ calendarId: "primary", requestBody: eventBody });
+    }
+
+    const eventId = res.data.id;
+    const link = res.data.htmlLink;
+
+    // Save event ID back to the job so future updates can patch the same event
+    if (jobId && eventId !== existingEventId) {
+      await db.collection("jobs").doc(jobId).update({ googleCalendarEventId: eventId }).catch(() => {});
+    }
+
+    return { eventId, link };
   } catch (err) {
     console.error("Calendar auto-sync failed:", err.message);
     return null;
   }
 }
 
-module.exports = { getIntegrationTools, executeIntegrationTool, syncJobToCalendar };
+// ── Delete a job from Google Calendar ──
+
+async function deleteJobFromCalendar(uid, googleCalendarEventId) {
+  try {
+    if (!googleCalendarEventId) return;
+    const userDoc = await db.collection("users").doc(uid).get();
+    if (!userDoc.exists) return;
+    const gcal = (userDoc.data().integrations || {}).google_calendar;
+    if (!gcal?.connected || !gcal?.tokens) return;
+
+    const auth = getOAuthClient(gcal.tokens);
+    const calendar = google.calendar({ version: "v3", auth });
+    await calendar.events.delete({ calendarId: "primary", eventId: googleCalendarEventId });
+  } catch (err) {
+    console.error("Calendar delete failed:", err.message);
+  }
+}
+
+module.exports = { getIntegrationTools, executeIntegrationTool, syncJobToCalendar, deleteJobFromCalendar };

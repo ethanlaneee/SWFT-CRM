@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
+const { syncJobToCalendar, deleteJobFromCalendar } = require("../ai/integration-tools");
 
 const col = () => db.collection("jobs");
 
@@ -62,6 +63,12 @@ router.post("/", async (req, res, next) => {
       createdAt: Date.now(),
     };
     const ref = await col().add(data);
+
+    // Sync to Google Calendar if connected and job has a date
+    if (data.scheduledDate) {
+      syncJobToCalendar(req.uid, data, ref.id).catch(console.error);
+    }
+
     res.status(201).json({ id: ref.id, ...data });
   } catch (err) { next(err); }
 });
@@ -79,7 +86,14 @@ router.put("/:id", async (req, res, next) => {
     }
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
-    res.json({ id: req.params.id, ...doc.data(), ...updates });
+
+    // Sync to Google Calendar if date is set (new or existing)
+    const merged = { ...doc.data(), ...updates };
+    if (merged.scheduledDate) {
+      syncJobToCalendar(req.uid, merged, req.params.id).catch(console.error);
+    }
+
+    res.json({ id: req.params.id, ...merged });
   } catch (err) { next(err); }
 });
 
@@ -120,7 +134,14 @@ router.delete("/:id", async (req, res, next) => {
     if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Job not found" });
     }
+    const jobData = doc.data();
     await col().doc(req.params.id).delete();
+
+    // Remove from Google Calendar if synced
+    if (jobData.googleCalendarEventId) {
+      deleteJobFromCalendar(req.uid, jobData.googleCalendarEventId).catch(console.error);
+    }
+
     res.json({ success: true });
   } catch (err) { next(err); }
 });
