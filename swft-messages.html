@@ -724,7 +724,8 @@ function renderChat(){
     if(m.isFollowup) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;">🔔 AI FOLLOW-UP</div>';
     var replyBtn='';
     if(_activeContact&&_activeContact.channel==='email'){
-      var msgId=m.gmailMessageId||'';
+      // Use RFC 2822 Message-ID for proper threading, fall back to gmail ID
+      var msgId=m.rfcMessageId||m.gmailMessageId||'';
       var threadId=m.gmailThreadId||'';
       var origSubject=m.subject||'';
       replyBtn='<div class="msg-reply-btn" onclick="replyToEmail(\''+esc(msgId)+'\',\''+esc(threadId)+'\',\''+esc(origSubject)+'\',\''+esc(m.body||'')+'\')">↩ Reply</div>';

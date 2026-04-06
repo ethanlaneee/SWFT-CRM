@@ -96,7 +96,20 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyH
     },
   });
 
-  return { messageId: result.data.id, threadId: result.data.threadId };
+  // Fetch the actual RFC 2822 Message-ID header so replies can thread correctly
+  let rfcMessageId = null;
+  try {
+    const sent = await gmail.users.messages.get({
+      userId: "me",
+      id: result.data.id,
+      format: "metadata",
+      metadataHeaders: ["Message-ID"],
+    });
+    const msgIdHeader = (sent.data.payload?.headers || []).find(h => h.name === "Message-ID");
+    rfcMessageId = msgIdHeader?.value || null;
+  } catch (e) { /* non-critical */ }
+
+  return { messageId: result.data.id, threadId: result.data.threadId, rfcMessageId };
 }
 
 // Multer — store files in memory (max 10MB per file)
@@ -503,6 +516,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       sentVia: "gmail",
       gmailMessageId: sendResult.messageId,
       gmailThreadId: sendResult.threadId,
+      rfcMessageId: sendResult.rfcMessageId || null,
       sentAt: Date.now(),
       ...(inReplyTo ? { isReply: true, inReplyTo, replyThreadId } : {}),
     };
@@ -679,6 +693,7 @@ router.post("/sync-gmail", async (req, res, next) => {
       const headers = full.data.payload.headers || [];
       const fromHeader = headers.find(h => h.name.toLowerCase() === "from");
       const subjectHeader = headers.find(h => h.name.toLowerCase() === "subject");
+      const messageIdHeader = headers.find(h => h.name.toLowerCase() === "message-id");
 
       // Extract email from "Name <email>" format
       const fromRaw = fromHeader ? fromHeader.value : "";
@@ -718,6 +733,7 @@ router.post("/sync-gmail", async (req, res, next) => {
         sentVia: "gmail",
         gmailMessageId: msg.id,
         gmailThreadId: msg.threadId,
+        rfcMessageId: messageIdHeader ? messageIdHeader.value : null,
         sentAt,
       });
       synced++;
