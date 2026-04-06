@@ -116,13 +116,24 @@ async function triggerAutomation(orgId, trigger, customer) {
         }
       }
 
-      // Calculate sendAt: delayDays from now, at the configured time (default 9:00 AM)
+      // Calculate sendAt: delayDays from now, at the configured time (default 9:00 AM Eastern)
       const sendAtTime = rule.sendAtTime || "09:00";
       const [hours, minutes] = sendAtTime.split(":").map(Number);
-      const targetDate = new Date(now + (rule.delayDays ?? 3) * 86400000);
-      targetDate.setHours(hours, minutes, 0, 0);
-      // If the computed time is already in the past (e.g. 0 delay, past 9am), send next day at that time
-      const sendAt = targetDate.getTime() <= now ? targetDate.getTime() + 86400000 : targetDate.getTime();
+      // Get current date in Eastern timezone
+      const etParts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+      }).formatToParts(new Date(now + (rule.delayDays ?? 3) * 86400000));
+      const ep = {}; etParts.forEach(p => { ep[p.type] = p.value; });
+      // Calculate ET→UTC offset
+      const _utcNow = new Date();
+      const _etStr = _utcNow.toLocaleString('en-US', { timeZone: 'America/New_York' });
+      const _offsetMs = _utcNow.getTime() - new Date(_etStr).getTime();
+      // Build target time in ET then convert to UTC
+      const etTarget = new Date(`${ep.year}-${ep.month}-${ep.day}T${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:00`);
+      let sendAt = etTarget.getTime() + _offsetMs;
+      // If the computed time is already in the past, send next day at that time
+      if (sendAt <= now) sendAt += 86400000;
 
       let surveyToken = null;
       let resolvedMessage = rule.messageTemplate || "";

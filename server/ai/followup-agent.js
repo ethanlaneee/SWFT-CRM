@@ -21,16 +21,37 @@ const { getUsage, incrementSms } = require("../usage");
 const { google } = require("googleapis");
 
 /**
- * Get the next 9:00 AM timestamp. If it's already past 9 AM today, returns tomorrow at 9 AM.
+ * Get the next 9:00 AM Eastern Time timestamp.
+ * Server runs in UTC, so we calculate 9 AM ET properly.
  */
 function nextNineAm() {
-  const now = new Date();
-  const target = new Date(now);
-  target.setHours(9, 0, 0, 0);
-  if (target.getTime() <= now.getTime()) {
-    target.setDate(target.getDate() + 1);
+  // Build "now" in Eastern time using Intl
+  const eastern = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  }).formatToParts(new Date());
+
+  const parts = {};
+  eastern.forEach(p => { parts[p.type] = p.value; });
+  const etHour = parseInt(parts.hour, 10);
+  const etNow = new Date(`${parts.year}-${parts.month}-${parts.day}T09:00:00`);
+
+  // Convert 9 AM ET to UTC: figure out the current ET→UTC offset
+  const utcNow = new Date();
+  const etString = utcNow.toLocaleString('en-US', { timeZone: 'America/New_York' });
+  const etDate = new Date(etString);
+  const offsetMs = utcNow.getTime() - etDate.getTime();
+
+  // Target 9 AM ET today, converted to UTC
+  const todayStr = `${parts.year}-${parts.month}-${parts.day}T09:00:00`;
+  let target = new Date(todayStr).getTime() + offsetMs;
+
+  // If 9 AM ET already passed today, schedule for tomorrow
+  if (target <= Date.now()) {
+    target += 24 * 60 * 60 * 1000;
   }
-  return target.getTime();
+  return target;
 }
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
