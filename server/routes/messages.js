@@ -501,7 +501,36 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     }
 
     user._uid = req.uid;
-    const replyHeaders = inReplyTo ? { inReplyTo, references: replyReferences || inReplyTo, threadId: replyThreadId } : {};
+
+    // Build reply headers — if inReplyTo looks like a Gmail internal ID (no angle brackets),
+    // look up the actual RFC 2822 Message-ID from Gmail before sending
+    let resolvedInReplyTo = inReplyTo || null;
+    if (replyThreadId && inReplyTo && !inReplyTo.includes("<")) {
+      // inReplyTo is a Gmail internal ID — fetch the real Message-ID header
+      try {
+        const oauth2Client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+          process.env.GOOGLE_REDIRECT_URI
+        );
+        oauth2Client.setCredentials(user.gmailTokens);
+        const gmailApi = google.gmail({ version: "v1", auth: oauth2Client });
+        const msg = await gmailApi.users.messages.get({
+          userId: "me",
+          id: inReplyTo,
+          format: "metadata",
+          metadataHeaders: ["Message-ID"],
+        });
+        const hdr = (msg.data.payload?.headers || []).find(h => h.name === "Message-ID");
+        if (hdr?.value) resolvedInReplyTo = hdr.value;
+      } catch (e) {
+        console.error("Could not fetch RFC Message-ID for reply:", e.message);
+      }
+    }
+
+    const replyHeaders = resolvedInReplyTo
+      ? { inReplyTo: resolvedInReplyTo, references: resolvedInReplyTo, threadId: replyThreadId }
+      : {};
     const sendResult = await sendViaGmail(user, to, subject, htmlBody, textBody, allFiles, replyHeaders);
 
     const msgRecord = {
