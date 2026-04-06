@@ -468,16 +468,16 @@ sqft × base_rate[service_type]
           <div class="toggle on" id="toggle-followup" onclick="event.stopPropagation();toggleAgent('followup')"></div>
           <span class="toggle-label" id="toggle-label-followup">On</span>
         </div>
-        <span class="activity-badge amber">2 pending actions</span>
+        <span class="activity-badge amber" id="followup-pending-badge">0 pending</span>
         <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
       </div>
     </div>
-  
+
     <div class="agent-stats">
-      <div class="astat"><div class="astat-val">$6,400</div><div class="astat-label">Invoices collected via follow-up</div></div>
-      <div class="astat"><div class="astat-val">8</div><div class="astat-label">Reviews requested MTD</div></div>
-      <div class="astat"><div class="astat-val">5</div><div class="astat-label">5-star reviews received</div></div>
-      <div class="astat"><div class="astat-val">63%</div><div class="astat-label">Quote follow-up close rate</div></div>
+      <div class="astat"><div class="astat-val" id="followup-stat-invoices">$0</div><div class="astat-label">Invoices collected via follow-up</div></div>
+      <div class="astat"><div class="astat-val" id="followup-stat-reviews">0</div><div class="astat-label">Reviews requested MTD</div></div>
+      <div class="astat"><div class="astat-val" id="followup-stat-total">0</div><div class="astat-label">Follow-ups sent MTD</div></div>
+      <div class="astat"><div class="astat-val" id="followup-stat-quotes">0</div><div class="astat-label">Quote follow-ups MTD</div></div>
     </div>
   
     <div class="agent-detail" id="detail-followup">
@@ -513,34 +513,10 @@ sqft × base_rate[service_type]
     <div class="activity-log">
       <div class="log-header">
         <div class="log-title">Recent Activity</div>
-        <span class="log-link">View all →</span>
       </div>
-      <div class="log-item">
-        <div class="log-dot" style="background:var(--green);"></div>
-        <div class="log-body">
-          <div class="log-text"><strong>Review request sent</strong> to Linda Chen · she left a 5-star Google review 18 min later</div>
-          <div class="log-time">Yesterday, 4:02 PM</div>
-        </div>
-      </div>
-      <div class="log-item">
-        <div class="log-dot" style="background:var(--amber);"></div>
-        <div class="log-body">
-          <div class="log-text"><strong>Invoice reminder sent</strong> to Patel · $4,200 · payment received same day</div>
-          <div class="log-time">Mar 21</div>
-        </div>
-      </div>
-      <div class="log-item">
-        <div class="log-dot" style="background:var(--green);"></div>
-        <div class="log-body">
-          <div class="log-text"><strong>Quote follow-up sent</strong> to Kim (Day 3) · customer replied and approved within 2 hrs</div>
-          <div class="log-time">Mar 18</div>
-        </div>
-      </div>
-      <div class="log-item">
-        <div class="log-dot" style="background:var(--blue);"></div>
-        <div class="log-body">
-          <div class="log-text"><strong>Re-engagement sent</strong> to 3 customers inactive 12+ months · 1 reply received</div>
-          <div class="log-time">Mar 15</div>
+      <div id="followup-activity-list">
+        <div class="log-item" style="justify-content:center;">
+          <div class="log-body"><div class="log-text" style="color:var(--gray2);">No follow-up activity yet. Enable the agent and it will start working automatically.</div></div>
         </div>
       </div>
     </div>
@@ -638,11 +614,75 @@ Google review would mean a lot to us 🙏
     }
   }
 
+  // ── Load follow-up agent real data ──
+  async function loadFollowupData() {
+    try {
+      const [stats, activity] = await Promise.all([
+        API.agents.followupStats(),
+        API.agents.activity('followup'),
+      ]);
+
+      // Update stats
+      const invEl = document.getElementById('followup-stat-invoices');
+      const revEl = document.getElementById('followup-stat-reviews');
+      const totEl = document.getElementById('followup-stat-total');
+      const quoEl = document.getElementById('followup-stat-quotes');
+      const badge = document.getElementById('followup-pending-badge');
+
+      if (invEl) invEl.textContent = '$' + (stats.invoicesCollected || 0).toLocaleString();
+      if (revEl) revEl.textContent = stats.reviewsSent || 0;
+      if (totEl) totEl.textContent = stats.totalSentMTD || 0;
+      if (quoEl) quoEl.textContent = stats.quoteFollowups || 0;
+      if (badge) {
+        const pc = stats.pendingCount || 0;
+        badge.textContent = pc + ' pending';
+        badge.classList.toggle('amber', pc > 0);
+      }
+
+      // Update activity log
+      const listEl = document.getElementById('followup-activity-list');
+      if (listEl && activity.length > 0) {
+        listEl.innerHTML = activity.map(a => {
+          const colors = { review_request: 'var(--green)', overdue_invoice: 'var(--amber)', unsigned_quote: 'var(--blue)' };
+          const labels = { review_request: 'Review request sent', overdue_invoice: 'Invoice reminder sent', unsigned_quote: 'Quote follow-up sent' };
+          const color = colors[a.type] || 'var(--gray)';
+          const label = labels[a.type] || a.type;
+          const detail = a.customerName ? ` to ${a.customerName}` : '';
+          const totalStr = a.total ? ` · $${a.total.toLocaleString()}` : '';
+          const stepStr = a.step ? ` (${a.step.replace(/_/g,' ')})` : '';
+          const time = a.createdAt ? timeAgo(a.createdAt) : '';
+          return `<div class="log-item">
+            <div class="log-dot" style="background:${color};"></div>
+            <div class="log-body">
+              <div class="log-text"><strong>${label}</strong>${detail}${totalStr}${stepStr}</div>
+              <div class="log-time">${time}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    } catch (err) {
+      console.error('Failed to load follow-up data:', err);
+    }
+  }
+
+  function timeAgo(ts) {
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + ' min ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + ' hr' + (hrs > 1 ? 's' : '') + ' ago';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
   // Wait for auth then load
   const _configInterval = setInterval(() => {
     if (window.__swftUser) {
       clearInterval(_configInterval);
       loadAgentConfigs();
+      loadFollowupData();
     }
   }, 200);
 

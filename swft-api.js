@@ -134,10 +134,12 @@ const API = {
 
   // ── AI Agents (Receptionist, Estimator, Follow-up) ──
   agents: {
-    list:   ()           => apiFetch("/api/agents"),
-    get:    (id)         => apiFetch(`/api/agents/${id}`),
-    update: (id, data)   => apiFetch(`/api/agents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    toggle: (id)         => apiFetch(`/api/agents/${id}/toggle`, { method: "POST", body: JSON.stringify({}) }),
+    list:     ()           => apiFetch("/api/agents"),
+    get:      (id)         => apiFetch(`/api/agents/${id}`),
+    update:   (id, data)   => apiFetch(`/api/agents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    toggle:   (id)         => apiFetch(`/api/agents/${id}/toggle`, { method: "POST", body: JSON.stringify({}) }),
+    activity: (id)         => apiFetch(`/api/agents/${id}/activity`),
+    followupStats: ()      => apiFetch("/api/agents/followup/stats"),
   },
 
   // ── Email ──

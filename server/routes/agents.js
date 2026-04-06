@@ -109,4 +109,65 @@ router.post("/:agentId/toggle", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/agents/:agentId/activity — recent activity log
+router.get("/:agentId/activity", async (req, res, next) => {
+  try {
+    const { agentId } = req.params;
+    if (!VALID_AGENTS.includes(agentId)) {
+      return res.status(400).json({ error: "Invalid agent ID" });
+    }
+    const snap = await db.collection("orgs").doc(req.orgId)
+      .collection("agentActivity")
+      .where("agent", "==", agentId)
+      .orderBy("createdAt", "desc")
+      .limit(20)
+      .get();
+    const activity = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    res.json(activity);
+  } catch (err) { next(err); }
+});
+
+// GET /api/agents/followup/stats — follow-up agent stats (real data)
+router.get("/followup/stats", async (req, res, next) => {
+  try {
+    const orgId = req.orgId;
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthMs = monthStart.getTime();
+
+    // Count follow-ups sent this month
+    const sentSnap = await db.collection("followups")
+      .where("orgId", "==", orgId)
+      .where("status", "==", "sent")
+      .where("sentAt", ">=", monthMs)
+      .get();
+
+    let invoicesCollected = 0;
+    let reviewsSent = 0;
+    let quoteFollowups = 0;
+
+    for (const doc of sentSnap.docs) {
+      const f = doc.data();
+      if (f.type === "overdue_invoice") invoicesCollected += (f.total || 0);
+      if (f.type === "review_request") reviewsSent++;
+      if (f.type === "unsigned_quote") quoteFollowups++;
+    }
+
+    // Count pending follow-ups
+    const pendingSnap = await db.collection("followups")
+      .where("orgId", "==", orgId)
+      .where("status", "==", "pending")
+      .get();
+
+    res.json({
+      invoicesCollected,
+      reviewsSent,
+      quoteFollowups,
+      pendingCount: pendingSnap.size,
+      totalSentMTD: sentSnap.size,
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

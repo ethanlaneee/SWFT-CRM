@@ -23,6 +23,7 @@ const { router: messagesRouter, twilioIncomingHandler } = require("./routes/mess
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
+const { runFollowupAgent } = require("./ai/followup-agent");
 const surveyRouter = require("./routes/survey");
 const publicChatRouter = require("./routes/publicChat");
 
@@ -179,3 +180,12 @@ setInterval(() => {
 
 // Run once on startup after 5 seconds
 setTimeout(() => processScheduledMessages().catch(console.error), 5000);
+
+// ── Follow-up Agent worker ──
+// Scans for unsigned quotes, overdue invoices, completed jobs every 60 seconds
+setInterval(() => {
+  runFollowupAgent().catch(err => console.error("Follow-up agent error:", err));
+}, 60 * 1000);
+
+// Run once on startup after 10 seconds
+setTimeout(() => runFollowupAgent().catch(console.error), 10000);
