@@ -119,32 +119,17 @@ app.get("/api/webhooks/twilio/test", async (req, res) => {
       role: d.data().role || "none",
       orgId: d.data().orgId || "none",
       name: d.data().name || d.data().email || "unknown",
+      plan: d.data().plan || "none",
     }));
 
-    // Check owners specifically
-    const owners = await db.collection("users").where("role", "==", "owner").limit(5).get();
-    diag.ownersCount = owners.size;
-
-    // Check customers
-    const custs = await db.collection("customers").limit(3).get();
-    diag.customersCount = custs.size;
-    if (custs.size > 0) {
-      diag.sampleCustomer = { id: custs.docs[0].id, phone: custs.docs[0].data().phone || "none", orgId: custs.docs[0].data().orgId || "none", userId: custs.docs[0].data().userId || "none" };
+    // Check agent configs for each user's orgId
+    diag.agentConfigs = {};
+    for (const userDoc of allUsers.docs) {
+      const uid = userDoc.id;
+      const uOrgId = userDoc.data().orgId || uid;
+      const configSnap = await db.collection("orgs").doc(uOrgId).collection("agentConfigs").get();
+      diag.agentConfigs[uOrgId] = configSnap.docs.map(d => ({ id: d.id, enabled: d.data().enabled, ...d.data() }));
     }
-
-    // Check recent messages
-    const msgs = await db.collection("messages").orderBy("sentAt", "desc").limit(3).get();
-    diag.recentMessagesCount = msgs.size;
-    diag.recentMessages = msgs.docs.map(d => ({
-      id: d.id,
-      from: d.data().from || "",
-      to: d.data().to || "",
-      direction: d.data().direction || "",
-      type: d.data().type || "",
-      userId: d.data().userId || "",
-      body: (d.data().body || "").slice(0, 50),
-      sentAt: d.data().sentAt,
-    }));
 
     res.json(diag);
   } catch (err) {
