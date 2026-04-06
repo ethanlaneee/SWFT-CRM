@@ -20,6 +20,19 @@ const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const { google } = require("googleapis");
 
+/**
+ * Get the next 9:00 AM timestamp. If it's already past 9 AM today, returns tomorrow at 9 AM.
+ */
+function nextNineAm() {
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(9, 0, 0, 0);
+  if (target.getTime() <= now.getTime()) {
+    target.setDate(target.getDate() + 1);
+  }
+  return target.getTime();
+}
+
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback";
@@ -197,7 +210,7 @@ async function scanUnsignedQuotes(orgId, config) {
           email: customer.email || null,
           step,
           message,
-          sendAt: Date.now(),
+          sendAt: nextNineAm(),
         });
       }
     }
@@ -244,7 +257,7 @@ async function scanOverdueInvoices(orgId, config) {
           step,
           message,
           total: invoice.total || 0,
-          sendAt: Date.now(),
+          sendAt: nextNineAm(),
         });
       }
     }
@@ -294,7 +307,7 @@ async function scanReviewRequests(orgId, config) {
       email: customer.email || null,
       step,
       message,
-      sendAt: Date.now(),
+      sendAt: nextNineAm(),
     });
   }
 }
