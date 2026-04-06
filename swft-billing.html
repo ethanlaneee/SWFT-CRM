@@ -596,7 +596,16 @@ async function changeBillingQuoteStatus(id, val, el) {
   const q = window._quotes && window._quotes[id];
   const prev = q ? q.status : 'draft';
   if (q) q.status = val;
-  try { await API.quotes.update(id, {status: val}); showToast('Status updated'); }
+  try {
+    if (val === 'sent') {
+      await API.quotes.send(id);
+    } else if (val === 'approved') {
+      await API.quotes.approve(id);
+    } else {
+      await API.quotes.update(id, { status: val });
+    }
+    showToast('Status updated');
+  }
   catch(e) { showToast('Error updating status'); if (q) q.status = prev; el.className = 'status-pill ' + (pillClass[prev]||'s-draft'); }
 }
 
@@ -606,7 +615,16 @@ async function changeBillingInvoiceStatus(id, val, el) {
   const inv = window._invoicesData && window._invoicesData[id];
   const prev = inv ? inv.status : 'open';
   if (inv) inv.status = val;
-  try { await API.invoices.update(id, {status: val}); showToast('Status updated'); }
+  try {
+    if (val === 'paid') {
+      await API.invoices.pay(id, { paymentMethod: 'other' });
+    } else if (val === 'sent') {
+      await API.invoices.send(id);
+    } else {
+      await API.invoices.update(id, { status: val });
+    }
+    showToast('Status updated');
+  }
   catch(e) { showToast('Error updating status'); if (inv) inv.status = prev; const ps = prev === 'paid' ? 'background:rgba(200,241,53,0.1);color:#c8f135;' : prev === 'overdue' ? 'background:rgba(255,82,82,0.1);color:#ff5252;' : 'background:rgba(245,166,35,0.1);color:#f5a623;'; el.style.cssText = ps; }
 }
 
@@ -911,14 +929,18 @@ async function sendQuote(){
     } catch(e) { showToast('Error: ' + e.message); }
     return;
   }
-  // Send quote
+  // Send quote or invoice (triggers automations)
   try {
     if(_q.id) {
-      await API.quotes.update(_q.id, { status: 'sent', sentAt: Date.now() });
+      if (_q.isInvoice) {
+        await API.invoices.send(_q.id);
+      } else {
+        await API.quotes.send(_q.id);
+      }
     }
     closeModal();
-    loadQuotes();
-    showToast('Quote sent');
+    if (_q.isInvoice) { loadInvoices(); } else { loadQuotes(); }
+    showToast(_q.isInvoice ? 'Invoice sent' : 'Quote sent');
   } catch(e) { showToast('Error: ' + e.message); }
 }
 

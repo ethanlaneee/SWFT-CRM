@@ -112,6 +112,7 @@ const API = {
     get:    (id)     => apiFetch(`/api/invoices/${id}`),
     create: (data)   => apiFetch("/api/invoices",         { method: "POST",   body: JSON.stringify(data) }),
     update: (id, data) => apiFetch(`/api/invoices/${id}`, { method: "PUT",    body: JSON.stringify(data) }),
+    send:   (id)     => apiFetch(`/api/invoices/${id}/send`,  { method: "POST", body: JSON.stringify({}) }),
     email:  (id, msg) => apiFetch(`/api/invoices/${id}/email`, { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
     pay:    (id, data) => apiFetch(`/api/invoices/${id}/pay`, { method: "POST", body: JSON.stringify(data) }),
     delete: (id)     => apiFetch(`/api/invoices/${id}`,   { method: "DELETE" }),

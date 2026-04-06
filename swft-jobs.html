@@ -927,9 +927,9 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
       };
       await API.invoices.create(data);
 
-      // Update job status to invoiced
+      // Update job status to complete (triggers job_completed automation)
       if (_currentJob.id) {
-        await API.jobs.update(_currentJob.id, { status: 'complete' });
+        await API.jobs.complete(_currentJob.id);
       }
 
       showToast('Invoice created from ' + (jobQuote ? 'quote' : 'job') + ' — opening billing');
@@ -1011,7 +1011,11 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     var prev = job ? job.status : 'scheduled';
     if (job) job.status = val;
     try {
-      await API.jobs.update(id, { status: val });
+      if (val === 'complete') {
+        await API.jobs.complete(id);
+      } else {
+        await API.jobs.update(id, { status: val });
+      }
       var row = el.closest('.job-row');
       if (row) {
         row.dataset.status = val;
@@ -1030,7 +1034,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
   async function markJobComplete() {
     if (!_currentJob || !_currentJob.id) return;
     try {
-      await API.jobs.update(_currentJob.id, { status: 'complete' });
+      await API.jobs.complete(_currentJob.id);
       closeDrawer();
       loadJobs();
       showToast('Job marked complete');

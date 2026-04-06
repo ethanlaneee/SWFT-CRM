@@ -326,7 +326,12 @@ async function changeInvoiceStatus(id,val,el){
   var inv=_invoices.find(function(i){return i.id===id;});
   var prev=inv?inv.status:'open';
   if(inv)inv.status=val;
-  try{await API.invoices.update(id,{status:val});renderStats();showToast('Status updated');}
+  try{
+    if(val==='paid'){await API.invoices.pay(id,{paymentMethod:'other'});}
+    else if(val==='sent'){await API.invoices.send(id);}
+    else{await API.invoices.update(id,{status:val});}
+    renderStats();showToast('Status updated');
+  }
   catch(e){showToast('Error updating status');if(inv)inv.status=prev;el.className='status-pill '+(prev==='paid'?'s-paid':prev==='draft'?'s-draft':'s-open');}
 }
 

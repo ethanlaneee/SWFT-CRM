@@ -70,6 +70,36 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Mark invoice as sent (without emailing) and trigger automation
+router.post("/:id/send", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.params.id).get();
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Invoice not found" });
+    }
+    await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
+
+    const invoiceData = doc.data();
+    if (invoiceData.customerId) {
+      try {
+        const custDoc = await db.collection("customers").doc(invoiceData.customerId).get();
+        const cust = custDoc.exists ? custDoc.data() : {};
+        triggerAutomation(req.orgId, "invoice_sent", {
+          id: invoiceData.customerId,
+          name: cust.name || invoiceData.customerName || "",
+          phone: cust.phone || "",
+          email: cust.email || "",
+          total: invoiceData.total || 0,
+          service: invoiceData.service || "",
+        }).catch(console.error);
+      } catch (autoErr) {
+        console.error("invoice_sent automation error:", autoErr);
+      }
+    }
+    res.json({ success: true, status: "sent" });
+  } catch (err) { next(err); }
+});
+
 // Pay invoice
 router.post("/:id/pay", async (req, res, next) => {
   try {
