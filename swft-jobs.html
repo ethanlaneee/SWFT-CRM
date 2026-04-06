@@ -97,12 +97,12 @@
 
 /* ── TABLE ── */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.table-head{display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.table-head{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;transition:color 0.14s;}
 .th:hover{color:var(--gray);}
 .th.sort-active{color:var(--green);}
 
-.job-row{display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:fadeUp 0.35s ease both;}
+.job-row{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:fadeUp 0.35s ease both;}
 .job-row:last-child{border-bottom:none;}
 .job-row:hover{background:var(--surface2);}
 .job-row:nth-child(1){animation-delay:.05s;} .job-row:nth-child(2){animation-delay:.10s;} .job-row:nth-child(3){animation-delay:.15s;} .job-row:nth-child(4){animation-delay:.20s;} .job-row:nth-child(5){animation-delay:.25s;} .job-row:nth-child(6){animation-delay:.30s;}
@@ -378,6 +378,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
   <div class="table-head">
     <div class="th sort-active">Job <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg></div>
     <div class="th">Customer</div>
+    <div class="th">Address</div>
     <div class="th">Amount</div>
     <div class="th">Status</div>
     <div class="th"></div>
@@ -707,6 +708,8 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
           '</div>' +
           '<div>' +
             '<div class="job-customer">' + (job.customerName || '') + '</div>' +
+          '</div>' +
+          '<div>' +
             '<div class="job-addr">' + shortAddr(job.address) + '</div>' +
           '</div>' +
           '<div>' +
