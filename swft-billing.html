@@ -832,9 +832,8 @@ async function autofillBillingCustomer(name) {
       var jobField = document.getElementById('e-job');
       if (jobField && !jobField.value) jobField.value = custJob.title || '';
 
-      // Fill finish notes
-      var finishField = document.getElementById('e-finish');
-      if (finishField && !finishField.value) finishField.value = custJob.finish || '';
+      // Fill finish notes — only autofill from job if creating from a job context, not for new quotes
+      // (Notes should start blank for new quotes to avoid carryover confusion)
 
       // Store job reference and cost
       if (_q) {
@@ -1117,7 +1116,7 @@ async function saveEdit(silent){
   _q.address=document.getElementById('e-address').value.trim() || _q.address || '';
   _q.sqft=document.getElementById('e-sqft').value.trim() || _q.sqft || '';
   _q.start=document.getElementById('e-start').value.trim() || _q.start || '';
-  _q.finish=document.getElementById('e-finish').value.trim() || _q.finish || '';
+  _q.finish=document.getElementById('e-finish').value.trim();
   var svcEl = document.getElementById('e-service');
   var customSvcEl = document.getElementById('e-custom-service-b');
   if (svcEl && svcEl.value === 'Other' && customSvcEl && customSvcEl.value.trim()) {
@@ -1208,7 +1207,7 @@ function previewCurrentDoc() {
   _q.service  = svcPreview || _q.service;
   _q.sqft     = g('e-sqft')     || _q.sqft;
   _q.start    = g('e-start')    || _q.start;
-  _q.finish   = g('e-finish')   || _q.finish;
+  _q.finish   = g('e-finish');
   _q.status   = g('e-status')   || _q.status;
   _q.notes    = g('m-notes')    || _q.notes;
   const type = _q.isInvoice ? 'invoice' : 'quote';
