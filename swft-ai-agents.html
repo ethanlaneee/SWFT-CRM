@@ -215,6 +215,7 @@
     <div class="nav-item" onclick="window.location.href='swft-automations'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Automations</div>
     <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 12 2z" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/><path d="M10 17h4" stroke-width="1.8" stroke-linecap="round"/></svg><span style="color:#c8f135;">AI Agents</span></div>
     <div class="nav-item" onclick="window.location.href='swft-reviews'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke-width="1.8" stroke-linejoin="round"/></svg>Reviews</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.07A7 7 0 0 1 14 23h-4a7 7 0 0 1-6.93-4H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" stroke-width="1.8"/></svg>AI Agents</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
@@ -249,11 +250,11 @@
   </div>
   <div class="hero-stats">
     <div class="hstat">
-      <div class="hstat-val">47</div>
+      <div class="hstat-val" id="hero-actions-week">--</div>
       <div class="hstat-label">Actions this week</div>
     </div>
     <div class="hstat">
-      <div class="hstat-val">~11h</div>
+      <div class="hstat-val" id="hero-time-saved">--</div>
       <div class="hstat-label">Time saved</div>
     </div>
   </div>
@@ -342,7 +343,7 @@
         <div class="toggle on" id="toggle-estimator" onclick="event.stopPropagation();toggleAgent('estimator')"></div>
         <span class="toggle-label" id="toggle-label-estimator">On</span>
       </div>
-      <span class="activity-badge">4 quotes today</span>
+      <span class="activity-badge" id="estimator-badge">0 today</span>
       <svg class="expand-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
     </div>
   </div>
@@ -785,6 +786,35 @@ Google review would mean a lot to us 🙏
     return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  // ── Load hero stats from real activity data ──
+  async function loadHeroStats() {
+    try {
+      const [recAct, estAct, fuAct] = await Promise.all([
+        API.agents.activity('receptionist'),
+        API.agents.activity('estimator'),
+        API.agents.activity('followup'),
+      ]);
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const weekActions = [...recAct, ...estAct, ...fuAct].filter(a => a.createdAt >= weekAgo).length;
+      const heroEl = document.getElementById('hero-actions-week');
+      if (heroEl) heroEl.textContent = weekActions;
+      // Rough estimate: ~14 min saved per action
+      const minsSaved = weekActions * 14;
+      const timeEl = document.getElementById('hero-time-saved');
+      if (timeEl) {
+        if (minsSaved < 60) timeEl.textContent = minsSaved + 'm';
+        else timeEl.textContent = '~' + Math.round(minsSaved / 60) + 'h';
+      }
+      // Update estimator today badge
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      const estToday = estAct.filter(a => a.createdAt >= todayStart.getTime()).length;
+      const estBadge = document.getElementById('estimator-badge');
+      if (estBadge) estBadge.textContent = estToday + ' today';
+    } catch (err) {
+      console.error('Failed to load hero stats:', err);
+    }
+  }
+
   // Wait for auth then load
   const _configInterval = setInterval(() => {
     if (window.__swftUser) {
@@ -793,6 +823,7 @@ Google review would mean a lot to us 🙏
       loadReceptionistData();
       loadEstimatorData();
       loadFollowupData();
+      loadHeroStats();
     }
   }, 200);
 
