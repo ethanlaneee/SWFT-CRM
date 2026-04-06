@@ -181,6 +181,45 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   </div>
 </div>
 
+<!-- Business Profile for AI -->
+<div class="settings-section">
+  <div class="settings-header"><span class="settings-header-icon">🧠</span><h3>BUSINESS PROFILE FOR AI</h3></div>
+  <div class="settings-body">
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.5;">This info powers your AI agents. The more you fill in, the smarter your receptionist, estimator, and follow-up agents will be. As you add jobs and customers, the AI also learns automatically.</div>
+    <div class="settings-field">
+      <label>About Your Business</label>
+      <textarea class="settings-input" id="s-biz-about" rows="3" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. We're a family-owned exterior cleaning company based in Edmonton, AB. We've been serving residential and commercial clients since 2020."></textarea>
+    </div>
+    <div class="settings-2col">
+      <div class="settings-field">
+        <label>Services You Offer</label>
+        <textarea class="settings-input" id="s-biz-services" rows="2" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. Pressure washing, soft washing, window cleaning, gutter cleaning, deck restoration"></textarea>
+      </div>
+      <div class="settings-field">
+        <label>Service Area</label>
+        <input class="settings-input" id="s-biz-area" style="width:100%;" placeholder="e.g. Edmonton, St. Albert, Sherwood Park"/>
+      </div>
+    </div>
+    <div class="settings-2col">
+      <div class="settings-field">
+        <label>Business Hours</label>
+        <input class="settings-input" id="s-biz-hours" style="width:100%;" placeholder="e.g. Mon-Sat 8am-6pm"/>
+      </div>
+      <div class="settings-field">
+        <label>Business Website</label>
+        <input class="settings-input" id="s-biz-website" style="width:100%;" placeholder="e.g. https://yourcompany.com"/>
+      </div>
+    </div>
+    <div class="settings-field">
+      <label>Anything Else the AI Should Know</label>
+      <textarea class="settings-input" id="s-biz-notes" rows="2" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. We don't do roofs. Free estimates always. Licensed and insured. We offer a 2-year warranty."></textarea>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+      <button class="settings-btn primary" onclick="saveSettings('bizprofile')">Save Business Profile</button>
+    </div>
+  </div>
+</div>
+
 <!-- Default Values -->
 <div class="settings-section">
   <div class="settings-header"><span class="settings-header-icon">⚙️</span><h3>DEFAULT VALUES</h3></div>
@@ -197,11 +236,17 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     </div>
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Service Types</div><div class="settings-row-desc">Available in job and quote forms</div></div>
-      <input class="settings-input" id="s-services" style="width:300px;" value="" placeholder="e.g. Pressure Washing, Window Cleaning, Gutter Cleaning"/>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <input class="settings-input" id="s-services" style="width:300px;" value="" placeholder="e.g. Pressure Washing, Window Cleaning, Gutter Cleaning"/>
+        <span style="font-size:10px;color:var(--gray2);">Separate with commas</span>
+      </div>
     </div>
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Crew Names</div><div class="settings-row-desc">Available in crew dropdown</div></div>
-      <input class="settings-input" id="s-crews" style="width:300px;" value="" placeholder="e.g. Crew A, Crew B"/>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <input class="settings-input" id="s-crews" style="width:300px;" value="" placeholder="e.g. Crew A, Crew B"/>
+        <span style="font-size:10px;color:var(--gray2);">Separate with commas</span>
+      </div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
       <button class="settings-btn primary" onclick="saveSettings('defaults')">Save Defaults</button>
@@ -401,6 +446,13 @@ async function saveSettings(section) {
       data.email = document.getElementById('s-email').value.trim();
       data.website = document.getElementById('s-website').value.trim();
       if (_companyLogo !== null) data.companyLogo = _companyLogo || '';
+    } else if (section === 'bizprofile') {
+      data.bizAbout = document.getElementById('s-biz-about').value.trim();
+      data.bizServices = document.getElementById('s-biz-services').value.trim();
+      data.bizArea = document.getElementById('s-biz-area').value.trim();
+      data.bizHours = document.getElementById('s-biz-hours').value.trim();
+      data.bizWebsite = document.getElementById('s-biz-website').value.trim();
+      data.bizNotes = document.getElementById('s-biz-notes').value.trim();
     } else if (section === 'defaults') {
       data.taxRate = document.getElementById('s-tax').value.trim();
       data.paymentTerms = document.getElementById('s-terms').value;
@@ -436,6 +488,13 @@ async function loadSettings() {
     if (data.crewNames) document.getElementById('s-crews').value = data.crewNames;
     if (data.weatherUnit) document.getElementById('s-weather-unit').value = data.weatherUnit;
     if (data.companyLogo) showLogo(data.companyLogo);
+    // Business profile for AI
+    if (data.bizAbout) document.getElementById('s-biz-about').value = data.bizAbout;
+    if (data.bizServices) document.getElementById('s-biz-services').value = data.bizServices;
+    if (data.bizArea) document.getElementById('s-biz-area').value = data.bizArea;
+    if (data.bizHours) document.getElementById('s-biz-hours').value = data.bizHours;
+    if (data.bizWebsite) document.getElementById('s-biz-website').value = data.bizWebsite;
+    if (data.bizNotes) document.getElementById('s-biz-notes').value = data.bizNotes;
   } catch (e) {}
 }
 

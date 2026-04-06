@@ -251,9 +251,16 @@ function buildReceptionistPrompt(config, owner, customer, bizContext) {
     prompt += `\nCOMPLETED JOBS: ${bizContext.jobCount}+`;
   }
 
-  // Manual overrides from config (if user added extra info)
-  if (config.businessDescription) prompt += `\n\nABOUT: ${config.businessDescription}`;
-  if (config.website) prompt += `\nWEBSITE: ${config.website}`;
+  // Business profile from Settings page (owner's user doc)
+  if (owner.bizAbout) prompt += `\n\nABOUT THE BUSINESS: ${owner.bizAbout}`;
+  if (owner.bizServices && !bizContext.services) prompt += `\nSERVICES: ${owner.bizServices}`;
+  if (owner.bizArea && !bizContext.serviceArea) prompt += `\nSERVICE AREA: ${owner.bizArea}`;
+  if (owner.bizHours) prompt += `\nHOURS: ${owner.bizHours}`;
+  if (owner.bizWebsite || owner.website) prompt += `\nWEBSITE: ${owner.bizWebsite || owner.website}`;
+  if (owner.bizNotes) prompt += `\nNOTES: ${owner.bizNotes}`;
+
+  // Manual overrides from agent config
+  if (config.businessDescription) prompt += `\n\nEXTRA: ${config.businessDescription}`;
 
   prompt += `
 

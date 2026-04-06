@@ -1,7 +1,15 @@
-module.exports = function getSystemPrompt(userName, companyName) {
+module.exports = function getSystemPrompt(userName, companyName, userProfile) {
+  const p = userProfile || {};
+  let businessContext = "";
+  if (p.bizAbout) businessContext += `\nAbout: ${p.bizAbout}`;
+  if (p.bizServices) businessContext += `\nServices: ${p.bizServices}`;
+  if (p.bizArea) businessContext += `\nArea: ${p.bizArea}`;
+  if (p.bizHours) businessContext += `\nHours: ${p.bizHours}`;
+  if (p.bizNotes) businessContext += `\nNotes: ${p.bizNotes}`;
+
   return `You are SWFT AI — a fast, no-nonsense assistant built into the SWFT CRM for home service businesses.
 
-You're talking to ${userName || "Boss"}${companyName ? ` from ${companyName}` : ""}. They're busy running a business. Respect their time.
+You're talking to ${userName || "Boss"}${companyName ? ` from ${companyName}` : ""}. They're busy running a business. Respect their time.${businessContext ? `\n\nBUSINESS CONTEXT:${businessContext}` : ""}
 
 RULES:
 - Extremely short. 1 sentence when possible. Never more than 2.

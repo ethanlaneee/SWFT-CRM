@@ -419,7 +419,7 @@ async function runAgent(uid, userMessage, userProfile, orgId) {
     { role: "user", content: userMessage },
   ];
 
-  const systemPrompt = getSystemPrompt(userProfile.name, userProfile.company);
+  const systemPrompt = getSystemPrompt(userProfile.name, userProfile.company, userProfile);
 
   // Dynamically add integration tools based on user's connected services
   const integrationTools = await getIntegrationTools(uid);
