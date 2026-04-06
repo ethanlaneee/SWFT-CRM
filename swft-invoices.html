@@ -465,39 +465,11 @@ async function sendInvoiceEmail(){
     }
   }catch(e){showToast('Error saving: '+e.message);return;}
 
-  // Generate PDF client-side using same HTML as Print/Save
-  showToast('Generating PDF...');
-  try{
-    var html=buildInvoiceHtml();
-    var container=document.createElement('div');
-    container.style.cssText='position:fixed;left:-9999px;top:0;width:700px;background:#fff;';
-    container.innerHTML=html.replace(/<html>.*?<body>/s,'').replace(/<\/body>.*<\/html>/s,'');
-    document.body.appendChild(container);
-    await new Promise(function(r){setTimeout(r,500);});
-
-    var pdfBlob=await html2pdf().set({
-      margin:[10,10,10,10],
-      filename:'invoice.pdf',
-      image:{type:'jpeg',quality:0.98},
-      html2canvas:{scale:2,useCORS:true,letterRendering:true},
-      jsPDF:{unit:'mm',format:'letter',orientation:'portrait'}
-    }).from(container).outputPdf('blob');
-
-    document.body.removeChild(container);
-
-    showToast('Sending invoice...');
-    var result=await API.invoices.emailWithPdf(_currentInv.id,pdfBlob);
-    if(result.error){showToast('Error: '+result.error);return;}
-    showToast('Invoice sent to customer!');
-    closeModal();loadInvoices();
-  }catch(e){
-    showToast('Error: '+e.message);
-    try{
-      await API.invoices.email(_currentInv.id);
-      showToast('Invoice sent (server PDF)');
-      closeModal();loadInvoices();
-    }catch(e2){showToast('Send failed: '+e2.message);}
-  }
+  // Redirect to messaging page with the invoice pre-attached
+  var s=window._swftSettings||{};
+  var fromName=s.company||s.name||'SWFT';
+  var subject=encodeURIComponent('Invoice from '+fromName);
+  window.location.href='swft-messages.html?invoiceId='+_currentInv.id+'&subject='+subject;
 }
 
 async function markPaid(){

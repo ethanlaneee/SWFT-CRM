@@ -596,44 +596,11 @@ async function sendQuoteEmail(){
     try{await API.quotes.update(_currentQuote.id,data);}catch(e){showToast('Error saving: '+e.message);return;}
   }
 
-  // Generate PDF client-side using same HTML as Print/Save
-  showToast('Generating PDF...');
-  try{
-    var html=buildQuoteHtml();
-    // Render in hidden container for html2pdf
-    var container=document.createElement('div');
-    container.style.cssText='position:fixed;left:-9999px;top:0;width:700px;background:#fff;';
-    container.innerHTML=html.replace(/<html>.*?<body>/s,'').replace(/<\/body>.*<\/html>/s,'');
-    document.body.appendChild(container);
-
-    // Wait for fonts to load
-    await new Promise(function(r){setTimeout(r,500);});
-
-    var pdfBlob=await html2pdf().set({
-      margin:[10,10,10,10],
-      filename:'quote.pdf',
-      image:{type:'jpeg',quality:0.98},
-      html2canvas:{scale:2,useCORS:true,letterRendering:true},
-      jsPDF:{unit:'mm',format:'letter',orientation:'portrait'}
-    }).from(container).outputPdf('blob');
-
-    document.body.removeChild(container);
-
-    showToast('Sending quote...');
-    var result=await API.quotes.emailWithPdf(_currentQuote.id,pdfBlob);
-    if(result.error){showToast('Error: '+result.error);return;}
-    showToast('Quote sent to customer!');
-    closeModal();
-    loadQuotes();
-  }catch(e){
-    showToast('Error: '+e.message);
-    // Fallback: try server-generated PDF
-    try{
-      await API.quotes.email(_currentQuote.id);
-      showToast('Quote sent (server PDF)');
-      closeModal();loadQuotes();
-    }catch(e2){showToast('Send failed: '+e2.message);}
-  }
+  // Redirect to messaging page with the quote pre-attached
+  var s=window._swftSettings||{};
+  var fromName=s.company||s.name||'SWFT';
+  var subject=encodeURIComponent('Quote from '+fromName);
+  window.location.href='swft-messages.html?quoteId='+_currentQuote.id+'&subject='+subject;
 }
 
 async function deleteQuote(){
