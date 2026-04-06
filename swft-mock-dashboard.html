@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SWFT Dashboard — Marketing Screenshot</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--green-dim:rgba(200,241,53,0.1);
+  --white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;
+  --blue:#4d9fff;--red:#ff5252;--amber:#f5a623;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:228px;flex-shrink:0;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:20px 16px;
+}
+.logo{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;
+  padding:0 12px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;
+}
+.logo span{color:var(--green);}
+.nav-section{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gray2);padding:12px 12px 8px;text-transform:uppercase;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:10px;
+  font-size:14px;font-weight:500;color:var(--gray);
+  cursor:pointer;transition:all 0.15s;margin-bottom:2px;
+}
+.nav-item:hover{color:var(--white);background:var(--surface2);}
+.nav-item.active{color:var(--white);background:rgba(200,241,53,0.06);border-left:3px solid var(--green);padding-left:9px;}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;}
+.nav-item.active svg{color:var(--green);}
+.nav-badge{
+  margin-left:auto;
+  padding:2px 8px;border-radius:100px;
+  font-size:11px;font-weight:600;
+  background:var(--green-dim);color:var(--green);
+}
+.sidebar-spacer{flex:1;}
+.user-tile{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 12px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  margin-top:12px;
+}
+.user-avatar{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg, var(--green), #8bc926);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;color:#0a0a0a;
+}
+.user-info{display:flex;flex-direction:column;}
+.user-name{font-size:13px;font-weight:600;color:var(--white);}
+.user-role{font-size:11px;color:var(--gray);}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Topbar */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 32px;
+  background:rgba(17,17,17,0.8);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.topbar-left{display:flex;flex-direction:column;}
+.topbar-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;line-height:1;}
+.topbar-sub{font-size:12px;color:var(--gray);margin-top:2px;}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.ai-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 18px;border-radius:100px;
+  background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.15);
+  font-size:12px;font-weight:600;color:var(--green);
+  cursor:pointer;
+}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.topbar-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);cursor:pointer;
+  position:relative;
+}
+.topbar-icon svg{width:18px;height:18px;color:var(--gray);}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--surface);}
+
+/* Body */
+.body{flex:1;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:20px;}
+
+/* KPI Row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:22px 24px;
+  transition:all 0.2s;
+}
+.kpi:hover{border-color:var(--border2);}
+.kpi-label{font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.kpi-value{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600;color:var(--white);margin-bottom:4px;}
+.kpi-delta{font-size:12px;font-weight:600;}
+.kpi-delta.up{color:var(--green);}
+.kpi-delta.down{color:var(--red);}
+.kpi-delta.warn{color:var(--amber);}
+
+/* Content grid */
+.content-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;}
+.panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:22px 24px;
+  display:flex;flex-direction:column;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:14px;border-bottom:1px solid var(--border);
+  margin-bottom:14px;
+}
+.panel-title{font-size:14px;font-weight:600;color:var(--white);}
+.panel-action{font-size:11px;color:var(--green);font-weight:600;cursor:pointer;}
+.row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+.row:last-child{border-bottom:none;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.row-main{flex:1;display:flex;flex-direction:column;}
+.row-title{color:var(--white);font-weight:500;}
+.row-sub{font-size:11px;color:var(--gray);margin-top:2px;}
+.row-right{text-align:right;}
+.row-amount{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--white);}
+.row-tag{
+  display:inline-block;padding:3px 10px;border-radius:100px;
+  font-size:10px;font-weight:600;letter-spacing:0.3px;margin-top:4px;
+}
+.tag-green{background:var(--green-dim);color:var(--green);}
+.tag-blue{background:rgba(77,159,255,0.1);color:var(--blue);}
+.tag-amber{background:rgba(245,166,35,0.1);color:var(--amber);}
+.tag-red{background:rgba(255,82,82,0.1);color:var(--red);}
+.tag-gray{background:rgba(122,122,122,0.1);color:var(--gray);}
+
+/* Bottom row */
+.bottom-grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px;}
+
+/* Recent activity */
+.activity-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+.activity-item:last-child{border-bottom:none;}
+.activity-icon{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+}
+.activity-text{flex:1;color:var(--gray);line-height:1.5;}
+.activity-text strong{color:var(--white);font-weight:600;}
+.activity-time{font-size:11px;color:var(--gray2);white-space:nowrap;margin-top:2px;}
+
+/* Chat FAB */
+.chat-fab{
+  position:fixed;bottom:24px;right:24px;
+  width:56px;height:56px;border-radius:16px;
+  background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 32px rgba(200,241,53,0.25);
+  cursor:pointer;z-index:10;
+}
+.chat-fab svg{width:24px;height:24px;color:#0a0a0a;}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="logo">SWFT<span>.</span></div>
+  <div class="nav-section">Main</div>
+  <div class="nav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </div>
+  <div class="nav-section">CRM</div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Customers
+    <span class="nav-badge">47</span>
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+    Jobs
+    <span class="nav-badge">12</span>
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+    Quotes
+    <span class="nav-badge">7</span>
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Invoices
+    <span class="nav-badge">9</span>
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    Schedule
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Messages
+    <span class="nav-badge" style="background:rgba(255,82,82,0.12);color:var(--red);">3</span>
+  </div>
+  <div class="nav-section">Admin</div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+  </div>
+  <div class="sidebar-spacer"></div>
+  <div class="user-tile">
+    <div class="user-avatar">ML</div>
+    <div class="user-info">
+      <span class="user-name">Mike Lawson</span>
+      <span class="user-role">Lawson Plumbing Co.</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">DASHBOARD</div>
+      <div class="topbar-sub">Welcome back, Mike. Here's your business at a glance.</div>
+    </div>
+    <div class="topbar-right">
+      <div class="ai-pill"><span class="ai-dot"></span> AI Assistant</div>
+      <div class="topbar-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Revenue (MTD)</div>
+        <div class="kpi-value">$38,420</div>
+        <div class="kpi-delta up">&#9650; 24% vs last month</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Active Jobs</div>
+        <div class="kpi-value">12</div>
+        <div class="kpi-delta up">&#9650; 3 new this week</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Pending Quotes</div>
+        <div class="kpi-value">$18,400</div>
+        <div class="kpi-delta warn">7 awaiting response</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Unpaid Invoices</div>
+        <div class="kpi-value">$11,200</div>
+        <div class="kpi-delta down">2 overdue</div>
+      </div>
+    </div>
+
+    <!-- Mid panels -->
+    <div class="content-grid">
+
+      <!-- Today's Schedule -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Today's Schedule — Apr 6</span>
+          <span class="panel-action">View Calendar &#8594;</span>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--green)"></span>
+          <div class="row-main">
+            <span class="row-title">Kitchen remodel — Johnson residence</span>
+            <span class="row-sub">8:00 AM – 12:00 PM &middot; 1842 Maple Dr</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$8,400</span>
+            <span class="row-tag tag-green">In Progress</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--blue)"></span>
+          <div class="row-main">
+            <span class="row-title">Bathroom rough-in — Garcia</span>
+            <span class="row-sub">12:30 PM – 3:00 PM &middot; 412 Oak St</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$3,200</span>
+            <span class="row-tag tag-blue">Scheduled</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--amber)"></span>
+          <div class="row-main">
+            <span class="row-title">Estimate — Water heater replacement</span>
+            <span class="row-sub">3:30 PM – 4:00 PM &middot; 2901 Birch Ln</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$1,800</span>
+            <span class="row-tag tag-amber">Estimate</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--green)"></span>
+          <div class="row-main">
+            <span class="row-title">Sewer line repair — Thompson</span>
+            <span class="row-sub">4:30 PM – 6:30 PM &middot; 780 Elm Ave</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$4,500</span>
+            <span class="row-tag tag-green">Confirmed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Jobs -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Active Jobs</span>
+          <span class="panel-action">View All &#8594;</span>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--green)"></span>
+          <div class="row-main">
+            <span class="row-title">Full bathroom remodel</span>
+            <span class="row-sub">Sarah Mitchell &middot; Started Mar 28</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$12,600</span>
+            <span class="row-tag tag-green">75% Complete</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--green)"></span>
+          <div class="row-main">
+            <span class="row-title">Kitchen remodel — rough plumbing</span>
+            <span class="row-sub">David Johnson &middot; Started Apr 1</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$8,400</span>
+            <span class="row-tag tag-green">In Progress</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--blue)"></span>
+          <div class="row-main">
+            <span class="row-title">Whole-house repipe</span>
+            <span class="row-sub">Martinez family &middot; Starts Apr 8</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$15,200</span>
+            <span class="row-tag tag-blue">Scheduled</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="status-dot" style="background:var(--amber)"></span>
+          <div class="row-main">
+            <span class="row-title">Tankless water heater install</span>
+            <span class="row-sub">Robert Chen &middot; Waiting on parts</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$3,800</span>
+            <span class="row-tag tag-amber">On Hold</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row -->
+    <div class="bottom-grid">
+
+      <!-- Recent Activity -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Recent Activity</span>
+          <span class="panel-action">View All &#8594;</span>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:var(--green-dim);color:var(--green);">$</div>
+          <div>
+            <div class="activity-text"><strong>Invoice #1047 paid</strong> — Sarah Mitchell paid $4,200 via card</div>
+            <div class="activity-time">12 minutes ago</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:rgba(77,159,255,0.1);color:var(--blue);">+</div>
+          <div>
+            <div class="activity-text"><strong>New lead</strong> — Angela Torres requested an estimate for slab leak repair</div>
+            <div class="activity-time">43 minutes ago</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:var(--green-dim);color:var(--green);">&#10003;</div>
+          <div>
+            <div class="activity-text"><strong>Quote #92 approved</strong> — David Johnson accepted whole-house repipe ($15,200)</div>
+            <div class="activity-time">1 hour ago</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:rgba(245,166,35,0.1);color:var(--amber);">!</div>
+          <div>
+            <div class="activity-text"><strong>Quote #88 expiring</strong> — Garcia bathroom remodel expires tomorrow ($6,800)</div>
+            <div class="activity-time">2 hours ago</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:rgba(77,159,255,0.1);color:var(--blue);">&#9993;</div>
+          <div>
+            <div class="activity-text"><strong>SMS received</strong> — Robert Chen: "Parts arrived, ready to schedule install"</div>
+            <div class="activity-time">3 hours ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outstanding Invoices -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Outstanding Invoices</span>
+          <span class="panel-action">View All &#8594;</span>
+        </div>
+        <div class="row">
+          <div class="row-main">
+            <span class="row-title">INV-1052 — Martinez family</span>
+            <span class="row-sub">Whole-house repipe deposit &middot; Due Apr 8</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$7,600</span>
+            <span class="row-tag tag-blue">Sent</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row-main">
+            <span class="row-title">INV-1048 — Karen Williams</span>
+            <span class="row-sub">Emergency pipe burst repair &middot; Due Apr 4</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$2,100</span>
+            <span class="row-tag tag-red">Overdue</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row-main">
+            <span class="row-title">INV-1045 — James Park</span>
+            <span class="row-sub">Garbage disposal + faucet install &middot; Due Mar 31</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$1,500</span>
+            <span class="row-tag tag-red">Overdue</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row-main">
+            <span class="row-title">INV-1050 — Angela Torres</span>
+            <span class="row-sub">Slab leak detection &middot; Due Apr 10</span>
+          </div>
+          <div class="row-right">
+            <span class="row-amount">$950</span>
+            <span class="row-tag tag-amber">Pending</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Chat FAB -->
+<div class="chat-fab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</div>
+
+</body>
+</html>

@@ -4,4 +4,4 @@ server/node_modules/
 server/.env
 *.env
 serviceAccountKey.json
-swft-mock-dashboard.html
+
