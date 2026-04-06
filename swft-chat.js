@@ -721,91 +721,90 @@
 
   if (micBtn) {
     let _userStoppedMic = false;
+    let _accumulatedTranscript = '';
 
-    micBtn.addEventListener('click', function() {
-      if (_chatListening) {
-        // Toggle OFF — stop recording and send
-        _userStoppedMic = true;
-        if (_chatRecognition) _chatRecognition.stop();
-        return;
-      }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        if (typeof showToast === 'function') showToast('Voice not supported in this browser');
-        return;
-      }
-
+    function startNewSession() {
+      if (!SpeechRecognition) return;
       _chatRecognition = new SpeechRecognition();
       _chatRecognition.lang = 'en-US';
       _chatRecognition.interimResults = true;
-      _chatRecognition.continuous = true;
+      _chatRecognition.continuous = false; // simpler: let browser decide when to stop each chunk
       _chatRecognition.maxAlternatives = 1;
-      _userStoppedMic = false;
-
-      let finalTranscript = '';
 
       _chatRecognition.onstart = function() {
         _chatListening = true;
-        finalTranscript = '';
         micBtn.classList.add('recording');
       };
 
       _chatRecognition.onresult = function(e) {
+        let sessionFinal = '';
         let interim = '';
-        finalTranscript = '';
         for (let i = 0; i < e.results.length; i++) {
           if (e.results[i].isFinal) {
-            finalTranscript += e.results[i][0].transcript;
+            sessionFinal += e.results[i][0].transcript;
           } else {
             interim += e.results[i][0].transcript;
           }
         }
-        input.value = finalTranscript + interim;
+        if (sessionFinal) _accumulatedTranscript += sessionFinal + ' ';
+        input.value = (_accumulatedTranscript + interim).trim();
         sendBtn.disabled = !input.value.trim();
       };
 
       _chatRecognition.onend = function() {
         if (_userStoppedMic) {
-          // User clicked mic to stop — send the message
           _chatListening = false;
           micBtn.classList.remove('recording');
-          const text = (finalTranscript || input.value).trim();
+          const text = input.value.trim();
           if (text && !isSending) {
             sendMessage(text);
+            _accumulatedTranscript = '';
           }
         } else {
-          // Browser stopped on its own (silence timeout) — restart seamlessly
-          // Keep button red and listening flag true
-          try {
-            _chatRecognition.start();
-          } catch(e) {
-            // If restart fails, truly stop
-            _chatListening = false;
-            micBtn.classList.remove('recording');
-          }
+          // Browser chunk ended — start a new session immediately to stay continuous
+          startNewSession();
         }
       };
 
       _chatRecognition.onerror = function(e) {
         if (e.error === 'not-allowed') {
+          _userStoppedMic = true;
           _chatListening = false;
           micBtn.classList.remove('recording');
           if (typeof showToast === 'function') showToast('Microphone blocked - check browser settings');
         } else if (e.error === 'network') {
+          _userStoppedMic = true;
           _chatListening = false;
           micBtn.classList.remove('recording');
           if (typeof showToast === 'function') showToast('Voice needs internet connection');
-        } else if (e.error === 'aborted') {
-          // User stopped — handled in onend
-        } else if (e.error !== 'no-speech') {
-          _chatListening = false;
-          micBtn.classList.remove('recording');
-          if (typeof showToast === 'function') showToast('Voice error: ' + e.error);
         }
+        // no-speech and aborted are normal — onend handles restart
       };
 
-      _chatRecognition.start();
+      try { _chatRecognition.start(); } catch(e) {
+        _chatListening = false;
+        micBtn.classList.remove('recording');
+      }
+    }
+
+    micBtn.addEventListener('click', function() {
+      if (!SpeechRecognition) {
+        if (typeof showToast === 'function') showToast('Voice not supported in this browser');
+        return;
+      }
+      if (_chatListening) {
+        // Toggle OFF
+        _userStoppedMic = true;
+        if (_chatRecognition) _chatRecognition.stop();
+      } else {
+        // Toggle ON
+        _userStoppedMic = false;
+        _accumulatedTranscript = '';
+        input.value = '';
+        startNewSession();
+      }
     });
   }
 })();
