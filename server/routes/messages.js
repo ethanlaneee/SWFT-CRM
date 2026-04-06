@@ -756,46 +756,30 @@ async function twilioIncomingHandler(req, res) {
       const data = doc.data();
       const custDigits = (data.phone || "").replace(/\D/g, "");
       if (custDigits && (custDigits === digits || custDigits === digits.slice(1) || "1" + custDigits === digits)) {
-        matched = { customerId: doc.id, customerName: data.name || "", userId: data.userId };
+        matched = {
+          customerId: doc.id,
+          customerName: data.name || "",
+          userId: data.userId || "",
+          orgId: data.orgId || "",
+        };
         break;
       }
     }
 
-    // Store inbound message (for both known and unknown senders)
-    const msgRecord = {
-      userId: matched?.userId || "",
-      orgId: matched?.orgId || "",
-      customerId: matched?.customerId || "",
-      customerName: matched?.customerName || "",
-      from: from,
-      to: "inbound",
-      body: body,
-      type: "sms",
-      direction: "inbound",
-      status: "received",
-      twilioMessageSid: msgSid || "",
-      sentAt: Date.now(),
-    };
+    if (!matched) {
+      console.log("Incoming SMS from unknown number (not matched to customer):", from);
+      return res.type("text/xml").send("<Response></Response>");
+    }
 
-    // Find the org to route to — use matched customer's org, or find org by phone
-    let orgId = null;
+    // Resolve orgId — use customer's orgId, or fall back to userId
+    let orgId = matched.orgId || matched.userId || "";
     let ownerUid = null;
     let ownerData = null;
 
-    if (matched) {
-      // Known customer — find their org
-      msgRecord.userId = matched.userId;
-      const custDoc = await db.collection("customers").doc(matched.customerId).get();
-      orgId = custDoc.exists ? custDoc.data().orgId : null;
-    }
-
-    if (!orgId) {
-      // For unknown numbers, we can't determine the org from a shared Twilio number.
-      // Log and return — future: per-org phone numbers will solve this.
-      if (!matched) {
-        console.log("Incoming SMS from unknown number (not matched to customer)");
-        return res.type("text/xml").send("<Response></Response>");
-      }
+    // If orgId is empty, try to get it from the user doc
+    if (!orgId && matched.userId) {
+      const userDoc = await db.collection("users").doc(matched.userId).get();
+      if (userDoc.exists) orgId = userDoc.data().orgId || matched.userId;
     }
 
     // Find org owner
@@ -805,17 +789,36 @@ async function twilioIncomingHandler(req, res) {
       if (!ownerSnap.empty) {
         ownerUid = ownerSnap.docs[0].id;
         ownerData = ownerSnap.docs[0].data();
-        msgRecord.orgId = orgId;
-        msgRecord.userId = ownerUid;
+      } else {
+        // Fallback: orgId might be the owner's uid directly
+        const ownerDoc = await db.collection("users").doc(orgId).get();
+        if (ownerDoc.exists) {
+          ownerUid = orgId;
+          ownerData = ownerDoc.data();
+        }
       }
     }
 
-    await db.collection("messages").add(msgRecord);
+    // Store inbound message
+    await db.collection("messages").add({
+      userId: ownerUid || matched.userId || "",
+      orgId: orgId,
+      customerId: matched.customerId,
+      customerName: matched.customerName,
+      from: from,
+      to: "inbound",
+      body: body,
+      type: "sms",
+      direction: "inbound",
+      status: "received",
+      twilioMessageSid: msgSid || "",
+      sentAt: Date.now(),
+    });
 
     // ── AI Receptionist — auto-reply if enabled ──
     if (orgId && ownerUid && ownerData) {
       try {
-        await handleInboundMessage(orgId, ownerUid, ownerData, from, body, matched || null);
+        await handleInboundMessage(orgId, ownerUid, ownerData, from, body, matched);
       } catch (err) {
         console.error("[receptionist] Error handling inbound:", err.message);
       }
