@@ -332,6 +332,8 @@
 
   // ── CRUD ──
   function openCreateModal() {
+    console.log('[automations] openCreateModal called');
+    try {
     document.getElementById('modal-title').textContent = 'NEW AUTOMATION';
     document.getElementById('m-id').value = '';
     document.getElementById('m-name').value = '';
@@ -347,11 +349,13 @@
     var overlay = document.getElementById('modal-overlay');
     overlay.style.display = 'flex';
     requestAnimationFrame(function(){ overlay.classList.add('open'); });
+    } catch(err) { console.error('[automations] openCreateModal error:', err); alert('Error opening modal: ' + err.message); }
   }
 
   function openEditModal(id) {
+    console.log('[automations] openEditModal called, id:', id);
     const a = _automations.find(x => x.id === id);
-    if (!a) return;
+    if (!a) { console.warn('[automations] automation not found:', id); return; }
     document.getElementById('modal-title').textContent = 'EDIT AUTOMATION';
     document.getElementById('m-id').value = a.id;
     document.getElementById('m-name').value = a.name || '';
@@ -475,6 +479,10 @@
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
+
+  // Debug: verify functions are global
+  console.log('[automations] Script loaded. openCreateModal:', typeof openCreateModal, 'openEditModal:', typeof openEditModal);
+  window.addEventListener('error', function(e) { console.error('[automations] Global error:', e.message, e.filename, e.lineno); });
 </script>
 
 <!-- Create/Edit Automation Modal -->
