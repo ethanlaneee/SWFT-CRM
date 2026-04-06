@@ -223,18 +223,25 @@ async function googleIntegrationCallback(req, res) {
       connectedAt: Date.now(),
     };
 
-    await db.collection("users").doc(uid).set({
-      [`integrations.${integrationId}`]: integrationData,
-    }, { merge: true });
+    console.log("Saving integration:", integrationId, "for user:", uid, "email:", email);
+
+    // Use update with nested object to ensure correct Firestore structure
+    const userRef = db.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+    const existing = userSnap.exists ? userSnap.data().integrations || {} : {};
+    existing[integrationId] = integrationData;
+    await userRef.set({ integrations: existing }, { merge: true });
 
     // Also set legacy Gmail fields for backward compatibility
     if (integrationId === "gmail") {
-      await db.collection("users").doc(uid).set({
+      await userRef.set({
         gmailConnected: true,
         gmailAddress: email,
         gmailTokens: integrationData.tokens,
       }, { merge: true });
     }
+
+    console.log("Integration saved successfully, redirecting to settings");
 
     // Redirect back to settings with success
     res.redirect(`/swft-settings?connected=${integrationId}`);
