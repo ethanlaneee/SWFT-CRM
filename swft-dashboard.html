@@ -296,6 +296,18 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       <p id="greeting-sub">Loading your data...</p>
     </div>
 
+<!-- AI Agent Activity Strip -->
+<div id="agent-strip" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:4px;animation:fadeUp 0.4s ease both;">
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:glow 2.2s ease-in-out infinite;"></div>
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;color:var(--green);">AI AGENTS</span>
+  </div>
+  <div style="display:flex;gap:18px;flex:1;overflow-x:auto;" id="agent-strip-stats">
+    <span style="font-size:12px;color:var(--gray2);">Loading agent data...</span>
+  </div>
+  <a href="swft-ai-agents" style="font-size:11px;color:var(--green);text-decoration:none;white-space:nowrap;flex-shrink:0;">Manage agents →</a>
+</div>
+
 <!-- AI Chat + Schedule Side by Side -->
 <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;min-height:calc(100vh - 190px);">
 
@@ -791,7 +803,35 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     } catch(e) {
       subEl.textContent = dayStr;
     }
-    // OLD: subEl.textContent = `${dayStr} · real data loaded above`; // disabled
+
+    // ── Load AI Agent stats strip ──
+    try {
+      const [agentConfigs, followupStats, recActivity, estActivity] = await Promise.all([
+        API.agents.list(),
+        API.agents.followupStats().catch(()=>null),
+        API.agents.activity('receptionist').catch(()=>[]),
+        API.agents.activity('estimator').catch(()=>[]),
+      ]);
+      const onCount = ['receptionist','estimator','followup'].filter(id => agentConfigs[id]?.enabled).length;
+      if (onCount > 0) {
+        const strip = document.getElementById('agent-strip');
+        const statsEl = document.getElementById('agent-strip-stats');
+        strip.style.display = 'flex';
+        const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+        const todayMs = todayStart.getTime();
+        const recToday = recActivity.filter(a => a.createdAt >= todayMs).length;
+        const estToday = estActivity.filter(a => a.createdAt >= todayMs).length;
+        const fPending = followupStats?.pendingCount || 0;
+        const fSent = followupStats?.totalSentMTD || 0;
+        let html = '';
+        if (agentConfigs.receptionist?.enabled) html += `<span style="font-size:12px;color:var(--white);">📞 <strong>${recToday}</strong> <span style="color:var(--gray);">replies today</span></span>`;
+        if (agentConfigs.estimator?.enabled) html += `<span style="font-size:12px;color:var(--white);">📐 <strong>${estToday}</strong> <span style="color:var(--gray);">estimates today</span></span>`;
+        if (agentConfigs.followup?.enabled) html += `<span style="font-size:12px;color:var(--white);">🔔 <strong>${fSent}</strong> <span style="color:var(--gray);">follow-ups MTD</span></span>`;
+        if (fPending > 0) html += `<span style="font-size:12px;color:var(--amber);">⏳ <strong>${fPending}</strong> pending</span>`;
+        html += `<span style="font-size:12px;color:var(--green);">${onCount}/3 active</span>`;
+        statsEl.innerHTML = html;
+      }
+    } catch(e) { console.error('Agent strip error:', e); }
 
   });
 </script>

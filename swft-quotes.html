@@ -205,6 +205,10 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
     <span class="topbar-slash">/</span>
     <div class="topbar-sub" id="q-count">loading...</div>
     <div class="topbar-right">
+      <button style="display:flex;align-items:center;gap:6px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);color:#c8f135;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;" onmouseover="this.style.background='rgba(200,241,53,0.15)'" onmouseout="this.style.background='rgba(200,241,53,0.08)'" onclick="openAIEstimate()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-width="1.8"/><path d="M2 17l10 5 10-5" stroke-width="1.8"/><path d="M2 12l10 5 10-5" stroke-width="1.8"/></svg>
+        AI Estimate
+      </button>
       <button class="btn-primary" onclick="openNewQuote()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
         New Quote
@@ -350,8 +354,11 @@ function renderTable(){
     var total='$'+Number(q.total||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
     var sc=q.status==='approved'?'s-approved':q.status==='sent'?'s-sent':'s-draft';
     var st=q.status||'draft';
+    var aiBadge=q.notes&&q.notes.indexOf('AI-generated')>-1?'<span style="background:rgba(200,241,53,0.1);color:#c8f135;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:5px;">AI</span>':'';
+    var fuBadge='';
+    if(q.status==='sent'&&q.sentAt){var daysSince=Math.floor((Date.now()-q.sentAt)/86400000);if(daysSince>=1)fuBadge='<span style="color:#f5a623;font-size:10px;margin-left:5px;" title="Follow-up agent tracking this quote">🔔</span>';}
     return '<div class="q-row" onclick="openQuote(\''+q.id+'\')">'+
-      '<div><div class="q-customer">'+(q.customerName||'Unnamed')+'</div><div class="q-job">'+(q.service||'')+(q.finish?' — '+q.finish:'')+'</div></div>'+
+      '<div><div class="q-customer">'+(q.customerName||'Unnamed')+aiBadge+'</div><div class="q-job">'+(q.service||'')+(q.finish?' — '+q.finish:'')+'</div></div>'+
       '<div class="q-date">'+(q.service||'—')+'</div>'+
       '<div class="q-date">'+created+'</div>'+
       '<div class="q-total">'+total+'</div>'+
@@ -359,7 +366,7 @@ function renderTable(){
         '<option value="draft"'+(st==='draft'?' selected':'')+'>draft</option>'+
         '<option value="sent"'+(st==='sent'?' selected':'')+'>sent</option>'+
         '<option value="approved"'+(st==='approved'?' selected':'')+'>approved</option>'+
-      '</select></div>'+
+      '</select>'+fuBadge+'</div>'+
       '<div><div class="row-btn">→</div></div>'+
     '</div>';
   }).join('');
@@ -591,6 +598,91 @@ async function deleteQuote(){
 }
 
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ── AI Estimate Modal ──
+function openAIEstimate(){
+  var overlay=document.getElementById('ai-est-overlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='ai-est-overlay';
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick=function(e){if(e.target===overlay)overlay.style.display='none';};
+    overlay.innerHTML='<div style="background:#111;border:1px solid #1f1f1f;border-radius:16px;padding:28px;width:420px;max-width:90vw;">'+
+      '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:2px;color:#c8f135;margin-bottom:16px;">AI ESTIMATE</div>'+
+      '<div style="display:flex;flex-direction:column;gap:10px;">'+
+        '<select id="ai-est-customer" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;"><option value="">Select customer (optional)</option></select>'+
+        '<input id="ai-est-service" placeholder="Service type (e.g. driveway, patio)" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
+        '<input id="ai-est-sqft" placeholder="Square footage" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
+        '<input id="ai-est-finish" placeholder="Finish type (optional)" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
+        '<input id="ai-est-desc" placeholder="Description / details" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
+        '<button id="ai-est-btn" onclick="runAIEstimate()" style="background:#c8f135;color:#0a0a0a;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Generate Estimate</button>'+
+        '<div id="ai-est-result" style="display:none;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:14px;font-size:12px;color:#f0f0f0;line-height:1.6;"></div>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(overlay);
+    // Populate customer dropdown
+    if(_customers&&_customers.length){
+      var sel=document.getElementById('ai-est-customer');
+      _customers.forEach(function(c){
+        var o=document.createElement('option');o.value=c.id;o.textContent=c.name||'Unnamed';sel.appendChild(o);
+      });
+    }
+  }
+  overlay.style.display='flex';
+}
+
+async function runAIEstimate(){
+  var btn=document.getElementById('ai-est-btn');
+  var result=document.getElementById('ai-est-result');
+  var custId=document.getElementById('ai-est-customer').value;
+  var custName='';
+  if(custId&&_customers){var c=_customers.find(function(x){return x.id===custId;});if(c)custName=c.name||'';}
+  btn.textContent='Generating...';btn.disabled=true;result.style.display='none';
+  try{
+    var est=await API.agents.estimate({
+      service:document.getElementById('ai-est-service').value,
+      sqft:document.getElementById('ai-est-sqft').value,
+      finish:document.getElementById('ai-est-finish').value,
+      description:document.getElementById('ai-est-desc').value,
+      customerId:custId,customerName:custName
+    });
+    var html='<div style="color:#c8f135;font-weight:700;font-size:16px;margin-bottom:8px;">Total: $'+(est.total||0).toLocaleString()+'</div>';
+    html+='<div style="color:#7a7a7a;font-size:11px;margin-bottom:8px;">Confidence: '+est.confidence+'</div>';
+    if(est.items&&est.items.length){
+      est.items.forEach(function(item){
+        html+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #1f1f1f;"><span>'+esc(item.description)+'</span><span style="color:#c8f135;">$'+(item.amount||0).toLocaleString()+'</span></div>';
+      });
+    }
+    if(est.notes)html+='<div style="margin-top:8px;color:#444;font-style:italic;">'+esc(est.notes)+'</div>';
+    html+='<button onclick="createQuoteFromEstimate()" style="margin-top:12px;background:#c8f135;color:#0a0a0a;border:none;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px;">Create Quote from Estimate</button>';
+    result.innerHTML=html;result.style.display='block';
+    window._lastEstimate=est;
+    window._lastEstimateCustId=custId;
+    window._lastEstimateCustName=custName;
+  }catch(e){showToast('Estimate failed: '+e.message);}
+  finally{btn.textContent='Generate Estimate';btn.disabled=false;}
+}
+
+async function createQuoteFromEstimate(){
+  if(!window._lastEstimate)return;
+  var est=window._lastEstimate;
+  try{
+    await API.quotes.create({
+      customerId:window._lastEstimateCustId||'',
+      customerName:window._lastEstimateCustName||'',
+      items:est.items||[],
+      total:est.total||0,
+      notes:(est.notes||'')+' (AI-generated estimate, '+est.confidence+' confidence)',
+      service:document.getElementById('ai-est-service').value,
+      sqft:document.getElementById('ai-est-sqft').value,
+      finish:document.getElementById('ai-est-finish').value,
+      status:'draft'
+    });
+    showToast('Quote created from AI estimate');
+    document.getElementById('ai-est-overlay').style.display='none';
+    loadQuotes();
+  }catch(e){showToast('Error: '+e.message);}
+}
 </script>
 
 <script src="swft-api.js"></script>

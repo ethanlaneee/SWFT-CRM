@@ -466,7 +466,12 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 
   <!-- DETAILS EDIT -->
   <div id="tab-job-quotes" style="display:none;">
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Quotes <button onclick="createQuoteForJob()" style="font-size:11px;color:var(--green);background:none;border:1px solid var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;">+ New Quote</button></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Quotes
+      <div style="display:flex;gap:6px;">
+        <button onclick="aiEstimateForJob()" style="font-size:11px;color:#c8f135;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;">AI Estimate</button>
+        <button onclick="createQuoteForJob()" style="font-size:11px;color:var(--green);background:none;border:1px solid var(--green);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;">+ New Quote</button>
+      </div>
+    </div>
     <div id="job-quotes-list" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
 
@@ -709,6 +714,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
           '</div>' +
           '<div>' +
             '<div class="job-amount">' + fmtCost(job.cost) + '</div>' +
+            (status === 'complete' ? '<div style="font-size:9px;color:#f5a623;margin-top:2px;" title="Review request will be sent by follow-up agent">🔔 Review pending</div>' : '') +
           '</div>' +
           '<div><select class="status-tag ' + sm.tag + '" onclick="event.stopPropagation()" onchange="changeJobStatus(\'' + job.id + '\',this.value,this)">' +
             '<option value="scheduled"' + (status === 'scheduled' ? ' selected' : '') + '>Scheduled</option>' +
@@ -875,6 +881,42 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 
 
 
+
+  async function aiEstimateForJob() {
+    if (!_currentJob) return;
+    var btn = event.target;
+    btn.textContent = 'Generating...'; btn.disabled = true;
+    try {
+      var est = await API.agents.estimate({
+        service: _currentJob.service || '',
+        sqft: _currentJob.sqft || '',
+        description: _currentJob.description || _currentJob.title || '',
+        finish: _currentJob.finish || '',
+        customerId: _currentJob.customerId || '',
+        customerName: _currentJob.customerName || '',
+        address: _currentJob.address || '',
+      });
+      if (est.total > 0) {
+        await API.quotes.create({
+          customerId: _currentJob.customerId || '',
+          customerName: _currentJob.customerName || '',
+          items: est.items || [],
+          total: est.total || 0,
+          notes: (est.notes || '') + ' (AI-generated estimate, ' + est.confidence + ' confidence)',
+          service: _currentJob.service || '',
+          sqft: _currentJob.sqft || '',
+          finish: _currentJob.finish || '',
+          address: _currentJob.address || '',
+          status: 'draft'
+        });
+        showToast('AI estimate created: $' + est.total.toLocaleString() + ' (' + est.confidence + ' confidence)');
+        loadJobQuotes(_currentJob.id);
+      } else {
+        showToast('Could not generate estimate — try adding more details');
+      }
+    } catch(e) { showToast('Error: ' + e.message); }
+    finally { btn.textContent = 'AI Estimate'; btn.disabled = false; }
+  }
 
   async function createQuoteForJob() {
     if (!_currentJob) return;

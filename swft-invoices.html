@@ -303,6 +303,11 @@ function renderTable(){
     var total='$'+Number(inv.total||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
     var sc=inv.status==='paid'?'s-paid':inv.status==='draft'?'s-draft':'s-open';
     var st=inv.status||'open';
+    var overdueBadge='';
+    if(inv.status!=='paid'&&inv.dueDate&&inv.dueDate<Date.now()){
+      var daysOverdue=Math.floor((Date.now()-inv.dueDate)/86400000);
+      overdueBadge='<span style="color:#f5a623;font-size:10px;margin-left:5px;" title="'+daysOverdue+' days overdue — follow-up agent tracking">🔔 '+daysOverdue+'d</span>';
+    }
     return '<div class="inv-row" onclick="openInvoice(\''+inv.id+'\')">'+
       '<div><div class="inv-customer">'+(inv.customerName||'Unnamed')+'</div><div class="inv-job">'+(inv.service||'')+'</div></div>'+
       '<div class="inv-date">'+(inv.service||'—')+'</div>'+
@@ -312,7 +317,7 @@ function renderTable(){
         '<option value="open"'+(st==='open'?' selected':'')+'>open</option>'+
         '<option value="paid"'+(st==='paid'?' selected':'')+'>paid</option>'+
         '<option value="draft"'+(st==='draft'?' selected':'')+'>draft</option>'+
-      '</select></div>'+
+      '</select>'+overdueBadge+'</div>'+
       '<div><div class="row-btn">→</div></div></div>';
   }).join('');
 }

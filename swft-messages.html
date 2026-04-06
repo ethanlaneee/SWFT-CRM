@@ -255,6 +255,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="ch-tab active" onclick="setChannel('all')">All</div>
       <div class="ch-tab" onclick="setChannel('email')">Email</div>
       <div class="ch-tab" onclick="setChannel('sms')">SMS</div>
+      <div class="ch-tab" onclick="setChannel('ai')" style="color:#c8f135;">AI</div>
     </div>
     <div class="contact-list" id="contact-list">
       <div class="chat-empty" style="padding:30px;font-size:12px;">Loading contacts...</div>
@@ -540,7 +541,9 @@ function showConnectEmailPopup(){
 function buildContacts(){
   var map={};
   var msgs=_allMessages;
-  if(_channel!=='all'){
+  if(_channel==='ai'){
+    msgs=msgs.filter(function(m){return m.isReceptionist||m.isFollowup;});
+  } else if(_channel!=='all'){
     msgs=msgs.filter(function(m){return(m.type||'email')===_channel;});
   }
   msgs.forEach(function(m){
@@ -704,7 +707,11 @@ function renderChat(){
     }
 
     var dir=m.direction==='inbound'?'inbound':'outbound';
+    var aiBadge='';
+    if(m.isReceptionist) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(200,241,53,0.12);border:1px solid rgba(200,241,53,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#c8f135;letter-spacing:0.5px;">📞 AI RECEPTIONIST</div>';
+    if(m.isFollowup) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;">🔔 AI FOLLOW-UP</div>';
     html+='<div class="msg-bubble '+dir+'">'+
+      aiBadge+
       subjectHtml+
       '<div class="msg-bubble-body">'+esc(bodyText||'(no content)')+'</div>'+
       attachHtml+
