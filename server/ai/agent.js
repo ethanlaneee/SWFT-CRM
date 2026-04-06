@@ -146,7 +146,7 @@ async function executeTool(toolName, input, uid, orgId) {
       const ref = await db.collection("jobs").add(data);
 
       // Auto-sync to Google Calendar if connected
-      const calEvent = await syncJobToCalendar(uid, data);
+      const calEvent = await syncJobToCalendar(uid, data, ref.id);
 
       return { id: ref.id, ...data, calendarSynced: !!calEvent };
     }

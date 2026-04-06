@@ -64,9 +64,12 @@ router.post("/", async (req, res, next) => {
     };
     const ref = await col().add(data);
 
-    // Sync to Google Calendar if connected and job has a date
+    // Sync to Google Calendar if connected and job has a date (await to store event ID)
     if (data.scheduledDate) {
-      syncJobToCalendar(req.uid, data, ref.id).catch(console.error);
+      try {
+        const calResult = await syncJobToCalendar(req.uid, data, ref.id);
+        if (calResult && calResult.eventId) data.googleCalendarEventId = calResult.eventId;
+      } catch (e) { console.error("Calendar sync error:", e.message); }
     }
 
     res.status(201).json({ id: ref.id, ...data });
@@ -90,7 +93,9 @@ router.put("/:id", async (req, res, next) => {
     // Sync to Google Calendar if date is set (new or existing)
     const merged = { ...doc.data(), ...updates };
     if (merged.scheduledDate) {
-      syncJobToCalendar(req.uid, merged, req.params.id).catch(console.error);
+      try {
+        await syncJobToCalendar(req.uid, merged, req.params.id);
+      } catch (e) { console.error("Calendar sync error:", e.message); }
     }
 
     res.json({ id: req.params.id, ...merged });
