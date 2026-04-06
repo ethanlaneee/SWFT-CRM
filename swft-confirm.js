@@ -215,7 +215,7 @@
       '<div class="pdf-line"><div>' + l.desc + '</div><div>' + (l.qty || "1") + '</div><div>' + (l.rate || "-") + '</div><div class="amt">' + l.total + '</div></div>'
     ).join("");
 
-    const total = (data.lines || []).reduce((s, l) => s + (parseFloat((l.total || "").replace(/[$,]/g, "")) || 0), 0);
+    const total = (data.lines || []).reduce((s, l) => s + (parseFloat(String(l.total || "").replace(/[$,]/g, "")) || 0), 0);
 
     const html = `
       ${(window._swftSettings && window._swftSettings.companyLogo) ? '<img src="' + window._swftSettings.companyLogo + '" style="max-height:50px;max-width:180px;object-fit:contain;margin-bottom:8px;"/>' : '<div class="pdf-company">' + ((window._swftSettings && window._swftSettings.company) || 'SWFT') + '<em>.</em></div>'}
