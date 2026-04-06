@@ -7,16 +7,14 @@ const col = () => db.collection("invoices");
 
 // Normalize line items to {desc, qty, rate, total} regardless of input format
 function normalizeItems(items) {
+  function num(v) { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; }
   return (items || []).map(i => {
     if (typeof i === "string") return { desc: i, qty: 1, rate: 0, total: 0 };
     const desc = i.desc || i.description || i.name || i.label || i.service || "";
-    const qty = Number(i.qty || i.quantity) || 1;
-    const rawRate = (i.rate !== undefined && i.rate !== null && i.rate !== "") ? Number(i.rate) : null;
-    const rawAmount = (i.amount !== undefined && i.amount !== null && i.amount !== "") ? Number(i.amount) : null;
-    const rawTotal = (i.total !== undefined && i.total !== null && i.total !== "") ? Number(i.total) : null;
-    const rawPrice = (i.price !== undefined && i.price !== null && i.price !== "") ? Number(i.price) : null;
-    const total = rawTotal || rawAmount || rawPrice || (rawRate ? rawRate * qty : 0);
-    const rate = rawRate || rawAmount || rawPrice || (total / qty) || 0;
+    const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
+    const nRate = num(i.rate), nAmount = num(i.amount), nTotal = num(i.total), nPrice = num(i.price);
+    const total = (nTotal != null && nTotal > 0) ? nTotal : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (nRate != null && nRate > 0) ? nRate * qty : 0;
+    const rate = (nRate != null && nRate > 0) ? nRate : (nAmount != null && nAmount > 0) ? nAmount : (nPrice != null && nPrice > 0) ? nPrice : (total > 0) ? total / qty : 0;
     return { desc, qty, rate, total };
   });
 }

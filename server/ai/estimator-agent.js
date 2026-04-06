@@ -145,7 +145,7 @@ ESTIMATION RULES:
 RESPOND WITH ONLY valid JSON in this exact format:
 {
   "items": [
-    { "description": "Line item description", "qty": 1, "rate": 500, "amount": 500 }
+    { "desc": "Line item description", "qty": 1, "rate": 500, "total": 500 }
   ],
   "total": 2500,
   "notes": "Brief notes about the estimate, assumptions made",
@@ -189,8 +189,20 @@ function parseEstimateResponse(text) {
 
   try {
     const parsed = JSON.parse(jsonStr);
+    // Normalize items to canonical {desc, qty, rate, total} format
+    const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
+    const items = rawItems.map(i => {
+      const desc = i.desc || i.description || i.name || i.label || "";
+      const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
+      const nRate = (i.rate != null && i.rate !== "") ? Number(i.rate) : null;
+      const nAmount = (i.amount != null && i.amount !== "") ? Number(i.amount) : null;
+      const nTotal = (i.total != null && i.total !== "") ? Number(i.total) : null;
+      const total = (nTotal != null && nTotal > 0) ? nTotal : (nAmount != null && nAmount > 0) ? nAmount : (nRate != null && nRate > 0) ? nRate * qty : 0;
+      const rate = (nRate != null && nRate > 0) ? nRate : (nAmount != null && nAmount > 0) ? nAmount : (total > 0) ? total / qty : 0;
+      return { desc, qty, rate, total };
+    });
     return {
-      items: Array.isArray(parsed.items) ? parsed.items : [],
+      items,
       total: Number(parsed.total) || 0,
       notes: parsed.notes || "",
       confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "medium",

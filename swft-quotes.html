@@ -394,7 +394,17 @@ async function openQuote(id){
   try{
     var q=await API.quotes.get(id);
     _currentQuote=q;
-    _items=(q.items||[]).map(function(i){return{desc:i.desc||'',qty:Number(i.qty)||1,rate:Number(i.rate)||0,total:Number(i.total)||0};});
+    _items=(q.items||[]).map(function(i){
+      var desc=i.desc||i.description||i.name||i.label||'';
+      var qty=Math.max(1,parseInt(i.qty||i.quantity,10)||1);
+      var nR=(i.rate!=null&&i.rate!=='')?Number(i.rate):null;
+      var nA=(i.amount!=null&&i.amount!=='')?Number(i.amount):null;
+      var nT=(i.total!=null&&i.total!=='')?Number(i.total):null;
+      var nP=(i.price!=null&&i.price!=='')?Number(i.price):null;
+      var total=(nT!=null&&nT>0)?nT:(nA!=null&&nA>0)?nA:(nP!=null&&nP>0)?nP:(nR!=null&&nR>0)?nR*qty:0;
+      var rate=(nR!=null&&nR>0)?nR:(nA!=null&&nA>0)?nA:(nP!=null&&nP>0)?nP:(total>0)?total/qty:0;
+      return{desc:desc,qty:qty,rate:rate,total:total};
+    });
     populateModal(q);
     document.getElementById('btn-delete').style.display='';
     document.getElementById('modal-overlay').classList.add('open');
@@ -666,10 +676,20 @@ async function createQuoteFromEstimate(){
   if(!window._lastEstimate)return;
   var est=window._lastEstimate;
   try{
+    var normItems=(est.items||[]).map(function(i){
+      var desc=i.desc||i.description||i.name||'';
+      var qty=Math.max(1,parseInt(i.qty||i.quantity,10)||1);
+      var nR=(i.rate!=null&&i.rate!=='')?Number(i.rate):null;
+      var nA=(i.amount!=null&&i.amount!=='')?Number(i.amount):null;
+      var nT=(i.total!=null&&i.total!=='')?Number(i.total):null;
+      var total=(nT!=null&&nT>0)?nT:(nA!=null&&nA>0)?nA:(nR!=null&&nR>0)?nR*qty:0;
+      var rate=(nR!=null&&nR>0)?nR:(nA!=null&&nA>0)?nA:(total>0)?total/qty:0;
+      return{desc:desc,qty:qty,rate:rate,total:total};
+    });
     await API.quotes.create({
       customerId:window._lastEstimateCustId||'',
       customerName:window._lastEstimateCustName||'',
-      items:est.items||[],
+      items:normItems,
       total:est.total||0,
       notes:(est.notes||'')+' (AI-generated estimate, '+est.confidence+' confidence)',
       service:document.getElementById('ai-est-service').value,

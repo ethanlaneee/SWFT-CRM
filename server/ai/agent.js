@@ -66,10 +66,13 @@ async function executeTool(toolName, input, uid, orgId) {
 
     case "create_quote": {
       const normalizedItems = (input.items || []).map(i => {
-        const desc = i.desc || i.description || "";
-        const qty = Number(i.qty) || 1;
-        const rate = Number(i.rate || i.amount || i.total || 0);
-        const total = Number(i.total || i.amount || (qty * rate) || 0);
+        const desc = i.desc || i.description || i.name || "";
+        const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
+        const _r = (i.rate != null && i.rate !== "") ? Number(i.rate) : null;
+        const _a = (i.amount != null && i.amount !== "") ? Number(i.amount) : null;
+        const _t = (i.total != null && i.total !== "") ? Number(i.total) : null;
+        const total = (_t != null && _t > 0) ? _t : (_a != null && _a > 0) ? _a : (_r != null && _r > 0) ? _r * qty : 0;
+        const rate = (_r != null && _r > 0) ? _r : (_a != null && _a > 0) ? _a : (total > 0) ? total / qty : 0;
         return { desc, qty, rate, total };
       });
       const total = normalizedItems.reduce((sum, i) => sum + i.total, 0);
@@ -105,10 +108,13 @@ async function executeTool(toolName, input, uid, orgId) {
 
     case "create_invoice": {
       const normalizedInvItems = (input.items || []).map(i => {
-        const desc = i.desc || i.description || "";
-        const qty = Number(i.qty) || 1;
-        const rate = Number(i.rate || i.amount || i.total || 0);
-        const total = Number(i.total || i.amount || (qty * rate) || 0);
+        const desc = i.desc || i.description || i.name || "";
+        const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
+        const _r = (i.rate != null && i.rate !== "") ? Number(i.rate) : null;
+        const _a = (i.amount != null && i.amount !== "") ? Number(i.amount) : null;
+        const _t = (i.total != null && i.total !== "") ? Number(i.total) : null;
+        const total = (_t != null && _t > 0) ? _t : (_a != null && _a > 0) ? _a : (_r != null && _r > 0) ? _r * qty : 0;
+        const rate = (_r != null && _r > 0) ? _r : (_a != null && _a > 0) ? _a : (total > 0) ? total / qty : 0;
         return { desc, qty, rate, total };
       });
       const total = normalizedInvItems.reduce((sum, i) => sum + i.total, 0);

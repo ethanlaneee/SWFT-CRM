@@ -271,16 +271,33 @@ function generateDocumentPdf(doc, docType, user) {
     for (const rawItem of items) {
       // Normalize: support {desc,rate,total}, {description,amount}, {name,price}, or any combo
       const item = typeof rawItem === "string" ? { desc: rawItem } : (rawItem || {});
-      const qty = Number(item.qty || item.quantity) || 1;
       const descText = item.desc || item.description || item.name || item.label || item.service || "";
-      const rawRate = item.rate !== undefined && item.rate !== null && item.rate !== "" ? Number(item.rate) : null;
-      const rawAmount = item.amount !== undefined && item.amount !== null && item.amount !== "" ? Number(item.amount) : null;
-      const rawTotal = item.total !== undefined && item.total !== null && item.total !== "" ? Number(item.total) : null;
-      const rawPrice = item.price !== undefined && item.price !== null && item.price !== "" ? Number(item.price) : null;
-      // Pick whichever value is actually present
-      const bestAmount = rawTotal || rawAmount || rawPrice || (rawRate ? rawRate * qty : 0);
-      const rate = rawRate || rawAmount || rawPrice || (bestAmount / qty) || 0;
-      const total = bestAmount || (qty * rate) || 0;
+      const qty = Math.max(1, parseInt(item.qty || item.quantity, 10) || 1);
+
+      // Parse every possible numeric field; use null for "not present"
+      function num(v) { if (v === undefined || v === null || v === "") return null; const n = Number(v); return isNaN(n) ? null : n; }
+      const nRate   = num(item.rate);
+      const nAmount = num(item.amount);
+      const nTotal  = num(item.total);
+      const nPrice  = num(item.price);
+
+      // Determine total: prefer total > amount > price > rate*qty
+      let total, rate;
+      if (nTotal != null && nTotal > 0)        { total = nTotal; }
+      else if (nAmount != null && nAmount > 0)  { total = nAmount; }
+      else if (nPrice != null && nPrice > 0)    { total = nPrice; }
+      else if (nRate != null && nRate > 0)      { total = nRate * qty; }
+      else                                      { total = 0; }
+
+      // Determine rate: prefer rate > amount > price > total/qty
+      if (nRate != null && nRate > 0)           { rate = nRate; }
+      else if (nAmount != null && nAmount > 0)  { rate = nAmount; }
+      else if (nPrice != null && nPrice > 0)    { rate = nPrice; }
+      else if (total > 0)                       { rate = total / qty; }
+      else                                      { rate = 0; }
+
+      console.log("[PDF item]", JSON.stringify({ descText, qty, rate, total, raw: { rate: item.rate, amount: item.amount, total: item.total, price: item.price } }));
+
       const qtyText = String(qty);
       const rateText = "$" + rate.toFixed(2);
       const totalText = "$" + total.toFixed(2);
@@ -330,15 +347,12 @@ function generateDocumentHtml(doc, docType, user) {
     .map(
       (item) => {
         const i = typeof item === "string" ? { desc: item } : (item || {});
-        const qty = Number(i.qty || i.quantity) || 1;
         const desc = i.desc || i.description || i.name || i.label || i.service || "";
-        const rR = i.rate !== undefined && i.rate !== null && i.rate !== "" ? Number(i.rate) : null;
-        const rA = i.amount !== undefined && i.amount !== null && i.amount !== "" ? Number(i.amount) : null;
-        const rT = i.total !== undefined && i.total !== null && i.total !== "" ? Number(i.total) : null;
-        const rP = i.price !== undefined && i.price !== null && i.price !== "" ? Number(i.price) : null;
-        const best = rT || rA || rP || (rR ? rR * qty : 0);
-        const rate = rR || rA || rP || (best / qty) || 0;
-        const total = best || (qty * rate) || 0;
+        const qty = Math.max(1, parseInt(i.qty || i.quantity, 10) || 1);
+        function n(v) { if (v === undefined || v === null || v === "") return null; const x = Number(v); return isNaN(x) ? null : x; }
+        const _r = n(i.rate), _a = n(i.amount), _t = n(i.total), _p = n(i.price);
+        const total = (_t != null && _t > 0) ? _t : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (_r != null && _r > 0) ? _r * qty : 0;
+        const rate = (_r != null && _r > 0) ? _r : (_a != null && _a > 0) ? _a : (_p != null && _p > 0) ? _p : (total > 0) ? total / qty : 0;
         return `
     <tr>
       <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#333;">${desc}</td>
