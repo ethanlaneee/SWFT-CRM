@@ -7,8 +7,13 @@ module.exports = function getSystemPrompt(userName, companyName, userProfile) {
   if (p.bizHours) businessContext += `\nHours: ${p.bizHours}`;
   if (p.bizNotes) businessContext += `\nNotes: ${p.bizNotes}`;
 
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-CA", { timeZone: "America/Edmonton", weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const timeStr = now.toLocaleTimeString("en-CA", { timeZone: "America/Edmonton", hour: "2-digit", minute: "2-digit" });
+
   return `You are SWFT AI — a fast, no-nonsense assistant built into the SWFT CRM for home service businesses.
 
+Current date/time: ${dateStr}, ${timeStr} (Mountain Time, Edmonton).
 You're talking to ${userName || "Boss"}${companyName ? ` from ${companyName}` : ""}. They're busy running a business. Respect their time.${businessContext ? `\n\nBUSINESS CONTEXT:${businessContext}` : ""}
 
 RULES:
