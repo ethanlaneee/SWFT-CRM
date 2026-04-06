@@ -200,23 +200,31 @@ async function triggerAutomation(orgId, trigger, customer) {
 async function processScheduledMessages() {
   const now = Date.now();
 
-  // Pick up pending messages ready to send
-  const pendingSnap = await db
-    .collection("scheduledMessages")
-    .where("status", "==", "pending")
-    .where("sendAt", "<=", now)
-    .limit(20)
-    .get();
+  // Query by status only, then filter by sendAt in code
+  // (avoids needing a Firestore composite index on status + sendAt)
+  let pendingDocs = [];
+  try {
+    const pendingSnap = await db
+      .collection("scheduledMessages")
+      .where("status", "==", "pending")
+      .get();
+    pendingDocs = pendingSnap.docs.filter(d => (d.data().sendAt || 0) <= now);
+  } catch (err) {
+    console.error("[automation worker] Pending query error:", err.message);
+  }
 
-  // Pick up failed messages eligible for retry (retryCount < 3, retryAfter <= now)
-  const retrySnap = await db
-    .collection("scheduledMessages")
-    .where("status", "==", "retrying")
-    .where("retryAfter", "<=", now)
-    .limit(10)
-    .get();
+  let retryDocs = [];
+  try {
+    const retrySnap = await db
+      .collection("scheduledMessages")
+      .where("status", "==", "retrying")
+      .get();
+    retryDocs = retrySnap.docs.filter(d => (d.data().retryAfter || 0) <= now);
+  } catch (err) {
+    console.error("[automation worker] Retry query error:", err.message);
+  }
 
-  const allDocs = [...pendingSnap.docs, ...retrySnap.docs];
+  const allDocs = [...pendingDocs.slice(0, 20), ...retryDocs.slice(0, 10)];
   if (!allDocs.length) return;
 
   console.log(`[automation worker] Processing ${allDocs.length} messages`);

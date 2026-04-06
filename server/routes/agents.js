@@ -151,18 +151,18 @@ router.get("/followup/stats", async (req, res, next) => {
     monthStart.setHours(0, 0, 0, 0);
     const monthMs = monthStart.getTime();
 
-    // Count follow-ups sent this month from followups collection
+    // Query by orgId + status only, filter sentAt in code (avoids composite index)
     const sentSnap = await db.collection("followups")
       .where("orgId", "==", orgId)
       .where("status", "==", "sent")
-      .where("sentAt", ">=", monthMs)
       .get();
+    const sentDocs = sentSnap.docs.filter(d => (d.data().sentAt || 0) >= monthMs);
 
     let invoicesCollected = 0;
     let reviewsSent = 0;
     let quoteFollowups = 0;
 
-    for (const doc of sentSnap.docs) {
+    for (const doc of sentDocs) {
       const f = doc.data();
       if (f.type === "overdue_invoice") invoicesCollected += (f.total || 0);
       if (f.type === "review_request") reviewsSent++;
@@ -173,10 +173,8 @@ router.get("/followup/stats", async (req, res, next) => {
     const schedSentSnap = await db.collection("scheduledMessages")
       .where("orgId", "==", orgId)
       .where("status", "==", "sent")
-      .where("sentAt", ">=", monthMs)
       .get();
-
-    const automationsSentMTD = schedSentSnap.size;
+    const automationsSentMTD = schedSentSnap.docs.filter(d => (d.data().sentAt || 0) >= monthMs).length;
 
     // Count pending follow-ups
     const pendingSnap = await db.collection("followups")
@@ -195,7 +193,7 @@ router.get("/followup/stats", async (req, res, next) => {
       reviewsSent,
       quoteFollowups,
       pendingCount: pendingSnap.size + schedPendingSnap.size,
-      totalSentMTD: sentSnap.size + automationsSentMTD,
+      totalSentMTD: sentDocs.length + automationsSentMTD,
     });
   } catch (err) { next(err); }
 });
