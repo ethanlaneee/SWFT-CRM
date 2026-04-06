@@ -1331,7 +1331,22 @@ function filterInvoices(q) {
 
     document.body.style.visibility = "visible";
     window.__swftUser = user;
-    loadQuotes();
+    loadQuotes().then(function(){
+      var params = new URLSearchParams(window.location.search);
+      var qId = params.get('quote');
+      var iId = params.get('invoice');
+      if (qId && window._quotes && window._quotes[qId]) {
+        openModalById(qId);
+      } else if (iId) {
+        loadInvoices().then(function(){
+          if (window._invoicesData && window._invoicesData[iId]) {
+            switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
+            openInvoiceModal(window._invoicesData[iId]);
+          }
+        });
+        return;
+      }
+    });
     loadInvoices();
 
   });

@@ -99,7 +99,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .msg-bubble-time{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--gray2);margin-top:6px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:10px;}
 .msg-reply-btn{font-size:10px;color:var(--gray);cursor:pointer;padding:2px 7px;border-radius:5px;border:1px solid var(--border2);background:transparent;transition:all 0.12s;font-family:'DM Sans',sans-serif;}
 .msg-reply-btn:hover{background:var(--surface2);color:var(--white);}
-.msg-bubble-attach{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--amber);margin-top:4px;}
+.msg-bubble-attach{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--amber);margin-top:4px;transition:color 0.12s;}
+.msg-bubble-attach[onclick]:hover{color:var(--green);text-decoration:underline;}
 .msg-date-sep{text-align:center;font-size:10px;color:var(--gray2);letter-spacing:1px;padding:8px 0;}
 .msg-bubble.scheduled{background:rgba(245,166,35,0.06);border:1px dashed rgba(245,166,35,0.25);align-self:flex-end;border-bottom-right-radius:4px;opacity:0.8;}
 .msg-sched-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;}
@@ -812,7 +813,13 @@ function renderChat(){
     var time=m.sentAt?new Date(m.sentAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
     var subjectHtml=m.subject?'<div class="msg-bubble-subject">'+esc(m.subject)+'</div>':'';
     var bodyText=(m.body||'').replace(/<[^>]*>/g,'').substring(0,500);
-    var attachHtml=m.attachedDocType?'<div class="msg-bubble-attach">📎 '+(m.attachedDocType==='quote'?'Quote':'Invoice')+' attached</div>':'';
+    var attachHtml='';
+    if(m.attachedDocType&&m.attachedDocId){
+      var docLabel=m.attachedDocType==='quote'?'Quote':'Invoice';
+      attachHtml='<div class="msg-bubble-attach" onclick="window.location.href=\'swft-billing?'+m.attachedDocType+'='+m.attachedDocId+'\'" style="cursor:pointer;" title="Open '+docLabel+'">📎 '+docLabel+' attached ↗</div>';
+    } else if(m.attachedDocType){
+      attachHtml='<div class="msg-bubble-attach">📎 '+(m.attachedDocType==='quote'?'Quote':'Invoice')+' attached</div>';
+    }
     if(m.attachments&&m.attachments.length){
       attachHtml+='<div class="msg-bubble-attach">📎 '+m.attachments.map(function(a){return esc(a);}).join(', ')+'</div>';
     }
