@@ -768,6 +768,42 @@ async function deleteCustById(id) {
   } catch(e) { showToast('Error: ' + e.message); }
 }
 
+// ── Render tags in the Notes drawer panel ──
+function renderDrawerTags(cust) {
+  var tagsEl = document.getElementById('cust-tags');
+  if (!tagsEl) return;
+  var tags = (cust && cust.tags) || [];
+  var chips = tags.map(function(t) {
+    return '<span class="cust-tag" style="display:inline-flex;align-items:center;gap:5px;">' +
+      esc(t) +
+      '<span onclick="removeTag(\'' + cust.id + '\',\'' + t.replace(/'/g, "\\'") + '\')" ' +
+      'style="cursor:pointer;font-size:13px;line-height:1;color:var(--gray2);transition:color 0.14s;" ' +
+      'onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--gray2)\'">&times;</span>' +
+      '</span>';
+  }).join('');
+  var addBtn = '<button onclick="openDrawerTagInput()" style="display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px dashed var(--border2);border-radius:20px;padding:3px 10px;color:var(--gray2);font-size:11px;cursor:pointer;transition:all 0.14s;" onmouseover="this.style.borderColor=\'var(--green)\';this.style.color=\'var(--green)\'" onmouseout="this.style.borderColor=\'var(--border2)\';this.style.color=\'var(--gray2)\'">+ Add tag</button>';
+  var inputHtml = '<input id="drawer-tag-input" placeholder="Tag name, press Enter…" style="display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;color:var(--white);font-family:\'DM Sans\',sans-serif;font-size:11px;outline:none;width:140px;" onkeydown="if(event.key===\'Enter\'&&this.value.trim()){addTagFromDrawer(this.value.trim());}" onblur="this.style.display=\'none\';document.getElementById(\'drawer-tag-add-btn\').style.display=\'\'"/>';
+  tagsEl.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">' +
+    chips +
+    '<span id="drawer-tag-add-btn">' + addBtn + '</span>' +
+    '<span id="drawer-tag-input-wrap">' + inputHtml + '</span>' +
+    '</div>';
+}
+
+function openDrawerTagInput() {
+  var btn = document.getElementById('drawer-tag-add-btn');
+  var inp = document.getElementById('drawer-tag-input');
+  if (!btn || !inp) return;
+  btn.style.display = 'none';
+  inp.style.display = 'inline-block';
+  inp.focus();
+}
+
+function addTagFromDrawer(tag) {
+  if (!_currentCustomer) return;
+  addTag(_currentCustomer.id, tag);
+}
+
 // ── Tag Management ──
 function toggleTagPopover(btn, custId) {
   // Close any open popover
@@ -813,6 +849,7 @@ async function addTag(custId, tag) {
   try {
     await API.customers.update(custId, { tags: tags });
     cust.tags = tags;
+    renderDrawerTags(cust);
     loadCustomers();
     showToast('Tag added');
   } catch(e) { showToast('Error: ' + e.message); }
@@ -826,6 +863,7 @@ async function removeTag(custId, tag) {
   try {
     await API.customers.update(custId, { tags: tags });
     cust.tags = tags;
+    renderDrawerTags(cust);
     loadCustomers();
     showToast('Tag removed');
   } catch(e) { showToast('Error: ' + e.message); }
@@ -1011,14 +1049,7 @@ function renderCustomerTabs(cust) {
   }
 
   // Tags
-  var tagsEl = document.getElementById('cust-tags');
-  if (tagsEl) {
-    if (!cust.tags || cust.tags.length === 0) {
-      tagsEl.innerHTML = '<span style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No tags</span>';
-    } else {
-      tagsEl.innerHTML = cust.tags.map(function(t) { return '<span class="cust-tag">' + esc(t) + '</span>'; }).join('');
-    }
-  }
+  renderDrawerTags(cust);
 
   // Notes
   var notesEl = document.getElementById('cust-notes');
