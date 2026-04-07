@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════
-// SWFT — Magnetic Buttons + Cursor Glow
+// SWFT — Magnetic Buttons
 // Include via: <script src="swft-magnetic.js"></script>
 // ════════════════════════════════════════════════
 
@@ -10,7 +10,6 @@
   var STRENGTH = 0.3;
 
   document.addEventListener("mousemove", function (e) {
-    // ── Magnetic buttons ──
     var btns = document.querySelectorAll(".swft-magnetic");
     for (var i = 0; i < btns.length; i++) {
       var btn = btns[i];
@@ -28,15 +27,6 @@
       } else if (btn.style.transform) {
         btn.style.transform = "";
       }
-    }
-
-    // ── Cursor glow on panels ──
-    var panels = document.querySelectorAll(".swft-glow-surface");
-    for (var j = 0; j < panels.length; j++) {
-      var panel = panels[j];
-      var prect = panel.getBoundingClientRect();
-      panel.style.setProperty("--glow-x", (e.clientX - prect.left) + "px");
-      panel.style.setProperty("--glow-y", (e.clientY - prect.top) + "px");
     }
   });
 
