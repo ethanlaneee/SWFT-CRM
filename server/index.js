@@ -513,6 +513,7 @@ app.use("/api/automations",   auth, checkAccess,  automationsRouter);
 app.use("/api/broadcasts",  auth, checkAccess,  require("./routes/broadcasts"));
 app.use("/api/transcribe",    auth, checkAccess,  require("./routes/transcribe"));
 app.use("/api/dev",           auth,               require("./routes/dev"));
+app.use("/api/outreach",      auth,               require("./routes/outreach"));
 
 
 // ── Error handler ──
