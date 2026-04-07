@@ -420,6 +420,10 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke-width="1.8"/><rect x="6" y="14" width="12" height="8" stroke-width="1.8"/></svg>
         Print / Save PDF
       </button>
+      <button class="pdf-btn" id="convert-to-invoice-btn" onclick="convertQuoteToInvoice()" style="display:none;color:#4d9fff;border-color:rgba(77,159,255,0.3);">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M9 15h6" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Convert to Invoice
+      </button>
       <div class="pdf-spacer"></div>
       <button class="pdf-btn primary" id="send-btn" onclick="sendQuote()">Send to Customer</button>
       <button class="pdf-btn primary" onclick="saveEdit()">Save</button>
@@ -501,6 +505,7 @@ async function loadQuotes() {
         '<option value="declined"' + (q.status==='declined'?' selected':'') + '>declined</option>' +
         '</select></div>' +
         '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
+        '<div class="row-btn" onclick="event.stopPropagation();convertQuoteFromRow(\'' + q.id + '\')" title="Convert to Invoice" style="color:#4d9fff;border-color:rgba(77,159,255,0.3);font-size:10px;">INV</div>' +
         '<div class="row-btn" onclick="event.stopPropagation();deleteQuoteById(\'' + q.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">×</div>' +
         '<div class="row-btn">→</div></div>';
       tbody.appendChild(row);
@@ -619,6 +624,10 @@ function openInvoiceModal(inv) {
     }
   }
 
+  // Hide convert-to-invoice button for invoices
+  var cvtBtn = document.getElementById('convert-to-invoice-btn');
+  if (cvtBtn) cvtBtn.style.display = 'none';
+
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -722,6 +731,10 @@ function openModalById(id) {
       sb.textContent = 'Send to Customer';
     }
   }
+
+  // Show convert-to-invoice button for quotes
+  var cvtBtn = document.getElementById('convert-to-invoice-btn');
+  if (cvtBtn) cvtBtn.style.display = '';
 
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -878,6 +891,11 @@ function openNewQuote() {
   document.getElementById('m-doc-type').textContent = 'QUOTE';
   populateEditForm();
   renderLineItems([]);
+
+  // Hide convert button for new unsaved quotes
+  var cvtBtn = document.getElementById('convert-to-invoice-btn');
+  if (cvtBtn) cvtBtn.style.display = 'none';
+
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -992,6 +1010,91 @@ async function sendQuote(){
   closePdfPreview();
   var overlay = document.getElementById('email-compose-overlay');
   overlay.style.display = 'flex';
+}
+
+async function convertQuoteToInvoice() {
+  if (!_q || _q.isInvoice) return;
+
+  try {
+    var ok = await swftConfirm('Create an invoice from this quote? All line items and details will be copied.', 'CONVERT TO INVOICE', '');
+    if (!ok) return;
+  } catch(e) {}
+
+  // Save the quote first to capture any edits
+  try { await saveEdit(true); } catch(e) { showToast('Error saving quote: ' + e.message); return; }
+
+  var items = (_q.lines || []).map(function(l) {
+    return { desc: l.desc || '', qty: l.qty || 1, rate: l.rate || '', total: l.total || '' };
+  });
+  var total = items.reduce(function(s, l) {
+    return s + (parseFloat((l.total || '').toString().replace(/[\$,]/g, '')) || 0);
+  }, 0);
+
+  var data = {
+    customerId: _q.customerId || '',
+    customerName: _q.customer || '',
+    quoteId: _q.id || '',
+    items: items,
+    total: total,
+    notes: _q.job || '',
+    status: 'open',
+    address: _q.address || '',
+    service: _q.service || '',
+    sqft: _q.sqft || '',
+    finish: _q.finish || '',
+    scheduledDate: _q.start || ''
+  };
+
+  try {
+    await API.invoices.create(data);
+    closeModal();
+    loadInvoices();
+    loadQuotes();
+    window._nextInvNum = (window._nextInvNum || 1) + 1;
+    switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
+    showToast('Invoice created from quote — all details copied');
+  } catch(e) { showToast('Error creating invoice: ' + e.message); }
+}
+
+async function convertQuoteFromRow(quoteId) {
+  var q = window._quotes[quoteId];
+  if (!q) { showToast('Quote not found'); return; }
+
+  try {
+    var ok = await swftConfirm('Create an invoice from this quote? All line items and details will be copied.', 'CONVERT TO INVOICE', '');
+    if (!ok) return;
+  } catch(e) {}
+
+  var items = (q.items || []).map(function(l) {
+    return { desc: l.desc || '', qty: l.qty || 1, rate: l.rate || '', total: l.total || '' };
+  });
+  var total = items.reduce(function(s, l) {
+    return s + (parseFloat((l.total || '').toString().replace(/[\$,]/g, '')) || 0);
+  }, 0);
+
+  var data = {
+    customerId: q.customerId || '',
+    customerName: q.customerName || '',
+    quoteId: q.id || '',
+    items: items,
+    total: total,
+    notes: q.notes || '',
+    status: 'open',
+    address: q.address || '',
+    service: q.service || '',
+    sqft: q.sqft || '',
+    finish: q.finish || '',
+    scheduledDate: q.scheduledDate || ''
+  };
+
+  try {
+    await API.invoices.create(data);
+    loadInvoices();
+    loadQuotes();
+    window._nextInvNum = (window._nextInvNum || 1) + 1;
+    switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]);
+    showToast('Invoice created from quote — all details copied');
+  } catch(e) { showToast('Error creating invoice: ' + e.message); }
 }
 
 function closeEmailCompose() {
