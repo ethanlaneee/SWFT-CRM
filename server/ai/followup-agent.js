@@ -15,7 +15,7 @@
  */
 
 const { db } = require("../firebase");
-const { sendSms } = require("../twilio");
+const { sendSms, getUserTwilioConfig } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const { google } = require("googleapis");
@@ -399,7 +399,7 @@ async function processFollowups() {
 
       // Send SMS (if phone on file)
       if (followup.phone) {
-        await sendSms(followup.phone, followup.message);
+        await sendSms(followup.phone, followup.message, getUserTwilioConfig(owner.user));
         await incrementSms(owner.uid);
       }
 

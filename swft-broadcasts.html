@@ -182,13 +182,7 @@
     <div class="compose-card" style="animation:fadeUp 0.3s ease 0.1s both;">
       <h3>Compose Broadcast</h3>
 
-      <div class="form-row">
-        <label>Channel</label>
-        <select id="bc-channel" onchange="onChannelChange()">
-          <option value="email">Email</option>
-          <option value="sms">SMS</option>
-        </select>
-      </div>
+      <input type="hidden" id="bc-channel" value="email">
 
       <div class="form-row">
         <label>Recipients</label>
@@ -310,7 +304,6 @@ function _toggleTag(tag) {
 }
 
 function updateRecipientCount() {
-  var channel = document.getElementById("bc-channel").value;
   var filter = document.getElementById("bc-filter").value;
   var custs = allCustomers.slice();
 
@@ -318,20 +311,10 @@ function updateRecipientCount() {
     custs = custs.filter(function(c) { return (c.tags || []).some(function(t) { return selectedTags.has(t); }); });
   }
 
-  if (channel === "email") {
-    custs = custs.filter(function(c) { return c.email; });
-  } else {
-    custs = custs.filter(function(c) { return c.phone; });
-  }
+  custs = custs.filter(function(c) { return c.email; });
 
   var el = document.getElementById("recipient-count");
-  el.innerHTML = '<strong>' + custs.length + '</strong> ' + (channel === "email" ? "customers with email" : "customers with phone number");
-}
-
-function onChannelChange() {
-  var ch = document.getElementById("bc-channel").value;
-  document.getElementById("subject-row").style.display = ch === "email" ? "" : "none";
-  updateRecipientCount();
+  el.innerHTML = '<strong>' + custs.length + '</strong> customers with email';
 }
 
 function onFilterChange() {
@@ -341,13 +324,12 @@ function onFilterChange() {
 }
 
 async function sendBroadcast() {
-  var channel = document.getElementById("bc-channel").value;
   var filter = document.getElementById("bc-filter").value;
   var subject = document.getElementById("bc-subject").value.trim();
   var message = document.getElementById("bc-message").value.trim();
 
   if (!message) return showToast("Please enter a message");
-  if (channel === "email" && !subject) return showToast("Please enter a subject");
+  if (!subject) return showToast("Please enter a subject");
 
   var btn = document.getElementById("btn-send");
   var status = document.getElementById("send-status");
@@ -355,7 +337,7 @@ async function sendBroadcast() {
   status.textContent = "Sending...";
 
   try {
-    var body = { channel: channel, message: message, recipientFilter: filter, subject: subject };
+    var body = { channel: "email", message: message, recipientFilter: filter, subject: subject };
     if (filter === "tagged") body.tags = Array.from(selectedTags);
 
     var result = await apiFetch("/api/broadcasts", { method: "POST", body: JSON.stringify(body) });
@@ -385,14 +367,12 @@ async function loadHistory() {
     list.innerHTML = broadcasts.map(function(b) {
       var date = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
       var channelClass = b.channel || "email";
-      var channelIcon = channelClass === "sms"
-        ? '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2"/></svg>'
-        : '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke-width="2"/></svg>';
+      var channelIcon = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke-width="2"/></svg>';
       var statusClass = b.status || "sent";
       var meta = (b.sentCount || 0) + ' sent' + (b.failedCount ? ', ' + b.failedCount + ' failed' : '') + ' of ' + (b.totalRecipients || 0);
-      var title = b.subject || (b.channel === "sms" ? "SMS Broadcast" : "Email Broadcast");
+      var title = b.subject || "Email Broadcast";
       return '<div class="history-row">' +
-        '<div class="history-channel ' + channelClass + '">' + channelIcon + '</div>' +
+        '<div class="history-channel email">' + channelIcon + '</div>' +
         '<div class="history-info">' +
           '<div class="history-subject">' + title + '</div>' +
           '<div class="history-meta">' + date + ' &middot; ' + meta + '</div>' +
