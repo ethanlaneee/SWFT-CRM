@@ -11,7 +11,7 @@
 :root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--sidebar-w:228px;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html{background:#0a0a0a;}
-body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;visibility:hidden;}
+body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;opacity:0;transition:opacity 0.15s;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 @keyframes glow{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(200,241,53,0.5);}50%{opacity:0.6;box-shadow:0 0 0 4px rgba(200,241,53,0);}}
@@ -781,7 +781,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       window.location.href = 'swft-login';
       return;
     }
-    document.body.style.visibility = 'visible';
+    document.body.style.opacity = '1';
 
     // ── Verify Stripe payment on return from Checkout ──
     // Stripe appends ?session_id=cs_xxx to the success_url.
@@ -807,43 +807,35 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       history.replaceState({}, '', window.location.pathname);
     }
 
-    // Get name from Firebase Auth profile, then Firestore, then email
+    // Get name from Firebase Auth profile immediately — no Firestore wait needed
     let firstName = user.displayName?.split(' ')[0];
-    if (!firstName) {
-      try {
-        const snap = await getDoc(doc(db, 'users', user.uid));
-        if (snap.exists()) {
-          const data = snap.data();
-          firstName = data.firstName || data.name?.split(' ')[0];
-        }
-      } catch(e) {}
-    }
     if (!firstName && user.email) firstName = user.email.split('@')[0];
     if (!firstName) firstName = 'Boss';
 
-    // Update greeting
-    const greetEl = document.getElementById('greeting-name');
-    if (greetEl) greetEl.textContent = firstName.toUpperCase() + '.';
+    // Update greeting immediately (don't wait for any data)
     const h2 = document.querySelector('.greeting h2');
     if (h2) h2.innerHTML = `${getGreeting()}, <em id="greeting-name">${firstName.toUpperCase()}.</em>`;
 
-    // Update greeting sub
     const now = new Date();
     const dayStr = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
     const subEl = document.getElementById('greeting-sub');
-    if (subEl) // Load real stats
-    try {
-      var stats = await API.dashboard.stats();
+    if (subEl) subEl.textContent = dayStr;
+
+    // Fire all data fetches in parallel — no sequential waiting
+    const [stats, followupStats] = await Promise.all([
+      API.dashboard.stats().catch(() => null),
+      API.agents.followupStats().catch(() => null),
+    ]);
+
+    // Update greeting sub with stats
+    if (subEl && stats) {
       var jobsToday = stats.activeJobs || 0;
       var openQuotes = stats.activeQuotes || 0;
       subEl.textContent = dayStr + ' · ' + jobsToday + ' jobs active · ' + openQuotes + ' quotes open';
-    } catch(e) {
-      subEl.textContent = dayStr;
     }
 
     // ── Load Automations stats strip ──
     try {
-      const followupStats = await API.agents.followupStats().catch(()=>null);
       if (followupStats) {
         const strip = document.getElementById('agent-strip');
         const statsEl = document.getElementById('agent-strip-stats');
@@ -864,8 +856,6 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
         statsEl.innerHTML = html;
       }
     } catch(e) { console.error('Automations strip error:', e); }
-
-  });
 </script>
 
 <!-- NEW JOB MODAL -->
