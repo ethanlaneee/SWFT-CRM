@@ -353,6 +353,26 @@ app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
 // ── Root → landing page (must be before static middleware) ──
 app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
 
+// ── Weather proxy (avoids CORS issues with Open-Meteo) ──
+app.get("/api/weather", (req, res) => {
+  const { lat, lon, units } = req.query;
+  const latitude = parseFloat(lat) || 30.27;
+  const longitude = parseFloat(lon) || -97.74;
+  const tempUnit = units === "celsius" ? "celsius" : "fahrenheit";
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=${tempUnit}&timezone=auto&forecast_days=16`;
+  require("https").get(url, (upstream) => {
+    let body = "";
+    upstream.on("data", (chunk) => { body += chunk; });
+    upstream.on("end", () => {
+      try {
+        const data = JSON.parse(body);
+        res.set("Cache-Control", "public, max-age=1800");
+        res.json(data);
+      } catch (e) { res.status(502).json({ error: "Weather parse failed" }); }
+    });
+  }).on("error", () => res.status(502).json({ error: "Weather fetch failed" }));
+});
+
 // ── Health check (before URL rewrite so /health doesn't become /health.html) ──
 app.get("/health", async (req, res) => {
   const fb = require("./firebase");
