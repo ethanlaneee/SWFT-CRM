@@ -367,15 +367,65 @@ app.get("/api/weather", auth, async (req, res) => {
     const latitude = parseFloat(lat) || 30.27;
     const longitude = parseFloat(lon) || -97.74;
     const tempUnit = units === "celsius" ? "celsius" : "fahrenheit";
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=${tempUnit}&timezone=auto&forecast_days=16`;
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      console.error("Open-Meteo error:", resp.status, await resp.text().catch(() => ""));
-      return res.status(502).json({ error: "Weather service unavailable" });
-    }
-    const data = await resp.json();
-    res.set("Cache-Control", "public, max-age=1800");
-    res.json(data);
+
+    // Try Open-Meteo first (16-day forecast)
+    try {
+      const omUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=${tempUnit}&timezone=auto&forecast_days=16`;
+      const omResp = await fetch(omUrl, { signal: AbortSignal.timeout(5000) });
+      if (omResp.ok) {
+        const data = await omResp.json();
+        res.set("Cache-Control", "public, max-age=1800");
+        return res.json(data);
+      }
+    } catch (e) { console.warn("Open-Meteo failed, trying fallback:", e.message); }
+
+    // Fallback: wttr.in (3-day, always available, no key needed)
+    try {
+      const wttrResp = await fetch(`https://wttr.in/${latitude},${longitude}?format=j1`, { signal: AbortSignal.timeout(5000) });
+      if (!wttrResp.ok) throw new Error("wttr.in " + wttrResp.status);
+      const wttr = await wttrResp.json();
+
+      // Map WWO weather codes to WMO codes
+      const wwoToWmo = (code) => {
+        const c = parseInt(code) || 0;
+        if (c <= 113) return 0;   // Clear
+        if (c <= 116) return 2;   // Partly cloudy
+        if (c <= 122) return 3;   // Overcast
+        if (c <= 143) return 45;  // Fog
+        if (c <= 182) return 51;  // Drizzle/light precip
+        if (c <= 248) return 45;  // Fog
+        if (c <= 284) return 55;  // Freezing drizzle
+        if (c <= 302) return 61;  // Light rain
+        if (c <= 314) return 63;  // Rain
+        if (c <= 356) return 65;  // Heavy rain
+        if (c <= 377) return 73;  // Snow
+        if (c <= 395) return 95;  // Thunder
+        return 3;
+      };
+
+      const useCelsius = tempUnit === "celsius";
+      const cc = wttr.current_condition?.[0] || {};
+      const days = wttr.weather || [];
+
+      // Build Open-Meteo compatible response
+      const data = {
+        current_weather: {
+          temperature: parseFloat(useCelsius ? cc.temp_C : cc.temp_F) || 0,
+          weathercode: wwoToWmo(cc.weatherCode),
+        },
+        daily: {
+          time: days.map(d => d.date),
+          weathercode: days.map(d => wwoToWmo(d.hourly?.[4]?.weatherCode || d.hourly?.[0]?.weatherCode || 0)),
+          temperature_2m_max: days.map(d => parseFloat(useCelsius ? d.maxtempC : d.maxtempF) || 0),
+          temperature_2m_min: days.map(d => parseFloat(useCelsius ? d.mintempC : d.mintempF) || 0),
+        },
+      };
+
+      res.set("Cache-Control", "public, max-age=1800");
+      return res.json(data);
+    } catch (e2) { console.error("wttr.in fallback also failed:", e2.message); }
+
+    res.status(502).json({ error: "All weather services unavailable" });
   } catch (e) {
     res.status(500).json({ error: "Internal error" });
   }
