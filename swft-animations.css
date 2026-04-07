@@ -106,6 +106,7 @@
 .cust-row,
 .job-row,
 .inv-row,
+.q-row,
 .schedule-row,
 .activity-item {
   position: relative;
@@ -114,6 +115,7 @@
 .cust-row::after,
 .job-row::after,
 .inv-row::after,
+.q-row::after,
 .schedule-row::after,
 .activity-item::after {
   content: '';
@@ -132,6 +134,7 @@
 .cust-row:hover::after,
 .job-row:hover::after,
 .inv-row:hover::after,
+.q-row:hover::after,
 .schedule-row:hover::after,
 .activity-item:hover::after {
   opacity: 1;
