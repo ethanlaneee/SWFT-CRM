@@ -235,6 +235,7 @@ async function processScheduledMessages() {
 
   const allDocs = [...pendingDocs.slice(0, 20), ...retryDocs.slice(0, 10)];
   if (!allDocs.length) return;
+  console.log(`[automation worker] Processing ${allDocs.length} messages`);
 
   console.log(`[automation worker] Processing ${allDocs.length} messages`);
 
