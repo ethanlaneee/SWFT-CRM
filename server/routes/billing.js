@@ -176,6 +176,25 @@ router.get("/plans", (req, res) => {
   });
 });
 
+// POST /api/billing/portal — Create Stripe Customer Portal session
+router.post("/portal", async (req, res, next) => {
+  try {
+    const stripe = getStripe();
+    const userDoc = await users().doc(req.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    if (!userData.stripeCustomerId) {
+      return res.status(400).json({ error: "No billing account found. Please subscribe to a plan first." });
+    }
+    const session = await stripe.billingPortal.sessions.create({
+      customer: userData.stripeCustomerId,
+      return_url: `${req.headers.origin || "https://goswft.com"}/swft-settings`,
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/billing/purchase-pack
 //

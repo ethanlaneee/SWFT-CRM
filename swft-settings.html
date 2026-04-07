@@ -79,6 +79,28 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .settings-field{display:flex;flex-direction:column;gap:4px;}
 .settings-field label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
 
+/* Billing section */
+.billing-plan-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+.billing-plan-badge.starter{background:rgba(200,241,53,0.08);color:var(--green);border:1px solid rgba(200,241,53,0.2);}
+.billing-plan-badge.pro{background:rgba(77,159,255,0.08);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
+.billing-plan-badge.business{background:rgba(245,166,35,0.08);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
+.billing-plan-card{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:18px 20px;}
+.billing-plan-info{display:flex;flex-direction:column;gap:4px;}
+.billing-plan-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;}
+.billing-plan-price{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gray);}
+.billing-plan-cycle{font-size:11px;color:var(--gray2);margin-top:2px;}
+.billing-usage-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px;}
+.billing-usage-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+.billing-usage-fill.green{background:var(--green);}
+.billing-usage-fill.amber{background:var(--amber);}
+.billing-usage-fill.red{background:var(--red);}
+.billing-usage-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--gray);font-family:'JetBrains Mono',monospace;}
+.billing-status{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;}
+.billing-status.active{background:rgba(200,241,53,0.1);color:var(--green);}
+.billing-status.trialing{background:rgba(77,159,255,0.1);color:var(--blue);}
+.billing-status.canceled{background:rgba(255,82,82,0.1);color:var(--red);}
+.billing-status.expired{background:rgba(255,82,82,0.1);color:var(--red);}
+
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
@@ -177,6 +199,67 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
       <button class="settings-btn primary" onclick="saveSettings('company')">Save Company Info</button>
     </div>
+  </div>
+</div>
+
+<!-- Plan & Billing -->
+<div class="settings-section" id="billing-section">
+  <div class="settings-header"><span class="settings-header-icon">💳</span><h3>PLAN & BILLING</h3></div>
+  <div class="settings-body">
+
+    <!-- Current Plan -->
+    <div class="billing-plan-card">
+      <div class="billing-plan-info">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="billing-plan-name" id="billing-plan-name">—</span>
+          <span class="billing-plan-badge starter" id="billing-plan-badge">STARTER</span>
+          <span class="billing-status trialing" id="billing-status">—</span>
+        </div>
+        <div class="billing-plan-price" id="billing-plan-price">$0/mo</div>
+        <div class="billing-plan-cycle" id="billing-plan-cycle"></div>
+      </div>
+      <a href="/swft-checkout" class="settings-btn primary" id="billing-upgrade-btn">Upgrade Plan</a>
+    </div>
+
+    <!-- Usage: SMS -->
+    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="settings-row-label">SMS Usage</div>
+        <div class="billing-usage-labels"><span id="billing-sms-label">0 / 0</span></div>
+      </div>
+      <div class="billing-usage-bar"><div class="billing-usage-fill green" id="billing-sms-bar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Usage: AI Messages -->
+    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="settings-row-label">AI Messages</div>
+        <div class="billing-usage-labels"><span id="billing-ai-label">0 / 0</span></div>
+      </div>
+      <div class="billing-usage-bar"><div class="billing-usage-fill green" id="billing-ai-bar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Manage Billing -->
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Payment & Invoices</div>
+        <div class="settings-row-desc">Update your payment method, view invoices, or change your billing cycle via Stripe.</div>
+      </div>
+      <button class="settings-btn" id="billing-portal-btn" onclick="openBillingPortal()">Manage Billing</button>
+    </div>
+
+    <!-- Buy Packs -->
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Need More?</div>
+        <div class="settings-row-desc">Buy top-up packs anytime — $15 for 200 SMS or $10 for 100 AI messages.</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="settings-btn" onclick="buyPack('sms')">+ SMS Pack</button>
+        <button class="settings-btn" onclick="buyPack('ai')">+ AI Pack</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -543,7 +626,104 @@ async function loadSettings() {
     if (data.bizHours) document.getElementById('s-biz-hours').value = data.bizHours;
     if (data.bizWebsite) document.getElementById('s-biz-website').value = data.bizWebsite;
     if (data.bizNotes) document.getElementById('s-biz-notes').value = data.bizNotes;
+
+    // Populate billing section
+    loadBillingInfo(data, token);
   } catch (e) {}
+}
+
+const PLAN_PRICES = { starter: { monthly: 89, annual: 71 }, pro: { monthly: 179, annual: 143 }, business: { monthly: 349, annual: 279 } };
+
+async function loadBillingInfo(userData, token) {
+  try {
+    var plan = userData.plan || 'starter';
+    var cycle = userData.billingCycle || 'monthly';
+    var status = userData.accountStatus || 'trialing';
+    var prices = PLAN_PRICES[plan] || PLAN_PRICES.starter;
+    var price = cycle === 'annual' ? prices.annual : prices.monthly;
+
+    // Plan name & badge
+    var nameEl = document.getElementById('billing-plan-name');
+    var badgeEl = document.getElementById('billing-plan-badge');
+    var statusEl = document.getElementById('billing-status');
+    var priceEl = document.getElementById('billing-plan-price');
+    var cycleEl = document.getElementById('billing-plan-cycle');
+
+    nameEl.textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+    badgeEl.textContent = plan.toUpperCase();
+    badgeEl.className = 'billing-plan-badge ' + plan;
+    priceEl.textContent = '$' + price + '/mo';
+    cycleEl.textContent = cycle === 'annual' ? 'Billed annually (save 20%)' : 'Billed monthly';
+
+    // Status
+    var statusLabels = { active: 'Active', trialing: 'Trial', canceled: 'Canceled', expired: 'Expired' };
+    statusEl.textContent = statusLabels[status] || status;
+    statusEl.className = 'billing-status ' + status;
+
+    if (userData.trialEndDate && status === 'trialing') {
+      var trialEnd = new Date(userData.trialEndDate._seconds ? userData.trialEndDate._seconds * 1000 : userData.trialEndDate);
+      var daysLeft = Math.max(0, Math.ceil((trialEnd - Date.now()) / 86400000));
+      cycleEl.textContent += ' — ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' left in trial';
+    }
+
+    // Upgrade button — hide for business
+    var upgradeBtn = document.getElementById('billing-upgrade-btn');
+    if (plan === 'business') {
+      upgradeBtn.style.display = 'none';
+    } else {
+      upgradeBtn.href = '/swft-checkout?plan=' + (plan === 'starter' ? 'pro' : 'business');
+      upgradeBtn.textContent = plan === 'starter' ? 'Upgrade to Pro' : 'Upgrade to Business';
+    }
+
+    // Usage bars
+    var usageRes = await fetch('/api/me/usage', { headers: { 'Authorization': 'Bearer ' + token } });
+    var usage = await usageRes.json();
+
+    updateUsageBar('sms', usage.sms.used, usage.sms.limit);
+    updateUsageBar('ai', usage.ai.used, usage.ai.limit);
+
+    // Hide portal button if no stripe customer
+    if (!userData.stripeCustomerId) {
+      document.getElementById('billing-portal-btn').style.display = 'none';
+    }
+  } catch (e) { console.warn('Billing load error:', e); }
+}
+
+function updateUsageBar(type, used, limit) {
+  var bar = document.getElementById('billing-' + type + '-bar');
+  var label = document.getElementById('billing-' + type + '-label');
+  if (limit === 'unlimited' || limit === Infinity) {
+    label.textContent = used + ' / Unlimited';
+    bar.style.width = '0%';
+    bar.className = 'billing-usage-fill green';
+  } else {
+    var pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
+    label.textContent = used + ' / ' + limit;
+    bar.style.width = pct + '%';
+    bar.className = 'billing-usage-fill ' + (pct >= 90 ? 'red' : pct >= 70 ? 'amber' : 'green');
+  }
+}
+
+async function openBillingPortal() {
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/billing/portal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+    });
+    var data = await res.json();
+    if (data.url) {
+      window.open(data.url, '_blank');
+    } else {
+      showToast(data.error || 'Could not open billing portal');
+    }
+  } catch (e) {
+    showToast('Error opening billing portal');
+  }
+}
+
+function buyPack(type) {
+  window.location.href = '/swft-billing?buy=' + type;
 }
 
 async function deleteAccount() {
