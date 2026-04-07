@@ -506,6 +506,18 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     serviceEl.selectedIndex = 0;
     crewEl.selectedIndex = 0;
   }
+  // ── Text-to-speech ──
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const clean = text.replace(/\*\*/g,'').replace(/\*/g,'').replace(/^[-•]\s/gm,'').replace(/^#+\s/gm,'').trim();
+    if (!clean) return;
+    const utt = new SpeechSynthesisUtterance(clean);
+    utt.rate = 1.05;
+    utt.pitch = 1;
+    window.speechSynthesis.speak(utt);
+  }
+
   // ── DASHBOARD AI CHAT ──
   let _dashSending = false;
 
@@ -547,6 +559,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'AI error');
       addDashMsg('assistant', data.message);
+      speak(data.message);
     } catch (err) {
       addDashMsg('assistant', 'Something went wrong: ' + err.message);
     } finally {

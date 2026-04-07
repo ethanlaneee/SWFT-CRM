@@ -677,8 +677,9 @@
         });
       }
 
-      // Show response
+      // Show response and speak it
       addMessage("assistant", data.message);
+      speak(data.message);
 
       // Dispatch event so current page can refresh data
       window.dispatchEvent(new CustomEvent("swft-ai-action", {
@@ -713,6 +714,18 @@
     }
   }
 
+
+  // ── Text-to-speech ──
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel(); // stop any ongoing speech
+    const clean = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/^[-•]\s/gm, '').replace(/^#+\s/gm, '').trim();
+    if (!clean) return;
+    const utt = new SpeechSynthesisUtterance(clean);
+    utt.rate = 1.05;
+    utt.pitch = 1;
+    window.speechSynthesis.speak(utt);
+  }
 
   // ── Voice Input — MediaRecorder → Whisper ──
   const micBtn = document.getElementById('swft-chat-mic');
