@@ -37,22 +37,63 @@ async function createSubAccount(friendlyName) {
 }
 
 /**
- * Buy a local phone number for a sub-account.
- * Searches for available numbers in the US and provisions the first match.
+ * Buy a local phone number for a sub-account in the user's country/region.
+ * Searches for available numbers with SMS capability and provisions the first match.
+ *
  * @param {string} subAccountSid
  * @param {string} subAccountAuthToken
  * @param {string} webhookUrl - URL for incoming SMS webhook
+ * @param {{ countryCode?: string, areaCode?: string }} [options]
+ *   countryCode: ISO 3166-1 alpha-2 (e.g. "US", "CA", "GB"). Defaults to "US".
+ *   areaCode: Optional area/region code to get a number local to the user's city.
  * @returns {{ phoneNumber: string, phoneSid: string }}
  */
-async function buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl) {
+async function buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl, options = {}) {
   const subClient = twilio(subAccountSid, subAccountAuthToken);
+  const countryCode = (options.countryCode || "US").toUpperCase();
+  const searchParams = { smsEnabled: true, limit: 1 };
 
-  // Search for an available local number with SMS capability
-  const available = await subClient.availablePhoneNumbers("US")
-    .local.list({ smsEnabled: true, limit: 1 });
+  // If an area code is provided, try to get a number in that region
+  if (options.areaCode) {
+    searchParams.areaCode = options.areaCode;
+  }
+
+  // Try local numbers first, then fall back to mobile (some countries only have mobile)
+  let available = [];
+  try {
+    available = await subClient.availablePhoneNumbers(countryCode)
+      .local.list(searchParams);
+  } catch (err) {
+    // Some countries (e.g. UK) may not support "local" — try mobile
+    console.log(`[twilio] No local numbers for ${countryCode}, trying mobile:`, err.message);
+  }
 
   if (!available.length) {
-    throw new Error("No available phone numbers found. Please try again or contact support.");
+    try {
+      available = await subClient.availablePhoneNumbers(countryCode)
+        .mobile.list(searchParams);
+    } catch (err) {
+      console.log(`[twilio] No mobile numbers for ${countryCode}:`, err.message);
+    }
+  }
+
+  // Last resort: if area code was too restrictive, retry without it
+  if (!available.length && options.areaCode) {
+    delete searchParams.areaCode;
+    try {
+      available = await subClient.availablePhoneNumbers(countryCode)
+        .local.list(searchParams);
+    } catch (_) { /* already logged */ }
+    if (!available.length) {
+      try {
+        available = await subClient.availablePhoneNumbers(countryCode)
+          .mobile.list(searchParams);
+      } catch (_) { /* already logged */ }
+    }
+  }
+
+  if (!available.length) {
+    throw new Error(`No available phone numbers found for country ${countryCode}. Please try again or contact support.`);
   }
 
   // Purchase the number and configure the SMS webhook

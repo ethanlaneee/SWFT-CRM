@@ -48,13 +48,20 @@ router.get("/", async (req, res, next) => {
       };
       await col().doc(req.uid).set(profile);
 
-      // Provision a dedicated Twilio sub-account + phone number for this user
+      // Provision a dedicated Twilio sub-account + phone number for this user.
+      // Use geo-IP country header (set by CDN/proxy) or default to US.
       try {
         const friendlyName = `SWFT - ${req.user.email || req.uid}`;
         const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
+        const countryCode = req.headers["cf-ipcountry"]  // Cloudflare
+          || req.headers["x-vercel-ip-country"]           // Vercel
+          || req.headers["x-country-code"]                // Custom proxy
+          || "US";
 
         const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
-        const { phoneNumber, phoneSid } = await buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl);
+        const { phoneNumber, phoneSid } = await buyPhoneNumber(
+          subAccountSid, subAccountAuthToken, webhookUrl, { countryCode }
+        );
 
         const twilioFields = {
           twilioSubAccountSid: subAccountSid,
@@ -85,7 +92,7 @@ router.put("/", async (req, res, next) => {
       // Profile
       "name", "firstName", "lastName", "email", "company", "phone",
       // Company
-      "address", "website",
+      "address", "country", "website",
       // Defaults
       "taxRate", "paymentTerms", "serviceTypes", "crewNames",
       // Preferences
@@ -140,8 +147,16 @@ router.post("/setup-twilio", async (req, res, next) => {
     const friendlyName = `SWFT - ${data.email || req.user.email || req.uid}`;
     const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
 
+    // Country can come from request body, user profile, or geo-IP headers
+    const countryCode = req.body.countryCode || data.country
+      || req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"]
+      || req.headers["x-country-code"] || "US";
+    const areaCode = req.body.areaCode || undefined;
+
     const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
-    const { phoneNumber, phoneSid } = await buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl);
+    const { phoneNumber, phoneSid } = await buyPhoneNumber(
+      subAccountSid, subAccountAuthToken, webhookUrl, { countryCode, areaCode }
+    );
 
     await col().doc(req.uid).set({
       twilioSubAccountSid: subAccountSid,
