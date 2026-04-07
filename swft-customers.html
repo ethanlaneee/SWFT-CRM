@@ -105,7 +105,7 @@ transition:border-color 0.15s;
 
 .table-head {
 display:grid;
-grid-template-columns: 1.6fr 1.4fr 1.1fr 1.4fr 1fr 80px;
+grid-template-columns: 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
 padding:11px 20px;
 border-bottom:1px solid var(--border);
 background:var(--surface2);
@@ -124,7 +124,7 @@ user-select:none; transition:color 0.14s;
 
 .cust-row {
 display:grid;
-grid-template-columns: 1.6fr 1.4fr 1.1fr 1.4fr 1fr 80px;
+grid-template-columns: 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
 padding:13px 20px;
 border-bottom:1px solid var(--border);
 align-items:center;
@@ -274,18 +274,18 @@ border:1px solid var(--border); border-radius:10px;
 .hist-meta { font-size:11px; color:var(--gray); margin-top:2px; }
 .hist-amount { font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500; color:var(--white); }
 
-/* Invoices */
-.invoice-item {
-display:flex; align-items:center; gap:12px;
-padding:11px 14px; background:var(--surface2);
-border:1px solid var(--border); border-radius:10px;
-}
-.inv-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gray2); width:52px; flex-shrink:0; }
-.inv-desc { flex:1; font-size:12.5px; color:var(--white); }
-.inv-amount { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--white); font-weight:500; }
-.inv-badge { font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:5px; }
-.inv-paid { background:rgba(200,241,53,0.1); color:var(--green); }
-.inv-open { background:rgba(245,166,35,0.1); color:var(--amber); }
+/* Tags in table */
+.cust-tags-cell { display:flex; gap:4px; flex-wrap:wrap; align-items:center; overflow:hidden; }
+.cust-tags-cell .cust-tag { font-size:10px; font-weight:500; padding:2px 8px; border-radius:12px; border:1px solid var(--border2); color:var(--gray); white-space:nowrap; }
+.cust-tags-cell .tag-add-btn { width:20px; height:20px; border-radius:50%; border:1px dashed var(--border2); background:transparent; color:var(--gray2); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.14s; flex-shrink:0; }
+.cust-tags-cell .tag-add-btn:hover { border-color:var(--green); color:var(--green); }
+.tag-popover { position:absolute; top:100%; left:0; z-index:500; background:var(--surface); border:1px solid var(--border2); border-radius:10px; padding:10px; min-width:200px; box-shadow:0 8px 24px rgba(0,0,0,0.4); display:flex; flex-direction:column; gap:6px; }
+.tag-popover input { background:var(--surface2); border:1px solid var(--border2); border-radius:6px; padding:6px 10px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
+.tag-popover input:focus { border-color:var(--green); }
+.tag-popover .tag-list { display:flex; flex-wrap:wrap; gap:4px; }
+.tag-popover .tag-chip { font-size:10px; padding:3px 8px; border-radius:12px; background:var(--surface2); border:1px solid var(--border2); color:var(--gray); cursor:pointer; display:flex; align-items:center; gap:4px; }
+.tag-popover .tag-chip:hover { border-color:var(--red); color:var(--red); }
+.tag-popover .tag-chip .tag-x { font-size:12px; line-height:1; }
 
 /* Notes */
 .note-item { padding:12px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; }
@@ -527,6 +527,7 @@ user-select:none;
     <div class="th">Phone</div>
     <div class="th">Email</div>
     <div class="th">Status</div>
+    <div class="th">Tags</div>
     <div class="th"></div>
   </div>
   <div class="table-body" id="table-body"></div>
@@ -578,7 +579,6 @@ user-select:none;
   <div class="drawer-tabs">
     <div class="dtab active" onclick="switchTab(this,'contact')">Info</div>
     <div class="dtab" onclick="switchTab(this,'jobs')">Job History</div>
-    <div class="dtab" onclick="switchTab(this,'invoices')">Invoices</div>
     <div class="dtab" onclick="switchTab(this,'notes')">Notes</div>
     <div class="dtab" onclick="switchTab(this,'ai-activity')" style="color:#c8f135;">AI</div>
   </div>
@@ -658,11 +658,6 @@ user-select:none;
   <div id="cust-job-list" style="display:flex;flex-direction:column;gap:8px;"></div>
 </div>
 
-<div id="tab-invoices" style="display:none;">
-  <div class="drawer-section-title">Invoices</div>
-  <div id="cust-inv-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-</div>
-
 <div id="tab-notes" style="display:none;">
   <div class="drawer-section-title">Tags</div>
   <div id="cust-tags" class="tags-row" style="margin-bottom:16px;"></div>
@@ -733,6 +728,7 @@ async function loadCustomers() {
   try {
     const list = await API.customers.list();
     window._customers = {};
+    window._custList = list;
     const countEl = document.getElementById('cust-count');
     if (countEl) countEl.textContent = list.length + ' contact' + (list.length !== 1 ? 's' : '');
     const tbody = document.getElementById('table-body');
@@ -757,7 +753,8 @@ async function loadCustomers() {
         '<div class="cust-phone">' + esc(cust.phone||'—') + '</div>' +
         '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(cust.email||'—') + '</div>' +
         '<div class="cust-status"><span class="status-active">Active</span></div>' +
-        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:11px;">x</div><div class="row-btn">→</div></div>';
+        '<div class="cust-tags-cell" style="position:relative;" onclick="event.stopPropagation()">' + ((cust.tags||[]).length > 0 ? (cust.tags||[]).map(function(t){ return '<span class="cust-tag">' + esc(t) + '</span>'; }).join('') : '') + '<button class="tag-add-btn" onclick="event.stopPropagation();toggleTagPopover(this,\'' + cust.id + '\')">+</button></div>' +
+        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);font-size:16px;">x</div><div class="row-btn">→</div></div>';
       tbody.appendChild(row);
     });
   } catch(e) { console.error('loadCustomers error:', e); }
@@ -773,6 +770,68 @@ async function deleteCustById(id) {
   } catch(e) { showToast('Error: ' + e.message); }
 }
 
+// ── Tag Management ──
+function toggleTagPopover(btn, custId) {
+  // Close any open popover
+  var existing = document.querySelector('.tag-popover');
+  if (existing) { existing.remove(); return; }
+
+  var cell = btn.closest('.cust-tags-cell');
+  var customers = window._custList || [];
+  var cust = customers.find(function(c) { return c.id === custId; });
+  var tags = (cust && cust.tags) || [];
+
+  var pop = document.createElement('div');
+  pop.className = 'tag-popover';
+  pop.onclick = function(e) { e.stopPropagation(); };
+  pop.innerHTML =
+    '<div class="tag-list">' + tags.map(function(t) {
+      return '<span class="tag-chip" onclick="removeTag(\'' + custId + '\',\'' + t.replace(/'/g, "\\'") + '\')">' + esc(t) + '<span class="tag-x">&times;</span></span>';
+    }).join('') + '</div>' +
+    '<input type="text" placeholder="Add tag..." onkeydown="if(event.key===\'Enter\'){addTag(\'' + custId + '\',this.value);this.value=\'\';}">';
+
+  cell.appendChild(pop);
+
+  // Focus the input
+  pop.querySelector('input').focus();
+
+  // Close on outside click
+  setTimeout(function() {
+    document.addEventListener('click', function closePopover(e) {
+      if (!pop.contains(e.target)) { pop.remove(); document.removeEventListener('click', closePopover); }
+    });
+  }, 0);
+}
+
+async function addTag(custId, tag) {
+  tag = tag.trim();
+  if (!tag) return;
+  var customers = window._custList || [];
+  var cust = customers.find(function(c) { return c.id === custId; });
+  if (!cust) return;
+  var tags = (cust.tags || []).slice();
+  if (tags.indexOf(tag) !== -1) { showToast('Tag already exists'); return; }
+  tags.push(tag);
+  try {
+    await API.customers.update(custId, { tags: tags });
+    cust.tags = tags;
+    loadCustomers();
+    showToast('Tag added');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function removeTag(custId, tag) {
+  var customers = window._custList || [];
+  var cust = customers.find(function(c) { return c.id === custId; });
+  if (!cust) return;
+  var tags = (cust.tags || []).filter(function(t) { return t !== tag; });
+  try {
+    await API.customers.update(custId, { tags: tags });
+    cust.tags = tags;
+    loadCustomers();
+    showToast('Tag removed');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
 
 let _currentCustomer = null;
 const _avatarColors = ['#c8f135','#4d9fff','#f5a623','#b388ff','#ff7b7b','#4dd0c4'];
@@ -901,19 +960,6 @@ function renderCustomerTabs(cust) {
     } else {
       jobList.innerHTML = cust.jobHistory.map(function(j) {
         return '<div class="job-hist-item"><div class="hist-dot" style="background:' + (j.color || 'var(--gray2)') + ';"></div><div class="hist-info"><div class="hist-name">' + j.name + '</div><div class="hist-meta">' + j.meta + '</div></div><div class="hist-amount">' + j.amount + '</div></div>';
-      }).join('');
-    }
-  }
-
-  // Invoices
-  const invList = document.getElementById('cust-inv-list');
-  if (invList) {
-    if (!cust.invoiceHistory || cust.invoiceHistory.length === 0) {
-      invList.innerHTML = '<div style="font-size:12.5px;color:var(--gray);padding:16px 0;text-align:center;">No invoices yet</div>';
-    } else {
-      invList.innerHTML = cust.invoiceHistory.map(function(inv) {
-        var badge = inv.status === 'Paid' ? 'inv-paid' : 'inv-open';
-        return '<div class="invoice-item"><div class="inv-num">' + inv.num + '</div><div class="inv-desc">' + inv.desc + '</div><div class="inv-amount">' + inv.amount + '</div><span class="inv-badge ' + badge + '">' + inv.status + '</span></div>';
       }).join('');
     }
   }
