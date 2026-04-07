@@ -858,7 +858,6 @@ function openDrawer(id) {
   document.getElementById('d-name').textContent      = c.name || '';
   document.getElementById('d-meta').innerHTML        = (c.phone || '') + ' &nbsp;&middot;&nbsp; <a href="#">' + (c.address || '') + '</a>';
   document.getElementById('d-spend').textContent     = c.spend || '$0';
-  document.getElementById('d-jobs').textContent      = c.jobs || '0';
   document.getElementById('d-last').textContent      = c.last || '\u2014';
   _currentCustomer = c;
   document.getElementById('d-phone').textContent     = c.phone || '';
@@ -873,10 +872,46 @@ function openDrawer(id) {
   renderCustomerTabs(c);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
+
+  // Fetch jobs for this customer and populate job history
+  API.jobs.list().then(function(jobs) {
+    var custJobs = jobs.filter(function(j) { return j.customerId === id; });
+    custJobs.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+
+    var statusColors = {
+      completed: 'var(--green)', scheduled: 'var(--blue)', 'in-progress': '#f5a623',
+      invoiced: '#b388ff', pending: 'var(--gray)', canceled: 'var(--red)'
+    };
+
+    c.jobHistory = custJobs.map(function(j) {
+      var date = j.completedAt || j.scheduledDate || j.createdAt;
+      var dateStr = date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+      var status = j.status || 'pending';
+      return {
+        name: j.title || j.service || 'Untitled Job',
+        meta: status.charAt(0).toUpperCase() + status.slice(1) + (dateStr ? ' \u2022 ' + dateStr : ''),
+        amount: j.cost ? '$' + Number(j.cost).toLocaleString() : '',
+        color: statusColors[status] || 'var(--gray2)'
+      };
+    });
+
+    // Update job count
+    document.getElementById('d-jobs').textContent = custJobs.length;
+    c.jobs = custJobs.length;
+
+    // Update total spend from completed jobs
+    var totalSpend = custJobs
+      .filter(function(j) { return j.status === 'completed' || j.status === 'invoiced'; })
+      .reduce(function(sum, j) { return sum + (Number(j.cost) || 0); }, 0);
+    document.getElementById('d-spend').textContent = '$' + totalSpend.toLocaleString();
+    c.spend = '$' + totalSpend.toLocaleString();
+
+    renderCustomerTabs(c);
+  }).catch(function(e) { console.error('Failed to load job history:', e); });
 }
 
 function openNewCustomer() {
-  _currentCustomer = {id: null, name:'', phone:'', email:'', address:'', notes:[], tags:[], since:'Mar 2026', spend:'$0', jobs:'0', _color:'var(--green)', _initials:'?', jobHistory:[], invoiceHistory:[]};
+  _currentCustomer = {id: null, name:'', phone:'', email:'', address:'', notes:[], tags:[], since:'', spend:'$0', jobs:'0', _color:'var(--green)', _initials:'?', jobHistory:[]};
   document.getElementById('d-avatar').textContent = '?';
   document.getElementById('d-avatar').style.background = 'var(--green)';
   document.getElementById('d-name').textContent = 'New Customer';
