@@ -69,15 +69,15 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .page-body{flex:1;padding:32px;display:flex;flex-direction:column;gap:14px;}
 
 /* GREETING */
-.greeting{margin-bottom:4px;animation:sharpIn 0.35s ease-out both;}
+.greeting{margin-bottom:4px;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
 .greeting h2{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--white);line-height:1;}
 .greeting h2 em{color:var(--green);font-style:normal;}
 .greeting p{font-size:12.5px;color:var(--gray);margin-top:5px;font-weight:300;}
 
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 22px 18px;position:relative;overflow:hidden;cursor:default;transition:border-color 0.18s,transform 0.18s ease-out,box-shadow 0.18s;animation:sharpIn 0.35s ease-out both;}
-.kpi-card:nth-child(1){animation-delay:0.03s;}.kpi-card:nth-child(2){animation-delay:0.08s;}.kpi-card:nth-child(3){animation-delay:0.13s;}.kpi-card:nth-child(4){animation-delay:0.18s;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 22px 18px;position:relative;overflow:hidden;cursor:default;transition:border-color 0.18s,transform 0.18s ease-out,box-shadow 0.18s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
+.kpi-card:nth-child(1){animation-delay:0.05s;}.kpi-card:nth-child(2){animation-delay:0.10s;}.kpi-card:nth-child(3){animation-delay:0.15s;}.kpi-card:nth-child(4){animation-delay:0.20s;}
 .kpi-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 12px 32px rgba(0,0,0,0.35);}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:14px 14px 0 0;}
 .kpi-card.c-green{--accent:var(--green);}.kpi-card.c-blue{--accent:#4d9fff;}.kpi-card.c-amber{--accent:#f5a623;}.kpi-card.c-red{--accent:#ff5252;}
@@ -95,7 +95,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .two-col{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:start;}
 
 /* PANEL */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.35s ease-out 0.1s both;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.1s both;}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
 .panel-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2.5px;color:var(--white);}
 .panel-link{font-size:11.5px;color:var(--green);cursor:pointer;font-weight:500;}
@@ -298,7 +298,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
 
 <!-- AI Agent Activity Strip -->
-<div id="agent-strip" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:4px;animation:sharpIn 0.35s ease-out both;animation-delay:0.15s;">
+<div id="agent-strip" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:4px;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;animation-delay:0.15s;">
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
     <div class="swft-breathing" style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
     <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;color:var(--green);">AUTOMATIONS</span>
@@ -461,7 +461,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     if (schedList) {
       const row = document.createElement('div');
       row.className = 'schedule-row';
-      row.style.animation = 'sharpIn 0.35s ease-out both';
+      row.style.animation = 'sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both';
       row.innerHTML = '<div class="sched-time">' + timeDisplay + '</div>' +
         '<div class="sched-timeline"><div class="sched-dot" style="color:#4d9fff;"></div><div class="sched-connector"></div></div>' +
         '<div class="sched-body"><div class="sched-title">' + title + '</div>' +

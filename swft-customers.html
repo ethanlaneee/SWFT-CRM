@@ -54,7 +54,7 @@ display:flex; align-items:center; padding:0 28px; gap:16px;
 position:sticky; top:0;
 background:rgba(10,10,10,0.88); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 z-index:100;
-animation: sharpIn 0.35s ease-out 0.05s both;
+animation: sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.05s both;
 }
 .topbar-page { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2.5px; color:var(--white); }
 .topbar-slash { color:var(--border2); font-family:'JetBrains Mono',monospace; font-size:16px; }
@@ -101,7 +101,7 @@ transition:border-color 0.15s;
 .sort-btn:hover { color:var(--white); border-color:var(--gray2); }
 
 /* ── CUSTOMER TABLE ── */
-.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:sharpIn 0.35s ease-out 0.15s both; }
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
 
 .table-head {
 display:grid;
@@ -130,7 +130,7 @@ border-bottom:1px solid var(--border);
 align-items:center;
 cursor:pointer;
 transition:background 0.12s;
-animation:sharpIn 0.35s ease-out both;
+animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;
 }
 .cust-row:last-child { border-bottom:none; }
 .cust-row:hover { background:var(--surface2); }

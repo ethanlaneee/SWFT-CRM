@@ -5,13 +5,13 @@
 
 /* ── Blur-to-Sharp Entrance ── */
 @keyframes sharpIn {
-  from { opacity: 0; filter: blur(4px); transform: translateY(8px); }
+  from { opacity: 0; filter: blur(3px); transform: translateY(5px); }
   to   { opacity: 1; filter: blur(0);   transform: translateY(0); }
 }
 
-/* Keep springUp for backwards compat — now uses sharpIn timing, no bounce */
+/* Keep springUp for backwards compat */
 @keyframes springUp {
-  from { opacity: 0; filter: blur(3px); transform: translateY(8px); }
+  from { opacity: 0; filter: blur(3px); transform: translateY(5px); }
   to   { opacity: 1; filter: blur(0);   transform: translateY(0); }
 }
 
@@ -87,19 +87,19 @@
 
 /* ── Stagger Utility ── */
 [data-stagger] > * {
-  animation: sharpIn 0.35s ease-out both;
+  animation: sharpIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 [data-stagger] > *:nth-child(1)  { animation-delay: 0.00s; }
-[data-stagger] > *:nth-child(2)  { animation-delay: 0.05s; }
-[data-stagger] > *:nth-child(3)  { animation-delay: 0.10s; }
-[data-stagger] > *:nth-child(4)  { animation-delay: 0.15s; }
-[data-stagger] > *:nth-child(5)  { animation-delay: 0.20s; }
-[data-stagger] > *:nth-child(6)  { animation-delay: 0.25s; }
-[data-stagger] > *:nth-child(7)  { animation-delay: 0.30s; }
-[data-stagger] > *:nth-child(8)  { animation-delay: 0.35s; }
-[data-stagger] > *:nth-child(9)  { animation-delay: 0.40s; }
-[data-stagger] > *:nth-child(10) { animation-delay: 0.45s; }
-[data-stagger] > *:nth-child(n+11) { animation-delay: 0.50s; }
+[data-stagger] > *:nth-child(2)  { animation-delay: 0.04s; }
+[data-stagger] > *:nth-child(3)  { animation-delay: 0.08s; }
+[data-stagger] > *:nth-child(4)  { animation-delay: 0.12s; }
+[data-stagger] > *:nth-child(5)  { animation-delay: 0.16s; }
+[data-stagger] > *:nth-child(6)  { animation-delay: 0.20s; }
+[data-stagger] > *:nth-child(7)  { animation-delay: 0.24s; }
+[data-stagger] > *:nth-child(8)  { animation-delay: 0.28s; }
+[data-stagger] > *:nth-child(9)  { animation-delay: 0.32s; }
+[data-stagger] > *:nth-child(10) { animation-delay: 0.36s; }
+[data-stagger] > *:nth-child(n+11) { animation-delay: 0.40s; }
 
 /* ── Row Hover Sweep ──
    Faint horizontal light sweep on table/list rows */

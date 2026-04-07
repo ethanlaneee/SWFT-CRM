@@ -55,7 +55,7 @@
 .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
 
 /* ── TOPBAR ── */
-.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;animation:sharpIn 0.35s ease-out 0.05s both;}
+.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.05s both;}
 .topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
 .topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
 .topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
@@ -73,8 +73,8 @@
 
 /* ── STAT STRIP ── */
 .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:sharpIn 0.35s ease-out both;}
-.stat-card:nth-child(1){animation-delay:.04s;} .stat-card:nth-child(2){animation-delay:.09s;} .stat-card:nth-child(3){animation-delay:.14s;} .stat-card:nth-child(4){animation-delay:.19s;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
+.stat-card:nth-child(1){animation-delay:0.05s;} .stat-card:nth-child(2){animation-delay:0.10s;} .stat-card:nth-child(3){animation-delay:0.15s;} .stat-card:nth-child(4){animation-delay:0.20s;}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c);border-radius:12px 12px 0 0;}
 .stat-card.c-green{--c:var(--green);} .stat-card.c-blue{--c:var(--blue);} .stat-card.c-amber{--c:var(--amber);} .stat-card.c-red{--c:var(--red);}
 .stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);}
@@ -108,16 +108,16 @@
 .sort-divider{height:1px;background:var(--border);margin:4px 0;}
 
 /* ── TABLE ── */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.35s ease-out 0.15s both;}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both;}
 .table-head{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;transition:color 0.14s;}
 .th:hover{color:var(--gray);}
 .th.sort-active{color:var(--green);}
 
-.job-row{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.35s ease-out both;}
+.job-row{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
 .job-row:last-child{border-bottom:none;}
 .job-row:hover{background:var(--surface2);}
-.job-row:nth-child(1){animation-delay:.05s;} .job-row:nth-child(2){animation-delay:.10s;} .job-row:nth-child(3){animation-delay:.15s;} .job-row:nth-child(4){animation-delay:.20s;} .job-row:nth-child(5){animation-delay:.25s;} .job-row:nth-child(6){animation-delay:.30s;}
+.job-row:nth-child(1){animation-delay:0.04s;} .job-row:nth-child(2){animation-delay:0.08s;} .job-row:nth-child(3){animation-delay:0.12s;} .job-row:nth-child(4){animation-delay:0.16s;} .job-row:nth-child(5){animation-delay:0.20s;} .job-row:nth-child(6){animation-delay:0.20s;}
 
 .job-id-cell{display:flex;align-items:center;gap:12px;}
 .status-pip{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
