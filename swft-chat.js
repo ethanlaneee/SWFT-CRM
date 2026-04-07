@@ -714,96 +714,98 @@
   }
 
 
-  // ── Voice Recognition for Chat Bubble ──
-  let _chatRecognition = null;
-  let _chatListening = false;
+  // ── Voice Input — MediaRecorder → Whisper ──
   const micBtn = document.getElementById('swft-chat-mic');
 
   if (micBtn) {
-    let _userStoppedMic = false;
-    let _accumulatedTranscript = '';
+    let _mediaRecorder = null;
+    let _audioChunks = [];
+    let _isRecording = false;
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    function startNewSession() {
-      if (!SpeechRecognition) return;
-      _chatRecognition = new SpeechRecognition();
-      _chatRecognition.lang = 'en-US';
-      _chatRecognition.interimResults = true;
-      _chatRecognition.continuous = false; // simpler: let browser decide when to stop each chunk
-      _chatRecognition.maxAlternatives = 1;
-
-      _chatRecognition.onstart = function() {
-        _chatListening = true;
-        micBtn.classList.add('recording');
-      };
-
-      _chatRecognition.onresult = function(e) {
-        let sessionFinal = '';
-        let interim = '';
-        for (let i = 0; i < e.results.length; i++) {
-          if (e.results[i].isFinal) {
-            sessionFinal += e.results[i][0].transcript;
-          } else {
-            interim += e.results[i][0].transcript;
-          }
-        }
-        if (sessionFinal) _accumulatedTranscript += sessionFinal + ' ';
-        input.value = (_accumulatedTranscript + interim).trim();
-        sendBtn.disabled = !input.value.trim();
-      };
-
-      _chatRecognition.onend = function() {
-        if (_userStoppedMic) {
-          _chatListening = false;
-          micBtn.classList.remove('recording');
-          const text = input.value.trim();
-          if (text && !isSending) {
-            sendMessage(text);
-            _accumulatedTranscript = '';
-          }
-        } else {
-          // Browser chunk ended — start a new session immediately to stay continuous
-          startNewSession();
-        }
-      };
-
-      _chatRecognition.onerror = function(e) {
-        if (e.error === 'not-allowed') {
-          _userStoppedMic = true;
-          _chatListening = false;
-          micBtn.classList.remove('recording');
-          if (typeof showToast === 'function') showToast('Microphone blocked - check browser settings');
-        } else if (e.error === 'network') {
-          _userStoppedMic = true;
-          _chatListening = false;
-          micBtn.classList.remove('recording');
-          if (typeof showToast === 'function') showToast('Voice needs internet connection');
-        }
-        // no-speech and aborted are normal — onend handles restart
-      };
-
-      try { _chatRecognition.start(); } catch(e) {
-        _chatListening = false;
-        micBtn.classList.remove('recording');
-      }
+    function setMicState(recording) {
+      _isRecording = recording;
+      micBtn.classList.toggle('recording', recording);
     }
 
-    micBtn.addEventListener('click', function() {
-      if (!SpeechRecognition) {
-        if (typeof showToast === 'function') showToast('Voice not supported in this browser');
+    async function startRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (typeof showToast === 'function') showToast('Microphone not supported in this browser');
         return;
       }
-      if (_chatListening) {
-        // Toggle OFF
-        _userStoppedMic = true;
-        if (_chatRecognition) _chatRecognition.stop();
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        if (typeof showToast === 'function') showToast('Microphone blocked — check browser settings');
+        return;
+      }
+
+      _audioChunks = [];
+      _mediaRecorder = new MediaRecorder(stream);
+
+      _mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) _audioChunks.push(e.data);
+      };
+
+      _mediaRecorder.onstop = async () => {
+        // Stop all mic tracks so the browser indicator clears
+        stream.getTracks().forEach((t) => t.stop());
+
+        const mimeType = _mediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(_audioChunks, { type: mimeType });
+        _audioChunks = [];
+
+        if (blob.size < 1000) return; // too short — nothing to transcribe
+
+        // Show a spinner in the mic button while waiting
+        micBtn.innerHTML = '<svg viewBox="0 0 24 24" stroke-width="1.8" style="animation:swft-typing 0.8s infinite"><circle cx="12" cy="12" r="9" stroke="#c8f135" fill="none"/></svg>';
+        micBtn.disabled = true;
+
+        try {
+          const token = await getToken();
+          const formData = new FormData();
+          formData.append('audio', blob, 'recording.' + (mimeType.includes('mp4') ? 'm4a' : 'webm'));
+
+          const res = await fetch(`${API_BASE}/api/transcribe`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Transcription failed');
+
+          if (data.text) {
+            input.value = data.text;
+            sendBtn.disabled = false;
+            input.focus();
+          }
+        } catch (err) {
+          if (typeof showToast === 'function') showToast('Voice transcription failed — try again');
+          console.error('[voice]', err);
+        } finally {
+          // Restore mic icon
+          micBtn.innerHTML = '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+          micBtn.disabled = false;
+        }
+      };
+
+      _mediaRecorder.start();
+      setMicState(true);
+    }
+
+    function stopRecording() {
+      if (_mediaRecorder && _mediaRecorder.state !== 'inactive') {
+        _mediaRecorder.stop();
+      }
+      setMicState(false);
+    }
+
+    micBtn.addEventListener('click', function () {
+      if (_isRecording) {
+        stopRecording();
       } else {
-        // Toggle ON
-        _userStoppedMic = false;
-        _accumulatedTranscript = '';
-        input.value = '';
-        startNewSession();
+        startRecording();
       }
     });
   }
