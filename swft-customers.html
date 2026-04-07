@@ -916,8 +916,9 @@ function closeDrawer() {
 function switchTab(el, tab) {
   document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  ['contact','jobs','invoices','notes','ai-activity'].forEach(t => {
-    document.getElementById('tab-' + t).style.display = (t === tab) ? 'block' : 'none';
+  ['contact','jobs','notes','ai-activity'].forEach(t => {
+    var el = document.getElementById('tab-' + t);
+    if (el) el.style.display = (t === tab) ? 'block' : 'none';
   });
 }
 
