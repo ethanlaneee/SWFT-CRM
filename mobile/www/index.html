@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#0a0a0a"/>
+  <meta name="format-detection" content="telephone=no"/>
+
+  <title>SWFT</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/app.css"/>
+
+  <style>
+    /* Splash / loading state */
+    .app-loading {
+      position: fixed; inset: 0;
+      background: #0a0a0a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.3s;
+    }
+    .app-loading.hide { opacity: 0; pointer-events: none; }
+    .app-loading .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px; letter-spacing: 6px;
+      color: #f0f0f0;
+    }
+    .app-loading .logo em { color: #c8f135; font-style: normal; }
+    .app-loading .tagline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: 3px;
+      color: #444; margin-top: 8px; text-transform: uppercase;
+    }
+    .app-loading .load-bar {
+      width: 120px; height: 2px; background: #1f1f1f;
+      border-radius: 1px; margin-top: 32px; overflow: hidden;
+    }
+    .app-loading .load-fill {
+      width: 40%; height: 100%; background: #c8f135;
+      border-radius: 1px;
+      animation: loadSlide 1.2s ease-in-out infinite;
+    }
+    @keyframes loadSlide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div class="app-loading" id="app-loading">
+    <div class="logo">SW<em>F</em>T</div>
+    <div class="tagline">Smart Workflow Technology</div>
+    <div class="load-bar"><div class="load-fill"></div></div>
+  </div>
+
+  <!-- App Shell -->
+  <div id="app">
+    <!-- Header Bar -->
+    <div class="header-bar" id="header-bar">
+      <span class="header-title">SW<em>F</em>T</span>
+      <div class="header-actions"></div>
+    </div>
+
+    <!-- Page Content -->
+    <div class="page-content" id="page-content">
+      <!-- Pages are rendered here dynamically -->
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="tab-bar" id="tab-bar">
+      <div class="tab-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="tab-label">Home</span>
+      </div>
+
+      <div class="tab-item" data-page="customers">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        <span class="tab-label">Customers</span>
+      </div>
+
+      <div class="tab-item" data-page="jobs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+        </svg>
+        <span class="tab-label">Jobs</span>
+      </div>
+
+      <div class="tab-item" data-page="messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        <span class="tab-label">Messages</span>
+      </div>
+
+      <div class="tab-item" data-page="more">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"/>
+          <circle cx="19" cy="12" r="1"/>
+          <circle cx="5" cy="12" r="1"/>
+        </svg>
+        <span class="tab-label">More</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capacitor native bridge -->
+  <script src="https://unpkg.com/@niccolodibiaggi/capacitor-shim@latest/dist/capacitor.js" type="module" onerror="console.log('Capacitor bridge not available — running in browser mode')"></script>
+
+  <!-- App Entry Point -->
+  <script type="module" src="js/app.js"></script>
+
+  <!-- Hide loading screen when app is ready -->
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('app-loading');
+        if (loader) {
+          loader.classList.add('hide');
+          setTimeout(() => loader.remove(), 400);
+        }
+      }, 800);
+    });
+  </script>
+</body>
+</html>
