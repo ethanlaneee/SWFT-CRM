@@ -372,6 +372,13 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       </div>
     </div>
     <div class="settings-row">
+      <div class="settings-row-info"><div class="settings-row-label">Line Item Descriptions</div><div class="settings-row-desc">Available in quote and invoice line items</div></div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <input class="settings-input" id="s-line-items" style="width:300px;" value="" placeholder="e.g. Materials, Labor, Equipment Rental"/>
+        <span style="font-size:10px;color:var(--gray2);">Separate with commas</span>
+      </div>
+    </div>
+    <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Crew Names</div><div class="settings-row-desc">Available in crew dropdown</div></div>
       <div style="display:flex;flex-direction:column;gap:3px;">
         <input class="settings-input" id="s-crews" style="width:300px;" value="" placeholder="e.g. Crew A, Crew B"/>
@@ -652,6 +659,7 @@ async function saveSettings(section) {
       data.taxRate = document.getElementById('s-tax').value.trim();
       data.paymentTerms = document.getElementById('s-terms').value;
       data.serviceTypes = document.getElementById('s-services').value.trim();
+      data.lineItemTypes = document.getElementById('s-line-items').value.trim();
       data.crewNames = document.getElementById('s-crews').value.trim();
     } else if (section === 'prefs') {
       data.weatherUnit = document.getElementById('s-weather-unit').value;
@@ -680,6 +688,7 @@ async function loadSettings() {
     if (data.taxRate) document.getElementById('s-tax').value = data.taxRate;
     if (data.paymentTerms) document.getElementById('s-terms').value = data.paymentTerms;
     if (data.serviceTypes) document.getElementById('s-services').value = data.serviceTypes;
+    if (data.lineItemTypes) document.getElementById('s-line-items').value = data.lineItemTypes;
     if (data.crewNames) document.getElementById('s-crews').value = data.crewNames;
     if (data.weatherUnit) document.getElementById('s-weather-unit').value = data.weatherUnit;
     if (data.companyLogo) showLogo(data.companyLogo);

@@ -94,7 +94,7 @@ router.put("/", async (req, res, next) => {
       // Company
       "address", "country", "website",
       // Defaults
-      "taxRate", "paymentTerms", "serviceTypes", "crewNames",
+      "taxRate", "paymentTerms", "serviceTypes", "lineItemTypes", "crewNames",
       // Preferences
       "weatherUnit",
       // Gmail
