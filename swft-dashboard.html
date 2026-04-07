@@ -636,70 +636,88 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   }
 
 
-  // ── VOICE TO TEXT ──
-  let _recognition = null;
-  let _isListening = false;
+  // ── VOICE TO TEXT — MediaRecorder → Whisper ──
+  let _mediaRecorder = null;
+  let _audioChunks = [];
+  let _isRecording = false;
 
-  function toggleVoice() {
-    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      showToast('Voice not supported - try Chrome');
-      return;
-    }
-    if (_isListening) {
-      if (_recognition) _recognition.stop();
-      return;
-    }
-
-    _recognition = new SpeechRecognition();
-    _recognition.lang = 'en-US';
-    _recognition.interimResults = true;
-    _recognition.continuous = false;
-    _recognition.maxAlternatives = 1;
-
+  async function toggleVoice() {
     var micBtn = document.getElementById('mic-btn');
 
-    _recognition.onstart = function() {
-      _isListening = true;
-      if (micBtn) { micBtn.style.background = '#ff5252'; micBtn.style.borderColor = '#ff5252'; }
-      showToast('Listening...');
-    };
-
-    _recognition.onresult = function(e) {
-      var transcript = '';
-      for (var i = e.resultIndex; i < e.results.length; i++) {
-        transcript += e.results[i][0].transcript;
-      }
-      document.getElementById('dash-chat-input').value = transcript;
-    };
-
-    _recognition.onend = function() {
-      _isListening = false;
-      if (micBtn) { micBtn.style.background = 'var(--surface2)'; micBtn.style.borderColor = 'var(--border2)'; }
-      var input = document.getElementById('dash-chat-input');
-      if (input && input.value.trim()) {
-        dashSend(input.value.trim());
-        input.value = '';
-      }
-    };
-
-    _recognition.onerror = function(e) {
-      _isListening = false;
-      if (micBtn) { micBtn.style.background = 'var(--surface2)'; micBtn.style.borderColor = 'var(--border2)'; }
-      if (e.error === 'not-allowed') {
-        showToast('Microphone blocked - enable in browser settings');
-      } else if (e.error === 'network') {
-        showToast('Voice needs internet');
-      } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        showToast('Voice error: ' + e.error);
-      }
-    };
-
-    try {
-      _recognition.start();
-    } catch(e) {
-      showToast('Could not start voice - try again');
+    if (_isRecording) {
+      // Second tap — stop recording
+      _isRecording = false;
+      if (_mediaRecorder && _mediaRecorder.state !== 'inactive') _mediaRecorder.stop();
+      return;
     }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast('Microphone not supported in this browser');
+      return;
+    }
+
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      showToast('Microphone blocked — check browser settings');
+      return;
+    }
+
+    _audioChunks = [];
+    _mediaRecorder = new MediaRecorder(stream);
+
+    _mediaRecorder.ondataavailable = function(e) {
+      if (e.data && e.data.size > 0) _audioChunks.push(e.data);
+    };
+
+    _mediaRecorder.onstop = async function() {
+      stream.getTracks().forEach(function(t) { t.stop(); });
+      if (micBtn) { micBtn.style.background = 'var(--surface2)'; micBtn.style.borderColor = 'var(--border2)'; }
+
+      var mimeType = _mediaRecorder.mimeType || 'audio/webm';
+      var blob = new Blob(_audioChunks, { type: mimeType });
+      _audioChunks = [];
+
+      if (blob.size < 1000) return;
+
+      // Show spinner while waiting for transcription
+      if (micBtn) micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9" stroke="#c8f135" stroke-width="2" fill="none" stroke-dasharray="28" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle></svg>';
+      if (micBtn) micBtn.disabled = true;
+
+      try {
+        const { getAuth } = await import('https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js');
+        const token = await getAuth().currentUser.getIdToken();
+
+        var ext = mimeType.includes('mp4') ? 'm4a' : 'webm';
+        var formData = new FormData();
+        formData.append('audio', blob, 'recording.' + ext);
+
+        var res = await fetch('/api/transcribe', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token },
+          body: formData,
+        });
+
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Transcription failed');
+
+        if (data.text) {
+          var input = document.getElementById('dash-chat-input');
+          if (input) { input.value = data.text; input.focus(); }
+        }
+      } catch (err) {
+        showToast('Voice transcription failed — try again');
+        console.error('[voice]', err);
+      } finally {
+        if (micBtn) micBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+        if (micBtn) micBtn.disabled = false;
+      }
+    };
+
+    _mediaRecorder.start();
+    _isRecording = true;
+    if (micBtn) { micBtn.style.background = '#ff5252'; micBtn.style.borderColor = '#ff5252'; }
   }
 
   let _toastTimer;
