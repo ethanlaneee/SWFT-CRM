@@ -497,10 +497,12 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       }
     }, 800);
     // Clear form for next use
-    ['nj-customer','nj-address','nj-date','nj-time','nj-sqft','nj-amount','nj-custom-service','nj-custom-crew'].forEach(id => {
+    ['nj-customer','nj-address','nj-date','nj-sqft','nj-amount','nj-custom-service','nj-custom-crew'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
+    const njTime = document.getElementById('nj-time');
+    if (njTime) njTime.value = '12:00';
     if (document.getElementById('nj-notes')) document.getElementById('nj-notes').value = '';
     document.getElementById('nj-custom-service').style.display = 'none';
     document.getElementById('nj-custom-crew').style.display = 'none';
@@ -876,7 +878,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="nj-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="nj-date" type="date"/></div>
-      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="nj-time" type="time"/></div>
+      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="nj-time" type="time" value="12:00"/></div>
     </div>
     <div class="nj-row">
       <div class="nj-field"><label class="nj-label">Service Type</label>

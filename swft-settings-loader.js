@@ -74,12 +74,18 @@
       });
 
       // ── Crew name dropdowns ──
-      if (settings.crewNames) {
-        const crews = settings.crewNames.split(",").map(function (s) { return s.trim(); });
-        document.querySelectorAll("#e-crew, #nj-crew").forEach(function (sel) {
-          const current = sel.value;
-          sel.innerHTML = "";
-          crews.forEach(function (c) {
+      // Always rebuild; if blank/missing, leave just an empty option.
+      const crewNames = (settings.crewNames || "")
+        .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      document.querySelectorAll("#e-crew, #nj-crew").forEach(function (sel) {
+        const current = sel.value;
+        sel.innerHTML = "";
+        if (crewNames.length === 0) {
+          const blank = document.createElement("option");
+          blank.value = ""; blank.textContent = "—";
+          sel.appendChild(blank);
+        } else {
+          crewNames.forEach(function (c) {
             const opt = document.createElement("option");
             opt.value = c; opt.textContent = c;
             sel.appendChild(opt);
@@ -91,8 +97,8 @@
           other.value = "Other"; other.textContent = "Other";
           sel.appendChild(other);
           if (current) sel.value = current;
-        });
-      }
+        }
+      });
     } catch (e) {
       // Settings load failed — use defaults silently
     }
