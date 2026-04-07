@@ -398,14 +398,25 @@ async function executeTool(toolName, input, uid, orgId) {
 // ── Main agent loop — handles tool calling with Claude ──
 
 async function runAgent(uid, userMessage, userProfile, orgId) {
-  // Enforce AI message cap based on user's plan
+  // Enforce AI message cap based on user's plan (includes bonus credits from packs)
   const plan = getPlan(userProfile.plan);
   if (plan.aiMessageLimit !== Infinity) {
-    const usage = await getUsage(uid);
-    if (usage.aiMessageCount >= plan.aiMessageLimit) {
+    const { getEffectiveUsage } = require("../usage");
+    const usage = await getEffectiveUsage(uid);
+    const effectiveLimit = plan.aiMessageLimit + (usage.aiCredits || 0);
+    if (usage.aiMessageCount >= effectiveLimit) {
       return {
-        message: `You've reached your AI message limit (${plan.aiMessageLimit}/month on the ${plan.name} plan). Upgrade your plan for more AI messages.`,
+        message: `You've reached your AI message limit (${plan.aiMessageLimit}/month on the ${plan.name} plan).`,
         actions: [],
+        limitReached: true,
+        type: "ai",
+        used: usage.aiMessageCount,
+        limit: plan.aiMessageLimit,
+        credits: usage.aiCredits || 0,
+        currentPlan: userProfile.plan,
+        upgradeTo: userProfile.plan === "starter" ? "pro" : "business",
+        packPrice: 10,
+        packUnits: 100,
       };
     }
   }

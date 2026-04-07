@@ -53,4 +53,35 @@ async function incrementAiMessage(uid) {
   return doc.data().aiMessageCount;
 }
 
-module.exports = { getUsage, incrementSms, incrementAiMessage };
+/**
+ * Add bonus SMS credits from an overage pack purchase.
+ */
+async function addSmsCredits(uid, amount) {
+  const ref = usageRef(uid);
+  await ref.set({ smsCredits: FieldValue.increment(amount) }, { merge: true });
+}
+
+/**
+ * Add bonus AI message credits from an overage pack purchase.
+ */
+async function addAiCredits(uid, amount) {
+  const ref = usageRef(uid);
+  await ref.set({ aiCredits: FieldValue.increment(amount) }, { merge: true });
+}
+
+/**
+ * Get effective remaining allowance: (planLimit + bonusCredits) - used.
+ */
+async function getEffectiveUsage(uid) {
+  const doc = await usageRef(uid).get();
+  if (!doc.exists) return { smsCount: 0, aiMessageCount: 0, smsCredits: 0, aiCredits: 0 };
+  const data = doc.data();
+  return {
+    smsCount: data.smsCount || 0,
+    aiMessageCount: data.aiMessageCount || 0,
+    smsCredits: data.smsCredits || 0,
+    aiCredits: data.aiCredits || 0,
+  };
+}
+
+module.exports = { getUsage, getEffectiveUsage, incrementSms, incrementAiMessage, addSmsCredits, addAiCredits };

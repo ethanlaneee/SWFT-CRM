@@ -134,13 +134,24 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       if (!to) return res.status(400).json({ error: "Phone number is required" });
       if (!body) return res.status(400).json({ error: "Message body is required" });
 
-      // Enforce SMS cap based on user's plan
+      // Enforce SMS cap based on user's plan (includes bonus credits from packs)
       const plan = getPlan(user.plan);
       if (plan.smsLimit !== Infinity) {
-        const usage = await getUsage(req.uid);
-        if (usage.smsCount >= plan.smsLimit) {
+        const { getEffectiveUsage } = require("../usage");
+        const usage = await getEffectiveUsage(req.uid);
+        const effectiveLimit = plan.smsLimit + (usage.smsCredits || 0);
+        if (usage.smsCount >= effectiveLimit) {
           return res.status(429).json({
-            error: `SMS limit reached (${plan.smsLimit}/month on the ${plan.name} plan). Upgrade your plan for more SMS.`,
+            error: `SMS limit reached (${plan.smsLimit}/month on the ${plan.name} plan).`,
+            limitReached: true,
+            type: "sms",
+            used: usage.smsCount,
+            limit: plan.smsLimit,
+            credits: usage.smsCredits || 0,
+            currentPlan: user.plan,
+            upgradeTo: user.plan === "starter" ? "pro" : "business",
+            packPrice: 15,
+            packUnits: 200,
           });
         }
       }
