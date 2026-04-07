@@ -940,7 +940,6 @@ async function loadScheduledForContact(){
   try{
     var res=await API.messages.scheduled();
     var msgs=res.messages||[];
-    console.log('[messages] scheduled msgs:', msgs.length, 'for contact:', _activeContact.customerId||_activeContact.to);
     // Filter to current contact
     var custId=_activeContact.customerId;
     var to=_activeContact.channel==='sms'?(_activeContact.phone||_activeContact.to):(_activeContact.email||_activeContact.to);
@@ -1389,8 +1388,8 @@ async function syncGmailInbox(){
 function startAutoRefresh(){
   if(_refreshTimer) clearInterval(_refreshTimer);
   if(_gmailSyncTimer) clearInterval(_gmailSyncTimer);
-  _refreshTimer=setInterval(refreshMessages,5000);
-  _gmailSyncTimer=setInterval(syncGmailInbox,30000);
+  _refreshTimer=setInterval(refreshMessages,30000);
+  _gmailSyncTimer=setInterval(syncGmailInbox,60000);
 }
 
 // ── Init ──

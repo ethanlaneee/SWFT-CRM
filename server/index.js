@@ -353,41 +353,6 @@ app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
 // ── Root → landing page (must be before static middleware) ──
 app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
 
-// ── Auth debug endpoint ──
-app.get("/api/auth-debug", async (req, res) => {
-  const fb = require("./firebase");
-  const result = { serverTime: new Date().toISOString(), adminProjectId: fb.projectId };
-  const header = req.headers.authorization;
-  if (header && header.startsWith("Bearer ")) {
-    const token = header.split("Bearer ")[1];
-    result.tokenLength = token.length;
-    try {
-      const parts = token.split('.');
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-      result.tokenAud = payload.aud;
-      result.tokenIss = payload.iss;
-      result.tokenExp = new Date(payload.exp * 1000).toISOString();
-      result.tokenIat = new Date(payload.iat * 1000).toISOString();
-      result.expired = Date.now() > payload.exp * 1000;
-      result.projectMatch = payload.aud === fb.projectId;
-    } catch (e) { result.decodeError = e.message; }
-    try {
-      const decoded = await fb.authAdmin.verifyIdToken(token);
-      result.verified = true;
-      result.uid = decoded.uid;
-    } catch (e) {
-      result.verified = false;
-      result.errorCode = e.code;
-      result.errorMessage = e.message;
-    }
-  } else {
-    result.noToken = true;
-  }
-  try { await fb.authAdmin.listUsers(1); result.adminWorks = true; }
-  catch (e) { result.adminWorks = false; result.adminError = e.message; }
-  res.json(result);
-});
-
 // ── Health check (before URL rewrite so /health doesn't become /health.html) ──
 app.get("/health", async (req, res) => {
   const fb = require("./firebase");
