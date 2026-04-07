@@ -86,12 +86,11 @@
       const url = `/api/weather?lat=${loc.lat}&lon=${loc.lon}&units=${tempUnit}`;
       // Include auth token (weather is Pro+ only)
       const headers = {};
-      if (typeof firebase !== "undefined" && firebase.auth) {
-        const user = firebase.auth().currentUser;
-        if (user) {
-          const token = await user.getIdToken();
-          headers["Authorization"] = "Bearer " + token;
-        }
+      // Try modular SDK user first (set by auth guard), then compat SDK
+      const user = window.__swftUser || (typeof firebase !== "undefined" && firebase.auth && firebase.auth().currentUser);
+      if (user) {
+        const token = await user.getIdToken();
+        headers["Authorization"] = "Bearer " + token;
       }
       const res = await fetch(url, { headers });
       if (res.status === 403 || res.status === 401) return null;
@@ -158,8 +157,18 @@
     strip.innerHTML = html;
   }
 
+  // Wait for Firebase auth to resolve (max 5s)
+  async function waitForAuth() {
+    if (window.__swftUser) return;
+    for (let i = 0; i < 50; i++) {
+      await new Promise(r => setTimeout(r, 100));
+      if (window.__swftUser) return;
+    }
+  }
+
   // Run on page load
   async function init() {
+    await waitForAuth();
     const data = await fetchWeather();
     if (!data) return;
 
