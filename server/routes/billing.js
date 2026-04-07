@@ -3,14 +3,20 @@ const { db } = require("../firebase");
 const { getStripe } = require("../utils/stripe");
 const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
 
+const { PLANS, OVERAGE_PACKS } = require("../plans");
+const { addSmsCredits, addAiCredits } = require("../usage");
+
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
 
-// Stripe Price IDs for each plan
+// Stripe Price IDs — monthly and annual for each plan
 const PRICE_IDS = {
-  starter:  "price_1TIc1URNPpAjdxw0uscz7ouv",
-  pro:      "price_1TIc1VRNPpAjdxw0fwN1bfEH",
-  business: "price_1TIc1VRNPpAjdxw05e9i863i",
+  starter:          "price_1TIc1URNPpAjdxw0uscz7ouv",
+  pro:              "price_1TIc1VRNPpAjdxw0fwN1bfEH",
+  business:         "price_1TIc1VRNPpAjdxw05e9i863i",
+  starter_annual:   "price_starter_annual",   // TODO: replace with real Stripe price ID after creating in dashboard
+  pro_annual:       "price_pro_annual",       // TODO: replace with real Stripe price ID after creating in dashboard
+  business_annual:  "price_business_annual",  // TODO: replace with real Stripe price ID after creating in dashboard
 };
 
 /**
@@ -105,9 +111,11 @@ async function syncBillingAddress(uid, stripeCustomerId) {
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/create-checkout-session", async (req, res, next) => {
   try {
-    const { plan } = req.body;
-    const planKey = plan && PRICE_IDS[plan] ? plan : "starter";
-    const priceId = PRICE_IDS[planKey];
+    const { plan, billing } = req.body;
+    const basePlan = (plan || "starter").replace(/_annual$/, "");
+    const planKey = PRICE_IDS[basePlan] ? basePlan : "starter";
+    const isAnnual = billing === "annual";
+    const priceId = isAnnual ? PRICE_IDS[`${planKey}_annual`] : PRICE_IDS[planKey];
 
     // Fetch Firestore profile to reuse existing Stripe customer ID
     const doc  = await users().doc(req.uid).get();
@@ -136,10 +144,10 @@ router.post("/create-checkout-session", async (req, res, next) => {
       customer_update: { address: "auto" },
       subscription_data: {
         trial_period_days: 14,
-        metadata: { firebaseUid: req.uid, plan: planKey },
+        metadata: { firebaseUid: req.uid, plan: planKey, billing: isAnnual ? "annual" : "monthly" },
       },
       return_url: `${process.env.APP_URL}/swft-checkout?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
-      metadata:   { firebaseUid: req.uid, plan: planKey },
+      metadata:   { firebaseUid: req.uid, plan: planKey, billing: isAnnual ? "annual" : "monthly" },
     });
 
     res.json({ clientSecret: session.client_secret });
@@ -149,10 +157,102 @@ router.post("/create-checkout-session", async (req, res, next) => {
 // GET /api/billing/plans — return plan info and Stripe price IDs (public-ish)
 router.get("/plans", (req, res) => {
   res.json({
-    starter:  { name: "Starter",  price: 49,  priceId: PRICE_IDS.starter },
-    pro:      { name: "Pro",      price: 99,  priceId: PRICE_IDS.pro },
-    business: { name: "Business", price: 149, priceId: PRICE_IDS.business },
+    starter: {
+      name: "Starter", monthlyPrice: 89, annualPrice: 71,
+      smsLimit: 150, aiMessageLimit: 75,
+      priceId: PRICE_IDS.starter, annualPriceId: PRICE_IDS.starter_annual,
+    },
+    pro: {
+      name: "Pro", monthlyPrice: 179, annualPrice: 143,
+      smsLimit: 2000, aiMessageLimit: 1000,
+      priceId: PRICE_IDS.pro, annualPriceId: PRICE_IDS.pro_annual,
+    },
+    business: {
+      name: "Business", monthlyPrice: 349, annualPrice: 279,
+      smsLimit: "Unlimited", aiMessageLimit: "Unlimited",
+      priceId: PRICE_IDS.business, annualPriceId: PRICE_IDS.business_annual,
+    },
+    overagePacks: OVERAGE_PACKS,
   });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/billing/purchase-pack
+//
+// Purchases a one-time overage pack (SMS or AI credits).
+// Creates a Stripe checkout session for a one-time payment.
+// Body: { pack: "sms"|"ai" }
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/purchase-pack", async (req, res, next) => {
+  try {
+    const { pack } = req.body;
+    if (!pack || !OVERAGE_PACKS[pack]) {
+      return res.status(400).json({ error: "Invalid pack type. Use 'sms' or 'ai'." });
+    }
+
+    const packInfo = OVERAGE_PACKS[pack];
+    const stripe = getStripe();
+
+    const doc  = await users().doc(req.uid).get();
+    const data = doc.exists ? doc.data() : {};
+    let customerId = data.stripeCustomerId || null;
+
+    if (!customerId) {
+      return res.status(400).json({ error: "No billing account found. Please subscribe to a plan first." });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      ui_mode:  "embedded",
+      customer: customerId,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          product_data: { name: `SWFT ${packInfo.name} — ${packInfo.units} credits` },
+          unit_amount: packInfo.price * 100,
+        },
+        quantity: 1,
+      }],
+      mode: "payment",
+      return_url: `${process.env.APP_URL}/swft-billing?pack_session_id={CHECKOUT_SESSION_ID}&pack=${pack}`,
+      metadata: { firebaseUid: req.uid, packType: pack, packUnits: String(packInfo.units) },
+    });
+
+    res.json({ clientSecret: session.client_secret });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/billing/verify-pack?pack_session_id=cs_xxx&pack=sms|ai
+//
+// Verifies a pack purchase and credits the user's account.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/verify-pack", async (req, res, next) => {
+  try {
+    const { pack_session_id, pack } = req.query;
+    if (!pack_session_id || !pack) {
+      return res.status(400).json({ error: "pack_session_id and pack are required." });
+    }
+
+    const stripe  = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(pack_session_id);
+
+    if (session.payment_status !== "paid") {
+      return res.status(402).json({ error: "Payment not completed." });
+    }
+
+    const packInfo = OVERAGE_PACKS[pack];
+    if (!packInfo) {
+      return res.status(400).json({ error: "Invalid pack type." });
+    }
+
+    if (pack === "sms") {
+      await addSmsCredits(req.uid, packInfo.units);
+    } else {
+      await addAiCredits(req.uid, packInfo.units);
+    }
+
+    res.json({ success: true, pack, units: packInfo.units });
+  } catch (err) { next(err); }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,6 +291,7 @@ router.get("/verify-session", async (req, res, next) => {
       accountStatus:        "active",
       isSubscribed:         true,
       plan:                 session.metadata?.plan || "starter",
+      billingCycle:         session.metadata?.billing || "monthly",
       stripeSubscriptionId: session.subscription,
     }, { merge: true });
 
@@ -239,6 +340,7 @@ async function webhookHandler(req, res) {
           accountStatus:        "active",
           isSubscribed:         true,
           plan:                 session.metadata?.plan || "starter",
+          billingCycle:         session.metadata?.billing || "monthly",
           stripeCustomerId:     session.customer,
           stripeSubscriptionId: session.subscription,
         }, { merge: true });

@@ -78,27 +78,27 @@
         {
           "@type": "Offer",
           "name": "Starter Plan",
-          "price": "49",
+          "price": "89",
           "priceCurrency": "USD",
           "billingIncrement": "P1M",
-          "description": "Full CRM, quotes, invoicing, scheduling, Gmail integration, 200 SMS/month, 100 AI messages/month",
+          "description": "Full CRM, quotes, invoicing, scheduling, Gmail integration, 150 SMS/month, 75 AI messages/month",
           "url": "https://goswft.com/swft-checkout?plan=starter",
           "eligibleCustomerType": "http://purl.org/goodrelations/v1#Business"
         },
         {
           "@type": "Offer",
           "name": "Pro Plan",
-          "price": "99",
+          "price": "179",
           "priceCurrency": "USD",
           "billingIncrement": "P1M",
-          "description": "Everything in Starter plus 1,000 SMS/month, 500 AI messages/month, priority support, team management, advanced AI tools",
+          "description": "Everything in Starter plus 2,000 SMS/month, 1,000 AI messages/month, priority support, team management, advanced AI tools",
           "url": "https://goswft.com/swft-checkout?plan=pro",
           "eligibleCustomerType": "http://purl.org/goodrelations/v1#Business"
         },
         {
           "@type": "Offer",
           "name": "Business Plan",
-          "price": "149",
+          "price": "349",
           "priceCurrency": "USD",
           "billingIncrement": "P1M",
           "description": "Unlimited SMS, unlimited AI messages, QuickBooks integration, dedicated support, custom branding, multi-user access",
@@ -129,7 +129,7 @@
           "name": "How much does SWFT cost?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "SWFT starts at $49/month for the Starter plan. The Pro plan is $99/month and the Business plan is $149/month. All plans include a 14-day free trial — no charge until after the trial ends."
+            "text": "SWFT starts at $89/month for the Starter plan. The Pro plan is $179/month and the Business plan is $349/month. All plans include a 14-day free trial — no charge until after the trial ends. Save 20% with annual billing."
           }
         },
         {
@@ -137,7 +137,7 @@
           "name": "Does SWFT replace other tools like invoicing and scheduling apps?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. SWFT replaces over $224/month in separate tools by combining CRM, invoicing, scheduling, SMS messaging, AI assistance, quote generation, and email — all in one platform."
+            "text": "Yes. SWFT replaces multiple separate tools by combining CRM, invoicing, scheduling, SMS messaging, AI assistance, quote generation, and email — all in one platform starting at $89/month."
           }
         },
         {
@@ -146,6 +146,22 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Yes. SWFT is built for all home service professionals including plumbers, HVAC technicians, electricians, landscapers, roofers, cleaners, and general contractors."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does SWFT compare to GoHighLevel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "GoHighLevel charges $97-$497/month plus hidden usage fees for SMS, email, and AI that can push real costs over $500/month. It's designed for marketing agencies and has a steep learning curve. SWFT is purpose-built for home service pros with flat pricing starting at $89/month, all features included, and setup in under 2 minutes."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does SWFT compare to Jobber?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Jobber charges per user, which gets expensive as your team grows — a 3-person crew can cost over $400/month. SWFT has no per-user fees; team management is included on the Pro plan and above. SWFT also includes AI automation (auto-responding to leads, generating quotes, following up on invoices) that Jobber does not offer."
           }
         }
       ]
@@ -398,6 +414,40 @@ section{position:relative;z-index:1;}
 .pill:hover{color:var(--white);border-color:var(--border2);}
 .pill svg{width:16px;height:16px;color:var(--green);}
 
+/* ── COMPETITOR SECTION ── */
+.competitors{padding:100px 0 80px;}
+.competitor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.competitor-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:32px 28px;transition:all 0.3s ease;
+}
+.competitor-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.3);}
+.competitor-header{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);
+}
+.competitor-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--white);}
+.competitor-price{font-size:12px;font-weight:600;color:var(--red);font-family:'JetBrains Mono',monospace;}
+.competitor-complaints{list-style:none;display:flex;flex-direction:column;gap:14px;}
+.competitor-complaints li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--gray);line-height:1.55;}
+
+/* ── VS TABLE ── */
+.vs-table-section{padding:40px 0 120px;}
+.vs-table-wrapper{max-width:960px;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--border);}
+.vs-table{width:100%;border-collapse:collapse;font-size:14px;}
+.vs-table thead th{padding:18px 20px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;text-align:left;border-bottom:1px solid var(--border2);}
+.vs-feature-col{width:22%;background:var(--surface);color:var(--gray);}
+.vs-other-col{width:39%;background:var(--surface);color:var(--gray);}
+.vs-swft-col{width:39%;background:linear-gradient(135deg,rgba(200,241,53,0.06),rgba(200,241,53,0.02));color:var(--green);}
+.vs-table tbody tr{border-bottom:1px solid var(--border);}
+.vs-table tbody tr:last-child{border-bottom:none;}
+.vs-table td{padding:16px 20px;vertical-align:top;line-height:1.5;}
+.vs-feature{font-weight:600;color:var(--white);font-size:13px;background:var(--surface);}
+.vs-other{color:var(--gray);background:var(--surface);}
+.vs-swft{color:var(--white);background:linear-gradient(135deg,rgba(200,241,53,0.04),rgba(200,241,53,0.01));}
+.vs-table .compare-x{margin-right:4px;}
+.vs-table .compare-check{margin-right:4px;}
+
 /* ── BEFORE vs AFTER ── */
 .compare{padding:100px 0 120px;}
 .compare-grid{
@@ -494,6 +544,34 @@ section{position:relative;z-index:1;}
 .pricing-note{text-align:center;margin-top:32px;font-size:13px;color:var(--gray);}
 .pricing-note strong{color:var(--white);}
 
+/* ── BILLING TOGGLE ── */
+.billing-toggle{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin-bottom:48px;
+}
+.billing-toggle label{font-size:15px;font-weight:500;color:var(--gray);cursor:pointer;transition:color 0.2s;}
+.billing-toggle label.active{color:var(--white);}
+.billing-toggle .toggle-track{
+  position:relative;width:52px;height:28px;border-radius:100px;
+  background:var(--surface2);border:1px solid var(--border2);
+  cursor:pointer;transition:all 0.2s;
+}
+.billing-toggle .toggle-track.annual{background:var(--green-dim);border-color:rgba(200,241,53,0.25);}
+.billing-toggle .toggle-knob{
+  position:absolute;top:3px;left:3px;width:20px;height:20px;
+  border-radius:50%;background:var(--white);
+  transition:transform 0.2s;
+}
+.billing-toggle .toggle-track.annual .toggle-knob{transform:translateX(24px);background:var(--green);}
+.billing-toggle .save-badge{
+  font-size:12px;font-weight:700;color:var(--green);
+  padding:4px 12px;border-radius:100px;
+  background:var(--green-dim);border:1px solid rgba(200,241,53,0.15);
+}
+.pricing-amount .annual-price{display:none;}
+.billing-annual .pricing-amount .monthly-price{display:none;}
+.billing-annual .pricing-amount .annual-price{display:inline;}
+
 /* ── VALUE STACK (below pricing) ── */
 .value-stack{padding:0 0 80px;}
 .stack-row{
@@ -569,6 +647,11 @@ section{position:relative;z-index:1;}
   .product{padding:60px 0 80px;}
   .feature-pills{gap:8px;}
   .pill{font-size:12px;padding:8px 14px;}
+  .competitor-grid{grid-template-columns:1fr;}
+  .competitors{padding:60px 0 40px;}
+  .vs-table-section{padding:20px 0 80px;}
+  .vs-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .vs-table{min-width:640px;}
   .compare-grid{grid-template-columns:1fr;}
   .compare{padding:60px 0 80px;}
   .pricing-grid{grid-template-columns:1fr;max-width:400px;}
@@ -763,7 +846,132 @@ section{position:relative;z-index:1;}
         <p>One app for invoicing, another for scheduling, another for texting. None of them talk to each other.</p>
       </div>
     </div>
-    <p class="pain-bottom reveal">If you're nodding along, <strong style="color:var(--green)">you're exactly who we built SWFT for.</strong></p>
+    <p class="pain-bottom reveal">If you're nodding along, <strong style="color:var(--green)">you've probably tried other software too.</strong> Here's why it didn't help.</p>
+  </div>
+</section>
+
+<!-- ── WHY OTHER CRMS FAIL ── -->
+<section class="competitors" id="competitors">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">The Real Problem</span>
+      <h2 class="section-title">YOUR CRM SHOULDN'T BE <span class="accent">ANOTHER HEADACHE</span></h2>
+      <p class="section-sub">You've probably tried other software. Here's why it didn't work.</p>
+    </div>
+
+    <div class="competitor-grid">
+
+      <div class="competitor-card reveal">
+        <div class="competitor-header">
+          <span class="competitor-name">GoHighLevel</span>
+          <span class="competitor-price">$97–$497/mo + hidden fees</span>
+        </div>
+        <ul class="competitor-complaints">
+          <li><span class="compare-x">&#10005;</span> Advertised at $97/mo, but SMS, email, AI, and phone credits are all extra — real cost often tops $500+/mo</li>
+          <li><span class="compare-x">&#10005;</span> Takes weeks to learn — non-intuitive UI built for marketing agencies, not contractors</li>
+          <li><span class="compare-x">&#10005;</span> Automation bugs send emails to the wrong customers</li>
+          <li><span class="compare-x">&#10005;</span> Paying for funnels, white-labeling, and features you'll never use</li>
+          <li><span class="compare-x">&#10005;</span> Support takes days to respond — or pay $300/mo for "priority"</li>
+        </ul>
+      </div>
+
+      <div class="competitor-card reveal">
+        <div class="competitor-header">
+          <span class="competitor-name">Jobber</span>
+          <span class="competitor-price">$49–$199/mo per user</span>
+        </div>
+        <ul class="competitor-complaints">
+          <li><span class="compare-x">&#10005;</span> Per-user pricing adds up fast — a 3-person crew pays 3x</li>
+          <li><span class="compare-x">&#10005;</span> QuickBooks sync breaks constantly, creating duplicate entries</li>
+          <li><span class="compare-x">&#10005;</span> Two-way SMS isn't available until the $139/mo plan</li>
+          <li><span class="compare-x">&#10005;</span> Can't customize workflows to match how you actually work</li>
+          <li><span class="compare-x">&#10005;</span> Best features locked behind expensive higher tiers</li>
+        </ul>
+      </div>
+
+      <div class="competitor-card reveal">
+        <div class="competitor-header">
+          <span class="competitor-name">Enterprise CRMs</span>
+          <span class="competitor-price">HubSpot, ServiceTitan, Zoho</span>
+        </div>
+        <ul class="competitor-complaints">
+          <li><span class="compare-x">&#10005;</span> HubSpot jumps from $20/seat to $890/mo with no middle ground</li>
+          <li><span class="compare-x">&#10005;</span> ServiceTitan requires multi-year contracts at $200–600+/technician</li>
+          <li><span class="compare-x">&#10005;</span> Onboarding takes weeks or months — some charge $1,500+ just for setup</li>
+          <li><span class="compare-x">&#10005;</span> Built for large companies, not a 1–10 person operation</li>
+          <li><span class="compare-x">&#10005;</span> Over 50% of CRM implementations fail due to complexity</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── SWFT vs THE REST TABLE ── -->
+<section class="vs-table-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">The Difference</span>
+      <h2 class="section-title">SWFT VS. <span class="accent">EVERYONE ELSE</span></h2>
+    </div>
+
+    <div class="vs-table-wrapper reveal">
+      <table class="vs-table">
+        <thead>
+          <tr>
+            <th class="vs-feature-col"></th>
+            <th class="vs-other-col">Other CRMs</th>
+            <th class="vs-swft-col">SWFT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="vs-feature">Pricing</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> $97–$600+/mo with hidden usage fees</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> $89–$349/mo flat. SMS &amp; AI limits clearly listed per plan.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Per-user charges</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> $20–$200+ per seat/technician</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> No per-user fees. Team access included on Pro+.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Setup time</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Days to months. Some require paid onboarding.</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> Under 2 minutes. No onboarding fee.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Contracts</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Annual contracts, multi-year lock-ins</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> Month-to-month. Cancel anytime.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">AI automation</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Extra cost or not available</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> AI receptionist, estimator &amp; follow-up included in every plan</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">All-in-one</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> CRM only — invoicing, SMS, scheduling cost extra</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> CRM, quotes, invoices, jobs, scheduling, SMS, email &amp; AI</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Learning curve</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Steep — weeks of training, video courses</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> If you can text, you can use SWFT</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Switch easily</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Manual CSV uploads, data loss</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> Import from Jobber, ServiceTitan &amp; Housecall Pro</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="text-align:center;margin-top:24px;font-size:12px;color:var(--gray);" class="reveal">
+      Competitor pricing based on publicly available information as of early 2026. SWFT SMS and AI message limits vary by plan — see pricing for details.
+    </p>
   </div>
 </section>
 
@@ -891,18 +1099,28 @@ section{position:relative;z-index:1;}
   <div class="container">
     <div class="section-header reveal">
       <span class="section-tag">Pricing</span>
-      <h2 class="section-title">REPLACE <span class="accent">$224/MO</span> IN TOOLS<br/>WITH ONE PLATFORM</h2>
-      <p class="section-sub">CRM, invoicing, scheduling, SMS, AI, quotes, and email — all included in every plan.</p>
+      <h2 class="section-title">SIMPLE, <span class="accent">TRANSPARENT</span> PRICING</h2>
+      <p class="section-sub">No hidden fees. No per-user charges. No surprises on your bill.</p>
     </div>
 
-    <div class="pricing-grid">
+    <!-- Billing toggle -->
+    <div class="billing-toggle reveal" id="billingToggle">
+      <label class="active" id="monthlyLabel">Monthly</label>
+      <div class="toggle-track" id="billingSwitch">
+        <div class="toggle-knob"></div>
+      </div>
+      <label id="annualLabel">Annual</label>
+      <span class="save-badge">Save 20%</span>
+    </div>
+
+    <div class="pricing-grid" id="pricingGrid">
 
       <!-- ── STARTER ── -->
       <div class="pricing-card reveal" data-delay="0">
         <div class="pricing-plan-name">STARTER</div>
         <div class="pricing-price">
           <span class="pricing-dollar">$</span>
-          <span class="pricing-amount">49</span>
+          <span class="pricing-amount"><span class="monthly-price">89</span><span class="annual-price">71</span></span>
           <span class="pricing-period">/mo</span>
         </div>
         <p class="pricing-desc">Everything you need to run your business from day one.</p>
@@ -912,11 +1130,12 @@ section{position:relative;z-index:1;}
           <li><span class="check">&#10003;</span> Quotes &amp; invoicing</li>
           <li><span class="check">&#10003;</span> Job scheduling &amp; calendar sync</li>
           <li><span class="check">&#10003;</span> Gmail &amp; Google Calendar integration</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">200 SMS</span> / month</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">100 AI messages</span> / month</li>
-          <li><span class="check">&#10003;</span> Email (Gmail or Postmark fallback)</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">150 SMS</span> / month</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">75 AI messages</span> / month</li>
+          <li><span class="check">&#10003;</span> Email (Gmail or Postmark)</li>
+          <li><span class="check">&#10003;</span> AI receptionist &amp; follow-ups</li>
         </ul>
-        <a class="pricing-cta secondary" href="/swft-checkout?plan=starter">
+        <a class="pricing-cta secondary" href="/swft-checkout?plan=starter" data-plan="starter">
           Start 14-Day Free Trial
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -928,21 +1147,21 @@ section{position:relative;z-index:1;}
         <div class="pricing-plan-name">PRO</div>
         <div class="pricing-price">
           <span class="pricing-dollar">$</span>
-          <span class="pricing-amount">99</span>
+          <span class="pricing-amount"><span class="monthly-price">179</span><span class="annual-price">143</span></span>
           <span class="pricing-period">/mo</span>
         </div>
         <p class="pricing-desc">For growing teams that need more power and higher limits.</p>
         <div class="pricing-divider"></div>
         <ul class="pricing-features">
           <li><span class="check">&#10003;</span> Everything in Starter</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">1,000 SMS</span> / month</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">500 AI messages</span> / month</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">2,000 SMS</span> / month</li>
+          <li><span class="check">&#10003;</span> <span class="highlight">1,000 AI messages</span> / month</li>
           <li><span class="check">&#10003;</span> Priority support</li>
           <li><span class="check">&#10003;</span> Google Sheets export</li>
-          <li><span class="check">&#10003;</span> Team management</li>
+          <li><span class="check">&#10003;</span> Team management &amp; multi-user</li>
           <li><span class="check">&#10003;</span> Advanced AI tools (directions, weather)</li>
         </ul>
-        <a class="pricing-cta primary" href="/swft-checkout?plan=pro">
+        <a class="pricing-cta primary" href="/swft-checkout?plan=pro" data-plan="pro">
           Start 14-Day Free Trial
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -953,7 +1172,7 @@ section{position:relative;z-index:1;}
         <div class="pricing-plan-name">BUSINESS</div>
         <div class="pricing-price">
           <span class="pricing-dollar">$</span>
-          <span class="pricing-amount">149</span>
+          <span class="pricing-amount"><span class="monthly-price">349</span><span class="annual-price">279</span></span>
           <span class="pricing-period">/mo</span>
         </div>
         <p class="pricing-desc">Unlimited everything. Built for high-volume operations.</p>
@@ -962,12 +1181,12 @@ section{position:relative;z-index:1;}
           <li><span class="check">&#10003;</span> Everything in Pro</li>
           <li><span class="check">&#10003;</span> <span class="highlight">Unlimited SMS</span></li>
           <li><span class="check">&#10003;</span> <span class="highlight">Unlimited AI messages</span></li>
-          <li><span class="check">&#10003;</span> QuickBooks integration (coming soon)</li>
           <li><span class="check">&#10003;</span> Dedicated support</li>
+          <li><span class="check">&#10003;</span> QuickBooks integration (coming soon)</li>
           <li><span class="check">&#10003;</span> Custom branding (coming soon)</li>
           <li><span class="check">&#10003;</span> Multi-user access</li>
         </ul>
-        <a class="pricing-cta secondary" href="/swft-checkout?plan=business">
+        <a class="pricing-cta secondary" href="/swft-checkout?plan=business" data-plan="business">
           Start 14-Day Free Trial
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -977,7 +1196,7 @@ section{position:relative;z-index:1;}
 
     <p class="pricing-note reveal">
       All plans include a <strong>14-day free trial</strong>. No charge until after your trial ends. Cancel anytime.<br/>
-      Replaces $224/mo in tools — CRM, invoicing, scheduling, SMS, AI, quotes &amp; email marketing.
+      Need more SMS or AI? Buy top-up packs anytime — $15 for 200 SMS or $10 for 100 AI messages.
     </p>
   </div>
 </section>
@@ -1051,10 +1270,34 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
 /* Stagger pain cards */
 document.querySelectorAll('.pain-card.reveal').forEach((el, i) => { el.dataset.delay = i * 80; });
+/* Stagger competitor cards */
+document.querySelectorAll('.competitor-card.reveal').forEach((el, i) => { el.dataset.delay = i * 100; });
 /* Stagger compare cols */
 document.querySelectorAll('.compare-col.reveal').forEach((el, i) => { el.dataset.delay = i * 150; });
 /* Stagger pricing cards */
 document.querySelectorAll('.pricing-card.reveal').forEach((el, i) => { el.dataset.delay = i * 120; });
+
+/* ── Billing toggle (monthly ↔ annual) ── */
+(function() {
+  const track = document.getElementById('billingSwitch');
+  const grid = document.getElementById('pricingGrid');
+  const mLabel = document.getElementById('monthlyLabel');
+  const aLabel = document.getElementById('annualLabel');
+  let isAnnual = false;
+
+  track.addEventListener('click', function() {
+    isAnnual = !isAnnual;
+    track.classList.toggle('annual', isAnnual);
+    grid.classList.toggle('billing-annual', isAnnual);
+    mLabel.classList.toggle('active', !isAnnual);
+    aLabel.classList.toggle('active', isAnnual);
+    // Update CTA links with billing param
+    document.querySelectorAll('.pricing-cta[data-plan]').forEach(function(a) {
+      const plan = a.dataset.plan;
+      a.href = '/swft-checkout?plan=' + plan + (isAnnual ? '&billing=annual' : '');
+    });
+  });
+})();
 </script>
 
 <!-- ── PUBLIC CHAT ── -->

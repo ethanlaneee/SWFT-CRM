@@ -77,10 +77,12 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   const config = await getReceptionistConfig(orgId);
   if (!config) return { replied: false, response: null, action: null };
 
-  // Check SMS limits before responding
+  // Check SMS limits before responding (includes bonus credits from packs)
   const plan = getPlan(owner.plan);
-  const usage = await getUsage(ownerUid);
-  if (usage.smsCount >= plan.smsLimit) {
+  const { getEffectiveUsage } = require("../usage");
+  const usage = await getEffectiveUsage(ownerUid);
+  const effectiveLimit = plan.smsLimit === Infinity ? Infinity : plan.smsLimit + (usage.smsCredits || 0);
+  if (usage.smsCount >= effectiveLimit) {
     console.log(`[receptionist] SMS limit reached for org ${orgId}, skipping auto-reply`);
     return { replied: false, response: null, action: "sms_limit" };
   }

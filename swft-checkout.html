@@ -251,14 +251,24 @@ body::after{
   <h1 class="page-title">CHOOSE YOUR <span class="accent">PLAN</span></h1>
   <p class="page-sub">14-day free trial on every plan. You won't be charged until the trial ends.</p>
 
-  <div class="pricing-grid">
+  <!-- Billing toggle -->
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:32px;" id="coToggle">
+    <label style="font-size:14px;font-weight:500;color:var(--white);cursor:pointer;" id="coMonthly">Monthly</label>
+    <div id="coSwitch" style="position:relative;width:48px;height:26px;border-radius:100px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;transition:all 0.2s;">
+      <div id="coKnob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--white);transition:transform 0.2s;"></div>
+    </div>
+    <label style="font-size:14px;font-weight:500;color:var(--gray);cursor:pointer;" id="coAnnual">Annual</label>
+    <span style="font-size:11px;font-weight:700;color:var(--green);padding:3px 10px;border-radius:100px;background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);">Save 20%</span>
+  </div>
+
+  <div class="pricing-grid" id="coPricingGrid">
     <!-- STARTER -->
     <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
       <div class="plan-radio"></div>
       <div class="plan-name">STARTER</div>
       <div class="plan-price">
         <span class="plan-dollar">$</span>
-        <span class="plan-amount">49</span>
+        <span class="plan-amount" data-monthly="89" data-annual="71">89</span>
         <span class="plan-period">/mo</span>
       </div>
       <p class="plan-desc">Everything you need to run your business from day one.</p>
@@ -268,8 +278,9 @@ body::after{
         <li><span class="ck">&#10003;</span> Quotes & invoicing</li>
         <li><span class="ck">&#10003;</span> Job scheduling & calendar sync</li>
         <li><span class="ck">&#10003;</span> Gmail & Google Calendar integration</li>
-        <li><span class="ck">&#10003;</span> <span class="hl">200 SMS</span> / month</li>
-        <li><span class="ck">&#10003;</span> <span class="hl">100 AI messages</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">150 SMS</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">75 AI messages</span> / month</li>
+        <li><span class="ck">&#10003;</span> AI receptionist & follow-ups</li>
       </ul>
     </div>
 
@@ -280,17 +291,17 @@ body::after{
       <div class="plan-name">PRO</div>
       <div class="plan-price">
         <span class="plan-dollar">$</span>
-        <span class="plan-amount">99</span>
+        <span class="plan-amount" data-monthly="179" data-annual="143">179</span>
         <span class="plan-period">/mo</span>
       </div>
       <p class="plan-desc">For growing teams that need more power and higher limits.</p>
       <div class="plan-divider"></div>
       <ul class="plan-features">
         <li><span class="ck">&#10003;</span> Everything in Starter</li>
-        <li><span class="ck">&#10003;</span> <span class="hl">1,000 SMS</span> / month</li>
-        <li><span class="ck">&#10003;</span> <span class="hl">500 AI messages</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">2,000 SMS</span> / month</li>
+        <li><span class="ck">&#10003;</span> <span class="hl">1,000 AI messages</span> / month</li>
         <li><span class="ck">&#10003;</span> Priority support</li>
-        <li><span class="ck">&#10003;</span> Team management</li>
+        <li><span class="ck">&#10003;</span> Team management & multi-user</li>
         <li><span class="ck">&#10003;</span> Google Sheets export</li>
       </ul>
     </div>
@@ -301,7 +312,7 @@ body::after{
       <div class="plan-name">BUSINESS</div>
       <div class="plan-price">
         <span class="plan-dollar">$</span>
-        <span class="plan-amount">149</span>
+        <span class="plan-amount" data-monthly="349" data-annual="279">349</span>
         <span class="plan-period">/mo</span>
       </div>
       <p class="plan-desc">Unlimited everything. Built for high-volume operations.</p>
@@ -459,7 +470,7 @@ body::after{
       const res = await fetch('/api/billing/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ plan: window._selectedPlan || 'starter' }),
+        body: JSON.stringify({ plan: window._selectedPlan || 'starter', billing: window._billingCycle || 'monthly' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create checkout session');
@@ -468,6 +479,7 @@ body::after{
       document.querySelector('.pricing-grid').style.display = 'none';
       document.querySelector('.page-title').style.display = 'none';
       document.querySelector('.page-sub').style.display = 'none';
+      document.getElementById('coToggle').style.display = 'none';
       document.getElementById('checkout-section').style.display = 'none';
       document.getElementById('auth-section').classList.remove('show');
       document.getElementById('payment-step').classList.add('show');
@@ -632,6 +644,40 @@ body::after{
     document.querySelector(`.plan-card[data-plan="${plan}"]`).classList.add('selected');
   }
   selectPlan(selectedPlan);
+
+  // ── Billing toggle (monthly ↔ annual) ──
+  window._billingCycle = params.get('billing') || 'monthly';
+  (function() {
+    const sw = document.getElementById('coSwitch');
+    const knob = document.getElementById('coKnob');
+    const mLbl = document.getElementById('coMonthly');
+    const aLbl = document.getElementById('coAnnual');
+    let isAnnual = window._billingCycle === 'annual';
+
+    function apply() {
+      if (isAnnual) {
+        sw.style.background = 'rgba(200,241,53,0.12)';
+        sw.style.borderColor = 'rgba(200,241,53,0.25)';
+        knob.style.transform = 'translateX(22px)';
+        knob.style.background = 'var(--green)';
+        mLbl.style.color = 'var(--gray)';
+        aLbl.style.color = 'var(--white)';
+      } else {
+        sw.style.background = 'var(--surface2)';
+        sw.style.borderColor = 'var(--border2)';
+        knob.style.transform = 'translateX(0)';
+        knob.style.background = 'var(--white)';
+        mLbl.style.color = 'var(--white)';
+        aLbl.style.color = 'var(--gray)';
+      }
+      window._billingCycle = isAnnual ? 'annual' : 'monthly';
+      document.querySelectorAll('.plan-amount[data-monthly]').forEach(function(el) {
+        el.textContent = isAnnual ? el.dataset.annual : el.dataset.monthly;
+      });
+    }
+    sw.addEventListener('click', function() { isAnnual = !isAnnual; apply(); });
+    apply();
+  })();
 
   // Toggle signup/login views
   function showLogin() {
