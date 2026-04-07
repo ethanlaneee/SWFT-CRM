@@ -235,199 +235,189 @@
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
+<!-- ── FIREBASE AUTH GUARD ── -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCB1fsmxaBqNn3gb3c3vYjkMFMVxjdmfCM",
-  authDomain: "swft-crm.firebaseapp.com",
-  projectId: "swft-crm",
-  storageBucket: "swft-crm.firebasestorage.app",
-  messagingSenderId: "1004519573498",
-  appId: "1:1004519573498:web:5765f407e498e53ea49e5b"
-};
-const app = initializeApp(firebaseConfig);
-const authInstance = getAuth(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
 
-const API = window.location.origin;
-let _token = null, _tokenTime = 0;
-const TOKEN_TTL = 5 * 60 * 1000;
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-async function getToken() {
-  const user = authInstance.currentUser;
-  if (!user) { window.location.href = "swft-login"; throw new Error("Not authenticated"); }
-  const now = Date.now();
-  if (_token && (now - _tokenTime) < TOKEN_TTL) return _token;
-  _token = await user.getIdToken();
-  _tokenTime = now;
-  return _token;
-}
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "swft-login";
+    } else {
+      document.body.style.visibility = "visible";
+      window.__swftUser = user;
+      const n = user.displayName || user.email || "";
+      document.getElementById("user-name").textContent = n;
+      document.getElementById("user-avatar").textContent = n.charAt(0).toUpperCase();
+      initBroadcasts();
+    }
+  });
+</script>
 
-async function apiFetch(path, opts = {}) {
-  const token = await getToken();
-  const res = await fetch(API + path, { ...opts, headers: { ...(opts.headers || {}), Authorization: "Bearer " + token, "Content-Type": "application/json" } });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  return res.json();
-}
+<script type="module" src="swft-user-sync.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-notifications.js"></script>
+<script src="swft-account.js"></script>
 
+<script>
 // State
-let allCustomers = [];
-let allTags = [];
-let selectedTags = new Set();
+var allCustomers = [];
+var allTags = [];
+var selectedTags = new Set();
 
-// ── Init ──
-onAuthStateChanged(authInstance, async (user) => {
-  if (!user) return window.location.href = "swft-login";
-  document.body.style.visibility = "visible";
-  const n = user.displayName || user.email || "";
-  document.getElementById("user-name").textContent = n;
-  document.getElementById("user-avatar").textContent = n.charAt(0).toUpperCase();
+async function initBroadcasts() {
   await loadCustomers();
   await loadHistory();
-});
+}
 
 async function loadCustomers() {
   try {
-    allCustomers = await apiFetch("/api/customers");
-    // Collect unique tags
-    const tagSet = new Set();
-    allCustomers.forEach(c => (c.tags || []).forEach(t => tagSet.add(t)));
-    allTags = [...tagSet].sort();
+    allCustomers = await API.customers.list();
+    var tagSet = new Set();
+    allCustomers.forEach(function(c) { (c.tags || []).forEach(function(t) { tagSet.add(t); }); });
+    allTags = Array.from(tagSet).sort();
     renderTags();
     updateRecipientCount();
   } catch (e) { console.error("loadCustomers:", e); }
 }
 
 function renderTags() {
-  const row = document.getElementById("tag-row");
-  row.innerHTML = allTags.map(t =>
-    `<div class="tag-chip ${selectedTags.has(t) ? 'selected' : ''}" onclick="window._toggleTag('${t.replace(/'/g, "\\'")}')">${t}</div>`
-  ).join("");
+  var row = document.getElementById("tag-row");
+  row.innerHTML = allTags.map(function(t) {
+    return '<div class="tag-chip ' + (selectedTags.has(t) ? 'selected' : '') + '" onclick="_toggleTag(\'' + t.replace(/'/g, "\\'") + '\')">' + t + '</div>';
+  }).join("");
   if (allTags.length === 0) row.innerHTML = '<span style="font-size:11px;color:var(--gray2);">No tags found. Add tags to customers first.</span>';
 }
-window._toggleTag = function(tag) {
+
+function _toggleTag(tag) {
   if (selectedTags.has(tag)) selectedTags.delete(tag);
   else selectedTags.add(tag);
   renderTags();
   updateRecipientCount();
-};
+}
 
 function updateRecipientCount() {
-  const channel = document.getElementById("bc-channel").value;
-  const filter = document.getElementById("bc-filter").value;
-  let custs = [...allCustomers];
+  var channel = document.getElementById("bc-channel").value;
+  var filter = document.getElementById("bc-filter").value;
+  var custs = allCustomers.slice();
 
   if (filter === "tagged" && selectedTags.size > 0) {
-    custs = custs.filter(c => (c.tags || []).some(t => selectedTags.has(t)));
+    custs = custs.filter(function(c) { return (c.tags || []).some(function(t) { return selectedTags.has(t); }); });
   }
 
   if (channel === "email") {
-    custs = custs.filter(c => c.email);
+    custs = custs.filter(function(c) { return c.email; });
   } else {
-    custs = custs.filter(c => c.phone);
+    custs = custs.filter(function(c) { return c.phone; });
   }
 
-  const el = document.getElementById("recipient-count");
-  el.innerHTML = `<strong>${custs.length}</strong> ${channel === "email" ? "customers with email" : "customers with phone number"}`;
+  var el = document.getElementById("recipient-count");
+  el.innerHTML = '<strong>' + custs.length + '</strong> ' + (channel === "email" ? "customers with email" : "customers with phone number");
 }
 
-window.onChannelChange = function() {
-  const ch = document.getElementById("bc-channel").value;
+function onChannelChange() {
+  var ch = document.getElementById("bc-channel").value;
   document.getElementById("subject-row").style.display = ch === "email" ? "" : "none";
   updateRecipientCount();
-};
+}
 
-window.onFilterChange = function() {
-  const f = document.getElementById("bc-filter").value;
+function onFilterChange() {
+  var f = document.getElementById("bc-filter").value;
   document.getElementById("tag-section").style.display = f === "tagged" ? "" : "none";
   updateRecipientCount();
-};
+}
 
-window.sendBroadcast = async function() {
-  const channel = document.getElementById("bc-channel").value;
-  const filter = document.getElementById("bc-filter").value;
-  const subject = document.getElementById("bc-subject").value.trim();
-  const message = document.getElementById("bc-message").value.trim();
+async function sendBroadcast() {
+  var channel = document.getElementById("bc-channel").value;
+  var filter = document.getElementById("bc-filter").value;
+  var subject = document.getElementById("bc-subject").value.trim();
+  var message = document.getElementById("bc-message").value.trim();
 
   if (!message) return showToast("Please enter a message");
   if (channel === "email" && !subject) return showToast("Please enter a subject");
 
-  const btn = document.getElementById("btn-send");
-  const status = document.getElementById("send-status");
+  var btn = document.getElementById("btn-send");
+  var status = document.getElementById("send-status");
   btn.disabled = true;
   status.textContent = "Sending...";
 
   try {
-    const body = { channel, message, recipientFilter: filter, subject };
-    if (filter === "tagged") body.tags = [...selectedTags];
+    var body = { channel: channel, message: message, recipientFilter: filter, subject: subject };
+    if (filter === "tagged") body.tags = Array.from(selectedTags);
 
-    const result = await apiFetch("/api/broadcasts", { method: "POST", body: JSON.stringify(body) });
-    showToast(`Broadcast sending to ${result.totalRecipients} customers`);
-    status.textContent = `Sent to ${result.totalRecipients} recipients`;
+    var result = await apiFetch("/api/broadcasts", { method: "POST", body: JSON.stringify(body) });
+    showToast("Broadcast sending to " + result.totalRecipients + " customers");
+    status.textContent = "Sent to " + result.totalRecipients + " recipients";
 
-    // Clear form
     document.getElementById("bc-message").value = "";
     document.getElementById("bc-subject").value = "";
 
-    // Refresh history after a delay
-    setTimeout(() => loadHistory(), 5000);
+    setTimeout(loadHistory, 5000);
   } catch (e) {
     showToast("Error: " + e.message);
     status.textContent = "";
   } finally {
     btn.disabled = false;
   }
-};
+}
 
 async function loadHistory() {
   try {
-    const broadcasts = await apiFetch("/api/broadcasts");
-    const list = document.getElementById("history-list");
+    var broadcasts = await apiFetch("/api/broadcasts");
+    var list = document.getElementById("history-list");
     if (!broadcasts.length) {
       list.innerHTML = '<div class="empty-state">No broadcasts yet</div>';
       return;
     }
-    list.innerHTML = broadcasts.map(b => {
-      const date = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
-      const channelClass = b.channel || "email";
-      const channelIcon = channelClass === "sms"
+    list.innerHTML = broadcasts.map(function(b) {
+      var date = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+      var channelClass = b.channel || "email";
+      var channelIcon = channelClass === "sms"
         ? '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2"/></svg>'
         : '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke-width="2"/></svg>';
-      const statusClass = b.status || "sent";
-      const meta = `${b.sentCount || 0} sent${b.failedCount ? ', ' + b.failedCount + ' failed' : ''} of ${b.totalRecipients || 0}`;
-      const title = b.subject || (b.channel === "sms" ? "SMS Broadcast" : "Email Broadcast");
-      return `<div class="history-row">
-        <div class="history-channel ${channelClass}">${channelIcon}</div>
-        <div class="history-info">
-          <div class="history-subject">${title}</div>
-          <div class="history-meta">${date} &middot; ${meta}</div>
-        </div>
-        <div class="history-badge ${statusClass}">${statusClass}</div>
-      </div>`;
+      var statusClass = b.status || "sent";
+      var meta = (b.sentCount || 0) + ' sent' + (b.failedCount ? ', ' + b.failedCount + ' failed' : '') + ' of ' + (b.totalRecipients || 0);
+      var title = b.subject || (b.channel === "sms" ? "SMS Broadcast" : "Email Broadcast");
+      return '<div class="history-row">' +
+        '<div class="history-channel ' + channelClass + '">' + channelIcon + '</div>' +
+        '<div class="history-info">' +
+          '<div class="history-subject">' + title + '</div>' +
+          '<div class="history-meta">' + date + ' &middot; ' + meta + '</div>' +
+        '</div>' +
+        '<div class="history-badge ' + statusClass + '">' + statusClass + '</div>' +
+      '</div>';
     }).join("");
   } catch (e) { console.error("loadHistory:", e); }
 }
 
 function showToast(msg) {
-  const t = document.getElementById("toast");
+  var t = document.getElementById("toast");
   document.getElementById("toast-msg").textContent = msg;
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3000);
+  setTimeout(function() { t.classList.remove("show"); }, 3000);
 }
 
-// Sidebar
-window.toggleSidebar = function() {
-  const sb = document.getElementById("sidebar");
-  const mn = document.getElementById("main");
-  const tg = document.getElementById("sidebar-toggle");
+function toggleSidebar() {
+  var sb = document.getElementById("sidebar");
+  var mn = document.getElementById("main");
+  var tg = document.getElementById("sidebar-toggle");
   sb.classList.toggle("collapsed");
   mn.classList.toggle("expanded");
   tg.classList.toggle("visible");
-};
+}
 </script>
 </body>
 </html>
