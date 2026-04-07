@@ -48,18 +48,21 @@ const tools = [
   },
   {
     name: "create_quote",
-    description: "Create a new quote/estimate for a customer. Include line items with descriptions and amounts.",
+    description: "Create a new quote/estimate for a customer. Always link to an existing job via jobId. Include line items with descriptions and amounts.",
     input_schema: {
       type: "object",
       properties: {
         customerId: { type: "string", description: "Customer ID to associate the quote with" },
         customerName: { type: "string", description: "Customer name for display" },
+        jobId: { type: "string", description: "Job ID this quote is for — always provide this" },
+        service: { type: "string", description: "Service type (e.g., 'Driveway', 'Patio')" },
+        address: { type: "string", description: "Job site address" },
         items: {
           type: "array",
           items: {
             type: "object",
             properties: {
-              description: { type: "string", description: "Line item description (e.g., 'Labor - water heater installation')" },
+              description: { type: "string", description: "Line item description (e.g., 'Labor - concrete pour')" },
               amount: { type: "number", description: "Cost for this line item" },
             },
             required: ["description", "amount"],
@@ -95,15 +98,17 @@ const tools = [
   },
   {
     name: "create_invoice",
-    description: "Create a new invoice for a customer. Can be created from a quote or from scratch.",
+    description: "Create an invoice for a customer. If quoteId is provided, line items are auto-populated from that quote — do not re-specify items. Always link to the existing customer and job.",
     input_schema: {
       type: "object",
       properties: {
         customerId: { type: "string", description: "Customer ID" },
         customerName: { type: "string", description: "Customer name for display" },
-        quoteId: { type: "string", description: "Optional quote ID this invoice is based on" },
+        quoteId: { type: "string", description: "Quote ID to pull line items from (recommended — items auto-populate)" },
+        jobId: { type: "string", description: "Job ID this invoice is for" },
         items: {
           type: "array",
+          description: "Line items — omit if quoteId is provided (auto-populated from quote)",
           items: {
             type: "object",
             properties: {
@@ -116,7 +121,7 @@ const tools = [
         dueDate: { type: "string", description: "Due date in YYYY-MM-DD format" },
         notes: { type: "string" },
       },
-      required: ["customerId", "customerName", "items"],
+      required: ["customerId", "customerName"],
     },
   },
   {

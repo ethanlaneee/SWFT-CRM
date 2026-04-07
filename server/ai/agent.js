@@ -75,6 +75,9 @@ async function executeTool(toolName, input, uid, orgId) {
         userId: uid,
         customerId: input.customerId || "",
         customerName: input.customerName || "",
+        jobId: input.jobId || null,
+        service: input.service || "",
+        address: input.address || "",
         items: normalizedItems,
         total,
         notes: input.notes || "",
@@ -194,7 +197,15 @@ async function executeTool(toolName, input, uid, orgId) {
     }
 
     case "create_invoice": {
-      const normalizedInvItems = normalizeItems(input.items);
+      // Auto-populate items from linked quote if not provided
+      let rawItems = input.items || [];
+      if (input.quoteId && rawItems.length === 0) {
+        const qSnap = await db.collection("quotes").doc(input.quoteId).get();
+        if (qSnap.exists && qSnap.data().orgId === oid) {
+          rawItems = qSnap.data().items || [];
+        }
+      }
+      const normalizedInvItems = normalizeItems(rawItems);
       const total = normalizedInvItems.reduce((sum, i) => sum + i.total, 0);
       const data = {
         orgId: oid,
@@ -202,6 +213,7 @@ async function executeTool(toolName, input, uid, orgId) {
         customerId: input.customerId || "",
         customerName: input.customerName || "",
         quoteId: input.quoteId || null,
+        jobId: input.jobId || null,
         items: normalizedInvItems,
         total,
         notes: input.notes || "",
