@@ -592,6 +592,47 @@ section{position:relative;z-index:1;}
 .pricing-note{text-align:center;margin-top:32px;font-size:13px;color:var(--gray);}
 .pricing-note strong{color:var(--white);}
 
+/* ── VALUE STACK ── */
+.value-breakdown{padding:100px 0 40px;}
+.value-list{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:0;}
+.value-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;
+  border-bottom:1px solid var(--border);
+  transition:background 0.2s;
+}
+.value-row:first-child{border-top:1px solid var(--border);border-radius:12px 12px 0 0;}
+.value-row:last-child{border-radius:0 0 12px 12px;border-bottom:1px solid var(--border);}
+.value-row:hover{background:var(--surface);}
+.value-tool{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--white);font-weight:500;}
+.value-tool svg{width:20px;height:20px;color:var(--green);flex-shrink:0;}
+.value-price{
+  font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;
+  color:var(--red);text-decoration:line-through;
+}
+.value-total-row{
+  display:flex;align-items:center;justify-content:space-between;
+  max-width:640px;margin:0 auto;
+  padding:24px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  margin-top:20px;
+}
+.value-total-label{font-size:16px;font-weight:600;color:var(--white);}
+.value-total-price{
+  font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;
+  color:var(--red);text-decoration:line-through;
+}
+.value-swft-row{
+  display:flex;align-items:center;justify-content:space-between;
+  max-width:640px;margin:0 auto;
+  padding:24px;
+  background:linear-gradient(135deg,rgba(200,241,53,0.08),rgba(200,241,53,0.02));
+  border:1px solid rgba(200,241,53,0.2);border-radius:12px;
+  margin-top:12px;
+}
+.value-swft-label{font-size:16px;font-weight:600;color:var(--white);}
+.value-swft-price{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:var(--green);}
+
 /* ── BILLING TOGGLE ── */
 .billing-toggle{
   display:flex;align-items:center;justify-content:center;gap:16px;
@@ -1234,6 +1275,85 @@ section{position:relative;z-index:1;}
         <div class="compare-item"><span class="compare-check">✓</span> One app replaces everything</div>
         <div class="compare-item"><span class="compare-check">✓</span> Home by dinner — admin runs itself</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VALUE BREAKDOWN ── -->
+<section class="value-breakdown">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">The Value</span>
+      <h2 class="section-title">WHAT YOU'D PAY <span class="accent">WITHOUT SWFT</span></h2>
+      <p class="section-sub">Here's what it costs to piece together the same tools separately.</p>
+    </div>
+
+    <div class="value-list reveal">
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          CRM &amp; Customer Management
+        </span>
+        <span class="value-price">$20/mo</span>
+      </div>
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          Quotes &amp; Invoicing
+        </span>
+        <span class="value-price">$19/mo</span>
+      </div>
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Job Scheduling &amp; Calendar
+        </span>
+        <span class="value-price">$20/mo</span>
+      </div>
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Business SMS &amp; Texting
+        </span>
+        <span class="value-price">$29/mo</span>
+      </div>
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+          Email Marketing
+        </span>
+        <span class="value-price">$13/mo</span>
+      </div>
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5"/></svg>
+          AI Assistant &amp; Chatbot
+        </span>
+        <span class="value-price">$20/mo</span>
+      </div>
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          AI Receptionist (auto-reply)
+        </span>
+        <span class="value-price">$99/mo</span>
+      </div>
+      <div class="value-row">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Automated Follow-ups
+        </span>
+        <span class="value-price">$49/mo</span>
+      </div>
+    </div>
+
+    <div class="value-total-row reveal">
+      <span class="value-total-label">Buying it all separately</span>
+      <span class="value-total-price">$269/mo</span>
+    </div>
+    <div class="value-swft-row reveal">
+      <span class="value-swft-label">SWFT — everything included</span>
+      <span class="value-swft-price">From $89/mo</span>
     </div>
   </div>
 </section>
