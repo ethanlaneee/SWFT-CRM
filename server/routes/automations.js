@@ -65,20 +65,14 @@ async function triggerAutomation(orgId, trigger, customer) {
     if (snap.empty) return;
 
     // Fetch org owner user doc for company name
-    const usersSnap = await db
-      .collection("users")
-      .where("orgId", "==", orgId)
-      .where("role", "==", "owner")
-      .limit(1)
-      .get();
-
-    // Fallback: try fetching the user doc where uid == orgId (solo user pattern)
     let orgUser = {};
-    if (!usersSnap.empty) {
-      orgUser = usersSnap.docs[0].data();
+    const ownerDoc = await db.collection("users").doc(orgId).get();
+    if (ownerDoc.exists) {
+      orgUser = ownerDoc.data();
     } else {
-      const ownerDoc = await db.collection("users").doc(orgId).get();
-      if (ownerDoc.exists) orgUser = ownerDoc.data();
+      // Fallback: query by orgId field
+      const usersSnap = await db.collection("users").where("orgId", "==", orgId).limit(1).get();
+      if (!usersSnap.empty) orgUser = usersSnap.docs[0].data();
     }
 
     const companyName = orgUser.company || orgUser.name || "";
@@ -217,7 +211,16 @@ async function processScheduledMessages() {
       .collection("scheduledMessages")
       .where("status", "==", "pending")
       .get();
-    pendingDocs = pendingSnap.docs.filter(d => (d.data().sendAt || 0) <= now);
+    const allPending = pendingSnap.docs;
+    pendingDocs = allPending.filter(d => (d.data().sendAt || 0) <= now);
+    if (allPending.length > 0) {
+      console.log(`[automation worker] Found ${allPending.length} pending, ${pendingDocs.length} ready to send now`);
+      // Log details of pending messages not yet ready
+      allPending.forEach(d => {
+        const data = d.data();
+        console.log(`[automation worker]   ${d.id}: sendAt=${new Date(data.sendAt).toISOString()}, ready=${(data.sendAt || 0) <= now}, type=${data.messageType}, to=${data.email || data.phone}`);
+      });
+    }
   } catch (err) {
     console.error("[automation worker] Pending query error:", err.message);
   }
@@ -245,27 +248,24 @@ async function processScheduledMessages() {
     const retryCount = msg.retryCount || 0;
 
     try {
-      // Fetch org user for email sending
-      const usersSnap = await db
-        .collection("users")
-        .where("orgId", "==", msg.orgId)
-        .where("role", "==", "owner")
-        .limit(1)
-        .get();
-
+      // Fetch org user for email sending — use doc ID lookup first (most reliable)
       let orgUser = {};
       let ownerUid = msg.userId || msg.orgId;
-      if (!usersSnap.empty) {
-        orgUser = usersSnap.docs[0].data();
-        orgUser._uid = usersSnap.docs[0].id;
-        ownerUid = usersSnap.docs[0].id;
+      const ownerDoc = await db.collection("users").doc(msg.orgId).get();
+      if (ownerDoc.exists) {
+        orgUser = ownerDoc.data();
+        orgUser._uid = msg.orgId;
+        ownerUid = msg.orgId;
       } else {
-        const ownerDoc = await db.collection("users").doc(msg.orgId).get();
-        if (ownerDoc.exists) {
-          orgUser = ownerDoc.data();
-          orgUser._uid = msg.orgId;
+        // Fallback: query by orgId field
+        const usersSnap = await db.collection("users").where("orgId", "==", msg.orgId).limit(1).get();
+        if (!usersSnap.empty) {
+          orgUser = usersSnap.docs[0].data();
+          orgUser._uid = usersSnap.docs[0].id;
+          ownerUid = usersSnap.docs[0].id;
         }
       }
+      console.log(`[automation worker] Processing ${msgDoc.id}: type=${msg.messageType}, to=${msg.email || msg.phone}, orgUser found=${!!orgUser._uid}, gmailConnected=${!!orgUser.gmailConnected}`);
 
       if (msg.messageType === "tag_customer") {
         // Add tags to the customer document
