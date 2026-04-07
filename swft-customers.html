@@ -54,9 +54,8 @@ display:flex; align-items:center; padding:0 28px; gap:16px;
 position:sticky; top:0;
 background:rgba(10,10,10,0.88); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
 z-index:100;
-animation: fadeDown 0.3s ease 0.15s both;
+animation: sharpIn 0.35s ease-out 0.05s both;
 }
-@keyframes fadeDown { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
 .topbar-page { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2.5px; color:var(--white); }
 .topbar-slash { color:var(--border2); font-family:'JetBrains Mono',monospace; font-size:16px; }
 .topbar-sub { font-size:12px; color:var(--gray); font-style:italic; font-weight:300; }
@@ -102,7 +101,7 @@ transition:border-color 0.15s;
 .sort-btn:hover { color:var(--white); border-color:var(--gray2); }
 
 /* ── CUSTOMER TABLE ── */
-.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:sharpIn 0.35s ease-out 0.15s both; }
 
 .table-head {
 display:grid;
@@ -131,12 +130,10 @@ border-bottom:1px solid var(--border);
 align-items:center;
 cursor:pointer;
 transition:background 0.12s;
-animation:sharpIn 0.3s ease-out both;
+animation:sharpIn 0.35s ease-out both;
 }
 .cust-row:last-child { border-bottom:none; }
 .cust-row:hover { background:var(--surface2); }
-
-@keyframes fadeUp { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 .cust-row:nth-child(1){animation-delay:0.04s;}
 .cust-row:nth-child(2){animation-delay:0.08s;}
 .cust-row:nth-child(3){animation-delay:0.12s;}
@@ -1161,7 +1158,10 @@ function showToast(msg) {
   const toast = document.getElementById('toast');
   const label = document.getElementById('toast-msg');
   label.textContent = msg;
+  toast.classList.remove('swft-success');
   toast.classList.add('show');
+  void toast.offsetWidth;
+  toast.classList.add('swft-success');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
