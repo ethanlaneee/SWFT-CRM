@@ -747,11 +747,7 @@ async function openBillingPortal() {
     });
     var data = await res.json();
     if (data.url) {
-      document.getElementById('billing-modal-title').textContent = 'Manage Billing';
-      var modal = document.getElementById('billing-modal');
-      modal.classList.add('portal-mode');
-      document.getElementById('billing-modal-body').innerHTML = '<iframe class="billing-portal-frame" src="' + data.url + '"></iframe>';
-      document.getElementById('billing-overlay').classList.add('open');
+      window.location.href = data.url;
     } else {
       showToast(data.error || 'Could not open billing portal');
     }
