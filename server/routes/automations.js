@@ -211,6 +211,7 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
         gmailThreadId: emailContext?.gmailThreadId || null,
         gmailMessageId: emailContext?.gmailMessageId || null,
         rfcMessageId: emailContext?.rfcMessageId || null,
+        originalSubject: emailContext?.originalSubject || null,
       };
 
       const newRef = db.collection("scheduledMessages").doc();
@@ -332,8 +333,11 @@ async function processScheduledMessages() {
           threadId: msg.gmailThreadId,
           rfcMessageId: msg.rfcMessageId,
         } : null;
-        // Prepend "Re: " when replying to an existing thread
-        if (threadInfo && !emailSubject.toLowerCase().startsWith("re:")) {
+        // Gmail requires subject to match original thread for proper threading
+        // Use "Re: <original subject>" when replying to an existing thread
+        if (threadInfo && msg.originalSubject) {
+          emailSubject = `Re: ${msg.originalSubject}`;
+        } else if (threadInfo && !emailSubject.toLowerCase().startsWith("re:")) {
           emailSubject = `Re: ${emailSubject}`;
         }
         emailResult = await sendAutomationEmail(

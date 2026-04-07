@@ -143,6 +143,7 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
         gmailThreadId: sendResult.threadId,
         gmailMessageId: sendResult.messageId,
         rfcMessageId: sendResult.rfcMessageId,
+        originalSubject: subject,
       }).catch(console.error);
     }
 

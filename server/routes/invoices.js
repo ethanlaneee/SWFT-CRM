@@ -185,7 +185,7 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
       userId: req.uid, orgId: req.orgId, to: cust.email, subject, body: bodyText,
       customerId: invData.customerId, customerName: invData.customerName || cust.name || "",
       type: "email", status: "sent", sentVia: "gmail",
-      gmailMessageId: sendResult.messageId, gmailThreadId: sendResult.threadId,
+      gmailMessageId: sendResult.messageId, gmailThreadId: sendResult.threadId, rfcMessageId: sendResult.rfcMessageId || null,
       attachedDocType: "invoice", attachedDocId: req.params.id,
       attachments: [pdfFile.originalname], sentAt: Date.now(),
     });
@@ -204,6 +204,7 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
         gmailThreadId: sendResult.threadId,
         gmailMessageId: sendResult.messageId,
         rfcMessageId: sendResult.rfcMessageId,
+        originalSubject: subject,
       }).catch(console.error);
     }
 
