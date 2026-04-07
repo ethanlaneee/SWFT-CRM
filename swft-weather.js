@@ -83,7 +83,7 @@
       const useCelsius = isCanada(loc.lat, loc.lon);
       _unit = useCelsius ? "°C" : "°F";
       const tempUnit = useCelsius ? "celsius" : "fahrenheit";
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=${tempUnit}&timezone=auto&forecast_days=16`;
+      const url = `/api/weather?lat=${loc.lat}&lon=${loc.lon}&units=${tempUnit}`;
       const res = await fetch(url);
       const data = await res.json();
       window._swftWeatherData = data;
