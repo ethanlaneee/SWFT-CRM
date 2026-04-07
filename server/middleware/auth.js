@@ -23,7 +23,7 @@ async function auth(req, res, next) {
 
   // Check cache first to avoid burning Firestore reads
   const cached = userCache.get(req.uid);
-  if (cached && (Date.now() - cached.cachedAt) < USER_CACHE_TTL) {
+  if (cached && cached.orgId && (Date.now() - cached.cachedAt) < USER_CACHE_TTL) {
     req.orgId = cached.orgId;
     req.userRole = cached.role;
     return next();
@@ -40,11 +40,14 @@ async function auth(req, res, next) {
       req.userRole = "owner";
     }
     // Cache the result
+    console.log("[auth] User", req.uid, "→ orgId:", req.orgId, "role:", req.userRole);
     userCache.set(req.uid, { orgId: req.orgId, role: req.userRole, cachedAt: Date.now() });
   } catch (err) {
     console.error("[auth] Firestore user lookup failed:", err.code || err.message);
+    // Don't cache failures — use defaults but retry next time
     req.orgId = req.uid;
     req.userRole = "owner";
+    return next();
   }
 
   next();
