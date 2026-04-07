@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>SWFT — Broadcasts</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#0a0a0a; --surface:#111111; --surface2:#181818;
+    --border:#1f1f1f; --border2:#2c2c2c;
+    --green:#c8f135; --white:#f0f0f0; --gray:#7a7a7a; --gray2:#444444;
+    --blue:#4d9fff; --amber:#f5a623; --red:#ff5252; --purple:#b388ff;
+    --sidebar-w:228px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{background:#0a0a0a;}
+  body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);line-height:1;}
+.logo-mark em{color:var(--green);font-style:normal;}
+.logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
+.sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(--surface2);}
+.s-avatar,.avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--white);}
+.user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
+
+/* ── TOPBAR ── */
+.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;animation:fadeDown 0.3s ease 0.15s both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
+.topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+
+/* ── PAGE BODY ── */
+.page-body{flex:1;padding:28px 28px 48px;display:flex;flex-direction:column;gap:20px;max-width:800px;}
+
+/* ── COMPOSE CARD ── */
+.compose-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:18px;}
+.compose-card h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);}
+.form-row{display:flex;flex-direction:column;gap:5px;}
+.form-row label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;}
+.form-row input,.form-row textarea,.form-row select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.form-row input:focus,.form-row textarea:focus,.form-row select:focus{border-color:var(--green);}
+.form-row textarea{resize:none;line-height:1.6;}
+.form-row select{cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7a7a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.form-row select option{background:var(--surface2);color:var(--white);}
+.var-hint{font-size:10px;color:var(--gray2);margin-top:2px;}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.tag-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--gray);cursor:pointer;transition:all 0.12s;user-select:none;}
+.tag-chip:hover{border-color:var(--green);color:var(--white);}
+.tag-chip.selected{background:rgba(200,241,53,0.12);border-color:rgba(200,241,53,0.3);color:var(--green);}
+.recipient-count{font-size:12px;color:var(--gray);margin-top:2px;}
+.recipient-count strong{color:var(--green);}
+
+/* ── BUTTONS ── */
+.btn-send{display:flex;align-items:center;gap:8px;padding:11px 24px;border-radius:10px;border:none;background:var(--green);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;align-self:flex-start;}
+.btn-send:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-send:disabled{opacity:0.4;cursor:not-allowed;transform:none;filter:none;}
+.btn-actions{display:flex;gap:10px;align-items:center;}
+
+/* ── HISTORY ── */
+.history-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;}
+.history-card h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:14px;}
+.history-row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);}
+.history-row:last-child{border-bottom:none;}
+.history-channel{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.history-channel.email{background:rgba(77,159,255,0.12);color:var(--blue);}
+.history-channel.sms{background:rgba(200,241,53,0.12);color:var(--green);}
+.history-info{flex:1;min-width:0;}
+.history-subject{font-size:13px;color:var(--white);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.history-meta{font-size:11px;color:var(--gray);margin-top:2px;}
+.history-badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.history-badge.sent{background:rgba(200,241,53,0.1);color:var(--green);}
+.history-badge.sending{background:rgba(245,166,35,0.1);color:var(--amber);}
+.history-badge.failed{background:rgba(255,82,82,0.1);color:var(--red);}
+.empty-state{text-align:center;color:var(--gray2);font-size:13px;padding:20px 0;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.topbar{transition:padding-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded .topbar{padding-left:56px;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div>
+      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-sub">simple. smart. swft.</div>
+    </div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item" onclick="window.location.href='swft-dashboard'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-label">CRM</div>
+    <div class="nav-item" onclick="window.location.href='swft-customers'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
+      Customers
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-jobs'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Jobs
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
+    <div class="nav-item" onclick="window.location.href='swft-schedule'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
+      Schedule
+    </div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
+    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
+    <div class="nav-label">Admin</div>
+    <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
+  </nav>
+  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
+    <div class="user-tile">
+      <div class="avatar" id="user-avatar"></div>
+      <div>
+        <div class="user-name" id="user-name"></div>
+        <div class="user-role">--</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<div class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-page">BROADCASTS</div>
+    <span class="topbar-slash">/</span>
+    <div class="topbar-sub" id="topbar-sub">send a message to all your customers at once</div>
+  </header>
+
+  <div class="page-body">
+
+    <!-- COMPOSE -->
+    <div class="compose-card" style="animation:fadeUp 0.3s ease 0.1s both;">
+      <h3>Compose Broadcast</h3>
+
+      <div class="form-row">
+        <label>Channel</label>
+        <select id="bc-channel" onchange="onChannelChange()">
+          <option value="email">Email</option>
+          <option value="sms">SMS</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Recipients</label>
+        <select id="bc-filter" onchange="onFilterChange()">
+          <option value="all">All Customers</option>
+          <option value="tagged">Filter by Tags</option>
+        </select>
+        <div id="tag-section" style="display:none;">
+          <div class="tag-row" id="tag-row"></div>
+        </div>
+        <div class="recipient-count" id="recipient-count"></div>
+      </div>
+
+      <div class="form-row" id="subject-row">
+        <label>Subject</label>
+        <input id="bc-subject" type="text" placeholder="e.g. Special offer for our valued customers"/>
+      </div>
+
+      <div class="form-row">
+        <label>Message</label>
+        <textarea id="bc-message" rows="6" placeholder="Hey {firstName}, we wanted to let you know about..."></textarea>
+        <span class="var-hint">Variables: {firstName}, {customerName}, {yourName}, {yourFirstName}, {companyName}</span>
+      </div>
+
+      <div class="btn-actions">
+        <button class="btn-send" id="btn-send" onclick="sendBroadcast()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="2" stroke-linejoin="round"/></svg>
+          Send Broadcast
+        </button>
+        <span id="send-status" style="font-size:12px;color:var(--gray);"></span>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-card" style="animation:fadeUp 0.3s ease 0.2s both;">
+      <h3>Recent Broadcasts</h3>
+      <div id="history-list">
+        <div class="empty-state">No broadcasts yet</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCB1fsmxaBqNn3gb3c3vYjkMFMVxjdmfCM",
+  authDomain: "swft-crm.firebaseapp.com",
+  projectId: "swft-crm",
+  storageBucket: "swft-crm.firebasestorage.app",
+  messagingSenderId: "1004519573498",
+  appId: "1:1004519573498:web:5765f407e498e53ea49e5b"
+};
+const app = initializeApp(firebaseConfig);
+const authInstance = getAuth(app);
+
+const API = window.location.origin;
+let _token = null, _tokenTime = 0;
+const TOKEN_TTL = 5 * 60 * 1000;
+
+async function getToken() {
+  const user = authInstance.currentUser;
+  if (!user) { window.location.href = "swft-login"; throw new Error("Not authenticated"); }
+  const now = Date.now();
+  if (_token && (now - _tokenTime) < TOKEN_TTL) return _token;
+  _token = await user.getIdToken();
+  _tokenTime = now;
+  return _token;
+}
+
+async function apiFetch(path, opts = {}) {
+  const token = await getToken();
+  const res = await fetch(API + path, { ...opts, headers: { ...(opts.headers || {}), Authorization: "Bearer " + token, "Content-Type": "application/json" } });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  return res.json();
+}
+
+// State
+let allCustomers = [];
+let allTags = [];
+let selectedTags = new Set();
+
+// ── Init ──
+onAuthStateChanged(authInstance, async (user) => {
+  if (!user) return window.location.href = "swft-login";
+  document.body.style.visibility = "visible";
+  const n = user.displayName || user.email || "";
+  document.getElementById("user-name").textContent = n;
+  document.getElementById("user-avatar").textContent = n.charAt(0).toUpperCase();
+  await loadCustomers();
+  await loadHistory();
+});
+
+async function loadCustomers() {
+  try {
+    allCustomers = await apiFetch("/api/customers");
+    // Collect unique tags
+    const tagSet = new Set();
+    allCustomers.forEach(c => (c.tags || []).forEach(t => tagSet.add(t)));
+    allTags = [...tagSet].sort();
+    renderTags();
+    updateRecipientCount();
+  } catch (e) { console.error("loadCustomers:", e); }
+}
+
+function renderTags() {
+  const row = document.getElementById("tag-row");
+  row.innerHTML = allTags.map(t =>
+    `<div class="tag-chip ${selectedTags.has(t) ? 'selected' : ''}" onclick="window._toggleTag('${t.replace(/'/g, "\\'")}')">${t}</div>`
+  ).join("");
+  if (allTags.length === 0) row.innerHTML = '<span style="font-size:11px;color:var(--gray2);">No tags found. Add tags to customers first.</span>';
+}
+window._toggleTag = function(tag) {
+  if (selectedTags.has(tag)) selectedTags.delete(tag);
+  else selectedTags.add(tag);
+  renderTags();
+  updateRecipientCount();
+};
+
+function updateRecipientCount() {
+  const channel = document.getElementById("bc-channel").value;
+  const filter = document.getElementById("bc-filter").value;
+  let custs = [...allCustomers];
+
+  if (filter === "tagged" && selectedTags.size > 0) {
+    custs = custs.filter(c => (c.tags || []).some(t => selectedTags.has(t)));
+  }
+
+  if (channel === "email") {
+    custs = custs.filter(c => c.email);
+  } else {
+    custs = custs.filter(c => c.phone);
+  }
+
+  const el = document.getElementById("recipient-count");
+  el.innerHTML = `<strong>${custs.length}</strong> ${channel === "email" ? "customers with email" : "customers with phone number"}`;
+}
+
+window.onChannelChange = function() {
+  const ch = document.getElementById("bc-channel").value;
+  document.getElementById("subject-row").style.display = ch === "email" ? "" : "none";
+  updateRecipientCount();
+};
+
+window.onFilterChange = function() {
+  const f = document.getElementById("bc-filter").value;
+  document.getElementById("tag-section").style.display = f === "tagged" ? "" : "none";
+  updateRecipientCount();
+};
+
+window.sendBroadcast = async function() {
+  const channel = document.getElementById("bc-channel").value;
+  const filter = document.getElementById("bc-filter").value;
+  const subject = document.getElementById("bc-subject").value.trim();
+  const message = document.getElementById("bc-message").value.trim();
+
+  if (!message) return showToast("Please enter a message");
+  if (channel === "email" && !subject) return showToast("Please enter a subject");
+
+  const btn = document.getElementById("btn-send");
+  const status = document.getElementById("send-status");
+  btn.disabled = true;
+  status.textContent = "Sending...";
+
+  try {
+    const body = { channel, message, recipientFilter: filter, subject };
+    if (filter === "tagged") body.tags = [...selectedTags];
+
+    const result = await apiFetch("/api/broadcasts", { method: "POST", body: JSON.stringify(body) });
+    showToast(`Broadcast sending to ${result.totalRecipients} customers`);
+    status.textContent = `Sent to ${result.totalRecipients} recipients`;
+
+    // Clear form
+    document.getElementById("bc-message").value = "";
+    document.getElementById("bc-subject").value = "";
+
+    // Refresh history after a delay
+    setTimeout(() => loadHistory(), 5000);
+  } catch (e) {
+    showToast("Error: " + e.message);
+    status.textContent = "";
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+async function loadHistory() {
+  try {
+    const broadcasts = await apiFetch("/api/broadcasts");
+    const list = document.getElementById("history-list");
+    if (!broadcasts.length) {
+      list.innerHTML = '<div class="empty-state">No broadcasts yet</div>';
+      return;
+    }
+    list.innerHTML = broadcasts.map(b => {
+      const date = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+      const channelClass = b.channel || "email";
+      const channelIcon = channelClass === "sms"
+        ? '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2"/></svg>'
+        : '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke-width="2"/></svg>';
+      const statusClass = b.status || "sent";
+      const meta = `${b.sentCount || 0} sent${b.failedCount ? ', ' + b.failedCount + ' failed' : ''} of ${b.totalRecipients || 0}`;
+      const title = b.subject || (b.channel === "sms" ? "SMS Broadcast" : "Email Broadcast");
+      return `<div class="history-row">
+        <div class="history-channel ${channelClass}">${channelIcon}</div>
+        <div class="history-info">
+          <div class="history-subject">${title}</div>
+          <div class="history-meta">${date} &middot; ${meta}</div>
+        </div>
+        <div class="history-badge ${statusClass}">${statusClass}</div>
+      </div>`;
+    }).join("");
+  } catch (e) { console.error("loadHistory:", e); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  document.getElementById("toast-msg").textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// Sidebar
+window.toggleSidebar = function() {
+  const sb = document.getElementById("sidebar");
+  const mn = document.getElementById("main");
+  const tg = document.getElementById("sidebar-toggle");
+  sb.classList.toggle("collapsed");
+  mn.classList.toggle("expanded");
+  tg.classList.toggle("visible");
+};
+</script>
+</body>
+</html>
