@@ -42,5 +42,7 @@ services:
         sync: false
       - key: ENCRYPT_KEY
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false
       - key: NODE_ENV
         value: production

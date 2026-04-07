@@ -505,6 +505,7 @@ app.use("/api/calendar",      require("./routes/calendar"));
 app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
 app.use("/api/automations",   auth, checkAccess,  automationsRouter);
 app.use("/api/broadcasts",  auth, checkAccess,  require("./routes/broadcasts"));
+app.use("/api/transcribe",    auth, checkAccess,  require("./routes/transcribe"));
 app.use("/api/dev",           auth,               require("./routes/dev"));
 
 
