@@ -175,9 +175,8 @@
     const strip = document.querySelector(".weather-strip");
     if (!strip) return;
 
-    // Schedule page — strip uses a multi-column grid layout
-    const style = window.getComputedStyle(strip);
-    if (style.gridTemplateColumns && style.gridTemplateColumns.includes("1fr")) {
+    // Schedule page — detected via data-type attribute
+    if (strip.dataset.type === "schedule") {
       updateScheduleWeather(data);
       return;
     }
