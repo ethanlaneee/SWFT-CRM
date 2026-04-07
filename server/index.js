@@ -475,19 +475,19 @@ app.listen(PORT, () => {
 });
 
 // ── Automation worker ──
-// Process pending scheduled messages every 30 seconds
+// Process pending scheduled messages every 5 minutes (was 30s — reduced to save Firestore reads)
 setInterval(() => {
   processScheduledMessages().catch(err => console.error("Automation worker error:", err));
-}, 30 * 1000);
-
-// Run once on startup after 5 seconds
-setTimeout(() => processScheduledMessages().catch(console.error), 5000);
-
-// ── Follow-up Agent worker ──
-// Scans for unsigned quotes, overdue invoices, completed jobs every 60 seconds
-setInterval(() => {
-  runFollowupAgent().catch(err => console.error("Follow-up agent error:", err));
-}, 60 * 1000);
+}, 5 * 60 * 1000);
 
 // Run once on startup after 10 seconds
-setTimeout(() => runFollowupAgent().catch(console.error), 10000);
+setTimeout(() => processScheduledMessages().catch(console.error), 10000);
+
+// ── Follow-up Agent worker ──
+// Scans for unsigned quotes, overdue invoices, completed jobs every 10 minutes (was 60s)
+setInterval(() => {
+  runFollowupAgent().catch(err => console.error("Follow-up agent error:", err));
+}, 10 * 60 * 1000);
+
+// Run once on startup after 30 seconds
+setTimeout(() => runFollowupAgent().catch(console.error), 30000);

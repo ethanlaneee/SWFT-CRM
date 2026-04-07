@@ -5,6 +5,10 @@ const col = () => db.collection("users");
 // Admin accounts bypass all subscription/trial checks
 const ADMIN_EMAILS = ["ethan@goswft.com"];
 
+// Cache account status for 2 minutes to reduce Firestore reads
+const accessCache = new Map();
+const ACCESS_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+
 // Maps (baseUrl, HTTP method) → required permission key
 const METHOD_PERMISSION = {
   "/api/dashboard":     { GET: "dashboard.view" },
@@ -120,14 +124,31 @@ async function checkAccess(req, res, next) {
 
   // ── Step 2: Account status ────────────────────────────────────────────────
   try {
-    const doc = await col().doc(req.uid).get();
-    if (!doc.exists) return next(); // new user — let them through
+    // Check cache first
+    const cached = accessCache.get(req.uid);
+    let accountStatus, isSubscribed, trialEndDate;
 
-    let { accountStatus, isSubscribed, trialEndDate } = doc.data();
+    if (cached && (Date.now() - cached.cachedAt) < ACCESS_CACHE_TTL) {
+      accountStatus = cached.accountStatus;
+      isSubscribed = cached.isSubscribed;
+      trialEndDate = cached.trialEndDate;
+    } else {
+      const doc = await col().doc(req.uid).get();
+      if (!doc.exists) {
+        accessCache.set(req.uid, { accountStatus: null, isSubscribed: false, trialEndDate: null, cachedAt: Date.now() });
+        return next(); // new user — let them through
+      }
+      const data = doc.data();
+      accountStatus = data.accountStatus;
+      isSubscribed = data.isSubscribed;
+      trialEndDate = data.trialEndDate;
+      accessCache.set(req.uid, { accountStatus, isSubscribed, trialEndDate, cachedAt: Date.now() });
+    }
 
     if (!isSubscribed && trialEndDate && Date.now() > trialEndDate) {
       if (accountStatus !== "expired") {
         await col().doc(req.uid).set({ accountStatus: "expired" }, { merge: true });
+        accessCache.delete(req.uid); // invalidate cache
       }
       accountStatus = "expired";
     }
