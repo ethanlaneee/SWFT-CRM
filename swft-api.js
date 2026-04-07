@@ -67,6 +67,12 @@ async function apiFetch(path, options = {}, _retried) {
         return apiFetch(path, options, true);
       }
     }
+    // If retry also got 401, run diagnostics
+    if (res.status === 401 && _retried && !window._swftDebugRan) {
+      window._swftDebugRan = true;
+      fetch("/api/auth-debug", { headers: { "Authorization": `Bearer ${_cachedToken}` } })
+        .then(r => r.json()).then(d => console.error("[SWFT AUTH DEBUG]", JSON.stringify(d, null, 2))).catch(() => {});
+    }
     const msg = data.error || "API error";
     if (res.status === 403 && typeof window !== "undefined" && typeof window.swftNoPermission === "function") {
       window.swftNoPermission(msg);

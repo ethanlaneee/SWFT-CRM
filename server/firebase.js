@@ -51,4 +51,8 @@ let _resolvedBucket = admin.storage().bucket(); // default
 // Getter so photo routes always use the resolved bucket
 function getStorageBucket() { return _resolvedBucket; }
 
-module.exports = { admin, db, authAdmin, get bucket() { return _resolvedBucket; }, getStorageBucket };
+// Expose the project ID for diagnostics
+const projectId = admin.app().options?.projectId || admin.app().options?.credential?.projectId || "unknown";
+console.log("[firebase] Admin SDK project ID:", projectId);
+
+module.exports = { admin, db, authAdmin, projectId, get bucket() { return _resolvedBucket; }, getStorageBucket };
