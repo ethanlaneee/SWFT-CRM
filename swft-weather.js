@@ -84,7 +84,17 @@
       _unit = useCelsius ? "°C" : "°F";
       const tempUnit = useCelsius ? "celsius" : "fahrenheit";
       const url = `/api/weather?lat=${loc.lat}&lon=${loc.lon}&units=${tempUnit}`;
-      const res = await fetch(url);
+      // Include auth token (weather is Pro+ only)
+      const headers = {};
+      if (typeof firebase !== "undefined" && firebase.auth) {
+        const user = firebase.auth().currentUser;
+        if (user) {
+          const token = await user.getIdToken();
+          headers["Authorization"] = "Bearer " + token;
+        }
+      }
+      const res = await fetch(url, { headers });
+      if (res.status === 403 || res.status === 401) return null;
       const data = await res.json();
       window._swftWeatherData = data;
       return data;
