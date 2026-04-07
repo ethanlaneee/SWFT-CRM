@@ -368,17 +368,14 @@ app.get("/api/weather", auth, async (req, res) => {
     const longitude = parseFloat(lon) || -97.74;
     const tempUnit = units === "celsius" ? "celsius" : "fahrenheit";
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=${tempUnit}&timezone=auto&forecast_days=16`;
-    require("https").get(url, (upstream) => {
-      let body = "";
-      upstream.on("data", (chunk) => { body += chunk; });
-      upstream.on("end", () => {
-        try {
-          const data = JSON.parse(body);
-          res.set("Cache-Control", "public, max-age=1800");
-          res.json(data);
-        } catch (e) { res.status(502).json({ error: "Weather parse failed" }); }
-      });
-    }).on("error", () => res.status(502).json({ error: "Weather fetch failed" }));
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      console.error("Open-Meteo error:", resp.status, await resp.text().catch(() => ""));
+      return res.status(502).json({ error: "Weather service unavailable" });
+    }
+    const data = await resp.json();
+    res.set("Cache-Control", "public, max-age=1800");
+    res.json(data);
   } catch (e) {
     res.status(500).json({ error: "Internal error" });
   }
