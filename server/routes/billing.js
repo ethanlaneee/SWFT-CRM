@@ -176,6 +176,62 @@ router.get("/plans", (req, res) => {
   });
 });
 
+// GET /api/billing/details — Return subscription, payment method, and invoices
+router.get("/details", async (req, res, next) => {
+  try {
+    const stripe = getStripe();
+    const userDoc = await users().doc(req.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    if (!userData.stripeCustomerId) {
+      return res.json({ subscription: null, paymentMethod: null, invoices: [] });
+    }
+    const customerId = userData.stripeCustomerId;
+
+    // Get subscription
+    const subs = await stripe.subscriptions.list({ customer: customerId, limit: 1, status: "all" });
+    const sub = subs.data[0] || null;
+
+    let subscription = null;
+    if (sub) {
+      subscription = {
+        id: sub.id,
+        status: sub.status,
+        currentPeriodEnd: sub.current_period_end,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        plan: sub.items.data[0]?.price?.nickname || userData.plan || "starter",
+        interval: sub.items.data[0]?.price?.recurring?.interval || "month",
+        amount: sub.items.data[0]?.price?.unit_amount || 0,
+      };
+    }
+
+    // Get default payment method
+    const customer = await stripe.customers.retrieve(customerId);
+    let paymentMethod = null;
+    if (customer.invoice_settings?.default_payment_method) {
+      const pm = await stripe.paymentMethods.retrieve(customer.invoice_settings.default_payment_method);
+      paymentMethod = {
+        brand: pm.card?.brand || "card",
+        last4: pm.card?.last4 || "****",
+        expMonth: pm.card?.exp_month,
+        expYear: pm.card?.exp_year,
+      };
+    }
+
+    // Get recent invoices
+    const invList = await stripe.invoices.list({ customer: customerId, limit: 10 });
+    const invoices = invList.data.map(inv => ({
+      id: inv.id,
+      date: inv.created,
+      amount: inv.amount_paid || inv.total,
+      status: inv.status,
+      pdf: inv.invoice_pdf,
+      number: inv.number,
+    }));
+
+    res.json({ subscription, paymentMethod, invoices });
+  } catch (err) { next(err); }
+});
+
 // POST /api/billing/portal — Create Stripe Customer Portal session
 router.post("/portal", async (req, res, next) => {
   try {

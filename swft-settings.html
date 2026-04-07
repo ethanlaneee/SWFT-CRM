@@ -100,6 +100,18 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .billing-status.trialing{background:rgba(77,159,255,0.1);color:var(--blue);}
 .billing-status.canceled{background:rgba(255,82,82,0.1);color:var(--red);}
 .billing-status.expired{background:rgba(255,82,82,0.1);color:var(--red);}
+.billing-invoice{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;}
+.billing-invoice-left{display:flex;align-items:center;gap:12px;}
+.billing-invoice-date{color:var(--gray);font-family:'JetBrains Mono',monospace;font-size:11px;min-width:80px;}
+.billing-invoice-num{color:var(--white);font-weight:500;}
+.billing-invoice-amount{font-family:'JetBrains Mono',monospace;color:var(--white);}
+.billing-invoice-status{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.billing-invoice-status.paid{background:rgba(200,241,53,0.1);color:var(--green);}
+.billing-invoice-status.open{background:rgba(77,159,255,0.1);color:var(--blue);}
+.billing-invoice-status.draft{background:rgba(122,122,122,0.1);color:var(--gray);}
+.billing-invoice-pdf{color:var(--green);text-decoration:none;font-size:11px;font-weight:500;}
+.billing-invoice-pdf:hover{text-decoration:underline;}
+.billing-card-brand{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--white);}
 
 /* Billing modal overlay */
 .billing-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px;}
@@ -257,13 +269,31 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="billing-usage-bar"><div class="billing-usage-fill green" id="billing-ai-bar" style="width:0%"></div></div>
     </div>
 
-    <!-- Manage Billing -->
+    <!-- Payment Method -->
     <div class="settings-row">
       <div class="settings-row-info">
-        <div class="settings-row-label">Payment & Invoices</div>
-        <div class="settings-row-desc">Update your payment method, view invoices, or change your billing cycle via Stripe.</div>
+        <div class="settings-row-label">Payment Method</div>
+        <div class="settings-row-desc" id="billing-card-info" style="display:flex;align-items:center;gap:8px;">
+          <span id="billing-card-icon" style="font-size:18px;"></span>
+          <span id="billing-card-detail" style="color:var(--gray);">No card on file</span>
+        </div>
       </div>
-      <button class="settings-btn" id="billing-portal-btn" onclick="openBillingPortal()">Manage Billing</button>
+      <button class="settings-btn" id="billing-update-card-btn" onclick="openBillingPortal()" style="display:none;">Update Card</button>
+    </div>
+
+    <!-- Subscription Status -->
+    <div class="settings-row" id="billing-sub-row" style="display:none;">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Subscription</div>
+        <div class="settings-row-desc" id="billing-sub-desc">—</div>
+      </div>
+      <button class="settings-btn danger" id="billing-cancel-btn" onclick="cancelSubscription()" style="display:none;">Cancel Plan</button>
+    </div>
+
+    <!-- Recent Invoices -->
+    <div class="settings-row" id="billing-invoices-row" style="flex-direction:column;align-items:stretch;gap:8px;display:none;">
+      <div class="settings-row-label">Recent Invoices</div>
+      <div id="billing-invoices-list" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
 
     <!-- Buy Packs -->
@@ -716,9 +746,9 @@ async function loadBillingInfo(userData, token) {
     updateUsageBar('sms', usage.sms.used, usage.sms.limit);
     updateUsageBar('ai', usage.ai.used, usage.ai.limit);
 
-    // Hide portal button if no stripe customer
-    if (!userData.stripeCustomerId) {
-      document.getElementById('billing-portal-btn').style.display = 'none';
+    // Load billing details from Stripe
+    if (userData.stripeCustomerId) {
+      loadBillingDetails(token);
     }
   } catch (e) { console.warn('Billing load error:', e); }
 }
@@ -747,13 +777,95 @@ async function openBillingPortal() {
     });
     var data = await res.json();
     if (data.url) {
-      window.location.href = data.url;
+      // Open in modal overlay
+      document.getElementById('billing-modal-title').textContent = 'Update Payment Method';
+      document.getElementById('billing-modal').classList.remove('portal-mode');
+      document.getElementById('billing-modal-body').innerHTML =
+        '<div style="text-align:center;padding:30px 20px;">' +
+        '<p style="color:var(--gray);font-size:13px;margin-bottom:20px;">You\'ll be taken to our secure payment portal to update your card. You\'ll be redirected back here when done.</p>' +
+        '<a href="' + data.url + '" class="settings-btn primary" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;text-decoration:none;font-size:14px;">' +
+        '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" stroke-width="1.8"/><line x1="1" y1="10" x2="23" y2="10" stroke-width="1.8"/></svg>' +
+        'Update Payment Method</a></div>';
+      document.getElementById('billing-overlay').classList.add('open');
     } else {
       showToast(data.error || 'Could not open billing portal');
     }
   } catch (e) {
     showToast('Error opening billing portal');
   }
+}
+
+async function loadBillingDetails(token) {
+  try {
+    var res = await fetch('/api/billing/details', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return;
+    var data = await res.json();
+
+    // Payment method
+    if (data.paymentMethod) {
+      var pm = data.paymentMethod;
+      var brandIcons = { visa: '💳', mastercard: '💳', amex: '💳', discover: '💳' };
+      var brandNames = { visa: 'Visa', mastercard: 'Mastercard', amex: 'Amex', discover: 'Discover' };
+      document.getElementById('billing-card-detail').innerHTML =
+        '<span class="billing-card-brand">' + (brandNames[pm.brand] || pm.brand) + ' •••• ' + pm.last4 + '</span>' +
+        '<span style="color:var(--gray);font-size:11px;">Expires ' + pm.expMonth + '/' + pm.expYear + '</span>';
+      document.getElementById('billing-update-card-btn').style.display = '';
+    }
+
+    // Subscription
+    if (data.subscription) {
+      var sub = data.subscription;
+      var subRow = document.getElementById('billing-sub-row');
+      subRow.style.display = '';
+      var renewDate = new Date(sub.currentPeriodEnd * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      var statusText = sub.status === 'active' ? 'Active' : sub.status === 'trialing' ? 'Trial' : sub.status;
+      var descText = statusText + ' — ' + (sub.cancelAtPeriodEnd ? 'Cancels on ' + renewDate : 'Renews on ' + renewDate);
+      document.getElementById('billing-sub-desc').textContent = descText;
+      if (sub.status === 'active' && !sub.cancelAtPeriodEnd) {
+        document.getElementById('billing-cancel-btn').style.display = '';
+      }
+    }
+
+    // Invoices
+    if (data.invoices && data.invoices.length > 0) {
+      document.getElementById('billing-invoices-row').style.display = '';
+      var html = '';
+      data.invoices.forEach(function(inv) {
+        var date = new Date(inv.date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        var amount = '$' + (inv.amount / 100).toFixed(2);
+        var statusCls = inv.status === 'paid' ? 'paid' : inv.status === 'open' ? 'open' : 'draft';
+        html += '<div class="billing-invoice">' +
+          '<div class="billing-invoice-left">' +
+          '<span class="billing-invoice-date">' + date + '</span>' +
+          '<span class="billing-invoice-num">' + (inv.number || '—') + '</span>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:12px;">' +
+          '<span class="billing-invoice-amount">' + amount + '</span>' +
+          '<span class="billing-invoice-status ' + statusCls + '">' + (inv.status || '—') + '</span>' +
+          (inv.pdf ? '<a href="' + inv.pdf + '" target="_blank" class="billing-invoice-pdf">PDF</a>' : '') +
+          '</div></div>';
+      });
+      document.getElementById('billing-invoices-list').innerHTML = html;
+    }
+  } catch (e) { console.warn('Billing details error:', e); }
+}
+
+async function cancelSubscription() {
+  var ok = await swftConfirm(
+    'Your plan will remain active until the end of your current billing period, then it will be canceled. You can resubscribe anytime.',
+    'CANCEL PLAN',
+    '⚠️'
+  );
+  if (!ok) return;
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/billing/portal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+    });
+    var data = await res.json();
+    if (data.url) window.location.href = data.url;
+  } catch (e) { showToast('Error: ' + e.message); }
 }
 
 var _packCheckout = null;
