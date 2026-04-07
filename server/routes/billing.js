@@ -232,7 +232,7 @@ router.post("/purchase-pack", async (req, res, next) => {
         quantity: 1,
       }],
       mode: "payment",
-      return_url: `${process.env.APP_URL}/swft-billing?pack_session_id={CHECKOUT_SESSION_ID}&pack=${pack}`,
+      return_url: `${process.env.APP_URL || "https://goswft.com"}/swft-settings?pack_session_id={CHECKOUT_SESSION_ID}&pack=${pack}`,
       metadata: { firebaseUid: req.uid, packType: pack, packUnits: String(packInfo.units) },
     });
 

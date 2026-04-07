@@ -101,6 +101,24 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .billing-status.canceled{background:rgba(255,82,82,0.1);color:var(--red);}
 .billing-status.expired{background:rgba(255,82,82,0.1);color:var(--red);}
 
+/* Billing modal overlay */
+.billing-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px;}
+.billing-overlay.open{display:flex;}
+.billing-modal{background:var(--bg);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.billing-modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);}
+.billing-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;}
+.billing-modal-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.billing-modal-close:hover{background:var(--surface2);color:var(--white);}
+.billing-modal-body{padding:24px;}
+.billing-modal-body #pack-checkout{min-height:300px;}
+.billing-portal-frame{width:100%;height:75vh;border:none;border-radius:0 0 16px 16px;}
+.billing-modal.portal-mode .billing-modal-body{padding:0;}
+.billing-modal.portal-mode{max-width:900px;max-height:95vh;}
+.pack-success{text-align:center;padding:40px 20px;}
+.pack-success-icon{font-size:48px;margin-bottom:16px;}
+.pack-success-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1.5px;margin-bottom:8px;}
+.pack-success-desc{font-size:13px;color:var(--gray);margin-bottom:20px;}
+
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
@@ -473,6 +491,22 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
+<!-- Billing modal overlay -->
+<div class="billing-overlay" id="billing-overlay" onclick="if(event.target===this)closeBillingModal()">
+  <div class="billing-modal" id="billing-modal">
+    <div class="billing-modal-header">
+      <span class="billing-modal-title" id="billing-modal-title">Purchase Pack</span>
+      <button class="billing-modal-close" onclick="closeBillingModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="billing-modal-body" id="billing-modal-body">
+      <div id="pack-checkout"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
 <script>
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
@@ -713,7 +747,11 @@ async function openBillingPortal() {
     });
     var data = await res.json();
     if (data.url) {
-      window.open(data.url, '_blank');
+      document.getElementById('billing-modal-title').textContent = 'Manage Billing';
+      var modal = document.getElementById('billing-modal');
+      modal.classList.add('portal-mode');
+      document.getElementById('billing-modal-body').innerHTML = '<iframe class="billing-portal-frame" src="' + data.url + '"></iframe>';
+      document.getElementById('billing-overlay').classList.add('open');
     } else {
       showToast(data.error || 'Could not open billing portal');
     }
@@ -722,8 +760,68 @@ async function openBillingPortal() {
   }
 }
 
-function buyPack(type) {
-  window.location.href = '/swft-billing?buy=' + type;
+var _packCheckout = null;
+async function buyPack(type) {
+  try {
+    var labels = { sms: 'SMS Pack — 200 credits for $15', ai: 'AI Message Pack — 100 credits for $10' };
+    document.getElementById('billing-modal-title').textContent = labels[type] || 'Purchase Pack';
+    var modal = document.getElementById('billing-modal');
+    modal.classList.remove('portal-mode');
+    document.getElementById('billing-modal-body').innerHTML = '<div id="pack-checkout" style="min-height:300px;"></div>';
+    document.getElementById('billing-overlay').classList.add('open');
+
+    var token = await getToken();
+    var res = await fetch('/api/billing/purchase-pack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ pack: type })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to start purchase');
+
+    var stripe = Stripe('pk_test_51THdAqRNPpAjdxw0hUyziBiAjBBJDXCTGFupwa90vVdBoY4wiu5eHsNGGoePiqlHdyNpbrm2ZL9lw3bOgSAotLUC00y739O6Ge');
+    _packCheckout = await stripe.initEmbeddedCheckout({ clientSecret: data.clientSecret });
+    _packCheckout.mount('#pack-checkout');
+  } catch (e) {
+    closeBillingModal();
+    showToast(e.message || 'Error starting pack purchase');
+  }
+}
+
+function closeBillingModal() {
+  document.getElementById('billing-overlay').classList.remove('open');
+  if (_packCheckout) { _packCheckout.destroy(); _packCheckout = null; }
+  document.getElementById('billing-modal').classList.remove('portal-mode');
+  document.getElementById('billing-modal-body').innerHTML = '<div id="pack-checkout"></div>';
+}
+
+async function verifyPackPurchase(user) {
+  var params = new URLSearchParams(window.location.search);
+  var sessionId = params.get('pack_session_id');
+  var pack = params.get('pack');
+  if (!sessionId || !pack) return;
+  try {
+    var token = await user.getIdToken();
+    var res = await fetch('/api/billing/verify-pack?pack_session_id=' + encodeURIComponent(sessionId) + '&pack=' + encodeURIComponent(pack), {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    var data = await res.json();
+    if (data.success) {
+      var labels = { sms: 'SMS', ai: 'AI message' };
+      document.getElementById('billing-modal-title').textContent = 'Pack Purchased!';
+      document.getElementById('billing-modal').classList.remove('portal-mode');
+      document.getElementById('billing-modal-body').innerHTML =
+        '<div class="pack-success">' +
+        '<div class="pack-success-icon">&#10003;</div>' +
+        '<div class="pack-success-title">' + data.units + ' ' + (labels[pack] || '') + ' credits added</div>' +
+        '<div class="pack-success-desc">Your credits have been applied to your account and are ready to use.</div>' +
+        '<button class="settings-btn primary" onclick="closeBillingModal();loadSettings();">Done</button>' +
+        '</div>';
+      document.getElementById('billing-overlay').classList.add('open');
+    }
+    // Clean URL
+    window.history.replaceState({}, '', '/swft-settings');
+  } catch (e) { console.warn('Pack verify error:', e); }
 }
 
 async function deleteAccount() {
@@ -1010,6 +1108,7 @@ function escHtml(s) {
       window.__swftUser = user;
       loadSettings();
       loadTemplates();
+      verifyPackPurchase(user);
       loadIntegrations().then(function(){
         if(window.location.hash){
           var el=document.querySelector(window.location.hash);
