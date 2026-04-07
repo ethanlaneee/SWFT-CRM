@@ -961,7 +961,7 @@ async function sendQuote(){
   }
 
   // Save first (silent = don't close modal or reload)
-  try { await saveEdit(true); } catch(e) {}
+  try { await saveEdit(true); } catch(e) { showToast('Error saving: ' + e.message); return; }
   if(!_q || !_q.id) { showToast('Save the document first'); return; }
 
   // Fetch customer email to pre-fill the compose popup

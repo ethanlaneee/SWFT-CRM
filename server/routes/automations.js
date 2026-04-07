@@ -25,7 +25,7 @@ async function sendAutomationEmail(orgUser, to, subject, body, threadInfo) {
       opts.references = threadInfo.rfcMessageId;
     }
   }
-  await sendSimpleGmail(orgUser, to, subject, body, htmlBody, opts);
+  return await sendSimpleGmail(orgUser, to, subject, body, htmlBody, opts);
 }
 
 // ── Exported worker functions ────────────────────────────────────────────────
@@ -149,9 +149,24 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
       let surveyToken = null;
       let resolvedMessage = rule.messageTemplate || "";
 
+      // Build sender name from org user profile
+      const senderFullName = orgUser.name || "";
+      const senderFirstName = senderFullName.split(" ")[0] || "";
+
       const vars = {
         customer_name: customer.name || "",
+        customerName: customer.name || "",
+        firstName: (customer.name || "").split(" ")[0] || "",
         company_name: companyName,
+        companyName: companyName,
+        your_name: senderFullName,
+        yourName: senderFullName,
+        your_first_name: senderFirstName,
+        yourFirstName: senderFirstName,
+        senderName: senderFullName,
+        service: customer.service || "",
+        total: customer.total != null ? String(customer.total) : "",
+        address: customer.address || "",
         link: "",
         survey_link: "",
       };
@@ -280,6 +295,7 @@ async function processScheduledMessages() {
       }
       console.log(`[automation worker] Processing ${msgDoc.id}: type=${msg.messageType}, to=${msg.email || msg.phone}, orgUser found=${!!orgUser._uid}, gmailConnected=${!!orgUser.gmailConnected}`);
 
+      let emailResult = null;
       if (msg.messageType === "tag_customer") {
         // Add tags to the customer document
         if (!msg.customerId) throw new Error("No customer ID for tagging");
@@ -311,12 +327,16 @@ async function processScheduledMessages() {
       } else if (msg.messageType === "email") {
         if (!msg.email) throw new Error("No email address for email");
         const companyName = orgUser.company || orgUser.name || "SWFT";
-        const emailSubject = msg.subject || `Message from ${companyName}`;
+        let emailSubject = msg.subject || `Message from ${companyName}`;
         const threadInfo = (msg.gmailThreadId || msg.rfcMessageId) ? {
           threadId: msg.gmailThreadId,
           rfcMessageId: msg.rfcMessageId,
         } : null;
-        await sendAutomationEmail(
+        // Prepend "Re: " when replying to an existing thread
+        if (threadInfo && !emailSubject.toLowerCase().startsWith("re:")) {
+          emailSubject = `Re: ${emailSubject}`;
+        }
+        emailResult = await sendAutomationEmail(
           orgUser,
           msg.email,
           emailSubject,
@@ -351,6 +371,11 @@ async function processScheduledMessages() {
         if (msg.messageType === "email") {
           const companyName = orgUser.company || orgUser.name || "SWFT";
           msgRecord.subject = msg.subject || `Message from ${companyName}`;
+          if (emailResult) {
+            msgRecord.gmailMessageId = emailResult.messageId || null;
+            msgRecord.gmailThreadId = emailResult.threadId || null;
+            msgRecord.rfcMessageId = emailResult.rfcMessageId || null;
+          }
         }
         await db.collection("messages").add(msgRecord);
       }

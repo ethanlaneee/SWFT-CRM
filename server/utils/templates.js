@@ -5,7 +5,9 @@
 function resolveTemplate(template, vars) {
   let msg = template || "";
   for (const [key, val] of Object.entries(vars)) {
-    msg = msg.replace(new RegExp(`{{${key}}}`, "g"), val || "");
+    // Support both {{var}} and {var} syntax
+    msg = msg.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), val || "");
+    msg = msg.replace(new RegExp(`\\{${key}\\}`, "g"), val || "");
   }
   return msg;
 }

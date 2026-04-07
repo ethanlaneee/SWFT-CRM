@@ -83,7 +83,18 @@ async function sendSimpleGmail(user, to, subject, textBody, htmlBody, opts = {})
   const encoded = encodeMime(mime);
   const requestBody = { raw: encoded };
   if (opts.threadId) requestBody.threadId = opts.threadId;
-  await gmail.users.messages.send({ userId: "me", requestBody });
+  const result = await gmail.users.messages.send({ userId: "me", requestBody });
+
+  // Fetch RFC Message-ID for threading future replies
+  let rfcMessageId = null;
+  try {
+    const sent = await gmail.users.messages.get({ userId: "me", id: result.data.id, format: "metadata", metadataHeaders: ["Message-ID"] });
+    const headers = sent.data.payload?.headers || [];
+    const msgIdHeader = headers.find(h => h.name.toLowerCase() === "message-id");
+    rfcMessageId = msgIdHeader?.value || null;
+  } catch (e) { /* ignore */ }
+
+  return { messageId: result.data.id, threadId: result.data.threadId, rfcMessageId };
 }
 
 module.exports = { getOAuthClient, getGmailClient, encodeMime, buildSimpleMime, sendSimpleGmail };

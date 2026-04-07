@@ -79,7 +79,7 @@ router.post("/:id/send", async (req, res, next) => {
     if (q.customerId) {
       const custDoc = await db.collection("customers").doc(q.customerId).get();
       const cust = custDoc.exists ? custDoc.data() : {};
-      triggerAutomation(req.orgId, "quote_sent", { id: q.customerId, name: cust.name || q.customerName || "", phone: cust.phone || "", email: cust.email || "", total: q.total || 0, service: q.service || "" }).catch(console.error);
+      triggerAutomation(req.orgId, "quote_sent", { id: q.customerId, name: cust.name || q.customerName || "", phone: cust.phone || "", email: cust.email || "", total: q.total || 0, service: q.service || "", address: cust.address || q.address || "" }).catch(console.error);
     }
     res.json({ success: true, status: "sent" });
   } catch (err) { next(err); }
@@ -131,7 +131,7 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
       userId: req.uid, orgId: req.orgId, to: cust.email, subject, body: bodyText,
       customerId: quoteData.customerId, customerName: quoteData.customerName || cust.name || "",
       type: "email", status: "sent", sentVia: "gmail",
-      gmailMessageId: sendResult.messageId, gmailThreadId: sendResult.threadId,
+      gmailMessageId: sendResult.messageId, gmailThreadId: sendResult.threadId, rfcMessageId: sendResult.rfcMessageId || null,
       attachedDocType: "quote", attachedDocId: req.params.id,
       attachments: [pdfFile.originalname], sentAt: Date.now(),
     });
@@ -139,7 +139,7 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
 
     if (quoteData.customerId) {
-      triggerAutomation(req.orgId, "quote_sent", { id: quoteData.customerId, name: cust.name || quoteData.customerName || "", phone: cust.phone || "", email: cust.email || "", total: quoteData.total || 0, service: quoteData.service || "" }, {
+      triggerAutomation(req.orgId, "quote_sent", { id: quoteData.customerId, name: cust.name || quoteData.customerName || "", phone: cust.phone || "", email: cust.email || "", total: quoteData.total || 0, service: quoteData.service || "", address: cust.address || quoteData.address || "" }, {
         gmailThreadId: sendResult.threadId,
         gmailMessageId: sendResult.messageId,
         rfcMessageId: sendResult.rfcMessageId,
