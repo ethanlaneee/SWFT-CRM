@@ -241,6 +241,9 @@ async function executeIntegrationTool(toolName, input, uid) {
     case "export_to_sheets": {
       const sheets = integrations.google_sheets;
       if (!sheets?.connected || !sheets?.tokens) return { error: "Google Sheets not connected" };
+      // Plan gate: Pro+ only
+      const userPlanCheck = (await db.collection("users").doc(uid).get()).data()?.plan || "starter";
+      if (userPlanCheck === "starter") return { error: "Google Sheets export requires the Pro plan or higher. Upgrade at /swft-checkout?plan=pro" };
 
       const auth = getOAuthClient(sheets.tokens);
       const sheetsApi = google.sheets({ version: "v4", auth });
@@ -321,7 +324,8 @@ async function getIntegrationTools(uid) {
     tools.push(...GMAIL_TOOLS);
   }
 
-  if (integrations.google_sheets?.connected) {
+  const userPlan = userData.plan || "starter";
+  if (integrations.google_sheets?.connected && userPlan !== "starter") {
     tools.push(...GOOGLE_SHEETS_TOOLS);
   }
 

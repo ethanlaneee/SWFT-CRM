@@ -448,6 +448,54 @@ section{position:relative;z-index:1;}
 .vs-table .compare-x{margin-right:4px;}
 .vs-table .compare-check{margin-right:4px;}
 
+/* ── AI SHOWCASE ── */
+.ai-showcase{padding:100px 0 120px;}
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:48px;}
+.ai-chat-mock{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:24px;max-width:400px;margin:0 auto;
+  box-shadow:0 24px 64px rgba(0,0,0,0.4);
+}
+.ai-chat-header{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px;
+}
+.ai-chat-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.ai-chat-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;}
+.ai-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;margin-bottom:10px;max-width:85%;}
+.ai-bubble.user{background:rgba(200,241,53,0.12);color:var(--green);margin-left:auto;border-bottom-right-radius:4px;}
+.ai-bubble.bot{background:var(--surface2);color:var(--white);border-bottom-left-radius:4px;}
+.ai-bubble .action-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;color:var(--green);
+  margin-top:6px;
+}
+.ai-content h3{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,42px);line-height:1.05;letter-spacing:1px;margin-bottom:20px;}
+.ai-content h3 .accent{color:var(--green);}
+.ai-content p{font-size:16px;color:var(--gray);line-height:1.7;margin-bottom:24px;}
+.ai-features{list-style:none;display:flex;flex-direction:column;gap:14px;}
+.ai-features li{display:flex;align-items:flex-start;gap:12px;font-size:15px;color:var(--gray);line-height:1.5;}
+.ai-features li strong{color:var(--white);}
+.ai-features .feat-icon{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  background:var(--green-dim);display:flex;align-items:center;justify-content:center;
+}
+.ai-features .feat-icon svg{width:16px;height:16px;color:var(--green);}
+
+.ai-agents{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.ai-agent-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:28px 24px;text-align:center;transition:all 0.3s ease;
+}
+.ai-agent-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.3);}
+.ai-agent-icon{
+  width:48px;height:48px;border-radius:12px;margin:0 auto 16px;
+  background:var(--green-dim);display:flex;align-items:center;justify-content:center;
+}
+.ai-agent-icon svg{width:24px;height:24px;color:var(--green);}
+.ai-agent-card h4{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--white);}
+.ai-agent-card p{font-size:13px;color:var(--gray);line-height:1.6;}
+
 /* ── BEFORE vs AFTER ── */
 .compare{padding:100px 0 120px;}
 .compare-grid{
@@ -647,6 +695,10 @@ section{position:relative;z-index:1;}
   .product{padding:60px 0 80px;}
   .feature-pills{gap:8px;}
   .pill{font-size:12px;padding:8px 14px;}
+  .ai-grid{grid-template-columns:1fr;gap:32px;}
+  .ai-chat-mock{order:-1;}
+  .ai-agents{grid-template-columns:1fr;}
+  .ai-showcase{padding:60px 0 80px;}
   .competitor-grid{grid-template-columns:1fr;}
   .competitors{padding:60px 0 40px;}
   .vs-table-section{padding:20px 0 80px;}
@@ -1061,6 +1113,98 @@ section{position:relative;z-index:1;}
   </div>
 </section>
 
+<!-- ── AI SHOWCASE ── -->
+<section class="ai-showcase" id="ai">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">Your AI Crew</span>
+      <h2 class="section-title">AN ASSISTANT THAT ACTUALLY <span class="accent">DOES THE WORK</span></h2>
+      <p class="section-sub">Type it or say it. SWFT's AI works across your entire business — customers, quotes, invoices, scheduling, texting, and more.</p>
+    </div>
+
+    <div class="ai-grid reveal">
+      <!-- Left: content -->
+      <div class="ai-content">
+        <h3>TALK TO IT LIKE A <span class="accent">REAL PERSON</span></h3>
+        <p>On the road between jobs? Just tell SWFT what you need. Add a customer, fire off a quote, check your schedule, send a text — all without tapping through menus. Voice or text, your call.</p>
+        <ul class="ai-features">
+          <li>
+            <span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+            <span><strong>"Add a new customer — John Smith, 555-0123"</strong> — done in seconds, no forms needed</span>
+          </li>
+          <li>
+            <span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+            <span><strong>"Create a quote for the Johnson deck job — $4,200"</strong> — quote built and ready to send</span>
+          </li>
+          <li>
+            <span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+            <span><strong>"Text Mrs. Garcia that we'll be there at 2pm"</strong> — SMS sent from your business number</span>
+          </li>
+          <li>
+            <span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+            <span><strong>"What's on my schedule tomorrow?"</strong> — instant overview, synced with Google Calendar</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Right: mock chat -->
+      <div class="ai-chat-mock">
+        <div class="ai-chat-header">
+          <div class="ai-chat-dot"></div>
+          <span class="ai-chat-title">SWFT AI</span>
+        </div>
+        <div class="ai-bubble user">Create a quote for Mike Davis — kitchen remodel, 3 line items: demo $1,200, cabinets $3,800, countertops $2,400</div>
+        <div class="ai-bubble bot">
+          Done. Quote #94 created for Mike Davis — $7,400 total.
+          <div class="action-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg> Quote created</div>
+        </div>
+        <div class="ai-bubble user">Send it to him</div>
+        <div class="ai-bubble bot">
+          Quote #94 sent to Mike Davis at mike.davis@email.com.
+          <div class="action-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg> Email sent</div>
+        </div>
+        <div class="ai-bubble user">Schedule the job for next Monday at 9am</div>
+        <div class="ai-bubble bot">
+          Job scheduled for Mon, Apr 13 at 9:00 AM. Added to your Google Calendar.
+          <div class="action-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg> Job created &amp; synced</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Agent Cards -->
+    <div class="section-header reveal" style="margin-top:64px;">
+      <span class="section-tag">Runs While You Sleep</span>
+      <h2 class="section-title">3 AI AGENTS. <span class="accent">ZERO EFFORT.</span></h2>
+      <p class="section-sub">These agents work in the background 24/7 — no setup, no babysitting.</p>
+    </div>
+
+    <div class="ai-agents">
+      <div class="ai-agent-card reveal">
+        <div class="ai-agent-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <h4>AI Receptionist</h4>
+        <p>Auto-replies to incoming customer texts 24/7. Answers questions, qualifies leads, and books estimates — even when you're on a job. Escalates to you when needed.</p>
+      </div>
+      <div class="ai-agent-card reveal">
+        <div class="ai-agent-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
+        </div>
+        <h4>AI Estimator</h4>
+        <p>Describe the job and get an instant quote — priced based on your actual past jobs. Generates itemized line items ready to send to the customer.</p>
+      </div>
+      <div class="ai-agent-card reveal">
+        <div class="ai-agent-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h4>AI Follow-Up</h4>
+        <p>Automatically chases unsigned quotes, overdue invoices, and review requests on days 1, 3, and 7. Sends SMS and email so nothing slips through the cracks.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- ── BEFORE vs AFTER ── -->
 <section class="compare">
   <div class="container">
@@ -1272,6 +1416,8 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 document.querySelectorAll('.pain-card.reveal').forEach((el, i) => { el.dataset.delay = i * 80; });
 /* Stagger competitor cards */
 document.querySelectorAll('.competitor-card.reveal').forEach((el, i) => { el.dataset.delay = i * 100; });
+/* Stagger AI agent cards */
+document.querySelectorAll('.ai-agent-card.reveal').forEach((el, i) => { el.dataset.delay = i * 100; });
 /* Stagger compare cols */
 document.querySelectorAll('.compare-col.reveal').forEach((el, i) => { el.dataset.delay = i * 150; });
 /* Stagger pricing cards */

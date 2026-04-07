@@ -7,6 +7,23 @@ const { db } = require("../firebase");
 const crypto = require("crypto");
 const { sendSimpleGmail } = require("../utils/email");
 
+// Plan-based team gating helper (Pro+ only)
+async function requireTeamPlan(req, res) {
+  const userDoc = await db.collection("users").doc(req.uid).get();
+  const plan = userDoc.exists ? (userDoc.data().plan || "starter") : "starter";
+  if (plan === "starter") {
+    res.status(403).json({
+      error: "Team management requires the Pro plan or higher.",
+      limitReached: true,
+      type: "team",
+      currentPlan: "starter",
+      upgradeTo: "pro",
+    });
+    return false;
+  }
+  return true;
+}
+
 const ROLES = ["owner", "admin", "technician", "office"];
 
 // ── Gmail helper for sending invite emails ──
@@ -117,6 +134,7 @@ router.get("/", async (req, res, next) => {
 // POST /api/team/invite — invite a new team member
 router.post("/invite", async (req, res, next) => {
   try {
+    if (!(await requireTeamPlan(req, res))) return;
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can invite members" });
     }
@@ -199,6 +217,7 @@ router.post("/invite", async (req, res, next) => {
 // PUT /api/team/:memberId — update a team member's role
 router.put("/:memberId", async (req, res, next) => {
   try {
+    if (!(await requireTeamPlan(req, res))) return;
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can update roles" });
     }
@@ -238,6 +257,7 @@ router.put("/:memberId", async (req, res, next) => {
 // DELETE /api/team/:memberId — remove a team member
 router.delete("/:memberId", async (req, res, next) => {
   try {
+    if (!(await requireTeamPlan(req, res))) return;
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can remove members" });
     }
