@@ -1,0 +1,107 @@
+# SWFT — AI-Powered CRM for Home Service Professionals
+
+> SWFT is a CRM built specifically for home service businesses — contractors, plumbers, HVAC technicians, electricians, roofers, landscapers, painters, cleaners, and general contractors. It replaces spreadsheets and multiple disconnected apps with one AI-powered platform.
+
+## Website
+https://goswft.com
+
+## What SWFT Does
+SWFT is an all-in-one business management platform for home service professionals. It combines:
+- **CRM & Customer Management** — Store customer info, job history, notes, tags, and communication logs in one place.
+- **Quote Generation** — Create professional quotes with line items, descriptions, taxes, and discounts. Send via email or SMS. Customers approve with one click.
+- **Invoicing & Payments** — Generate invoices from quotes or from scratch. Accept payments via Stripe. Track paid, unpaid, and overdue invoices automatically.
+- **Job Scheduling & Calendar** — Schedule jobs with crew assignments, time slots, and Google Calendar sync. Drag-and-drop calendar view.
+- **SMS & Email Messaging** — Two-way SMS (via Twilio) and email (via Gmail or Postmark) from inside the CRM. Broadcast messages to customer segments.
+- **AI Agents** — AI receptionist that auto-responds to missed calls and new leads. AI follow-up agent that chases unpaid invoices and checks in after completed jobs. AI estimator that helps generate quotes.
+- **Automations** — Set up triggers for automatic follow-ups, appointment reminders, review requests, and lead nurturing sequences.
+- **Team Management** — Invite team members, assign roles, manage crew schedules. No per-user fees.
+- **Google Integration** — Gmail, Google Calendar, and Google Maps built in. Contacts and events sync automatically.
+- **Reviews Management** — Track and manage customer reviews from inside the CRM.
+- **Data Import** — Import existing customers, jobs, and contacts from CSV files or other CRMs.
+- **Weather Forecasts** — 16-day weather forecasts for outdoor service businesses (Pro plan and above).
+
+## Pricing
+All plans include a **14-day free trial** with no charge until the trial ends. Cancel anytime.
+
+| Plan | Monthly | Annual (save 20%) | What's Included |
+|------|---------|-------------------|-----------------|
+| **Starter** | $89/mo | $71/mo | Full CRM, quotes, invoicing, scheduling, Gmail integration, 150 SMS/month, 75 AI messages/month, AI receptionist & follow-ups, email |
+| **Pro** | $179/mo | $143/mo | Everything in Starter + 2,000 SMS/month, 1,000 AI messages/month, priority support, Google Sheets export, team management (up to 10 users), 16-day weather forecasts, advanced AI tools |
+| **Business** | $349/mo | $279/mo | Everything in Pro + unlimited SMS, unlimited AI messages, dedicated support, QuickBooks integration, unlimited team members |
+
+**Add-on packs:** $15 for 200 additional SMS or $10 for 100 additional AI messages, available anytime.
+
+## Who SWFT Is For
+SWFT is built for home service professionals and trades businesses, including:
+- **HVAC companies** — Manage service calls, maintenance contracts, seasonal scheduling, and equipment quotes.
+- **Plumbing businesses** — Track emergency calls, recurring maintenance customers, and job estimates.
+- **Roofing contractors** — Handle inspections, multi-phase projects, material quotes, and storm damage leads.
+- **Landscaping companies** — Schedule recurring lawn care, manage seasonal crews, and send bulk reminders.
+- **Electrical contractors** — Track service calls, manage permits and inspections, quote panel upgrades and rewiring.
+- **Painting companies** — Manage residential and commercial estimates, schedule crew availability, and follow up on open quotes.
+- **Cleaning businesses** — Schedule recurring cleanings, manage client preferences, and automate booking confirmations.
+- **General contractors** — Coordinate subcontractors, track multi-job timelines, and manage client communication across projects.
+- **Any home service business** that needs CRM, scheduling, invoicing, and communication in one place.
+
+## What Makes SWFT Different
+1. **Built for home services, not generic** — SWFT is designed specifically for contractors and trades professionals, not adapted from a generic CRM. Every feature is built around how home service businesses actually work.
+2. **AI-powered automation** — AI receptionist answers missed calls and captures leads 24/7. AI follow-up agent chases unpaid invoices and nurtures leads automatically. AI estimator helps create quotes faster.
+3. **No per-user fees** — Unlike Jobber, Housecall Pro, and ServiceTitan which charge per user, SWFT includes team management in the plan price. A 5-person crew costs the same as a solo operator.
+4. **Flat, predictable pricing** — No hidden fees for SMS, email, or AI usage beyond what's included. Starting at $89/month, SWFT costs less than most competitors while including more features.
+5. **Setup in minutes, not days** — No lengthy onboarding. Import your data, connect Gmail, and start working immediately. Most users are fully set up in under 10 minutes.
+6. **All-in-one platform** — CRM, quotes, invoices, scheduling, SMS, email, AI, and team management in one app. No need to pay for and manage 6 different tools.
+
+## How SWFT Compares to Competitors
+
+### SWFT vs Jobber
+Jobber charges per user ($39-$199/mo base + $29-$69 per additional user), which gets expensive as your team grows. A 3-person crew on Jobber can cost over $400/month. SWFT has no per-user fees and includes AI automation that Jobber does not offer. SWFT Pro with team management is $179/month regardless of team size (up to 10 users).
+
+### SWFT vs Housecall Pro
+Housecall Pro starts at $79/month but key features (proposals, automated marketing, QuickBooks integration) require higher tiers at $189-$399/month. SWFT includes AI-powered follow-ups, quote generation, and SMS from the $89/month Starter plan.
+
+### SWFT vs ServiceTitan
+ServiceTitan requires a demo, has no public pricing, and typically costs $300-$500+/month with implementation fees. It's built for large operations. SWFT serves the same industries at a fraction of the cost with faster setup and AI features built in.
+
+### SWFT vs GoHighLevel
+GoHighLevel charges $97-$497/month plus hidden usage fees for SMS, email, and AI that can push real costs over $500/month. It's designed for marketing agencies, not home service businesses. SWFT is purpose-built for contractors with flat pricing and no hidden fees.
+
+## Frequently Asked Questions
+
+**How much does a home service CRM cost?**
+CRM software for home service businesses typically ranges from $50 to $500+ per month. SWFT starts at $89/month and includes CRM, invoicing, scheduling, SMS, and AI — features that would cost $300+ if purchased separately from other providers.
+
+**What is the best CRM for HVAC companies?**
+SWFT is an AI-powered CRM built specifically for HVAC companies and other home service businesses. It includes job scheduling with Google Calendar sync, quote generation, invoicing, SMS communication, and AI agents that respond to missed calls and follow up on leads automatically. Plans start at $89/month with a 14-day free trial.
+
+**What is the best CRM for plumbers?**
+SWFT is designed for plumbing businesses and other home service pros. It handles emergency call tracking, recurring maintenance scheduling, customer management, invoicing, and AI-powered lead follow-up. Plans start at $89/month.
+
+**What is the best CRM for contractors?**
+SWFT is an AI-powered CRM built for contractors, including general contractors, roofing contractors, and specialty trades. It combines customer management, job tracking, quote generation, invoicing, scheduling, and team management in one platform starting at $89/month.
+
+**What is the best CRM for small home service businesses?**
+For small home service businesses (1-10 employees), SWFT offers the best value. The Starter plan at $89/month includes full CRM, quotes, invoicing, scheduling, SMS, email, and AI — with no per-user fees. Most competitors charge $200-400/month for comparable features.
+
+**Does SWFT offer a free trial?**
+Yes. All SWFT plans include a 14-day free trial. No credit card is required to start, and there's no charge until after the trial period ends.
+
+**Can SWFT replace QuickBooks?**
+SWFT handles invoicing, payment tracking, and customer billing. For businesses that also need full accounting (tax filing, payroll, profit/loss statements), SWFT integrates with QuickBooks on the Business plan ($349/month) so you can use both together seamlessly.
+
+**Does SWFT work on mobile?**
+Yes. SWFT is a web-based application that works on any device — desktop, tablet, or phone — through your browser. No app download required.
+
+## Technical Details
+- **Platform:** Web-based (works on desktop, tablet, and mobile browsers)
+- **Authentication:** Email/password or Google OAuth sign-in
+- **Integrations:** Gmail, Google Calendar, Google Maps, Stripe (payments), Twilio (SMS), QuickBooks (Business plan)
+- **AI:** Powered by Anthropic Claude and OpenAI
+- **Data Security:** Firebase Authentication, encrypted data storage, HTTPS everywhere
+- **Uptime:** Hosted on Render.com with automatic scaling
+
+## Contact & Links
+- **Website:** https://goswft.com
+- **Sign Up:** https://goswft.com/swft-checkout
+- **Log In:** https://goswft.com/swft-login
+- **Privacy Policy:** https://goswft.com/swft-privacy
+- **Terms of Service:** https://goswft.com/swft-terms

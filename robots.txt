@@ -1,5 +1,32 @@
 User-agent: *
 Allow: /
+
+# ── Allow AI crawlers explicitly ──
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# ── Block authenticated app pages ──
 Disallow: /swft-login
 Disallow: /swft-login.html
 Disallow: /swft-dashboard
@@ -30,6 +57,18 @@ Disallow: /swft-ai-agents
 Disallow: /swft-ai-agents.html
 Disallow: /swft-dev
 Disallow: /swft-dev.html
+Disallow: /swft-import
+Disallow: /swft-import.html
+Disallow: /swft-broadcasts
+Disallow: /swft-broadcasts.html
+Disallow: /swft-survey
+Disallow: /swft-survey.html
+Disallow: /swft-join
+Disallow: /swft-join.html
 Disallow: /api/
+
+# ── AI-readable content ──
+Allow: /llms.txt
+Allow: /llms-full.txt
 
 Sitemap: https://goswft.com/sitemap.xml
