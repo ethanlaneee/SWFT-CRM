@@ -116,23 +116,32 @@ async function triggerAutomation(orgId, trigger, customer) {
         }
       }
 
-      // Calculate sendAt: delayDays from now, at the configured time (default 9:00 AM Eastern)
-      const sendAtTime = rule.sendAtTime || "09:00";
-      const [hours, minutes] = sendAtTime.split(":").map(Number);
-      // Get the target date in Eastern timezone
-      const futureDate = new Date(now + (rule.delayDays ?? 3) * 86400000);
-      const etParts = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
-      }).formatToParts(futureDate);
-      const ep = {}; etParts.forEach(p => { ep[p.type] = parseInt(p.value, 10); });
-      // Determine EDT vs EST for correct UTC offset
-      const testDate = new Date(Date.UTC(ep.year, ep.month - 1, ep.day, 12, 0, 0));
-      const tzName = testDate.toLocaleString('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' });
-      const isDST = tzName.includes('EDT');
-      const offsetHours = isDST ? 4 : 5;
-      let sendAt = Date.UTC(ep.year, ep.month - 1, ep.day, hours + offsetHours, minutes, 0);
-      // If the computed time is already in the past, send next day at that time
-      if (sendAt <= now) sendAt += 86400000;
+      // Calculate sendAt
+      const delayDays = rule.delayDays ?? 3;
+      const delayHrs = rule.delayHours ?? 0;
+
+      let sendAt;
+      if (delayDays === 0 && delayHrs === 0) {
+        // Immediate — send right away (worker picks it up next cycle)
+        sendAt = now;
+      } else {
+        // Delayed — schedule for the configured time after the delay
+        const totalDelayMs = (delayDays * 86400000) + (delayHrs * 3600000);
+        const sendAtTime = rule.sendAtTime || "09:00";
+        const [hours, minutes] = sendAtTime.split(":").map(Number);
+        const futureDate = new Date(now + totalDelayMs);
+        const etParts = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).formatToParts(futureDate);
+        const ep = {}; etParts.forEach(p => { ep[p.type] = parseInt(p.value, 10); });
+        const testDate = new Date(Date.UTC(ep.year, ep.month - 1, ep.day, 12, 0, 0));
+        const tzName = testDate.toLocaleString('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' });
+        const isDST = tzName.includes('EDT');
+        const offsetHours = isDST ? 4 : 5;
+        sendAt = Date.UTC(ep.year, ep.month - 1, ep.day, hours + offsetHours, minutes, 0);
+        // If the computed time is already in the past, send next day at that time
+        if (sendAt <= now) sendAt += 86400000;
+      }
 
       let surveyToken = null;
       let resolvedMessage = rule.messageTemplate || "";
