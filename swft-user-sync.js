@@ -17,18 +17,22 @@ function applyProfile(fullName, initials, email) {
   document.querySelectorAll(".user-role").forEach((el) => { el.textContent = email || ""; });
 }
 
+// Apply cached profile immediately at DOM-ready — before auth resolves
+// This ensures the profile appears instantly on all pages, even heavy CRM ones
+const _cached = sessionStorage.getItem("swft_profile");
+if (_cached) {
+  try {
+    const p = JSON.parse(_cached);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => applyProfile(p.fullName, p.initials, p.email));
+    } else {
+      applyProfile(p.fullName, p.initials, p.email);
+    }
+  } catch (e) { /* ignore bad cache */ }
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
-
-  // Apply cached profile immediately (no flicker on page switch)
-  const cacheKey = "swft_profile_" + user.uid;
-  const cached = sessionStorage.getItem(cacheKey);
-  if (cached) {
-    try {
-      const p = JSON.parse(cached);
-      applyProfile(p.fullName, p.initials, p.email);
-    } catch (e) { /* ignore bad cache */ }
-  }
 
   let firstName = "";
   let lastName = "";
@@ -62,8 +66,8 @@ onAuthStateChanged(auth, async (user) => {
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
   const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "?";
 
-  // Cache for instant display on next page
-  sessionStorage.setItem(cacheKey, JSON.stringify({ fullName, initials, email: user.email || "" }));
+  // Update cache under a simple key (no uid needed for lookup)
+  sessionStorage.setItem("swft_profile", JSON.stringify({ fullName, initials, email: user.email || "" }));
 
   applyProfile(fullName, initials, user.email);
 });
