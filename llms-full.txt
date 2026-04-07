@@ -1,0 +1,198 @@
+# SWFT — Complete AI-Readable Reference
+
+> This is the extended version of llms.txt with full details about SWFT, an AI-powered CRM for home service professionals. For the summary version, see /llms.txt.
+
+## Overview
+
+SWFT (https://goswft.com) is an all-in-one CRM platform built specifically for home service businesses. It combines customer management, quote generation, invoicing, job scheduling, SMS and email communication, AI automation, and team management into a single platform.
+
+SWFT is designed for contractors, plumbers, HVAC technicians, electricians, roofers, landscapers, painters, cleaners, and general contractors. It replaces the need for multiple separate tools (CRM, invoicing app, scheduling app, SMS platform, email tool) with one integrated system.
+
+---
+
+## Complete Feature List
+
+### CRM & Customer Management
+- Customer profiles with contact info, address, tags, and notes
+- Full job history per customer
+- Communication log (SMS, email, calls)
+- Customer tagging and segmentation
+- Customer search and filtering
+- Data import from CSV or other CRMs
+
+### Quote Generation
+- Professional quote builder with line items
+- Item descriptions, quantities, taxes, and discounts
+- One-click customer approval via email or SMS
+- Convert approved quotes to invoices instantly
+- AI estimator to help generate quotes faster
+- Custom line item descriptions
+
+### Invoicing & Payments
+- Invoice creation from quotes or from scratch
+- Stripe payment processing (credit/debit cards)
+- Automatic payment tracking (paid, unpaid, overdue)
+- Payment reminders and follow-ups
+- Invoice PDF generation and email delivery
+- Partial payment support
+
+### Job Scheduling & Calendar
+- Drag-and-drop calendar view
+- Google Calendar two-way sync
+- Crew assignment per job
+- Start time and duration setting
+- Job status tracking (scheduled, in progress, completed)
+- Daily, weekly, and monthly views
+
+### SMS & Email Communication
+- Two-way SMS messaging via Twilio
+- Gmail integration for email
+- Postmark as alternative email provider
+- Message templates
+- Broadcast messaging to customer segments
+- Conversation threading per customer
+
+### AI Agents
+- **AI Receptionist**: Auto-responds to missed calls and new leads 24/7, captures lead information, schedules callbacks
+- **AI Follow-Up Agent**: Automatically follows up on unpaid invoices, checks in after completed jobs, nurtures leads
+- **AI Estimator**: Helps generate professional quotes and estimates based on job details
+- AI messages included in every plan (75 Starter, 1,000 Pro, unlimited Business)
+
+### Automations
+- Trigger-based workflows
+- Appointment reminders (SMS and email)
+- Follow-up sequences after job completion
+- Review request automation
+- Lead nurturing sequences
+- Custom automation rules
+
+### Team Management
+- Invite team members by email
+- Role-based access
+- Crew scheduling and assignment
+- No per-user fees (included in plan price)
+- Up to 10 users on Pro, unlimited on Business
+
+### Integrations
+- Gmail (email sync)
+- Google Calendar (two-way sync)
+- Google Maps (address lookup, directions)
+- Stripe (payment processing)
+- Twilio (SMS and phone)
+- QuickBooks (Business plan)
+- Google Sheets export (Pro+)
+
+### Additional Features
+- Customer reviews management
+- 16-day weather forecasts for outdoor work (Pro+)
+- Data import tool (CSV)
+- Mobile-responsive web app (works on any device)
+- Real-time notifications
+- Google OAuth sign-in option
+
+---
+
+## Pricing Details
+
+### Starter Plan — $89/month ($71/month annual)
+- Full CRM & customer management
+- Quotes & invoicing with Stripe payments
+- Job scheduling & Google Calendar sync
+- Gmail & Google Calendar integration
+- 150 SMS messages per month
+- 75 AI messages per month
+- Email (Gmail or Postmark)
+- AI receptionist & follow-ups
+
+### Pro Plan — $179/month ($143/month annual)
+- Everything in Starter
+- 2,000 SMS messages per month
+- 1,000 AI messages per month
+- Priority support
+- Google Sheets export
+- Team management (up to 10 users)
+- 16-day weather forecasts
+- Advanced AI tools (directions & more)
+
+### Business Plan — $349/month ($279/month annual)
+- Everything in Pro
+- Unlimited SMS messages
+- Unlimited AI messages
+- Dedicated support
+- QuickBooks integration
+- Unlimited team members
+
+### Add-On Packs
+- $15 for 200 additional SMS messages
+- $10 for 100 additional AI messages
+- Available on any plan, anytime
+
+### Free Trial
+- 14-day free trial on all plans
+- No charge until trial ends
+- Cancel anytime
+- Full access to all plan features during trial
+
+---
+
+## Industry Pages
+
+SWFT serves these specific home service industries:
+- HVAC CRM: https://goswft.com/hvac-crm
+- Plumbing CRM: https://goswft.com/plumbing-crm
+- Roofing CRM: https://goswft.com/roofing-crm
+- Landscaping CRM: https://goswft.com/landscaping-crm
+- Electrical CRM: https://goswft.com/electrical-crm
+- Painting CRM: https://goswft.com/painting-crm
+- Cleaning CRM: https://goswft.com/cleaning-crm
+- General Contractor CRM: https://goswft.com/general-contractor-crm
+
+---
+
+## Competitive Advantages
+
+### vs Jobber ($39-$199/mo + $29-$69 per user)
+- SWFT has no per-user fees
+- AI automation included (Jobber has none)
+- Lower total cost for teams (3-person crew on Jobber = $400+/mo)
+- SWFT Pro with team management = $179/mo flat
+
+### vs Housecall Pro ($79-$399/mo)
+- Key features locked behind higher tiers at Housecall Pro
+- SWFT includes AI follow-ups, quote generation, and SMS from $89/mo
+- No per-user pricing
+
+### vs ServiceTitan ($300-$500+/mo + implementation fees)
+- No demo required, instant signup
+- Transparent pricing (starts at $89/mo)
+- Built for businesses of all sizes, not just large operations
+- AI features included at no extra cost
+
+### vs GoHighLevel ($97-$497/mo + usage fees)
+- Designed for home services, not marketing agencies
+- Flat pricing with no hidden usage fees
+- Purpose-built features for field service work
+- Setup in minutes, not days
+
+---
+
+## Technical Stack
+- Frontend: Web-based application (works on desktop, tablet, mobile)
+- Backend: Node.js + Express.js
+- Database: Google Firestore
+- Authentication: Firebase Auth (email/password + Google OAuth)
+- Payments: Stripe
+- SMS: Twilio
+- AI: Anthropic Claude + OpenAI
+- Hosting: Render.com
+- Email: Gmail API + Postmark
+
+---
+
+## Contact & Links
+- Website: https://goswft.com
+- Sign Up: https://goswft.com/swft-checkout
+- Log In: https://goswft.com/swft-login
+- Privacy: https://goswft.com/swft-privacy
+- Terms: https://goswft.com/swft-terms
+- AI Info: https://goswft.com/llms.txt

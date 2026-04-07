@@ -453,6 +453,12 @@ app.get("/health", async (req, res) => {
   });
 });
 
+// ── Serve .md files as plain text for AI readability ──
+app.get("*.md", (req, res, next) => {
+  res.type("text/plain");
+  next();
+});
+
 // Rewrite clean URLs → .html before static lookup (e.g. /swft-customers → /swft-customers.html)
 app.use((req, res, next) => {
   if (req.method === "GET" && !req.path.startsWith("/api/") && !path.extname(req.path) && req.path !== "/") {
