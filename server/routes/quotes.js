@@ -139,7 +139,11 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     await col().doc(req.params.id).update({ status: "sent", sentAt: Date.now() });
 
     if (quoteData.customerId) {
-      triggerAutomation(req.orgId, "quote_sent", { id: quoteData.customerId, name: cust.name || quoteData.customerName || "", phone: cust.phone || "", email: cust.email || "", total: quoteData.total || 0, service: quoteData.service || "" }).catch(console.error);
+      triggerAutomation(req.orgId, "quote_sent", { id: quoteData.customerId, name: cust.name || quoteData.customerName || "", phone: cust.phone || "", email: cust.email || "", total: quoteData.total || 0, service: quoteData.service || "" }, {
+        gmailThreadId: sendResult.threadId,
+        gmailMessageId: sendResult.messageId,
+        rfcMessageId: sendResult.rfcMessageId,
+      }).catch(console.error);
     }
 
     res.json({ success: true, messageId: sendResult.messageId });

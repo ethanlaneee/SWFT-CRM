@@ -53,12 +53,14 @@ function encodeMime(mime) {
  * Build a simple text+HTML email (no attachments).
  * Used by automations, surveys, team invites.
  */
-function buildSimpleMime({ from, fromName, to, subject, textBody, htmlBody }) {
+function buildSimpleMime({ from, fromName, to, subject, textBody, htmlBody, inReplyTo, references }) {
   const boundary = "swft_boundary_" + Date.now();
   let mime = "";
   mime += `From: ${fromName} <${from}>\r\n`;
   mime += `To: ${to}\r\n`;
   mime += `Subject: ${subject}\r\n`;
+  if (inReplyTo) mime += `In-Reply-To: ${inReplyTo}\r\n`;
+  if (references) mime += `References: ${references}\r\n`;
   mime += `MIME-Version: 1.0\r\n`;
   mime += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
   mime += `--${boundary}\r\n`;
@@ -75,11 +77,13 @@ function buildSimpleMime({ from, fromName, to, subject, textBody, htmlBody }) {
  * Send a simple email via Gmail (no attachments).
  * Used by automations, surveys, team invites.
  */
-async function sendSimpleGmail(user, to, subject, textBody, htmlBody) {
+async function sendSimpleGmail(user, to, subject, textBody, htmlBody, opts = {}) {
   const { gmail, fromAddr, fromName } = await getGmailClient(user);
-  const mime = buildSimpleMime({ from: fromAddr, fromName, to, subject, textBody, htmlBody });
+  const mime = buildSimpleMime({ from: fromAddr, fromName, to, subject, textBody, htmlBody, inReplyTo: opts.inReplyTo, references: opts.references });
   const encoded = encodeMime(mime);
-  await gmail.users.messages.send({ userId: "me", requestBody: { raw: encoded } });
+  const requestBody = { raw: encoded };
+  if (opts.threadId) requestBody.threadId = opts.threadId;
+  await gmail.users.messages.send({ userId: "me", requestBody });
 }
 
 module.exports = { getOAuthClient, getGmailClient, encodeMime, buildSimpleMime, sendSimpleGmail };

@@ -200,6 +200,10 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
         email: cust.email || "",
         total: invData.total || 0,
         service: invData.service || "",
+      }, {
+        gmailThreadId: sendResult.threadId,
+        gmailMessageId: sendResult.messageId,
+        rfcMessageId: sendResult.rfcMessageId,
       }).catch(console.error);
     }
 

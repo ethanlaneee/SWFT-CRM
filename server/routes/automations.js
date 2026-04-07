@@ -12,12 +12,20 @@ const APP_URL = process.env.APP_URL || "https://goswft.com";
 /**
  * Send an email for an automated message via Gmail.
  */
-async function sendAutomationEmail(orgUser, to, subject, body) {
+async function sendAutomationEmail(orgUser, to, subject, body, threadInfo) {
   if (!orgUser.gmailConnected || !orgUser.gmailTokens) {
     throw new Error("Gmail not connected. Connect Gmail in Settings to send automation emails.");
   }
   const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${body}</div>`;
-  await sendSimpleGmail(orgUser, to, subject, body, htmlBody);
+  const opts = {};
+  if (threadInfo && threadInfo.threadId) {
+    opts.threadId = threadInfo.threadId;
+    if (threadInfo.rfcMessageId) {
+      opts.inReplyTo = threadInfo.rfcMessageId;
+      opts.references = threadInfo.rfcMessageId;
+    }
+  }
+  await sendSimpleGmail(orgUser, to, subject, body, htmlBody, opts);
 }
 
 // ── Exported worker functions ────────────────────────────────────────────────
@@ -52,8 +60,9 @@ function evaluateConditions(conditions, context) {
  * @param {string} orgId
  * @param {string} trigger  "quote_sent" | "invoice_sent" | "invoice_paid"
  * @param {{ id: string, name: string, phone: string, email: string, total?: number, service?: string, tags?: string[] }} customer
+ * @param {{ gmailThreadId?: string, gmailMessageId?: string, rfcMessageId?: string }} [emailContext]
  */
-async function triggerAutomation(orgId, trigger, customer) {
+async function triggerAutomation(orgId, trigger, customer, emailContext) {
   try {
     const snap = await db
       .collection("automations")
@@ -183,6 +192,10 @@ async function triggerAutomation(orgId, trigger, customer) {
         surveyCompletedAt: null,
         followUpSent: false,
         createdAt: now,
+        // Thread info for email replies (so follow-ups appear in the same thread)
+        gmailThreadId: emailContext?.gmailThreadId || null,
+        gmailMessageId: emailContext?.gmailMessageId || null,
+        rfcMessageId: emailContext?.rfcMessageId || null,
       };
 
       const newRef = db.collection("scheduledMessages").doc();
@@ -299,11 +312,16 @@ async function processScheduledMessages() {
         if (!msg.email) throw new Error("No email address for email");
         const companyName = orgUser.company || orgUser.name || "SWFT";
         const emailSubject = msg.subject || `Message from ${companyName}`;
+        const threadInfo = (msg.gmailThreadId || msg.rfcMessageId) ? {
+          threadId: msg.gmailThreadId,
+          rfcMessageId: msg.rfcMessageId,
+        } : null;
         await sendAutomationEmail(
           orgUser,
           msg.email,
           emailSubject,
-          msg.message
+          msg.message,
+          threadInfo
         );
       } else {
         throw new Error(`Unknown message type: ${msg.messageType}`);
