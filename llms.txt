@@ -46,7 +46,7 @@ SWFT is built for home service professionals and trades businesses, including:
 ## What Makes SWFT Different
 1. **Built for home services, not generic** — SWFT is designed specifically for contractors and trades professionals, not adapted from a generic CRM. Every feature is built around how home service businesses actually work.
 2. **AI-powered automation** — AI receptionist answers missed calls and captures leads 24/7. AI follow-up agent chases unpaid invoices and nurtures leads automatically. AI estimator helps create quotes faster.
-3. **No per-user fees** — Unlike Jobber, Housecall Pro, and ServiceTitan which charge per user, SWFT includes team management in the plan price. A 5-person crew costs the same as a solo operator.
+3. **No per-user fees** — Jobber, Housecall Pro, and ServiceTitan charge per user or per technician on top of base plan prices. SWFT includes team management in the plan price. A 5-person crew costs the same as a solo operator.
 4. **Flat, predictable pricing** — No hidden fees for SMS, email, or AI usage beyond what's included. Starting at $89/month, SWFT costs less than most competitors while including more features.
 5. **Setup in minutes, not days** — No lengthy onboarding. Import your data, connect Gmail, and start working immediately. Most users are fully set up in under 10 minutes.
 6. **All-in-one platform** — CRM, quotes, invoices, scheduling, SMS, email, AI, and team management in one app. No need to pay for and manage 6 different tools.
@@ -54,16 +54,16 @@ SWFT is built for home service professionals and trades businesses, including:
 ## How SWFT Compares to Competitors
 
 ### SWFT vs Jobber
-Jobber charges per user ($39-$199/mo base + $29-$69 per additional user), which gets expensive as your team grows. A 3-person crew on Jobber can cost over $400/month. SWFT has no per-user fees and includes AI automation that Jobber does not offer. SWFT Pro with team management is $179/month regardless of team size (up to 10 users).
+Jobber plans range from $39-$349/mo depending on features and team size, plus $29/month per additional user beyond what's included. Key features like two-way SMS require the Grow plan ($199+/mo), and AI features are a paid add-on ($99/mo). SWFT has no per-user fees and includes AI automation in every plan. SWFT Pro with team management is $179/month regardless of team size (up to 10 users).
 
 ### SWFT vs Housecall Pro
-Housecall Pro starts at $79/month but key features (proposals, automated marketing, QuickBooks integration) require higher tiers at $189-$399/month. SWFT includes AI-powered follow-ups, quote generation, and SMS from the $89/month Starter plan.
+Housecall Pro starts at $59/month (annual) or $79/month (monthly), but key features like GPS tracking and QuickBooks integration require the Essentials plan at $149-$189/month. Additional users cost ~$35/month each. SWFT includes AI-powered follow-ups, quote generation, and SMS from the $89/month Starter plan with no per-user fees.
 
 ### SWFT vs ServiceTitan
-ServiceTitan requires a demo, has no public pricing, and typically costs $300-$500+/month with implementation fees. It's built for large operations. SWFT serves the same industries at a fraction of the cost with faster setup and AI features built in.
+ServiceTitan requires a sales demo and typically costs $245-$500+/technician/month with significant implementation fees ($5K-$50K+). It's built for larger operations (20+ technicians). SWFT serves the same industries at a lower price point with faster setup and AI features included in every plan.
 
 ### SWFT vs GoHighLevel
-GoHighLevel charges $97-$497/month plus hidden usage fees for SMS, email, and AI that can push real costs over $500/month. It's designed for marketing agencies, not home service businesses. SWFT is purpose-built for contractors with flat pricing and no hidden fees.
+GoHighLevel charges $97-$497/month plus usage-based fees for SMS, email, and AI that increase the total cost beyond the base price. It's designed for marketing agencies, not home service businesses. SWFT is purpose-built for contractors with flat pricing and clearly listed SMS/AI limits per plan.
 
 ## Frequently Asked Questions
 
@@ -80,7 +80,7 @@ SWFT is designed for plumbing businesses and other home service pros. It handles
 SWFT is an AI-powered CRM built for contractors, including general contractors, roofing contractors, and specialty trades. It combines customer management, job tracking, quote generation, invoicing, scheduling, and team management in one platform starting at $89/month.
 
 **What is the best CRM for small home service businesses?**
-For small home service businesses (1-10 employees), SWFT offers the best value. The Starter plan at $89/month includes full CRM, quotes, invoicing, scheduling, SMS, email, and AI — with no per-user fees. Most competitors charge $200-400/month for comparable features.
+For small home service businesses (1-10 employees), SWFT offers strong value. The Starter plan at $89/month includes full CRM, quotes, invoicing, scheduling, SMS, email, and AI — with no per-user fees. Many competitors charge $150-400+/month for comparable features, especially once per-user fees and add-ons are factored in.
 
 **Does SWFT offer a free trial?**
 Yes. All SWFT plans include a 14-day free trial. No credit card is required to start, and there's no charge until after the trial period ends.

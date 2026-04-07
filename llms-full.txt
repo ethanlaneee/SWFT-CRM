@@ -151,26 +151,26 @@ SWFT serves these specific home service industries:
 
 ## Competitive Advantages
 
-### vs Jobber ($39-$199/mo + $29-$69 per user)
+### vs Jobber ($39-$349/mo + $29/extra user)
 - SWFT has no per-user fees
-- AI automation included (Jobber has none)
-- Lower total cost for teams (3-person crew on Jobber = $400+/mo)
+- AI automation included in every SWFT plan (Jobber's AI Receptionist is a $99/mo add-on)
+- Two-way SMS included on all SWFT plans (Jobber requires Grow plan at $199+/mo)
 - SWFT Pro with team management = $179/mo flat
 
-### vs Housecall Pro ($79-$399/mo)
-- Key features locked behind higher tiers at Housecall Pro
+### vs Housecall Pro ($59-$329/mo + ~$35/extra user)
+- Key features like QuickBooks integration locked behind higher tiers at Housecall Pro
 - SWFT includes AI follow-ups, quote generation, and SMS from $89/mo
 - No per-user pricing
 
-### vs ServiceTitan ($300-$500+/mo + implementation fees)
+### vs ServiceTitan ($245-$500+/technician/mo + $5K-$50K+ implementation)
 - No demo required, instant signup
 - Transparent pricing (starts at $89/mo)
-- Built for businesses of all sizes, not just large operations
+- Built for businesses of all sizes, not just large operations (20+ technicians)
 - AI features included at no extra cost
 
-### vs GoHighLevel ($97-$497/mo + usage fees)
+### vs GoHighLevel ($97-$497/mo + usage-based fees)
 - Designed for home services, not marketing agencies
-- Flat pricing with no hidden usage fees
+- Flat pricing with clearly listed SMS/AI limits per plan
 - Purpose-built features for field service work
 - Setup in minutes, not days
 
