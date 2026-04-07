@@ -1,26 +1,26 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { sendSimpleGmail } = require("../utils/email");
-const { sendSms, getUserTwilioConfig } = require("../twilio");
 const { resolveTemplate } = require("../utils/templates");
 
 /**
  * POST /api/broadcasts — create and send a broadcast to multiple customers
  *
  * Body:
- *   channel: "email" | "sms"
- *   subject: string (email only)
+ *   channel: "email"
+ *   subject: string
  *   message: string (template with {firstName}, {customerName}, etc.)
  *   recipientFilter: "all" | "tagged"
  *   tags: string[] (when recipientFilter === "tagged")
  */
 router.post("/", async (req, res, next) => {
   try {
-    const { channel, subject, message, recipientFilter, tags } = req.body;
-    if (!channel || !message) {
-      return res.status(400).json({ error: "channel and message are required" });
+    const { subject, message, recipientFilter, tags } = req.body;
+    const channel = "email";
+    if (!message) {
+      return res.status(400).json({ error: "message is required" });
     }
-    if (channel === "email" && !subject) {
+    if (!subject) {
       return res.status(400).json({ error: "subject is required for email broadcasts" });
     }
 
@@ -47,12 +47,8 @@ router.post("/", async (req, res, next) => {
       });
     }
 
-    // Filter to those with valid contact info
-    if (channel === "email") {
-      customers = customers.filter(c => c.email);
-    } else {
-      customers = customers.filter(c => c.phone);
-    }
+    // Filter to those with valid email
+    customers = customers.filter(c => c.email);
 
     if (customers.length === 0) {
       return res.status(400).json({ error: "No customers match the selected criteria" });
@@ -111,42 +107,24 @@ router.post("/", async (req, res, next) => {
         const resolvedMessage = resolveTemplate(message, vars);
         const resolvedSubject = subject ? resolveTemplate(subject, vars) : "";
 
-        if (channel === "email") {
-          const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${resolvedMessage}</div>`;
-          await sendSimpleGmail(orgUser, cust.email, resolvedSubject, resolvedMessage, htmlBody);
+        const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${resolvedMessage}</div>`;
+        await sendSimpleGmail(orgUser, cust.email, resolvedSubject, resolvedMessage, htmlBody);
 
-          // Record in messages collection
-          await db.collection("messages").add({
-            userId: req.uid,
-            orgId: req.orgId,
-            to: cust.email,
-            subject: resolvedSubject,
-            body: resolvedMessage,
-            customerId: cust.id,
-            customerName: cust.name || "",
-            type: "email",
-            status: "sent",
-            sentVia: "gmail",
-            broadcastId: broadcastRef.id,
-            sentAt: Date.now(),
-          });
-        } else {
-          await sendSms(cust.phone, resolvedMessage, getUserTwilioConfig(orgUser));
-
-          await db.collection("messages").add({
-            userId: req.uid,
-            orgId: req.orgId,
-            to: cust.phone,
-            body: resolvedMessage,
-            customerId: cust.id,
-            customerName: cust.name || "",
-            type: "sms",
-            status: "sent",
-            sentVia: "twilio",
-            broadcastId: broadcastRef.id,
-            sentAt: Date.now(),
-          });
-        }
+        // Record in messages collection
+        await db.collection("messages").add({
+          userId: req.uid,
+          orgId: req.orgId,
+          to: cust.email,
+          subject: resolvedSubject,
+          body: resolvedMessage,
+          customerId: cust.id,
+          customerName: cust.name || "",
+          type: "email",
+          status: "sent",
+          sentVia: "gmail",
+          broadcastId: broadcastRef.id,
+          sentAt: Date.now(),
+        });
 
         sentCount++;
       } catch (err) {
@@ -155,9 +133,7 @@ router.post("/", async (req, res, next) => {
       }
 
       // Small delay between sends to avoid rate limits
-      if (channel === "email") {
-        await new Promise(r => setTimeout(r, 500));
-      }
+      await new Promise(r => setTimeout(r, 500));
     }
 
     // Update broadcast record with final counts
