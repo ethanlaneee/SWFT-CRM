@@ -899,6 +899,16 @@ function openDrawer(id) {
     document.getElementById('d-jobs').textContent = custJobs.length;
     c.jobs = custJobs.length;
 
+    // Update last job date
+    if (custJobs.length > 0) {
+      var lastDate = custJobs[0].scheduledDate || custJobs[0].completedAt || custJobs[0].createdAt;
+      if (lastDate) {
+        var formatted = new Date(lastDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('d-last').textContent = formatted;
+        c.last = formatted;
+      }
+    }
+
     // Update total spend from completed jobs
     var totalSpend = custJobs
       .filter(function(j) { return j.status === 'completed' || j.status === 'invoiced'; })
