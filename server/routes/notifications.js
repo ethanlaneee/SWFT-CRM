@@ -6,12 +6,13 @@ const col = () => db.collection("notifications");
 // GET /api/notifications — list notifications for current user (most recent 50)
 router.get("/", async (req, res, next) => {
   try {
+    // Query by userId only, sort in code (avoids needing a composite index)
     const snap = await col()
       .where("userId", "==", req.uid)
-      .orderBy("createdAt", "desc")
-      .limit(50)
       .get();
-    const notifications = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let notifications = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    notifications.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    notifications = notifications.slice(0, 50);
     res.json(notifications);
   } catch (err) { next(err); }
 });

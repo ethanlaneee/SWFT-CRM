@@ -174,7 +174,21 @@ router.get("/followup/stats", async (req, res, next) => {
       .where("orgId", "==", orgId)
       .where("status", "==", "sent")
       .get();
-    const automationsSentMTD = schedSentSnap.docs.filter(d => (d.data().sentAt || 0) >= monthMs).length;
+    const schedSentMTD = schedSentSnap.docs.filter(d => (d.data().sentAt || 0) >= monthMs);
+    const automationsSentMTD = schedSentMTD.length;
+
+    // Break down by trigger type
+    let emailsSentMTD = 0;
+    let smsSentMTD = 0;
+    let quoteTriggers = 0;
+    let invoiceTriggers = 0;
+    for (const doc of schedSentMTD) {
+      const d = doc.data();
+      if (d.messageType === "email") emailsSentMTD++;
+      if (d.messageType === "sms") smsSentMTD++;
+      if (d.trigger === "quote_sent") quoteTriggers++;
+      if (d.trigger === "invoice_sent" || d.trigger === "invoice_paid") invoiceTriggers++;
+    }
 
     // Count pending follow-ups
     const pendingSnap = await db.collection("followups")
@@ -194,6 +208,10 @@ router.get("/followup/stats", async (req, res, next) => {
       quoteFollowups,
       pendingCount: pendingSnap.size + schedPendingSnap.size,
       totalSentMTD: sentDocs.length + automationsSentMTD,
+      emailsSentMTD,
+      smsSentMTD,
+      quoteTriggers,
+      invoiceTriggers,
     });
   } catch (err) { next(err); }
 });
