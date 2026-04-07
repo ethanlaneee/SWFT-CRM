@@ -219,6 +219,31 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
     }
 
     await batch.commit();
+
+    // Log activity immediately so the UI shows it right away
+    for (const autoDoc of snap.docs) {
+      const rule = autoDoc.data();
+      try {
+        const triggerLabels = {
+          quote_sent: "unsigned_quote",
+          invoice_sent: "overdue_invoice",
+          invoice_paid: "review_request",
+          job_completed: "review_request",
+          customer_created: "automation_send",
+        };
+        await db.collection("orgs").doc(orgId).collection("agentActivity").add({
+          agent: "followup",
+          type: triggerLabels[trigger] || "automation_send",
+          targetId: autoDoc.id,
+          customerId: customer.id || "",
+          customerName: customer.name || "",
+          messageType: rule.messageType || "sms",
+          createdAt: Date.now(),
+        });
+      } catch (actErr) {
+        console.error("[triggerAutomation] Activity log error:", actErr.message);
+      }
+    }
   } catch (err) {
     console.error("triggerAutomation error:", err);
   }
