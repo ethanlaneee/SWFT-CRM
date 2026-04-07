@@ -821,21 +821,19 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     const subEl = document.getElementById('greeting-sub');
     if (subEl) subEl.textContent = dayStr;
 
-    // Fire all data fetches in parallel — no sequential waiting
-    const [stats, followupStats] = await Promise.all([
-      API.dashboard.stats().catch(() => null),
-      API.agents.followupStats().catch(() => null),
-    ]);
-
-    // Update greeting sub with stats
-    if (subEl && stats) {
+    // Load dashboard stats
+    try {
+      var stats = await API.dashboard.stats();
       var jobsToday = stats.activeJobs || 0;
       var openQuotes = stats.activeQuotes || 0;
-      subEl.textContent = dayStr + ' · ' + jobsToday + ' jobs active · ' + openQuotes + ' quotes open';
+      if (subEl) subEl.textContent = dayStr + ' · ' + jobsToday + ' jobs active · ' + openQuotes + ' quotes open';
+    } catch(e) {
+      if (subEl) subEl.textContent = dayStr;
     }
 
     // ── Load Automations stats strip ──
     try {
+      const followupStats = await API.agents.followupStats().catch(() => null);
       if (followupStats) {
         const strip = document.getElementById('agent-strip');
         const statsEl = document.getElementById('agent-strip-stats');
