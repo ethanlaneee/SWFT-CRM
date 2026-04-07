@@ -782,10 +782,13 @@ function renderChat(){
 
   // Subject row visibility
   document.getElementById('subject-row').style.display=c.channel==='email'?'flex':'none';
-  // Attach area
-  document.getElementById('attach-area').style.display=c.channel==='email'?'':'none';
-  document.getElementById('file-attach-btn').style.display=c.channel==='email'?'':'none';
-  document.getElementById('template-btn').style.display=c.channel==='email'?'':'none';
+  // Attach area / file buttons (may not exist if paperclip was removed)
+  var attachArea=document.getElementById('attach-area');
+  if(attachArea) attachArea.style.display=c.channel==='email'?'':'none';
+  var fileBtn=document.getElementById('file-attach-btn');
+  if(fileBtn) fileBtn.style.display=c.channel==='email'?'':'none';
+  var tmplBtn=document.getElementById('template-btn');
+  if(tmplBtn) tmplBtn.style.display=c.channel==='email'?'':'none';
 
   // Messages
   var msgs=c.messages.slice().sort(function(a,b){return(a.sentAt||0)-(b.sentAt||0);});
