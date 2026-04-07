@@ -66,7 +66,7 @@
 @keyframes glow{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(200,241,53,0.5);}50%{opacity:0.6;box-shadow:0 0 0 4px rgba(200,241,53,0);}}
 .icon-btn{width:34px;height:34px;border-radius:8px;background:transparent;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
 .icon-btn:hover{background:var(--surface2);color:var(--white);}
-.btn-primary{display:flex;align-items:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s cubic-bezier(0.34,1.56,0.64,1);}
+.btn-primary{display:flex;align-items:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s ease-out;}
 .btn-primary:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 4px 18px rgba(200,241,53,0.22);}
 
 /* ── PAGE BODY ── */
@@ -74,7 +74,7 @@
 
 /* ── STAT STRIP ── */
 .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:springUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:sharpIn 0.35s ease-out both;}
 .stat-card:nth-child(1){animation-delay:.04s;} .stat-card:nth-child(2){animation-delay:.09s;} .stat-card:nth-child(3){animation-delay:.14s;} .stat-card:nth-child(4){animation-delay:.19s;}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c);border-radius:12px 12px 0 0;}
 .stat-card.c-green{--c:var(--green);} .stat-card.c-blue{--c:var(--blue);} .stat-card.c-amber{--c:var(--amber);} .stat-card.c-red{--c:var(--red);}
@@ -115,7 +115,7 @@
 .th:hover{color:var(--gray);}
 .th.sort-active{color:var(--green);}
 
-.job-row{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:springUp 0.35s cubic-bezier(0.34,1.56,0.64,1) both;}
+.job-row{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.3s ease-out both;}
 .job-row:last-child{border-bottom:none;}
 .job-row:hover{background:var(--surface2);}
 .job-row:nth-child(1){animation-delay:.05s;} .job-row:nth-child(2){animation-delay:.10s;} .job-row:nth-child(3){animation-delay:.15s;} .job-row:nth-child(4){animation-delay:.20s;} .job-row:nth-child(5){animation-delay:.25s;} .job-row:nth-child(6){animation-delay:.30s;}
@@ -745,12 +745,12 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
         tbody.appendChild(row);
       });
 
-      // Update stat cards
-      var el;
-      el = document.getElementById('stat-active');    if (el) el.textContent = counts.active;
-      el = document.getElementById('stat-scheduled');  if (el) el.textContent = counts.scheduled;
-      el = document.getElementById('stat-pending');    if (el) el.textContent = counts.pending;
-      el = document.getElementById('stat-complete');   if (el) el.textContent = counts.complete;
+      // Update stat cards with counter animation
+      var el, cu = window.swftCountUp || function(e,v){ e.textContent=v; };
+      el = document.getElementById('stat-active');    if (el) cu(el, counts.active);
+      el = document.getElementById('stat-scheduled');  if (el) cu(el, counts.scheduled);
+      el = document.getElementById('stat-pending');    if (el) cu(el, counts.pending);
+      el = document.getElementById('stat-complete');   if (el) cu(el, counts.complete);
       el = document.getElementById('stat-complete-sub'); if (el) el.textContent = fmtCost(completeCost) + ' invoiced';
 
       // Update topbar sub
@@ -1446,6 +1446,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
 <script src="swft-chat.js"></script>
+<script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
 </body>
 </html>

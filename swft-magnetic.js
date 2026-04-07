@@ -1,38 +1,45 @@
 // ════════════════════════════════════════════════
-// SWFT — Magnetic Button Effect
-// Adds a subtle gravitational pull toward the cursor
-// on elements with class .swft-magnetic
+// SWFT — Magnetic Buttons + Cursor Glow
 // Include via: <script src="swft-magnetic.js"></script>
 // ════════════════════════════════════════════════
 
 (function () {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  const RADIUS = 20; // px — magnetic pull radius around button center
-  const STRENGTH = 0.3; // 0–1 — how strongly the button follows the cursor
+  var RADIUS = 20;
+  var STRENGTH = 0.3;
 
   document.addEventListener("mousemove", function (e) {
-    const btns = document.querySelectorAll(".swft-magnetic");
-    for (let i = 0; i < btns.length; i++) {
-      const btn = btns[i];
-      const rect = btn.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = e.clientX - cx;
-      const dy = e.clientY - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const zone = Math.max(rect.width, rect.height) / 2 + RADIUS;
+    // ── Magnetic buttons ──
+    var btns = document.querySelectorAll(".swft-magnetic");
+    for (var i = 0; i < btns.length; i++) {
+      var btn = btns[i];
+      var rect = btn.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      var dx = e.clientX - cx;
+      var dy = e.clientY - cy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var zone = Math.max(rect.width, rect.height) / 2 + RADIUS;
 
       if (dist < zone) {
-        const pull = (1 - dist / zone) * STRENGTH;
+        var pull = (1 - dist / zone) * STRENGTH;
         btn.style.transform = "translate(" + (dx * pull) + "px," + (dy * pull) + "px)";
       } else if (btn.style.transform) {
         btn.style.transform = "";
       }
     }
+
+    // ── Cursor glow on panels ──
+    var panels = document.querySelectorAll(".swft-glow-surface");
+    for (var j = 0; j < panels.length; j++) {
+      var panel = panels[j];
+      var prect = panel.getBoundingClientRect();
+      panel.style.setProperty("--glow-x", (e.clientX - prect.left) + "px");
+      panel.style.setProperty("--glow-y", (e.clientY - prect.top) + "px");
+    }
   });
 
-  // Reset on mouse leave from document
   document.addEventListener("mouseleave", function () {
     var btns = document.querySelectorAll(".swft-magnetic");
     for (var i = 0; i < btns.length; i++) btns[i].style.transform = "";

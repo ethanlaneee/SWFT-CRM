@@ -76,7 +76,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 22px 18px;position:relative;overflow:hidden;cursor:default;transition:border-color 0.18s,transform 0.18s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.18s;animation:springUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 22px 18px;position:relative;overflow:hidden;cursor:default;transition:border-color 0.18s,transform 0.18s ease-out,box-shadow 0.18s;animation:sharpIn 0.4s ease-out both;}
 .kpi-card:nth-child(1){animation-delay:0.03s;}.kpi-card:nth-child(2){animation-delay:0.08s;}.kpi-card:nth-child(3){animation-delay:0.13s;}.kpi-card:nth-child(4){animation-delay:0.18s;}
 .kpi-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 12px 32px rgba(0,0,0,0.35);}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:14px 14px 0 0;}
@@ -298,7 +298,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     </div>
 
 <!-- AI Agent Activity Strip -->
-<div id="agent-strip" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:4px;animation:springUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;animation-delay:0.2s;">
+<div id="agent-strip" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:4px;animation:sharpIn 0.35s ease-out both;animation-delay:0.15s;">
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
     <div class="swft-breathing" style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
     <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;color:var(--green);">AUTOMATIONS</span>
@@ -313,7 +313,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;min-height:calc(100vh - 190px);">
 
 <!-- SWFT AI AGENT -->
-<div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
+<div class="panel swft-glow-surface" style="display:flex;flex-direction:column;overflow:hidden;">
   <div class="panel-header">
     <div class="panel-title" style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:glow 2.2s ease-in-out infinite;"></div> SWFT AI AGENT</div>
   </div>
@@ -356,7 +356,7 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 </div>
 
 <!-- TODAY'S SCHEDULE -->
-<div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
+<div class="panel swft-glow-surface" style="display:flex;flex-direction:column;overflow:hidden;">
   <div class="panel-header">
     <div class="panel-title">TODAY'S SCHEDULE</div>
     <a class="panel-link" onclick="window.location.href='swft-schedule'">Full calendar &#8594;</a>

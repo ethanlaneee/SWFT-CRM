@@ -3,30 +3,26 @@
    Include via: <link rel="stylesheet" href="swft-animations.css">
    ════════════════════════════════════════════════ */
 
-/* ── Spring Entrance (replaces linear fadeUp) ── */
-@keyframes springUp {
-  0%   { opacity: 0; transform: translateY(16px) scale(0.97); }
-  60%  { opacity: 1; transform: translateY(-3px) scale(1.005); }
-  80%  { transform: translateY(1px) scale(0.998); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+/* ── Blur-to-Sharp Entrance ── */
+@keyframes sharpIn {
+  from { opacity: 0; filter: blur(4px); transform: translateY(8px); }
+  to   { opacity: 1; filter: blur(0);   transform: translateY(0); }
 }
 
-@keyframes springScale {
-  0%   { opacity: 0; transform: scale(0.92); }
-  60%  { opacity: 1; transform: scale(1.03); }
-  80%  { transform: scale(0.99); }
-  100% { opacity: 1; transform: scale(1); }
+/* Keep springUp for backwards compat — now uses sharpIn timing, no bounce */
+@keyframes springUp {
+  from { opacity: 0; filter: blur(3px); transform: translateY(8px); }
+  to   { opacity: 1; filter: blur(0);   transform: translateY(0); }
 }
 
 /* ── Success Scale-Snap ── */
 @keyframes scaleSnap {
   0%   { transform: scale(1); }
-  40%  { transform: scale(1.12); }
-  70%  { transform: scale(0.97); }
+  50%  { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
 
-.swft-success { animation: scaleSnap 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.swft-success { animation: scaleSnap 0.2s ease-out; }
 
 /* ── Skeleton Shimmer ── */
 @keyframes shimmer {
@@ -46,7 +42,6 @@
   border-radius: 6px;
 }
 
-/* Skeleton bar variants */
 .swft-skeleton-text {
   height: 13px;
   width: 60%;
@@ -71,30 +66,28 @@
 /* ── Breathing Pulse (agentic logic indicator) ── */
 @keyframes breathe {
   0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(200, 241, 53, 0.4); }
-  50%      { opacity: 0.6; box-shadow: 0 0 12px 4px rgba(200, 241, 53, 0); }
+  50%      { opacity: 0.55; box-shadow: 0 0 12px 4px rgba(200, 241, 53, 0); }
 }
 
 .swft-breathing { animation: breathe 1.5s ease-in-out infinite; }
 
 /* ── Magnetic Button Base ── */
 .swft-magnetic {
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s ease-out;
   will-change: transform;
 }
 
-/* ── Spring Sidebar Override ──
-   Overshoot curve: stiffness ~300, damping ~30 equivalent */
+/* ── Sidebar — clean ease, no overshoot ── */
 .sidebar {
-  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 .main {
-  transition: margin-left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: margin-left 0.28s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-/* ── Stagger Utility ──
-   Apply data-stagger="N" on parent, children animate in sequence */
+/* ── Stagger Utility ── */
 [data-stagger] > * {
-  animation: springUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: sharpIn 0.35s ease-out both;
 }
 [data-stagger] > *:nth-child(1)  { animation-delay: 0.00s; }
 [data-stagger] > *:nth-child(2)  { animation-delay: 0.05s; }
@@ -108,6 +101,78 @@
 [data-stagger] > *:nth-child(10) { animation-delay: 0.45s; }
 [data-stagger] > *:nth-child(n+11) { animation-delay: 0.50s; }
 
+/* ── Row Hover Sweep ──
+   Faint horizontal light sweep on table/list rows */
+.cust-row,
+.job-row,
+.inv-row,
+.schedule-row,
+.activity-item {
+  position: relative;
+  overflow: hidden;
+}
+.cust-row::after,
+.job-row::after,
+.inv-row::after,
+.schedule-row::after,
+.activity-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(200, 241, 53, 0.03) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: opacity 0.2s ease-out, transform 0.4s ease-out;
+  pointer-events: none;
+}
+.cust-row:hover::after,
+.job-row:hover::after,
+.inv-row:hover::after,
+.schedule-row:hover::after,
+.activity-item:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Input Focus Glow ── */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(200, 241, 53, 0.12), 0 0 16px rgba(200, 241, 53, 0.06) !important;
+  border-color: #c8f135 !important;
+  transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out !important;
+}
+
+/* ── Cursor Glow ──
+   .swft-glow-surface enables the radial glow that follows the mouse.
+   JS sets --glow-x / --glow-y via mousemove. */
+.swft-glow-surface {
+  position: relative;
+  overflow: hidden;
+}
+.swft-glow-surface::before {
+  content: '';
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200, 241, 53, 0.045) 0%, transparent 70%);
+  left: var(--glow-x, -200px);
+  top: var(--glow-y, -200px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  transition: left 0.15s ease-out, top 0.15s ease-out, opacity 0.3s ease-out;
+  opacity: 0;
+}
+.swft-glow-surface:hover::before {
+  opacity: 1;
+}
+
 /* ── Accessibility: Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -119,5 +184,8 @@
   .swft-skeleton {
     animation: none;
     background: #1a1a1a;
+  }
+  .swft-glow-surface::before {
+    display: none;
   }
 }
