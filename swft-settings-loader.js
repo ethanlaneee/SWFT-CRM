@@ -23,28 +23,57 @@
       const settings = await res.json();
       window._swftSettings = settings;
 
-      // Apply service types to all service dropdowns on the page
-      if (settings.serviceTypes) {
-        const types = settings.serviceTypes.split(",").map(function (s) { return s.trim(); });
-        document.querySelectorAll("#e-service, #nj-service").forEach(function (sel) {
-          const current = sel.value;
-          sel.innerHTML = "";
-          types.forEach(function (t) {
+      // ── Service type dropdowns ──
+      // Always rebuild from settings. If blank/missing, leave just an empty option.
+      const serviceTypes = (settings.serviceTypes || "")
+        .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      document.querySelectorAll("#e-service, #nj-service").forEach(function (sel) {
+        const current = sel.value;
+        sel.innerHTML = "";
+        if (serviceTypes.length === 0) {
+          const blank = document.createElement("option");
+          blank.value = ""; blank.textContent = "—";
+          sel.appendChild(blank);
+        } else {
+          serviceTypes.forEach(function (t) {
             const opt = document.createElement("option");
-            opt.value = t;
-            opt.textContent = t;
+            opt.value = t; opt.textContent = t;
             sel.appendChild(opt);
           });
-          // Add "Other" option
           const other = document.createElement("option");
-          other.value = "Other";
-          other.textContent = "Other";
+          other.value = "Other"; other.textContent = "Other";
           sel.appendChild(other);
           if (current) sel.value = current;
-        });
-      }
+        }
+      });
 
-      // Apply crew names to all crew dropdowns
+      // ── Line item description dropdowns ──
+      // Rebuild from settings.lineItemTypes if set, otherwise use built-in defaults.
+      const defaultLineItems = [
+        "Materials", "Labor", "Equipment Rental",
+        "Delivery / Haul-Off", "Disposal / Cleanup",
+        "Permit Fee", "Misc"
+      ];
+      const lineItemTypes = (settings.lineItemTypes || "")
+        .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      const lineItems = lineItemTypes.length > 0 ? lineItemTypes : defaultLineItems;
+
+      document.querySelectorAll(".swft-desc-select").forEach(function (sel) {
+        const current = sel.value;
+        // Keep the blank placeholder option, replace everything else
+        sel.innerHTML = '<option value="">Select description…</option>';
+        lineItems.forEach(function (t) {
+          const opt = document.createElement("option");
+          opt.value = t; opt.textContent = t;
+          sel.appendChild(opt);
+        });
+        const custom = document.createElement("option");
+        custom.value = "__custom__"; custom.textContent = "Custom…";
+        sel.appendChild(custom);
+        if (current) sel.value = current;
+      });
+
+      // ── Crew name dropdowns ──
       if (settings.crewNames) {
         const crews = settings.crewNames.split(",").map(function (s) { return s.trim(); });
         document.querySelectorAll("#e-crew, #nj-crew").forEach(function (sel) {
@@ -52,24 +81,20 @@
           sel.innerHTML = "";
           crews.forEach(function (c) {
             const opt = document.createElement("option");
-            opt.value = c;
-            opt.textContent = c;
+            opt.value = c; opt.textContent = c;
             sel.appendChild(opt);
           });
-          // Add Unassigned and Other
           var ua = document.createElement("option");
-          ua.value = "Unassigned";
-          ua.textContent = "Unassigned";
+          ua.value = "Unassigned"; ua.textContent = "Unassigned";
           sel.appendChild(ua);
           var other = document.createElement("option");
-          other.value = "Other";
-          other.textContent = "Other";
+          other.value = "Other"; other.textContent = "Other";
           sel.appendChild(other);
           if (current) sel.value = current;
         });
       }
     } catch (e) {
-      // Settings load failed - use defaults
+      // Settings load failed — use defaults silently
     }
   }
 

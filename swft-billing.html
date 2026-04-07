@@ -158,9 +158,12 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .pdf-li-del{width:22px;height:22px;border-radius:5px;border:none;background:transparent;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.12s;}
 .pdf-li-del:hover{background:rgba(255,82,82,0.1);color:#ff5252;}
 .pdf-add-row{display:grid;grid-template-columns:2fr 0.6fr 0.8fr 0.8fr 26px;padding:8px 0;gap:4px;border-top:1px dashed #ddd;margin-top:4px;}
-.pdf-add-input{background:transparent;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:#111;outline:none;}
+.pdf-add-input{background:transparent;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:#111;outline:none;width:100%;}
 .pdf-add-input:focus{border-color:#8ab800;}
 .pdf-add-input::placeholder{color:#bbb;}
+.pdf-add-select{background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:#111;outline:none;width:100%;cursor:pointer;}
+.pdf-add-select:focus{border-color:#8ab800;}
+.pdf-desc-col{display:flex;flex-direction:column;gap:3px;}
 .pdf-add-btn{width:22px;height:22px;border-radius:5px;background:rgba(138,184,0,0.1);border:1px solid rgba(138,184,0,0.3);color:#8ab800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
 .pdf-add-btn:hover{background:rgba(138,184,0,0.2);}
 .pdf-totals{margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;}
@@ -404,7 +407,20 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
       <div class="pdf-li-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div><div></div></div>
       <div id="li-body"></div>
       <div class="pdf-add-row">
-        <input class="pdf-add-input" id="new-desc" placeholder="Add description..."/>
+        <div class="pdf-desc-col">
+          <select class="pdf-add-select swft-desc-select" id="new-desc" onchange="toggleDescCustom('new-desc','new-desc-custom')">
+            <option value="">Select description…</option>
+            <option>Materials</option>
+            <option>Labor</option>
+            <option>Equipment Rental</option>
+            <option>Delivery / Haul-Off</option>
+            <option>Disposal / Cleanup</option>
+            <option>Permit Fee</option>
+            <option>Misc</option>
+            <option value="__custom__">Custom…</option>
+          </select>
+          <input class="pdf-add-input" id="new-desc-custom" placeholder="Enter custom description…" style="display:none;"/>
+        </div>
         <input class="pdf-add-input" id="new-qty" placeholder="Qty" style="text-align:center;"/>
         <input class="pdf-add-input" id="new-rate" placeholder="$ Rate"/>
         <input class="pdf-add-input" id="new-total" placeholder="Total" readonly style="color:#8ab800;font-weight:500;"/>
@@ -915,16 +931,30 @@ function renderLineItems(lines) {
     '<div class="pdf-total-line grand"><span>Total</span><span>$'+sub.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>';
 }
 
+function toggleDescCustom(selId, inputId) {
+  var sel = document.getElementById(selId);
+  var inp = document.getElementById(inputId);
+  if (!inp) return;
+  var show = sel.value === '__custom__';
+  inp.style.display = show ? 'block' : 'none';
+  if (show) inp.focus();
+}
+
 function addLineItem() {
-  const desc = document.getElementById('new-desc').value.trim();
+  var sel  = document.getElementById('new-desc');
+  var desc = sel.value === '__custom__'
+    ? document.getElementById('new-desc-custom').value.trim()
+    : sel.value.trim();
   const qty  = document.getElementById('new-qty').value.trim();
   const rate = document.getElementById('new-rate').value.trim();
-  if(!desc){showToast('Add a description first');return;}
+  if(!desc){showToast('Select or enter a description');return;}
   const r = parseFloat(rate.replace(/[$,]/g,''))||0;
   const q = parseFloat(qty)||1;
   if(_q) _q.lines.push({desc,sub:'',qty,rate:'$'+r.toFixed(2),total:'$'+(r*q).toFixed(2)});
   renderLineItems(_q?_q.lines:[]);
-  document.getElementById('new-desc').value='';
+  sel.value='';
+  var custom = document.getElementById('new-desc-custom');
+  if(custom){custom.value='';custom.style.display='none';}
   document.getElementById('new-qty').value='';
   document.getElementById('new-rate').value='';
   document.getElementById('new-total').value='';

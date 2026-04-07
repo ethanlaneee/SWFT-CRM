@@ -122,9 +122,12 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .pdf-li-del{width:22px;height:22px;border-radius:5px;border:none;background:transparent;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.12s;}
 .pdf-li-del:hover{background:rgba(255,82,82,0.1);color:#ff5252;}
 .pdf-add-row{display:grid;grid-template-columns:2fr 0.6fr 0.8fr 0.8fr 26px;padding:8px 0;gap:4px;border-top:1px dashed #ddd;margin-top:4px;}
-.pdf-add-input{background:transparent;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:#111;outline:none;}
+.pdf-add-input{background:transparent;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:#111;outline:none;width:100%;}
 .pdf-add-input:focus{border-color:#8ab800;}
 .pdf-add-input::placeholder{color:#bbb;}
+.pdf-add-select{background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:12px;color:#111;outline:none;width:100%;cursor:pointer;}
+.pdf-add-select:focus{border-color:#8ab800;}
+.pdf-desc-col{display:flex;flex-direction:column;gap:3px;}
 .pdf-add-btn{width:22px;height:22px;border-radius:5px;background:rgba(138,184,0,0.1);border:1px solid rgba(138,184,0,0.3);color:#8ab800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
 .pdf-add-btn:hover{background:rgba(138,184,0,0.2);}
 .pdf-totals{margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;}
@@ -237,7 +240,20 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
       <div class="pdf-li-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div><div></div></div>
       <div id="li-body"></div>
       <div class="pdf-add-row">
-        <input class="pdf-add-input" id="add-desc" placeholder="Add description..."/>
+        <div class="pdf-desc-col">
+          <select class="pdf-add-select swft-desc-select" id="add-desc" onchange="toggleDescCustom('add-desc','add-desc-custom')">
+            <option value="">Select description…</option>
+            <option>Materials</option>
+            <option>Labor</option>
+            <option>Equipment Rental</option>
+            <option>Delivery / Haul-Off</option>
+            <option>Disposal / Cleanup</option>
+            <option>Permit Fee</option>
+            <option>Misc</option>
+            <option value="__custom__">Custom…</option>
+          </select>
+          <input class="pdf-add-input" id="add-desc-custom" placeholder="Enter custom description…" style="display:none;"/>
+        </div>
         <input class="pdf-add-input" id="add-qty" placeholder="Qty" style="text-align:center;"/>
         <input class="pdf-add-input" id="add-rate" placeholder="$ Rate"/>
         <input class="pdf-add-input" id="add-total" placeholder="Total" readonly style="color:#8ab800;font-weight:500;"/>
@@ -410,11 +426,19 @@ function updateItem(i,field,val){
 }
 function removeItem(i){_items.splice(i,1);renderLineItems();}
 
+function toggleDescCustom(selId,inputId){
+  var sel=document.getElementById(selId);var inp=document.getElementById(inputId);if(!inp)return;
+  var show=sel.value==='__custom__';inp.style.display=show?'block':'none';if(show)inp.focus();
+}
+
 function addLineItem(){
-  var desc=document.getElementById('add-desc').value.trim();var qty=Number(document.getElementById('add-qty').value)||1;var rate=Number(document.getElementById('add-rate').value)||0;
-  if(!desc){showToast('Enter a description');return;}
+  var sel=document.getElementById('add-desc');
+  var desc=sel.value==='__custom__'?document.getElementById('add-desc-custom').value.trim():sel.value.trim();
+  var qty=Number(document.getElementById('add-qty').value)||1;var rate=Number(document.getElementById('add-rate').value)||0;
+  if(!desc){showToast('Select or enter a description');return;}
   _items.push({desc:desc,qty:qty,rate:rate,total:qty*rate});
-  document.getElementById('add-desc').value='';document.getElementById('add-qty').value='';document.getElementById('add-rate').value='';document.getElementById('add-total').value='';
+  sel.value='';var custom=document.getElementById('add-desc-custom');if(custom){custom.value='';custom.style.display='none';}
+  document.getElementById('add-qty').value='';document.getElementById('add-rate').value='';document.getElementById('add-total').value='';
   renderLineItems();
 }
 
