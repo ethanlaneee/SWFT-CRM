@@ -259,7 +259,18 @@
       const triggerLabel = TRIGGERS[a.trigger] || a.trigger || '—';
       const ch = a.messageType || a.channel || 'sms';
       const channelLabel = CHANNELS[ch] || ch || 'SMS';
-      const delayLabel = a.delayDays ? a.delayDays + ' day' + (a.delayDays > 1 ? 's' : '') + ' after' : a.delayHours ? a.delayHours + 'h after' : 'Immediate';
+      var delayLabel = 'Immediate';
+      if (a.delayDays || a.delayHours) {
+        var parts = [];
+        if (a.delayDays) parts.push(a.delayDays + ' day' + (a.delayDays > 1 ? 's' : ''));
+        if (a.delayHours) parts.push(a.delayHours + 'h');
+        var timeStr = a.sendAtTime || '09:00';
+        var timeParts = timeStr.split(':');
+        var h = parseInt(timeParts[0]), m = timeParts[1];
+        var ampm = h >= 12 ? 'PM' : 'AM';
+        if (h > 12) h -= 12; if (h === 0) h = 12;
+        delayLabel = parts.join(' ') + ' later at ' + h + ':' + m + ' ' + ampm + ' ET';
+      }
       const statusColor = a.enabled ? 'var(--green)' : 'var(--gray2)';
       const statusBg = a.enabled ? 'rgba(200,241,53,0.1)' : 'rgba(100,100,100,0.1)';
       const statusText = a.enabled ? 'Active' : 'Paused';
@@ -339,6 +350,7 @@
     document.getElementById('m-channel').value = 'sms';
     document.getElementById('m-delay-days').value = '1';
     document.getElementById('m-delay-hours').value = '';
+    document.getElementById('m-send-time').value = '09:00';
     document.getElementById('m-message').value = '';
     document.getElementById('m-subject').value = '';
     document.getElementById('m-enabled').checked = true;
@@ -361,6 +373,7 @@
     document.getElementById('m-channel').value = ch;
     document.getElementById('m-delay-days').value = a.delayDays || '';
     document.getElementById('m-delay-hours').value = a.delayHours || '';
+    document.getElementById('m-send-time').value = a.sendAtTime || '09:00';
     document.getElementById('m-message').value = a.messageTemplate || a.message || '';
     document.getElementById('m-subject').value = a.emailSubject || a.subject || '';
     document.getElementById('m-enabled').checked = !!a.enabled;
@@ -390,6 +403,7 @@
       messageType: document.getElementById('m-channel').value,
       delayDays: parseInt(document.getElementById('m-delay-days').value) || 0,
       delayHours: parseInt(document.getElementById('m-delay-hours').value) || 0,
+      sendAtTime: document.getElementById('m-send-time').value || '09:00',
       messageTemplate: document.getElementById('m-message').value.trim(),
       emailSubject: document.getElementById('m-subject').value.trim(),
       enabled: document.getElementById('m-enabled').checked,
@@ -516,7 +530,7 @@
           </select>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
         <div style="display:flex;flex-direction:column;gap:3px;">
           <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Delay (days)</label>
           <input id="m-delay-days" type="number" min="0" placeholder="e.g. 1" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
@@ -524,6 +538,11 @@
         <div style="display:flex;flex-direction:column;gap:3px;">
           <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Delay (hours)</label>
           <input id="m-delay-hours" type="number" min="0" placeholder="e.g. 0" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Send at time</label>
+          <input id="m-send-time" type="time" value="09:00" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+          <span style="font-size:9px;color:var(--gray2);">Eastern time (ignored if delay is 0)</span>
         </div>
       </div>
       <div id="m-subject-row" style="display:none;flex-direction:column;gap:3px;">
