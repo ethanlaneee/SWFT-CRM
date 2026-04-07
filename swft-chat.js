@@ -745,6 +745,10 @@
         if (typeof showToast === 'function') showToast('Microphone not supported in this browser');
         return;
       }
+
+      // Stop any ongoing TTS so we don't record the AI's own voice
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+
       let stream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -752,6 +756,9 @@
         if (typeof showToast === 'function') showToast('Microphone blocked — check browser settings');
         return;
       }
+
+      // Brief pause to let speakers clear before recording starts
+      await new Promise(r => setTimeout(r, 300));
 
       _audioChunks = [];
       _mediaRecorder = new MediaRecorder(stream);
