@@ -83,11 +83,12 @@ const tools = [
   },
   {
     name: "send_quote",
-    description: "Mark a quote as sent to the customer.",
+    description: "Send a quote to the customer. Marks it as sent, emails it via Gmail, logs it to Messages, and triggers follow-up automations. Always confirm recipient name, email, and total with the user before calling this tool.",
     input_schema: {
       type: "object",
       properties: {
         quoteId: { type: "string", description: "The quote ID to send" },
+        recipientEmail: { type: "string", description: "Email address to send to. If omitted, uses the customer's email on file." },
       },
       required: ["quoteId"],
     },

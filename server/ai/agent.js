@@ -5,6 +5,8 @@ const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
 const { getIntegrationTools, executeIntegrationTool, syncJobToCalendar } = require("./integration-tools");
 const { sendSms, getUserTwilioConfig } = require("../twilio");
+const { sendViaGmail } = require("../routes/messages");
+const { triggerAutomation } = require("../routes/automations");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms, incrementAiMessage } = require("../usage");
 const { generateEstimate } = require("./estimator-agent");
@@ -94,8 +96,101 @@ async function executeTool(toolName, input, uid, orgId) {
     case "send_quote": {
       const qDoc = await db.collection("quotes").doc(input.quoteId).get();
       if (!qDoc.exists || qDoc.data().orgId !== oid) return { error: "Quote not found" };
+      const q = qDoc.data();
+
+      // Mark as sent
       await db.collection("quotes").doc(input.quoteId).update({ status: "sent", sentAt: Date.now() });
-      return { success: true, quoteId: input.quoteId, status: "sent" };
+
+      // Resolve customer details
+      let custEmail = input.recipientEmail || "";
+      let custName = q.customerName || "";
+      let custPhone = "";
+      const custId = q.customerId || "";
+
+      if (custId) {
+        const custDoc = await db.collection("customers").doc(custId).get();
+        if (custDoc.exists) {
+          const cust = custDoc.data();
+          custEmail = custEmail || cust.email || "";
+          custName = cust.name || custName;
+          custPhone = cust.phone || "";
+        }
+      }
+
+      // Trigger automations (same as the HTTP endpoint)
+      if (custId) {
+        triggerAutomation(oid, "quote_sent", {
+          id: custId, name: custName, phone: custPhone, email: custEmail,
+          total: q.total || 0, service: q.service || "", address: q.address || "",
+        }).catch(console.error);
+      }
+
+      // Send email via Gmail if connected and customer has email
+      let emailSent = false;
+      let emailError = null;
+      if (custEmail) {
+        try {
+          const userDoc = await db.collection("users").doc(uid).get();
+          const user = userDoc.exists ? userDoc.data() : {};
+          if (user.gmailConnected && user.gmailTokens) {
+            const fromName = user.company || user.name || "SWFT";
+            const subject = `Quote from ${fromName}`;
+            const itemLines = (q.items || [])
+              .map(i => `  • ${i.description}: $${(i.total || i.amount || 0).toFixed(2)}`)
+              .join("\n");
+            const bodyText = [
+              `Hi ${custName},`,
+              "",
+              "Please review your quote below:",
+              "",
+              itemLines,
+              "",
+              `Total: $${(q.total || 0).toFixed(2)}`,
+              q.notes ? `\nNotes: ${q.notes}` : "",
+              "",
+              "If you have any questions, please reach out.",
+              "",
+              `Best,\n${fromName}`,
+            ].join("\n");
+            const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.8;">${bodyText.replace(/\n/g, "<br>")}</div>`;
+
+            user._uid = uid;
+            const sendResult = await sendViaGmail(user, custEmail, subject, htmlBody, bodyText, []);
+
+            // Log to messages so it appears in the Messages tab
+            await db.collection("messages").add({
+              orgId: oid, userId: uid,
+              to: custEmail, subject, body: bodyText,
+              customerId: custId, customerName: custName,
+              type: "email", status: "sent", sentVia: "gmail",
+              gmailMessageId: sendResult.messageId,
+              gmailThreadId: sendResult.threadId,
+              rfcMessageId: sendResult.rfcMessageId || null,
+              attachedDocType: "quote", attachedDocId: input.quoteId,
+              sentAt: Date.now(),
+            });
+            emailSent = true;
+          } else {
+            emailError = "Gmail not connected";
+          }
+        } catch (e) {
+          console.error("[send_quote email]", e);
+          emailError = e.message;
+        }
+      }
+
+      return {
+        success: true,
+        quoteId: input.quoteId,
+        status: "sent",
+        emailSent,
+        recipientEmail: custEmail || null,
+        note: emailSent
+          ? `Email sent to ${custEmail} and logged to Messages`
+          : custEmail
+            ? `Status updated. Email not sent: ${emailError}. Connect Gmail in Settings.`
+            : "Status updated. No email on file for this customer.",
+      };
     }
 
     case "create_invoice": {
