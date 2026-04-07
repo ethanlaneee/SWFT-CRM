@@ -11,8 +11,24 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12
 const auth = getAuth();
 const db = getFirestore();
 
+function applyProfile(fullName, initials, email) {
+  document.querySelectorAll(".user-name").forEach((el) => { el.textContent = fullName; });
+  document.querySelectorAll(".s-avatar, .avatar").forEach((el) => { el.textContent = initials; });
+  document.querySelectorAll(".user-role").forEach((el) => { el.textContent = email || ""; });
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
+
+  // Apply cached profile immediately (no flicker on page switch)
+  const cacheKey = "swft_profile_" + user.uid;
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) {
+    try {
+      const p = JSON.parse(cached);
+      applyProfile(p.fullName, p.initials, p.email);
+    } catch (e) { /* ignore bad cache */ }
+  }
 
   let firstName = "";
   let lastName = "";
@@ -46,15 +62,8 @@ onAuthStateChanged(auth, async (user) => {
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
   const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "?";
 
-  // Update all sidebar user tiles
-  document.querySelectorAll(".user-name").forEach((el) => {
-    el.textContent = fullName;
-  });
-  document.querySelectorAll(".s-avatar, .avatar").forEach((el) => {
-    el.textContent = initials;
-  });
-  // Show email under the name
-  document.querySelectorAll(".user-role").forEach((el) => {
-    el.textContent = user.email || "";
-  });
+  // Cache for instant display on next page
+  sessionStorage.setItem(cacheKey, JSON.stringify({ fullName, initials, email: user.email || "" }));
+
+  applyProfile(fullName, initials, user.email);
 });
