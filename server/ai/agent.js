@@ -4,7 +4,7 @@ const crmTools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
 const { getIntegrationTools, executeIntegrationTool, syncJobToCalendar } = require("./integration-tools");
-const { sendSms } = require("../twilio");
+const { sendSms, getUserTwilioConfig } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms, incrementAiMessage } = require("../usage");
 const { generateEstimate } = require("./estimator-agent");
@@ -256,7 +256,8 @@ async function executeTool(toolName, input, uid, orgId) {
             return { error: `SMS limit reached (${userPlan.smsLimit}/month on the ${userPlan.name} plan). The user needs to upgrade their plan for more SMS.` };
           }
         }
-        const result = await sendSms(input.to, input.body);
+        const userData = userDoc.exists ? userDoc.data() : {};
+        const result = await sendSms(input.to, input.body, getUserTwilioConfig(userData));
         await incrementSms(uid);
         // Save to messages collection
         await db.collection("messages").add({

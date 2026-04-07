@@ -2,8 +2,7 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const { DEFAULT_PLAN, getPlan } = require("../plans");
 const { getUsage } = require("../usage");
-// TODO: Re-enable sub-accounts when Twilio is upgraded
-// const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
+const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
 
 const col = () => db.collection("users");
 
@@ -49,7 +48,28 @@ router.get("/", async (req, res, next) => {
       };
       await col().doc(req.uid).set(profile);
 
-      // TODO: Re-enable per-user Twilio sub-accounts when upgraded
+      // Provision a dedicated Twilio sub-account + phone number for this user
+      try {
+        const friendlyName = `SWFT - ${req.user.email || req.uid}`;
+        const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
+
+        const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
+        const { phoneNumber, phoneSid } = await buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl);
+
+        const twilioFields = {
+          twilioSubAccountSid: subAccountSid,
+          twilioSubAccountAuthToken: subAccountAuthToken,
+          twilioPhoneNumber: phoneNumber,
+          twilioPhoneSid: phoneSid,
+        };
+        await col().doc(req.uid).set(twilioFields, { merge: true });
+        Object.assign(profile, twilioFields);
+        console.log(`[user] Twilio provisioned for ${req.user.email}: ${phoneNumber}`);
+      } catch (err) {
+        // Don't block account creation if Twilio provisioning fails
+        console.error("[user] Twilio provisioning failed:", err.message);
+      }
+
       return res.json({ id: req.uid, ...profile });
     }
     const data = await checkTrialExpired(doc.id, doc.data());
@@ -107,10 +127,32 @@ router.get("/usage", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/me/setup-twilio — provision Twilio for existing users
-// TODO: Re-enable when Twilio is upgraded to support sub-accounts
-router.post("/setup-twilio", async (req, res) => {
-  res.json({ success: true, message: "SMS is ready (shared number)" });
+// POST /api/me/setup-twilio — provision Twilio for existing users who don't have a sub-account yet
+router.post("/setup-twilio", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.uid).get();
+    const data = doc.exists ? doc.data() : {};
+
+    if (data.twilioSubAccountSid && data.twilioPhoneNumber) {
+      return res.json({ success: true, phoneNumber: data.twilioPhoneNumber, message: "Twilio already provisioned" });
+    }
+
+    const friendlyName = `SWFT - ${data.email || req.user.email || req.uid}`;
+    const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
+
+    const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
+    const { phoneNumber, phoneSid } = await buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl);
+
+    await col().doc(req.uid).set({
+      twilioSubAccountSid: subAccountSid,
+      twilioSubAccountAuthToken: subAccountAuthToken,
+      twilioPhoneNumber: phoneNumber,
+      twilioPhoneSid: phoneSid,
+    }, { merge: true });
+
+    console.log(`[user] Twilio provisioned for existing user ${data.email}: ${phoneNumber}`);
+    res.json({ success: true, phoneNumber, message: "Twilio sub-account and phone number provisioned" });
+  } catch (err) { next(err); }
 });
 
 // POST /api/me/check-trial — manually trigger trial expiry check
@@ -164,7 +206,17 @@ router.delete("/delete-account", async (req, res, next) => {
   try {
     const uid = req.uid;
 
-    // TODO: Close Twilio sub-account when sub-accounts are re-enabled
+    // Close Twilio sub-account if one exists
+    try {
+      const userDoc = await col().doc(uid).get();
+      const userData = userDoc.exists ? userDoc.data() : {};
+      if (userData.twilioSubAccountSid) {
+        await closeSubAccount(userData.twilioSubAccountSid);
+        console.log(`[user] Closed Twilio sub-account ${userData.twilioSubAccountSid}`);
+      }
+    } catch (err) {
+      console.error("[user] Failed to close Twilio sub-account:", err.message);
+    }
 
     const collections = ["customers", "jobs", "quotes", "invoices", "schedule"];
 

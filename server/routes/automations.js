@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const crypto = require("crypto");
 const { db } = require("../firebase");
-const { sendSms } = require("../twilio");
+const { sendSms, getUserTwilioConfig } = require("../twilio");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
 
@@ -335,7 +335,7 @@ async function processScheduledMessages() {
         }
       } else if (msg.messageType === "sms") {
         if (!msg.phone) throw new Error("No phone number for SMS");
-        await sendSms(msg.phone, msg.message);
+        await sendSms(msg.phone, msg.message, getUserTwilioConfig(orgUser));
       } else if (msg.messageType === "notification") {
         // Internal notification — create in notifications collection
         await db.collection("notifications").add({

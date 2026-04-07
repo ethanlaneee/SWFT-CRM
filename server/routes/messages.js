@@ -2,7 +2,7 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const multer = require("multer");
 const { google } = require("googleapis");
-const { sendSms } = require("../twilio");
+const { sendSms, getUserTwilioConfig } = require("../twilio");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const { handleInboundMessage } = require("../ai/receptionist-agent");
@@ -145,7 +145,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
         }
       }
 
-      const result = await sendSms(to, body);
+      const result = await sendSms(to, body, getUserTwilioConfig(user));
 
       await incrementSms(req.uid);
 
@@ -607,6 +607,7 @@ async function twilioIncomingHandler(req, res) {
 
     const from = req.body.From || req.body.from || "";
     const body = req.body.Body || req.body.body || "";
+    const toNumber = req.body.To || req.body.to || "";
     const msgSid = req.body.MessageSid || req.body.messageSid || "";
 
     if (!from || !body) {
@@ -614,43 +615,62 @@ async function twilioIncomingHandler(req, res) {
       return res.type("text/xml").send("<Response></Response>");
     }
 
-    console.log("[twilio-webhook] From:", from, "Body:", body.slice(0, 100));
+    console.log("[twilio-webhook] From:", from, "To:", toNumber, "Body:", body.slice(0, 100));
 
+    // Resolve the account owner by matching the "To" phone number to a user's
+    // dedicated Twilio number. This correctly routes inbound SMS in multi-tenant setups.
+    let ownerUid = null;
+    let ownerData = null;
+    let orgId = "";
+
+    if (toNumber) {
+      const usersSnap = await db.collection("users")
+        .where("twilioPhoneNumber", "==", toNumber).limit(1).get();
+      if (!usersSnap.empty) {
+        ownerUid = usersSnap.docs[0].id;
+        ownerData = usersSnap.docs[0].data();
+        orgId = ownerData.orgId || ownerUid;
+        console.log("[twilio-webhook] Matched owner by phone number:", ownerData.name || ownerUid);
+      }
+    }
+
+    // Fallback: first user in DB (for legacy shared-number setups)
+    if (!ownerUid) {
+      const userSnap = await db.collection("users").limit(1).get();
+      if (!userSnap.empty) {
+        ownerUid = userSnap.docs[0].id;
+        ownerData = userSnap.docs[0].data();
+        orgId = ownerData.orgId || ownerUid;
+      }
+    }
+
+    // Match inbound phone to a customer within this owner's org
     const digits = from.replace(/\D/g, "");
-    const custSnap = await db.collection("customers").get();
     let matched = null;
-    for (const doc of custSnap.docs) {
-      const data = doc.data();
-      const custDigits = (data.phone || "").replace(/\D/g, "");
-      if (custDigits && (custDigits === digits || custDigits === digits.slice(1) || "1" + custDigits === digits)) {
-        matched = {
-          customerId: doc.id,
-          customerName: data.name || "",
-          userId: data.userId || "",
-          orgId: data.orgId || "",
-        };
-        break;
+    if (ownerUid) {
+      const custQuery = orgId
+        ? db.collection("customers").where("orgId", "==", orgId)
+        : db.collection("customers").where("userId", "==", ownerUid);
+      const custSnap = await custQuery.get();
+      for (const doc of custSnap.docs) {
+        const data = doc.data();
+        const custDigits = (data.phone || "").replace(/\D/g, "");
+        if (custDigits && (custDigits === digits || custDigits === digits.slice(1) || "1" + custDigits === digits)) {
+          matched = {
+            customerId: doc.id,
+            customerName: data.name || "",
+            userId: data.userId || "",
+            orgId: data.orgId || "",
+          };
+          break;
+        }
       }
     }
 
     if (matched) {
       console.log("[twilio-webhook] Matched customer:", matched.customerName, "id:", matched.customerId, "orgId:", matched.orgId);
     } else {
-      console.log("[twilio-webhook] No customer matched for phone:", from, "- checked", custSnap.size, "customers");
-    }
-
-    // Resolve the account owner — always find an actual user to route the message to.
-    // For single-tenant setups, just get the first user in the database.
-    let ownerUid = null;
-    let ownerData = null;
-    let orgId = "";
-
-    // Try to find account owner: first by customer data, then any user as fallback
-    const userSnap = await db.collection("users").limit(1).get();
-    if (!userSnap.empty) {
-      ownerUid = userSnap.docs[0].id;
-      ownerData = userSnap.docs[0].data();
-      orgId = ownerData.orgId || ownerUid;
+      console.log("[twilio-webhook] No customer matched for phone:", from);
     }
 
     console.log("[twilio-webhook] Resolved owner:", ownerUid, "orgId:", orgId, "name:", ownerData?.name || "unknown");

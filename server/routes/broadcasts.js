@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { sendSimpleGmail } = require("../utils/email");
-const { sendSms } = require("../twilio");
+const { sendSms, getUserTwilioConfig } = require("../twilio");
 const { resolveTemplate } = require("../utils/templates");
 
 /**
@@ -131,7 +131,7 @@ router.post("/", async (req, res, next) => {
             sentAt: Date.now(),
           });
         } else {
-          await sendSms(cust.phone, resolvedMessage);
+          await sendSms(cust.phone, resolvedMessage, getUserTwilioConfig(orgUser));
 
           await db.collection("messages").add({
             userId: req.uid,
