@@ -19,14 +19,9 @@ router.get("/", async (req, res, next) => {
 
     const today = new Date().toISOString().split("T")[0];
     const totalJobs = jobs.length;
-    // Count both explicitly "active" AND scheduled jobs whose date has arrived
-    const activeJobs = jobs.filter(j =>
-      j.status !== "complete" && (
-        j.status === "active" ||
-        (j.scheduledDate && j.scheduledDate <= today)
-      )
-    ).length;
-    const scheduledJobs = jobs.filter(j => j.status === "scheduled" && j.scheduledDate > today).length;
+    // Count all non-complete jobs as active (includes scheduled, active, pending)
+    const activeJobs = jobs.filter(j => j.status !== "complete").length;
+    const scheduledJobs = jobs.filter(j => j.status === "scheduled").length;
     const completedJobs = jobs.filter(j => j.status === "complete").length;
 
     const monthlyRevenue = invoices
@@ -39,7 +34,7 @@ router.get("/", async (req, res, next) => {
 
     const activeQuotes = quotesSnap.docs.filter(d => {
       const s = d.data().status;
-      return s === "draft" || s === "sent";
+      return s !== "approved" && s !== "declined";
     }).length;
 
     const upcomingTasks = scheduleSnap.docs.filter(d => {

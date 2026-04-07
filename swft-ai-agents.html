@@ -476,6 +476,8 @@
       loadAutomations().then(updateTopbarCounts);
       loadStats();
       loadActivity();
+      // Refresh activity every 30 seconds
+      setInterval(loadActivity, 30000);
     }
   }, 200);
 

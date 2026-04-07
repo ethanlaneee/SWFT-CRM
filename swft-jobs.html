@@ -92,8 +92,20 @@
 .ftab{font-size:11.5px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;display:flex;align-items:center;justify-content:center;white-space:nowrap;}
 .ftab:hover{color:var(--white);border-color:var(--gray2);}
 .ftab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
-.sort-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;margin-left:auto;}
-.sort-btn:hover{color:var(--white);border-color:var(--gray2);}
+/* ── SORT DROPDOWN ── */
+.sort-wrap{position:relative;margin-left:auto;}
+.sort-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
+.sort-btn:hover,.sort-btn.open{color:var(--white);border-color:var(--gray2);background:var(--surface2);}
+.sort-btn .sort-label{font-size:11px;color:var(--green);font-weight:600;margin-left:2px;}
+.sort-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:5px;min-width:190px;z-index:200;box-shadow:0 8px 28px rgba(0,0,0,0.4);opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity 0.15s,transform 0.15s;}
+.sort-menu.open{opacity:1;pointer-events:all;transform:translateY(0);}
+.sort-menu-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);padding:6px 10px 4px;}
+.sort-option{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:7px;cursor:pointer;font-size:12.5px;color:var(--gray);transition:all 0.12s;user-select:none;}
+.sort-option:hover{background:var(--border);color:var(--white);}
+.sort-option.active{color:var(--green);background:rgba(200,241,53,0.07);}
+.sort-option .sort-dir{font-size:10px;color:var(--gray2);}
+.sort-option.active .sort-dir{color:var(--green);}
+.sort-divider{height:1px;background:var(--border);margin:4px 0;}
 
 /* ── TABLE ── */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
@@ -368,10 +380,22 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     <div class="ftab" onclick="setFilter(this,'pending')">Pending</div>
     <div class="ftab" onclick="setFilter(this,'complete')">Complete</div>
   </div>
-  <button class="sort-btn" onclick="showToast('Sorted by date')">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="1.8"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="1.8"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="1.8"/></svg>
-    Sort
-  </button>
+  <div class="sort-wrap">
+    <button class="sort-btn" id="sort-btn" onclick="toggleSortMenu()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="1.8"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="1.8"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="1.8"/></svg>
+      Sort <span class="sort-label" id="sort-label">Date ↓</span>
+    </button>
+    <div class="sort-menu" id="sort-menu">
+      <div class="sort-menu-label">Sort by</div>
+      <div class="sort-option active" id="so-date-new" onclick="applySort('date-new')">Date <span class="sort-dir">Newest first</span></div>
+      <div class="sort-option" id="so-date-old" onclick="applySort('date-old')">Date <span class="sort-dir">Oldest first</span></div>
+      <div class="sort-divider"></div>
+      <div class="sort-option" id="so-name-az" onclick="applySort('name-az')">Customer <span class="sort-dir">A → Z</span></div>
+      <div class="sort-option" id="so-name-za" onclick="applySort('name-za')">Customer <span class="sort-dir">Z → A</span></div>
+      <div class="sort-divider"></div>
+      <div class="sort-option" id="so-status" onclick="applySort('status')">Status <span class="sort-dir">Active first</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- Table -->
@@ -835,6 +859,63 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
                + row.querySelector('.job-customer').textContent.toLowerCase();
       row.style.display = text.includes(query) ? 'grid' : 'none';
     });
+  }
+
+  // ── Sort dropdown ──
+  var _sortLabels = {
+    'date-new': 'Date ↓', 'date-old': 'Date ↑',
+    'name-az': 'Customer A–Z', 'name-za': 'Customer Z–A',
+    'status': 'Status'
+  };
+
+  function toggleSortMenu() {
+    var menu = document.getElementById('sort-menu');
+    var btn = document.getElementById('sort-btn');
+    var open = menu.classList.toggle('open');
+    btn.classList.toggle('open', open);
+    if (open) {
+      setTimeout(function() { document.addEventListener('click', closeSortOnOutside); }, 10);
+    }
+  }
+
+  function closeSortOnOutside(e) {
+    var wrap = document.querySelector('.sort-wrap');
+    if (!wrap.contains(e.target)) {
+      document.getElementById('sort-menu').classList.remove('open');
+      document.getElementById('sort-btn').classList.remove('open');
+      document.removeEventListener('click', closeSortOnOutside);
+    }
+  }
+
+  function applySort(key) {
+    document.querySelectorAll('.sort-option').forEach(function(o) { o.classList.remove('active'); });
+    var activeEl = document.getElementById('so-' + key);
+    if (activeEl) activeEl.classList.add('active');
+    document.getElementById('sort-label').textContent = _sortLabels[key] || key;
+    document.getElementById('sort-menu').classList.remove('open');
+    document.getElementById('sort-btn').classList.remove('open');
+    document.removeEventListener('click', closeSortOnOutside);
+
+    var tbody = document.getElementById('table-body');
+    var rows = Array.from(tbody.querySelectorAll('.job-row'));
+
+    var statusOrder = { active: 0, scheduled: 1, pending: 2, complete: 3 };
+
+    rows.sort(function(a, b) {
+      var jobA = window._jobs[a.getAttribute('onclick').match(/'([^']+)'/)[1]] || {};
+      var jobB = window._jobs[b.getAttribute('onclick').match(/'([^']+)'/)[1]] || {};
+      switch (key) {
+        case 'date-new': return (jobB.scheduledDate || '').localeCompare(jobA.scheduledDate || '');
+        case 'date-old': return (jobA.scheduledDate || '').localeCompare(jobB.scheduledDate || '');
+        case 'name-az':  return (jobA.customerName || '').toLowerCase().localeCompare((jobB.customerName || '').toLowerCase());
+        case 'name-za':  return (jobB.customerName || '').toLowerCase().localeCompare((jobA.customerName || '').toLowerCase());
+        case 'status':   return (statusOrder[jobA.status] || 9) - (statusOrder[jobB.status] || 9);
+        default: return 0;
+      }
+    });
+
+    rows.forEach(function(r) { tbody.appendChild(r); });
+    showToast('Sorted by ' + _sortLabels[key]);
   }
 
   async function deleteJobRow(el, jobId) {
