@@ -10,7 +10,7 @@
 :root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--sidebar-w:228px;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html{background:#0a0a0a;}
-body{opacity:0;transition:opacity 0.15s;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
 .collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
@@ -547,7 +547,7 @@ function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent
   const firebaseConfig={apiKey:"AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",authDomain:"swft-ai26.firebaseapp.com",projectId:"swft-ai26",storageBucket:"swft-ai26.firebasestorage.app",messagingSenderId:"170879575187",appId:"1:170879575187:web:e329382b0adf9518ead966",measurementId:"G-B8BEW7E87V"};
   const app=initializeApp(firebaseConfig);const auth=getAuth(app);
   // body starts at opacity:0 via CSS
-  onAuthStateChanged(auth,(user)=>{if(!user){window.location.href="swft-login";}else{document.body.style.opacity="1";window.__swftUser=user;loadInvoices();}});
+  onAuthStateChanged(auth,(user)=>{if(!user){window.location.href="swft-login";}else{window.__swftUser=user;loadInvoices();}});
 </script>
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-settings-loader.js"></script>
