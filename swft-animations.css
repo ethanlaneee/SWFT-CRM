@@ -1,0 +1,123 @@
+/* ════════════════════════════════════════════════
+   SWFT — Shared Animation System
+   Include via: <link rel="stylesheet" href="swft-animations.css">
+   ════════════════════════════════════════════════ */
+
+/* ── Spring Entrance (replaces linear fadeUp) ── */
+@keyframes springUp {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.97); }
+  60%  { opacity: 1; transform: translateY(-3px) scale(1.005); }
+  80%  { transform: translateY(1px) scale(0.998); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes springScale {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.03); }
+  80%  { transform: scale(0.99); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Success Scale-Snap ── */
+@keyframes scaleSnap {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.12); }
+  70%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+.swft-success { animation: scaleSnap 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ── Skeleton Shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.swft-skeleton {
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 25%,
+    rgba(200, 241, 53, 0.06) 50%,
+    #1a1a1a 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Skeleton bar variants */
+.swft-skeleton-text {
+  height: 13px;
+  width: 60%;
+  border-radius: 4px;
+}
+
+.swft-skeleton-text.short { width: 35%; }
+.swft-skeleton-text.medium { width: 50%; }
+.swft-skeleton-text.long { width: 80%; }
+
+.swft-skeleton-card {
+  height: 88px;
+  border-radius: 12px;
+}
+
+.swft-skeleton-row {
+  height: 48px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+/* ── Breathing Pulse (agentic logic indicator) ── */
+@keyframes breathe {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(200, 241, 53, 0.4); }
+  50%      { opacity: 0.6; box-shadow: 0 0 12px 4px rgba(200, 241, 53, 0); }
+}
+
+.swft-breathing { animation: breathe 1.5s ease-in-out infinite; }
+
+/* ── Magnetic Button Base ── */
+.swft-magnetic {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+/* ── Spring Sidebar Override ──
+   Overshoot curve: stiffness ~300, damping ~30 equivalent */
+.sidebar {
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+.main {
+  transition: margin-left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* ── Stagger Utility ──
+   Apply data-stagger="N" on parent, children animate in sequence */
+[data-stagger] > * {
+  animation: springUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+[data-stagger] > *:nth-child(1)  { animation-delay: 0.00s; }
+[data-stagger] > *:nth-child(2)  { animation-delay: 0.05s; }
+[data-stagger] > *:nth-child(3)  { animation-delay: 0.10s; }
+[data-stagger] > *:nth-child(4)  { animation-delay: 0.15s; }
+[data-stagger] > *:nth-child(5)  { animation-delay: 0.20s; }
+[data-stagger] > *:nth-child(6)  { animation-delay: 0.25s; }
+[data-stagger] > *:nth-child(7)  { animation-delay: 0.30s; }
+[data-stagger] > *:nth-child(8)  { animation-delay: 0.35s; }
+[data-stagger] > *:nth-child(9)  { animation-delay: 0.40s; }
+[data-stagger] > *:nth-child(10) { animation-delay: 0.45s; }
+[data-stagger] > *:nth-child(n+11) { animation-delay: 0.50s; }
+
+/* ── Accessibility: Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .swft-skeleton {
+    animation: none;
+    background: #1a1a1a;
+  }
+}
