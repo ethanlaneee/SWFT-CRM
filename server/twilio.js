@@ -43,9 +43,10 @@ async function createSubAccount(friendlyName) {
  * @param {string} subAccountSid
  * @param {string} subAccountAuthToken
  * @param {string} webhookUrl - URL for incoming SMS webhook
- * @param {{ countryCode?: string, areaCode?: string }} [options]
+ * @param {{ countryCode?: string, areaCode?: string, region?: string }} [options]
  *   countryCode: ISO 3166-1 alpha-2 (e.g. "US", "CA", "GB"). Defaults to "US".
  *   areaCode: Optional area/region code to get a number local to the user's city.
+ *   region: US/CA state abbreviation (e.g. "CA", "TX") — Twilio's inRegion filter.
  * @returns {{ phoneNumber: string, phoneSid: string }}
  */
 async function buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl, options = {}) {
@@ -56,6 +57,11 @@ async function buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl, op
   // If an area code is provided, try to get a number in that region
   if (options.areaCode) {
     searchParams.areaCode = options.areaCode;
+  }
+
+  // For US/CA, use inRegion to match the user's state (e.g. "CA" for California)
+  if (options.region && (countryCode === "US" || countryCode === "CA")) {
+    searchParams.inRegion = options.region;
   }
 
   // Try local numbers first, then fall back to mobile (some countries only have mobile)
@@ -77,9 +83,10 @@ async function buyPhoneNumber(subAccountSid, subAccountAuthToken, webhookUrl, op
     }
   }
 
-  // Last resort: if area code was too restrictive, retry without it
-  if (!available.length && options.areaCode) {
+  // Last resort: if region/area code was too restrictive, retry without them
+  if (!available.length && (options.areaCode || options.region)) {
     delete searchParams.areaCode;
+    delete searchParams.inRegion;
     try {
       available = await subClient.availablePhoneNumbers(countryCode)
         .local.list(searchParams);

@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { getStripe } = require("../utils/stripe");
+const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
 
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
@@ -11,6 +12,88 @@ const PRICE_IDS = {
   pro:      "price_1TIc1VRNPpAjdxw0fwN1bfEH",
   business: "price_1TIc1VRNPpAjdxw05e9i863i",
 };
+
+/**
+ * After checkout completes, pull the billing address from Stripe, store it on
+ * the user profile, and (re-)provision a Twilio phone number that matches the
+ * user's billing country so they get a local number.
+ */
+async function syncBillingAddress(uid, stripeCustomerId) {
+  try {
+    const stripe = getStripe();
+    const customer = await stripe.customers.retrieve(stripeCustomerId);
+    const addr = customer.address;
+    if (!addr) return;
+
+    const billingAddress = {
+      billingAddress: {
+        line1:       addr.line1 || "",
+        line2:       addr.line2 || "",
+        city:        addr.city || "",
+        state:       addr.state || "",
+        postal_code: addr.postal_code || "",
+        country:     addr.country || "",       // ISO 3166-1 alpha-2
+      },
+      country: addr.country || "",
+    };
+    await users().doc(uid).set(billingAddress, { merge: true });
+    console.log(`[billing] Saved billing address for ${uid}: ${addr.city}, ${addr.state} ${addr.country}`);
+
+    // Provision or re-provision Twilio with the billing country/region
+    const userDoc = await users().doc(uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+
+    const billingCountry = addr.country || "US";
+    const currentPhone = userData.twilioPhoneNumber || "";
+
+    // Check if current phone already matches the billing country.
+    // Country calling codes: US/CA = +1, GB = +44, AU = +61, etc.
+    const COUNTRY_PREFIXES = {
+      US: "+1", CA: "+1", GB: "+44", AU: "+61", NZ: "+64", IE: "+353",
+      DE: "+49", FR: "+33", ES: "+34", IT: "+39", NL: "+31", MX: "+52",
+      BR: "+55", IN: "+91", ZA: "+27",
+    };
+    const expectedPrefix = COUNTRY_PREFIXES[billingCountry];
+    const alreadyMatches = expectedPrefix && currentPhone.startsWith(expectedPrefix);
+
+    if (!userData.twilioSubAccountSid || !alreadyMatches) {
+      // Close old sub-account if one exists but doesn't match
+      if (userData.twilioSubAccountSid && !alreadyMatches) {
+        try {
+          await closeSubAccount(userData.twilioSubAccountSid);
+          console.log(`[billing] Closed old Twilio sub-account ${userData.twilioSubAccountSid} (country mismatch)`);
+        } catch (e) {
+          console.error("[billing] Failed to close old sub-account:", e.message);
+        }
+      }
+
+      const friendlyName = `SWFT - ${userData.email || uid}`;
+      const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
+
+      // For US/CA, use the billing state to get a regionally local number
+      const region = (billingCountry === "US" || billingCountry === "CA")
+        ? (addr.state || undefined)
+        : undefined;
+
+      const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
+      const { phoneNumber, phoneSid } = await buyPhoneNumber(
+        subAccountSid, subAccountAuthToken, webhookUrl,
+        { countryCode: billingCountry, region }
+      );
+
+      await users().doc(uid).set({
+        twilioSubAccountSid: subAccountSid,
+        twilioSubAccountAuthToken: subAccountAuthToken,
+        twilioPhoneNumber: phoneNumber,
+        twilioPhoneSid: phoneSid,
+      }, { merge: true });
+
+      console.log(`[billing] Twilio provisioned for ${uid} in ${billingCountry}: ${phoneNumber}`);
+    }
+  } catch (err) {
+    console.error("[billing] syncBillingAddress failed:", err.message);
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/billing/create-checkout-session
@@ -49,6 +132,8 @@ router.post("/create-checkout-session", async (req, res, next) => {
       line_items:           [{ price: priceId, quantity: 1 }],
       mode:                 "subscription",
       allow_promotion_codes: true,
+      billing_address_collection: "required",
+      customer_update: { address: "auto" },
       subscription_data: {
         trial_period_days: 14,
         metadata: { firebaseUid: req.uid, plan: planKey },
@@ -109,6 +194,13 @@ router.get("/verify-session", async (req, res, next) => {
       stripeSubscriptionId: session.subscription,
     }, { merge: true });
 
+    // Sync billing address and provision a location-matched Twilio number
+    if (session.customer) {
+      syncBillingAddress(req.uid, session.customer).catch(err =>
+        console.error("[verify-session] syncBillingAddress error:", err.message)
+      );
+    }
+
     res.json({ success: true, accountStatus: "active" });
   } catch (err) { next(err); }
 });
@@ -150,6 +242,13 @@ async function webhookHandler(req, res) {
           stripeCustomerId:     session.customer,
           stripeSubscriptionId: session.subscription,
         }, { merge: true });
+
+        // Sync billing address and provision a location-matched Twilio number
+        if (session.customer) {
+          syncBillingAddress(uid, session.customer).catch(err =>
+            console.error("[billing-webhook] syncBillingAddress error:", err.message)
+          );
+        }
       }
     }
 
