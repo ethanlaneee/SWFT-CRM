@@ -993,57 +993,80 @@
 
   async function saveEdit() {
     if (!_currentJobId) return;
+    var title    = document.getElementById('e-title') ? document.getElementById('e-title').value : '';
+    var customer = document.getElementById('e-customer').value || '';
+    var date     = document.getElementById('e-date').value || '';
+    var time     = document.getElementById('e-time') ? document.getElementById('e-time').value : '';
+    var address  = document.getElementById('e-address-edit') ? document.getElementById('e-address-edit').value : (document.getElementById('e-address') ? document.getElementById('e-address').value : '');
+    var service  = document.getElementById('e-service').value || '';
+    var sqft     = document.getElementById('e-sqft') ? document.getElementById('e-sqft').value : '';
+    var crew     = document.getElementById('e-crew') ? document.getElementById('e-crew').value : '';
+    var dur      = document.getElementById('e-dur') ? document.getElementById('e-dur').value : '';
+    var amount   = document.getElementById('e-amount') ? document.getElementById('e-amount').value : '';
+    var status   = document.getElementById('e-status') ? document.getElementById('e-status').value : 'Scheduled';
+    var fmtAmount = amount ? '$' + parseFloat(amount).toLocaleString() : '$0';
+
     var data = {
-      customerName: document.getElementById('e-customer').value || '',
-      scheduledDate: document.getElementById('e-date').value || '',
-      service: document.getElementById('e-service').value || '',
-      address: document.getElementById('e-address-edit') ? document.getElementById('e-address-edit').value : '',
-      sqft: document.getElementById('e-sqft') ? document.getElementById('e-sqft').value : '',
-      crew: document.getElementById('e-crew') ? document.getElementById('e-crew').value : ''
+      customerName: customer,
+      scheduledDate: date,
+      service: service,
+      address: address,
+      sqft: sqft,
+      crew: crew
     };
+    if (title) data.title = title;
+    if (time) data.startTime = time;
+    if (dur) data.duration = dur;
+    if (amount) data.amount = parseFloat(amount) || 0;
+    if (status) data.status = status;
+
     try {
       await API.jobs.update(_currentJobId, data);
-      closeDrawer();
+
+      // Persist edits back into the jobs object so reopening shows saved state
+      if (_currentJob) {
+        _currentJob.title    = title || _currentJob.title;
+        _currentJob.customer = customer;
+        _currentJob.date     = date + (time ? ' · ' + time : '');
+        _currentJob.address  = address;
+        _currentJob.service  = service;
+        _currentJob.sqft     = sqft;
+        _currentJob.crew     = '<span class="crew-pill">' + crew + '</span>';
+        _currentJob.dur      = dur;
+        _currentJob.amount   = fmtAmount;
+        _currentJob.tag      = status;
+        _currentJob.tagStyle = tagStyles[status] || tagStyles['Scheduled'];
+      }
+
+      // Update view panel
+      document.getElementById('d-title').textContent          = title || _currentJob.title;
+      document.getElementById('d-customer').textContent       = customer;
+      document.getElementById('d-date').textContent           = date + (time ? ' · ' + time : '');
+      document.getElementById('d-address').textContent        = address;
+      document.getElementById('d-service').textContent        = service;
+      document.getElementById('d-crew-detail').textContent    = crew;
+      document.getElementById('d-sqft').textContent           = sqft;
+      document.getElementById('d-dur').textContent            = dur;
+      document.getElementById('d-amount').textContent         = fmtAmount;
+      document.getElementById('d-crew').innerHTML             = '<span class="crew-pill">' + crew + '</span>';
+
+      // Update status tag
+      var tagEl = document.getElementById('d-tag');
+      tagEl.textContent   = status;
+      tagEl.style.cssText = tagStyles[status] || tagStyles['Scheduled'];
+
+      // Switch back to view
+      document.getElementById('d-edit').style.display  = 'none';
+      document.getElementById('d-view').style.display  = 'flex';
+      document.getElementById('footer-edit').style.display = 'none';
+      document.getElementById('footer-view').style.display = 'flex';
+
       await loadCalendarJobs();
       showToast('Job updated');
     } catch(e) {
       showToast('Save error: ' + e.message);
     }
-  };
-
-    // Persist edits back into the jobs object so reopening shows saved state
-    if (_currentJob) {
-      _currentJob.title    = title;
-      _currentJob.customer = customer;
-      _currentJob.date     = date + (time ? ' · ' + time : '');
-      _currentJob.address  = address;
-      _currentJob.service  = service;
-      _currentJob.sqft     = sqft;
-      _currentJob.crew     = '<span class="crew-pill">' + crew + '</span>';
-      _currentJob.dur      = dur;
-      _currentJob.amount   = fmtAmount;
-      _currentJob.tag      = status;
-      _currentJob.tagStyle = tagStyles[status] || tagStyles['Scheduled'];
-    }
-
-    // Update view panel
-    document.getElementById('d-title').textContent          = title;
-    document.getElementById('d-customer').textContent       = customer;
-    document.getElementById('d-date').textContent           = date + (time ? ' · ' + time : '');
-    document.getElementById('d-address').textContent        = address;
-    document.getElementById('d-service').textContent        = service;
-    document.getElementById('d-crew-detail').textContent    = crew;
-    document.getElementById('d-sqft').textContent           = sqft;
-    document.getElementById('d-dur').textContent            = dur;
-    document.getElementById('d-amount').textContent         = fmtAmount;
-    document.getElementById('d-crew').innerHTML             = '<span class="crew-pill">' + crew + '</span>';
-
-    // Update status tag
-    const tagEl = document.getElementById('d-tag');
-    tagEl.textContent   = status;
-    tagEl.style.cssText = tagStyles[status] || tagStyles['Scheduled'];
-
-    // Switch back to view
+  }
 
 </script>
 
