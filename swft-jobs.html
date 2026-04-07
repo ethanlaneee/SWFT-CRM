@@ -379,7 +379,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     <div class="th sort-active">Job <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg></div>
     <div class="th">Customer</div>
     <div class="th">Address</div>
-    <div class="th">Amount</div>
     <div class="th">Status</div>
     <div class="th"></div>
   </div>
@@ -419,7 +418,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
   </div>
 
   <div class="drawer-stats">
-    <div class="dstat"><div class="dstat-label">Amount</div><div class="dstat-value green" id="d-amount">$7,200</div></div>
     <div class="dstat"><div class="dstat-label">Sqft</div><div class="dstat-value" id="d-sqft">480</div></div>
     <div class="dstat"><div class="dstat-label">Service</div><div class="dstat-value" id="d-service" style="font-size:13px;margin-top:5px;">Stamped</div></div>
     <div class="dstat"><div class="dstat-label">Payment</div><div class="dstat-value amber" id="d-pay" style="font-size:13px;margin-top:5px;">Deposit</div></div>
@@ -538,10 +536,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
       </div>
     </div>
     <div class="edit-row-2">
-      <div class="edit-field">
-        <label class="edit-label">Amount ($)</label>
-        <input class="edit-input" id="e-amount" type="text"/>
-      </div>
       <div class="edit-field">
         <label class="edit-label">Status</label>
         <select class="edit-input" id="e-status">
@@ -712,10 +706,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
           '<div>' +
             '<div class="job-addr">' + shortAddr(job.address) + '</div>' +
           '</div>' +
-          '<div>' +
-            '<div class="job-amount">' + fmtCost(job.cost) + '</div>' +
-            (status === 'complete' ? '<div style="font-size:9px;color:#f5a623;margin-top:2px;" title="Review request will be sent by follow-up agent">🔔 Review pending</div>' : '') +
-          '</div>' +
           '<div><select class="status-tag ' + sm.tag + '" onclick="event.stopPropagation()" onchange="changeJobStatus(\'' + job.id + '\',this.value,this)">' +
             '<option value="scheduled"' + (status === 'scheduled' ? ' selected' : '') + '>Scheduled</option>' +
             '<option value="active"' + (status === 'active' ? ' selected' : '') + '>In Progress</option>' +
@@ -793,7 +783,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     document.getElementById('d-status-tag').textContent= sm.label;
     document.getElementById('d-status-tag').className  = 'd-status-tag ' + sm.tag;
     document.getElementById('d-crew').innerHTML        = '';
-    document.getElementById('d-amount').textContent    = fmtCost(j.cost);
+    // Amount removed from UI — tracked via quotes/invoices instead
     document.getElementById('d-sqft').textContent      = j.sqft || '—';
     document.getElementById('d-service').textContent   = j.service || '—';
     document.getElementById('d-pay').textContent       = j.payStatus || '—';
@@ -1179,8 +1169,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     document.getElementById('e-sqft').value     = j.sqft || '';
     document.getElementById('e-dur').value      = j.duration || '';
     document.getElementById('e-finish').value   = j.finish || '';
-    var rawAmt = String(j.cost || '0');
-    document.getElementById('e-amount').value   = rawAmt;
 
     // Set service dropdown
     var svcEl = document.getElementById('e-service');
@@ -1217,7 +1205,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     document.getElementById('d-status-tag').className   = 'd-status-tag tag-sched';
     document.getElementById('d-crew').innerHTML         = '';
 
-    document.getElementById('d-amount').textContent     = '$0';
     document.getElementById('d-sqft').textContent       = '—';
     document.getElementById('d-service').textContent    = '—';
     document.getElementById('d-pay').textContent        = '—';
@@ -1243,7 +1230,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     document.getElementById('e-sqft').value         = '';
     document.getElementById('e-crew').selectedIndex = 0;
     document.getElementById('e-dur').value          = '';
-    document.getElementById('e-amount').value       = '';
     document.getElementById('e-status').selectedIndex = 0;
     document.getElementById('e-finish').value       = '';
 
@@ -1279,11 +1265,9 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
     var sqft     = document.getElementById('e-sqft').value.trim();
     var crew     = document.getElementById('e-crew').value;
     var dur      = document.getElementById('e-dur').value.trim();
-    var rawAmt   = document.getElementById('e-amount').value.trim().replace('$','').replace(/,/g,'');
     var statusLabel = document.getElementById('e-status').value;
     var finish   = document.getElementById('e-finish').value.trim();
     var status   = LABEL_TO_STATUS[statusLabel] || 'scheduled';
-    var cost     = parseFloat(rawAmt) || 0;
 
     var data = {
       title: title,
@@ -1292,7 +1276,6 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
       status: status,
       scheduledDate: date,
       scheduledTime: time,
-      cost: cost,
       address: address,
       sqft: sqft,
       duration: dur,
