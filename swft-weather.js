@@ -153,19 +153,18 @@
     const data = await fetchWeather();
     if (!data) return;
 
-    // Dashboard page — single weather strip line
-    const dashStrip = document.querySelector(".weather-strip .weather-icon");
-    if (dashStrip) {
-      updateDashboardWeather(data);
-      return;
-    }
+    const strip = document.querySelector(".weather-strip");
+    if (!strip) return;
 
-    // Schedule page — 7-day grid
-    const schedStrip = document.querySelector(".weather-strip .weather-day");
-    if (schedStrip) {
+    // Schedule page — strip uses a multi-column grid layout
+    const style = window.getComputedStyle(strip);
+    if (style.gridTemplateColumns && style.gridTemplateColumns.includes("1fr")) {
       updateScheduleWeather(data);
       return;
     }
+
+    // Dashboard page — single weather strip line
+    updateDashboardWeather(data);
   }
 
   if (document.readyState === "loading") {
