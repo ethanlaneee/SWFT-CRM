@@ -632,6 +632,16 @@ section{position:relative;z-index:1;}
 }
 .value-swft-label{font-size:16px;font-weight:600;color:var(--white);}
 .value-swft-price{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:var(--green);}
+.value-row.hidden-cost{background:rgba(255,82,82,0.04);}
+.value-row.hidden-cost .value-tool{color:var(--gray);}
+.value-hidden-tag{
+  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--red);background:rgba(255,82,82,0.1);
+  padding:2px 8px;border-radius:4px;margin-left:8px;
+}
+.value-note{font-size:12px;color:var(--gray);line-height:1.6;}
+.value-note strong{color:var(--white);}
+.value-swft-included{font-size:13px;color:var(--green);margin-top:4px;opacity:0.8;}
 
 /* ── BILLING TOGGLE ── */
 .billing-toggle{
@@ -1345,14 +1355,36 @@ section{position:relative;z-index:1;}
         </span>
         <span class="value-price">$49/mo</span>
       </div>
+      <div class="value-row hidden-cost">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+          Extra team members (3 users)
+          <span class="value-hidden-tag">Per-seat</span>
+        </span>
+        <span class="value-price">+$58/mo</span>
+      </div>
+      <div class="value-row hidden-cost">
+        <span class="value-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          SMS &amp; email overage fees
+          <span class="value-hidden-tag">Hidden</span>
+        </span>
+        <span class="value-price">+$50–200/mo</span>
+      </div>
     </div>
 
     <div class="value-total-row reveal">
-      <span class="value-total-label">Buying it all separately</span>
-      <span class="value-total-price">$269/mo</span>
+      <div>
+        <span class="value-total-label">Buying it all separately</span>
+        <p class="value-note" style="margin-top:4px;">Base tools + 3-person team + typical usage fees</p>
+      </div>
+      <span class="value-total-price">$377–527/mo</span>
     </div>
     <div class="value-swft-row reveal">
-      <span class="value-swft-label">SWFT — everything included</span>
+      <div>
+        <span class="value-swft-label">SWFT — everything included</span>
+        <p class="value-swft-included">No per-seat fees. No hidden usage charges. All features, every plan.</p>
+      </div>
       <span class="value-swft-price">From $89/mo</span>
     </div>
   </div>
