@@ -352,6 +352,7 @@
     document.getElementById('m-enabled').checked = true;
     document.getElementById('m-subject-row').style.display = 'none';
     document.getElementById('delete-btn').style.display = 'none';
+    onDelayChange();
     var overlay = document.getElementById('modal-overlay');
     overlay.style.display = 'flex';
     requestAnimationFrame(function(){ overlay.classList.add('open'); });
@@ -374,6 +375,7 @@
     document.getElementById('m-enabled').checked = !!a.enabled;
     document.getElementById('m-subject-row').style.display = (ch === 'email' || ch === 'both') ? '' : 'none';
     document.getElementById('delete-btn').style.display = '';
+    onDelayChange();
     var overlay = document.getElementById('modal-overlay');
     overlay.style.display = 'flex';
     requestAnimationFrame(function(){ overlay.classList.add('open'); });
@@ -388,6 +390,11 @@
   function onChannelChange() {
     var ch = document.getElementById('m-channel').value;
     document.getElementById('m-subject-row').style.display = (ch === 'email' || ch === 'both') ? '' : 'none';
+  }
+
+  function onDelayChange() {
+    var days = parseInt(document.getElementById('m-delay-days').value) || 0;
+    document.getElementById('m-time-row').style.display = days > 0 ? '' : 'none';
   }
 
   async function saveAutomation() {
@@ -528,13 +535,13 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div style="display:flex;flex-direction:column;gap:3px;">
           <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Delay (days)</label>
-          <input id="m-delay-days" type="number" min="0" placeholder="0 = immediate" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+          <input id="m-delay-days" type="number" min="0" placeholder="0 = immediate" oninput="onDelayChange()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
           <span style="font-size:9px;color:var(--gray2);">0 = sends immediately</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:3px;">
+        <div id="m-time-row" style="display:flex;flex-direction:column;gap:3px;">
           <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Send at time</label>
           <input id="m-send-time" type="time" value="09:00" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-          <span style="font-size:9px;color:var(--gray2);">Eastern time (ignored if delay is 0)</span>
+          <span style="font-size:9px;color:var(--gray2);">Eastern time</span>
         </div>
       </div>
       <div id="m-subject-row" style="display:none;flex-direction:column;gap:3px;">
