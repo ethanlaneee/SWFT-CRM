@@ -54,7 +54,7 @@ SWFT is built for home service professionals and trades businesses, including:
 ## How SWFT Compares to Competitors
 
 ### SWFT vs Jobber
-Jobber plans range from $39-$349/mo depending on features and team size, plus $29/month per additional user beyond what's included. Key features like two-way SMS require the Grow plan ($199+/mo), and AI features are a paid add-on ($99/mo). SWFT has no per-user fees and includes AI automation in every plan. SWFT Pro with team management is $179/month regardless of team size (up to 10 users).
+Jobber plans range from $29/mo (Core annual) to $699/mo (Team Plus monthly with 15 users). Key features like two-way SMS require the Grow plan ($199+/mo), and AI features are a paid add-on ($99/mo). SWFT has no per-user fees and includes AI automation in every plan. SWFT Pro with team management is $179/month regardless of team size (up to 10 users).
 
 ### SWFT vs Housecall Pro
 Housecall Pro starts at $59/month (annual) or $79/month (monthly), but key features like GPS tracking and QuickBooks integration require the Essentials plan at $149-$189/month. Additional users cost ~$35/month each. SWFT includes AI-powered follow-ups, quote generation, and SMS from the $89/month Starter plan with no per-user fees.
