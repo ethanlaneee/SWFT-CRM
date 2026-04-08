@@ -2,7 +2,11 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const { DEFAULT_PLAN, getPlan } = require("../plans");
 const { getUsage } = require("../usage");
-const { createMessagingProfile, buyPhoneNumber, closeMessagingProfile } = require("../telnyx");
+const {
+  createMessagingProfile, buyPhoneNumber, closeMessagingProfile,
+  searchAvailableNumbers, orderPhoneNumber, releasePhoneNumber,
+  normalizeRegion, cityToAreaCode,
+} = require("../telnyx");
 
 const col = () => db.collection("users");
 
@@ -49,18 +53,28 @@ router.get("/", async (req, res, next) => {
       await col().doc(req.uid).set(profile);
 
       // Provision a dedicated Telnyx Messaging Profile + phone number for this user.
-      // Use geo-IP country header (set by CDN/proxy) or default to US.
+      // Use Cloudflare geo headers to get the most local number possible:
+      //   city → area code → province/state → country
       try {
         const friendlyName = `SWFT - ${req.user.email || req.uid}`;
         const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
-        const countryCode = req.headers["cf-ipcountry"]  // Cloudflare
-          || req.headers["x-vercel-ip-country"]           // Vercel
-          || req.headers["x-country-code"]                // Custom proxy
-          || "US";
+        const countryCode = (
+          req.headers["cf-ipcountry"] ||
+          req.headers["x-vercel-ip-country"] ||
+          req.headers["x-country-code"] ||
+          "US"
+        ).toUpperCase();
+        const rawCity = req.headers["cf-ipcity"] || req.headers["x-vercel-ip-city"] || "";
+        const rawRegion = req.headers["cf-ipregion"] || req.headers["x-vercel-ip-region"] || "";
+        const regionCode = normalizeRegion(rawRegion, countryCode);
+        const areaCode = cityToAreaCode(rawCity);
+
+        console.log(`[user] Provisioning Telnyx for ${req.user.email} — country:${countryCode} region:${regionCode||"?"} city:${rawCity||"?"} areaCode:${areaCode||"?"}`);
 
         const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
         const { phoneNumber, phoneSid } = await buyPhoneNumber(
-          messagingProfileId, webhookUrl, { countryCode }
+          messagingProfileId, webhookUrl,
+          { countryCode, region: regionCode, city: rawCity, areaCode }
         );
 
         const telnyxFields = {
@@ -146,15 +160,17 @@ router.post("/setup-telnyx", async (req, res, next) => {
     const friendlyName = `SWFT - ${data.email || req.user.email || req.uid}`;
     const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
 
-    // Country can come from request body, user profile, or geo-IP headers
-    const countryCode = req.body.countryCode || data.country
+    const countryCode = (req.body.countryCode || data.country
       || req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"]
-      || req.headers["x-country-code"] || "US";
-    const areaCode = req.body.areaCode || undefined;
+      || req.headers["x-country-code"] || "US").toUpperCase();
+    const rawCity = req.headers["cf-ipcity"] || req.headers["x-vercel-ip-city"] || "";
+    const rawRegion = req.headers["cf-ipregion"] || req.headers["x-vercel-ip-region"] || "";
+    const regionCode = req.body.region || normalizeRegion(rawRegion, countryCode);
+    const areaCode = req.body.areaCode || cityToAreaCode(rawCity) || undefined;
 
     const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
     const { phoneNumber, phoneSid } = await buyPhoneNumber(
-      messagingProfileId, webhookUrl, { countryCode, areaCode }
+      messagingProfileId, webhookUrl, { countryCode, region: regionCode, city: rawCity, areaCode }
     );
 
     await col().doc(req.uid).set({
@@ -165,6 +181,68 @@ router.post("/setup-telnyx", async (req, res, next) => {
 
     console.log(`[user] Telnyx provisioned for existing user ${data.email}: ${phoneNumber}`);
     res.json({ success: true, phoneNumber, message: "Telnyx messaging profile and phone number provisioned" });
+  } catch (err) { next(err); }
+});
+
+// GET /api/me/available-numbers — search available phone numbers (for number picker)
+// Query params: country, region (province/state code), areaCode, city
+router.get("/available-numbers", async (req, res, next) => {
+  try {
+    const { country, region, areaCode, city } = req.query;
+    const countryCode = (country || req.headers["cf-ipcountry"] || "US").toUpperCase();
+    const regionCode = region || normalizeRegion(
+      req.headers["cf-ipregion"] || req.headers["x-vercel-ip-region"] || "",
+      countryCode
+    );
+    const resolvedAreaCode = areaCode || (city ? cityToAreaCode(city) : null) ||
+      (req.headers["cf-ipcity"] ? cityToAreaCode(req.headers["cf-ipcity"]) : null);
+
+    const numbers = await searchAvailableNumbers({
+      countryCode,
+      region: regionCode,
+      areaCode: resolvedAreaCode,
+      city,
+      limit: 12,
+    });
+    res.json({ numbers, countryCode, region: regionCode, areaCode: resolvedAreaCode });
+  } catch (err) { next(err); }
+});
+
+// POST /api/me/select-number — order a specific number the user chose from the picker
+// Body: { phoneNumber: "+14035551234" }
+router.post("/select-number", async (req, res, next) => {
+  try {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) return res.status(400).json({ error: "phoneNumber required" });
+
+    const doc = await col().doc(req.uid).get();
+    const userData = doc.exists ? doc.data() : {};
+    const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
+
+    // Reuse existing messaging profile, or create one if none
+    let messagingProfileId = userData.telnyxMessagingProfileId;
+    if (!messagingProfileId) {
+      const friendlyName = `SWFT - ${userData.email || req.user.email || req.uid}`;
+      const result = await createMessagingProfile(friendlyName, webhookUrl);
+      messagingProfileId = result.messagingProfileId;
+    }
+
+    // Release old number if the user already has one
+    if (userData.telnyxPhoneSid && userData.telnyxPhoneNumber !== phoneNumber) {
+      await releasePhoneNumber(userData.telnyxPhoneSid);
+    }
+
+    // Order the chosen number
+    const { phoneSid } = await orderPhoneNumber(phoneNumber, messagingProfileId);
+
+    await col().doc(req.uid).set({
+      telnyxPhoneNumber: phoneNumber,
+      telnyxPhoneSid: phoneSid,
+      telnyxMessagingProfileId: messagingProfileId,
+    }, { merge: true });
+
+    console.log(`[user] Number changed for ${userData.email || req.uid}: ${phoneNumber}`);
+    res.json({ success: true, phoneNumber, messagingProfileId });
   } catch (err) { next(err); }
 });
 

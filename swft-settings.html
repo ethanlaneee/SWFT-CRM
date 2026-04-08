@@ -79,6 +79,32 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .settings-field{display:flex;flex-direction:column;gap:4px;}
 .settings-field label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
 
+/* Number picker modal */
+.np-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.22s;}
+.np-overlay.open{opacity:1;pointer-events:all;}
+.np-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(0.96);transition:transform 0.25s cubic-bezier(0.22,1,0.36,1);}
+.np-overlay.open .np-modal{transform:scale(1);}
+.np-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.np-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);}
+.np-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;cursor:pointer;color:var(--gray);display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.np-close:hover{background:var(--surface2);color:var(--white);}
+.np-body{padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.np-filters{display:flex;gap:8px;flex-wrap:wrap;}
+.np-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;flex:1;min-width:100px;transition:border-color 0.15s;}
+.np-input:focus{border-color:var(--green);}
+.np-input::placeholder{color:var(--gray2);}
+.np-select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;flex:1;min-width:120px;}
+.np-select option{background:var(--surface2);}
+.np-results{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.np-num-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;}
+.np-num-row:last-child{border-bottom:none;}
+.np-num-row:hover{background:var(--surface2);}
+.np-num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--white);flex:1;}
+.np-loc{font-size:11.5px;color:var(--gray);flex:1;}
+.np-select-btn{padding:5px 14px;border-radius:7px;border:1px solid rgba(200,241,53,0.3);background:rgba(200,241,53,0.08);color:var(--green);font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.15s;}
+.np-select-btn:hover{background:rgba(200,241,53,0.18);}
+.np-empty{padding:24px;text-align:center;color:var(--gray2);font-size:13px;}
+
 /* Billing section */
 .billing-plan-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
 .billing-plan-badge.starter{background:rgba(200,241,53,0.08);color:var(--green);border:1px solid rgba(200,241,53,0.2);}
@@ -451,6 +477,55 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   </div>
 </div>
 
+<!-- SMS Phone Number -->
+<div class="settings-section">
+  <div class="settings-header"><span class="settings-header-icon">📱</span><h3>SMS PHONE NUMBER</h3></div>
+  <div class="settings-body">
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Your SWFT Number</div>
+        <div class="settings-row-desc">All inbound and outbound SMS uses this number. Your customers see and text this number.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="sms-number-display" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--white);">Loading...</span>
+        <button class="settings-btn primary" onclick="openNumberPicker()">Browse Numbers</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Number Picker Modal -->
+<div class="np-overlay" id="np-overlay" onclick="if(event.target===this)closeNumberPicker()">
+  <div class="np-modal">
+    <div class="np-header">
+      <div class="np-title">Choose Your Number</div>
+      <button class="np-close" onclick="closeNumberPicker()">&times;</button>
+    </div>
+    <div class="np-body">
+      <div style="font-size:12.5px;color:var(--gray);line-height:1.5;">Search by country, province/state, or city to find a local number. Your existing number will be released when you select a new one.</div>
+      <div class="np-filters">
+        <select class="np-select" id="np-country" onchange="npCountryChange()" style="flex:0 0 auto;min-width:140px;">
+          <option value="US">🇺🇸 United States</option>
+          <option value="CA">🇨🇦 Canada</option>
+          <option value="GB">🇬🇧 United Kingdom</option>
+          <option value="AU">🇦🇺 Australia</option>
+          <option value="NZ">🇳🇿 New Zealand</option>
+        </select>
+        <select class="np-select" id="np-region" style="flex:0 0 auto;min-width:140px;">
+          <option value="">Any province/state</option>
+        </select>
+        <input class="np-input" id="np-city" placeholder="City (optional)" style="min-width:120px;"/>
+      </div>
+      <button onclick="npSearch()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:var(--green);border:none;color:#0a0a0a;font-weight:700;font-size:12.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">
+        Search Numbers
+      </button>
+      <div id="np-results">
+        <div class="np-empty" id="np-empty-state">Enter your location above and click Search.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Preferences -->
 <div class="settings-section">
   <div class="settings-header"><span class="settings-header-icon">🎨</span><h3>PREFERENCES</h3></div>
@@ -698,7 +773,120 @@ async function loadSettings() {
 
     // Populate billing section
     loadBillingInfo(data, token);
+
+    // Show current SMS number
+    var smsEl = document.getElementById('sms-number-display');
+    if (smsEl) {
+      smsEl.textContent = data.telnyxPhoneNumber || 'Not provisioned';
+      smsEl.style.color = data.telnyxPhoneNumber ? 'var(--white)' : 'var(--gray2)';
+    }
   } catch (e) {}
+}
+
+// ── Number Picker ──────────────────────────────────────────────────────────
+
+const NP_REGIONS = {
+  US: [
+    ['', 'Any state'],
+    ['AL','Alabama'],['AK','Alaska'],['AZ','Arizona'],['AR','Arkansas'],['CA','California'],
+    ['CO','Colorado'],['CT','Connecticut'],['FL','Florida'],['GA','Georgia'],['HI','Hawaii'],
+    ['ID','Idaho'],['IL','Illinois'],['IN','Indiana'],['IA','Iowa'],['KS','Kansas'],
+    ['KY','Kentucky'],['LA','Louisiana'],['ME','Maine'],['MD','Maryland'],['MA','Massachusetts'],
+    ['MI','Michigan'],['MN','Minnesota'],['MS','Mississippi'],['MO','Missouri'],['MT','Montana'],
+    ['NE','Nebraska'],['NV','Nevada'],['NJ','New Jersey'],['NM','New Mexico'],['NY','New York'],
+    ['NC','North Carolina'],['ND','North Dakota'],['OH','Ohio'],['OK','Oklahoma'],['OR','Oregon'],
+    ['PA','Pennsylvania'],['RI','Rhode Island'],['SC','South Carolina'],['SD','South Dakota'],
+    ['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],
+    ['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming'],
+  ],
+  CA: [
+    ['', 'Any province'],
+    ['AB','Alberta'],['BC','British Columbia'],['MB','Manitoba'],['NB','New Brunswick'],
+    ['NL','Newfoundland'],['NS','Nova Scotia'],['NT','Northwest Territories'],['NU','Nunavut'],
+    ['ON','Ontario'],['PE','Prince Edward Island'],['QC','Quebec'],['SK','Saskatchewan'],['YT','Yukon'],
+  ],
+  GB: [
+    ['', 'Any region'],
+    ['ENG','England'],['SCT','Scotland'],['WLS','Wales'],['NIR','Northern Ireland'],
+  ],
+  AU: [['', 'Any state'],['NSW','New South Wales'],['VIC','Victoria'],['QLD','Queensland'],['WA','Western Australia'],['SA','South Australia'],['TAS','Tasmania'],['ACT','Australian Capital Territory'],['NT','Northern Territory']],
+  NZ: [['', 'Any region']],
+};
+
+function npCountryChange() {
+  var country = document.getElementById('np-country').value;
+  var sel = document.getElementById('np-region');
+  var regions = NP_REGIONS[country] || [['', 'Any region']];
+  sel.innerHTML = regions.map(function(r) {
+    return '<option value="' + r[0] + '">' + r[1] + '</option>';
+  }).join('');
+}
+
+async function npSearch() {
+  var country = document.getElementById('np-country').value;
+  var region = document.getElementById('np-region').value;
+  var city = document.getElementById('np-city').value.trim();
+  var resultsEl = document.getElementById('np-results');
+  resultsEl.innerHTML = '<div class="np-empty">Searching...</div>';
+
+  try {
+    var token = await getToken();
+    var params = new URLSearchParams({ country });
+    if (region) params.set('region', region);
+    if (city) params.set('city', city);
+    var res = await fetch('/api/me/available-numbers?' + params.toString(), {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    var data = await res.json();
+    var numbers = data.numbers || [];
+
+    if (!numbers.length) {
+      resultsEl.innerHTML = '<div class="np-empty">No numbers found. Try broadening your search — remove the city or try a different region.</div>';
+      return;
+    }
+
+    resultsEl.innerHTML = '<div class="np-results">' +
+      numbers.map(function(n) {
+        var loc = [n.locality, n.region].filter(Boolean).join(', ');
+        return '<div class="np-num-row">' +
+          '<div class="np-num">' + n.phoneNumber + '</div>' +
+          '<div class="np-loc">' + (loc || n.countryCode) + '</div>' +
+          '<button class="np-select-btn" onclick="npSelectNumber(\'' + n.phoneNumber.replace(/'/g, '') + '\')">Select</button>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  } catch(e) {
+    resultsEl.innerHTML = '<div class="np-empty">Search failed: ' + (e.message || 'unknown error') + '</div>';
+  }
+}
+
+async function npSelectNumber(phoneNumber) {
+  if (!confirm('Select ' + phoneNumber + ' as your SWFT number? Your current number will be released.')) return;
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/me/select-number', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phoneNumber })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    var smsEl = document.getElementById('sms-number-display');
+    if (smsEl) { smsEl.textContent = phoneNumber; smsEl.style.color = 'var(--white)'; }
+    closeNumberPicker();
+    showToast('Number updated to ' + phoneNumber);
+  } catch(e) {
+    showToast('Error: ' + (e.message || 'could not select number'));
+  }
+}
+
+function openNumberPicker() {
+  npCountryChange(); // populate region dropdown
+  document.getElementById('np-overlay').classList.add('open');
+}
+
+function closeNumberPicker() {
+  document.getElementById('np-overlay').classList.remove('open');
 }
 
 const PLAN_PRICES = { starter: { monthly: 89, annual: 71 }, pro: { monthly: 179, annual: 143 }, business: { monthly: 349, annual: 279 } };

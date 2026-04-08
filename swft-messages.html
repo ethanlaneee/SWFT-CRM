@@ -490,9 +490,20 @@ async function loadData(){
     _allMessages=results[0];
     _customers=results[1];
     var user=results[2];
-    var num=user.telnyxPhoneNumber||'+1 (587) 315-3452';
     var el=document.getElementById('your-number');
-    if(el) el.textContent='Your #: '+num;
+    if(el){
+      if(user.telnyxPhoneNumber){
+        el.textContent='Your #: '+user.telnyxPhoneNumber;
+        el.style.cursor='pointer';
+        el.title='Change number in Settings';
+        el.onclick=function(){ window.location.href='swft-settings'; };
+      } else {
+        el.textContent='No number — set up in Settings';
+        el.style.color='var(--amber)';
+        el.style.cursor='pointer';
+        el.onclick=function(){ window.location.href='swft-settings'; };
+      }
+    }
 
     // Gmail connection status
     _gmailConnected=!!user.gmailConnected;
