@@ -547,26 +547,12 @@ router.post("/clear-rejected", async (req, res) => {
   }
 });
 
-// ── POST /api/outreach/reset — Wipe all outreach data (leads + emails) ──
+// ── POST /api/outreach/reset — Delete all emails and reset lead statuses back to "new" ──
 router.post("/reset", async (req, res) => {
   try {
-    const [leadsSnap, emailsSnap] = await Promise.all([
-      db.collection("outreach_leads").limit(500).get(),
-      db.collection("outreach_emails").limit(500).get(),
-    ]);
+    let emailCount = 0;
 
-    let leadCount = 0, emailCount = 0;
-
-    // Firestore batch limit is 500, so process in batches
-    while (true) {
-      const snap = await db.collection("outreach_leads").limit(500).get();
-      if (snap.empty) break;
-      const batch = db.batch();
-      snap.docs.forEach(doc => batch.delete(doc.ref));
-      await batch.commit();
-      leadCount += snap.size;
-    }
-
+    // Delete all emails (drafts, sent, rejected)
     while (true) {
       const snap = await db.collection("outreach_emails").limit(500).get();
       if (snap.empty) break;
@@ -576,7 +562,26 @@ router.post("/reset", async (req, res) => {
       emailCount += snap.size;
     }
 
-    res.json({ leads: leadCount, emails: emailCount });
+    // Reset all lead statuses back to "new" and clear email tracking fields
+    let leadsReset = 0;
+    const leadsSnap = await db.collection("outreach_leads").limit(500).get();
+    if (!leadsSnap.empty) {
+      const batch = db.batch();
+      leadsSnap.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          status: "new",
+          score: null,
+          emailCount: 0,
+          lastContactedAt: null,
+          lastThreadId: null,
+          lastRfcMessageId: null,
+        });
+      });
+      await batch.commit();
+      leadsReset = leadsSnap.size;
+    }
+
+    res.json({ emails: emailCount, leadsReset });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

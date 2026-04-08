@@ -1025,13 +1025,12 @@ window._clearRejected = async function() {
 };
 
 window._resetOutreach = async function() {
-  if (!confirm('This will delete ALL leads, emails, and drafts. Are you sure?')) return;
-  if (!confirm('Really? This cannot be undone.')) return;
+  if (!confirm('This will delete all emails/drafts and reset all lead statuses back to "new". Your leads will NOT be deleted. Continue?')) return;
   const btn = document.getElementById('btnReset');
   if (btn) { btn.classList.add('loading'); btn.disabled = true; }
   try {
     const result = await outreachPost('/api/outreach/reset');
-    showToast(`Reset complete — deleted ${result.leads || 0} leads and ${result.emails || 0} emails`, 'success');
+    showToast(`Reset complete — deleted ${result.emails || 0} emails, reset ${result.leadsReset || 0} leads to "new"`, 'success');
     await loadOutreachData();
   } catch (e) { showToast('Reset failed: ' + e.message, 'error'); }
   finally { if (btn) { btn.classList.remove('loading'); btn.disabled = false; } }
