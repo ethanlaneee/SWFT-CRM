@@ -268,10 +268,11 @@ router.get("/available-numbers", async (req, res, next) => {
 
 // POST /api/me/select-number — order a specific number the user chose from the picker
 // Body: { phoneNumber: "+14035551234" }
+//   OR: { autoAssign: true, countryCode: "CA", region: "AB", areaCode: "403" }
 router.post("/select-number", async (req, res, next) => {
   try {
-    const { phoneNumber } = req.body;
-    if (!phoneNumber) return res.status(400).json({ error: "phoneNumber required" });
+    const { phoneNumber, autoAssign, countryCode: reqCountry, region: reqRegion, areaCode: reqAreaCode } = req.body;
+    if (!phoneNumber && !autoAssign) return res.status(400).json({ error: "phoneNumber or autoAssign required" });
 
     const doc = await col().doc(req.uid).get();
     const userData = doc.exists ? doc.data() : {};
@@ -291,26 +292,24 @@ router.post("/select-number", async (req, res, next) => {
       }
     }
 
-    // Release old number if the user already has one
-    if (userData.telnyxPhoneSid && userData.telnyxPhoneNumber !== phoneNumber) {
-      try { await releasePhoneNumber(userData.telnyxPhoneSid); } catch (_) { /* non-fatal */ }
-    }
+    let realNumber, phoneSid;
 
-    let realNumber = phoneNumber;
-    let phoneSid;
-
-    if (phoneNumber.includes("-")) {
-      // Telnyx returned a wildcard pattern (e.g. "+18252------") — common for CA numbers.
-      // Extract the area code and buy the first real available number in that area code.
-      const digits = phoneNumber.replace(/\D/g, "");
-      const areaCode = digits.length >= 4 ? digits.slice(1, 4) : undefined;
-      const countryCode = digits.startsWith("1") ? (areaCode ? "CA" : "US") : "US";
-      console.log(`[user] Wildcard number detected, buying by area code ${areaCode || "any"}`);
-      const result = await buyPhoneNumber(messagingProfileId, webhookUrl, { countryCode, areaCode });
-      realNumber = result.phoneNumber;
-      phoneSid = result.phoneSid;
+    if (autoAssign) {
+      // Auto-assign: buy the best available number for the given geo params.
+      // Used for countries like CA where Telnyx doesn't pre-list specific numbers.
+      const countryCode = (reqCountry || "CA").toUpperCase();
+      console.log(`[user] Auto-assigning number for ${userData.email || req.uid} — country:${countryCode} region:${reqRegion || "?"} areaCode:${reqAreaCode || "?"}`);
+      ({ phoneNumber: realNumber, phoneSid } = await buyPhoneNumber(
+        messagingProfileId, webhookUrl,
+        { countryCode, region: reqRegion, areaCode: reqAreaCode }
+      ));
     } else {
+      // Release old number if the user already has one
+      if (userData.telnyxPhoneSid && userData.telnyxPhoneNumber !== phoneNumber) {
+        try { await releasePhoneNumber(userData.telnyxPhoneSid); } catch (_) { /* non-fatal */ }
+      }
       ({ phoneSid } = await orderPhoneNumber(phoneNumber, messagingProfileId));
+      realNumber = phoneNumber;
     }
 
     await col().doc(req.uid).set({

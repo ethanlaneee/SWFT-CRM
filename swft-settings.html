@@ -877,7 +877,18 @@ async function npSearch() {
     var numbers = data.numbers || [];
 
     if (!numbers.length) {
-      resultsEl.innerHTML = '<div class="np-empty">No numbers found. Try broadening your search — remove the city or try a different region.</div>';
+      // For CA and other countries where Telnyx doesn't pre-list specific numbers,
+      // offer auto-assign: we'll buy whatever's available for the area.
+      var areaLabel = city ? city : (region ? region : country);
+      resultsEl.innerHTML =
+        '<div class="np-empty">No specific numbers available to preview for this area.</div>' +
+        '<div style="padding:14px 0 4px;">' +
+          '<button class="settings-btn primary" style="width:100%" onclick="npAutoAssign(\'' +
+            country.replace(/'/g,'') + '\',\'' +
+            (region||'').replace(/'/g,'') + '\',\'' +
+            (data.areaCode||'').replace(/'/g,'') +
+          '\')">Get Next Available ' + areaLabel + ' Number</button>' +
+        '</div>';
       return;
     }
 
@@ -929,6 +940,29 @@ async function npSelectNumber(phoneNumber) {
     showToast('Number updated to ' + (data.phoneNumber || phoneNumber));
   } catch(e) {
     showToast('Error: ' + (e.message || 'could not select number'));
+  }
+}
+
+async function npAutoAssign(country, region, areaCode) {
+  if (!confirm('Assign you the next available local number in this area? Your current number will be released.')) return;
+  try {
+    var token = await getToken();
+    var body = { autoAssign: true, countryCode: country };
+    if (region) body.region = region;
+    if (areaCode) body.areaCode = areaCode;
+    var res = await fetch('/api/me/select-number', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    var smsEl = document.getElementById('sms-number-display');
+    if (smsEl) { smsEl.textContent = data.phoneNumber; smsEl.style.color = 'var(--white)'; }
+    closeNumberPicker();
+    showToast('Number assigned: ' + data.phoneNumber);
+  } catch(e) {
+    showToast('Error: ' + (e.message || 'could not assign number'));
   }
 }
 
