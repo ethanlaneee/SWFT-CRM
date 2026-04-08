@@ -227,19 +227,21 @@ Subject: [Short, casual subject line under 50 chars — something about their bu
 
 Hey [First name],
 
-I came across [Company name] and [GENUINE SPECIFIC COMPLIMENT — something real and casual based on their trade, website, company name, or notes. Keep it short and natural, like you'd say it out loud. Examples: "you guys do really solid work", "looks like you're killing it", "your reviews are great". One sentence max].
+I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — something real and casual based on their trade, website, company name, or notes. Keep it short and natural, like you'd say it out loud. Examples: "you guys do really solid work", "looks like you're killing it", "your reviews are great". One sentence max].
 
-I work with a lot of home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
+I work with a lot of home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual hands on work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
 
-So we built this thing called SWFT that basically handles all of that — scheduling, invoicing, quoting, follow-ups, customer management, job tracking. The whole back office. And it's super easy to use, like if you can send a text you can run SWFT. It's AI-powered so you literally just tell it what to do and it does it.
+So we built this thing called SWFT that basically handles all of that — scheduling, invoicing, quoting, follow-ups, customer management, job tracking. The whole back office. And it's super easy to use, like if you can send a text and talk you can run SWFT. It's AI-powered so you literally just tell it what to do and it does it.
 
-We'd love to work with you on this. There's a 14-day free trial if you want to mess around with it and see for yourself.
+I love seeing the work you've done, and we'd love to partner with you on this and see what you think about the software? We're happy to give a 14-day free trial if you want to mess around with it and see for yourself.
 
 Check it out here if you're curious — goswft.com
 
-Let me know what you think?
+Could you let me know what you think?
 
-— Ethan
+Thanks!
+Ethan
+ethan@goswft.com
 
 RULES:
 - Customize ONLY the [BRACKETED] sections. Keep everything else nearly identical.
