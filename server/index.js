@@ -605,3 +605,22 @@ async function runLeadFinder() {
 setInterval(() => runLeadFinder().catch(console.error), 6 * 60 * 60 * 1000);
 // Run once on startup after 60 seconds
 setTimeout(() => runLeadFinder().catch(console.error), 60000);
+
+// ── Reply checker worker ──
+// Polls Gmail threads every 2 hours to detect replies from outreach leads.
+// Marks leads as "replied" so they don't get follow-ups.
+async function runReplyChecker() {
+  try {
+    const result = await outreachRouter.checkReplies();
+    if (result.replied > 0) {
+      console.log(`[reply-checker] Checked ${result.checked} threads, found ${result.replied} new replies`);
+    }
+  } catch (e) {
+    console.error("[reply-checker] Worker error:", e.message);
+  }
+}
+
+// Check every 2 hours
+setInterval(() => runReplyChecker().catch(console.error), 2 * 60 * 60 * 1000);
+// Run once on startup after 90 seconds
+setTimeout(() => runReplyChecker().catch(console.error), 90000);

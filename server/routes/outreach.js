@@ -13,7 +13,7 @@
 const express = require("express");
 const router = express.Router();
 const { db } = require("../firebase");
-const { sendSimpleGmail } = require("../utils/email");
+const { sendSimpleGmail, getGmailClient } = require("../utils/email");
 const Anthropic = require("@anthropic-ai/sdk");
 const claude = new Anthropic();
 
@@ -890,5 +890,69 @@ router.post("/find-leads", async (req, res) => {
 
 // Export findLeads for the daily worker
 router.findLeads = findLeads;
+
+// ── Reply checker: polls Gmail threads to detect replies and mark leads as "replied" ──
+async function checkReplies() {
+  const sender = await getOutreachSender();
+  if (!sender.gmailTokens) {
+    console.log("[reply-checker] Gmail not connected for info@goswft.com, skipping");
+    return { checked: 0, replied: 0 };
+  }
+
+  const { gmail } = await getGmailClient(sender);
+  const senderEmail = "info@goswft.com";
+
+  // Get all emailed leads that have a thread ID
+  const snap = await db.collection("outreach_leads")
+    .where("status", "==", "emailed")
+    .limit(200)
+    .get();
+
+  const leads = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(l => l.lastThreadId);
+
+  if (leads.length === 0) return { checked: 0, replied: 0 };
+
+  let replied = 0;
+
+  for (const lead of leads) {
+    try {
+      const thread = await gmail.users.threads.get({
+        userId: "me",
+        id: lead.lastThreadId,
+        format: "metadata",
+        metadataHeaders: ["From"],
+      });
+
+      const messages = thread.data.messages || [];
+
+      // Check if any message in the thread is NOT from us (i.e., a reply)
+      const hasReply = messages.some(msg => {
+        const fromHeader = (msg.payload?.headers || []).find(h => h.name.toLowerCase() === "from");
+        const fromVal = (fromHeader?.value || "").toLowerCase();
+        return !fromVal.includes(senderEmail);
+      });
+
+      if (hasReply) {
+        await db.collection("outreach_leads").doc(lead.id).update({
+          status: "replied",
+          repliedAt: Date.now(),
+        });
+        replied++;
+        console.log(`[reply-checker] Lead "${lead.name}" (${lead.email}) replied!`);
+      }
+    } catch (e) {
+      // Thread might have been deleted or is inaccessible — skip
+      if (e.code !== 404) {
+        console.error(`[reply-checker] Error checking thread for ${lead.email}:`, e.message);
+      }
+    }
+  }
+
+  return { checked: leads.length, replied };
+}
+
+router.checkReplies = checkReplies;
 
 module.exports = router;
