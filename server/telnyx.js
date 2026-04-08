@@ -2,6 +2,9 @@ const Telnyx = require("telnyx");
 
 const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
 const TELNYX_PHONE = process.env.TELNYX_PHONE_NUMBER || "";
+// Shared messaging profile created once in the Telnyx portal.
+// All SWFT users share this profile — avoids per-user profile creation.
+const SHARED_MESSAGING_PROFILE_ID = process.env.TELNYX_MESSAGING_PROFILE_ID || "";
 
 function getClient() {
   if (!TELNYX_API_KEY) throw new Error("Telnyx API key not configured (TELNYX_API_KEY)");
@@ -355,4 +358,5 @@ module.exports = {
   getUserTelnyxConfig,
   normalizeRegion,
   cityToAreaCode,
+  SHARED_MESSAGING_PROFILE_ID,
 };

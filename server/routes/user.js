@@ -5,8 +5,15 @@ const { getUsage } = require("../usage");
 const {
   createMessagingProfile, buyPhoneNumber, closeMessagingProfile,
   searchAvailableNumbers, orderPhoneNumber, releasePhoneNumber,
-  normalizeRegion, cityToAreaCode,
+  normalizeRegion, cityToAreaCode, SHARED_MESSAGING_PROFILE_ID,
 } = require("../telnyx");
+
+// Use the shared Telnyx messaging profile if configured, otherwise create per-user profiles.
+async function getOrCreateMessagingProfile(friendlyName, webhookUrl) {
+  if (SHARED_MESSAGING_PROFILE_ID) return SHARED_MESSAGING_PROFILE_ID;
+  const result = await createMessagingProfile(friendlyName, webhookUrl);
+  return result.messagingProfileId;
+}
 
 const col = () => db.collection("users");
 
@@ -71,7 +78,7 @@ router.get("/", async (req, res, next) => {
 
         console.log(`[user] Provisioning Telnyx for ${req.user.email} — country:${countryCode} region:${regionCode||"?"} city:${rawCity||"?"} areaCode:${areaCode||"?"}`);
 
-        const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
+        const messagingProfileId = await getOrCreateMessagingProfile(friendlyName, webhookUrl);
         const { phoneNumber, phoneSid } = await buyPhoneNumber(
           messagingProfileId, webhookUrl,
           { countryCode, region: regionCode, city: rawCity, areaCode }
@@ -168,7 +175,7 @@ router.post("/setup-telnyx", async (req, res, next) => {
     const regionCode = req.body.region || normalizeRegion(rawRegion, countryCode);
     const areaCode = req.body.areaCode || cityToAreaCode(rawCity) || undefined;
 
-    const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
+    const messagingProfileId = await getOrCreateMessagingProfile(friendlyName, webhookUrl);
     const { phoneNumber, phoneSid } = await buyPhoneNumber(
       messagingProfileId, webhookUrl, { countryCode, region: regionCode, city: rawCity, areaCode }
     );
@@ -275,10 +282,9 @@ router.post("/select-number", async (req, res, next) => {
     if (!messagingProfileId) {
       const friendlyName = `SWFT - ${userData.email || req.user.email || req.uid}`;
       try {
-        const result = await createMessagingProfile(friendlyName, webhookUrl);
-        messagingProfileId = result.messagingProfileId;
+        messagingProfileId = await getOrCreateMessagingProfile(friendlyName, webhookUrl);
       } catch (profileErr) {
-        console.error("[user] createMessagingProfile failed:", profileErr.message);
+        console.error("[user] getOrCreateMessagingProfile failed:", profileErr.message);
         return res.status(503).json({
           error: "Telnyx messaging is not yet enabled on this account. Please contact SWFT support.",
         });
