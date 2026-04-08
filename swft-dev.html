@@ -998,7 +998,10 @@ window._outreachAction = async function(action) {
   try {
     const result = await outreachPost(pathMap[action]);
     const count = result.scored || result.generated || 0;
-    showToast(`${action === 'score' ? 'Scored' : 'Generated'} ${count} ${action === 'score' ? 'leads' : 'emails'}`, count > 0 ? 'success' : 'info');
+    const msg = count > 0
+      ? `${action === 'score' ? 'Scored' : 'Generated'} ${count} ${action === 'score' ? 'leads' : 'emails'}`
+      : (result.message || `No ${action === 'score' ? 'leads to score' : 'emails generated'}`);
+    showToast(msg, count > 0 ? 'success' : 'info');
     await loadOutreachData();
   } catch (e) {
     showToast(`${action} failed: ${e.message}`, 'error');

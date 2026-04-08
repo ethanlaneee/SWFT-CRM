@@ -596,9 +596,9 @@ router.post("/followup", async (req, res) => {
 
     const eligible = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
-      .filter(l => l.lastContactedAt && l.lastContactedAt < cutoff && (l.emailCount || 0) < 3); // Max 3 emails per lead
+      .filter(l => l.lastContactedAt && l.lastContactedAt < cutoff && (l.emailCount || 0) < 3);
 
-    if (eligible.length === 0) return res.json({ generated: 0, message: "No leads ready for follow-up" });
+    if (eligible.length === 0) return res.json({ generated: 0, message: "No leads ready for follow-up. Leads must be in 'emailed' status and at least 3 days since last contact." });
 
     const generated = [];
 
@@ -614,35 +614,68 @@ router.post("/followup", async (req, res) => {
       const prevEmail = prevSnap.empty ? null : prevSnap.docs[0].data();
       const sequenceNum = (lead.emailCount || 1) + 1;
 
-      const anglePrompts = {
-        2: "Take a different angle than the first email. Maybe mention a specific pain point for their trade, or share a quick stat about how much time CRM saves. Remind them about the 14-day free trial — zero risk to try it out.",
-        3: "This is the final follow-up. Be very brief (2-3 sentences). Respectful breakup email — say something like 'figured this wasn't the right time, no hard feelings' with a final soft CTA. Mention the free trial one last time.",
-      };
+      const followUpTemplate = sequenceNum === 2
+        ? `FOLLOW-UP EMAIL TEMPLATE (1st follow-up):
+
+Subject: [Simple, helpful subject — like "Thought this might be helpful" or "Quick question about [trade]". NOT salesy. NOT "following up on my last email".]
+
+Hey [First name],
+
+I'm just touching base again because I know things can get pretty hectic running a service business — I wanted to make sure my last email didn't get buried. Not sure if you got a chance to see it yet or not!
+
+But I work with home service businesses, and [REWORD THE CORE PITCH — same message as below but with different casual wording. The key points to hit: the biggest time sink is admin work (not the actual jobs), and SWFT handles scheduling, invoicing, quoting, follow-ups, customer management, job tracking. It's AI-powered so you just tell it what to do. Mention the 14-day free trial. But say it all differently than the original — rephrase, restructure, use different examples. Keep it casual and natural.]
+
+[TRADE-SPECIFIC HOOK — one sentence connecting to their specific trade. Like "I know [trade] guys especially deal with [specific pain point]" or "A lot of [trade] businesses I talk to say [relatable thing]".]
+
+Check it out here if you're curious — goswft.com
+
+Would love to hear what you think!
+
+Thanks!
+Ethan
+ethan@goswft.com`
+        : `FOLLOW-UP EMAIL TEMPLATE (final follow-up):
+
+Subject: [Casual closing subject — like "No worries either way" or "Last thing from me".]
+
+Hey [First name],
+
+Totally get it if now isn't the right time — running a [trade] business keeps you busy enough without random emails piling up.
+
+I'll leave it at this: if you ever want to take the admin stuff off your plate (scheduling, invoicing, follow-ups, all of it), SWFT's got a 14-day free trial sitting there whenever you're ready. No pressure at all.
+
+goswft.com
+
+Take care!
+Ethan
+ethan@goswft.com`;
 
       const response = await claude.messages.create({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 800,
+        max_tokens: 1000,
         messages: [{
           role: "user",
-          content: `You are Ethan, founder of SWFT — an AI-powered CRM built for home service businesses. You're writing a follow-up email (#${sequenceNum - 1}) to someone who didn't reply to your first outreach.
-
-Your voice: You sound like a real person texting a friend who runs a business — chill, direct, no fluff. Short sentences. You don't sound like a marketer or a bot. You write like someone who's been in the trenches and gets it.
+          content: `You are writing a follow-up outreach email for Ethan, founder of SWFT. The recipient did NOT reply to the first email. Below is the FOLLOW-UP TEMPLATE. Your job is to customize ONLY the parts in [BRACKETS]. Everything else stays essentially the same — same structure, same tone, same flow, same wording.
 
 Recipient:
 - Name: ${lead.name}
 - Company: ${lead.company}
 - Trade: ${lead.trade}
+- Website: ${lead.website || "none"}
+- Notes: ${lead.notes || "none"}
 
 Previous email subject: "${prevEmail?.subject || "N/A"}"
-${anglePrompts[sequenceNum] || "Take a different angle."}
 
-Rules:
-- Short subject line (under 50 chars), feels like a natural follow-up
-- 2-4 sentences max. Keep the same casual, human tone.
-- Sign off as "Ethan" (no last name, no title)
-- Do NOT start with "Just following up" or "Just checking in" or "Hope you're doing well"
-- Do NOT sound corporate or templated
+${followUpTemplate}
+
+RULES:
+- Customize ONLY the [BRACKETED] sections. Keep everything else nearly identical.
+- The tone should feel like a real person — casual, friendly, not pushy
+- Do NOT mention Google reviews, star ratings, or review counts
+- Do NOT use exclamation marks more than twice
+- Do NOT sound corporate, salesy, or templated
 - Do NOT include unsubscribe links (we add those separately)
+- Do NOT rewrite or restructure the email — follow the template exactly
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
