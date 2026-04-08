@@ -21,7 +21,7 @@ const PRICE_IDS = {
 
 /**
  * After checkout completes, pull the billing address from Stripe, store it on
- * the user profile, and (re-)provision a Twilio phone number that matches the
+ * the user profile, and (re-)provision a Telnyx phone number that matches the
  * user's billing country so they get a local number.
  */
 async function syncBillingAddress(uid, stripeCustomerId) {
@@ -369,7 +369,7 @@ router.get("/verify-session", async (req, res, next) => {
       stripeSubscriptionId: session.subscription,
     }, { merge: true });
 
-    // Sync billing address and provision a location-matched Twilio number
+    // Sync billing address and provision a location-matched Telnyx number
     if (session.customer) {
       syncBillingAddress(req.uid, session.customer).catch(err =>
         console.error("[verify-session] syncBillingAddress error:", err.message)
@@ -419,7 +419,7 @@ async function webhookHandler(req, res) {
           stripeSubscriptionId: session.subscription,
         }, { merge: true });
 
-        // Sync billing address and provision a location-matched Twilio number
+        // Sync billing address and provision a location-matched Telnyx number
         if (session.customer) {
           syncBillingAddress(uid, session.customer).catch(err =>
             console.error("[billing-webhook] syncBillingAddress error:", err.message)

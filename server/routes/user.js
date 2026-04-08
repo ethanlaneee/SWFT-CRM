@@ -168,12 +168,6 @@ router.post("/setup-telnyx", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Legacy alias — keep for backward compat with any bookmarked calls
-router.post("/setup-twilio", async (req, res, next) => {
-  req.url = "/setup-telnyx";
-  next("route");
-});
-
 // POST /api/me/check-trial — manually trigger trial expiry check
 router.post("/check-trial", async (req, res, next) => {
   try {

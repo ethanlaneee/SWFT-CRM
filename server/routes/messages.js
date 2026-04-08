@@ -130,7 +130,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
     const user = userDoc.exists ? userDoc.data() : {};
 
     if (msgType === "sms") {
-      // ── SMS via Twilio ──
+      // ── SMS via Telnyx ──
       if (!to) return res.status(400).json({ error: "Phone number is required" });
       if (!body) return res.status(400).json({ error: "Message body is required" });
 
@@ -636,19 +636,13 @@ async function telnyxIncomingHandler(req, res) {
     console.log("[telnyx-webhook] From:", from, "To:", toNumber, "Body:", body.slice(0, 100));
 
     // Resolve the account owner by matching the "To" number to a user's dedicated number.
-    // Try telnyxPhoneNumber first, fall back to twilioPhoneNumber for migration window.
     let ownerUid = null;
     let ownerData = null;
     let orgId = "";
 
     if (toNumber) {
-      let usersSnap = await db.collection("users")
+      const usersSnap = await db.collection("users")
         .where("telnyxPhoneNumber", "==", toNumber).limit(1).get();
-      if (usersSnap.empty) {
-        // Migration fallback: user may still have old field name
-        usersSnap = await db.collection("users")
-          .where("twilioPhoneNumber", "==", toNumber).limit(1).get();
-      }
       if (!usersSnap.empty) {
         ownerUid = usersSnap.docs[0].id;
         ownerData = usersSnap.docs[0].data();

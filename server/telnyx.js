@@ -10,8 +10,7 @@ function getClient() {
 
 /**
  * Create a Telnyx Messaging Profile for a new SWFT user.
- * Messaging profiles group phone numbers under a shared webhook URL.
- * Equivalent to Twilio sub-accounts for multi-tenant SMS.
+ * Groups phone numbers under a shared webhook URL for multi-tenant SMS.
  *
  * @param {string} friendlyName - e.g. "SWFT - John's Plumbing"
  * @param {string} webhookUrl - URL for inbound SMS webhooks
@@ -46,23 +45,20 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
   const telnyx = getClient();
   const countryCode = (options.countryCode || "US").toUpperCase();
 
-  // Build search params
-  const searchParams = {
-    "filter[country_code]": countryCode,
-    "filter[features][]": "SMS",
-    "filter[limit]": 5,
+  // Build search filter (nested object — v6 SDK deepObject style)
+  const filter = {
+    country_code: countryCode,
+    features: ["sms"],
+    limit: 5,
   };
-
-  if (options.areaCode) {
-    searchParams["filter[national_destination_code]"] = options.areaCode;
-  }
+  if (options.areaCode) filter.national_destination_code = options.areaCode;
   if (options.region && (countryCode === "US" || countryCode === "CA")) {
-    searchParams["filter[administrative_area]"] = options.region;
+    filter.administrative_area = options.region;
   }
 
   let available = [];
   try {
-    const result = await telnyx.availablePhoneNumbers.list(searchParams);
+    const result = await telnyx.availablePhoneNumbers.list({ filter });
     available = result.data || [];
   } catch (err) {
     console.log(`[telnyx] Number search failed for ${countryCode}:`, err.message);
@@ -70,14 +66,11 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
 
   // Retry without area code / region if too restrictive
   if (!available.length && (options.areaCode || options.region)) {
-    const fallback = {
-      "filter[country_code]": countryCode,
-      "filter[features][]": "SMS",
-      "filter[limit]": 5,
-    };
     console.log(`[telnyx] Retrying without area code / region for ${countryCode}`);
     try {
-      const result = await telnyx.availablePhoneNumbers.list(fallback);
+      const result = await telnyx.availablePhoneNumbers.list({
+        filter: { country_code: countryCode, features: ["sms"], limit: 5 },
+      });
       available = result.data || [];
     } catch (err) {
       console.log(`[telnyx] Fallback search also failed:`, err.message);
@@ -127,7 +120,7 @@ async function closeMessagingProfile(messagingProfileId, phoneSid) {
   // Delete the messaging profile
   if (messagingProfileId) {
     try {
-      await telnyx.messagingProfiles.del(messagingProfileId);
+      await telnyx.messagingProfiles.delete(messagingProfileId);
       console.log(`[telnyx] Deleted messaging profile ${messagingProfileId}`);
     } catch (err) {
       console.log(`[telnyx] Failed to delete messaging profile ${messagingProfileId}:`, err.message);
@@ -159,7 +152,7 @@ async function sendSms(to, body, userTelnyx) {
     params.messaging_profile_id = userTelnyx.telnyxMessagingProfileId;
   }
 
-  const message = await telnyx.messages.create(params);
+  const message = await telnyx.messages.send(params);
   return {
     sid: message.data.id,
     status: message.data.to?.[0]?.status || "sent",
@@ -169,7 +162,6 @@ async function sendSms(to, body, userTelnyx) {
 /**
  * Extract Telnyx config from a user data object (Firestore).
  * Returns the config to pass to sendSms, or null if not provisioned.
- * Falls back to checking old twilioPhoneNumber during migration window.
  */
 function getUserTelnyxConfig(userData) {
   if (userData?.telnyxPhoneNumber) {
@@ -178,8 +170,6 @@ function getUserTelnyxConfig(userData) {
       telnyxMessagingProfileId: userData.telnyxMessagingProfileId || null,
     };
   }
-  // Migration fallback: if user still has old Twilio number, send from shared number
-  // (their Twilio number won't work with Telnyx — they need re-provisioning)
   return null;
 }
 

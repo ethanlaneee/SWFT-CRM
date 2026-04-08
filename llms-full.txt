@@ -45,7 +45,7 @@ SWFT is designed for contractors, plumbers, HVAC technicians, electricians, roof
 - Daily, weekly, and monthly views
 
 ### SMS & Email Communication
-- Two-way SMS messaging via Twilio
+- Two-way SMS messaging via Telnyx
 - Gmail integration for email
 - Postmark as alternative email provider
 - Message templates
@@ -78,7 +78,7 @@ SWFT is designed for contractors, plumbers, HVAC technicians, electricians, roof
 - Google Calendar (two-way sync)
 - Google Maps (address lookup, directions)
 - Stripe (payment processing)
-- Twilio (SMS and phone)
+- Telnyx (SMS and phone)
 - QuickBooks (Business plan)
 - Google Sheets export (Pro+)
 
@@ -182,7 +182,7 @@ SWFT serves these specific home service industries:
 - Database: Google Firestore
 - Authentication: Firebase Auth (email/password + Google OAuth)
 - Payments: Stripe
-- SMS: Twilio
+- SMS: Telnyx
 - AI: Anthropic Claude + OpenAI
 - Hosting: Render.com
 - Email: Gmail API + Postmark

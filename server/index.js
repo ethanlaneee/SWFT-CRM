@@ -116,8 +116,7 @@ app.post("/api/webhooks/telnyx/voice", async (req, res) => {
     // Look up the business name for a personalised greeting
     let companyName = "our team";
     if (toNumber) {
-      let snap = await db.collection("users").where("telnyxPhoneNumber", "==", toNumber).limit(1).get();
-      if (snap.empty) snap = await db.collection("users").where("twilioPhoneNumber", "==", toNumber).limit(1).get();
+      const snap = await db.collection("users").where("telnyxPhoneNumber", "==", toNumber).limit(1).get();
       if (!snap.empty) {
         const data = snap.docs[0].data();
         companyName = data.company || data.name || companyName;
@@ -152,8 +151,7 @@ app.post("/api/webhooks/telnyx/transcription", async (req, res) => {
     const to = req.body?.To || req.body?.to || "";
 
     if (transcriptionText && to) {
-      let snap = await db.collection("users").where("telnyxPhoneNumber", "==", to).limit(1).get();
-      if (snap.empty) snap = await db.collection("users").where("twilioPhoneNumber", "==", to).limit(1).get();
+      const snap = await db.collection("users").where("telnyxPhoneNumber", "==", to).limit(1).get();
       if (!snap.empty) {
         const ownerUid = snap.docs[0].id;
         const ownerData = snap.docs[0].data();

@@ -4,7 +4,7 @@
  */
 const router = require("express").Router();
 const { db } = require("../firebase");
-const { sendSms, getUserTwilioConfig } = require("../twilio");
+const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
 
@@ -150,7 +150,7 @@ router.post("/:token", async (req, res) => {
         try {
           if (followUpType === "sms") {
             if (msg.phone) {
-              await sendSms(msg.phone, followUpMessage, getUserTwilioConfig(orgUser));
+              await sendSms(msg.phone, followUpMessage, getUserTelnyxConfig(orgUser));
             }
           } else {
             if (msg.email) {

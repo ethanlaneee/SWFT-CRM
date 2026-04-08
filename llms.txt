@@ -11,7 +11,7 @@ SWFT is an all-in-one business management platform for home service professional
 - **Quote Generation** — Create professional quotes with line items, descriptions, taxes, and discounts. Send via email or SMS. Customers approve with one click.
 - **Invoicing & Payments** — Generate invoices from quotes or from scratch. Accept payments via Stripe. Track paid, unpaid, and overdue invoices automatically.
 - **Job Scheduling & Calendar** — Schedule jobs with crew assignments, time slots, and Google Calendar sync. Drag-and-drop calendar view.
-- **SMS & Email Messaging** — Two-way SMS (via Twilio) and email (via Gmail or Postmark) from inside the CRM. Broadcast messages to customer segments.
+- **SMS & Email Messaging** — Two-way SMS (via Telnyx) and email (via Gmail or Postmark) from inside the CRM. Broadcast messages to customer segments.
 - **AI Agents** — AI receptionist that auto-responds to missed calls and new leads. AI follow-up agent that chases unpaid invoices and checks in after completed jobs. AI estimator that helps generate quotes.
 - **Automations** — Set up triggers for automatic follow-ups, appointment reminders, review requests, and lead nurturing sequences.
 - **Team Management** — Invite team members, assign roles, manage crew schedules. No per-user fees.
@@ -94,7 +94,7 @@ Yes. SWFT is a web-based application that works on any device — desktop, table
 ## Technical Details
 - **Platform:** Web-based (works on desktop, tablet, and mobile browsers)
 - **Authentication:** Email/password or Google OAuth sign-in
-- **Integrations:** Gmail, Google Calendar, Google Maps, Stripe (payments), Twilio (SMS), QuickBooks (Business plan)
+- **Integrations:** Gmail, Google Calendar, Google Maps, Stripe (payments), Telnyx (SMS), QuickBooks (Business plan)
 - **AI:** Powered by Anthropic Claude and OpenAI
 - **Data Security:** Firebase Authentication, encrypted data storage, HTTPS everywhere
 - **Uptime:** Hosted on Render.com with automatic scaling
