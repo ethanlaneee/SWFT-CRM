@@ -17,6 +17,11 @@ const { sendSimpleGmail } = require("../utils/email");
 const Anthropic = require("@anthropic-ai/sdk");
 const claude = new Anthropic();
 
+// ── CAN-SPAM compliance constants ──
+const BASE_URL = process.env.BASE_URL || "https://goswft.com";
+const COMPANY_NAME = "SWFT";
+const PHYSICAL_ADDRESS = process.env.COMPANY_ADDRESS || "";
+
 // ── Helper: get the outreach Gmail user (info@goswft.com) ──
 async function getOutreachSender() {
   // Find the user with info@goswft.com connected
@@ -183,18 +188,18 @@ Respond with ONLY a JSON array: [{"email": "...", "score": N, "reason": "one sen
 // ── POST /api/outreach/generate — AI-generate personalized emails (drafts only) ──
 router.post("/generate", async (req, res) => {
   try {
-    const { minScore = 50, limit = 15 } = req.body;
+    const { limit = 15 } = req.body;
 
-    // Get scored leads that haven't been emailed yet
-    const snap = await db.collection("outreach_leads")
-      .where("status", "==", "scored")
-      .limit(200)
-      .get();
+    // Get leads that haven't been emailed yet (new or scored)
+    const [newSnap, scoredSnap] = await Promise.all([
+      db.collection("outreach_leads").where("status", "==", "new").limit(200).get(),
+      db.collection("outreach_leads").where("status", "==", "scored").limit(200).get(),
+    ]);
 
-    let leads = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(l => (l.score || 0) >= minScore)
-      .slice(0, limit);
+    let leads = [
+      ...newSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+      ...scoredSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    ].filter(l => l.email).slice(0, limit);
 
     if (leads.length === 0) return res.json({ generated: 0, message: "No eligible leads" });
 
@@ -206,7 +211,7 @@ router.post("/generate", async (req, res) => {
         max_tokens: 1000,
         messages: [{
           role: "user",
-          content: `Write a cold outreach email from SWFT (an AI-powered CRM for home service businesses) to a potential customer.
+          content: `You are writing an outreach email for Ethan, founder of SWFT. Below is the STANDARD EMAIL TEMPLATE. Your job is to customize ONLY the parts in [BRACKETS] for this specific recipient. Everything else stays essentially the same — same structure, same tone, same flow, same wording. Do NOT rewrite the email from scratch. Just fill in the personalized parts.
 
 Recipient:
 - Name: ${lead.name}
@@ -215,15 +220,38 @@ Recipient:
 - Website: ${lead.website || "none"}
 - Notes: ${lead.notes || "none"}
 
-Rules:
-- Short subject line (under 50 chars), no spam words like "free" or "limited time"
-- 3-5 sentences max. Casual, direct, human tone.
-- Reference their specific trade and a real pain point they face
-- Mention ONE specific SWFT feature that solves that pain point
-- End with a soft CTA (not pushy — something like "worth a look?" or "happy to show you")
-- Sign off as "Ethan" from SWFT
-- Do NOT use exclamation marks excessively
+STANDARD EMAIL TEMPLATE:
+
+Subject: [Casual subject line like "Saw your [trade] work in [city]" — just reference their trade and location. Examples: "Saw your HVAC work in Calgary", "Saw your plumbing work in Austin", "Saw your landscaping in Denver". Keep it simple and personal, NOT salesy or clever.]
+
+Hey [First name],
+
+I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — keep it simple and general. Base it on their trade and company name, NOT on reviews or ratings. Examples: "you guys do really solid work", "looks like you're killing it", "you guys are doing great things". Keep it casual like you'd say it out loud. Do NOT mention Google reviews, star ratings, or review counts.] in the [AREA — pull the city or region from their address/notes, like "Calgary area", "Austin area", "Denver area". If no location info is available, just skip this part]. One sentence max.
+
+I work with a lot of home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual hands on work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
+
+So we built this thing called SWFT that basically handles all of that — scheduling, invoicing, quoting, follow-ups, customer management, job tracking. The whole back office. And it's super easy to use, like if you can send a text and talk you can run SWFT. It's AI-powered so you literally just tell it what to do and it does it.
+
+I love seeing the work you've done, and we'd love to partner with you on this and see what you think about the software? We're happy to give a 14-day free trial if you want to mess around with it and see for yourself.
+
+Check it out here if you're curious — goswft.com
+
+Could you let me know what you think?
+
+Thanks!
+Ethan
+ethan@goswft.com
+
+RULES:
+- Customize ONLY the [BRACKETED] sections. Keep everything else nearly identical.
+- The compliment must feel simple and genuine — do NOT reference Google reviews, star ratings, or review counts
+- NEVER say things like "your reviews are impressive" or "I saw your 4.8 rating"
+- The admin tasks should be realistic for their specific trade
+- Do NOT use exclamation marks more than once
+- Do NOT sound corporate, salesy, or templated
 - Do NOT include unsubscribe links (we add those separately)
+- Do NOT mention specific pricing numbers
+- Do NOT rewrite or restructure the email — follow the template exactly
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
@@ -254,6 +282,9 @@ Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         gmailThreadId: null,
         rfcMessageId: null,
       });
+
+      // Mark lead so it doesn't get re-generated
+      await db.collection("outreach_leads").doc(lead.id).update({ status: "drafted" });
 
       generated.push({
         id: ref.id,
@@ -324,24 +355,44 @@ router.post("/approve", async (req, res) => {
 
       const email = doc.data();
 
-      // Build HTML body
+      // ── Suppression check: skip if lead unsubscribed since draft was created ──
+      const leadDoc = await db.collection("outreach_leads").doc(email.leadId).get();
+      if (!leadDoc.exists || leadDoc.data().status === "unsubscribed") {
+        await db.collection("outreach_emails").doc(emailId).update({ status: "rejected" });
+        results.push({ id: emailId, status: "skipped", reason: "lead unsubscribed" });
+        continue;
+      }
+
+      // ── Build CAN-SPAM compliant footer ──
+      const unsubUrl = `${BASE_URL}/unsubscribe?id=${email.leadId}`;
+      const canSpamFooter = `\n\n---\n${COMPANY_NAME}${PHYSICAL_ADDRESS ? " | " + PHYSICAL_ADDRESS : ""}\nDon't want to hear from us? Unsubscribe: ${unsubUrl}`;
+      const canSpamHtml = `
+        <hr style="border:none;border-top:1px solid #eee;margin:24px 0 12px;"/>
+        <p style="font-size:11px;color:#999;line-height:1.4;">
+          ${COMPANY_NAME}${PHYSICAL_ADDRESS ? " &bull; " + PHYSICAL_ADDRESS : ""}<br/>
+          <a href="${unsubUrl}" style="color:#999;">Unsubscribe</a>
+        </p>`;
+
       const htmlBody = `
         <div style="font-family: sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
           ${email.body.split("\n").map(p => `<p>${p}</p>`).join("")}
-          <br/>
-          <p style="font-size: 12px; color: #999;">
-            If you don't want to hear from us, just reply "unsubscribe" and we won't contact you again.
-          </p>
+          ${canSpamHtml}
         </div>
       `;
+
+      const extraHeaders = {
+        "List-Unsubscribe": `<${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      };
 
       try {
         const result = await sendSimpleGmail(
           sender,
           email.leadEmail,
           email.subject,
-          email.body + "\n\nIf you don't want to hear from us, just reply \"unsubscribe\" and we won't contact you again.",
-          htmlBody
+          email.body + canSpamFooter,
+          htmlBody,
+          extraHeaders
         );
 
         await db.collection("outreach_emails").doc(emailId).update({
@@ -383,7 +434,27 @@ router.post("/approve", async (req, res) => {
   }
 });
 
-// ── POST /api/outreach/reject — Reject draft emails ──
+// ── PUT /api/outreach/draft/:id — Edit a draft email ──
+router.put("/draft/:id", async (req, res) => {
+  try {
+    const { subject, body } = req.body;
+    const doc = await db.collection("outreach_emails").doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: "Draft not found" });
+    if (doc.data().status !== "draft") return res.status(400).json({ error: "Can only edit drafts" });
+
+    const updates = {};
+    if (subject !== undefined) updates.subject = subject;
+    if (body !== undefined) updates.body = body;
+    updates.editedAt = Date.now();
+
+    await db.collection("outreach_emails").doc(req.params.id).update(updates);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── POST /api/outreach/reject — Reject draft emails & reset lead status ──
 router.post("/reject", async (req, res) => {
   try {
     const { emailIds } = req.body;
@@ -391,7 +462,22 @@ router.post("/reject", async (req, res) => {
 
     const batch = db.batch();
     for (const id of emailIds) {
+      const emailDoc = await db.collection("outreach_emails").doc(id).get();
       batch.update(db.collection("outreach_emails").doc(id), { status: "rejected" });
+
+      // Reset lead status so it can be re-generated
+      if (emailDoc.exists) {
+        const leadId = emailDoc.data().leadId;
+        if (leadId) {
+          const leadDoc = await db.collection("outreach_leads").doc(leadId).get();
+          if (leadDoc.exists && leadDoc.data().status === "drafted") {
+            const hasScore = leadDoc.data().score != null;
+            batch.update(db.collection("outreach_leads").doc(leadId), {
+              status: hasScore ? "scored" : "new",
+            });
+          }
+        }
+      }
     }
     await batch.commit();
 
