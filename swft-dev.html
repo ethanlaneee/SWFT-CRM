@@ -741,6 +741,22 @@ function renderOutreach(data) {
           Generate Follow-ups
         </span>
       </button>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="action-btn" id="btnClearRejected" onclick="window._clearRejected()" style="border-color:var(--border2);color:var(--gray);">
+          <div class="btn-spinner"></div>
+          <span class="btn-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+            Clear Rejected
+          </span>
+        </button>
+        <button class="action-btn" id="btnReset" onclick="window._resetOutreach()" style="border-color:rgba(255,82,82,0.2);color:var(--red);">
+          <div class="btn-spinner"></div>
+          <span class="btn-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            Reset All
+          </span>
+        </button>
+      </div>
     </div>
 
     <!-- DRAFTS TABLE -->
@@ -990,6 +1006,32 @@ window._outreachAction = async function(action) {
     btn.classList.remove('loading');
     btn.disabled = false;
   }
+};
+
+/* ── CLEAR REJECTED / RESET ALL ── */
+window._clearRejected = async function() {
+  if (!confirm('Remove all rejected emails from the records? This cleans up your stats.')) return;
+  const btn = document.getElementById('btnClearRejected');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  try {
+    const result = await outreachPost('/api/outreach/clear-rejected');
+    showToast(`Cleared ${result.deleted || 0} rejected emails`, 'success');
+    await loadOutreachData();
+  } catch (e) { showToast('Clear failed: ' + e.message, 'error'); }
+  finally { if (btn) { btn.classList.remove('loading'); btn.disabled = false; } }
+};
+
+window._resetOutreach = async function() {
+  if (!confirm('This will delete ALL leads, emails, and drafts. Are you sure?')) return;
+  if (!confirm('Really? This cannot be undone.')) return;
+  const btn = document.getElementById('btnReset');
+  if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+  try {
+    const result = await outreachPost('/api/outreach/reset');
+    showToast(`Reset complete — deleted ${result.leads || 0} leads and ${result.emails || 0} emails`, 'success');
+    await loadOutreachData();
+  } catch (e) { showToast('Reset failed: ' + e.message, 'error'); }
+  finally { if (btn) { btn.classList.remove('loading'); btn.disabled = false; } }
 };
 
 /* ── APPROVE / REJECT ── */
