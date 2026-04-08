@@ -694,6 +694,10 @@ async function findLeads({ location = "Austin, TX", trades = DEFAULT_TRADES, lim
       if (!email) { skipped.noEmail++; continue; }
       if (existingEmails.has(email.toLowerCase())) { skipped.duplicate++; continue; }
 
+      // Extract city from address (typically "123 Main St, City, State/Province Zip, Country")
+      const addressParts = address.split(",").map(s => s.trim());
+      const city = addressParts.length >= 2 ? addressParts[addressParts.length - 3] || addressParts[0] : "";
+
       const ref = db.collection("outreach_leads").doc();
       const lead = {
         name: name,
@@ -702,7 +706,11 @@ async function findLeads({ location = "Austin, TX", trades = DEFAULT_TRADES, lim
         trade: trade,
         website: website.replace(/^https?:\/\//, "").replace(/\/$/, ""),
         phone: phone,
-        notes: `Auto-discovered via Google Places. ${rating ? `Rating: ${rating}/5 (${reviewCount} reviews).` : ""} Address: ${address}`,
+        city: city,
+        address: address,
+        rating: rating,
+        reviewCount: reviewCount,
+        notes: `Auto-discovered via Google Places.`,
         score: null,
         status: "new",
         createdAt: Date.now(),

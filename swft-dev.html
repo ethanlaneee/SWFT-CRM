@@ -176,6 +176,11 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .reject-btn:hover{background:rgba(255,82,82,0.2);}
 
 /* SCORE BADGE */
+/* SORT ARROWS */
+.sort-arrow{font-size:8px;color:var(--green);margin-left:3px;}
+.data-table thead th[onclick]{transition:color 0.14s;}
+.data-table thead th[onclick]:hover{color:var(--green);}
+
 .score-badge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;}
 .score-badge.high{background:rgba(200,241,53,0.15);color:var(--green);}
 .score-badge.med{background:rgba(245,166,35,0.15);color:var(--amber);}
@@ -757,7 +762,19 @@ function renderOutreach(data) {
       <div class="table-scroll">
         <table class="data-table">
           <thead>
-            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Trade</th><th>Score</th><th>Status</th><th>Emails</th><th>Last Contact</th><th>Added</th></tr>
+            <tr>
+              <th onclick="window._sortLeads('name')" style="cursor:pointer;">Name <span class="sort-arrow" data-col="name"></span></th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th onclick="window._sortLeads('city')" style="cursor:pointer;">City <span class="sort-arrow" data-col="city"></span></th>
+              <th>Company</th>
+              <th onclick="window._sortLeads('trade')" style="cursor:pointer;">Trade <span class="sort-arrow" data-col="trade"></span></th>
+              <th onclick="window._sortLeads('rating')" style="cursor:pointer;">Rating <span class="sort-arrow" data-col="rating"></span></th>
+              <th onclick="window._sortLeads('score')" style="cursor:pointer;">Score <span class="sort-arrow" data-col="score"></span></th>
+              <th onclick="window._sortLeads('status')" style="cursor:pointer;">Status <span class="sort-arrow" data-col="status"></span></th>
+              <th>Emails</th>
+              <th>Added</th>
+            </tr>
           </thead>
           <tbody id="leadsTableBody"></tbody>
         </table>
@@ -796,19 +813,23 @@ function renderLeadsTable(leads) {
   if (!tbody) return;
 
   tbody.innerHTML = leads.length === 0
-    ? '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray);">No leads imported yet</td></tr>'
-    : leads.map(l => `<tr>
+    ? '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--gray);">No leads imported yet</td></tr>'
+    : leads.map(l => {
+      const ratingDisplay = l.rating ? `<span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px;">${l.rating}</span><span style="color:var(--gray2);font-size:10px;">/${l.reviewCount || 0}</span>` : '<span style="color:var(--gray2);">—</span>';
+      return `<tr>
       <td>${escHtml(l.name || '—')}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(l.email)}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(l.phone || '—')}</td>
+      <td>${escHtml(l.city || '—')}</td>
       <td>${escHtml(l.company || '—')}</td>
       <td>${escHtml(l.trade || '—')}</td>
+      <td>${ratingDisplay}</td>
       <td>${scoreBadge(l.score)}</td>
       <td><span class="outreach-status ${l.status || 'new'}">${l.status || 'new'}</span></td>
       <td style="font-family:'JetBrains Mono',monospace;text-align:center;">${l.emailCount || 0}</td>
-      <td style="font-size:11px;">${l.lastContactedAt ? timeAgo(l.lastContactedAt) : '—'}</td>
       <td style="font-size:11px;">${timeAgo(l.createdAt)}</td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
 }
 
 /* ── DRAFT DETAIL EXPAND ── */
@@ -935,6 +956,32 @@ window._bulkRejectDrafts = async function() {
 };
 
 /* ── LEAD FILTER ── */
+let leadSortCol = null;
+let leadSortAsc = true;
+
+window._sortLeads = function(col) {
+  if (leadSortCol === col) { leadSortAsc = !leadSortAsc; }
+  else { leadSortCol = col; leadSortAsc = (col === 'rating' || col === 'score') ? false : true; }
+
+  const sorted = [...outreachData.leads].sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (col === 'rating' || col === 'score') {
+      va = va || 0; vb = vb || 0;
+      return leadSortAsc ? va - vb : vb - va;
+    }
+    va = (va || '').toString().toLowerCase();
+    vb = (vb || '').toString().toLowerCase();
+    return leadSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+
+  // Update sort arrows
+  document.querySelectorAll('.sort-arrow').forEach(el => {
+    el.textContent = el.dataset.col === col ? (leadSortAsc ? '\u25B2' : '\u25BC') : '';
+  });
+
+  renderLeadsTable(sorted);
+};
+
 window._filterLeads = function(query) {
   const q = query.toLowerCase().trim();
   const filtered = q ? outreachData.leads.filter(l =>
@@ -942,6 +989,7 @@ window._filterLeads = function(query) {
     (l.email || '').toLowerCase().includes(q) ||
     (l.company || '').toLowerCase().includes(q) ||
     (l.trade || '').toLowerCase().includes(q) ||
+    (l.city || '').toLowerCase().includes(q) ||
     (l.status || '').toLowerCase().includes(q)
   ) : outreachData.leads;
   renderLeadsTable(filtered);
