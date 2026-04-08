@@ -220,6 +220,21 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .draft-body{font-size:13px;line-height:1.7;color:var(--gray);white-space:pre-wrap;max-width:700px;}
 .draft-meta{display:flex;gap:20px;margin-top:12px;font-size:11px;color:var(--gray2);}
 
+/* SWFT CONFIRM MODAL */
+.swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.swft-modal-overlay.open{display:flex;}
+.swft-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
+.swft-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:12px;}
+.swft-modal-body{font-size:13px;line-height:1.6;color:var(--gray);margin-bottom:24px;white-space:pre-line;}
+.swft-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.swft-modal-btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid;transition:all 0.14s;}
+.swft-modal-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray);}
+.swft-modal-btn.cancel:hover{background:var(--surface2);color:var(--white);}
+.swft-modal-btn.confirm{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.swft-modal-btn.confirm:hover{box-shadow:0 0 20px rgba(200,241,53,0.2);}
+.swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
+.swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
+
 /* RESPONSIVE */
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.detail-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:640px){.kpi-grid{grid-template-columns:1fr;}.page-body{padding:20px 16px;}.header{padding:0 16px;}.tab-nav{padding:0 16px;}.detail-grid{grid-template-columns:1fr;}.search-input{width:160px;}.table-scroll{max-height:none;}}
@@ -292,6 +307,18 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- SWFT CONFIRM MODAL -->
+<div class="swft-modal-overlay" id="swftModalOverlay">
+  <div class="swft-modal">
+    <div class="swft-modal-title" id="swftModalTitle"></div>
+    <div class="swft-modal-body" id="swftModalBody"></div>
+    <div class="swft-modal-actions">
+      <button class="swft-modal-btn cancel" id="swftModalCancel">Cancel</button>
+      <button class="swft-modal-btn confirm" id="swftModalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
@@ -347,6 +374,41 @@ window.showToast = function(msg, type = 'info') {
   toast.innerHTML = `<span>${icons[type] || ''}</span> ${escHtml(msg)}`;
   container.appendChild(toast);
   setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 4000);
+};
+
+/* ── SWFT CONFIRM MODAL ── */
+window.swftConfirm = function(title, message, opts = {}) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('swftModalOverlay');
+    const titleEl = document.getElementById('swftModalTitle');
+    const bodyEl = document.getElementById('swftModalBody');
+    const cancelBtn = document.getElementById('swftModalCancel');
+    const confirmBtn = document.getElementById('swftModalConfirm');
+
+    titleEl.textContent = title;
+    bodyEl.textContent = message;
+
+    // Reset button classes
+    confirmBtn.className = 'swft-modal-btn ' + (opts.danger ? 'danger' : 'confirm');
+    confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Delete' : 'Confirm');
+    cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      cancelBtn.removeEventListener('click', onCancel);
+      confirmBtn.removeEventListener('click', onConfirm);
+      overlay.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onCancel() { cleanup(false); }
+    function onConfirm() { cleanup(true); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
+    overlay.addEventListener('click', onOverlay);
+    overlay.classList.add('open');
+  });
 };
 
 /* ── API ── */
@@ -611,8 +673,8 @@ function detailItem(label, value, colorClass) {
 
 /* ── DELETE USER ── */
 window._deleteUser = async function(uid, label) {
-  if (!confirm(`Permanently delete user "${label}" and ALL their data?\n\nThis will delete:\n- Firestore profile & all collections\n- Usage & conversation history\n- Stripe subscription (if active)\n- Firebase Auth account\n\nThis cannot be undone.`)) return;
-  if (!confirm(`Are you absolutely sure? Type OK to confirm.`)) return;
+  if (!await swftConfirm('Delete User', `Permanently delete user "${label}" and ALL their data?\n\nThis will delete:\n- Firestore profile & all collections\n- Usage & conversation history\n- Stripe subscription (if active)\n- Firebase Auth account\n\nThis cannot be undone.`, { danger: true, confirmLabel: 'Delete User' })) return;
+  if (!await swftConfirm('Are You Sure?', 'This action is permanent and cannot be reversed.', { danger: true, confirmLabel: 'Yes, Delete' })) return;
 
   try {
     const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
@@ -1006,7 +1068,7 @@ window._outreachAction = async function(action) {
 
 /* ── CLEAR EMAIL STATS ── */
 window._clearEmailStats = async function() {
-  if (!confirm('This will delete all email records (drafts, sent, rejected) and reset the email stats. Your leads are kept. Continue?')) return;
+  if (!await swftConfirm('Clear Email Stats', 'This will delete all email records (drafts, sent, rejected) and reset the email stats. Your leads are kept. Continue?')) return;
   const btn = document.getElementById('btnClearEmails');
   if (btn) { btn.classList.add('loading'); btn.disabled = true; }
   try {
@@ -1037,7 +1099,7 @@ window._rejectDraft = async function(emailId) {
 window._bulkApproveDrafts = async function() {
   const ids = outreachData.drafts.map(d => d.id);
   if (ids.length === 0) return;
-  if (!confirm(`Approve and send all ${ids.length} draft emails?`)) return;
+  if (!await swftConfirm('Approve All Drafts', `Approve and send all ${ids.length} draft emails?`, { confirmLabel: 'Send All' })) return;
 
   const btn = document.getElementById('bulkApproveBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
@@ -1052,7 +1114,7 @@ window._bulkApproveDrafts = async function() {
 window._bulkRejectDrafts = async function() {
   const ids = outreachData.drafts.map(d => d.id);
   if (ids.length === 0) return;
-  if (!confirm(`Reject all ${ids.length} drafts?`)) return;
+  if (!await swftConfirm('Reject All Drafts', `Reject all ${ids.length} drafts? This will reset leads back to their previous status.`, { danger: true, confirmLabel: 'Reject All' })) return;
 
   try {
     await outreachPost('/api/outreach/reject', { emailIds: ids });
@@ -1119,7 +1181,7 @@ window._bulkChangeStatus = async function() {
   const status = document.getElementById('bulkStatusSelect').value;
   if (!status) return showToast('Pick a status first', 'error');
   if (selectedLeadIds.size === 0) return showToast('No leads selected', 'error');
-  if (!confirm(`Change ${selectedLeadIds.size} lead(s) to "${status}"?`)) return;
+  if (!await swftConfirm('Change Status', `Change ${selectedLeadIds.size} lead(s) to "${status}"?`)) return;
 
   try {
     await outreachPost('/api/outreach/leads/bulk-status', {
@@ -1136,7 +1198,7 @@ window._bulkChangeStatus = async function() {
 
 window._bulkDeleteLeads = async function() {
   if (selectedLeadIds.size === 0) return showToast('No leads selected', 'error');
-  if (!confirm(`Delete ${selectedLeadIds.size} lead(s)? This cannot be undone.`)) return;
+  if (!await swftConfirm('Delete Leads', `Delete ${selectedLeadIds.size} lead(s)? This cannot be undone.`, { danger: true })) return;
 
   try {
     await outreachPost('/api/outreach/leads/bulk-delete', {
