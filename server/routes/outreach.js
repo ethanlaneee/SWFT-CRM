@@ -225,9 +225,9 @@ Recipient:
 
 Structure:
 1. OPEN with a genuine, specific compliment about their business. Look at their company name, trade, website, and notes — find something real to compliment. Examples: their reviews look solid, their work looks great, they seem like they're growing fast, their website is clean, they clearly know their craft. Make it feel like you actually looked them up. One sentence.
-2. Transition naturally into a pain point that someone in their trade actually deals with (scheduling chaos, chasing payments, quoting taking forever, etc.)
-3. Mention ONE specific SWFT feature that solves that pain point — don't list features, just weave it in naturally.
-4. Position this as an opportunity and a partnership. Use the phrase "we would love to partner with you" naturally somewhere in the email. Mention SWFT has a 14-day free trial so they can try it with zero risk.
+2. Empathize with the business side being the hardest part. Something like: "One thing I've seen working with home service businesses is that the hardest part isn't the actual work — it's the business side. Scheduling, invoicing, following up, quoting... it adds up fast." Make it feel like you genuinely understand their world.
+3. Position SWFT as the solution that takes that weight off their shoulders. Mention ONE specific feature that's relevant to their trade — don't list features, just weave it in naturally. Frame it as "we built SWFT to take care of that side so you can focus on the work."
+4. Position this as a partnership opportunity. Use the phrase "we would love to partner with you" naturally. Mention SWFT has a 14-day free trial so they can try it with zero risk.
 5. End with a soft CTA (not pushy — "want to try it out?" or "happy to set you up" or "want me to send you a link?")
 6. Sign off as "Ethan" (no last name, no title)
 
