@@ -20,6 +20,15 @@ const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = requi
 const { router: squareRouter, squareWebhookHandler } = require("./routes/square");
 const { router: notificationsRouter } = require("./routes/notifications");
 const { router: messagesRouter, telnyxIncomingHandler } = require("./routes/messages");
+const {
+  router: socialMessagesRouter,
+  facebookVerifyWebhook,
+  facebookIncomingHandler,
+  instagramVerifyWebhook,
+  instagramIncomingHandler,
+  whatsappVerifyWebhook,
+  whatsappIncomingHandler,
+} = require("./routes/socialMessages");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
@@ -90,8 +99,16 @@ app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 
-// ── Incoming message webhooks (no auth — called by Telnyx) ──
+// ── Incoming message webhooks (no auth — called by external platforms) ──
 app.post("/api/webhooks/telnyx/sms", telnyxIncomingHandler);
+
+// ── Social messaging webhooks (no auth — called by Meta) ──
+app.get("/api/webhooks/facebook", facebookVerifyWebhook);
+app.post("/api/webhooks/facebook", facebookIncomingHandler);
+app.get("/api/webhooks/instagram", instagramVerifyWebhook);
+app.post("/api/webhooks/instagram", instagramIncomingHandler);
+app.get("/api/webhooks/whatsapp", whatsappVerifyWebhook);
+app.post("/api/webhooks/whatsapp", whatsappIncomingHandler);
 
 // GET version — lets you verify the endpoint is reachable in a browser
 app.get("/api/webhooks/telnyx/sms", (req, res) => {
@@ -573,6 +590,7 @@ app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/email",           auth, checkAccess,  require("./routes/email"));
 app.use("/api/email-templates", auth, checkAccess,  require("./routes/emailTemplates"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
+app.use("/api/social",    auth, checkAccess,  socialMessagesRouter);
 app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
 app.use("/api/square",        auth, checkAccess,  squareRouter);

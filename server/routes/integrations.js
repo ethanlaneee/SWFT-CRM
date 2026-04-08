@@ -75,6 +75,30 @@ const INTEGRATIONS = [
     provider: "stripe",
     scopes: [],
   },
+  {
+    id: "facebook",
+    name: "Facebook Messenger",
+    icon: "message-circle",
+    description: "Receive and send Facebook Messenger messages in your unified inbox",
+    provider: "facebook",
+    scopes: ["pages_messaging", "pages_read_engagement"],
+  },
+  {
+    id: "instagram",
+    name: "Instagram DMs",
+    icon: "camera",
+    description: "Receive and send Instagram Direct Messages in your unified inbox",
+    provider: "instagram",
+    scopes: ["instagram_manage_messages", "instagram_basic"],
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp Business",
+    icon: "phone",
+    description: "Receive and send WhatsApp messages in your unified inbox",
+    provider: "whatsapp",
+    scopes: ["whatsapp_business_messaging"],
+  },
 ];
 
 // GET /api/integrations — list all available integrations with user's connection status
@@ -98,6 +122,19 @@ router.get("/", async (req, res, next) => {
       }
       if (!connected && integration.id === "google_calendar" && userData.googleCalendarConnected) {
         connected = true;
+      }
+      // Social platforms — check for accessToken instead of "connected" flag
+      if (!connected && integration.id === "facebook" && connections.facebook?.accessToken) {
+        connected = true;
+        account = connections.facebook?.pageName || null;
+      }
+      if (!connected && integration.id === "instagram" && connections.instagram?.accessToken) {
+        connected = true;
+        account = connections.instagram?.accountName || null;
+      }
+      if (!connected && integration.id === "whatsapp" && connections.whatsapp?.accessToken) {
+        connected = true;
+        account = connections.whatsapp?.displayPhone || null;
       }
       return { ...integration, connected, account };
     });
@@ -154,6 +191,11 @@ router.post("/:id/connect", (req, res, next) => {
       return res.json({ url });
     }
 
+    // Social messaging platforms — redirect to the social connect endpoint
+    if (["facebook", "instagram", "whatsapp"].includes(integration.provider)) {
+      return res.json({ socialConnect: true, provider: integration.provider });
+    }
+
     res.status(400).json({ error: "Unsupported provider" });
   } catch (err) { next(err); }
 });
@@ -186,6 +228,13 @@ router.post("/:id/disconnect", async (req, res, next) => {
         googleCalendarConnected: false,
         googleCalendarTokens: FieldValue.delete(),
       }).catch(() => {}); // ignore if fields don't exist
+    }
+
+    // Social platforms — clear the full integration object
+    if (["facebook", "instagram", "whatsapp"].includes(integrationId)) {
+      await userRef.update({
+        [`integrations.${integrationId}`]: FieldValue.delete(),
+      }).catch(() => {});
     }
 
     console.log(`[integrations] Disconnected ${integrationId} for user ${req.uid}`);
