@@ -146,6 +146,19 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.swft-modal-overlay.open{display:flex;}
+.swft-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
+.swft-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:12px;}
+.swft-modal-body{font-size:13px;line-height:1.6;color:var(--gray);margin-bottom:24px;white-space:pre-line;}
+.swft-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.swft-modal-btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid;transition:all 0.14s;}
+.swft-modal-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray);}
+.swft-modal-btn.cancel:hover{background:var(--surface2);color:var(--white);}
+.swft-modal-btn.confirm{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.swft-modal-btn.confirm:hover{box-shadow:0 0 20px rgba(200,241,53,0.2);}
+.swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
+.swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
 </style>
 </head>
 <body>
@@ -278,7 +291,49 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
+<!-- SWFT CONFIRM MODAL -->
+<div class="swft-modal-overlay" id="swftModalOverlay">
+  <div class="swft-modal">
+    <div class="swft-modal-title" id="swftModalTitle"></div>
+    <div class="swft-modal-body" id="swftModalBody"></div>
+    <div class="swft-modal-actions">
+      <button class="swft-modal-btn cancel" id="swftModalCancel">Cancel</button>
+      <button class="swft-modal-btn confirm" id="swftModalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
+/* ── SWFT CONFIRM MODAL ── */
+window.swftConfirm = function(title, message, opts = {}) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('swftModalOverlay');
+    const titleEl = document.getElementById('swftModalTitle');
+    const bodyEl = document.getElementById('swftModalBody');
+    const cancelBtn = document.getElementById('swftModalCancel');
+    const confirmBtn = document.getElementById('swftModalConfirm');
+    titleEl.textContent = title;
+    bodyEl.textContent = message;
+    confirmBtn.className = 'swft-modal-btn ' + (opts.danger ? 'danger' : 'confirm');
+    confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Delete' : 'Confirm');
+    cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      cancelBtn.removeEventListener('click', onCancel);
+      confirmBtn.removeEventListener('click', onConfirm);
+      overlay.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onCancel() { cleanup(false); }
+    function onConfirm() { cleanup(true); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
+    overlay.addEventListener('click', onOverlay);
+    overlay.classList.add('open');
+  });
+};
+
 var _myRole = 'owner';
 var _allRoles = {};
 var _allPermissions = [];
@@ -419,9 +474,7 @@ async function changeRole(memberId, newRole){
 }
 
 async function cancelInvite(memberId, name){
-  var ok = typeof swftConfirm === 'function'
-    ? await swftConfirm('Cancel the invite for <strong>' + name + '</strong>? They will no longer be able to join using the invite link.', 'CANCEL INVITE', '✉️')
-    : window.confirm('Cancel invite for ' + name + '?');
+  var ok = await swftConfirm('Cancel Invite', 'Cancel invite for ' + name + '?', { danger: true, confirmLabel: 'Cancel Invite' });
   if(!ok) return;
   try{
     await API.team.remove(memberId);
@@ -431,9 +484,7 @@ async function cancelInvite(memberId, name){
 }
 
 async function removeMember(memberId, name){
-  var ok = typeof swftConfirm === 'function'
-    ? await swftConfirm('Remove <strong>' + name + '</strong> from your team?', 'REMOVE MEMBER', '👤')
-    : window.confirm('Remove ' + name + ' from your team?');
+  var ok = await swftConfirm('Remove Member', 'Remove ' + name + ' from your team?', { danger: true, confirmLabel: 'Remove' });
   if(!ok) return;
   try{
     await API.team.remove(memberId);
@@ -571,16 +622,7 @@ async function createCustomRole(){
 }
 
 async function deleteCustomRole(roleId, name){
-  var ok;
-  if(typeof swftConfirm === 'function'){
-    ok = await swftConfirm(
-      'Delete the <strong>' + name + '</strong> role? Any team members assigned to it must be reassigned first.',
-      'DELETE ROLE',
-      '🗑️'
-    );
-  } else {
-    ok = window.confirm('Delete the "' + name + '" role?');
-  }
+  var ok = await swftConfirm('Delete Role', 'Delete the "' + name + '" role?', { danger: true });
   if(!ok) return;
   try{
     await API.team.deleteRole(roleId);
