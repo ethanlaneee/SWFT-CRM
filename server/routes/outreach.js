@@ -636,17 +636,15 @@ Ethan
 ethan@goswft.com`
         : `FOLLOW-UP EMAIL TEMPLATE (final follow-up):
 
-Subject: [Casual closing subject — like "No worries either way" or "Last thing from me".]
+Subject: [Casual closing subject — like "No worries either way" or "Last thing from me". Keep it simple and NOT salesy.]
 
 Hey [First name],
 
-Totally get it if now isn't the right time — running a [trade] business keeps you busy enough without random emails piling up.
+Since I haven't heard back, I'm guessing the timing just isn't right for us to partner just yet.
 
-I'll leave it at this: if you ever want to take the admin stuff off your plate (scheduling, invoicing, follow-ups, all of it), SWFT's got a 14-day free trial sitting there whenever you're ready. No pressure at all.
+I'll stop checking in for now, but if you're ever looking to save some time and automate the back office to help scale your business faster, don't hesitate to reach out!
 
-goswft.com
-
-Take care!
+Thanks!
 Ethan
 ethan@goswft.com`;
 
