@@ -223,21 +223,21 @@ Recipient:
 
 STANDARD EMAIL TEMPLATE:
 
-Subject: [Short, personal subject line under 50 chars — something about their business, not about SWFT]
+Subject: [Short, casual subject line under 50 chars — something about their business, like you're sending a quick note to someone you came across]
 
 Hey [First name],
 
-I was looking through [Company name] and [GENUINE SPECIFIC COMPLIMENT — something real based on their trade, website, company name, or notes. Examples: "your work looks really solid", "you guys are clearly growing fast", "your reviews are impressive", "it's clear you take pride in your work". One sentence, make it feel like you actually looked them up].
+I came across [Company name] and [GENUINE SPECIFIC COMPLIMENT — something real and casual based on their trade, website, company name, or notes. Keep it short and natural, like you'd say it out loud. Examples: "you guys do really solid work", "looks like you're killing it", "your reviews are great". One sentence max].
 
-From my experience working with home service businesses, one of the biggest issues is getting to those repetitive tasks — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS that someone in their trade actually deals with daily, like: keeping track of what jobs are scheduled, chasing customers for payments, sending out quotes, following up with leads]. At the end of the day, the more time you're spending on actual jobs, the better — that's where the money is. Every hour on admin work is an hour you're not out there growing the business.
+I work with a lot of home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
 
-That's exactly why we built SWFT. It handles the scheduling, invoicing, quoting, follow-ups, customer management, job tracking — all of it. And there's no steep learning curve. If you know how to text, you can use SWFT. It's AI-powered, so you just tell it what you need done and it takes care of it, no questions asked. Imagine finishing your day and the invoices are already sent, the follow-ups are done, and tomorrow's schedule is already set.
+So we built this thing called SWFT that basically handles all of that — scheduling, invoicing, quoting, follow-ups, customer management, job tracking. The whole back office. And it's super easy to use, like if you can send a text you can run SWFT. It's AI-powered so you literally just tell it what to do and it does it.
 
-We would love to partner with you. There's a 14-day free trial so you can try it with zero risk.
+We'd love to work with you on this. There's a 14-day free trial if you want to mess around with it and see for yourself.
 
-Here's our website if you'd like to check it out — goswft.com
+Check it out here if you're curious — goswft.com
 
-Would that be helpful for you?
+Let me know what you think?
 
 — Ethan
 
