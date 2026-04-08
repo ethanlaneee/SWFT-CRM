@@ -184,6 +184,57 @@ router.post("/setup-telnyx", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/me/find-google-business — search Google Places for the user's business
+// and return a pre-built Google review URL.
+router.post("/find-google-business", async (req, res, next) => {
+  try {
+    const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
+    if (!MAPS_KEY) return res.status(503).json({ error: "Google Maps API not configured" });
+
+    const doc = await col().doc(req.uid).get();
+    const userData = doc.exists ? doc.data() : {};
+
+    // Build search query from business name + address
+    const businessName = req.body.businessName || userData.company || userData.name || "";
+    const address = req.body.address || userData.address || "";
+    const query = [businessName, address].filter(Boolean).join(" ");
+
+    if (!query.trim()) {
+      return res.status(400).json({ error: "No business name or address found in your profile. Add them in Company Profile first." });
+    }
+
+    // Google Places Text Search
+    const searchUrl = new URL("https://maps.googleapis.com/maps/api/place/findplacefromtext/json");
+    searchUrl.searchParams.set("input", query);
+    searchUrl.searchParams.set("inputtype", "textquery");
+    searchUrl.searchParams.set("fields", "place_id,name,formatted_address");
+    searchUrl.searchParams.set("key", MAPS_KEY);
+
+    const placesRes = await fetch(searchUrl.toString());
+    const placesData = await placesRes.json();
+
+    if (placesData.status !== "OK" || !placesData.candidates?.length) {
+      return res.status(404).json({
+        error: "Business not found on Google Maps. Try updating your company name and address in Company Profile.",
+        googleStatus: placesData.status,
+      });
+    }
+
+    const place = placesData.candidates[0];
+    const reviewUrl = `https://search.google.com/local/writereview?placeid=${place.place_id}`;
+
+    // Auto-save to user profile
+    await col().doc(req.uid).set({ googleReviewLink: reviewUrl }, { merge: true });
+
+    res.json({
+      placeId: place.place_id,
+      businessName: place.name,
+      address: place.formatted_address,
+      reviewUrl,
+    });
+  } catch (err) { next(err); }
+});
+
 // GET /api/me/available-numbers — search available phone numbers (for number picker)
 // Query params: country, region (province/state code), areaCode, city
 router.get("/available-numbers", async (req, res, next) => {

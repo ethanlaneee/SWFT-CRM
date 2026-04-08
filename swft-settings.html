@@ -476,12 +476,18 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
   </div>
   <div class="settings-body" style="border-top:1px solid var(--border);padding-top:16px;">
-    <div class="settings-row" style="border-bottom:none;">
+    <div class="settings-row" style="border-bottom:none;flex-wrap:wrap;gap:10px;">
       <div class="settings-row-info">
         <div class="settings-row-label">Google Review Link</div>
-        <div class="settings-row-desc">Sent to customers when the AI follow-up agent requests a review. Paste your Google Business review URL here.</div>
+        <div class="settings-row-desc">Sent to customers when the AI follow-up agent requests a review.</div>
       </div>
-      <input id="google-review-link" type="text" placeholder="https://g.page/r/your-business/review" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:300px;max-width:100%;transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border2)'" onchange="saveReviewLink(this.value)">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <input id="google-review-link" type="text" placeholder="https://search.google.com/local/writereview?placeid=..." style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:280px;max-width:100%;transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border2)'" onchange="saveReviewLink(this.value)">
+        <button id="find-biz-btn" class="settings-btn primary" onclick="findGoogleBusiness()" style="white-space:nowrap;">
+          Find My Business
+        </button>
+      </div>
+      <div id="find-biz-result" style="width:100%;font-size:11.5px;margin-top:2px;display:none;"></div>
     </div>
   </div>
 </div>
@@ -617,6 +623,46 @@ async function saveReviewLink(val) {
     await API.user.update({ googleReviewLink: val });
     showToast('Google review link saved');
   } catch(e) { showToast('Failed to save review link'); }
+}
+
+async function findGoogleBusiness() {
+  var btn = document.getElementById('find-biz-btn');
+  var resultEl = document.getElementById('find-biz-result');
+  btn.textContent = 'Searching...';
+  btn.disabled = true;
+  resultEl.style.display = 'none';
+
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/me/find-google-business', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    var data = await res.json();
+
+    if (!res.ok) {
+      resultEl.style.display = '';
+      resultEl.style.color = 'var(--red)';
+      resultEl.textContent = data.error || 'Could not find business.';
+      return;
+    }
+
+    // Auto-fill and save
+    var input = document.getElementById('google-review-link');
+    input.value = data.reviewUrl;
+    resultEl.style.display = '';
+    resultEl.style.color = 'var(--green)';
+    resultEl.textContent = '✓ Found: ' + data.businessName + ' — ' + data.address;
+    showToast('Google review link saved');
+  } catch(e) {
+    resultEl.style.display = '';
+    resultEl.style.color = 'var(--red)';
+    resultEl.textContent = 'Error: ' + (e.message || 'unknown error');
+  } finally {
+    btn.textContent = 'Find My Business';
+    btn.disabled = false;
+  }
 }
 
 // Load existing review link on page load
