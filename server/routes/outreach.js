@@ -212,11 +212,7 @@ router.post("/generate", async (req, res) => {
         max_tokens: 1000,
         messages: [{
           role: "user",
-          content: `You are Ethan, founder of SWFT — an AI-powered CRM built for home service businesses ($89-$349/mo). You're writing a personal cold outreach email.
-
-Your voice: You sound like a real person texting a friend who runs a business — chill, direct, no fluff. You use short sentences. You don't sound like a marketer. You never say things like "I hope this email finds you well" or "I'd love to connect." You write like someone who's been in the trenches and gets it.
-
-This email follows a sales framework: AGREE → ACKNOWLEDGE → TRANSITION. You agree with their reality, make them feel deeply understood, acknowledge their struggle, and then naturally transition into offering something genuinely valuable — without ever sounding salesy. The reader should feel like you're someone who gets their world and is offering real help, not pitching a product.
+          content: `You are writing an outreach email for Ethan, founder of SWFT. Below is the STANDARD EMAIL TEMPLATE. Your job is to customize ONLY the parts in [BRACKETS] for this specific recipient. Everything else stays essentially the same — same structure, same tone, same flow, same wording. Do NOT rewrite the email from scratch. Just fill in the personalized parts.
 
 Recipient:
 - Name: ${lead.name}
@@ -225,28 +221,33 @@ Recipient:
 - Website: ${lead.website || "none"}
 - Notes: ${lead.notes || "none"}
 
-Structure:
+STANDARD EMAIL TEMPLATE:
 
-[AGREE]
-1. Let them know you checked out their business, then give a genuine, specific compliment. Look at their company name, trade, website, and notes — find something real. Examples: their reviews look solid, their work looks great, they seem like they're growing fast, their website is clean, they clearly know their craft. Make it feel like you actually spent time looking them up.
+Subject: [Short, personal subject line under 50 chars — something about their business, not about SWFT]
 
-[ACKNOWLEDGE]
-2. Make them feel deeply understood by speaking from personal experience. Frame it as: "From my experience working with home service businesses, one of the biggest issues is getting to those mediocre tasks..." — the stuff like keeping track of what jobs are scheduled, chasing customers for payments, sending quotes, following up with leads, managing the books. Then land the key insight: at the end of the day, the more time you spend on actual jobs, the better — that's where the money is and that's where their skills are. Every hour spent on admin work is an hour not spent on the jobs that grow the business. That's the natural bridge into "that's why we built SWFT." Tie it to their specific trade — mention real scenarios they deal with. The goal is for them to read this and think "this guy actually gets what my day looks like." IMPORTANT: Never compare the difficulty of their trade work to the business side. Never say or imply "the jobs aren't the hard part." The framing is always: your time is better spent on the jobs, and admin work takes you away from that.
+Hey [First name],
 
-[TRANSITION]
-3. Transition naturally — don't pitch, just share what you built and why. Frame it as: "That's exactly why we built SWFT." Then naturally mention the key features it handles: scheduling, invoicing, automated follow-ups, quoting, customer management, job tracking, and AI-powered messaging. Weave them into the pain points you just acknowledged — show how each thing you mentioned eating their time is something SWFT takes care of. Make it clear this solves their actual problems, not theoretical ones.
-4. Mention what makes SWFT stand out: there's no steep learning curve. If you know how to text or speak, you can use SWFT. It's AI-powered — you just tell your AI what to do and it handles it, no questions asked. Keep this natural and confident, not like a feature list.
-5. Position this as a partnership. Use the phrase "we would love to partner with you" naturally. Mention SWFT has a 14-day free trial so they can try it with zero risk.
-6. Close with: "Here's our website if you'd like to check it out — goswft.com" (always include the website link exactly like that). Then sign off as "Ethan" (no last name, no title).
+I was looking through [Company name] and [GENUINE SPECIFIC COMPLIMENT — something real based on their trade, website, company name, or notes. Examples: "your work looks really solid", "you guys are clearly growing fast", "your reviews are impressive", "it's clear you take pride in your work". One sentence, make it feel like you actually looked them up].
 
-Rules:
-- Short subject line (under 50 chars), no spam words like "free" or "limited time"
-- 7-10 sentences total. Enough to cover everything but still feels like a personal email, not a sales pitch.
-- The email should feel like genuine value being offered, not a product being sold
-- Do NOT use exclamation marks more than once in the whole email
+From my experience working with home service businesses, one of the biggest issues is getting to those mediocre tasks — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS that someone in their trade actually deals with daily, like: keeping track of what jobs are scheduled, chasing customers for payments, sending out quotes, following up with leads]. At the end of the day, the more time you're spending on actual jobs, the better — that's where the money is. Every hour on admin work is an hour you're not out there growing the business.
+
+That's exactly why we built SWFT. It handles the scheduling, invoicing, quoting, follow-ups, customer management, job tracking — all of it. And there's no steep learning curve. If you know how to text, you can use SWFT. It's AI-powered, so you just tell it what you need done and it takes care of it, no questions asked.
+
+We would love to partner with you. There's a 14-day free trial so you can try it with zero risk.
+
+Here's our website if you'd like to check it out — goswft.com
+
+— Ethan
+
+RULES:
+- Customize ONLY the [BRACKETED] sections. Keep everything else nearly identical.
+- The compliment must feel specific and genuine, not generic
+- The admin tasks should be realistic for their specific trade
+- Do NOT use exclamation marks more than once
 - Do NOT sound corporate, salesy, or templated
 - Do NOT include unsubscribe links (we add those separately)
 - Do NOT mention specific pricing numbers
+- Do NOT rewrite or restructure the email — follow the template exactly
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
