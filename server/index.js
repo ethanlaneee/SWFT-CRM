@@ -29,7 +29,7 @@ const {
   whatsappVerifyWebhook,
   whatsappIncomingHandler,
 } = require("./routes/socialMessages");
-const { router: metaRouter, webhookVerify: metaWebhookVerify, webhookReceive: metaWebhookReceive } = require("./routes/meta");
+const { router: metaRouter, webhookVerify: metaWebhookVerify, webhookReceive: metaWebhookReceive, oauthCallback: metaOAuthCallback } = require("./routes/meta");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
@@ -113,6 +113,8 @@ app.post("/api/webhooks/whatsapp", whatsappIncomingHandler);
 // Unified Meta webhook (single endpoint for all Meta products)
 app.get("/api/webhooks/meta", metaWebhookVerify);
 app.post("/api/webhooks/meta", metaWebhookReceive);
+// Meta OAuth callback — no auth, Facebook redirects here after user authorizes
+app.get("/api/meta/callback", metaOAuthCallback);
 
 // GET version — lets you verify the endpoint is reachable in a browser
 app.get("/api/webhooks/telnyx/sms", (req, res) => {

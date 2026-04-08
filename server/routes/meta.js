@@ -61,10 +61,10 @@ router.get("/status", async (req, res, next) => {
 // GET /api/meta/connect — kick off Facebook OAuth
 router.get("/connect", (req, res) => {
   if (!meta.isConfigured()) {
-    return res.status(503).send("Meta app not configured (META_APP_ID / META_APP_SECRET missing)");
+    return res.status(503).json({ error: "Meta app not configured. Contact SWFT support." });
   }
   const state = Buffer.from(JSON.stringify({ uid: req.uid })).toString("base64url");
-  res.redirect(meta.getOAuthUrl(state));
+  res.json({ url: meta.getOAuthUrl(state) });
 });
 
 // GET /api/meta/callback — Facebook OAuth callback (no auth middleware — FB redirects here)
@@ -357,4 +357,11 @@ async function webhookReceive(req, res) {
   }
 }
 
-module.exports = { router, webhookVerify, webhookReceive };
+// Export the callback handler separately so it can be registered without auth middleware
+async function oauthCallback(req, res) {
+  // Delegate to the router's /callback handler by re-invoking it
+  req.url = "/callback";
+  router.handle(req, res, () => res.redirect("/swft-settings?meta_error=not_found"));
+}
+
+module.exports = { router, webhookVerify, webhookReceive, oauthCallback };

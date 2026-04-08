@@ -1287,6 +1287,25 @@ async function loadIntegrations() {
 }
 
 async function connectIntegration(id) {
+  // Facebook, Instagram, WhatsApp all use the Meta OAuth flow
+  if (id === 'facebook' || id === 'instagram' || id === 'whatsapp') {
+    try {
+      var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+      var token = await getAuth().currentUser.getIdToken();
+      var res = await fetch('/api/meta/connect', {
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      var data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        showToast(data.error || 'Failed to start Meta connection');
+      }
+    } catch(e) {
+      showToast('Failed to start connection');
+    }
+    return;
+  }
   try {
     var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
     var token = await getAuth().currentUser.getIdToken();
