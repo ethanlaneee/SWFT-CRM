@@ -142,6 +142,64 @@ router.get("/:agentId/activity", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Receptionist task endpoints ──
+
+// GET /api/agents/receptionist/tasks — list pending AI tasks for this org
+router.get("/receptionist/tasks", async (req, res, next) => {
+  try {
+    const snap = await db.collection("tasks")
+      .where("orgId", "==", req.orgId)
+      .where("status", "==", "pending")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  } catch (err) { next(err); }
+});
+
+// PUT /api/agents/receptionist/tasks/:taskId — mark task done or dismissed
+router.put("/receptionist/tasks/:taskId", async (req, res, next) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+    if (!["done", "dismissed"].includes(status)) {
+      return res.status(400).json({ error: "status must be 'done' or 'dismissed'" });
+    }
+    const ref = db.collection("tasks").doc(taskId);
+    const doc = await ref.get();
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+    await ref.update({ status, updatedAt: Date.now() });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// GET /api/agents/receptionist/threads/:phone/mode — get manual mode state
+router.get("/receptionist/threads/:phone/mode", async (req, res, next) => {
+  try {
+    const phone = req.params.phone.replace(/\D/g, "");
+    const chatId = `${req.orgId}_${phone}`;
+    const doc = await db.collection("receptionistChats").doc(chatId).get();
+    const manualMode = doc.exists ? (doc.data().manualMode === true) : false;
+    res.json({ manualMode });
+  } catch (err) { next(err); }
+});
+
+// PUT /api/agents/receptionist/threads/:phone/mode — toggle manual/auto mode
+router.put("/receptionist/threads/:phone/mode", async (req, res, next) => {
+  try {
+    const phone = req.params.phone.replace(/\D/g, "");
+    const { manualMode } = req.body;
+    const chatId = `${req.orgId}_${phone}`;
+    await db.collection("receptionistChats").doc(chatId).set(
+      { manualMode: !!manualMode, modeUpdatedAt: Date.now() },
+      { merge: true }
+    );
+    res.json({ manualMode: !!manualMode });
+  } catch (err) { next(err); }
+});
+
 // GET /api/agents/followup/stats — follow-up agent stats (real data)
 router.get("/followup/stats", async (req, res, next) => {
   try {

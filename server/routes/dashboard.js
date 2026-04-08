@@ -4,11 +4,12 @@ const { db } = require("../firebase");
 // GET /api/dashboard — aggregated stats
 router.get("/", async (req, res, next) => {
   try {
-    const [jobsSnap, quotesSnap, invoicesSnap, scheduleSnap] = await Promise.all([
+    const [jobsSnap, quotesSnap, invoicesSnap, scheduleSnap, aiTasksSnap] = await Promise.all([
       db.collection("jobs").where("orgId", "==", req.orgId).get(),
       db.collection("quotes").where("orgId", "==", req.orgId).get(),
       db.collection("invoices").where("orgId", "==", req.orgId).get(),
       db.collection("schedule").where("orgId", "==", req.orgId).get(),
+      db.collection("tasks").where("orgId", "==", req.orgId).where("status", "==", "pending").get(),
     ]);
 
     const jobs = jobsSnap.docs.map(d => d.data());
@@ -42,6 +43,8 @@ router.get("/", async (req, res, next) => {
       return date && date >= new Date().toISOString().split("T")[0];
     }).length;
 
+    const pendingAiTasks = aiTasksSnap.size;
+
     res.json({
       totalJobs,
       activeJobs,
@@ -51,6 +54,7 @@ router.get("/", async (req, res, next) => {
       totalRevenue,
       activeQuotes,
       upcomingTasks,
+      pendingAiTasks,
     });
   } catch (err) { next(err); }
 });

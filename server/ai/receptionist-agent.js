@@ -7,6 +7,12 @@
  *
  * Conversation history per phone number is stored in:
  *   receptionistChats/{orgId}_{phone}/messages/{docId}
+ *
+ * Per-thread manual mode stored on:
+ *   receptionistChats/{orgId}_{phone} (doc field: manualMode)
+ *
+ * AI-detected tasks stored in:
+ *   tasks/{taskId}
  */
 
 const Anthropic = require("@anthropic-ai/sdk");
@@ -77,6 +83,16 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   const config = await getReceptionistConfig(orgId);
   if (!config) return { replied: false, response: null, action: null };
 
+  // Check per-thread manual mode — owner has taken over this conversation
+  const chatId = `${orgId}_${fromPhone.replace(/\D/g, "")}`;
+  const chatMeta = await db.collection("receptionistChats").doc(chatId).get();
+  if (chatMeta.exists && chatMeta.data().manualMode === true) {
+    // Save inbound to history so the owner can see it, but don't auto-reply
+    await saveChatMessage(orgId, fromPhone, "user", messageBody);
+    console.log(`[receptionist] Manual mode active for ${chatId}, skipping auto-reply`);
+    return { replied: false, response: null, action: "manual_mode" };
+  }
+
   // Check SMS limits before responding (includes bonus credits from packs)
   const plan = getPlan(owner.plan);
   const { getEffectiveUsage } = require("../usage");
@@ -109,7 +125,7 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   // Call Claude
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 160,
+    max_tokens: 200,
     system: systemPrompt,
     messages,
   });
@@ -117,9 +133,22 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   const replyText = response.content[0]?.text || "";
   if (!replyText) return { replied: false, response: null, action: null };
 
-  // Check for escalation signal
+  // Parse task signals: [TASK:TYPE:details]
+  const taskRegex = /\[TASK:(QUOTE|ESTIMATE|CALL|PAYMENT):([^\]]*)\]/gi;
+  const detectedTasks = [];
+  let tm;
+  while ((tm = taskRegex.exec(replyText)) !== null) {
+    detectedTasks.push({ type: tm[1].toUpperCase(), details: tm[2].trim() });
+  }
+
+  // Strip all signals from the customer-facing reply
   const shouldEscalate = replyText.includes("[ESCALATE]");
-  const cleanReply = replyText.replace("[ESCALATE]", "").trim();
+  const cleanReply = replyText
+    .replace(/\[TASK:[A-Z]+:[^\]]*\]/gi, "")
+    .replace("[ESCALATE]", "")
+    .trim();
+
+  if (!cleanReply) return { replied: false, response: null, action: null };
 
   // Send the SMS reply
   try {
@@ -127,7 +156,7 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
     await incrementSms(ownerUid);
     await saveChatMessage(orgId, fromPhone, "assistant", cleanReply);
 
-    // Log to messages collection for visibility
+    // Log to messages collection for visibility in the messages page
     await db.collection("messages").add({
       userId: ownerUid,
       orgId,
@@ -143,8 +172,31 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
       isReceptionist: true,
     });
 
+    // Create task documents for each detected signal
+    for (const task of detectedTasks) {
+      await db.collection("tasks").add({
+        orgId,
+        ownerUid,
+        type: task.type,
+        details: task.details,
+        phone: fromPhone,
+        customerName: customer?.customerName || "",
+        customerId: customer?.customerId || "",
+        inboundMessage: messageBody.slice(0, 300),
+        status: "pending",
+        createdAt: Date.now(),
+      });
+      console.log(`[receptionist] Task created: ${task.type} for org ${orgId} — ${task.details}`);
+    }
+
+    // Determine activity type
+    const activityType = detectedTasks.length > 0
+      ? `task_${detectedTasks[0].type.toLowerCase()}`
+      : shouldEscalate ? "escalated"
+      : customer ? "replied_customer"
+      : "replied_lead";
+
     // Log activity
-    const activityType = shouldEscalate ? "escalated" : (customer ? "replied_customer" : "replied_lead");
     await db.collection("orgs").doc(orgId).collection("agentActivity").add({
       agent: "receptionist",
       type: activityType,
@@ -152,17 +204,22 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
       customerName: customer?.customerName || "",
       inboundMessage: messageBody.slice(0, 200),
       response: cleanReply.slice(0, 200),
+      tasksCreated: detectedTasks.length,
       createdAt: Date.now(),
     });
 
-    // If escalation, notify the owner
-    if (shouldEscalate) {
+    // Notify owner on escalation or task creation
+    const needsNotification = shouldEscalate || detectedTasks.length > 0;
+    if (needsNotification) {
+      const taskLabel = detectedTasks.length > 0
+        ? `Task: ${detectedTasks[0].type} — ${detectedTasks[0].details.slice(0, 60)}`
+        : null;
       await db.collection("notifications").add({
         orgId,
         userId: ownerUid,
-        type: "receptionist_escalation",
-        title: "Receptionist Escalation",
-        message: `Message from ${customer?.customerName || fromPhone} needs your attention: "${messageBody.slice(0, 100)}"`,
+        type: detectedTasks.length > 0 ? "receptionist_task" : "receptionist_escalation",
+        title: detectedTasks.length > 0 ? "New AI Task" : "Receptionist Escalation",
+        message: taskLabel || `Message from ${customer?.customerName || fromPhone} needs your attention: "${messageBody.slice(0, 100)}"`,
         phone: fromPhone,
         read: false,
         createdAt: Date.now(),
@@ -230,16 +287,20 @@ async function getBusinessContext(orgId, ownerUid) {
 
 /**
  * Build the system prompt for the receptionist.
- * Auto-discovers business info from actual job/quote data.
+ *
+ * The agent starts as a generic assistant. As the business owner adds info
+ * in Settings (bizAbout, bizServices, bizArea, bizHours, bizWebsite, bizNotes)
+ * and accumulates jobs/quotes, the prompt automatically becomes more specific
+ * and fine-tuned to that business — no manual prompt editing required.
  */
 function buildReceptionistPrompt(config, owner, customer, bizContext) {
   const companyName = config.businessName || owner.company || owner.name || "our company";
   const ownerName = owner.name || "the owner";
   const tone = config.tone === "casual" ? "casual and friendly" : "friendly and professional";
 
-  let prompt = `You are an AI receptionist for ${companyName}. You respond to inbound text messages.`;
+  let prompt = `You are an AI receptionist for ${companyName}. You respond to inbound text messages on behalf of the owner.`;
 
-  // Auto-discovered business context
+  // Auto-discovered business context from actual jobs & quotes
   if (bizContext.services) {
     prompt += `\n\nSERVICES (from past jobs): ${bizContext.services}`;
   }
@@ -253,7 +314,7 @@ function buildReceptionistPrompt(config, owner, customer, bizContext) {
     prompt += `\nCOMPLETED JOBS: ${bizContext.jobCount}+`;
   }
 
-  // Business profile from Settings page (owner's user doc)
+  // Business profile from Settings page (populated by the owner)
   if (owner.bizAbout) prompt += `\n\nABOUT THE BUSINESS: ${owner.bizAbout}`;
   if (owner.bizServices && !bizContext.services) prompt += `\nSERVICES: ${owner.bizServices}`;
   if (owner.bizArea && !bizContext.serviceArea) prompt += `\nSERVICE AREA: ${owner.bizArea}`;
@@ -261,8 +322,8 @@ function buildReceptionistPrompt(config, owner, customer, bizContext) {
   if (owner.bizWebsite || owner.website) prompt += `\nWEBSITE: ${owner.bizWebsite || owner.website}`;
   if (owner.bizNotes) prompt += `\nNOTES: ${owner.bizNotes}`;
 
-  // Manual overrides from agent config
-  if (config.businessDescription) prompt += `\n\nEXTRA: ${config.businessDescription}`;
+  // Manual overrides from agent config page
+  if (config.businessDescription) prompt += `\n\nEXTRA INFO: ${config.businessDescription}`;
 
   prompt += `
 
@@ -272,20 +333,27 @@ RULES:
 1. Only mention services from the list above. Never invent services.
 2. Never quote specific prices. Always say "${ownerName} will send a custom quote."
 3. Don't know? Say "${ownerName} will get back to you."
-4. Can't help or person is upset? Add [ESCALATE] at end.
+4. Can't help or person is upset? Add [ESCALATE] at end of reply.
 5. Under 120 chars when possible. This is SMS.
 6. "stop"/"unsubscribe" → acknowledge + [ESCALATE]
 7. No emojis unless customer uses them first.
-8. NEVER repeat business info word-for-word from your instructions. The business details above are reference material — absorb them and respond naturally in your own words like a real person would. Paraphrase and summarize. Only quote exact numbers (hours, addresses) when precision matters.`;
+8. NEVER repeat business info word-for-word. Absorb the details and respond naturally. Paraphrase. Only quote exact numbers (hours, prices) when precision matters.
+
+TASK SIGNALS — embed ONE in your reply (customer never sees it) when triggered:
+• [TASK:QUOTE:brief summary] — Lead gave enough detail (measurements, scope, material type) that the owner can prepare a quote
+• [TASK:ESTIMATE:brief summary] — Lead explicitly wants a physical walkthrough or on-site visit
+• [TASK:CALL:brief summary] — Situation needs a real phone call (emergency, complex specs, unclear scope, frustrated lead)
+• [TASK:PAYMENT:brief summary] — Lead is ready to pay, book with deposit, or explicitly mentions payment now
+Only emit a signal when clearly triggered. Never emit more than one per reply. Strip it yourself — it goes to the owner's task dashboard, not to the customer.`;
 
   if (config.greeting) {
     prompt += `\n\nGREETING STYLE: "${config.greeting}"`;
   }
 
   if (customer) {
-    prompt += `\n\nEXISTING CUSTOMER: ${customer.customerName || "Unknown"}. Be familiar.`;
+    prompt += `\n\nEXISTING CUSTOMER: ${customer.customerName || "Unknown"}. Be familiar, they've worked with us before.`;
   } else {
-    prompt += `\n\nNEW LEAD. Get their name and what they need.`;
+    prompt += `\n\nNEW LEAD. Be warm. Try to get their name and what they need in 1-2 exchanges.`;
   }
 
   return prompt;

@@ -197,6 +197,11 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* AI Mode Toggle */
+.ai-mode-btn{padding:5px 12px;border-radius:7px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:10.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap;display:none;}
+.ai-mode-btn.manual{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.08);color:#f5a623;}
+.ai-mode-btn:hover{filter:brightness(1.15);}
 </style>
 </head>
 <body>
@@ -290,6 +295,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
         <div class="chat-header-detail" id="chat-detail"></div>
       </div>
       <span class="chat-channel-pill" id="chat-channel-pill" style="display:none;"></span>
+      <button id="ai-mode-btn" class="ai-mode-btn" onclick="toggleAiMode()">Automation</button>
       <button id="add-contact-btn" onclick="openAddToContact()" style="display:none;margin-left:auto;padding:6px 14px;border-radius:8px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">+ Add to Customer</button>
     </div>
     <!-- Connect email inline banner (hidden by default) -->
@@ -783,6 +789,17 @@ function renderChat(){
   // Show "Add to Customer" button for unknown contacts
   var addBtn=document.getElementById('add-contact-btn');
   if(addBtn) addBtn.style.display=c.customerId?'none':'';
+
+  // AI mode toggle — only for SMS threads
+  var aiModeBtn=document.getElementById('ai-mode-btn');
+  if(aiModeBtn){
+    if(c.channel==='sms'){
+      aiModeBtn.style.display='';
+      loadAiThreadMode(c.phone||c.to);
+    } else {
+      aiModeBtn.style.display='none';
+    }
+  }
 
   // Subject row visibility
   document.getElementById('subject-row').style.display=c.channel==='email'?'flex':'none';
@@ -1538,6 +1555,55 @@ function applyTemplate(t) {
 function escHtml2(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── AI Thread Mode (Automation / In Conversation) ──
+var _aiThreadManual = false;
+
+async function loadAiThreadMode(phone) {
+  try {
+    var digits = (phone||'').replace(/\D/g,'');
+    if(!digits) return;
+    var token = await getAuthToken();
+    var res = await fetch('/api/agents/receptionist/threads/' + encodeURIComponent(digits) + '/mode', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if(res.ok){
+      var data = await res.json();
+      _aiThreadManual = data.manualMode || false;
+      updateAiModeBtn();
+    }
+  } catch(e) { /* ignore */ }
+}
+
+function updateAiModeBtn() {
+  var btn = document.getElementById('ai-mode-btn');
+  if(!btn) return;
+  if(_aiThreadManual){
+    btn.textContent = 'In Conversation';
+    btn.classList.add('manual');
+  } else {
+    btn.textContent = 'Automation';
+    btn.classList.remove('manual');
+  }
+}
+
+async function toggleAiMode() {
+  if(!_activeContact || _activeContact.channel !== 'sms') return;
+  var phone = (_activeContact.phone || _activeContact.to || '').replace(/\D/g,'');
+  if(!phone) return;
+  var newManual = !_aiThreadManual;
+  try {
+    var token = await getAuthToken();
+    await fetch('/api/agents/receptionist/threads/' + encodeURIComponent(phone) + '/mode', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manualMode: newManual })
+    });
+    _aiThreadManual = newManual;
+    updateAiModeBtn();
+    showToast(newManual ? 'In Conversation — AI paused for this thread' : 'Automation — AI is responding');
+  } catch(e) { showToast('Error updating mode'); }
 }
 </script>
 <script type="module" src="swft-user-sync.js"></script>

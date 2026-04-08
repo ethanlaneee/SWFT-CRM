@@ -355,14 +355,25 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
   </div>
 </div>
 
-<!-- TODAY'S SCHEDULE -->
+<!-- TODAY'S SCHEDULE + AI TASKS -->
+<div style="display:flex;flex-direction:column;gap:14px;">
+
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
   <div class="panel-header">
-    <div class="panel-title">TODAY'S SCHEDULE</div>
+    <div class="panel-title" style="display:flex;align-items:center;gap:8px;">TODAY'S SCHEDULE<span id="ai-tasks-badge" style="display:none;background:rgba(245,166,35,0.15);color:#f5a623;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span></div>
     <a class="panel-link" onclick="window.location.href='swft-schedule'">Full calendar &#8594;</a>
   </div>
   <div class="weather-strip"><span class="weather-icon">&#9925;</span><span class="weather-text"><strong>72&#176;F</strong> &nbsp;Partly cloudy</span><span class="weather-badge">&#10003; Clear</span></div>
   <div id="schedule-list" style="flex:1;overflow-y:auto;"></div>
+  <div id="ai-tasks-section" style="display:none;border-top:1px solid var(--border);">
+    <div style="padding:10px 20px 6px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#f5a623;font-weight:600;">AI Tasks</span>
+      <a style="font-size:11px;color:var(--green);cursor:pointer;" onclick="window.location.href='swft-messages?tab=ai'">View in messages &#8594;</a>
+    </div>
+    <div id="ai-tasks-list" style="max-height:240px;overflow-y:auto;"></div>
+  </div>
+</div>
+
 </div>
 
 </div>
@@ -633,22 +644,102 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
       var todayJobs = (jobs || []).filter(function(j) { return j.scheduledDate === today; });
       if (todayJobs.length === 0) {
         list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs scheduled for today.</div>';
+      } else {
+        list.innerHTML = '';
+        todayJobs.forEach(function(j) {
+          var pipColor = j.status === 'active' ? 'var(--green)' : j.status === 'scheduled' ? '#4d9fff' : j.status === 'pending' ? '#f5a623' : 'var(--gray2)';
+          var row = document.createElement('div');
+          row.className = 'schedule-row now';
+          var crew = j.crew && j.crew !== 'Unassigned' ? '<span class="sched-chip">' + j.crew + '</span>' : '';
+          row.innerHTML = '<div class="sched-time">' + (j.duration || '—') + '</div>' +
+            '<div class="sched-timeline"><div class="sched-dot" style="color:' + pipColor + ';"></div><div class="sched-connector"></div></div>' +
+            '<div class="sched-body"><div class="sched-title">' + (j.title || j.customerName + ' - ' + j.service) + '</div>' +
+            '<div class="sched-meta">' + crew + (j.address ? '<span class="sched-addr">' + j.address + '</span>' : '') + '</div></div>' +
+            '<div class="sched-dur">' + (j.status||'') + '</div>';
+          list.appendChild(row);
+        });
+      }
+    } catch(e) { console.error('loadSchedule error:', e); }
+    // Load AI tasks into the same panel
+    loadAiTasks();
+  }
+
+  async function loadAiTasks() {
+    try {
+      var token = await getDashToken();
+      var res = await fetch('/api/agents/receptionist/tasks', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (!res.ok) return;
+      var tasks = await res.json();
+      var section = document.getElementById('ai-tasks-section');
+      var list = document.getElementById('ai-tasks-list');
+      var badge = document.getElementById('ai-tasks-badge');
+      if (!section || !list) return;
+
+      if (!tasks.length) {
+        section.style.display = 'none';
+        if (badge) badge.style.display = 'none';
         return;
       }
-      list.innerHTML = '';
-      todayJobs.forEach(function(j) {
-        var pipColor = j.status === 'active' ? 'var(--green)' : j.status === 'scheduled' ? '#4d9fff' : j.status === 'pending' ? '#f5a623' : 'var(--gray2)';
-        var row = document.createElement('div');
-        row.className = 'schedule-row now';
-        var crew = j.crew && j.crew !== 'Unassigned' ? '<span class="sched-chip">' + j.crew + '</span>' : '';
-        row.innerHTML = '<div class="sched-time">' + (j.duration || '—') + '</div>' +
-          '<div class="sched-timeline"><div class="sched-dot" style="color:' + pipColor + ';"></div><div class="sched-connector"></div></div>' +
-          '<div class="sched-body"><div class="sched-title">' + (j.title || j.customerName + ' - ' + j.service) + '</div>' +
-          '<div class="sched-meta">' + crew + (j.address ? '<span class="sched-addr">' + j.address + '</span>' : '') + '</div></div>' +
-          '<div class="sched-dur">' + (j.status||'') + '</div>';
-        list.appendChild(row);
+
+      section.style.display = '';
+      if (badge) { badge.textContent = tasks.length + ' task' + (tasks.length !== 1 ? 's' : ''); badge.style.display = ''; }
+
+      var TASK_META = {
+        QUOTE: { label: 'Quote Request', color: '#c8f135', bg: 'rgba(200,241,53,0.08)' },
+        ESTIMATE: { label: 'On-Site Estimate', color: '#4d9fff', bg: 'rgba(77,159,255,0.08)' },
+        CALL: { label: 'Follow-Up Call', color: '#f5a623', bg: 'rgba(245,166,35,0.08)' },
+        PAYMENT: { label: 'Payment Ready', color: '#c8f135', bg: 'rgba(200,241,53,0.08)' },
+      };
+
+      list.innerHTML = tasks.map(function(t) {
+        var m = TASK_META[t.type] || { label: t.type, color: 'var(--gray)', bg: 'var(--surface2)' };
+        var ago = t.createdAt ? timeAgo(t.createdAt) : '';
+        var name = t.customerName || t.phone || 'Unknown';
+        return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);transition:background 0.12s;" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:' + m.color + ';flex-shrink:0;margin-top:5px;box-shadow:0 0 5px ' + m.color + '40;"></div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">' +
+              '<span style="font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:' + m.bg + ';color:' + m.color + ';letter-spacing:0.3px;">' + m.label + '</span>' +
+              '<span style="font-size:11px;color:var(--white);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(name) + '</span>' +
+            '</div>' +
+            '<div style="font-size:11.5px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(t.details || '') + '</div>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">' +
+            '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9.5px;color:var(--gray2);">' + ago + '</span>' +
+            '<div style="display:flex;gap:4px;">' +
+              '<button onclick="dismissAiTask(\'' + t.id + '\',\'done\')" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);cursor:pointer;font-family:\'DM Sans\',sans-serif;font-weight:600;">Done</button>' +
+              '<button onclick="dismissAiTask(\'' + t.id + '\',\'dismissed\')" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;font-family:\'DM Sans\',sans-serif;">Skip</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    } catch(e) { console.error('loadAiTasks error:', e); }
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function timeAgo(ms) {
+    var diff = Date.now() - ms;
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+    return Math.floor(diff/86400000) + 'd ago';
+  }
+
+  async function dismissAiTask(taskId, status) {
+    try {
+      var token = await getDashToken();
+      await fetch('/api/agents/receptionist/tasks/' + taskId, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
       });
-    } catch(e) { console.error('loadSchedule error:', e); }
+      loadAiTasks();
+    } catch(e) { showToast('Could not update task'); }
   }
 
 
