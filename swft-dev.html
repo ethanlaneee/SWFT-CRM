@@ -148,9 +148,56 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .login-btn:disabled{opacity:0.5;cursor:not-allowed;}
 .login-error{color:var(--red);font-size:11.5px;text-align:center;margin-top:12px;min-height:18px;}
 
+/* TABS */
+.tab-nav{display:flex;gap:0;padding:0 28px;border-bottom:1px solid var(--border);background:rgba(10,10,10,0.92);backdrop-filter:blur(14px);position:sticky;top:60px;z-index:99;}
+.tab-btn{background:none;border:none;color:var(--gray);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;padding:12px 20px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.14s;}
+.tab-btn:hover{color:var(--white);}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green);}
+
+/* ACTION BAR */
+.action-bar{display:flex;gap:10px;flex-wrap:wrap;}
+.action-btn{display:flex;align-items:center;gap:7px;padding:10px 18px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.14s;font-family:'DM Sans',sans-serif;border:1px solid;}
+.action-btn.primary{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.2);color:var(--green);}
+.action-btn.primary:hover{background:rgba(200,241,53,0.15);}
+.action-btn.blue{background:rgba(77,159,255,0.08);border-color:rgba(77,159,255,0.2);color:var(--blue);}
+.action-btn.blue:hover{background:rgba(77,159,255,0.15);}
+.action-btn.amber{background:rgba(245,166,35,0.08);border-color:rgba(245,166,35,0.2);color:var(--amber);}
+.action-btn.amber:hover{background:rgba(245,166,35,0.15);}
+.action-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.action-btn .btn-spinner{width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;display:none;}
+.action-btn.loading .btn-spinner{display:inline-block;}
+.action-btn.loading .btn-label{display:none;}
+
+/* APPROVE / REJECT BTNS */
+.approve-btn,.reject-btn{padding:5px 12px;border-radius:6px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all 0.14s;font-family:'DM Sans',sans-serif;border:1px solid;}
+.approve-btn{background:rgba(200,241,53,0.1);border-color:rgba(200,241,53,0.25);color:var(--green);}
+.approve-btn:hover{background:rgba(200,241,53,0.2);}
+.reject-btn{background:rgba(255,82,82,0.1);border-color:rgba(255,82,82,0.25);color:var(--red);}
+.reject-btn:hover{background:rgba(255,82,82,0.2);}
+
+/* SCORE BADGE */
+.score-badge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;}
+.score-badge.high{background:rgba(200,241,53,0.15);color:var(--green);}
+.score-badge.med{background:rgba(245,166,35,0.15);color:var(--amber);}
+.score-badge.low{background:rgba(255,82,82,0.15);color:var(--red);}
+
+/* OUTREACH STATUS */
+.outreach-status{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:500;padding:3px 9px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;}
+.outreach-status.new{background:rgba(122,122,122,0.15);color:var(--gray);}
+.outreach-status.scored{background:rgba(77,159,255,0.15);color:var(--blue);}
+.outreach-status.emailed{background:rgba(200,241,53,0.15);color:var(--green);}
+.outreach-status.replied{background:rgba(200,241,53,0.25);color:var(--green);}
+.outreach-status.converted{background:rgba(200,241,53,0.35);color:var(--green);}
+.outreach-status.unsubscribed{background:rgba(255,82,82,0.15);color:var(--red);}
+
+/* DRAFT EXPAND */
+.draft-detail{padding:16px 20px;background:var(--bg);border-top:1px solid var(--border);animation:fadeUp 0.2s ease both;}
+.draft-body{font-size:13px;line-height:1.7;color:var(--gray);white-space:pre-wrap;max-width:700px;}
+.draft-meta{display:flex;gap:20px;margin-top:12px;font-size:11px;color:var(--gray2);}
+
 /* RESPONSIVE */
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.detail-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:640px){.kpi-grid{grid-template-columns:1fr;}.page-body{padding:20px 16px;}.header{padding:0 16px;}.detail-grid{grid-template-columns:1fr;}.search-input{width:160px;}.table-scroll{max-height:none;}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr;}.page-body{padding:20px 16px;}.header{padding:0 16px;}.tab-nav{padding:0 16px;}.detail-grid{grid-template-columns:1fr;}.search-input{width:160px;}.table-scroll{max-height:none;}}
 </style>
 </head>
 <body>
@@ -194,11 +241,25 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
     </div>
   </div>
 
-  <!-- BODY -->
+  <!-- TAB NAV -->
+  <div class="tab-nav" id="tabNav">
+    <button class="tab-btn active" data-tab="platform" onclick="window._switchTab('platform')">PLATFORM</button>
+    <button class="tab-btn" data-tab="outreach" onclick="window._switchTab('outreach')">OUTREACH</button>
+  </div>
+
+  <!-- PLATFORM TAB -->
   <div class="page-body" id="pageBody">
     <div class="page-loader" id="pageLoader">
       <div class="spinner"></div>
       <span>Loading developer data...</span>
+    </div>
+  </div>
+
+  <!-- OUTREACH TAB -->
+  <div class="page-body" id="outreachBody" style="display:none;">
+    <div class="page-loader" id="outreachLoader">
+      <div class="spinner"></div>
+      <span>Loading outreach data...</span>
     </div>
   </div>
 </div>
@@ -547,6 +608,311 @@ window._deleteUser = async function(uid, label) {
   }
 };
 
+/* ── TAB SWITCHING ── */
+let activeTab = 'platform';
+let outreachLoaded = false;
+
+window._switchTab = function(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('pageBody').style.display = tab === 'platform' ? '' : 'none';
+  document.getElementById('outreachBody').style.display = tab === 'outreach' ? '' : 'none';
+  if (tab === 'outreach' && !outreachLoaded) loadOutreachData();
+};
+
+/* ── OUTREACH STATE ── */
+let outreachData = { stats: { leads: {}, emails: {} }, leads: [], drafts: [] };
+let expandedDraftId = null;
+
+/* ── OUTREACH API HELPERS ── */
+async function outreachPost(path, body = {}) {
+  const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+  const user = getAuth().currentUser;
+  if (!user) return null;
+  const token = await user.getIdToken();
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Request failed');
+  }
+  return res.json();
+}
+
+/* ── OUTREACH RENDER ── */
+function renderOutreach(data) {
+  const ls = data.stats.leads;
+  const es = data.stats.emails;
+  const body = document.getElementById('outreachBody');
+
+  body.innerHTML = `
+    <!-- LEAD PIPELINE KPIs -->
+    <div class="section-label">Lead Pipeline</div>
+    <div class="kpi-grid">
+      ${kpiCard('Total Leads', fmt(ls.total), '', 'green', 0)}
+      ${kpiCard('New (Unscored)', fmt(ls.new), '', 'white', 1)}
+      ${kpiCard('Scored', fmt(ls.scored), 'ready for email gen', 'blue', 2)}
+      ${kpiCard('Emailed', fmt(ls.emailed), '', 'green', 3)}
+      ${kpiCard('Replied', fmt(ls.replied), '', 'green', 4)}
+      ${kpiCard('Converted', fmt(ls.converted), '', 'green', 5)}
+      ${kpiCard('Unsubscribed', fmt(ls.unsubscribed), '', 'red', 6)}
+      ${kpiCard('Avg Lead Score', ls.avgScore || 0, 'out of 100', 'amber', 7)}
+    </div>
+
+    <!-- EMAIL STATS KPIs -->
+    <div class="section-label">Email Stats</div>
+    <div class="kpi-grid">
+      ${kpiCard('Total Emails', fmt(es.total), '', 'green', 0)}
+      ${kpiCard('Drafts Pending', fmt(es.drafts), 'awaiting approval', 'amber', 1)}
+      ${kpiCard('Sent', fmt(es.sent), '', 'green', 2)}
+      ${kpiCard('Rejected', fmt(es.rejected), '', 'red', 3)}
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="section-label">Actions</div>
+    <div class="action-bar">
+      <button class="action-btn primary" id="btnScore" onclick="window._outreachAction('score')">
+        <div class="btn-spinner"></div>
+        <span class="btn-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Score Unscored Leads
+        </span>
+      </button>
+      <button class="action-btn blue" id="btnGenerate" onclick="window._outreachAction('generate')">
+        <div class="btn-spinner"></div>
+        <span class="btn-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Generate Emails
+        </span>
+      </button>
+      <button class="action-btn amber" id="btnFollowup" onclick="window._outreachAction('followup')">
+        <div class="btn-spinner"></div>
+        <span class="btn-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          Generate Follow-ups
+        </span>
+      </button>
+    </div>
+
+    <!-- DRAFTS TABLE -->
+    <div class="table-wrap" style="animation-delay:0.3s">
+      <div class="table-header">
+        <div style="display:flex;align-items:center;">
+          <span class="table-title">Pending Drafts</span>
+          <span class="table-count" id="draftCount">(${data.drafts.length})</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          ${data.drafts.length > 0 ? `
+            <button class="approve-btn" onclick="window._bulkApproveDrafts()" id="bulkApproveBtn">Approve All (${data.drafts.length})</button>
+            <button class="reject-btn" onclick="window._bulkRejectDrafts()" id="bulkRejectBtn">Reject All</button>
+          ` : ''}
+        </div>
+      </div>
+      <div class="table-scroll" style="max-height:400px;">
+        <table class="data-table">
+          <thead>
+            <tr><th>To</th><th>Company</th><th>Trade</th><th>Subject</th><th>Seq</th><th>Created</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="draftsTableBody">
+            ${data.drafts.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray);">No pending drafts</td></tr>' : data.drafts.map(d => draftRow(d)).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LEADS TABLE -->
+    <div class="table-wrap" style="animation-delay:0.35s">
+      <div class="table-header">
+        <div style="display:flex;align-items:center;">
+          <span class="table-title">All Leads</span>
+          <span class="table-count" id="leadCount">(${data.leads.length})</span>
+        </div>
+        <input class="search-input" type="text" placeholder="Search leads..." id="leadSearch" oninput="window._filterLeads(this.value)"/>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Company</th><th>Trade</th><th>Score</th><th>Status</th><th>Emails</th><th>Last Contact</th><th>Added</th></tr>
+          </thead>
+          <tbody id="leadsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  renderLeadsTable(data.leads);
+}
+
+function draftRow(d) {
+  return `<tr data-did="${d.id}" onclick="window._toggleDraftDetail('${d.id}', this)" style="cursor:pointer;">
+    <td>${escHtml(d.leadName || d.leadEmail)}</td>
+    <td>${escHtml(d.leadCompany || '—')}</td>
+    <td>${escHtml(d.leadTrade || '—')}</td>
+    <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d.subject)}</td>
+    <td style="font-family:'JetBrains Mono',monospace;text-align:center;">${d.sequence || 1}</td>
+    <td style="font-size:11px;">${timeAgo(d.createdAt)}</td>
+    <td onclick="event.stopPropagation();" style="display:flex;gap:6px;">
+      <button class="approve-btn" onclick="window._approveDraft('${d.id}')">Approve</button>
+      <button class="reject-btn" onclick="window._rejectDraft('${d.id}')">Reject</button>
+    </td>
+  </tr>`;
+}
+
+function scoreBadge(score) {
+  if (score == null) return '<span style="color:var(--gray2);">—</span>';
+  const cls = score >= 70 ? 'high' : score >= 40 ? 'med' : 'low';
+  return `<span class="score-badge ${cls}">${score}</span>`;
+}
+
+function renderLeadsTable(leads) {
+  const tbody = document.getElementById('leadsTableBody');
+  const countEl = document.getElementById('leadCount');
+  if (countEl) countEl.textContent = `(${leads.length})`;
+  if (!tbody) return;
+
+  tbody.innerHTML = leads.length === 0
+    ? '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray);">No leads imported yet</td></tr>'
+    : leads.map(l => `<tr>
+      <td>${escHtml(l.name || '—')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(l.email)}</td>
+      <td>${escHtml(l.company || '—')}</td>
+      <td>${escHtml(l.trade || '—')}</td>
+      <td>${scoreBadge(l.score)}</td>
+      <td><span class="outreach-status ${l.status || 'new'}">${l.status || 'new'}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;text-align:center;">${l.emailCount || 0}</td>
+      <td style="font-size:11px;">${l.lastContactedAt ? timeAgo(l.lastContactedAt) : '—'}</td>
+      <td style="font-size:11px;">${timeAgo(l.createdAt)}</td>
+    </tr>`).join('');
+}
+
+/* ── DRAFT DETAIL EXPAND ── */
+window._toggleDraftDetail = function(draftId, rowEl) {
+  const existing = document.querySelector('.draft-detail-row');
+  if (existing) {
+    const wasExpanded = existing.getAttribute('data-did') === draftId;
+    existing.previousElementSibling?.classList.remove('expanded-parent');
+    existing.remove();
+    expandedDraftId = null;
+    if (wasExpanded) return;
+  }
+
+  expandedDraftId = draftId;
+  rowEl.classList.add('expanded-parent');
+  const draft = outreachData.drafts.find(d => d.id === draftId);
+  if (!draft) return;
+
+  const detailRow = document.createElement('tr');
+  detailRow.className = 'draft-detail-row';
+  detailRow.setAttribute('data-did', draftId);
+  detailRow.innerHTML = `<td colspan="7" style="padding:0!important;"><div class="draft-detail">
+    <div class="draft-body">${escHtml(draft.body)}</div>
+    <div class="draft-meta">
+      <span>To: ${escHtml(draft.leadEmail)}</span>
+      <span>Sequence: ${draft.sequence || 1}</span>
+      ${draft.isFollowUp ? '<span style="color:var(--amber);">Follow-up</span>' : ''}
+    </div>
+  </div></td>`;
+  rowEl.insertAdjacentElement('afterend', detailRow);
+};
+
+/* ── OUTREACH ACTIONS ── */
+window._outreachAction = async function(action) {
+  const btnMap = { score: 'btnScore', generate: 'btnGenerate', followup: 'btnFollowup' };
+  const pathMap = { score: '/api/outreach/score', generate: '/api/outreach/generate', followup: '/api/outreach/followup' };
+  const btn = document.getElementById(btnMap[action]);
+  if (!btn) return;
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    const result = await outreachPost(pathMap[action]);
+    const count = result.scored || result.generated || 0;
+    showToast(`${action === 'score' ? 'Scored' : 'Generated'} ${count} ${action === 'score' ? 'leads' : 'emails'}`, count > 0 ? 'success' : 'info');
+    await loadOutreachData();
+  } catch (e) {
+    showToast(`${action} failed: ${e.message}`, 'error');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+};
+
+/* ── APPROVE / REJECT ── */
+window._approveDraft = async function(emailId) {
+  try {
+    await outreachPost('/api/outreach/approve', { emailIds: [emailId] });
+    showToast('Email approved & sent', 'success');
+    await loadOutreachData();
+  } catch (e) { showToast('Approve failed: ' + e.message, 'error'); }
+};
+
+window._rejectDraft = async function(emailId) {
+  try {
+    await outreachPost('/api/outreach/reject', { emailIds: [emailId] });
+    showToast('Draft rejected', 'info');
+    await loadOutreachData();
+  } catch (e) { showToast('Reject failed: ' + e.message, 'error'); }
+};
+
+window._bulkApproveDrafts = async function() {
+  const ids = outreachData.drafts.map(d => d.id);
+  if (ids.length === 0) return;
+  if (!confirm(`Approve and send all ${ids.length} draft emails?`)) return;
+
+  const btn = document.getElementById('bulkApproveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+  try {
+    const result = await outreachPost('/api/outreach/approve', { emailIds: ids });
+    showToast(`Sent ${result.sent || 0} emails`, 'success');
+    await loadOutreachData();
+  } catch (e) { showToast('Bulk approve failed: ' + e.message, 'error'); }
+};
+
+window._bulkRejectDrafts = async function() {
+  const ids = outreachData.drafts.map(d => d.id);
+  if (ids.length === 0) return;
+  if (!confirm(`Reject all ${ids.length} drafts?`)) return;
+
+  try {
+    await outreachPost('/api/outreach/reject', { emailIds: ids });
+    showToast(`Rejected ${ids.length} drafts`, 'info');
+    await loadOutreachData();
+  } catch (e) { showToast('Bulk reject failed: ' + e.message, 'error'); }
+};
+
+/* ── LEAD FILTER ── */
+window._filterLeads = function(query) {
+  const q = query.toLowerCase().trim();
+  const filtered = q ? outreachData.leads.filter(l =>
+    (l.name || '').toLowerCase().includes(q) ||
+    (l.email || '').toLowerCase().includes(q) ||
+    (l.company || '').toLowerCase().includes(q) ||
+    (l.trade || '').toLowerCase().includes(q) ||
+    (l.status || '').toLowerCase().includes(q)
+  ) : outreachData.leads;
+  renderLeadsTable(filtered);
+};
+
+/* ── LOAD OUTREACH ── */
+window.loadOutreachData = async function() {
+  try {
+    const data = await devFetch('/api/dev/outreach');
+    if (!data) return;
+    outreachData = data;
+    outreachLoaded = true;
+    renderOutreach(data);
+  } catch (e) {
+    console.error('Outreach load error:', e);
+    const body = document.getElementById('outreachBody');
+    body.innerHTML = `<div style="text-align:center;padding:80px 0;color:var(--red);font-size:14px;">Failed to load outreach data. <button onclick="loadOutreachData()" style="color:var(--green);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;">Retry</button></div>`;
+  }
+};
+
 /* ── FILTER ── */
 window._filterUsers = function(query) {
   const q = query.toLowerCase().trim();
@@ -566,16 +932,24 @@ window.loadAllData = async function() {
   if (btn) btn.classList.add('spinning');
 
   try {
-    const [stats, users] = await Promise.all([
-      devFetch('/api/dev/stats'),
-      devFetch('/api/dev/users')
-    ]);
+    const fetches = [devFetch('/api/dev/stats'), devFetch('/api/dev/users')];
+    // If outreach tab is active or was loaded, refresh it too
+    if (activeTab === 'outreach' || outreachLoaded) fetches.push(devFetch('/api/dev/outreach'));
 
+    const results = await Promise.all(fetches);
+    const [stats, users] = results;
     if (!stats || !users) return;
 
     allUsers = users;
     renderDashboard(stats, users);
     renderUserTable(users);
+
+    if (results[2]) {
+      outreachData = results[2];
+      outreachLoaded = true;
+      renderOutreach(results[2]);
+    }
+
     showToast('Data loaded successfully', 'success');
   } catch (e) {
     console.error('Load error:', e);

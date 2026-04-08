@@ -262,6 +262,48 @@ router.get("/user/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── GET /api/dev/outreach — combined outreach campaign data ──
+router.get("/outreach", async (req, res, next) => {
+  try {
+    const [leadsSnap, emailsSnap] = await Promise.all([
+      db.collection("outreach_leads").orderBy("createdAt", "desc").limit(500).get(),
+      db.collection("outreach_emails").orderBy("createdAt", "desc").limit(500).get(),
+    ]);
+
+    const leads = leadsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const emails = emailsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const drafts = emails.filter(e => e.status === "draft");
+    const scoredLeads = leads.filter(l => l.score != null);
+    const avgScore = scoredLeads.length > 0
+      ? Math.round(scoredLeads.reduce((sum, l) => sum + l.score, 0) / scoredLeads.length)
+      : 0;
+
+    res.json({
+      stats: {
+        leads: {
+          total: leads.length,
+          new: leads.filter(l => l.status === "new").length,
+          scored: leads.filter(l => l.status === "scored").length,
+          emailed: leads.filter(l => l.status === "emailed").length,
+          replied: leads.filter(l => l.status === "replied").length,
+          converted: leads.filter(l => l.status === "converted").length,
+          unsubscribed: leads.filter(l => l.status === "unsubscribed").length,
+          avgScore,
+        },
+        emails: {
+          total: emails.length,
+          drafts: drafts.length,
+          sent: emails.filter(e => e.status === "sent").length,
+          rejected: emails.filter(e => e.status === "rejected").length,
+        },
+      },
+      leads,
+      drafts,
+    });
+  } catch (err) { next(err); }
+});
+
 // ── DELETE /api/dev/user/:id — permanently delete a user and all their data ──
 router.delete("/user/:id", async (req, res, next) => {
   try {
