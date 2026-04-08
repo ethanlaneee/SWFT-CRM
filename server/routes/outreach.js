@@ -227,7 +227,7 @@ Subject: [Short, casual subject line under 50 chars — something about their bu
 
 Hey [First name],
 
-I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — something real and casual based on their trade, website, company name, or notes. Keep it short and natural, like you'd say it out loud. Examples: "you guys do really solid work", "looks like you're killing it", "your reviews are great". One sentence max].
+I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — something real and casual based on their trade, website, company name, or notes. Keep it short and natural, like you'd say it out loud. Examples: "you guys do really solid work", "looks like you're killing it", "your reviews are great"] in the [AREA — pull the city or region from their address/notes, like "Calgary area", "Austin area", "Denver area". If no location info is available, just skip this part]. One sentence max.
 
 I work with a lot of home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual hands on work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
 
