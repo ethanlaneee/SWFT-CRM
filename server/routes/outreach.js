@@ -437,6 +437,26 @@ router.post("/approve", async (req, res) => {
   }
 });
 
+// ── PUT /api/outreach/draft/:id — Edit a draft email ──
+router.put("/draft/:id", async (req, res) => {
+  try {
+    const { subject, body } = req.body;
+    const doc = await db.collection("outreach_emails").doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: "Draft not found" });
+    if (doc.data().status !== "draft") return res.status(400).json({ error: "Can only edit drafts" });
+
+    const updates = {};
+    if (subject !== undefined) updates.subject = subject;
+    if (body !== undefined) updates.body = body;
+    updates.editedAt = Date.now();
+
+    await db.collection("outreach_emails").doc(req.params.id).update(updates);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── POST /api/outreach/reject — Reject draft emails ──
 router.post("/reject", async (req, res) => {
   try {

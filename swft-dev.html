@@ -852,14 +852,51 @@ window._toggleDraftDetail = function(draftId, rowEl) {
   detailRow.className = 'draft-detail-row';
   detailRow.setAttribute('data-did', draftId);
   detailRow.innerHTML = `<td colspan="7" style="padding:0!important;"><div class="draft-detail">
-    <div class="draft-body">${escHtml(draft.body)}</div>
-    <div class="draft-meta">
-      <span>To: ${escHtml(draft.leadEmail)}</span>
-      <span>Sequence: ${draft.sequence || 1}</span>
-      ${draft.isFollowUp ? '<span style="color:var(--amber);">Follow-up</span>' : ''}
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Subject</label>
+      <input type="text" id="draft-subject-${draftId}" value="${escHtml(draft.subject)}" style="width:100%;max-width:600px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;"/>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Body</label>
+      <textarea id="draft-body-${draftId}" style="width:100%;max-width:700px;min-height:200px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.7;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;resize:vertical;">${escHtml(draft.body)}</textarea>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="approve-btn" onclick="window._saveDraft('${draftId}')" id="save-draft-${draftId}">Save Changes</button>
+      <span class="draft-meta">To: ${escHtml(draft.leadEmail)} &nbsp;|&nbsp; Sequence: ${draft.sequence || 1}${draft.isFollowUp ? ' &nbsp;|&nbsp; <span style="color:var(--amber);">Follow-up</span>' : ''}</span>
     </div>
   </div></td>`;
   rowEl.insertAdjacentElement('afterend', detailRow);
+};
+
+/* ── SAVE DRAFT EDIT ── */
+window._saveDraft = async function(draftId) {
+  const subject = document.getElementById('draft-subject-' + draftId)?.value;
+  const body = document.getElementById('draft-body-' + draftId)?.value;
+  const btn = document.getElementById('save-draft-' + draftId);
+  if (!subject || !body) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const user = getAuth().currentUser;
+    const token = await user.getIdToken();
+    const res = await fetch('/api/outreach/draft/' + draftId, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, body }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+
+    // Update local data
+    const draft = outreachData.drafts.find(d => d.id === draftId);
+    if (draft) { draft.subject = subject; draft.body = body; }
+
+    showToast('Draft updated', 'success');
+    if (btn) { btn.disabled = false; btn.textContent = 'Saved!'; setTimeout(() => { btn.textContent = 'Save Changes'; }, 1500); }
+  } catch (e) {
+    showToast('Save failed: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+  }
 };
 
 /* ── FIND LEADS ── */
