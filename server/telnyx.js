@@ -41,11 +41,14 @@ async function searchAvailableNumbers(options = {}) {
   const countryCode = (options.countryCode || "US").toUpperCase();
   const limit = options.limit || 12;
 
-  // Build the most specific filter first
+  // Build the most specific filter first.
+  // best_effort: true tells Telnyx to return actual specific numbers rather
+  // than wildcard/pattern numbers (e.g. "+18252------") for CA/US searches.
   const buildFilter = (overrides = {}) => ({
     country_code: countryCode,
     features: ["sms"],
     limit,
+    best_effort: true,
     ...overrides,
   });
 
@@ -133,16 +136,17 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
   const areaCode = options.areaCode || (options.city ? cityToAreaCode(options.city) : null);
   const region = options.region || null;
 
-  // Build a cascade of search attempts: most local first
+  // Build a cascade of search attempts: most local first.
+  // best_effort: true returns specific assignable numbers rather than patterns.
   const attempts = [];
 
   if (areaCode) {
-    attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, national_destination_code: areaCode });
+    attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true, national_destination_code: areaCode });
   }
   if (region && (countryCode === "US" || countryCode === "CA" || countryCode === "GB")) {
-    attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, administrative_area: region });
+    attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true, administrative_area: region });
   }
-  attempts.push({ country_code: countryCode, features: ["sms"], limit: 5 });
+  attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true });
 
   let available = [];
   for (const filter of attempts) {

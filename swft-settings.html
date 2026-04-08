@@ -847,11 +847,21 @@ async function npSearch() {
 
     resultsEl.innerHTML = '<div class="np-results">' +
       numbers.map(function(n) {
-        var loc = [n.locality, n.region].filter(Boolean).join(', ');
+        var loc = [n.locality, n.region].filter(Boolean).join(', ') || n.countryCode;
+        // Telnyx sometimes returns wildcard patterns like "+18252------".
+        // Format these as readable area-code blocks; full numbers display as-is.
+        var raw = n.phoneNumber || '';
+        var displayNum = raw;
+        if (raw.includes('-')) {
+          // Pattern number — show area code + "local number" label
+          var digits = raw.replace(/\D/g, '');
+          var areaCode = digits.length >= 4 ? digits.slice(1, 4) : digits;
+          displayNum = '(' + areaCode + ') Local Number';
+        }
         return '<div class="np-num-row">' +
-          '<div class="np-num">' + n.phoneNumber + '</div>' +
-          '<div class="np-loc">' + (loc || n.countryCode) + '</div>' +
-          '<button class="np-select-btn" onclick="npSelectNumber(\'' + n.phoneNumber.replace(/'/g, '') + '\')">Select</button>' +
+          '<div class="np-num">' + displayNum + '</div>' +
+          '<div class="np-loc">' + loc + '</div>' +
+          '<button class="np-select-btn" onclick="npSelectNumber(\'' + raw.replace(/'/g, '') + '\')">Select</button>' +
         '</div>';
       }).join('') +
     '</div>';
