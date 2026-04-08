@@ -219,6 +219,20 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 .dash-msg.user{align-self:flex-end;background:var(--green);color:#0a0a0a;border-bottom-right-radius:4px;}
 .dash-msg.assistant{align-self:flex-start;background:var(--surface2);color:#e0e0e0;border:1px solid var(--border2);border-bottom-left-radius:4px;}
 
+.swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.swft-modal-overlay.open{display:flex;}
+.swft-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
+.swft-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:12px;}
+.swft-modal-body{font-size:13px;line-height:1.6;color:var(--gray);margin-bottom:24px;white-space:pre-line;}
+.swft-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.swft-modal-btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid;transition:all 0.14s;}
+.swft-modal-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray);}
+.swft-modal-btn.cancel:hover{background:var(--surface2);color:var(--white);}
+.swft-modal-btn.confirm{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.swft-modal-btn.confirm:hover{box-shadow:0 0 20px rgba(200,241,53,0.2);}
+.swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
+.swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
+
 </style>
 
 </head>
@@ -387,7 +401,49 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
+<!-- SWFT CONFIRM MODAL -->
+<div class="swft-modal-overlay" id="swftModalOverlay">
+  <div class="swft-modal">
+    <div class="swft-modal-title" id="swftModalTitle"></div>
+    <div class="swft-modal-body" id="swftModalBody"></div>
+    <div class="swft-modal-actions">
+      <button class="swft-modal-btn cancel" id="swftModalCancel">Cancel</button>
+      <button class="swft-modal-btn confirm" id="swftModalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
+  /* ── SWFT CONFIRM MODAL ── */
+  window.swftConfirm = function(title, message, opts = {}) {
+    return new Promise(resolve => {
+      const overlay = document.getElementById('swftModalOverlay');
+      const titleEl = document.getElementById('swftModalTitle');
+      const bodyEl = document.getElementById('swftModalBody');
+      const cancelBtn = document.getElementById('swftModalCancel');
+      const confirmBtn = document.getElementById('swftModalConfirm');
+      titleEl.textContent = title;
+      bodyEl.textContent = message;
+      confirmBtn.className = 'swft-modal-btn ' + (opts.danger ? 'danger' : 'confirm');
+      confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Delete' : 'Confirm');
+      cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+      function cleanup(result) {
+        overlay.classList.remove('open');
+        cancelBtn.removeEventListener('click', onCancel);
+        confirmBtn.removeEventListener('click', onConfirm);
+        overlay.removeEventListener('click', onOverlay);
+        resolve(result);
+      }
+      function onCancel() { cleanup(false); }
+      function onConfirm() { cleanup(true); }
+      function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+      cancelBtn.addEventListener('click', onCancel);
+      confirmBtn.addEventListener('click', onConfirm);
+      overlay.addEventListener('click', onOverlay);
+      overlay.classList.add('open');
+    });
+  };
+
   function filterJobs(tab, status) {
     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
@@ -501,9 +557,9 @@ body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif;min-heigh
     closeNewJobModal();
     showToast(title + ' created');
     // Offer calendar sync
-    setTimeout(function() {
+    setTimeout(async function() {
       const job = { title: title, date: dateVal, time: timeVal, address: address, service: service };
-      if (dateVal && confirm('Add "' + title + '" to your calendar?')) {
+      if (dateVal && await swftConfirm('Add to Calendar', 'Add "' + title + '" to your calendar?', { confirmLabel: 'Add' })) {
         addToGoogleCalendar(job);
       }
     }, 800);

@@ -205,6 +205,20 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .ai-mode-btn{padding:5px 12px;border-radius:7px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:10.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap;display:none;}
 .ai-mode-btn.manual{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.08);color:#f5a623;}
 .ai-mode-btn:hover{filter:brightness(1.15);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.swft-modal-overlay.open{display:flex;}
+.swft-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
+.swft-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:12px;}
+.swft-modal-body{font-size:13px;line-height:1.6;color:var(--gray);margin-bottom:24px;white-space:pre-line;}
+.swft-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.swft-modal-btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid;transition:all 0.14s;}
+.swft-modal-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray);}
+.swft-modal-btn.cancel:hover{background:var(--surface2);color:var(--white);}
+.swft-modal-btn.confirm{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.swft-modal-btn.confirm:hover{box-shadow:0 0 20px rgba(200,241,53,0.2);}
+.swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
+.swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
 </style>
 </head>
 <body>
@@ -449,7 +463,49 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
+<!-- SWFT CONFIRM MODAL -->
+<div class="swft-modal-overlay" id="swftModalOverlay">
+  <div class="swft-modal">
+    <div class="swft-modal-title" id="swftModalTitle"></div>
+    <div class="swft-modal-body" id="swftModalBody"></div>
+    <div class="swft-modal-actions">
+      <button class="swft-modal-btn cancel" id="swftModalCancel">Cancel</button>
+      <button class="swft-modal-btn confirm" id="swftModalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
+/* ── SWFT CONFIRM MODAL ── */
+window.swftConfirm = function(title, message, opts = {}) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('swftModalOverlay');
+    const titleEl = document.getElementById('swftModalTitle');
+    const bodyEl = document.getElementById('swftModalBody');
+    const cancelBtn = document.getElementById('swftModalCancel');
+    const confirmBtn = document.getElementById('swftModalConfirm');
+    titleEl.textContent = title;
+    bodyEl.textContent = message;
+    confirmBtn.className = 'swft-modal-btn ' + (opts.danger ? 'danger' : 'confirm');
+    confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Delete' : 'Confirm');
+    cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      cancelBtn.removeEventListener('click', onCancel);
+      confirmBtn.removeEventListener('click', onConfirm);
+      overlay.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onCancel() { cleanup(false); }
+    function onConfirm() { cleanup(true); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
+    overlay.addEventListener('click', onOverlay);
+    overlay.classList.add('open');
+  });
+};
+
 // ── State ──
 var _channel = 'all';       // current channel filter
 var _allMessages = [];       // all messages from API
@@ -752,12 +808,7 @@ function filterContacts(q){
 async function deleteThread(escaped){
   var c=JSON.parse(unescape(escaped));
   var name=c.customerName||'this contact';
-  if(typeof swftConfirm==='function'){
-    var ok=await swftConfirm('Move conversation with <strong>'+name+'</strong> to Recently Deleted?','DELETE THREAD','🗑️');
-    if(!ok)return;
-  }else{
-    if(!confirm('Move conversation with '+name+' to Recently Deleted?'))return;
-  }
+  if(!await swftConfirm('Delete Conversation', 'Move conversation with '+name+' to Recently Deleted?', { danger: true, confirmLabel: 'Move to Deleted' }))return;
   try{
     var ids=c.messages.map(function(m){return m.id;}).filter(Boolean);
     await Promise.all(ids.map(function(id){return API.messages.delete(id);}));
@@ -1021,7 +1072,7 @@ async function loadScheduledForContact(){
 }
 
 async function clearAllScheduled(){
-  if(!confirm('Clear all pending scheduled messages?')) return;
+  if(!await swftConfirm('Clear Scheduled', 'Clear all pending scheduled messages?', { danger: true, confirmLabel: 'Clear All' })) return;
   try{
     var token=await getAuthToken();
     await fetch('/api/automations/pending',{method:'DELETE',headers:{'Authorization':'Bearer '+token}});
