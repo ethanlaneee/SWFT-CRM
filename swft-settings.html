@@ -475,6 +475,15 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   <div class="settings-body" id="integrations-list" style="gap:0;">
     <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
   </div>
+  <div class="settings-body" style="border-top:1px solid var(--border);padding-top:16px;">
+    <div class="settings-row" style="border-bottom:none;">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Google Review Link</div>
+        <div class="settings-row-desc">Sent to customers when the AI follow-up agent requests a review. Paste your Google Business review URL here.</div>
+      </div>
+      <input id="google-review-link" type="text" placeholder="https://g.page/r/your-business/review" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:300px;max-width:100%;transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border2)'" onchange="saveReviewLink(this.value)">
+    </div>
+  </div>
 </div>
 
 <!-- SMS Phone Number -->
@@ -550,25 +559,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Import Customers & Jobs</div><div class="settings-row-desc">Migrate from Jobber, ServiceTitan, Housecall Pro, or any CSV export. Import up to 500 records at a time.</div></div>
       <button class="settings-btn primary" onclick="window.location.href='swft-import'">Import CSV</button>
-    </div>
-  </div>
-</div>
-
-<!-- AI Agents -->
-<div class="settings-section">
-  <div class="settings-header"><span class="settings-header-icon">🤖</span><h3>AI AGENTS</h3></div>
-  <div class="settings-body">
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">AI Estimator</div><div class="settings-row-desc">Generates quotes from job descriptions using your past job data and pricing configuration. Available in Quotes and Jobs pages.</div></div>
-      <button class="settings-btn primary" onclick="window.location.href='swft-ai-agents'">Configure</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">AI Follow-up Agent</div><div class="settings-row-desc">Automatically follows up on unsigned quotes, overdue invoices, and sends review requests after completed jobs.</div></div>
-      <button class="settings-btn primary" onclick="window.location.href='swft-ai-agents'">Configure</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Google Review Link</div><div class="settings-row-desc">Used by the follow-up agent when requesting reviews from customers after job completion.</div></div>
-      <input id="google-review-link" type="text" placeholder="https://g.page/r/your-business/review" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:300px;max-width:100%;" onchange="saveReviewLink(this.value)">
     </div>
   </div>
 </div>
