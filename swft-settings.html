@@ -162,6 +162,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
 </style>
 </head>
 <body>
@@ -1415,9 +1416,7 @@ async function saveSocialConnect(provider) {
 }
 
 async function disconnectIntegration(id, name) {
-  var ok = typeof swftConfirm === 'function'
-    ? await swftConfirm('Disconnect <strong>' + (name || id) + '</strong>? You can reconnect at any time.', 'DISCONNECT', '🔌', 'Disconnect')
-    : confirm('Disconnect ' + (name || id) + '?');
+  var ok = await swftConfirm('Disconnect <strong>' + (name || id) + '</strong>? You can reconnect at any time.', 'DISCONNECT', '🔌', 'Disconnect');
   if (!ok) return;
   try {
     var { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
@@ -1558,9 +1557,7 @@ async function saveTemplate() {
 }
 
 async function deleteTemplate(id) {
-  var ok = typeof swftConfirm === 'function'
-    ? await swftConfirm('Delete this template?')
-    : confirm('Delete this template?');
+  var ok = await swftConfirm('Delete this template? This cannot be undone.', 'DELETE TEMPLATE', '🗑️', 'Delete');
   if (!ok) return;
   try {
     var token = await getToken();
