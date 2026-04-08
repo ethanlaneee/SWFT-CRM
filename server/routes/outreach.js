@@ -457,7 +457,7 @@ router.put("/draft/:id", async (req, res) => {
   }
 });
 
-// ── POST /api/outreach/reject — Reject draft emails ──
+// ── POST /api/outreach/reject — Reject draft emails & reset lead status ──
 router.post("/reject", async (req, res) => {
   try {
     const { emailIds } = req.body;
@@ -465,7 +465,22 @@ router.post("/reject", async (req, res) => {
 
     const batch = db.batch();
     for (const id of emailIds) {
+      const emailDoc = await db.collection("outreach_emails").doc(id).get();
       batch.update(db.collection("outreach_emails").doc(id), { status: "rejected" });
+
+      // Reset lead status so it can be re-generated
+      if (emailDoc.exists) {
+        const leadId = emailDoc.data().leadId;
+        if (leadId) {
+          const leadDoc = await db.collection("outreach_leads").doc(leadId).get();
+          if (leadDoc.exists && leadDoc.data().status === "drafted") {
+            const hasScore = leadDoc.data().score != null;
+            batch.update(db.collection("outreach_leads").doc(leadId), {
+              status: hasScore ? "scored" : "new",
+            });
+          }
+        }
+      }
     }
     await batch.commit();
 
