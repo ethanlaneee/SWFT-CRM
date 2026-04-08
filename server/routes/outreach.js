@@ -224,15 +224,16 @@ Recipient:
 - Notes: ${lead.notes || "none"}
 
 Structure:
-1. OPEN with a genuine, specific compliment about their business. Look at their company name, trade, website, and notes — find something real to compliment. Examples: their reviews look solid, their work looks great, they seem like they're growing fast, their website is clean, they clearly know their craft. Make it feel like you actually looked them up. One sentence.
-2. Empathize with the business side being the hardest part. Something like: "One thing I've seen working with home service businesses is that the hardest part isn't the actual work — it's the business side. Scheduling, invoicing, following up, quoting... it adds up fast." Make it feel like you genuinely understand their world.
-3. Position SWFT as the solution that takes that weight off their shoulders. In one or two sentences, naturally mention the key features SWFT handles: scheduling, invoicing, automated follow-ups, quoting, AI-powered messaging, customer management, and job tracking. Don't just list them robotically — weave them into the pain point. Something like "we built SWFT to handle the scheduling, invoicing, quoting, follow-ups, customer management — all of it — so you can just focus on the work." Keep it breezy but make it clear SWFT covers a lot of ground.
-4. Position this as a partnership opportunity. Use the phrase "we would love to partner with you" naturally. Mention SWFT has a 14-day free trial so they can try it with zero risk.
-5. Close with: "Here's our website if you'd like to check it out — goswft.com" (always include the website link exactly like that). Then sign off as "Ethan" (no last name, no title).
+1. OPEN by letting them know you checked out their business, then give a genuine, specific compliment. Look at their company name, trade, website, and notes — find something real. Examples: their reviews look solid, their work looks great, they seem like they're growing fast, their website is clean, they clearly know their craft. Make it feel like you actually spent time looking them up.
+2. Make them feel deeply understood. Speak to the reality that in home service businesses, the actual trade work isn't what burns people out — it's everything around it. The quoting, the scheduling, chasing down payments, managing leads, following up with customers, keeping track of jobs. That's what eats up their most valuable resource: their time. Say something that makes them think "this guy actually gets it." Don't be generic — tie it to their specific trade if you can. The goal is for them to feel like you understand their day-to-day struggle better than anyone who's ever emailed them.
+3. Position SWFT as the solution that takes all of that off their shoulders. Naturally mention the key features: scheduling, invoicing, automated follow-ups, quoting, customer management, job tracking, and AI-powered messaging. Don't just list them robotically — weave them into the pain points you just described. Frame it as "we built SWFT to handle all of that so you can focus on the work."
+4. Mention what makes SWFT different: there's no steep learning curve. If you know how to text or speak, you can use SWFT. It's AI-powered — you just tell your AI what to do and it handles it, no questions asked. Keep this natural, not like a feature spec.
+5. Position this as a partnership opportunity. Use the phrase "we would love to partner with you" naturally. Mention SWFT has a 14-day free trial so they can try it with zero risk.
+6. Close with: "Here's our website if you'd like to check it out — goswft.com" (always include the website link exactly like that). Then sign off as "Ethan" (no last name, no title).
 
 Rules:
 - Short subject line (under 50 chars), no spam words like "free" or "limited time"
-- 5-8 sentences total. Keep it tight but cover the features.
+- 7-10 sentences total. Enough to cover everything but still feels like a quick personal email.
 - Do NOT use exclamation marks more than once in the whole email
 - Do NOT sound corporate, salesy, or templated
 - Do NOT include unsubscribe links (we add those separately)
