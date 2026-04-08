@@ -23,6 +23,7 @@ async function createMessagingProfile(friendlyName, webhookUrl) {
     webhook_url: webhookUrl,
     webhook_failover_url: "",
     enabled: true,
+    whitelisted_destinations: ["CA", "US"],
   });
   return {
     messagingProfileId: profile.data.id,
