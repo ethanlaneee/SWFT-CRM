@@ -121,6 +121,48 @@ router.delete("/leads/:id", async (req, res) => {
   }
 });
 
+// ── POST /api/outreach/leads/bulk-delete — Delete multiple leads ──
+router.post("/leads/bulk-delete", async (req, res) => {
+  try {
+    const { leadIds } = req.body;
+    if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+      return res.status(400).json({ error: "Provide leadIds array" });
+    }
+
+    const batch = db.batch();
+    for (const id of leadIds) {
+      batch.delete(db.collection("outreach_leads").doc(id));
+    }
+    await batch.commit();
+    res.json({ deleted: leadIds.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── POST /api/outreach/leads/bulk-status — Change status of multiple leads ──
+router.post("/leads/bulk-status", async (req, res) => {
+  try {
+    const { leadIds, status } = req.body;
+    const validStatuses = ["new", "scored", "drafted", "emailed", "replied", "converted", "unsubscribed"];
+    if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+      return res.status(400).json({ error: "Provide leadIds array" });
+    }
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Use: ${validStatuses.join(", ")}` });
+    }
+
+    const batch = db.batch();
+    for (const id of leadIds) {
+      batch.update(db.collection("outreach_leads").doc(id), { status });
+    }
+    await batch.commit();
+    res.json({ updated: leadIds.length, status });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── POST /api/outreach/score — AI-score unscored leads ──
 router.post("/score", async (req, res) => {
   try {

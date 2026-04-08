@@ -196,6 +196,25 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .outreach-status.converted{background:rgba(200,241,53,0.35);color:var(--green);}
 .outreach-status.unsubscribed{background:rgba(255,82,82,0.15);color:var(--red);}
 
+/* LEAD SELECT MODE */
+.lead-checkbox{width:16px;height:16px;accent-color:var(--green);cursor:pointer;margin:0;}
+.lead-cb-col{width:36px;text-align:center;}
+.select-toggle{display:flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--border2);color:var(--gray);font-size:11.5px;font-weight:500;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
+.select-toggle:hover{background:var(--surface2);color:var(--white);border-color:var(--gray2);}
+.select-toggle.active{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.2);color:var(--green);}
+.bulk-bar{display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;margin-bottom:8px;animation:fadeUp 0.2s ease both;}
+.bulk-bar.show{display:flex;}
+.bulk-bar .bulk-count{font-size:12px;font-weight:600;color:var(--white);margin-right:4px;}
+.bulk-bar select{background:var(--surface2);border:1px solid var(--border2);color:var(--white);font-size:12px;padding:6px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;}
+.bulk-bar select option{background:var(--surface2);color:var(--white);}
+.bulk-bar .bulk-apply{padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid;font-family:'DM Sans',sans-serif;transition:all 0.14s;}
+.bulk-bar .bulk-apply.status-btn{background:rgba(77,159,255,0.08);border-color:rgba(77,159,255,0.2);color:var(--blue);}
+.bulk-bar .bulk-apply.status-btn:hover{background:rgba(77,159,255,0.15);}
+.bulk-bar .bulk-apply.delete-btn{background:rgba(255,82,82,0.08);border-color:rgba(255,82,82,0.2);color:var(--red);}
+.bulk-bar .bulk-apply.delete-btn:hover{background:rgba(255,82,82,0.15);}
+.bulk-bar .bulk-cancel{padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--gray);font-family:'DM Sans',sans-serif;transition:all 0.14s;}
+.bulk-bar .bulk-cancel:hover{background:var(--surface2);color:var(--white);}
+
 /* DRAFT EXPAND */
 .draft-detail{padding:16px 20px;background:var(--bg);border-top:1px solid var(--border);animation:fadeUp 0.2s ease both;}
 .draft-body{font-size:13px;line-height:1.7;color:var(--gray);white-space:pre-wrap;max-width:700px;}
@@ -753,16 +772,37 @@ function renderOutreach(data) {
     <!-- LEADS TABLE -->
     <div class="table-wrap" style="animation-delay:0.35s">
       <div class="table-header">
-        <div style="display:flex;align-items:center;">
+        <div style="display:flex;align-items:center;gap:10px;">
           <span class="table-title">All Leads</span>
           <span class="table-count" id="leadCount">(${data.leads.length})</span>
+          <button class="select-toggle" id="selectToggle" onclick="window._toggleSelectMode()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+            <span>Select</span>
+          </button>
         </div>
         <input class="search-input" type="text" placeholder="Search leads..." id="leadSearch" oninput="window._filterLeads(this.value)"/>
+      </div>
+      <div class="bulk-bar" id="bulkBar">
+        <span class="bulk-count" id="bulkCount">0 selected</span>
+        <select id="bulkStatusSelect">
+          <option value="">Change status to...</option>
+          <option value="new">New</option>
+          <option value="scored">Scored</option>
+          <option value="drafted">Drafted</option>
+          <option value="emailed">Emailed</option>
+          <option value="replied">Replied</option>
+          <option value="converted">Converted</option>
+          <option value="unsubscribed">Unsubscribed</option>
+        </select>
+        <button class="bulk-apply status-btn" onclick="window._bulkChangeStatus()">Apply</button>
+        <button class="bulk-apply delete-btn" onclick="window._bulkDeleteLeads()">Delete</button>
+        <button class="bulk-cancel" onclick="window._toggleSelectMode()">Cancel</button>
       </div>
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
+              <th class="lead-cb-col" id="selectAllCol" style="display:none;"><input type="checkbox" class="lead-checkbox" id="selectAllCb" onchange="window._selectAllLeads(this.checked)"/></th>
               <th onclick="window._sortLeads('name')" style="cursor:pointer;">Name <span class="sort-arrow" data-col="name"></span></th>
               <th>Email</th>
               <th>Phone</th>
@@ -812,11 +852,15 @@ function renderLeadsTable(leads) {
   if (countEl) countEl.textContent = `(${leads.length})`;
   if (!tbody) return;
 
+  const colSpan = selectMode ? 12 : 11;
+  const cbDisplay = selectMode ? '' : 'display:none;';
   tbody.innerHTML = leads.length === 0
-    ? '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--gray);">No leads imported yet</td></tr>'
+    ? `<tr><td colspan="${colSpan}" style="text-align:center;padding:30px;color:var(--gray);">No leads imported yet</td></tr>`
     : leads.map(l => {
       const ratingDisplay = l.rating ? `<span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px;">${l.rating}</span><span style="color:var(--gray2);font-size:10px;">/${l.reviewCount || 0}</span>` : '<span style="color:var(--gray2);">—</span>';
+      const checked = selectedLeadIds.has(l.id) ? 'checked' : '';
       return `<tr>
+      <td class="lead-cb-col" style="${cbDisplay}"><input type="checkbox" class="lead-checkbox" data-lead-id="${l.id}" ${checked} onchange="window._onLeadChecked()"/></td>
       <td>${escHtml(l.name || '—')}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(l.email)}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(l.phone || '—')}</td>
@@ -990,6 +1034,94 @@ window._bulkRejectDrafts = async function() {
     showToast(`Rejected ${ids.length} drafts`, 'info');
     await loadOutreachData();
   } catch (e) { showToast('Bulk reject failed: ' + e.message, 'error'); }
+};
+
+/* ── LEAD SELECT MODE ── */
+let selectMode = false;
+const selectedLeadIds = new Set();
+
+window._toggleSelectMode = function() {
+  selectMode = !selectMode;
+  selectedLeadIds.clear();
+
+  const toggle = document.getElementById('selectToggle');
+  const bulkBar = document.getElementById('bulkBar');
+  const selectAllCol = document.getElementById('selectAllCol');
+  const selectAllCb = document.getElementById('selectAllCb');
+
+  if (toggle) toggle.classList.toggle('active', selectMode);
+  if (bulkBar) bulkBar.classList.toggle('show', selectMode);
+  if (selectAllCol) selectAllCol.style.display = selectMode ? '' : 'none';
+  if (selectAllCb) selectAllCb.checked = false;
+
+  // Toggle checkbox columns in all body rows
+  document.querySelectorAll('#leadsTableBody .lead-cb-col').forEach(td => {
+    td.style.display = selectMode ? '' : 'none';
+  });
+  document.querySelectorAll('#leadsTableBody .lead-checkbox').forEach(cb => {
+    cb.checked = false;
+  });
+
+  window._updateBulkCount();
+};
+
+window._selectAllLeads = function(checked) {
+  selectedLeadIds.clear();
+  document.querySelectorAll('#leadsTableBody .lead-checkbox').forEach(cb => {
+    cb.checked = checked;
+    if (checked) selectedLeadIds.add(cb.dataset.leadId);
+  });
+  window._updateBulkCount();
+};
+
+window._onLeadChecked = function() {
+  selectedLeadIds.clear();
+  document.querySelectorAll('#leadsTableBody .lead-checkbox:checked').forEach(cb => {
+    selectedLeadIds.add(cb.dataset.leadId);
+  });
+  const allCbs = document.querySelectorAll('#leadsTableBody .lead-checkbox');
+  const selectAllCb = document.getElementById('selectAllCb');
+  if (selectAllCb) selectAllCb.checked = allCbs.length > 0 && selectedLeadIds.size === allCbs.length;
+  window._updateBulkCount();
+};
+
+window._updateBulkCount = function() {
+  const el = document.getElementById('bulkCount');
+  if (el) el.textContent = `${selectedLeadIds.size} selected`;
+};
+
+window._bulkChangeStatus = async function() {
+  const status = document.getElementById('bulkStatusSelect').value;
+  if (!status) return showToast('Pick a status first', 'error');
+  if (selectedLeadIds.size === 0) return showToast('No leads selected', 'error');
+  if (!confirm(`Change ${selectedLeadIds.size} lead(s) to "${status}"?`)) return;
+
+  try {
+    await outreachPost('/api/outreach/leads/bulk-status', {
+      leadIds: [...selectedLeadIds],
+      status: status,
+    });
+    showToast(`Updated ${selectedLeadIds.size} leads to "${status}"`, 'success');
+    selectedLeadIds.clear();
+    window._updateBulkCount();
+    document.getElementById('bulkStatusSelect').value = '';
+    await loadOutreachData();
+  } catch (e) { showToast('Status change failed: ' + e.message, 'error'); }
+};
+
+window._bulkDeleteLeads = async function() {
+  if (selectedLeadIds.size === 0) return showToast('No leads selected', 'error');
+  if (!confirm(`Delete ${selectedLeadIds.size} lead(s)? This cannot be undone.`)) return;
+
+  try {
+    await outreachPost('/api/outreach/leads/bulk-delete', {
+      leadIds: [...selectedLeadIds],
+    });
+    showToast(`Deleted ${selectedLeadIds.size} leads`, 'success');
+    selectedLeadIds.clear();
+    window._updateBulkCount();
+    await loadOutreachData();
+  } catch (e) { showToast('Delete failed: ' + e.message, 'error'); }
 };
 
 /* ── LEAD FILTER ── */
