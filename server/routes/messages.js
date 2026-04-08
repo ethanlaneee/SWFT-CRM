@@ -2,7 +2,7 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const multer = require("multer");
 const { google } = require("googleapis");
-const { sendSms, getUserTwilioConfig } = require("../twilio");
+const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const { handleInboundMessage } = require("../ai/receptionist-agent");
@@ -156,7 +156,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
         }
       }
 
-      const result = await sendSms(to, body, getUserTwilioConfig(user));
+      const result = await sendSms(to, body, getUserTelnyxConfig(user));
 
       await incrementSms(req.uid);
 
@@ -168,7 +168,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
         customerName: customerName || "",
         type: "sms",
         status: "sent",
-        twilioMessageSid: result.sid,
+        telnyxMessageId: result.sid,
         sentAt: Date.now(),
       };
       const docRef = await db.collection("messages").add(msgRecord);
@@ -596,56 +596,68 @@ router.post("/:id/restore", async (req, res, next) => {
 });
 
 /**
- * Twilio incoming SMS webhook handler (no auth — called by Twilio directly).
+ * Telnyx incoming SMS webhook handler (no auth — called by Telnyx directly).
+ *
+ * Telnyx sends JSON webhooks with this shape:
+ * {
+ *   data: {
+ *     event_type: "message.received",
+ *     payload: {
+ *       id: "...",
+ *       from: { phone_number: "+1..." },
+ *       to: [{ phone_number: "+1..." }],
+ *       text: "Hello",
+ *       direction: "inbound"
+ *     }
+ *   }
+ * }
  */
-async function twilioIncomingHandler(req, res) {
+async function telnyxIncomingHandler(req, res) {
   try {
-    console.log("[twilio-webhook] Incoming SMS received:", JSON.stringify(req.body || {}).slice(0, 300));
+    console.log("[telnyx-webhook] Incoming event:", JSON.stringify(req.body || {}).slice(0, 300));
 
-    // Twilio signature validation (skip if auth token not configured)
-    const twilio = require("twilio");
-    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
-    if (twilioAuthToken) {
-      const signature = req.headers['x-twilio-signature'] || '';
-      const url = `${process.env.APP_URL || 'https://goswft.com'}/api/webhooks/twilio/sms`;
-      const valid = twilio.validateRequest(twilioAuthToken, signature, url, req.body);
-      if (!valid) {
-        console.warn("[twilio-webhook] Signature validation FAILED. URL used:", url);
-        // Don't block — signature issues are common with proxy/CDN setups
-        // Just log the warning and continue processing
-      }
+    const event = req.body?.data;
+    if (!event || event.event_type !== "message.received") {
+      // Acknowledge non-SMS events (delivery receipts, etc.) silently
+      return res.sendStatus(200);
     }
 
-    const from = req.body.From || req.body.from || "";
-    const body = req.body.Body || req.body.body || "";
-    const toNumber = req.body.To || req.body.to || "";
-    const msgSid = req.body.MessageSid || req.body.messageSid || "";
+    const payload = event.payload || {};
+    const from = payload.from?.phone_number || "";
+    const body = payload.text || "";
+    const toNumber = payload.to?.[0]?.phone_number || "";
+    const msgId = payload.id || "";
 
     if (!from || !body) {
-      console.warn("[twilio-webhook] Missing From or Body in request");
-      return res.type("text/xml").send("<Response></Response>");
+      console.warn("[telnyx-webhook] Missing from or text in payload");
+      return res.sendStatus(200);
     }
 
-    console.log("[twilio-webhook] From:", from, "To:", toNumber, "Body:", body.slice(0, 100));
+    console.log("[telnyx-webhook] From:", from, "To:", toNumber, "Body:", body.slice(0, 100));
 
-    // Resolve the account owner by matching the "To" phone number to a user's
-    // dedicated Twilio number. This correctly routes inbound SMS in multi-tenant setups.
+    // Resolve the account owner by matching the "To" number to a user's dedicated number.
+    // Try telnyxPhoneNumber first, fall back to twilioPhoneNumber for migration window.
     let ownerUid = null;
     let ownerData = null;
     let orgId = "";
 
     if (toNumber) {
-      const usersSnap = await db.collection("users")
-        .where("twilioPhoneNumber", "==", toNumber).limit(1).get();
+      let usersSnap = await db.collection("users")
+        .where("telnyxPhoneNumber", "==", toNumber).limit(1).get();
+      if (usersSnap.empty) {
+        // Migration fallback: user may still have old field name
+        usersSnap = await db.collection("users")
+          .where("twilioPhoneNumber", "==", toNumber).limit(1).get();
+      }
       if (!usersSnap.empty) {
         ownerUid = usersSnap.docs[0].id;
         ownerData = usersSnap.docs[0].data();
         orgId = ownerData.orgId || ownerUid;
-        console.log("[twilio-webhook] Matched owner by phone number:", ownerData.name || ownerUid);
+        console.log("[telnyx-webhook] Matched owner by phone number:", ownerData.name || ownerUid);
       }
     }
 
-    // Fallback: first user in DB (for legacy shared-number setups)
+    // Fallback: first user in DB (for single-user / shared-number setups)
     if (!ownerUid) {
       const userSnap = await db.collection("users").limit(1).get();
       if (!userSnap.empty) {
@@ -655,7 +667,7 @@ async function twilioIncomingHandler(req, res) {
       }
     }
 
-    // Match inbound phone to a customer within this owner's org
+    // Match inbound phone to a known customer within this org
     const digits = from.replace(/\D/g, "");
     let matched = null;
     if (ownerUid) {
@@ -679,53 +691,51 @@ async function twilioIncomingHandler(req, res) {
     }
 
     if (matched) {
-      console.log("[twilio-webhook] Matched customer:", matched.customerName, "id:", matched.customerId, "orgId:", matched.orgId);
+      console.log("[telnyx-webhook] Matched customer:", matched.customerName, "id:", matched.customerId);
     } else {
-      console.log("[twilio-webhook] No customer matched for phone:", from);
+      console.log("[telnyx-webhook] No customer matched for phone:", from);
     }
-
-    console.log("[twilio-webhook] Resolved owner:", ownerUid, "orgId:", orgId, "name:", ownerData?.name || "unknown");
 
     if (!orgId || !ownerUid) {
-      console.warn("[twilio-webhook] Could not resolve org/owner for inbound SMS from:", from);
-      return res.type("text/xml").send("<Response></Response>");
+      console.warn("[telnyx-webhook] Could not resolve org/owner for inbound SMS from:", from);
+      return res.sendStatus(200);
     }
 
-    console.log("[twilio-webhook] Resolved orgId:", orgId, "ownerUid:", ownerUid, "ownerName:", ownerData?.name || "unknown");
+    console.log("[telnyx-webhook] Resolved orgId:", orgId, "ownerUid:", ownerUid);
 
     // Store inbound message
     const savedMsg = await db.collection("messages").add({
       userId: ownerUid || matched?.userId || "",
-      orgId: orgId,
+      orgId,
       customerId: matched?.customerId || "",
       customerName: matched?.customerName || from,
-      from: from,
+      from,
       to: "inbound",
-      body: body,
+      body,
       type: "sms",
       direction: "inbound",
       status: "received",
-      twilioMessageSid: msgSid || "",
+      telnyxMessageId: msgId || "",
       sentAt: Date.now(),
     });
 
-    console.log("[twilio-webhook] Message saved:", savedMsg.id);
+    console.log("[telnyx-webhook] Message saved:", savedMsg.id);
 
     // ── AI Receptionist — auto-reply if enabled ──
     if (orgId && ownerUid && ownerData) {
       try {
-        console.log("[twilio-webhook] Calling receptionist agent for org:", orgId);
+        console.log("[telnyx-webhook] Calling receptionist agent for org:", orgId);
         await handleInboundMessage(orgId, ownerUid, ownerData, from, body, matched || null);
       } catch (err) {
         console.error("[receptionist] Error handling inbound:", err.message, err.stack);
       }
     }
 
-    res.type("text/xml").send("<Response></Response>");
+    res.sendStatus(200);
   } catch (err) {
-    console.error("Twilio incoming webhook error:", err);
-    res.type("text/xml").send("<Response></Response>");
+    console.error("Telnyx incoming webhook error:", err);
+    res.sendStatus(200); // Always ACK to prevent Telnyx retries on our bugs
   }
 }
 
-module.exports = { router, twilioIncomingHandler, sendViaGmail };
+module.exports = { router, telnyxIncomingHandler, sendViaGmail };

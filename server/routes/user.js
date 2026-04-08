@@ -2,7 +2,7 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const { DEFAULT_PLAN, getPlan } = require("../plans");
 const { getUsage } = require("../usage");
-const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
+const { createMessagingProfile, buyPhoneNumber, closeMessagingProfile } = require("../telnyx");
 
 const col = () => db.collection("users");
 
@@ -48,33 +48,32 @@ router.get("/", async (req, res, next) => {
       };
       await col().doc(req.uid).set(profile);
 
-      // Provision a dedicated Twilio sub-account + phone number for this user.
+      // Provision a dedicated Telnyx Messaging Profile + phone number for this user.
       // Use geo-IP country header (set by CDN/proxy) or default to US.
       try {
         const friendlyName = `SWFT - ${req.user.email || req.uid}`;
-        const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
+        const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
         const countryCode = req.headers["cf-ipcountry"]  // Cloudflare
           || req.headers["x-vercel-ip-country"]           // Vercel
           || req.headers["x-country-code"]                // Custom proxy
           || "US";
 
-        const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
+        const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
         const { phoneNumber, phoneSid } = await buyPhoneNumber(
-          subAccountSid, subAccountAuthToken, webhookUrl, { countryCode }
+          messagingProfileId, webhookUrl, { countryCode }
         );
 
-        const twilioFields = {
-          twilioSubAccountSid: subAccountSid,
-          twilioSubAccountAuthToken: subAccountAuthToken,
-          twilioPhoneNumber: phoneNumber,
-          twilioPhoneSid: phoneSid,
+        const telnyxFields = {
+          telnyxMessagingProfileId: messagingProfileId,
+          telnyxPhoneNumber: phoneNumber,
+          telnyxPhoneSid: phoneSid,
         };
-        await col().doc(req.uid).set(twilioFields, { merge: true });
-        Object.assign(profile, twilioFields);
-        console.log(`[user] Twilio provisioned for ${req.user.email}: ${phoneNumber}`);
+        await col().doc(req.uid).set(telnyxFields, { merge: true });
+        Object.assign(profile, telnyxFields);
+        console.log(`[user] Telnyx provisioned for ${req.user.email}: ${phoneNumber}`);
       } catch (err) {
-        // Don't block account creation if Twilio provisioning fails
-        console.error("[user] Twilio provisioning failed:", err.message);
+        // Don't block account creation if Telnyx provisioning fails
+        console.error("[user] Telnyx provisioning failed:", err.message);
       }
 
       return res.json({ id: req.uid, ...profile });
@@ -134,18 +133,18 @@ router.get("/usage", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/me/setup-twilio — provision Twilio for existing users who don't have a sub-account yet
-router.post("/setup-twilio", async (req, res, next) => {
+// POST /api/me/setup-telnyx — provision Telnyx for existing users who don't have a number yet
+router.post("/setup-telnyx", async (req, res, next) => {
   try {
     const doc = await col().doc(req.uid).get();
     const data = doc.exists ? doc.data() : {};
 
-    if (data.twilioSubAccountSid && data.twilioPhoneNumber) {
-      return res.json({ success: true, phoneNumber: data.twilioPhoneNumber, message: "Twilio already provisioned" });
+    if (data.telnyxMessagingProfileId && data.telnyxPhoneNumber) {
+      return res.json({ success: true, phoneNumber: data.telnyxPhoneNumber, message: "Telnyx already provisioned" });
     }
 
     const friendlyName = `SWFT - ${data.email || req.user.email || req.uid}`;
-    const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
+    const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
 
     // Country can come from request body, user profile, or geo-IP headers
     const countryCode = req.body.countryCode || data.country
@@ -153,21 +152,26 @@ router.post("/setup-twilio", async (req, res, next) => {
       || req.headers["x-country-code"] || "US";
     const areaCode = req.body.areaCode || undefined;
 
-    const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
+    const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
     const { phoneNumber, phoneSid } = await buyPhoneNumber(
-      subAccountSid, subAccountAuthToken, webhookUrl, { countryCode, areaCode }
+      messagingProfileId, webhookUrl, { countryCode, areaCode }
     );
 
     await col().doc(req.uid).set({
-      twilioSubAccountSid: subAccountSid,
-      twilioSubAccountAuthToken: subAccountAuthToken,
-      twilioPhoneNumber: phoneNumber,
-      twilioPhoneSid: phoneSid,
+      telnyxMessagingProfileId: messagingProfileId,
+      telnyxPhoneNumber: phoneNumber,
+      telnyxPhoneSid: phoneSid,
     }, { merge: true });
 
-    console.log(`[user] Twilio provisioned for existing user ${data.email}: ${phoneNumber}`);
-    res.json({ success: true, phoneNumber, message: "Twilio sub-account and phone number provisioned" });
+    console.log(`[user] Telnyx provisioned for existing user ${data.email}: ${phoneNumber}`);
+    res.json({ success: true, phoneNumber, message: "Telnyx messaging profile and phone number provisioned" });
   } catch (err) { next(err); }
+});
+
+// Legacy alias — keep for backward compat with any bookmarked calls
+router.post("/setup-twilio", async (req, res, next) => {
+  req.url = "/setup-telnyx";
+  next("route");
 });
 
 // POST /api/me/check-trial — manually trigger trial expiry check
@@ -221,16 +225,16 @@ router.delete("/delete-account", async (req, res, next) => {
   try {
     const uid = req.uid;
 
-    // Close Twilio sub-account if one exists
+    // Release Telnyx phone number and messaging profile if provisioned
     try {
       const userDoc = await col().doc(uid).get();
       const userData = userDoc.exists ? userDoc.data() : {};
-      if (userData.twilioSubAccountSid) {
-        await closeSubAccount(userData.twilioSubAccountSid);
-        console.log(`[user] Closed Twilio sub-account ${userData.twilioSubAccountSid}`);
+      if (userData.telnyxMessagingProfileId) {
+        await closeMessagingProfile(userData.telnyxMessagingProfileId, userData.telnyxPhoneSid);
+        console.log(`[user] Released Telnyx profile ${userData.telnyxMessagingProfileId}`);
       }
     } catch (err) {
-      console.error("[user] Failed to close Twilio sub-account:", err.message);
+      console.error("[user] Failed to release Telnyx resources:", err.message);
     }
 
     const collections = ["customers", "jobs", "quotes", "invoices", "schedule"];

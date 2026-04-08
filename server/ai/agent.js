@@ -4,7 +4,7 @@ const crmTools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
 const { getIntegrationTools, executeIntegrationTool, syncJobToCalendar } = require("./integration-tools");
-const { sendSms, getUserTwilioConfig } = require("../twilio");
+const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendViaGmail } = require("../routes/messages");
 const { triggerAutomation } = require("../routes/automations");
 const { getPlan } = require("../plans");
@@ -364,7 +364,7 @@ async function executeTool(toolName, input, uid, orgId) {
           }
         }
         const userData = userDoc.exists ? userDoc.data() : {};
-        const result = await sendSms(input.to, input.body, getUserTwilioConfig(userData));
+        const result = await sendSms(input.to, input.body, getUserTelnyxConfig(userData));
         await incrementSms(uid);
         // Save to messages collection
         await db.collection("messages").add({
@@ -374,7 +374,7 @@ async function executeTool(toolName, input, uid, orgId) {
           direction: "outbound",
           to: input.to,
           body: input.body,
-          twilioSid: result.sid,
+          telnyxMessageId: result.sid,
           status: result.status,
           createdAt: Date.now(),
         });

@@ -11,7 +11,7 @@
 
 const Anthropic = require("@anthropic-ai/sdk");
 const { db } = require("../firebase");
-const { sendSms, getUserTwilioConfig } = require("../twilio");
+const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 
@@ -123,7 +123,7 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
 
   // Send the SMS reply
   try {
-    await sendSms(fromPhone, cleanReply, getUserTwilioConfig(owner));
+    await sendSms(fromPhone, cleanReply, getUserTelnyxConfig(owner));
     await incrementSms(ownerUid);
     await saveChatMessage(orgId, fromPhone, "assistant", cleanReply);
 
@@ -138,7 +138,7 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
       type: "sms",
       direction: "outbound",
       status: "sent",
-      sentVia: "twilio",
+      sentVia: "telnyx",
       sentAt: Date.now(),
       isReceptionist: true,
     });

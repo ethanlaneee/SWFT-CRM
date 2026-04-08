@@ -19,7 +19,7 @@ const { router: billingRouter, webhookHandler } = require("./routes/billing");
 const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = require("./routes/payments");
 const { router: squareRouter, squareWebhookHandler } = require("./routes/square");
 const { router: notificationsRouter } = require("./routes/notifications");
-const { router: messagesRouter, twilioIncomingHandler } = require("./routes/messages");
+const { router: messagesRouter, telnyxIncomingHandler } = require("./routes/messages");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
@@ -90,23 +90,96 @@ app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 
-// ── Incoming message webhooks (no auth — called by Twilio) ──
-app.post("/api/webhooks/twilio/sms", twilioIncomingHandler);
+// ── Incoming message webhooks (no auth — called by Telnyx) ──
+app.post("/api/webhooks/telnyx/sms", telnyxIncomingHandler);
 
 // GET version — lets you verify the endpoint is reachable in a browser
-app.get("/api/webhooks/twilio/sms", (req, res) => {
+app.get("/api/webhooks/telnyx/sms", (req, res) => {
   res.json({
     status: "ok",
-    message: "Twilio SMS webhook endpoint is reachable. POST to this URL from Twilio.",
-    twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
-    twilioPhone: process.env.TWILIO_PHONE_NUMBER ? "configured" : "missing",
+    message: "Telnyx SMS webhook endpoint is reachable. Configure this URL in your Telnyx Messaging Profile.",
+    telnyxConfigured: !!process.env.TELNYX_API_KEY,
+    telnyxPhone: process.env.TELNYX_PHONE_NUMBER ? "configured" : "missing",
     anthropicKey: process.env.ANTHROPIC_API_KEY ? "configured" : "missing",
     appUrl: process.env.APP_URL || "not set",
   });
 });
 
+// ── Inbound voice webhook — Telnyx calls this when someone dials your number ──
+// Responds with TeXML to greet the caller and optionally collect info.
+// Configure this URL in the Telnyx portal under your TeXML Application.
+app.post("/api/webhooks/telnyx/voice", async (req, res) => {
+  try {
+    const { db } = require("./firebase");
+    const toNumber = req.body?.To || req.body?.to || "";
+
+    // Look up the business name for a personalised greeting
+    let companyName = "our team";
+    if (toNumber) {
+      let snap = await db.collection("users").where("telnyxPhoneNumber", "==", toNumber).limit(1).get();
+      if (snap.empty) snap = await db.collection("users").where("twilioPhoneNumber", "==", toNumber).limit(1).get();
+      if (!snap.empty) {
+        const data = snap.docs[0].data();
+        companyName = data.company || data.name || companyName;
+      }
+    }
+
+    // TeXML response — greet the caller and record a voicemail
+    const texml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Polly.Joanna">Thanks for calling ${companyName}. We are not available right now. Please leave your name, number, and a brief message after the tone and we will get back to you shortly.</Say>
+  <Record maxLength="120" playBeep="true" transcribe="true" transcribeCallback="/api/webhooks/telnyx/transcription" />
+  <Say voice="Polly.Joanna">Thank you. Goodbye.</Say>
+</Response>`;
+
+    res.type("text/xml").send(texml);
+  } catch (err) {
+    console.error("[voice-webhook] Error:", err.message);
+    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say>Thank you for calling. Please try again later.</Say>
+</Response>`;
+    res.type("text/xml").send(fallback);
+  }
+});
+
+// ── Voice transcription callback — stores voicemail text as a notification ──
+app.post("/api/webhooks/telnyx/transcription", async (req, res) => {
+  try {
+    const { db } = require("./firebase");
+    const transcriptionText = req.body?.TranscriptionText || req.body?.transcription_text || "";
+    const from = req.body?.From || req.body?.from || "";
+    const to = req.body?.To || req.body?.to || "";
+
+    if (transcriptionText && to) {
+      let snap = await db.collection("users").where("telnyxPhoneNumber", "==", to).limit(1).get();
+      if (snap.empty) snap = await db.collection("users").where("twilioPhoneNumber", "==", to).limit(1).get();
+      if (!snap.empty) {
+        const ownerUid = snap.docs[0].id;
+        const ownerData = snap.docs[0].data();
+        const orgId = ownerData.orgId || ownerUid;
+        await db.collection("notifications").add({
+          orgId,
+          userId: ownerUid,
+          type: "voicemail",
+          title: `Voicemail from ${from}`,
+          message: transcriptionText,
+          phone: from,
+          read: false,
+          createdAt: Date.now(),
+        });
+        console.log(`[voice-webhook] Saved voicemail transcription for ${ownerUid} from ${from}`);
+      }
+    }
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("[transcription-webhook] Error:", err.message);
+    res.sendStatus(200);
+  }
+});
+
 // Full end-to-end diagnostic — simulates inbound SMS and reports every step
-app.get("/api/webhooks/twilio/test", async (req, res) => {
+app.get("/api/webhooks/telnyx/test", async (req, res) => {
   const { db } = require("./firebase");
   const { getReceptionistConfig } = require("./ai/receptionist-agent");
   const { getPlan } = require("./plans");
@@ -143,14 +216,15 @@ app.get("/api/webhooks/twilio/test", async (req, res) => {
       diag.steps.push(`OK: SMS limit fine (${usage.smsCount}/${plan.smsLimit})`);
     }
 
-    // Step 4: Check Twilio credentials
-    const hasTwilio = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_API_KEY_SID && process.env.TWILIO_API_KEY_SECRET);
-    diag.twilioConfigured = hasTwilio;
-    diag.twilioPhone = process.env.TWILIO_PHONE_NUMBER || "not set";
-    if (!hasTwilio) {
-      diag.steps.push("FAIL: Twilio credentials missing (need ACCOUNT_SID, API_KEY_SID, API_KEY_SECRET)");
+    // Step 4: Check Telnyx credentials
+    const hasTelnyx = !!process.env.TELNYX_API_KEY;
+    diag.telnyxConfigured = hasTelnyx;
+    diag.telnyxPhone = process.env.TELNYX_PHONE_NUMBER || "not set";
+    diag.userTelnyxPhone = userData.telnyxPhoneNumber || "not provisioned";
+    if (!hasTelnyx) {
+      diag.steps.push("FAIL: TELNYX_API_KEY not configured");
     } else {
-      diag.steps.push("OK: Twilio credentials configured");
+      diag.steps.push("OK: Telnyx API key configured");
     }
 
     // Step 5: Check Anthropic key
@@ -176,12 +250,12 @@ app.get("/api/webhooks/twilio/test", async (req, res) => {
         const replyText = testReply.content[0]?.text || "";
         diag.steps.push(`OK: Claude replied: "${replyText.slice(0, 50)}"`);
 
-        // Test Twilio send
+        // Test Telnyx SMS send
         try {
-          const { sendSms } = require("./twilio");
+          const { sendSms } = require("./telnyx");
           const testPhone = req.query.to || "";
           if (testPhone) {
-            await sendSms(testPhone, "SWFT AI Receptionist test - this confirms SMS sending works!");
+            await sendSms(testPhone, "SWFT AI Receptionist test — Telnyx SMS confirmed!");
             diag.steps.push(`OK: Test SMS sent to ${testPhone}`);
           } else {
             diag.steps.push("SKIP: Add ?to=+1XXXXXXXXXX to test SMS sending");
@@ -448,7 +522,7 @@ app.get("/health", async (req, res) => {
     firebaseAuth: firebaseOk,
     firebaseError,
     adminProjectId: fb.projectId,
-    twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+    telnyxConfigured: !!process.env.TELNYX_API_KEY,
     appUrl: process.env.APP_URL || "not set",
   });
 });

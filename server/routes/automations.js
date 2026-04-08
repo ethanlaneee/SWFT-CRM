@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const crypto = require("crypto");
 const { db } = require("../firebase");
-const { sendSms, getUserTwilioConfig } = require("../twilio");
+const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
 
@@ -335,7 +335,7 @@ async function processScheduledMessages() {
         }
       } else if (msg.messageType === "sms") {
         if (!msg.phone) throw new Error("No phone number for SMS");
-        await sendSms(msg.phone, msg.message, getUserTwilioConfig(orgUser));
+        await sendSms(msg.phone, msg.message, getUserTelnyxConfig(orgUser));
       } else if (msg.messageType === "notification") {
         // Internal notification — create in notifications collection
         await db.collection("notifications").add({
@@ -392,7 +392,7 @@ async function processScheduledMessages() {
           customerName: msg.customerName || "",
           type: msg.messageType,
           status: "sent",
-          sentVia: msg.messageType === "sms" ? "twilio" : "gmail",
+          sentVia: msg.messageType === "sms" ? "telnyx" : "gmail",
           sentAt: Date.now(),
           scheduledMessageId: msgDoc.id,
           isAutomation: !!msg.automationId,

@@ -15,7 +15,7 @@
  */
 
 const { db } = require("../firebase");
-const { sendSms, getUserTwilioConfig } = require("../twilio");
+const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const { google } = require("googleapis");
@@ -399,7 +399,7 @@ async function processFollowups() {
 
       // Send SMS (if phone on file)
       if (followup.phone) {
-        await sendSms(followup.phone, followup.message, getUserTwilioConfig(owner.user));
+        await sendSms(followup.phone, followup.message, getUserTelnyxConfig(owner.user));
         await incrementSms(owner.uid);
       }
 
@@ -426,7 +426,7 @@ async function processFollowups() {
         customerName: followup.customerName || "",
         type: "sms",
         status: "sent",
-        sentVia: "twilio",
+        sentVia: "telnyx",
         sentAt: Date.now(),
         isFollowup: true,
         followupId: fDoc.id,

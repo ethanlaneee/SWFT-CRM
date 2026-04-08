@@ -484,7 +484,7 @@ async function loadData(){
     _allMessages=results[0];
     _customers=results[1];
     var user=results[2];
-    var num=user.twilioPhoneNumber||'+1 (587) 315-3452';
+    var num=user.telnyxPhoneNumber||user.twilioPhoneNumber||'+1 (587) 315-3452';
     var el=document.getElementById('your-number');
     if(el) el.textContent='Your #: '+num;
 

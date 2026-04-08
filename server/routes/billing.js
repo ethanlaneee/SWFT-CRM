@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { getStripe } = require("../utils/stripe");
-const { createSubAccount, buyPhoneNumber, closeSubAccount } = require("../twilio");
+const { createMessagingProfile, buyPhoneNumber, closeMessagingProfile } = require("../telnyx");
 
 const { PLANS, OVERAGE_PACKS } = require("../plans");
 const { addSmsCredits, addAiCredits } = require("../usage");
@@ -45,12 +45,12 @@ async function syncBillingAddress(uid, stripeCustomerId) {
     await users().doc(uid).set(billingAddress, { merge: true });
     console.log(`[billing] Saved billing address for ${uid}: ${addr.city}, ${addr.state} ${addr.country}`);
 
-    // Provision or re-provision Twilio with the billing country/region
+    // Provision or re-provision Telnyx with the billing country/region
     const userDoc = await users().doc(uid).get();
     const userData = userDoc.exists ? userDoc.data() : {};
 
     const billingCountry = addr.country || "US";
-    const currentPhone = userData.twilioPhoneNumber || "";
+    const currentPhone = userData.telnyxPhoneNumber || "";
 
     // Check if current phone already matches the billing country.
     // Country calling codes: US/CA = +1, GB = +44, AU = +61, etc.
@@ -62,39 +62,38 @@ async function syncBillingAddress(uid, stripeCustomerId) {
     const expectedPrefix = COUNTRY_PREFIXES[billingCountry];
     const alreadyMatches = expectedPrefix && currentPhone.startsWith(expectedPrefix);
 
-    if (!userData.twilioSubAccountSid || !alreadyMatches) {
-      // Close old sub-account if one exists but doesn't match
-      if (userData.twilioSubAccountSid && !alreadyMatches) {
+    if (!userData.telnyxMessagingProfileId || !alreadyMatches) {
+      // Close old messaging profile + number if country changed
+      if (userData.telnyxMessagingProfileId && !alreadyMatches) {
         try {
-          await closeSubAccount(userData.twilioSubAccountSid);
-          console.log(`[billing] Closed old Twilio sub-account ${userData.twilioSubAccountSid} (country mismatch)`);
+          await closeMessagingProfile(userData.telnyxMessagingProfileId, userData.telnyxPhoneSid);
+          console.log(`[billing] Released old Telnyx profile ${userData.telnyxMessagingProfileId} (country mismatch)`);
         } catch (e) {
-          console.error("[billing] Failed to close old sub-account:", e.message);
+          console.error("[billing] Failed to release old Telnyx profile:", e.message);
         }
       }
 
       const friendlyName = `SWFT - ${userData.email || uid}`;
-      const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/twilio/sms`;
+      const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
 
       // For US/CA, use the billing state to get a regionally local number
       const region = (billingCountry === "US" || billingCountry === "CA")
         ? (addr.state || undefined)
         : undefined;
 
-      const { subAccountSid, subAccountAuthToken } = await createSubAccount(friendlyName);
+      const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
       const { phoneNumber, phoneSid } = await buyPhoneNumber(
-        subAccountSid, subAccountAuthToken, webhookUrl,
+        messagingProfileId, webhookUrl,
         { countryCode: billingCountry, region }
       );
 
       await users().doc(uid).set({
-        twilioSubAccountSid: subAccountSid,
-        twilioSubAccountAuthToken: subAccountAuthToken,
-        twilioPhoneNumber: phoneNumber,
-        twilioPhoneSid: phoneSid,
+        telnyxMessagingProfileId: messagingProfileId,
+        telnyxPhoneNumber: phoneNumber,
+        telnyxPhoneSid: phoneSid,
       }, { merge: true });
 
-      console.log(`[billing] Twilio provisioned for ${uid} in ${billingCountry}: ${phoneNumber}`);
+      console.log(`[billing] Telnyx provisioned for ${uid} in ${billingCountry}: ${phoneNumber}`);
     }
   } catch (err) {
     console.error("[billing] syncBillingAddress failed:", err.message);
