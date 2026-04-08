@@ -17,6 +17,12 @@ const { sendSimpleGmail } = require("../utils/email");
 const Anthropic = require("@anthropic-ai/sdk");
 const claude = new Anthropic();
 
+// ── CAN-SPAM compliance constants ──
+const BASE_URL = process.env.BASE_URL || "https://goswft.com";
+const COMPANY_NAME = "SWFT";
+// CAN-SPAM requires a valid postal address. Set COMPANY_ADDRESS env var when available.
+const PHYSICAL_ADDRESS = process.env.COMPANY_ADDRESS || "";
+
 // ── Helper: get the outreach Gmail user (info@goswft.com) ──
 async function getOutreachSender() {
   // Find the user with info@goswft.com connected
@@ -301,7 +307,7 @@ router.get("/emails", async (req, res) => {
   }
 });
 
-// ── POST /api/outreach/approve — Approve emails for sending ──
+// ── POST /api/outreach/approve — Approve emails for sending (CAN-SPAM compliant) ──
 router.post("/approve", async (req, res) => {
   try {
     const { emailIds } = req.body; // Array of outreach_email doc IDs
@@ -324,24 +330,46 @@ router.post("/approve", async (req, res) => {
 
       const email = doc.data();
 
-      // Build HTML body
+      // ── Suppression check: skip if lead unsubscribed since draft was created ──
+      const leadDoc = await db.collection("outreach_leads").doc(email.leadId).get();
+      if (!leadDoc.exists || leadDoc.data().status === "unsubscribed") {
+        await db.collection("outreach_emails").doc(emailId).update({ status: "rejected" });
+        results.push({ id: emailId, status: "skipped", reason: "lead unsubscribed" });
+        continue;
+      }
+
+      // ── Build CAN-SPAM compliant footer ──
+      const unsubUrl = `${BASE_URL}/unsubscribe?id=${email.leadId}`;
+
+      const addressLine = PHYSICAL_ADDRESS ? `<p style="margin: 0 0 4px;">${COMPANY_NAME} &mdash; ${PHYSICAL_ADDRESS}</p>` : "";
+      const addressText = PHYSICAL_ADDRESS ? `${COMPANY_NAME} — ${PHYSICAL_ADDRESS}\n` : "";
+
       const htmlBody = `
         <div style="font-family: sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
           ${email.body.split("\n").map(p => `<p>${p}</p>`).join("")}
-          <br/>
-          <p style="font-size: 12px; color: #999;">
-            If you don't want to hear from us, just reply "unsubscribe" and we won't contact you again.
-          </p>
+        </div>
+        <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #999; line-height: 1.5;">
+          ${addressLine}
+          <p style="margin: 0;">Not interested? <a href="${unsubUrl}" style="color: #666; text-decoration: underline;">Unsubscribe</a> — you won't hear from us again.</p>
         </div>
       `;
+
+      const textFooter = `\n\n---\n${addressText}Not interested? Unsubscribe here: ${unsubUrl}`;
+
+      // ── List-Unsubscribe headers (required by Gmail/Yahoo for bulk senders) ──
+      const extraHeaders = {
+        "List-Unsubscribe": `<${unsubUrl}>, <mailto:info@goswft.com?subject=Unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      };
 
       try {
         const result = await sendSimpleGmail(
           sender,
           email.leadEmail,
           email.subject,
-          email.body + "\n\nIf you don't want to hear from us, just reply \"unsubscribe\" and we won't contact you again.",
-          htmlBody
+          email.body + textFooter,
+          htmlBody,
+          { extraHeaders }
         );
 
         await db.collection("outreach_emails").doc(emailId).update({

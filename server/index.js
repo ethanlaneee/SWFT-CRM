@@ -515,6 +515,34 @@ app.use("/api/transcribe",    auth, checkAccess,  require("./routes/transcribe")
 app.use("/api/dev",           auth,               require("./routes/dev"));
 app.use("/api/outreach",      auth,               require("./routes/outreach"));
 
+// ── Public one-click unsubscribe for outreach emails (no auth — recipient clicks this) ──
+app.get("/unsubscribe", async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).send("Missing id");
+  try {
+    const doc = await db.collection("outreach_leads").doc(id).get();
+    if (doc.exists && doc.data().status !== "unsubscribed") {
+      await doc.ref.update({ status: "unsubscribed" });
+    }
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribed</title><style>body{font-family:-apple-system,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#0a0a0a;color:#f0f0f0;}.box{text-align:center;max-width:420px;padding:40px;}.check{font-size:48px;margin-bottom:16px;}h2{margin:0 0 8px;font-size:22px;}p{color:#7a7a7a;font-size:15px;line-height:1.5;}</style></head><body><div class="box"><div class="check">&#10003;</div><h2>You've been unsubscribed</h2><p>You won't receive any more emails from SWFT. We're sorry to see you go.</p></div></body></html>`);
+  } catch (e) {
+    console.error("[unsubscribe] Error:", e.message);
+    res.status(500).send("Something went wrong. Please email info@goswft.com to unsubscribe.");
+  }
+});
+app.post("/unsubscribe", async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).send("Missing id");
+  try {
+    const doc = await db.collection("outreach_leads").doc(id).get();
+    if (doc.exists && doc.data().status !== "unsubscribed") {
+      await doc.ref.update({ status: "unsubscribed" });
+    }
+    res.status(200).send("Unsubscribed");
+  } catch (e) {
+    res.status(500).send("Error");
+  }
+});
 
 // ── Error handler ──
 app.use((err, req, res, next) => {
