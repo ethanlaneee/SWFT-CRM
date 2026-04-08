@@ -894,10 +894,12 @@ async function npSearch() {
           var areaCode = digits.length >= 4 ? digits.slice(1, 4) : digits;
           displayNum = '(' + areaCode + ') Local Number';
         }
+        var isWildcard = raw.includes('-');
+        var btnLabel = isWildcard ? 'Order' : 'Select';
         return '<div class="np-num-row">' +
           '<div class="np-num">' + displayNum + '</div>' +
           '<div class="np-loc">' + loc + '</div>' +
-          '<button class="np-select-btn" onclick="npSelectNumber(\'' + raw.replace(/'/g, '') + '\')">Select</button>' +
+          '<button class="np-select-btn" onclick="npSelectNumber(\'' + raw.replace(/'/g, '') + '\')">' + btnLabel + '</button>' +
         '</div>';
       }).join('') +
     '</div>';
@@ -907,7 +909,11 @@ async function npSearch() {
 }
 
 async function npSelectNumber(phoneNumber) {
-  if (!confirm('Select ' + phoneNumber + ' as your SWFT number? Your current number will be released.')) return;
+  var isWildcard = phoneNumber.includes('-');
+  var msg = isWildcard
+    ? 'Order a local number in this area code? Your current number will be released.'
+    : 'Select ' + phoneNumber + ' as your SWFT number? Your current number will be released.';
+  if (!confirm(msg)) return;
   try {
     var token = await getToken();
     var res = await fetch('/api/me/select-number', {
@@ -918,9 +924,9 @@ async function npSelectNumber(phoneNumber) {
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed');
     var smsEl = document.getElementById('sms-number-display');
-    if (smsEl) { smsEl.textContent = phoneNumber; smsEl.style.color = 'var(--white)'; }
+    if (smsEl) { smsEl.textContent = data.phoneNumber || phoneNumber; smsEl.style.color = 'var(--white)'; }
     closeNumberPicker();
-    showToast('Number updated to ' + phoneNumber);
+    showToast('Number updated to ' + (data.phoneNumber || phoneNumber));
   } catch(e) {
     showToast('Error: ' + (e.message || 'could not select number'));
   }

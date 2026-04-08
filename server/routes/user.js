@@ -296,17 +296,31 @@ router.post("/select-number", async (req, res, next) => {
       try { await releasePhoneNumber(userData.telnyxPhoneSid); } catch (_) { /* non-fatal */ }
     }
 
-    // Order the chosen number
-    const { phoneSid } = await orderPhoneNumber(phoneNumber, messagingProfileId);
+    let realNumber = phoneNumber;
+    let phoneSid;
+
+    if (phoneNumber.includes("-")) {
+      // Telnyx returned a wildcard pattern (e.g. "+18252------") — common for CA numbers.
+      // Extract the area code and buy the first real available number in that area code.
+      const digits = phoneNumber.replace(/\D/g, "");
+      const areaCode = digits.length >= 4 ? digits.slice(1, 4) : undefined;
+      const countryCode = digits.startsWith("1") ? (areaCode ? "CA" : "US") : "US";
+      console.log(`[user] Wildcard number detected, buying by area code ${areaCode || "any"}`);
+      const result = await buyPhoneNumber(messagingProfileId, webhookUrl, { countryCode, areaCode });
+      realNumber = result.phoneNumber;
+      phoneSid = result.phoneSid;
+    } else {
+      ({ phoneSid } = await orderPhoneNumber(phoneNumber, messagingProfileId));
+    }
 
     await col().doc(req.uid).set({
-      telnyxPhoneNumber: phoneNumber,
+      telnyxPhoneNumber: realNumber,
       telnyxPhoneSid: phoneSid,
       telnyxMessagingProfileId: messagingProfileId,
     }, { merge: true });
 
-    console.log(`[user] Number changed for ${userData.email || req.uid}: ${phoneNumber}`);
-    res.json({ success: true, phoneNumber, messagingProfileId });
+    console.log(`[user] Number changed for ${userData.email || req.uid}: ${realNumber}`);
+    res.json({ success: true, phoneNumber: realNumber, messagingProfileId });
   } catch (err) { next(err); }
 });
 
