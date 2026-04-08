@@ -909,12 +909,15 @@ section{position:relative;z-index:1;}
 
 @media(max-width:480px){
   .chat-window{
-    width:100vw;right:0;left:0;bottom:auto;top:0;
-    max-height:100vh;max-height:100dvh;height:100vh;height:100dvh;
-    border-radius:0;
+    width:100vw;right:0;left:0;bottom:0;top:auto;
+    max-height:none;height:auto;
+    max-height:calc(100vh - env(safe-area-inset-top));
+    border-radius:16px 16px 0 0;
     animation:none;
   }
-  .chat-body{max-height:none;flex:1;min-height:0;}
+  .chat-window.open ~ .chat-fab{display:none;}
+  .chat-body{max-height:50vh;min-height:120px;flex:1;}
+  .chat-input-area{padding:12px 16px calc(12px + env(safe-area-inset-bottom));}
   .chat-close-mobile{display:block;}
   .chat-header-sub{margin-left:0;}
   .chat-fab{bottom:20px;right:16px;width:50px;height:50px;}
@@ -1710,6 +1713,28 @@ document.querySelectorAll('.pricing-card.reveal').forEach((el, i) => { el.datase
     fab.classList.toggle('open', isOpen);
     if (isOpen) input.focus();
   });
+
+  // iOS keyboard handling: scroll input into view when keyboard opens
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+      if (win.classList.contains('open')) {
+        win.style.height = window.visualViewport.height + 'px';
+      }
+    });
+    window.visualViewport.addEventListener('scroll', function() {
+      if (win.classList.contains('open')) {
+        win.style.bottom = (window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop) + 'px';
+      }
+    });
+  }
+  // Reset height when chat closes
+  const origClose = win.querySelector('.chat-close-mobile');
+  if (origClose) {
+    origClose.addEventListener('click', function() {
+      win.style.height = '';
+      win.style.bottom = '';
+    });
+  }
 
   input.addEventListener('input', function() {
     sendBtn.disabled = !input.value.trim() || sending;
