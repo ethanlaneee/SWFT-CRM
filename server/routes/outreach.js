@@ -223,7 +223,7 @@ Recipient:
 
 STANDARD EMAIL TEMPLATE:
 
-Subject: [Short, casual subject line under 50 chars — something about their business, like you're sending a quick note to someone you came across]
+Subject: [Casual subject line like "Saw your [trade] work in [city]" — just reference their trade and location. Examples: "Saw your HVAC work in Calgary", "Saw your plumbing work in Austin", "Saw your landscaping in Denver". Keep it simple and personal, NOT salesy or clever.]
 
 Hey [First name],
 
