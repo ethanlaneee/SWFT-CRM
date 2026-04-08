@@ -231,25 +231,59 @@ body::after{
 .btn-cta:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(200,241,53,0.25);}
 .btn-cta svg{width:18px;height:18px;}
 
-/* MOBILE NAV LINKS */
-.mobile-nav-links{
-  display:none;
-  position:fixed;top:60px;left:0;right:0;z-index:99;
-  background:rgba(10,10,10,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+/* MOBILE HAMBURGER + SIDEBAR */
+.hamburger{
+  display:none;background:none;border:none;cursor:pointer;padding:4px;
+  flex-direction:column;gap:5px;justify-content:center;
+}
+.hamburger span{display:block;width:22px;height:2px;background:var(--white);border-radius:2px;transition:all 0.25s;}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+
+.mobile-sidebar-overlay{
+  display:none;position:fixed;inset:0;z-index:998;
+  background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  opacity:0;transition:opacity 0.25s;
+}
+.mobile-sidebar-overlay.open{display:block;opacity:1;}
+
+.mobile-sidebar{
+  position:fixed;top:0;right:-280px;z-index:999;
+  width:280px;height:100vh;height:100dvh;
+  background:var(--surface);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:80px 28px 40px;gap:0;
+  transition:right 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:-8px 0 32px rgba(0,0,0,0.4);
+}
+.mobile-sidebar.open{right:0;}
+
+.mobile-sidebar a{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 0;
+  font-size:16px;font-weight:500;color:var(--gray);text-decoration:none;
   border-bottom:1px solid var(--border);
-  padding:10px 20px;
-  gap:6px;
-  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  transition:color 0.14s;
 }
-.mobile-nav-links::-webkit-scrollbar{display:none;}
-.mobile-nav-links a{
-  flex-shrink:0;
-  padding:6px 14px;border-radius:6px;
-  font-size:12px;font-weight:500;color:var(--gray);text-decoration:none;
-  background:var(--surface);border:1px solid var(--border);
-  transition:all 0.14s;white-space:nowrap;
+.mobile-sidebar a:last-of-type{border-bottom:none;}
+.mobile-sidebar a:hover,.mobile-sidebar a:active{color:var(--white);}
+.mobile-sidebar a svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;}
+
+.mobile-sidebar .sidebar-cta{
+  margin-top:auto;
+  display:flex;flex-direction:column;gap:10px;
 }
-.mobile-nav-links a:hover,.mobile-nav-links a:active{color:var(--white);border-color:var(--gray2);}
+.mobile-sidebar .sidebar-cta a{
+  border-bottom:none;justify-content:center;
+  padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
+}
+.mobile-sidebar .sidebar-cta .sidebar-login{
+  background:transparent;border:1px solid var(--border2);color:var(--white);
+}
+.mobile-sidebar .sidebar-cta .sidebar-trial{
+  background:var(--green);color:#0a0a0a;border:none;
+}
 
 /* ── SECTIONS ── */
 section{position:relative;z-index:1;}
@@ -754,13 +788,9 @@ section{position:relative;z-index:1;}
 
 @media(max-width:768px){
   .nav{padding:14px 20px;}
-  .nav-links .nav-link{display:none;}
-  .nav-links{gap:10px;}
-  .btn-login{padding:8px 16px;font-size:13px;}
-  .btn-cta{padding:8px 16px;font-size:13px;border-radius:8px;}
-  .btn-cta svg{width:14px;height:14px;}
-  .mobile-nav-links{display:flex;}
-  .hero{padding:160px 0 60px;}
+  .nav-links{display:none;}
+  .hamburger{display:flex;}
+  .hero{padding:130px 0 60px;}
   .hero-trust{gap:20px;}
   .container{padding:0 20px;}
   .pain-grid{grid-template-columns:1fr;}
@@ -907,13 +937,43 @@ section{position:relative;z-index:1;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
   </div>
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
-<div class="mobile-nav-links" id="mobileNav">
-  <a href="#problems">Why SWFT</a>
-  <a href="#product">Product</a>
-  <a href="#pricing">Pricing</a>
-  <a href="#compare">Compare</a>
+
+<div class="mobile-sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="mobile-sidebar" id="sidebar">
+  <a href="#problems" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5"/><circle cx="12" cy="12" r="10"/></svg>
+    Why SWFT
+  </a>
+  <a href="#product" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6"/></svg>
+    Product
+  </a>
+  <a href="#pricing" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Pricing
+  </a>
+  <a href="#compare" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+    Compare
+  </a>
+  <div class="sidebar-cta">
+    <a href="/swft-login" class="sidebar-login">Log In</a>
+    <a href="/swft-checkout" class="sidebar-trial">Start Free Trial</a>
+  </div>
 </div>
+
+<script>
+function toggleSidebar(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+  document.body.style.overflow = document.getElementById('sidebar').classList.contains('open') ? 'hidden' : '';
+}
+</script>
 
 <!-- ── HERO ── -->
 <section class="hero">
