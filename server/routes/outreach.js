@@ -532,27 +532,12 @@ router.post("/reject", async (req, res) => {
   }
 });
 
-// ── POST /api/outreach/clear-rejected — Remove all rejected emails from records ──
-router.post("/clear-rejected", async (req, res) => {
-  try {
-    const snap = await db.collection("outreach_emails").where("status", "==", "rejected").get();
-    if (snap.empty) return res.json({ deleted: 0 });
-
-    const batch = db.batch();
-    snap.docs.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
-    res.json({ deleted: snap.size });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ── POST /api/outreach/reset — Delete all emails and reset lead statuses back to "new" ──
-router.post("/reset", async (req, res) => {
+// ── POST /api/outreach/clear-emails — Delete all email records and reset lead statuses ──
+router.post("/clear-emails", async (req, res) => {
   try {
     let emailCount = 0;
 
-    // Delete all emails (drafts, sent, rejected)
+    // Delete all emails (drafts, sent, rejected) in batches
     while (true) {
       const snap = await db.collection("outreach_emails").limit(500).get();
       if (snap.empty) break;
@@ -562,26 +547,26 @@ router.post("/reset", async (req, res) => {
       emailCount += snap.size;
     }
 
-    // Reset all lead statuses back to "new" and clear email tracking fields
-    let leadsReset = 0;
-    const leadsSnap = await db.collection("outreach_leads").limit(500).get();
-    if (!leadsSnap.empty) {
-      const batch = db.batch();
-      leadsSnap.docs.forEach(doc => {
-        batch.update(doc.ref, {
-          status: "new",
-          score: null,
-          emailCount: 0,
-          lastContactedAt: null,
-          lastThreadId: null,
-          lastRfcMessageId: null,
+    // Reset leads that were drafted/emailed back so they can be re-processed
+    const statusesToReset = ["drafted", "emailed"];
+    for (const status of statusesToReset) {
+      const snap = await db.collection("outreach_leads").where("status", "==", status).get();
+      if (!snap.empty) {
+        const batch = db.batch();
+        snap.docs.forEach(doc => {
+          batch.update(doc.ref, {
+            status: doc.data().score != null ? "scored" : "new",
+            emailCount: 0,
+            lastContactedAt: null,
+            lastThreadId: null,
+            lastRfcMessageId: null,
+          });
         });
-      });
-      await batch.commit();
-      leadsReset = leadsSnap.size;
+        await batch.commit();
+      }
     }
 
-    res.json({ emails: emailCount, leadsReset });
+    res.json({ deleted: emailCount });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
