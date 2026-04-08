@@ -757,7 +757,7 @@ function renderOutreach(data) {
       <div class="table-scroll">
         <table class="data-table">
           <thead>
-            <tr><th>Name</th><th>Email</th><th>Company</th><th>Trade</th><th>Score</th><th>Status</th><th>Emails</th><th>Last Contact</th><th>Added</th></tr>
+            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Trade</th><th>Score</th><th>Status</th><th>Emails</th><th>Last Contact</th><th>Added</th></tr>
           </thead>
           <tbody id="leadsTableBody"></tbody>
         </table>
@@ -796,10 +796,11 @@ function renderLeadsTable(leads) {
   if (!tbody) return;
 
   tbody.innerHTML = leads.length === 0
-    ? '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray);">No leads imported yet</td></tr>'
+    ? '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray);">No leads imported yet</td></tr>'
     : leads.map(l => `<tr>
       <td>${escHtml(l.name || '—')}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(l.email)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(l.phone || '—')}</td>
       <td>${escHtml(l.company || '—')}</td>
       <td>${escHtml(l.trade || '—')}</td>
       <td>${scoreBadge(l.score)}</td>
