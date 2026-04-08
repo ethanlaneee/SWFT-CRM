@@ -227,8 +227,9 @@ Structure:
 1. OPEN with a genuine, specific compliment about their business. Look at their company name, trade, website, and notes — find something real to compliment. Examples: their reviews look solid, their work looks great, they seem like they're growing fast, their website is clean, they clearly know their craft. Make it feel like you actually looked them up. One sentence.
 2. Transition naturally into a pain point that someone in their trade actually deals with (scheduling chaos, chasing payments, quoting taking forever, etc.)
 3. Mention ONE specific SWFT feature that solves that pain point — don't list features, just weave it in naturally.
-4. End with a soft CTA (not pushy — "worth a look?" or "happy to show you how it works" or "want me to send you a quick demo?")
-5. Sign off as "Ethan" (no last name, no title)
+4. Position this as an opportunity and a partnership. Use the phrase "we would love to partner with you" naturally somewhere in the email. Mention SWFT has a 14-day free trial so they can try it with zero risk.
+5. End with a soft CTA (not pushy — "want to try it out?" or "happy to set you up" or "want me to send you a link?")
+6. Sign off as "Ethan" (no last name, no title)
 
 Rules:
 - Short subject line (under 50 chars), no spam words like "free" or "limited time"
@@ -236,7 +237,7 @@ Rules:
 - Do NOT use exclamation marks more than once in the whole email
 - Do NOT sound corporate, salesy, or templated
 - Do NOT include unsubscribe links (we add those separately)
-- Do NOT mention pricing
+- Do NOT mention specific pricing numbers
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
@@ -469,8 +470,8 @@ router.post("/followup", async (req, res) => {
       const sequenceNum = (lead.emailCount || 1) + 1;
 
       const anglePrompts = {
-        2: "Take a different angle than the first email. Maybe mention a specific pain point for their trade, or share a quick stat about how much time CRM saves.",
-        3: "This is the final follow-up. Be very brief (2-3 sentences). Respectful breakup email — say something like 'figured this wasn't the right time, no hard feelings' with a final soft CTA.",
+        2: "Take a different angle than the first email. Maybe mention a specific pain point for their trade, or share a quick stat about how much time CRM saves. Remind them about the 14-day free trial — zero risk to try it out.",
+        3: "This is the final follow-up. Be very brief (2-3 sentences). Respectful breakup email — say something like 'figured this wasn't the right time, no hard feelings' with a final soft CTA. Mention the free trial one last time.",
       };
 
       const response = await claude.messages.create({
