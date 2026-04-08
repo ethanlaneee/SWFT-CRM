@@ -185,6 +185,7 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .outreach-status{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:500;padding:3px 9px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;}
 .outreach-status.new{background:rgba(122,122,122,0.15);color:var(--gray);}
 .outreach-status.scored{background:rgba(77,159,255,0.15);color:var(--blue);}
+.outreach-status.drafted{background:rgba(245,166,35,0.15);color:var(--amber);}
 .outreach-status.emailed{background:rgba(200,241,53,0.15);color:var(--green);}
 .outreach-status.replied{background:rgba(200,241,53,0.25);color:var(--green);}
 .outreach-status.converted{background:rgba(200,241,53,0.35);color:var(--green);}
@@ -654,8 +655,9 @@ function renderOutreach(data) {
     <div class="kpi-grid">
       ${kpiCard('Total Leads', fmt(ls.total), '', 'green', 0)}
       ${kpiCard('New (Unscored)', fmt(ls.new), '', 'white', 1)}
-      ${kpiCard('Scored', fmt(ls.scored), 'ready for email gen', 'blue', 2)}
-      ${kpiCard('Emailed', fmt(ls.emailed), '', 'green', 3)}
+      ${kpiCard('Scored', fmt(ls.scored), '', 'blue', 2)}
+      ${kpiCard('Drafted', fmt(ls.drafted), 'awaiting approval', 'amber', 3)}
+      ${kpiCard('Emailed', fmt(ls.emailed), '', 'green', 4)}
       ${kpiCard('Replied', fmt(ls.replied), '', 'green', 4)}
       ${kpiCard('Converted', fmt(ls.converted), '', 'green', 5)}
       ${kpiCard('Unsubscribed', fmt(ls.unsubscribed), '', 'red', 6)}

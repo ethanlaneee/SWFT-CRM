@@ -189,18 +189,18 @@ Respond with ONLY a JSON array: [{"email": "...", "score": N, "reason": "one sen
 // ── POST /api/outreach/generate — AI-generate personalized emails (drafts only) ──
 router.post("/generate", async (req, res) => {
   try {
-    const { minScore = 50, limit = 15 } = req.body;
+    const { limit = 15 } = req.body;
 
-    // Get scored leads that haven't been emailed yet
-    const snap = await db.collection("outreach_leads")
-      .where("status", "==", "scored")
-      .limit(200)
-      .get();
+    // Get leads that haven't been emailed yet (new or scored)
+    const [newSnap, scoredSnap] = await Promise.all([
+      db.collection("outreach_leads").where("status", "==", "new").limit(200).get(),
+      db.collection("outreach_leads").where("status", "==", "scored").limit(200).get(),
+    ]);
 
-    let leads = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(l => (l.score || 0) >= minScore)
-      .slice(0, limit);
+    let leads = [
+      ...newSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+      ...scoredSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    ].filter(l => l.email).slice(0, limit);
 
     if (leads.length === 0) return res.json({ generated: 0, message: "No eligible leads" });
 
@@ -280,6 +280,9 @@ Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         gmailThreadId: null,
         rfcMessageId: null,
       });
+
+      // Mark lead so it doesn't get re-generated
+      await db.collection("outreach_leads").doc(lead.id).update({ status: "drafted" });
 
       generated.push({
         id: ref.id,

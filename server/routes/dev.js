@@ -285,6 +285,7 @@ router.get("/outreach", async (req, res, next) => {
           total: leads.length,
           new: leads.filter(l => l.status === "new").length,
           scored: leads.filter(l => l.status === "scored").length,
+          drafted: leads.filter(l => l.status === "drafted").length,
           emailed: leads.filter(l => l.status === "emailed").length,
           replied: leads.filter(l => l.status === "replied").length,
           converted: leads.filter(l => l.status === "converted").length,
