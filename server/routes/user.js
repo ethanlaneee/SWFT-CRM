@@ -274,13 +274,20 @@ router.post("/select-number", async (req, res, next) => {
     let messagingProfileId = userData.telnyxMessagingProfileId;
     if (!messagingProfileId) {
       const friendlyName = `SWFT - ${userData.email || req.user.email || req.uid}`;
-      const result = await createMessagingProfile(friendlyName, webhookUrl);
-      messagingProfileId = result.messagingProfileId;
+      try {
+        const result = await createMessagingProfile(friendlyName, webhookUrl);
+        messagingProfileId = result.messagingProfileId;
+      } catch (profileErr) {
+        console.error("[user] createMessagingProfile failed:", profileErr.message);
+        return res.status(503).json({
+          error: "Telnyx messaging is not yet enabled on this account. Please contact SWFT support.",
+        });
+      }
     }
 
     // Release old number if the user already has one
     if (userData.telnyxPhoneSid && userData.telnyxPhoneNumber !== phoneNumber) {
-      await releasePhoneNumber(userData.telnyxPhoneSid);
+      try { await releasePhoneNumber(userData.telnyxPhoneSid); } catch (_) { /* non-fatal */ }
     }
 
     // Order the chosen number
