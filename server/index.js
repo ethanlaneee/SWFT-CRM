@@ -29,6 +29,7 @@ const {
   whatsappVerifyWebhook,
   whatsappIncomingHandler,
 } = require("./routes/socialMessages");
+const { router: metaRouter, webhookVerify: metaWebhookVerify, webhookReceive: metaWebhookReceive } = require("./routes/meta");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
@@ -109,6 +110,9 @@ app.get("/api/webhooks/instagram", instagramVerifyWebhook);
 app.post("/api/webhooks/instagram", instagramIncomingHandler);
 app.get("/api/webhooks/whatsapp", whatsappVerifyWebhook);
 app.post("/api/webhooks/whatsapp", whatsappIncomingHandler);
+// Unified Meta webhook (single endpoint for all Meta products)
+app.get("/api/webhooks/meta", metaWebhookVerify);
+app.post("/api/webhooks/meta", metaWebhookReceive);
 
 // GET version — lets you verify the endpoint is reachable in a browser
 app.get("/api/webhooks/telnyx/sms", (req, res) => {
@@ -591,6 +595,7 @@ app.use("/api/email",           auth, checkAccess,  require("./routes/email"));
 app.use("/api/email-templates", auth, checkAccess,  require("./routes/emailTemplates"));
 app.use("/api/messages",  auth, checkAccess,  messagesRouter);
 app.use("/api/social",    auth, checkAccess,  socialMessagesRouter);
+app.use("/api/meta",      auth, checkAccess,  metaRouter);
 app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
 app.use("/api/square",        auth, checkAccess,  squareRouter);
