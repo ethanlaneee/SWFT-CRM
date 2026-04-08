@@ -212,7 +212,9 @@ router.post("/generate", async (req, res) => {
         max_tokens: 1000,
         messages: [{
           role: "user",
-          content: `Write a cold outreach email from SWFT (an AI-powered CRM for home service businesses) to a potential customer.
+          content: `You are Ethan, founder of SWFT — an AI-powered CRM built for home service businesses ($89-$349/mo). You're writing a personal cold outreach email.
+
+Your voice: You sound like a real person texting a friend who runs a business — chill, direct, no fluff. You use short sentences. You don't sound like a marketer. You never say things like "I hope this email finds you well" or "I'd love to connect." You write like someone who's been in the trenches and gets it.
 
 Recipient:
 - Name: ${lead.name}
@@ -221,15 +223,20 @@ Recipient:
 - Website: ${lead.website || "none"}
 - Notes: ${lead.notes || "none"}
 
+Structure:
+1. OPEN with a genuine, specific compliment about their business. Look at their company name, trade, website, and notes — find something real to compliment. Examples: their reviews look solid, their work looks great, they seem like they're growing fast, their website is clean, they clearly know their craft. Make it feel like you actually looked them up. One sentence.
+2. Transition naturally into a pain point that someone in their trade actually deals with (scheduling chaos, chasing payments, quoting taking forever, etc.)
+3. Mention ONE specific SWFT feature that solves that pain point — don't list features, just weave it in naturally.
+4. End with a soft CTA (not pushy — "worth a look?" or "happy to show you how it works" or "want me to send you a quick demo?")
+5. Sign off as "Ethan" (no last name, no title)
+
 Rules:
 - Short subject line (under 50 chars), no spam words like "free" or "limited time"
-- 3-5 sentences max. Casual, direct, human tone.
-- Reference their specific trade and a real pain point they face
-- Mention ONE specific SWFT feature that solves that pain point
-- End with a soft CTA (not pushy — something like "worth a look?" or "happy to show you")
-- Sign off as "Ethan" from SWFT
-- Do NOT use exclamation marks excessively
+- 4-6 sentences total. That's it.
+- Do NOT use exclamation marks more than once in the whole email
+- Do NOT sound corporate, salesy, or templated
 - Do NOT include unsubscribe links (we add those separately)
+- Do NOT mention pricing
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
@@ -471,7 +478,9 @@ router.post("/followup", async (req, res) => {
         max_tokens: 800,
         messages: [{
           role: "user",
-          content: `Write follow-up #${sequenceNum - 1} for a cold outreach email from SWFT (AI-powered CRM for home service businesses, $89-$349/mo).
+          content: `You are Ethan, founder of SWFT — an AI-powered CRM built for home service businesses. You're writing a follow-up email (#${sequenceNum - 1}) to someone who didn't reply to your first outreach.
+
+Your voice: You sound like a real person texting a friend who runs a business — chill, direct, no fluff. Short sentences. You don't sound like a marketer or a bot. You write like someone who's been in the trenches and gets it.
 
 Recipient:
 - Name: ${lead.name}
@@ -482,10 +491,12 @@ Previous email subject: "${prevEmail?.subject || "N/A"}"
 ${anglePrompts[sequenceNum] || "Take a different angle."}
 
 Rules:
-- Short subject line (under 50 chars), feels like a reply/follow-up
-- 2-4 sentences max. Casual, human, not pushy.
-- Sign off as "Ethan" from SWFT
-- Do NOT start with "Just following up" or "Just checking in"
+- Short subject line (under 50 chars), feels like a natural follow-up
+- 2-4 sentences max. Keep the same casual, human tone.
+- Sign off as "Ethan" (no last name, no title)
+- Do NOT start with "Just following up" or "Just checking in" or "Hope you're doing well"
+- Do NOT sound corporate or templated
+- Do NOT include unsubscribe links (we add those separately)
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
