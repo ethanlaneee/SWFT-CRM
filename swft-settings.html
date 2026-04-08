@@ -7,7 +7,7 @@
 <title>SWFT — Settings</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--sidebar-w:228px;}
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html{background:#0a0a0a;}
 body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
@@ -49,6 +49,15 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
 
 .page-body{flex:1;padding:28px;display:flex;flex-direction:column;gap:20px;}
+
+/* Settings section nav */
+.settings-nav{display:flex;gap:4px;padding:0 0 8px;overflow-x:auto;position:sticky;top:60px;z-index:90;background:var(--bg);margin:-8px -4px 0;padding:8px 4px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.settings-nav::-webkit-scrollbar{display:none;}
+.settings-nav-item{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;color:var(--gray);cursor:pointer;white-space:nowrap;transition:all 0.14s;font-family:'DM Sans',sans-serif;flex-shrink:0;}
+.settings-nav-item:hover{background:var(--surface2);color:var(--white);border-color:var(--border2);}
+.settings-nav-item.active{background:rgba(200,241,53,0.08);color:var(--green);border-color:rgba(200,241,53,0.2);font-weight:500;}
+.settings-nav-icon{font-size:13px;line-height:1;}
+.settings-section{scroll-margin-top:130px;}
 
 /* Settings sections */
 .settings-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
@@ -222,8 +231,22 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
   <div class="page-body">
 
+<!-- Settings section nav -->
+<nav class="settings-nav" id="settingsNav">
+  <div class="settings-nav-item active" data-target="sec-company"><span class="settings-nav-icon">🏢</span>Company</div>
+  <div class="settings-nav-item" data-target="sec-billing"><span class="settings-nav-icon">💳</span>Billing</div>
+  <div class="settings-nav-item" data-target="sec-ai-profile"><span class="settings-nav-icon">🧠</span>AI Profile</div>
+  <div class="settings-nav-item" data-target="sec-defaults"><span class="settings-nav-icon">⚙️</span>Defaults</div>
+  <div class="settings-nav-item" data-target="sec-templates"><span class="settings-nav-icon">📝</span>Templates</div>
+  <div class="settings-nav-item" data-target="sec-integrations"><span class="settings-nav-icon">🔗</span>Integrations</div>
+  <div class="settings-nav-item" data-target="sec-preferences"><span class="settings-nav-icon">🎨</span>Preferences</div>
+  <div class="settings-nav-item" data-target="sec-import"><span class="settings-nav-icon">📥</span>Import</div>
+  <div class="settings-nav-item" data-target="sec-agents"><span class="settings-nav-icon">🤖</span>AI Agents</div>
+  <div class="settings-nav-item" data-target="sec-privacy"><span class="settings-nav-icon">🔒</span>Privacy</div>
+</nav>
+
 <!-- Company Profile -->
-<div class="settings-section">
+<div class="settings-section" id="sec-company">
   <div class="settings-header"><span class="settings-header-icon">🏢</span><h3>COMPANY PROFILE</h3></div>
   <div class="settings-body">
     <div class="settings-2col">
@@ -260,7 +283,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Plan & Billing -->
-<div class="settings-section" id="billing-section">
+<div class="settings-section" id="sec-billing">
   <div class="settings-header"><span class="settings-header-icon">💳</span><h3>PLAN & BILLING</h3></div>
   <div class="settings-body">
 
@@ -339,7 +362,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Business Profile for AI -->
-<div class="settings-section">
+<div class="settings-section" id="sec-ai-profile">
   <div class="settings-header"><span class="settings-header-icon">🧠</span><h3>BUSINESS PROFILE FOR AI</h3></div>
   <div class="settings-body">
     <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.5;">This info powers your AI agents. The more you fill in, the smarter your estimator and follow-up agents will be. As you add jobs and customers, the AI also learns automatically.</div>
@@ -378,7 +401,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Default Values -->
-<div class="settings-section">
+<div class="settings-section" id="sec-defaults">
   <div class="settings-header"><span class="settings-header-icon">⚙️</span><h3>DEFAULT VALUES</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -419,7 +442,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Email Templates -->
-<div class="settings-section" id="email-templates">
+<div class="settings-section" id="sec-templates">
   <div class="settings-header"><span class="settings-header-icon">📝</span><h3>EMAIL TEMPLATES</h3></div>
   <div class="settings-body" style="gap:0;">
     <div class="settings-row" style="padding-bottom:12px;">
@@ -471,7 +494,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Integrations -->
-<div class="settings-section" id="integrations">
+<div class="settings-section" id="sec-integrations">
   <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
   <div class="settings-body" id="integrations-list" style="gap:0;">
     <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
@@ -543,7 +566,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Preferences -->
-<div class="settings-section">
+<div class="settings-section" id="sec-preferences">
   <div class="settings-header"><span class="settings-header-icon">🎨</span><h3>PREFERENCES</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -560,7 +583,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 </div>
 
 <!-- Import Data -->
-<div class="settings-section">
+<div class="settings-section" id="sec-import">
   <div class="settings-header"><span class="settings-header-icon">📥</span><h3>IMPORT DATA</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -570,8 +593,27 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   </div>
 </div>
 
+<!-- AI Agents -->
+<div class="settings-section" id="sec-agents">
+  <div class="settings-header"><span class="settings-header-icon">🤖</span><h3>AI AGENTS</h3></div>
+  <div class="settings-body">
+    <div class="settings-row">
+      <div class="settings-row-info"><div class="settings-row-label">AI Estimator</div><div class="settings-row-desc">Generates quotes from job descriptions using your past job data and pricing configuration. Available in Quotes and Jobs pages.</div></div>
+      <button class="settings-btn primary" onclick="window.location.href='swft-ai-agents'">Configure</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-row-info"><div class="settings-row-label">AI Follow-up Agent</div><div class="settings-row-desc">Automatically follows up on unsigned quotes, overdue invoices, and sends review requests after completed jobs.</div></div>
+      <button class="settings-btn primary" onclick="window.location.href='swft-ai-agents'">Configure</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-row-info"><div class="settings-row-label">Google Review Link</div><div class="settings-row-desc">Used by the follow-up agent when requesting reviews from customers after job completion.</div></div>
+      <input id="google-review-link" type="text" placeholder="https://g.page/r/your-business/review" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:300px;max-width:100%;" onchange="saveReviewLink(this.value)">
+    </div>
+  </div>
+</div>
+
 <!-- Privacy & Data -->
-<div class="settings-section">
+<div class="settings-section" id="sec-privacy">
   <div class="settings-header"><span class="settings-header-icon">🔒</span><h3>PRIVACY & DATA</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -618,6 +660,43 @@ function toggleSidebar(){
   document.getElementById('main').classList.toggle('expanded');
   document.getElementById('sidebar-toggle').classList.toggle('visible');
 }
+
+/* ── Settings section nav ── */
+(function() {
+  var nav = document.getElementById('settingsNav');
+  if (!nav) return;
+  var items = nav.querySelectorAll('.settings-nav-item');
+
+  // Click to scroll
+  items.forEach(function(item) {
+    item.addEventListener('click', function() {
+      var target = document.getElementById(item.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Scroll spy — highlight the nav item for the section currently in view
+  var sections = Array.from(items).map(function(i) { return document.getElementById(i.dataset.target); }).filter(Boolean);
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      var scrollY = window.scrollY + 140;
+      var current = sections[0];
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].offsetTop <= scrollY) current = sections[i];
+      }
+      items.forEach(function(item) {
+        item.classList.toggle('active', item.dataset.target === current.id);
+      });
+      // Keep active item visible in horizontal scroll
+      var active = nav.querySelector('.settings-nav-item.active');
+      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      ticking = false;
+    });
+  });
+})();
 
 async function saveReviewLink(val) {
   try {
