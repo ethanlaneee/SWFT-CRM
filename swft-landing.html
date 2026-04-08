@@ -231,6 +231,26 @@ body::after{
 .btn-cta:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(200,241,53,0.25);}
 .btn-cta svg{width:18px;height:18px;}
 
+/* MOBILE NAV LINKS */
+.mobile-nav-links{
+  display:none;
+  position:fixed;top:60px;left:0;right:0;z-index:99;
+  background:rgba(10,10,10,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  gap:6px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.mobile-nav-links::-webkit-scrollbar{display:none;}
+.mobile-nav-links a{
+  flex-shrink:0;
+  padding:6px 14px;border-radius:6px;
+  font-size:12px;font-weight:500;color:var(--gray);text-decoration:none;
+  background:var(--surface);border:1px solid var(--border);
+  transition:all 0.14s;white-space:nowrap;
+}
+.mobile-nav-links a:hover,.mobile-nav-links a:active{color:var(--white);border-color:var(--gray2);}
+
 /* ── SECTIONS ── */
 section{position:relative;z-index:1;}
 .container{max-width:1200px;margin:0 auto;padding:0 32px;}
@@ -739,7 +759,8 @@ section{position:relative;z-index:1;}
   .btn-login{padding:8px 16px;font-size:13px;}
   .btn-cta{padding:8px 16px;font-size:13px;border-radius:8px;}
   .btn-cta svg{width:14px;height:14px;}
-  .hero{padding:130px 0 60px;}
+  .mobile-nav-links{display:flex;}
+  .hero{padding:160px 0 60px;}
   .hero-trust{gap:20px;}
   .container{padding:0 20px;}
   .pain-grid{grid-template-columns:1fr;}
@@ -757,8 +778,18 @@ section{position:relative;z-index:1;}
   .competitor-grid{grid-template-columns:1fr;}
   .competitors{padding:60px 0 40px;}
   .vs-table-section{padding:20px 0 80px;}
-  .vs-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .vs-table{min-width:640px;}
+  .vs-table-wrapper{overflow-x:visible;}
+  .vs-table{min-width:0;}
+  .vs-table thead{display:none;}
+  .vs-table, .vs-table tbody, .vs-table tr, .vs-table td{display:block;width:100%;}
+  .vs-table tbody tr{padding:16px;margin-bottom:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);}
+  .vs-table tbody tr:last-child{margin-bottom:0;}
+  .vs-table td{padding:6px 0;border:none;}
+  .vs-table td.vs-feature{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--white);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  .vs-table td.vs-other{color:var(--gray);font-size:13px;}
+  .vs-table td.vs-swft{color:var(--green);font-size:13px;}
+  .vs-table td.vs-other::before{content:"Others: ";font-weight:600;color:var(--gray2);}
+  .vs-table td.vs-swft::before{content:"SWFT: ";font-weight:600;color:var(--green);}
   .compare-grid{grid-template-columns:1fr;}
   .compare{padding:60px 0 80px;}
   .pricing-grid{grid-template-columns:1fr;max-width:400px;}
@@ -877,6 +908,12 @@ section{position:relative;z-index:1;}
     </a>
   </div>
 </nav>
+<div class="mobile-nav-links" id="mobileNav">
+  <a href="#problems">Why SWFT</a>
+  <a href="#product">Product</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#compare">Compare</a>
+</div>
 
 <!-- ── HERO ── -->
 <section class="hero">
@@ -1025,7 +1062,7 @@ section{position:relative;z-index:1;}
 </section>
 
 <!-- ── SWFT vs THE REST TABLE ── -->
-<section class="vs-table-section">
+<section class="vs-table-section" id="compare">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-tag">The Difference</span>
