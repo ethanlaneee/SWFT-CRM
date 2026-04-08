@@ -153,7 +153,7 @@
           "name": "How does SWFT compare to GoHighLevel?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "GoHighLevel starts at $97/month but charges usage-based fees for SMS, email, and AI on top of the base price, which can increase total costs significantly. It's designed for marketing agencies and has a steep learning curve. SWFT is purpose-built for home service pros with flat pricing starting at $89/month and clearly listed SMS/AI limits per plan."
+            "text": "GoHighLevel plans range from $97-$497/month, but SMS, email, and AI credits are billed separately on top. Optional add-ons like AI Employee ($97/mo), Premium Support ($500/mo), and SEO tools ($79/mo) increase costs further. It's designed for marketing agencies and has a steep learning curve. SWFT is purpose-built for home service pros with flat pricing starting at $89/month and clearly listed SMS/AI limits per plan."
           }
         },
         {
@@ -484,6 +484,35 @@ section{position:relative;z-index:1;}
 .competitor-price{font-size:12px;font-weight:600;color:var(--red);font-family:'JetBrains Mono',monospace;}
 .competitor-complaints{list-style:none;display:flex;flex-direction:column;gap:14px;}
 .competitor-complaints li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--gray);line-height:1.55;}
+.verify-link{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:16px;font-size:12px;color:var(--gray2);
+  text-decoration:none;transition:color 0.2s;
+}
+.verify-link:hover{color:var(--gray);text-decoration:none;}
+.verify-link svg{width:12px;height:12px;flex-shrink:0;}
+.sources-toggle{
+  display:flex;align-items:center;gap:6px;
+  background:none;border:1px solid var(--border);border-radius:8px;
+  padding:8px 14px;margin:24px auto 0;
+  font-size:12px;color:var(--gray);font-family:'DM Sans',sans-serif;
+  cursor:pointer;transition:all 0.2s;
+}
+.sources-toggle:hover{border-color:var(--border2);color:var(--white);}
+.sources-toggle svg{width:12px;height:12px;transition:transform 0.2s;}
+.sources-toggle.open svg{transform:rotate(180deg);}
+.sources-list{
+  max-height:0;overflow:hidden;transition:max-height 0.3s ease;
+  margin:0 auto;max-width:700px;
+}
+.sources-list.open{max-height:400px;}
+.sources-list ul{
+  list-style:none;padding:16px 0 0;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:8px 24px;
+}
+.sources-list li{font-size:11.5px;}
+.sources-list a{color:var(--gray2);text-decoration:none;transition:color 0.15s;}
+.sources-list a:hover{color:var(--green);}
 
 /* ── VS TABLE ── */
 .vs-table-section{padding:40px 0 120px;scroll-margin-top:70px;}
@@ -807,6 +836,7 @@ section{position:relative;z-index:1;}
   .ai-showcase{padding:60px 0 80px;}
   .competitor-grid{grid-template-columns:1fr;}
   .competitors{padding:60px 0 40px;}
+  .sources-list ul{grid-template-columns:1fr;}
   .vs-table-section{padding:20px 0 80px;}
   .vs-table-wrapper{overflow-x:visible;}
   .vs-table{min-width:0;}
@@ -1081,15 +1111,16 @@ function toggleSidebar(){
       <div class="competitor-card reveal">
         <div class="competitor-header">
           <span class="competitor-name">GoHighLevel</span>
-          <span class="competitor-price">$97–$497/mo + usage-based fees</span>
+          <span class="competitor-price">$97–$497/mo + usage fees &amp; add-ons</span>
         </div>
         <ul class="competitor-complaints">
-          <li><span class="compare-x">&#10005;</span> Starts at $97/mo, but SMS, email, AI, and phone credits are usage-based extras — total cost can reach $150–$400+/mo</li>
-          <li><span class="compare-x">&#10005;</span> Takes weeks to learn — built for marketing agencies, not contractors</li>
+          <li><span class="compare-x">&#10005;</span> Base plans are $97–$497/mo, but SMS, email, AI, and phone credits are billed separately on top</li>
+          <li><span class="compare-x">&#10005;</span> Add-ons stack up: AI Employee ($97/mo), Premium Support ($500/mo), SEO tools ($79/mo)</li>
           <li><span class="compare-x">&#10005;</span> Complex automation setup with a steep learning curve</li>
           <li><span class="compare-x">&#10005;</span> Paying for funnels, white-labeling, and features you'll never use</li>
-          <li><span class="compare-x">&#10005;</span> Built for agencies managing multiple clients, not field service pros</li>
+          <li><span class="compare-x">&#10005;</span> Built for marketing agencies managing multiple clients, not field service pros</li>
         </ul>
+        <a href="https://www.gohighlevel.com/pricing" target="_blank" rel="noopener" class="verify-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Verify on gohighlevel.com</a>
       </div>
 
       <div class="competitor-card reveal">
@@ -1104,6 +1135,7 @@ function toggleSidebar(){
           <li><span class="compare-x">&#10005;</span> Key features like automated quoting locked behind higher tiers</li>
           <li><span class="compare-x">&#10005;</span> Team plans scale up to $699/mo for 15 users</li>
         </ul>
+        <a href="https://www.getjobber.com/pricing/" target="_blank" rel="noopener" class="verify-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Verify on getjobber.com</a>
       </div>
 
       <div class="competitor-card reveal">
@@ -1118,9 +1150,30 @@ function toggleSidebar(){
           <li><span class="compare-x">&#10005;</span> Built for large companies, not a 1–10 person operation</li>
           <li><span class="compare-x">&#10005;</span> Over 50% of CRM implementations fail due to complexity</li>
         </ul>
+        <a href="https://www.hubspot.com/pricing/crm" target="_blank" rel="noopener" class="verify-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Verify on hubspot.com</a>
       </div>
 
     </div>
+
+    <div style="text-align:center;" class="reveal">
+      <button class="sources-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        View pricing sources
+      </button>
+      <div class="sources-list">
+        <ul>
+          <li><a href="https://www.gohighlevel.com/pricing" target="_blank" rel="noopener">GoHighLevel — Official Pricing</a></li>
+          <li><a href="https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide" target="_blank" rel="noopener">GoHighLevel — Billing &amp; Add-ons Guide</a></li>
+          <li><a href="https://www.getjobber.com/pricing/" target="_blank" rel="noopener">Jobber — Official Pricing</a></li>
+          <li><a href="https://help.getjobber.com/hc/en-us/articles/14711336911383" target="_blank" rel="noopener">Jobber — Two-Way SMS FAQ</a></li>
+          <li><a href="https://www.hubspot.com/pricing/crm" target="_blank" rel="noopener">HubSpot — CRM Pricing</a></li>
+          <li><a href="https://www.servicetitan.com/pricing" target="_blank" rel="noopener">ServiceTitan — Pricing</a></li>
+          <li><a href="https://www.housecallpro.com/pricing/" target="_blank" rel="noopener">Housecall Pro — Pricing</a></li>
+          <li><a href="https://www.zoho.com/crm/zohocrm-pricing.html" target="_blank" rel="noopener">Zoho CRM — Pricing</a></li>
+        </ul>
+      </div>
+    </div>
+
   </div>
 </section>
 
