@@ -71,7 +71,7 @@ async function searchAvailableNumbers(options = {}) {
       if (numbers.length > 0) {
         return numbers.map(n => ({
           phoneNumber: n.phone_number,
-          locality: n.region_information?.[0]?.locality || "",
+          locality: n.region_information?.[0]?.locality || options.city || "",
           region: n.region_information?.[0]?.region_name || options.region || "",
           countryCode: n.country_code || countryCode,
         }));
