@@ -269,7 +269,7 @@ Subject: [Casual subject line like "Saw your [trade] work in [city]" — just re
 
 Hey [First name],
 
-I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — keep it simple and general. Base it on their trade and company name, NOT on reviews or ratings. Examples: "you guys do really solid work", "looks like you're killing it", "you guys are doing great things". Keep it casual like you'd say it out loud. Do NOT mention Google reviews, star ratings, or review counts.] in the [AREA — pull the city or region from their address/notes, like "Calgary area", "Austin area", "Denver area". If no location info is available, just skip this part]. One sentence max.
+I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — keep it simple, general, and ONE sentence max. Base it on their trade and company name, NOT on reviews or ratings. Examples: "you guys do really solid work", "looks like you're killing it", "you guys are doing great things". Keep it casual like you'd say it out loud. Do NOT mention Google reviews, star ratings, or review counts.] in the [AREA — pull the city or region from their address/notes, like "Calgary area", "Austin area", "Denver area". If no location info is available, just skip this part].
 
 I work with home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual hands on work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
 
