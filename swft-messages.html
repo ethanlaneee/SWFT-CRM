@@ -84,6 +84,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .chat-channel-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;letter-spacing:0.3px;}
 .chat-channel-pill.email{background:rgba(77,159,255,0.1);color:var(--blue);}
 .chat-channel-pill.sms{background:rgba(200,241,53,0.1);color:var(--green);}
+.chat-channel-pill.facebook{background:rgba(24,119,242,0.1);color:#1877F2;}
+.chat-channel-pill.instagram{background:rgba(228,64,95,0.1);color:#E4405F;}
+.chat-channel-pill.whatsapp{background:rgba(37,211,102,0.1);color:#25D366;}
 
 /* Messages area */
 .chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;}
@@ -269,6 +272,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="ch-tab active" onclick="setChannel('all')">All</div>
       <div class="ch-tab" onclick="setChannel('email')">Email</div>
       <div class="ch-tab" onclick="setChannel('sms')">SMS</div>
+      <div class="ch-tab" onclick="setChannel('facebook')" style="color:#1877F2;">FB</div>
+      <div class="ch-tab" onclick="setChannel('instagram')" style="color:#E4405F;">IG</div>
+      <div class="ch-tab" onclick="setChannel('whatsapp')" style="color:#25D366;">WA</div>
       <div class="ch-tab" onclick="setChannel('ai')" style="color:#c8f135;">AI</div>
       <div class="ch-tab" onclick="setChannel('deleted')" style="color:var(--red);">Deleted</div>
     </div>
@@ -388,6 +394,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
         <select class="ncm-input" id="nc-channel">
           <option value="email">Email</option>
           <option value="sms">SMS</option>
+          <option value="facebook">Facebook Messenger</option>
+          <option value="instagram">Instagram DM</option>
+          <option value="whatsapp">WhatsApp</option>
         </select>
       </div>
       <div class="ncm-field" id="nc-email-field">
@@ -397,6 +406,10 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="ncm-field" id="nc-phone-field" style="display:none;">
         <label class="ncm-label">Phone Number</label>
         <input class="ncm-input" id="nc-phone" type="tel" placeholder="+1 (555) 123-4567"/>
+      </div>
+      <div class="ncm-field" id="nc-social-field" style="display:none;">
+        <label class="ncm-label" id="nc-social-label">Platform ID</label>
+        <input class="ncm-input" id="nc-social-id" type="text" placeholder="Enter platform ID"/>
       </div>
     </div>
     <div class="ncm-footer">
@@ -682,6 +695,17 @@ function buildContacts(){
   _contacts=Object.values(map).sort(function(a,b){return b.lastTime-a.lastTime;});
 }
 
+function channelTag(ch) {
+  var map = {
+    sms: '<span style="color:var(--green);font-size:10px;">SMS</span>',
+    email: '<span style="color:var(--blue);font-size:10px;">Email</span>',
+    facebook: '<span style="color:#1877F2;font-size:10px;">FB</span>',
+    instagram: '<span style="color:#E4405F;font-size:10px;">IG</span>',
+    whatsapp: '<span style="color:#25D366;font-size:10px;">WA</span>'
+  };
+  return map[ch] || '<span style="color:var(--gray);font-size:10px;">' + (ch||'').toUpperCase() + '</span>';
+}
+
 // ── Render contacts ──
 function renderContacts(){
   var list=document.getElementById('contact-list');
@@ -703,7 +727,7 @@ function renderContacts(){
     var time=lastMsg.sentAt?formatTime(lastMsg.sentAt):'';
     var initials=getInitials(c.customerName);
     var isActive=_activeContact&&_activeContact.customerId===c.customerId&&_activeContact.channel===c.channel&&_activeContact.to===c.to;
-    var chIcon=c.channel==='sms'?'<span style="color:var(--green);font-size:10px;">SMS</span>':'<span style="color:var(--blue);font-size:10px;">Email</span>';
+    var chIcon = channelTag(c.channel);
 
     var actionBtn=_channel==='deleted'
       ? '<div class="c-delete" onclick="event.stopPropagation();restoreThread(\''+escape(JSON.stringify(c))+'\')" title="Restore thread" style="color:var(--green);opacity:1;font-size:11px;font-weight:600;">Restore</div>'
@@ -792,11 +816,12 @@ function renderChat(){
   header.style.display='flex';
   document.getElementById('chat-avatar').textContent=getInitials(c.customerName);
   document.getElementById('chat-name').textContent=c.customerName;
-  document.getElementById('chat-detail').textContent=c.channel==='sms'?(c.phone||c.to):(c.email||c.to);
+  document.getElementById('chat-detail').textContent=(c.channel==='sms'||c.channel==='whatsapp')?(c.phone||c.to):(c.channel==='facebook'||c.channel==='instagram')?(c.to||''):(c.email||c.to);
   var pill=document.getElementById('chat-channel-pill');
   pill.style.display='';
   pill.className='chat-channel-pill '+c.channel;
-  pill.textContent=c.channel==='sms'?'SMS':'Email';
+  var channelLabels = {sms:'SMS',email:'Email',facebook:'Facebook',instagram:'Instagram',whatsapp:'WhatsApp'};
+  pill.textContent = channelLabels[c.channel] || c.channel;
   // Show "Add to Customer" button for unknown contacts
   var addBtn=document.getElementById('add-contact-btn');
   if(addBtn) addBtn.style.display=c.customerId?'none':'';
@@ -1156,7 +1181,7 @@ async function sendMessage(){
     return;
   }
 
-  var to=c.channel==='sms'?(c.phone||c.to):(c.email||c.to);
+  var to=(c.channel==='sms'||c.channel==='whatsapp')?(c.phone||c.to):(c.channel==='facebook'||c.channel==='instagram')?(c.to||''):(c.email||c.to);
   var hasFiles=c.channel==='email'&&_attachedFiles.length>0;
 
   if(c.channel==='email'){
@@ -1167,7 +1192,10 @@ async function sendMessage(){
   try{
     console.log('[SEND] replyContext at send time:', JSON.stringify(_replyContext));
     var result;
-    if(hasFiles){
+    if(['facebook','instagram','whatsapp'].includes(c.channel)){
+      var socialPayload = {to:to, body:body, customerId:c.customerId||'', customerName:c.customerName||''};
+      result = await apiFetch('/api/social/send/'+c.channel, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(socialPayload)});
+    }else if(hasFiles){
       // Use FormData for file uploads
       var fd=new FormData();
       fd.append('to',to);
@@ -1316,8 +1344,20 @@ async function loadCustomerDropdown(){
   });
   // Channel toggle
   document.getElementById('nc-channel').onchange=function(){
-    document.getElementById('nc-email-field').style.display=this.value==='email'?'':'none';
-    document.getElementById('nc-phone-field').style.display=this.value==='sms'?'':'none';
+    var ch = this.value;
+    document.getElementById('nc-email-field').style.display=ch==='email'?'':'none';
+    document.getElementById('nc-phone-field').style.display=(ch==='sms'||ch==='whatsapp')?'':'none';
+    var socialField = document.getElementById('nc-social-field');
+    if(socialField){
+      socialField.style.display=(ch==='facebook'||ch==='instagram')?'':'none';
+      if(ch==='facebook'){
+        document.getElementById('nc-social-label').textContent='Facebook Page-Scoped ID';
+        document.getElementById('nc-social-id').placeholder='Enter PSID...';
+      } else if(ch==='instagram'){
+        document.getElementById('nc-social-label').textContent='Instagram-Scoped ID';
+        document.getElementById('nc-social-id').placeholder='Enter IGSID...';
+      }
+    }
   };
 }
 
@@ -1336,19 +1376,27 @@ function startConversation(){
   if(!sel.value){showToast('Select a customer');return;}
 
   var ch=document.getElementById('nc-channel').value;
+  var socialId=(document.getElementById('nc-social-id')||{}).value||'';
+  var to;
+  if(ch==='email') to=document.getElementById('nc-email').value||opt.dataset.email||'';
+  else if(ch==='sms'||ch==='whatsapp') to=document.getElementById('nc-phone').value||opt.dataset.phone||'';
+  else if(ch==='facebook'||ch==='instagram') to=socialId;
+  else to='';
+
   var contact={
     customerId:sel.value,
     customerName:opt.textContent,
     channel:ch,
     email:document.getElementById('nc-email').value||opt.dataset.email||'',
     phone:document.getElementById('nc-phone').value||opt.dataset.phone||'',
-    to:ch==='sms'?(document.getElementById('nc-phone').value||opt.dataset.phone||''):(document.getElementById('nc-email').value||opt.dataset.email||''),
+    to:to,
     messages:[],
     lastTime:0
   };
 
   if(ch==='email'&&!contact.email){showToast('Enter an email address');return;}
-  if(ch==='sms'&&!contact.phone){showToast('Enter a phone number');return;}
+  if((ch==='sms'||ch==='whatsapp')&&!contact.phone){showToast('Enter a phone number');return;}
+  if((ch==='facebook'||ch==='instagram')&&!socialId){showToast('Enter a platform ID');return;}
 
   _activeContact=contact;
   closeNewConversation();

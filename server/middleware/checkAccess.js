@@ -18,6 +18,7 @@ const METHOD_PERMISSION = {
   "/api/invoices":      { GET: "invoices.view",   POST: "invoices.add",    PUT: "invoices.edit",    DELETE: "invoices.delete" },
   "/api/schedule":      { GET: "schedule.view",   POST: "schedule.add",    PUT: "schedule.edit",    DELETE: "schedule.delete" },
   "/api/messages":      { GET: "messages.view",   POST: "messages.send",   DELETE: "messages.view" },
+  "/api/social":        { GET: "messages.view",   POST: "messages.send" },
   "/api/payments":      { GET: "invoices.view",   POST: "invoices.edit" },
   "/api/photos":        { GET: "jobs.view",        POST: "jobs.edit",       DELETE: "jobs.edit" },
   "/api/ai":            { GET: "ai.use",           POST: "ai.use",          DELETE: "ai.use" },
