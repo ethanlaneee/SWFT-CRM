@@ -604,4 +604,129 @@ router.get("/stats", async (req, res) => {
   }
 });
 
+// ── Lead Finder — Auto-discover leads via Google Places ──
+const DEFAULT_TRADES = ["plumber", "HVAC", "roofer", "electrician", "landscaper", "painter", "cleaner", "general contractor"];
+
+async function extractEmailFromWebsite(websiteUrl) {
+  try {
+    const url = websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; SWFT Lead Finder)" },
+      redirect: "follow",
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // Extract emails via regex — check mailto links first, then raw text
+    const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+    const found = [...new Set((html.match(emailRegex) || []))];
+
+    // Filter out junk emails
+    const junk = ["noreply", "no-reply", "example.com", "sentry.io", "wixpress", "wordpress", "googleapis", "gravatar", "schema.org", ".png", ".jpg", ".svg", ".css", ".js"];
+    const valid = found.filter(e => !junk.some(j => e.toLowerCase().includes(j)));
+
+    // Prefer info@, contact@, hello@, owner name emails; avoid generic support@
+    const preferred = valid.find(e => /^(info|contact|hello|admin|office)@/i.test(e));
+    return preferred || valid[0] || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function findLeads({ location = "Austin, TX", trades = DEFAULT_TRADES, limit = 15 } = {}) {
+  const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
+  if (!MAPS_KEY) throw new Error("GOOGLE_MAPS_API_KEY not configured.");
+
+  // Get existing lead emails for dedup
+  const existingSnap = await db.collection("outreach_leads").get();
+  const existingEmails = new Set(existingSnap.docs.map(d => d.data().email?.toLowerCase()));
+
+  const imported = [];
+  const skipped = { noWebsite: 0, noEmail: 0, duplicate: 0 };
+
+  // Cycle through trades until we hit the limit
+  for (const trade of trades) {
+    if (imported.length >= limit) break;
+
+    const query = `${trade} in ${location}`;
+    const placesRes = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": MAPS_KEY,
+        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.rating,places.userRatingCount",
+      },
+      body: JSON.stringify({ textQuery: query, maxResultCount: 20 }),
+    });
+
+    if (!placesRes.ok) {
+      console.error(`[outreach] Places API error for "${query}":`, await placesRes.text());
+      continue;
+    }
+
+    const placesData = await placesRes.json();
+    const places = placesData.places || [];
+
+    for (const place of places) {
+      if (imported.length >= limit) break;
+
+      const name = place.displayName?.text || "";
+      const website = place.websiteUri || "";
+      const phone = place.nationalPhoneNumber || "";
+      const address = place.formattedAddress || "";
+      const rating = place.rating || null;
+      const reviewCount = place.userRatingCount || 0;
+
+      if (!website) { skipped.noWebsite++; continue; }
+
+      const email = await extractEmailFromWebsite(website);
+      if (!email) { skipped.noEmail++; continue; }
+      if (existingEmails.has(email.toLowerCase())) { skipped.duplicate++; continue; }
+
+      const ref = db.collection("outreach_leads").doc();
+      const lead = {
+        name: name,
+        email: email.toLowerCase().trim(),
+        company: name,
+        trade: trade,
+        website: website.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+        phone: phone,
+        notes: `Auto-discovered via Google Places. ${rating ? `Rating: ${rating}/5 (${reviewCount} reviews).` : ""} Address: ${address}`,
+        score: null,
+        status: "new",
+        createdAt: Date.now(),
+        lastContactedAt: null,
+        emailCount: 0,
+        source: "auto-places",
+      };
+      await ref.set(lead);
+      existingEmails.add(email.toLowerCase());
+      imported.push({ id: ref.id, ...lead });
+    }
+  }
+
+  console.log(`[outreach] Lead finder: imported ${imported.length}, skipped ${JSON.stringify(skipped)}`);
+  return { imported: imported.length, skipped, leads: imported };
+}
+
+router.post("/find-leads", async (req, res) => {
+  try {
+    const { location, trades, limit } = req.body;
+    const result = await findLeads({ location, trades, limit });
+    res.json(result);
+  } catch (e) {
+    console.error("[outreach] Find leads error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Export findLeads for the daily worker
+router.findLeads = findLeads;
+
 module.exports = router;

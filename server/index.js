@@ -571,3 +571,37 @@ setInterval(() => {
 
 // Run once on startup after 30 seconds
 setTimeout(() => runFollowupAgent().catch(console.error), 30000);
+
+// ── Outreach lead finder worker ──
+// Auto-discovers 15 leads per day via Google Places API.
+// Runs every 24 hours. Checks Firestore for last run to avoid duplicating on restart.
+const outreachRouter = require("./routes/outreach");
+
+async function runLeadFinder() {
+  try {
+    if (!process.env.GOOGLE_MAPS_API_KEY) return;
+
+    // Check last run time
+    const configRef = db.collection("outreach_config").doc("lead_finder");
+    const configDoc = await configRef.get();
+    const lastRun = configDoc.exists ? configDoc.data().lastRun || 0 : 0;
+    const hoursSinceRun = (Date.now() - lastRun) / (1000 * 60 * 60);
+
+    if (hoursSinceRun < 20) return; // Don't run if less than 20 hours since last run
+
+    // Read config for location and trades
+    const location = configDoc.exists && configDoc.data().location ? configDoc.data().location : "Austin, TX";
+    const trades = configDoc.exists && configDoc.data().trades ? configDoc.data().trades : ["plumber", "HVAC", "roofer", "electrician", "landscaper", "painter", "cleaner", "general contractor"];
+
+    const result = await outreachRouter.findLeads({ location, trades, limit: 15 });
+    await configRef.set({ lastRun: Date.now(), location, trades }, { merge: true });
+    console.log(`[lead-finder] Auto-imported ${result.imported} leads`);
+  } catch (e) {
+    console.error("[lead-finder] Worker error:", e.message);
+  }
+}
+
+// Check every 6 hours if it's time to find leads (runs once per 24h)
+setInterval(() => runLeadFinder().catch(console.error), 6 * 60 * 60 * 1000);
+// Run once on startup after 60 seconds
+setTimeout(() => runLeadFinder().catch(console.error), 60000);

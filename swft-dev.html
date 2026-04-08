@@ -671,6 +671,26 @@ function renderOutreach(data) {
       ${kpiCard('Rejected', fmt(es.rejected), '', 'red', 3)}
     </div>
 
+    <!-- FIND LEADS -->
+    <div class="section-label">Find Leads</div>
+    <div class="plan-section" style="animation-delay:0.25s">
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <label style="display:block;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:6px;">Target Location</label>
+          <input class="search-input" type="text" id="findLocation" value="Austin, TX" placeholder="City, State" style="width:100%;background-position:10px center;padding-left:14px;"/>
+        </div>
+        <button class="action-btn primary" id="btnFind" onclick="window._findLeads()" style="height:38px;">
+          <div class="btn-spinner"></div>
+          <span class="btn-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Find 15 Leads
+          </span>
+        </button>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--gray2);">Searches Google Places for home service businesses and extracts emails from their websites. Runs automatically once per day.</div>
+      <div id="findResult" style="margin-top:10px;font-size:12px;display:none;"></div>
+    </div>
+
     <!-- ACTIONS -->
     <div class="section-label">Actions</div>
     <div class="action-bar">
@@ -816,6 +836,32 @@ window._toggleDraftDetail = function(draftId, rowEl) {
     </div>
   </div></td>`;
   rowEl.insertAdjacentElement('afterend', detailRow);
+};
+
+/* ── FIND LEADS ── */
+window._findLeads = async function() {
+  const btn = document.getElementById('btnFind');
+  const resultDiv = document.getElementById('findResult');
+  const location = document.getElementById('findLocation')?.value?.trim() || 'Austin, TX';
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<span style="color:var(--gray);">Searching Google Places and scanning websites for emails... this may take a minute.</span>';
+
+  try {
+    const result = await outreachPost('/api/outreach/find-leads', { location, limit: 15 });
+    const s = result.skipped || {};
+    resultDiv.innerHTML = `<span style="color:var(--green);">Found ${result.imported} leads.</span> <span style="color:var(--gray2);">(Skipped: ${s.noWebsite || 0} no website, ${s.noEmail || 0} no email found, ${s.duplicate || 0} duplicates)</span>`;
+    showToast(`Imported ${result.imported} new leads from ${location}`, result.imported > 0 ? 'success' : 'info');
+    await loadOutreachData();
+  } catch (e) {
+    resultDiv.innerHTML = `<span style="color:var(--red);">Error: ${escHtml(e.message)}</span>`;
+    showToast('Find leads failed: ' + e.message, 'error');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
 };
 
 /* ── OUTREACH ACTIONS ── */
