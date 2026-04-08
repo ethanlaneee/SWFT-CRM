@@ -56,25 +56,27 @@ async function searchAvailableNumbers(options = {}) {
     ...overrides,
   });
 
+  // Try without best_effort first (returns real orderable numbers).
+  // best_effort can return wildcard patterns (e.g. +18252------) for CA numbers
+  // which look like numbers but cannot be ordered directly.
   const attempts = [];
 
-  // Most specific: area code (city-level)
   if (options.areaCode) {
+    attempts.push(buildFilter({ best_effort: false, national_destination_code: options.areaCode }));
     attempts.push(buildFilter({ national_destination_code: options.areaCode }));
   }
-
-  // Region only (province/state)
   if (options.region && (countryCode === "US" || countryCode === "CA" || countryCode === "GB")) {
+    attempts.push(buildFilter({ best_effort: false, administrative_area: options.region }));
     attempts.push(buildFilter({ administrative_area: options.region }));
   }
-
-  // Country only (broadest fallback)
+  attempts.push(buildFilter({ best_effort: false }));
   attempts.push(buildFilter());
 
   for (const filter of attempts) {
     try {
       const result = await telnyx.availablePhoneNumbers.list({ filter });
-      const numbers = result.data || [];
+      // Filter out wildcard/pattern results — they cannot be ordered
+      const numbers = (result.data || []).filter(n => n.phone_number && !n.phone_number.includes("-"));
       if (numbers.length > 0) {
         return numbers.map(n => ({
           phoneNumber: n.phone_number,
@@ -141,24 +143,30 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
   const region = options.region || null;
 
   // Build a cascade of search attempts: most local first.
-  // best_effort: true returns specific assignable numbers rather than patterns.
+  // We search WITHOUT best_effort first to get real orderable numbers.
+  // best_effort returns wildcard patterns (e.g. +18252------) for CA numbers
+  // which cannot be ordered directly.
   const attempts = [];
 
   if (areaCode) {
+    attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, national_destination_code: areaCode });
     attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true, national_destination_code: areaCode });
   }
   if (region && (countryCode === "US" || countryCode === "CA" || countryCode === "GB")) {
+    attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, administrative_area: region });
     attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true, administrative_area: region });
   }
+  attempts.push({ country_code: countryCode, features: ["sms"], limit: 5 });
   attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true });
 
-  let available = [];
+  let chosen = null;
   for (const filter of attempts) {
     try {
       const result = await telnyx.availablePhoneNumbers.list({ filter });
-      available = result.data || [];
-      if (available.length > 0) {
-        console.log(`[telnyx] Found ${available.length} number(s) with filter:`, JSON.stringify(filter));
+      const numbers = (result.data || []).filter(n => n.phone_number && !n.phone_number.includes("-"));
+      if (numbers.length > 0) {
+        chosen = numbers[0].phone_number;
+        console.log(`[telnyx] Found orderable number ${chosen} with filter:`, JSON.stringify(filter));
         break;
       }
     } catch (err) {
@@ -166,13 +174,13 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
     }
   }
 
-  if (!available.length) {
+  if (!chosen) {
     throw new Error(
       `No available phone numbers found for country ${countryCode}. Please try again or contact support.`
     );
   }
 
-  return orderPhoneNumber(available[0].phone_number, messagingProfileId);
+  return orderPhoneNumber(chosen, messagingProfileId);
 }
 
 /**
