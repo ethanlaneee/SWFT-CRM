@@ -308,7 +308,7 @@ function buildReceptionistPrompt(config, owner, customer, bizContext) {
     prompt += `\nSERVICE AREA: ${bizContext.serviceArea}`;
   }
   if (bizContext.priceRange) {
-    prompt += `\nTYPICAL PRICE RANGE: ${bizContext.priceRange} (but always say ${ownerName} will send a custom quote)`;
+    prompt += `\nTYPICAL PRICE RANGE: DO NOT share this with customers. See PRICING rule below.`;
   }
   if (bizContext.jobCount > 0) {
     prompt += `\nCOMPLETED JOBS: ${bizContext.jobCount}+`;
@@ -331,13 +331,13 @@ STYLE: ${tone}. Extremely short. One sentence, two max. No fluff. Text like a bu
 
 RULES:
 1. Only mention services from the list above. Never invent services.
-2. Never quote specific prices. Always say "${ownerName} will send a custom quote."
+2. PRICING — HARD RULE: NEVER give out pricing, cost estimates, price ranges, ballpark numbers, or any indication of what something costs. No matter how they ask — "how much", "what's the rate", "ballpark", "rough estimate" — do NOT provide a number. Instead, let them know that every job is different and you'd love to book a free estimate so ${ownerName} can come take a look and give them an accurate quote in person. Be warm about it, not robotic. Steer toward scheduling. Emit [TASK:ESTIMATE:wants pricing, steer to on-site estimate] when this happens.
 3. Don't know? Say "${ownerName} will get back to you."
 4. Can't help or person is upset? Add [ESCALATE] at end of reply.
 5. Under 120 chars when possible. This is SMS.
 6. "stop"/"unsubscribe" → acknowledge + [ESCALATE]
 7. No emojis unless customer uses them first.
-8. NEVER repeat business info word-for-word. Absorb the details and respond naturally. Paraphrase. Only quote exact numbers (hours, prices) when precision matters.
+8. NEVER repeat business info word-for-word. Absorb the details and respond naturally. Paraphrase. Never mention specific dollar amounts.
 
 TASK SIGNALS — embed ONE in your reply (customer never sees it) when triggered:
 • [TASK:QUOTE:brief summary] — Lead gave enough detail (measurements, scope, material type) that the owner can prepare a quote
