@@ -291,14 +291,32 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
 
   // ── Attempt 2: Criteria-based order (for CA and other countries where search returns only wildcards) ──
   console.log(`[telnyx] No browsable numbers found for ${countryCode}, trying criteria-based order`);
-  const result = await orderNumberByCriteria(messagingProfileId, { countryCode, region, areaCode });
-  if (result) {
-    console.log(`[telnyx] Criteria-based order succeeded: ${result.phoneNumber}`);
-    return result;
+  const criteriaResult = await orderNumberByCriteria(messagingProfileId, { countryCode, region, areaCode });
+  if (criteriaResult) {
+    console.log(`[telnyx] Criteria-based order succeeded: ${criteriaResult.phoneNumber}`);
+    return criteriaResult;
+  }
+
+  // ── Attempt 3: If non-US country failed, try a US number as fallback ──
+  if (countryCode !== "US") {
+    console.log(`[telnyx] ${countryCode} failed, trying US number as fallback`);
+    try {
+      const usResult = await telnyx.availablePhoneNumbers.list({
+        filter: { country_code: "US", features: ["sms"], limit: 5 }
+      });
+      const usNums = (usResult.data || []).filter(n => n.phone_number && !n.phone_number.includes("-"));
+      if (usNums.length > 0) {
+        const chosen = usNums[0].phone_number;
+        console.log(`[telnyx] US fallback found: ${chosen}`);
+        return orderPhoneNumber(chosen, messagingProfileId);
+      }
+    } catch (err) {
+      console.log(`[telnyx] US fallback search failed:`, err.message);
+    }
   }
 
   throw new Error(
-    `Could not provision a phone number for ${countryCode}${areaCode ? " (" + areaCode + ")" : ""}. Please try a different area or contact support.`
+    `Could not provision a ${countryCode} number — your Telnyx account may need regulatory setup for this country. A US number was also unavailable. Check your Telnyx dashboard or contact support.`
   );
 }
 

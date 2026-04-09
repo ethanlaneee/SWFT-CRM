@@ -1025,6 +1025,8 @@ async function npSelectNumber(phoneNumber) {
 
 async function npAutoAssign(country, region, areaCode) {
   if (!await swftConfirm('Assign you the next available local number in this area? Your current number will be released.', 'AUTO-ASSIGN NUMBER', '📱', 'Confirm')) return;
+  var resultsEl = document.getElementById('np-results');
+  if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px;">Provisioning your number...</div>';
   try {
     var token = await getToken();
     var body = { autoAssign: true, countryCode: country };
@@ -1043,6 +1045,15 @@ async function npAutoAssign(country, region, areaCode) {
     showToast('Number assigned: ' + data.phoneNumber);
   } catch(e) {
     showToast('Error: ' + (e.message || 'could not assign number'));
+    // Show fallback option to try US number
+    if (country !== 'US' && resultsEl) {
+      resultsEl.innerHTML =
+        '<div style="text-align:center;padding:12px 0;">' +
+          '<div style="font-size:12px;color:var(--red);margin-bottom:12px;">' + (e.message || 'Could not provision number') + '</div>' +
+          '<div style="font-size:11.5px;color:var(--gray);margin-bottom:14px;line-height:1.5;">Canadian numbers may require regulatory setup on your Telnyx account.<br/>You can use a US number in the meantime — it works for Canadian customers too.</div>' +
+          '<button class="settings-btn primary" style="width:100%;padding:12px;font-size:13px;" onclick="npAutoAssign(\'US\',\'\',\'\')">Get a US Number Instead</button>' +
+        '</div>';
+    }
   }
 }
 
