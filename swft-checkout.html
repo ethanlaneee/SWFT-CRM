@@ -736,12 +736,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         });
         if (res.ok) {
           fbq('track', 'CompleteRegistration');
+          fbq('track', 'StartTrial', {currency: 'USD', value: 0.00});
           window.location.href = '/swft-dashboard';
         } else {
           const data = await res.json();
           // Trial subscriptions may not need immediate payment verification
           // Redirect to dashboard anyway since checkout completed
           fbq('track', 'CompleteRegistration');
+          fbq('track', 'StartTrial', {currency: 'USD', value: 0.00});
           window.location.href = '/swft-dashboard';
         }
       } catch {
