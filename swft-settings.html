@@ -259,7 +259,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="settings-nav-item" data-target="sec-integrations"><span class="settings-nav-icon">🔗</span>Integrations</div>
   <div class="settings-nav-item" data-target="sec-preferences"><span class="settings-nav-icon">🎨</span>Preferences</div>
   <div class="settings-nav-item" data-target="sec-import"><span class="settings-nav-icon">📥</span>Import</div>
-  <div class="settings-nav-item" data-target="sec-agents"><span class="settings-nav-icon">🤖</span>AI Agents</div>
   <div class="settings-nav-item" data-target="sec-privacy"><span class="settings-nav-icon">🔒</span>Privacy</div>
 </nav>
 
@@ -607,25 +606,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Import Customers & Jobs</div><div class="settings-row-desc">Migrate from Jobber, ServiceTitan, Housecall Pro, or any CSV export. Import up to 500 records at a time.</div></div>
       <button class="settings-btn primary" onclick="window.location.href='swft-import'">Import CSV</button>
-    </div>
-  </div>
-</div>
-
-<!-- AI Agents -->
-<div class="settings-section" id="sec-agents">
-  <div class="settings-header"><span class="settings-header-icon">🤖</span><h3>AI AGENTS</h3></div>
-  <div class="settings-body">
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">AI Estimator</div><div class="settings-row-desc">Generates quotes from job descriptions using your past job data and pricing configuration. Available in Quotes and Jobs pages.</div></div>
-      <button class="settings-btn primary" onclick="window.location.href='swft-ai-agents'">Configure</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">AI Follow-up Agent</div><div class="settings-row-desc">Automatically follows up on unsigned quotes, overdue invoices, and sends review requests after completed jobs.</div></div>
-      <button class="settings-btn primary" onclick="window.location.href='swft-ai-agents'">Configure</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Google Review Link</div><div class="settings-row-desc">Used by the follow-up agent when requesting reviews from customers after job completion.</div></div>
-      <input id="google-review-link" type="text" placeholder="https://g.page/r/your-business/review" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:300px;max-width:100%;" onchange="saveReviewLink(this.value)">
     </div>
   </div>
 </div>
