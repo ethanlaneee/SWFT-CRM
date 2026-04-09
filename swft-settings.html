@@ -956,17 +956,18 @@ async function npSearch() {
     var numbers = data.numbers || [];
 
     if (!numbers.length) {
-      // For CA and other countries where Telnyx doesn't pre-list specific numbers,
-      // offer auto-assign: we'll buy whatever's available for the area.
       var areaLabel = city ? city : (region ? region : country);
+      var areaCodeDisplay = data.areaCode ? ' (' + data.areaCode + ')' : '';
       resultsEl.innerHTML =
-        '<div class="np-empty">No specific numbers available to preview for this area.</div>' +
-        '<div style="padding:14px 0 4px;">' +
-          '<button class="settings-btn primary" style="width:100%" onclick="npAutoAssign(\'' +
+        '<div style="text-align:center;padding:16px 0 8px;">' +
+          '<div style="font-size:24px;margin-bottom:10px;">📱</div>' +
+          '<div style="font-size:13px;color:var(--white);font-weight:600;margin-bottom:4px;">Ready to assign your ' + areaLabel + areaCodeDisplay + ' number</div>' +
+          '<div style="font-size:11.5px;color:var(--gray);margin-bottom:16px;line-height:1.5;">We\'ll grab you the best available local number for this area. Takes just a few seconds.</div>' +
+          '<button class="settings-btn primary" style="width:100%;padding:12px;font-size:13px;" onclick="npAutoAssign(\'' +
             country.replace(/'/g,'') + '\',\'' +
             (region||'').replace(/'/g,'') + '\',\'' +
             (data.areaCode||'').replace(/'/g,'') +
-          '\')">Get Next Available ' + areaLabel + ' Number</button>' +
+          '\')">Get My ' + areaLabel + ' Number</button>' +
         '</div>';
       return;
     }
