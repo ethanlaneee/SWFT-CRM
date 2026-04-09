@@ -1021,8 +1021,8 @@ async function npSelectNumber(phoneNumber) {
   var isWildcard = phoneNumber.includes('-');
   var msg = isWildcard
     ? 'Order a local number in this area code? Your current number will be released.'
-    : 'Select ' + phoneNumber + ' as your SWFT number? Your current number will be released.';
-  if (!confirm(msg)) return;
+    : 'Select <strong>' + phoneNumber + '</strong> as your SWFT number? Your current number will be released.';
+  if (!await swftConfirm(msg, 'SELECT NUMBER', '📱', 'Confirm')) return;
   try {
     var token = await getToken();
     var res = await fetch('/api/me/select-number', {
@@ -1042,7 +1042,7 @@ async function npSelectNumber(phoneNumber) {
 }
 
 async function npAutoAssign(country, region, areaCode) {
-  if (!confirm('Assign you the next available local number in this area? Your current number will be released.')) return;
+  if (!await swftConfirm('Assign you the next available local number in this area? Your current number will be released.', 'AUTO-ASSIGN NUMBER', '📱', 'Confirm')) return;
   try {
     var token = await getToken();
     var body = { autoAssign: true, countryCode: country };
