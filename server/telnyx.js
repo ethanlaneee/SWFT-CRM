@@ -143,19 +143,21 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
   const region = options.region || null;
 
   // Build a cascade of search attempts: most local first.
-  // We search WITHOUT best_effort first to get real orderable numbers.
-  // best_effort returns wildcard patterns (e.g. +18252------) for CA numbers
-  // which cannot be ordered directly.
+  // For each geo filter, try: no features → sms features → best_effort.
+  // Canadian numbers often aren't tagged with SMS in the search API but still support it.
   const attempts = [];
 
   if (areaCode) {
+    attempts.push({ country_code: countryCode, limit: 5, national_destination_code: areaCode });
     attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, national_destination_code: areaCode });
     attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true, national_destination_code: areaCode });
   }
   if (region && (countryCode === "US" || countryCode === "CA" || countryCode === "GB")) {
+    attempts.push({ country_code: countryCode, limit: 5, administrative_area: region });
     attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, administrative_area: region });
     attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true, administrative_area: region });
   }
+  attempts.push({ country_code: countryCode, limit: 5 });
   attempts.push({ country_code: countryCode, features: ["sms"], limit: 5 });
   attempts.push({ country_code: countryCode, features: ["sms"], limit: 5, best_effort: true });
 
@@ -163,9 +165,10 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
   for (const filter of attempts) {
     try {
       const result = await telnyx.availablePhoneNumbers.list({ filter });
-      const numbers = (result.data || []).filter(n => n.phone_number && !n.phone_number.includes("-"));
-      if (numbers.length > 0) {
-        chosen = numbers[0].phone_number;
+      // Prefer real (non-wildcard) numbers
+      const real = (result.data || []).filter(n => n.phone_number && !n.phone_number.includes("-"));
+      if (real.length > 0) {
+        chosen = real[0].phone_number;
         console.log(`[telnyx] Found orderable number ${chosen} with filter:`, JSON.stringify(filter));
         break;
       }
@@ -174,9 +177,53 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
     }
   }
 
+  // Fallback for countries like Canada where Telnyx only returns wildcard patterns:
+  // Accept a wildcard result, extract its NPA prefix, and try to order via that prefix.
+  if (!chosen) {
+    console.log(`[telnyx] No real numbers found, trying wildcard fallback for ${countryCode}`);
+    for (const filter of attempts) {
+      try {
+        const result = await telnyx.availablePhoneNumbers.list({ filter });
+        const any = (result.data || []).filter(n => n.phone_number);
+        if (any.length > 0) {
+          // Extract the concrete digits from the wildcard (e.g. "+14035------" → "4035")
+          const raw = any[0].phone_number;
+          const prefix = raw.replace(/[^0-9+]/g, "").replace(/^(\+?1)/, "+1");
+          console.log(`[telnyx] Wildcard found: ${raw}, trying to order with prefix search`);
+
+          // Search one more time using starts_with on the concrete prefix digits
+          const digits = raw.replace(/[^0-9]/g, "");
+          const npa = digits.length >= 4 ? digits.slice(1, 4) : null;
+          if (npa) {
+            const prefixResult = await telnyx.availablePhoneNumbers.list({
+              filter: { country_code: countryCode, national_destination_code: npa, limit: 1 }
+            });
+            const prefixNums = (prefixResult.data || []).filter(n => n.phone_number && !n.phone_number.includes("-"));
+            if (prefixNums.length > 0) {
+              chosen = prefixNums[0].phone_number;
+              console.log(`[telnyx] Prefix search found orderable number: ${chosen}`);
+              break;
+            }
+          }
+
+          // Last resort: try ordering the wildcard directly — Telnyx may resolve it
+          try {
+            console.log(`[telnyx] Attempting direct order of wildcard pattern: ${raw}`);
+            return await orderPhoneNumber(raw, messagingProfileId);
+          } catch (orderErr) {
+            console.log(`[telnyx] Direct wildcard order failed: ${orderErr.message}`);
+            // Continue to next attempt
+          }
+        }
+      } catch (err) {
+        console.log(`[telnyx] Wildcard fallback search failed:`, err.message);
+      }
+    }
+  }
+
   if (!chosen) {
     throw new Error(
-      `No available phone numbers found for country ${countryCode}. Please try again or contact support.`
+      `No available phone numbers found for ${countryCode}${areaCode ? " (" + areaCode + ")" : ""}. This may be a temporary issue — please try again in a few minutes or try a different area.`
     );
   }
 
