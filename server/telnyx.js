@@ -126,13 +126,20 @@ async function releasePhoneNumber(phoneSid) {
 }
 
 /**
- * Order a phone number by criteria (country, region) without specifying
- * a specific number. Telnyx picks and assigns the best available number.
- * This is the only reliable method for countries like Canada where Telnyx
- * doesn't return browsable/orderable numbers via the search API.
+ * Order a phone number by criteria using the Telnyx REST API directly.
+ * This bypasses the SDK's numberOrders.create which may not support
+ * sub_number_orders_attributes correctly.
+ *
+ * Uses POST /v2/number_orders with sub_number_orders_attributes to let
+ * Telnyx pick and assign the best available number for a country/region.
+ * This is the only reliable method for Canada where the search API
+ * only returns wildcard patterns.
  */
-async function orderNumberByCriteria(telnyx, messagingProfileId, { countryCode, region, areaCode }) {
-  // Try criteria-based orders from most specific to least specific
+async function orderNumberByCriteria(messagingProfileId, { countryCode, region, areaCode }) {
+  const apiKey = TELNYX_API_KEY;
+  if (!apiKey) throw new Error("Telnyx API key not configured");
+
+  // Try from most specific to least specific
   const orderAttempts = [];
 
   if (areaCode) {
@@ -156,37 +163,79 @@ async function orderNumberByCriteria(telnyx, messagingProfileId, { countryCode, 
     country_code: countryCode,
     quantity: 1,
   });
+  // Also try toll_free as a last resort
+  orderAttempts.push({
+    phone_number_type: "toll_free",
+    country_code: countryCode,
+    quantity: 1,
+  });
 
   for (const subOrder of orderAttempts) {
     try {
       console.log(`[telnyx] Criteria-based order attempt:`, JSON.stringify(subOrder));
-      const order = await telnyx.numberOrders.create({
-        messaging_profile_id: messagingProfileId,
-        sub_number_orders_attributes: [subOrder],
+
+      const res = await fetch("https://api.telnyx.com/v2/number_orders", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_profile_id: messagingProfileId,
+          sub_number_orders_attributes: [subOrder],
+        }),
       });
 
-      // Extract the assigned phone number from the order response
-      const phoneNumbers = order.data.phone_numbers || [];
+      const json = await res.json();
+      console.log(`[telnyx] Criteria order response (${res.status}):`, JSON.stringify(json).slice(0, 800));
+
+      if (!res.ok) {
+        console.log(`[telnyx] Criteria order HTTP ${res.status}:`, json.errors || json.error || json);
+        continue;
+      }
+
+      const data = json.data || json;
+
+      // Extract phone number from response — check multiple locations
+      const phoneNumbers = data.phone_numbers || [];
       if (phoneNumbers.length > 0 && phoneNumbers[0].phone_number) {
         return {
           phoneNumber: phoneNumbers[0].phone_number,
-          phoneSid: phoneNumbers[0].id || order.data.id,
+          phoneSid: phoneNumbers[0].id || data.id,
         };
       }
 
-      // Check sub_number_orders for the result
-      const subOrders = order.data.sub_number_orders || [];
+      // Check sub_number_orders
+      const subOrders = data.sub_number_orders || [];
       for (const sub of subOrders) {
         const nums = sub.phone_numbers || [];
         if (nums.length > 0 && nums[0].phone_number) {
           return {
             phoneNumber: nums[0].phone_number,
-            phoneSid: nums[0].id || order.data.id,
+            phoneSid: nums[0].id || data.id,
           };
         }
       }
 
-      console.log(`[telnyx] Criteria order created but no number in response:`, JSON.stringify(order.data).slice(0, 500));
+      // If the order was accepted but number is pending, check the order ID
+      if (data.id && data.status !== "failed") {
+        console.log(`[telnyx] Order ${data.id} status: ${data.status} — checking for assigned number...`);
+        // Wait briefly and check order status
+        await new Promise(r => setTimeout(r, 2000));
+        const checkRes = await fetch(`https://api.telnyx.com/v2/number_orders/${data.id}`, {
+          headers: { "Authorization": `Bearer ${apiKey}` },
+        });
+        const checkJson = await checkRes.json();
+        console.log(`[telnyx] Order status check:`, JSON.stringify(checkJson).slice(0, 800));
+        const checkData = checkJson.data || checkJson;
+        const checkNums = checkData.phone_numbers || [];
+        if (checkNums.length > 0 && checkNums[0].phone_number) {
+          return {
+            phoneNumber: checkNums[0].phone_number,
+            phoneSid: checkNums[0].id || checkData.id,
+          };
+        }
+      }
     } catch (err) {
       console.log(`[telnyx] Criteria-based order failed:`, err.message);
     }
@@ -242,7 +291,7 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
 
   // ── Attempt 2: Criteria-based order (for CA and other countries where search returns only wildcards) ──
   console.log(`[telnyx] No browsable numbers found for ${countryCode}, trying criteria-based order`);
-  const result = await orderNumberByCriteria(telnyx, messagingProfileId, { countryCode, region, areaCode });
+  const result = await orderNumberByCriteria(messagingProfileId, { countryCode, region, areaCode });
   if (result) {
     console.log(`[telnyx] Criteria-based order succeeded: ${result.phoneNumber}`);
     return result;
