@@ -52,10 +52,10 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .contact-search:focus-within{border-color:var(--green);}
 .contact-search input{background:transparent;border:none;outline:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;flex:1;}
 .contact-search input::placeholder{color:var(--gray2);}
-.channel-tabs{display:flex;gap:4px;padding:10px 16px 6px;}
-.ch-tab{font-size:11px;font-weight:500;padding:5px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
-.ch-tab:hover{color:var(--white);border-color:var(--gray2);}
-.ch-tab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+.channel-tabs{padding:10px 16px 6px;}
+.channel-select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg2);color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7a7a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.channel-select:focus{outline:none;border-color:rgba(200,241,53,0.4);}
+.channel-select option{background:#111;color:#f0f0f0;}
 .contact-list{flex:1;overflow-y:auto;}
 .contact-item{display:flex;align-items:center;gap:11px;padding:12px 16px;cursor:pointer;transition:background 0.12s;border-bottom:1px solid var(--border);}
 .contact-item:hover{background:var(--surface2);}
@@ -301,14 +301,16 @@ src="https://www.facebook.com/tr?id=893212580432377&ev=PageView&noscript=1"
       </div>
     </div>
     <div class="channel-tabs">
-      <div class="ch-tab active" onclick="setChannel('all')">All</div>
-      <div class="ch-tab" onclick="setChannel('email')">Email</div>
-      <div class="ch-tab" onclick="setChannel('sms')">SMS</div>
-      <div class="ch-tab" onclick="setChannel('facebook')" style="color:#1877F2;">FB</div>
-      <div class="ch-tab" onclick="setChannel('instagram')" style="color:#E4405F;">IG</div>
-      <div class="ch-tab" onclick="setChannel('whatsapp')" style="color:#25D366;">WA</div>
-      <div class="ch-tab" onclick="setChannel('ai')" style="color:#c8f135;">AI</div>
-      <div class="ch-tab" onclick="setChannel('deleted')" style="color:var(--red);">Deleted</div>
+      <select class="channel-select" id="channel-select" onchange="setChannel(this.value)">
+        <option value="all">All Channels</option>
+        <option value="email">Email</option>
+        <option value="sms">SMS</option>
+        <option value="facebook">Facebook</option>
+        <option value="instagram">Instagram</option>
+        <option value="whatsapp">WhatsApp</option>
+        <option value="ai">AI</option>
+        <option value="deleted">Deleted</option>
+      </select>
     </div>
     <div class="contact-list" id="contact-list">
       <div class="chat-empty" style="padding:30px;font-size:12px;">Loading contacts...</div>
@@ -557,10 +559,8 @@ function autoResize(el){
 // ── Channel filter ──
 function setChannel(ch){
   _channel=ch;
-  document.querySelectorAll('.ch-tab').forEach(function(t){
-    var label=t.textContent.toLowerCase().trim();
-    t.classList.toggle('active',label===ch);
-  });
+  var sel=document.getElementById('channel-select');
+  if(sel&&sel.value!==ch) sel.value=ch;
   buildContacts();
   renderContacts();
   // If active contact doesn't match filter, clear it
