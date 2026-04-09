@@ -297,26 +297,10 @@ async function buyPhoneNumber(messagingProfileId, webhookUrl, options = {}) {
     return criteriaResult;
   }
 
-  // ── Attempt 3: If non-US country failed, try a US number as fallback ──
-  if (countryCode !== "US") {
-    console.log(`[telnyx] ${countryCode} failed, trying US number as fallback`);
-    try {
-      const usResult = await telnyx.availablePhoneNumbers.list({
-        filter: { country_code: "US", features: ["sms"], limit: 5 }
-      });
-      const usNums = (usResult.data || []).filter(n => n.phone_number && !n.phone_number.includes("-"));
-      if (usNums.length > 0) {
-        const chosen = usNums[0].phone_number;
-        console.log(`[telnyx] US fallback found: ${chosen}`);
-        return orderPhoneNumber(chosen, messagingProfileId);
-      }
-    } catch (err) {
-      console.log(`[telnyx] US fallback search failed:`, err.message);
-    }
-  }
-
   throw new Error(
-    `Could not provision a ${countryCode} number — your Telnyx account may need regulatory setup for this country. A US number was also unavailable. Check your Telnyx dashboard or contact support.`
+    countryCode === "CA"
+      ? "Canadian numbers require CRTC regulatory approval on your Telnyx account. Go to portal.telnyx.com → Numbers → Regulatory Compliance to submit your business verification, then try again."
+      : `Could not provision a ${countryCode} number. Your Telnyx account may need regulatory setup for this country. Check portal.telnyx.com → Regulatory Compliance.`
   );
 }
 
