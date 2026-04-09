@@ -735,11 +735,13 @@ src="https://www.facebook.com/tr?id=893212580432377&ev=PageView&noscript=1"
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (res.ok) {
+          fbq('track', 'CompleteRegistration');
           window.location.href = '/swft-dashboard';
         } else {
           const data = await res.json();
           // Trial subscriptions may not need immediate payment verification
           // Redirect to dashboard anyway since checkout completed
+          fbq('track', 'CompleteRegistration');
           window.location.href = '/swft-dashboard';
         }
       } catch {
