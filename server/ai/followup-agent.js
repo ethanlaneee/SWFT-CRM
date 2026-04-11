@@ -18,7 +18,7 @@ const { db } = require("../firebase");
 const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
-const { google } = require("googleapis");
+const { sendSimpleGmail } = require("../utils/email");
 
 /**
  * Convert hours:minutes in Eastern Time to a UTC timestamp for the given date.
@@ -48,32 +48,49 @@ function nextNineAm() {
   return target;
 }
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "https://goswft.com/api/auth/google/callback";
+/**
+ * Resolve the user's Gmail tokens from either the new (integrations.gmail) or
+ * legacy (gmailTokens) location.
+ */
+function getGmailTokens(userData) {
+  const gmail = userData?.integrations?.gmail;
+  const tokens = gmail?.tokens || userData?.gmailTokens || null;
+  const connected = (gmail?.connected || userData?.gmailConnected) && !!tokens;
+  return { tokens, connected };
+}
 
+/**
+ * Send a follow-up email via Gmail using the shared sendSimpleGmail utility,
+ * which handles token refresh, proper From headers, and HTML body construction.
+ *
+ * Returns:
+ *   { sent: true }                    on success
+ *   { sent: false, reason: "no_gmail" } if Gmail isn't connected
+ * Throws on real send failures so the caller can retry.
+ */
 async function sendFollowupEmail(ownerUid, toEmail, subject, body) {
   const userDoc = await db.collection("users").doc(ownerUid).get();
-  if (!userDoc.exists) return;
+  if (!userDoc.exists) return { sent: false, reason: "no_user" };
+
   const userData = userDoc.data();
-  const gmail = userData.integrations?.gmail;
-  const tokens = gmail?.tokens || userData.gmailTokens;
-  const connected = gmail?.connected || userData.gmailConnected;
-  if (!connected || !tokens) return; // Gmail not connected — skip silently
+  const { tokens, connected } = getGmailTokens(userData);
+  if (!connected) return { sent: false, reason: "no_gmail" };
 
-  const client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-  client.setCredentials(tokens);
+  // sendSimpleGmail expects the user object to carry tokens at gmailTokens and
+  // optionally _uid so refreshed access tokens are persisted.
+  const userForGmail = {
+    ...userData,
+    _uid: ownerUid,
+    gmailTokens: tokens,
+    gmailAddress: userData.gmailAddress || userData.integrations?.gmail?.account || userData.email,
+  };
 
-  const gmailApi = google.gmail({ version: "v1", auth: client });
-  const raw = Buffer.from(
-    `To: ${toEmail}\r\n` +
-    `Subject: ${subject}\r\n` +
-    `Content-Type: text/plain; charset=utf-8\r\n\r\n` +
-    body
-  ).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const htmlBody =
+    `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${body}</div>`;
 
-  await gmailApi.users.messages.send({ userId: "me", requestBody: { raw } });
+  await sendSimpleGmail(userForGmail, toEmail, subject, body, htmlBody);
   console.log(`[followup-agent] Email sent to ${toEmail}: ${subject}`);
+  return { sent: true };
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -208,11 +225,11 @@ async function scanUnsignedQuotes(orgId, config) {
         const exists = await followupExists(orgId, "unsigned_quote", doc.id, step);
         if (exists) continue;
 
-        // Get customer phone
+        // Get customer contact info — need at least a phone OR email
         const custDoc = await db.collection("customers").doc(quote.customerId).get();
         if (!custDoc.exists) continue;
         const customer = custDoc.data();
-        if (!customer.phone) continue;
+        if (!customer.phone && !customer.email) continue;
 
         const message = buildQuoteFollowup(customer, quote, day);
         await createFollowup({
@@ -258,7 +275,7 @@ async function scanOverdueInvoices(orgId, config) {
         const custDoc = await db.collection("customers").doc(invoice.customerId).get();
         if (!custDoc.exists) continue;
         const customer = custDoc.data();
-        if (!customer.phone) continue;
+        if (!customer.phone && !customer.email) continue;
 
         const message = buildInvoiceFollowup(customer, invoice, day);
         await createFollowup({
@@ -304,7 +321,7 @@ async function scanReviewRequests(orgId, config) {
     const custDoc = await db.collection("customers").doc(job.customerId).get();
     if (!custDoc.exists) continue;
     const customer = custDoc.data();
-    if (!customer.phone) continue;
+    if (!customer.phone && !customer.email) continue;
 
     // Get owner info for the review message
     const owner = await getOrgOwner(orgId);
@@ -384,54 +401,117 @@ async function processFollowups() {
         continue;
       }
 
-      // Get owner for SMS limits
+      // Get owner for SMS limits and Gmail tokens
       const owner = await getOrgOwner(followup.orgId);
       if (!owner) throw new Error("No org owner found");
 
-      // Check SMS limit
-      const plan = getPlan(owner.user.plan);
-      const usage = await getUsage(owner.uid);
-      if (usage.smsCount >= plan.smsLimit) {
-        console.log(`[followup-agent] SMS limit reached for org ${followup.orgId}, skipping`);
-        await ref.update({ status: "skipped", reason: "sms_limit", updatedAt: Date.now() });
+      // Determine which channels are actually available for this follow-up.
+      const { connected: gmailConnected } = getGmailTokens(owner.user);
+      const wantsSms = !!followup.phone;
+      const wantsEmail = !!followup.email && gmailConnected;
+
+      if (!wantsSms && !wantsEmail) {
+        // Nothing we can send — likely Gmail is disconnected for an email-only
+        // followup, or both contact channels are missing.
+        const reason = followup.email && !gmailConnected ? "no_gmail" : "no_channel";
+        console.log(`[followup-agent] Skipping ${fDoc.id} — ${reason}`);
+        await ref.update({ status: "skipped", reason, updatedAt: Date.now() });
         continue;
       }
 
-      // Send SMS (if phone on file)
-      if (followup.phone) {
-        await sendSms(followup.phone, followup.message, getUserTelnyxConfig(owner.user));
-        await incrementSms(owner.uid);
-      }
-
-      // Send email (if email on file and Gmail connected)
-      if (followup.email) {
-        const subject = buildEmailSubject(followup.type);
-        try {
-          await sendFollowupEmail(owner.uid, followup.email, subject, followup.message);
-        } catch (emailErr) {
-          console.error(`[followup-agent] Email failed for ${fDoc.id}:`, emailErr.message);
+      // SMS quota only blocks SMS sends — email-only follow-ups still go.
+      let smsBlocked = false;
+      if (wantsSms) {
+        const plan = getPlan(owner.user.plan);
+        const usage = await getUsage(owner.uid);
+        if (usage.smsCount >= plan.smsLimit) {
+          if (!wantsEmail) {
+            console.log(`[followup-agent] SMS limit reached for org ${followup.orgId}, skipping`);
+            await ref.update({ status: "skipped", reason: "sms_limit", updatedAt: Date.now() });
+            continue;
+          }
+          console.log(`[followup-agent] SMS limit reached for org ${followup.orgId}, sending email only`);
+          smsBlocked = true;
         }
       }
 
-      // Mark as sent
-      await ref.update({ status: "sent", sentAt: Date.now(), error: null });
+      let smsSent = false;
+      let emailSent = false;
+      const sendErrors = [];
 
-      // Create message record for chat thread visibility
-      await db.collection("messages").add({
-        userId: owner.uid,
-        orgId: followup.orgId,
-        to: followup.phone,
-        body: followup.message,
-        customerId: followup.customerId || "",
-        customerName: followup.customerName || "",
-        type: "sms",
+      // Send SMS (if phone on file and not over the limit)
+      if (wantsSms && !smsBlocked) {
+        try {
+          await sendSms(followup.phone, followup.message, getUserTelnyxConfig(owner.user));
+          await incrementSms(owner.uid);
+          smsSent = true;
+        } catch (smsErr) {
+          console.error(`[followup-agent] SMS failed for ${fDoc.id}:`, smsErr.message);
+          sendErrors.push(`sms: ${smsErr.message}`);
+        }
+      }
+
+      // Send email (if email on file and Gmail connected)
+      if (wantsEmail) {
+        const subject = buildEmailSubject(followup.type);
+        try {
+          const result = await sendFollowupEmail(owner.uid, followup.email, subject, followup.message);
+          if (result?.sent) emailSent = true;
+        } catch (emailErr) {
+          console.error(`[followup-agent] Email failed for ${fDoc.id}:`, emailErr.message);
+          sendErrors.push(`email: ${emailErr.message}`);
+        }
+      }
+
+      // If nothing actually went out, treat this as a failure so it retries.
+      if (!smsSent && !emailSent) {
+        throw new Error(sendErrors.join("; ") || "No channels sent");
+      }
+
+      // Mark as sent — record which channels actually went out.
+      await ref.update({
         status: "sent",
-        sentVia: "telnyx",
         sentAt: Date.now(),
-        isFollowup: true,
-        followupId: fDoc.id,
-        followupType: followup.type,
+        sentChannels: { sms: smsSent, email: emailSent },
+        error: sendErrors.length ? sendErrors.join("; ") : null,
       });
+
+      // Create message records for chat thread visibility — one per channel.
+      if (smsSent) {
+        await db.collection("messages").add({
+          userId: owner.uid,
+          orgId: followup.orgId,
+          to: followup.phone,
+          body: followup.message,
+          customerId: followup.customerId || "",
+          customerName: followup.customerName || "",
+          type: "sms",
+          status: "sent",
+          sentVia: "telnyx",
+          sentAt: Date.now(),
+          isFollowup: true,
+          followupId: fDoc.id,
+          followupType: followup.type,
+        });
+      }
+      if (emailSent) {
+        await db.collection("messages").add({
+          userId: owner.uid,
+          orgId: followup.orgId,
+          to: followup.email,
+          body: followup.message,
+          subject: buildEmailSubject(followup.type),
+          customerId: followup.customerId || "",
+          customerName: followup.customerName || "",
+          type: "email",
+          status: "sent",
+          sentVia: "gmail",
+          sentAt: Date.now(),
+          isFollowup: true,
+          followupId: fDoc.id,
+          followupType: followup.type,
+        });
+      }
 
       // Log activity
       await logActivity(followup.orgId, {
@@ -441,9 +521,11 @@ async function processFollowups() {
         customerName: followup.customerName,
         step: followup.step,
         total: followup.total || null,
+        channels: { sms: smsSent, email: emailSent },
       });
 
-      console.log(`[followup-agent] Sent ${fDoc.id} (${followup.type}/${followup.step}) to ${followup.phone}`);
+      const channelStr = [smsSent && "sms", emailSent && "email"].filter(Boolean).join("+");
+      console.log(`[followup-agent] Sent ${fDoc.id} (${followup.type}/${followup.step}) via ${channelStr} to ${followup.phone || followup.email}`);
 
     } catch (err) {
       console.error(`[followup-agent] Failed ${fDoc.id} (attempt ${retryCount + 1}):`, err.message);
