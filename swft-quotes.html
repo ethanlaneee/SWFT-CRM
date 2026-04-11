@@ -291,7 +291,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="pdf-fields">
         <div class="pdf-field-row">
           <span class="pdf-field-label">Customer</span>
-          <select class="pdf-field-select" id="f-customer"></select>
+          <select class="pdf-field-select" id="f-customer" onchange="autofillFromCustomer(this.value)"></select>
         </div>
         <div class="pdf-2col">
           <div class="pdf-field-row"><span class="pdf-field-label">Service</span><input class="pdf-field-input" id="f-service" placeholder="e.g. Stamped Concrete"/></div>
@@ -470,8 +470,24 @@ async function changeQuoteStatus(id,val,el){
 }
 
 // ── Modal ──
+// Lazy-load customers if the user opens a quote modal before loadQuotes() finishes.
+async function ensureCustomersLoaded(){
+  if(_customers&&_customers.length)return;
+  try{_customers=await API.customers.list();}catch(e){console.error('ensureCustomersLoaded:',e);}
+}
+
+// Autofill the address field when the customer selection changes.
+function autofillFromCustomer(custId){
+  if(!custId||!_customers)return;
+  var cust=_customers.find(function(c){return c.id===custId;});
+  if(!cust)return;
+  var addr=document.getElementById('f-address');
+  if(addr) addr.value=cust.address||'';
+}
+
 async function openQuote(id){
   try{
+    await ensureCustomersLoaded();
     var q=await API.quotes.get(id);
     _currentQuote=q;
     _items=(q.items||[]).map(function(i){
@@ -491,8 +507,9 @@ async function openQuote(id){
   }catch(e){showToast('Error loading quote');}
 }
 
-function openNewQuote(){
+async function openNewQuote(){
   _currentQuote=null;_items=[];
+  await ensureCustomersLoaded();
   populateModal({});
   document.getElementById('btn-delete').style.display='none';
   document.getElementById('modal-overlay').classList.add('open');

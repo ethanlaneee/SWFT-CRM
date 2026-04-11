@@ -454,7 +454,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 <div class="edit-field">
   <label class="edit-label">Customer</label>
-  <select class="edit-input" id="e-customer"><option value="">Select a customer...</option></select>
+  <select class="edit-input" id="e-customer" onchange="schedAutofillFromCustomer(this.value)"><option value="">Select a customer...</option></select>
 </div>
 <div class="edit-row-2">
   <div class="edit-field">
@@ -581,6 +581,37 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script>
   /* ── Calendar Jobs Data ── */
   let calendarJobs = [];
+  window._schedCustList = [];
+
+  async function loadSchedCustomers() {
+    try {
+      var customers = await API.customers.list();
+      window._schedCustList = customers || [];
+      var sel = document.getElementById('e-customer');
+      if (!sel) return;
+      // Preserve current selection so a re-load while the drawer is open doesn't reset it
+      var current = sel.value;
+      sel.innerHTML = '<option value="">Select a customer...</option>';
+      window._schedCustList.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name || 'Unnamed';
+        opt.dataset.address = c.address || '';
+        opt.dataset.phone = c.phone || '';
+        opt.dataset.name = c.name || '';
+        sel.appendChild(opt);
+      });
+      if (current) sel.value = current;
+    } catch (e) { console.error('loadSchedCustomers:', e); }
+  }
+
+  function schedAutofillFromCustomer(custId) {
+    if (!custId || !window._schedCustList) return;
+    var cust = window._schedCustList.find(function(c) { return c.id === custId; });
+    if (!cust) return;
+    var addr = document.getElementById('e-address-edit') || document.getElementById('e-address');
+    if (addr) addr.value = cust.address || '';
+  }
 
   async function loadCalendarJobs() {
     try {
@@ -915,13 +946,41 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   }
 
 
-  function enterEditMode() {
+  async function enterEditMode() {
     const j = _currentJob;
     if (!j) return;
 
+    // Populate the customer dropdown before trying to select one
+    await loadSchedCustomers();
+
     // Populate edit fields from current job data
     document.getElementById('e-title').value    = j.title || '';
-    document.getElementById('e-customer').value = j.customer || '';
+    var custSel = document.getElementById('e-customer');
+    // Prefer matching by id, fall back to matching by name (for legacy jobs that
+    // only stored customerName)
+    var matched = false;
+    if (j.customerId) {
+      for (var i = 0; i < custSel.options.length; i++) {
+        if (custSel.options[i].value === j.customerId) {
+          custSel.selectedIndex = i;
+          matched = true;
+          break;
+        }
+      }
+    }
+    if (!matched) {
+      var wantName = (j.customerName || j.customer || '').trim();
+      if (wantName) {
+        for (var k = 0; k < custSel.options.length; k++) {
+          if ((custSel.options[k].textContent || '').trim() === wantName) {
+            custSel.selectedIndex = k;
+            matched = true;
+            break;
+          }
+        }
+      }
+    }
+    if (!matched) custSel.selectedIndex = 0;
     const dateParts = j.date.split(' · ');
     document.getElementById('e-date').value     = dateParts[0] || '';
     document.getElementById('e-time').value     = dateParts[1] || '12:00';
@@ -957,8 +1016,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('footer-edit').style.display = 'flex';
   }
 
-  function openNewJob() {
+  async function openNewJob() {
     _currentJob = {date:'', title:'', customer:'', tag:'Scheduled', tagStyle:'background:rgba(77,159,255,0.12);color:#4d9fff;', crew:'Crew A', amount:'$0', sqft:'—', dur:'—', num:'J-NEW', address:'', service:'—', wx:'☀️', wxDesc:'—', wxNote:'', wxBadge:'', wxText:''};
+
+    // Make sure the customer dropdown actually has customers in it
+    await loadSchedCustomers();
 
     // Update drawer header
     document.getElementById('d-date').textContent     = 'New Job';
@@ -1015,7 +1077,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   async function saveEdit() {
     if (!_currentJobId) return;
     var title    = document.getElementById('e-title') ? document.getElementById('e-title').value : '';
-    var customer = document.getElementById('e-customer').value || '';
+    var custSel = document.getElementById('e-customer');
+    var customerId = custSel.value || '';
+    var customer = (custSel.selectedIndex > 0 && custSel.options[custSel.selectedIndex])
+      ? custSel.options[custSel.selectedIndex].textContent
+      : '';
     var date     = document.getElementById('e-date').value || '';
     var time     = document.getElementById('e-time') ? document.getElementById('e-time').value : '';
     var address  = document.getElementById('e-address-edit') ? document.getElementById('e-address-edit').value : (document.getElementById('e-address') ? document.getElementById('e-address').value : '');
@@ -1028,6 +1094,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     var fmtAmount = amount ? '$' + parseFloat(amount).toLocaleString() : '$0';
 
     var data = {
+      customerId: customerId,
       customerName: customer,
       scheduledDate: date,
       service: service,

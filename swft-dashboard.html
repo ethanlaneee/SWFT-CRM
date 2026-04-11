@@ -496,8 +496,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!custId || !window._dashCustList) return;
     var cust = window._dashCustList.find(function(c) { return c.id === custId; });
     if (!cust) return;
+    // Always overwrite — picking a customer is an explicit action and should
+    // refresh the dependent address field, otherwise switching customers
+    // silently does nothing and looks broken.
     var addr = document.getElementById('nj-address');
-    if (addr && !addr.value) addr.value = cust.address || '';
+    if (addr) addr.value = cust.address || '';
   }
 
   function openNewJobModal() {

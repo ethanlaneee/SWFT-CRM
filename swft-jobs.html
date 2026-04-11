@@ -862,8 +862,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!custId || !window._customerList) return;
     var cust = window._customerList.find(function(c) { return c.id === custId; });
     if (!cust) return;
+    // Always overwrite — picking a customer is an explicit action and should
+    // refresh the dependent address field, otherwise switching customers
+    // silently does nothing and looks broken.
     var addr = document.getElementById('e-address-edit');
-    if (addr && !addr.value) addr.value = cust.address || '';
+    if (addr) addr.value = cust.address || '';
   }
 
   function openDrawer(id) {
@@ -1504,11 +1507,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       // Auto-open new job if ?customer= param
       var params = new URLSearchParams(window.location.search);
       if (params.get('customer')) {
-        setTimeout(function(){
-          openNewJob();
+        // Wait for openNewJob (which awaits loadCustomerDropdown) to finish
+        // before setting the dropdown value, otherwise the option doesn't
+        // exist yet and the value is silently dropped.
+        (async function(){
+          await openNewJob();
           var custInput = document.getElementById('e-customer');
-          if (custInput) custInput.value = params.get('customer');
-        }, 400);
+          if (custInput) {
+            custInput.value = params.get('customer');
+            autofillFromCustomer(custInput.value);
+          }
+        })();
       }
     }
   });
