@@ -282,6 +282,17 @@ border:none;border-radius:10px;cursor:pointer;transition:all 0.18s;
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── Login hint (welcome-back personalisation) ── */
+#login-hint{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;color:var(--green);
+  margin-top:5px;min-height:16px;
+  opacity:0;transform:translateY(-4px);
+  transition:opacity 0.2s ease,transform 0.2s ease;
+  pointer-events:none;
+}
+#login-hint.show{opacity:1;transform:translateY(0);}
 </style>
 
 
@@ -341,6 +352,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
       </div>
       <span class="field-error" id="login-email-err">Please enter a valid email.</span>
+      <div id="login-hint"></div>
     </div>
 
     <div class="field">
@@ -566,6 +578,63 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       // Prefetch failed — dashboard will fetch fresh on load, no impact on login
     }
   }
+
+  // ── EMAIL HINT ──
+  // When the user pauses typing a valid email, ask the server if they have an
+  // account and show a personalised "Welcome back, {name}!" greeting.
+  // This is purely cosmetic — no sensitive data is returned.
+  (function () {
+    const emailInput = document.getElementById('login-email');
+    const hintEl     = document.getElementById('login-hint');
+    let debounceTimer  = null;
+    let lastQueriedEmail = '';
+
+    function showHint(firstName) {
+      hintEl.innerHTML =
+        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
+        ' Welcome back, ' + firstName + '!';
+      hintEl.classList.add('show');
+    }
+
+    function clearHint() {
+      hintEl.classList.remove('show');
+      lastQueriedEmail = '';
+    }
+
+    emailInput.addEventListener('input', function () {
+      clearTimeout(debounceTimer);
+      const email = this.value.trim();
+
+      if (!email) { clearHint(); return; }
+
+      debounceTimer = setTimeout(async () => {
+        // Basic format check before hitting the network
+        if (!/\S+@\S+\.\S+/.test(email)) { clearHint(); return; }
+        // Skip if we already fetched for this exact email
+        if (email === lastQueriedEmail) return;
+        lastQueriedEmail = email;
+
+        try {
+          const res  = await fetch('/api/login-hint?email=' + encodeURIComponent(email));
+          const data = await res.json();
+
+          // Discard stale response if user kept typing
+          if (emailInput.value.trim() !== email) return;
+
+          if (data.exists && data.firstName) {
+            showHint(data.firstName);
+          } else {
+            clearHint();
+          }
+        } catch (_) { clearHint(); }
+      }, 400);
+    });
+
+    // Clear hint whenever the email field is emptied
+    emailInput.addEventListener('change', function () {
+      if (!this.value.trim()) clearHint();
+    });
+  })();
 
   // ── LOGIN ──
   window.handleLogin = async function() {

@@ -574,6 +574,40 @@ app.use(express.static(staticRoot, {
   }
 }));
 
+// ── Login hint — public, no auth ──
+// Looks up a Firestore user by email and returns only first name + initials
+// so the sign-in page can personalise the UI (à la Google) before the user
+// authenticates. Intentionally returns no sensitive fields.
+// Tight per-IP rate limit to prevent bulk email enumeration.
+const hintLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests." },
+});
+app.get("/api/login-hint", hintLimiter, async (req, res) => {
+  const email = (req.query.email || "").trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.json({ exists: false });
+  }
+  try {
+    const { db } = require("./firebase");
+    const snap = await db.collection("users")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+    if (snap.empty) return res.json({ exists: false });
+    const d = snap.docs[0].data();
+    const firstName = d.firstName || d.name?.split(" ")[0] || "";
+    const lastName  = d.lastName  || d.name?.split(" ").slice(1).join(" ") || "";
+    const initials  = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "?";
+    return res.json({ exists: true, firstName, initials });
+  } catch (_) {
+    return res.json({ exists: false });
+  }
+});
+
 // ── Routes ──
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
