@@ -540,6 +540,33 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }, { merge: true });
   }
 
+  // ── PROFILE PREFETCH ──
+  // Fires immediately after auth succeeds so the first dashboard page finds
+  // the /api/me payload already in sessionStorage — eliminates the cold-start
+  // API round-trip and the 500 ms artificial delay in swft-settings-loader.js.
+  async function prefetchUserProfile(user) {
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/me', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      sessionStorage.setItem('swft_me_cache', JSON.stringify({ data, ts: Date.now() }));
+
+      // Also prime the user-sync sidebar cache so the name/avatar appears instantly
+      const firstName = data.firstName || data.name?.split(' ')[0] || '';
+      const lastName  = data.lastName  || data.name?.split(' ').slice(1).join(' ') || '';
+      const fullName  = [firstName, lastName].filter(Boolean).join(' ');
+      const initials  = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || '?';
+      sessionStorage.setItem('swft_profile', JSON.stringify({
+        fullName, initials, email: data.email || user.email || ''
+      }));
+    } catch (_) {
+      // Prefetch failed — dashboard will fetch fresh on load, no impact on login
+    }
+  }
+
   // ── LOGIN ──
   window.handleLogin = async function() {
     clearErrors();
@@ -559,8 +586,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     setLoading(btn, true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, email, password);
       showSuccess('Signed in! Checking account...');
+      // Fire prefetch in parallel — doesn't block the status check or redirect
+      prefetchUserProfile(cred.user).catch(() => {});
       await goToDashboard();
     } catch (err) {
       setLoading(btn, false);
@@ -629,6 +658,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     try {
       const result = await signInWithPopup(auth, provider);
       await saveUserToFirestore(result.user);
+      // Prefetch profile in parallel with the success redirect
+      prefetchUserProfile(result.user).catch(() => {});
       const isNew = result._tokenResponse?.isNewUser;
       showSuccessState(isNew
         ? `Welcome to SWFT, ${result.user.displayName?.split(' ')[0] || 'there'}!`
