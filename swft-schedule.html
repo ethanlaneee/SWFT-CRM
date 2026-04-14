@@ -429,6 +429,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="detail-icon">👥</div>
       <div><div class="detail-label">Crew</div><div class="detail-value" id="d-crew-detail">Crew A — Marcus T., Devon R., Luis M.</div></div>
     </div>
+    <div class="detail-row" id="d-notes-row" style="display:none;">
+      <div class="detail-icon">📝</div>
+      <div><div class="detail-label">Notes</div><div class="detail-value" id="d-notes-val" style="white-space:pre-wrap;"></div></div>
+    </div>
     <div class="section-title" style="margin-top:4px;">Weather Forecast</div>
     <div class="wx-card" id="d-wx">
       <div class="wx-big">⛅</div>
@@ -585,13 +589,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   async function loadCalendarJobs() {
     try {
       const jobs = await API.jobs.list();
+      // Store full job objects so the drawer can show all fields
+      jobs.forEach(function(j) { _jobsCache[j.id] = j; });
       calendarJobs = jobs.map(function(j) {
         var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
         return {
           date: j.scheduledDate || '',
           title: j.title || (j.customerName + ' - ' + (j.service||'')),
-          crew: '',
-          address: j.address || '',
           color: color,
           drawerId: j.id
         };
@@ -673,7 +677,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       const dayJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
       for (let ji = 0; ji < dayJobs.length; ji++) {
         const job = dayJobs[ji];
-        html += '<div class="job-block ' + job.color + '" onclick="showCalPopup(event,\'' + job.drawerId + '\',' + JSON.stringify(job).replace(/'/g,"\\'") + ')">' + job.title + '</div>';
+        html += '<div class="job-block ' + job.color + '" onclick="event.stopPropagation();openDrawer(\'' + job.drawerId + '\')">' + job.title + '</div>';
       }
 
       html += '</div>';
@@ -769,36 +773,121 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
   })();
 
-  const jobs = {};
+  const _jobsCache = {};
+
+  const _STATUS_LABELS = { active:'In Progress', scheduled:'Scheduled', pending:'Pending', complete:'Complete' };
+  const _STATUS_COLORS = { active:'var(--green)', scheduled:'#4d9fff', pending:'var(--amber)', complete:'var(--gray)' };
+  const _STATUS_BKGS   = { active:'rgba(200,241,53,0.12)', scheduled:'rgba(77,159,255,0.12)', pending:'rgba(245,166,35,0.12)', complete:'rgba(122,122,122,0.12)' };
+  const tagStyles = {
+    'In Progress':'background:rgba(200,241,53,0.12);color:var(--green);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+    'Scheduled':  'background:rgba(77,159,255,0.12);color:#4d9fff;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+    'Pending':    'background:rgba(245,166,35,0.12);color:var(--amber);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+    'Complete':   'background:rgba(122,122,122,0.12);color:var(--gray);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+  };
+
+  const WMO_ICONS_DRW = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};
+  const WMO_DESC_DRW  = {0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Light showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm w/ hail',99:'Severe thunderstorm'};
 
   let _currentJob = null;
+  let _currentJobId = null;
+
   function openDrawer(id) {
-    const j = jobs[id]; if(!j) return;
-    _currentJob = j;
-    document.getElementById('d-date').textContent     = j.date;
-    document.getElementById('d-title').textContent    = j.title;
-    document.getElementById('d-customer').textContent = j.customer;
-    document.getElementById('d-tag').textContent      = j.tag;
-    document.getElementById('d-tag').style.cssText    = j.tagStyle;
-    document.getElementById('d-crew').innerHTML       = j.crew;
-    document.getElementById('d-amount').textContent   = j.amount;
-    document.getElementById('d-sqft').textContent     = j.sqft;
-    document.getElementById('d-dur').textContent      = j.dur;
-    document.getElementById('d-num').textContent      = j.num;
-    document.getElementById('d-address').textContent  = j.address;
-    document.getElementById('d-service').textContent  = j.service;
-    document.getElementById('d-crew-detail').textContent = j.crew.replace(/<[^>]+>/g,'').trim();
-    document.getElementById('d-wx').innerHTML = `
-      <div class="wx-big">${j.wx}</div>
-      <div class="wx-info">
-        <div class="wx-desc">${j.wxDesc}</div>
-        <div class="wx-note">${j.wxNote}</div>
-      </div>
-      <span class="wx-badge ${j.wxBadge}">${j.wxText}</span>`;
-    document.getElementById('d-edit').style.display='none';
-    document.getElementById('d-view').style.display='flex';
-    document.getElementById('footer-edit').style.display='none';
-    document.getElementById('footer-view').style.display='flex';
+    const raw = _jobsCache[id];
+    if (!raw) return;
+    _currentJobId = id;
+
+    // Derive display and edit-mode values from the raw API job
+    var statusLabel = _STATUS_LABELS[raw.status] || raw.status || 'Scheduled';
+    var tagStyle    = tagStyles[statusLabel] || tagStyles['Scheduled'];
+    var crewNames   = (raw.crew || '').split(',').map(function(c){ return c.trim(); }).filter(Boolean);
+    var crewHtml    = crewNames.length
+      ? crewNames.map(function(c){ return '<span class="crew-pill">' + c + '</span>'; }).join('')
+      : '<span style="color:var(--gray);font-size:11px;">No crew assigned</span>';
+    var serviceStr  = [raw.service, raw.finish].filter(Boolean).join(' — ') || '—';
+    var amountStr   = raw.cost ? '$' + Number(raw.cost).toLocaleString() : (raw.payStatus || '—');
+
+    // Store _currentJob in the shape enterEditMode expects
+    _currentJob = {
+      title:    raw.title || ((raw.customerName || '') + (raw.service ? ' — ' + raw.service : '')),
+      customer: raw.customerName || '',
+      date:     (raw.scheduledDate || '') + (raw.scheduledTime ? ' · ' + raw.scheduledTime : ''),
+      address:  raw.address || '',
+      sqft:     raw.sqft || '',
+      dur:      raw.duration || '',
+      amount:   raw.cost ? '$' + Number(raw.cost).toLocaleString() : '',
+      service:  serviceStr,
+      tag:      statusLabel,
+      tagStyle: tagStyle,
+      crew:     crewHtml,
+      num:      '#' + id.slice(-4).toUpperCase(),
+    };
+
+    // ── Populate drawer ──
+    // Header
+    var displayDate = '—';
+    if (raw.scheduledDate) {
+      var d = new Date(raw.scheduledDate + 'T12:00:00');
+      displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      if (raw.scheduledTime) displayDate += ' · ' + raw.scheduledTime;
+    }
+    document.getElementById('d-date').textContent     = displayDate;
+    document.getElementById('d-title').textContent    = _currentJob.title;
+    document.getElementById('d-customer').textContent = _currentJob.customer;
+    document.getElementById('d-tag').textContent      = statusLabel;
+    document.getElementById('d-tag').style.cssText    = tagStyle;
+    document.getElementById('d-crew').innerHTML       = crewHtml;
+
+    // Stats
+    document.getElementById('d-amount').textContent = amountStr;
+    document.getElementById('d-sqft').textContent   = raw.sqft     || '—';
+    document.getElementById('d-dur').textContent    = raw.duration || '—';
+    document.getElementById('d-num').textContent    = '#' + id.slice(-4).toUpperCase();
+
+    // Detail rows
+    document.getElementById('d-address').textContent     = raw.address || '—';
+    document.getElementById('d-service').textContent     = serviceStr;
+    document.getElementById('d-crew-detail').textContent = crewNames.join(', ') || 'No crew assigned';
+
+    // Notes row (show/hide)
+    var notesRow = document.getElementById('d-notes-row');
+    if (notesRow) {
+      if (raw.notes && raw.notes.trim()) {
+        document.getElementById('d-notes-val').textContent = raw.notes;
+        notesRow.style.display = '';
+      } else {
+        notesRow.style.display = 'none';
+      }
+    }
+
+    // Weather
+    var wxEl = document.getElementById('d-wx');
+    var wxData = window._swftWeatherData;
+    if (wxData && wxData.daily && raw.scheduledDate) {
+      var idx = wxData.daily.time.indexOf(raw.scheduledDate);
+      if (idx !== -1) {
+        var code = wxData.daily.weathercode[idx];
+        var high = Math.round(wxData.daily.temperature_2m_max[idx]);
+        var low  = Math.round(wxData.daily.temperature_2m_min[idx]);
+        var unit = (wxData.daily_units && wxData.daily_units.temperature_2m_max === '°C') ? '°C' : '°F';
+        var wxIcon = WMO_ICONS_DRW[code] || '☁️';
+        var wxDesc = WMO_DESC_DRW[code] || '';
+        var badgeCls = 'wx-ok', badgeText = '✓ Good';
+        if (code >= 95)      { badgeCls = 'wx-warn'; badgeText = '⚠ Storm';  }
+        else if (code >= 61) { badgeCls = 'wx-warn'; badgeText = '⚠ Rain';   }
+        else if (low  < 35)  { badgeCls = 'wx-warn'; badgeText = '⚠ Freeze'; }
+        else if (high > 100) { badgeCls = 'wx-warn'; badgeText = '⚠ Heat';   }
+        wxEl.innerHTML = '<div class="wx-big">' + wxIcon + '</div><div class="wx-info"><div class="wx-desc">' + high + unit + ' / ' + low + unit + ' — ' + wxDesc + '</div></div><span class="wx-badge ' + badgeCls + '">' + badgeText + '</span>';
+      } else {
+        wxEl.innerHTML = '<div class="wx-info"><div class="wx-desc" style="color:var(--gray)">No forecast for this date</div></div>';
+      }
+    } else {
+      wxEl.innerHTML = '<div class="wx-info"><div class="wx-desc" style="color:var(--gray)">No forecast available</div></div>';
+    }
+
+    document.getElementById('d-edit').style.display  = 'none';
+    document.getElementById('d-view').style.display  = 'flex';
+    document.getElementById('footer-edit').style.display = 'none';
+    document.getElementById('footer-view').style.display = 'flex';
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
   }
@@ -918,18 +1007,19 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   function enterEditMode() {
     const j = _currentJob;
     if (!j) return;
+    const raw = _currentJobId ? _jobsCache[_currentJobId] : null;
 
     // Populate edit fields from current job data
     document.getElementById('e-title').value    = j.title || '';
     document.getElementById('e-customer').value = j.customer || '';
-    const dateParts = j.date.split(' · ');
+    const dateParts = (j.date || '').split(' · ');
     document.getElementById('e-date').value     = dateParts[0] || '';
     document.getElementById('e-time').value     = dateParts[1] || '12:00';
     document.getElementById('e-address').value  = j.address || '';
     document.getElementById('e-sqft').value     = j.sqft || '';
     document.getElementById('e-dur').value      = j.dur || '';
-    document.getElementById('e-amount').value   = j.amount.replace('$','') || '';
-    document.getElementById('e-notes').value    = '';
+    document.getElementById('e-amount').value   = (j.amount || '').replace(/[$,]/g, '') || '';
+    document.getElementById('e-notes').value    = (raw && raw.notes) ? raw.notes : '';
 
     // Match service select
     const svcEl = document.getElementById('e-service');
