@@ -19,6 +19,7 @@ const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
 const { google } = require("googleapis");
+const { isQuoteAcceptedInConversation } = require("../utils/quoteConversationCheck");
 
 /**
  * Convert hours:minutes in Eastern Time to a UTC timestamp for the given date.
@@ -188,6 +189,13 @@ async function scanForFollowups() {
 
 /**
  * Scan for sent quotes that haven't been approved.
+ *
+ * A follow-up is only scheduled when:
+ *   • The quote status is "sent" (set by the quote send/email endpoints)
+ *   • The quote has a sentAt timestamp and a linked customerId
+ *   • The customer's most recent outbound message wasn't a broadcast blast
+ *     sent AFTER the quote — if we just sent them a broadcast we don't want
+ *     to pile on with a quote follow-up in the same window.
  */
 async function scanUnsignedQuotes(orgId, config) {
   const days = config.unsignedQuoteDays || [1, 3, 7];
@@ -200,6 +208,11 @@ async function scanUnsignedQuotes(orgId, config) {
     const quote = doc.data();
     if (!quote.sentAt || !quote.customerId) continue;
 
+    // Skip quotes that were never actually sent to the customer via the quote
+    // send flow.  A quote must have a sentAt (set by the /send or /email
+    // endpoint) — manual status edits via PUT don't set sentAt, so they're
+    // already excluded by the check above.
+
     const daysSinceSent = daysAgo(quote.sentAt);
 
     for (const day of days) {
@@ -208,11 +221,25 @@ async function scanUnsignedQuotes(orgId, config) {
         const exists = await followupExists(orgId, "unsigned_quote", doc.id, step);
         if (exists) continue;
 
-        // Get customer phone
+        // Get customer details
         const custDoc = await db.collection("customers").doc(quote.customerId).get();
         if (!custDoc.exists) continue;
         const customer = custDoc.data();
         if (!customer.phone) continue;
+
+        // Guard: if the most recent message sent to this customer was a
+        // broadcast (not a direct quote email), and it was sent after the
+        // quote, hold off 24 h so we don't double-hit them right after a
+        // marketing blast.
+        const recentBroadcast = await mostRecentBroadcastAfter(
+          orgId, quote.customerId, quote.sentAt
+        );
+        if (recentBroadcast && Date.now() - recentBroadcast < DAY_MS) {
+          console.log(
+            `[followup-agent] Skipping ${doc.id} step ${step} — broadcast sent to customer ${quote.customerId} within last 24h`
+          );
+          continue;
+        }
 
         const message = buildQuoteFollowup(customer, quote, day);
         await createFollowup({
@@ -229,6 +256,33 @@ async function scanUnsignedQuotes(orgId, config) {
         });
       }
     }
+  }
+}
+
+/**
+ * Return the sentAt timestamp of the most recent broadcast message sent to
+ * this customer AFTER a given timestamp, or null if none exists.
+ */
+async function mostRecentBroadcastAfter(orgId, customerId, afterMs) {
+  try {
+    const snap = await db.collection("messages")
+      .where("orgId", "==", orgId)
+      .where("customerId", "==", customerId)
+      .get();
+
+    let latest = null;
+    for (const d of snap.docs) {
+      const m = d.data();
+      if (!m.broadcastId) continue;
+      const ts = m.sentAt || m.createdAt || 0;
+      if (ts > afterMs && (latest === null || ts > latest)) {
+        latest = ts;
+      }
+    }
+    return latest;
+  } catch (err) {
+    console.error("[followup-agent] mostRecentBroadcastAfter error:", err.message);
+    return null;
   }
 }
 
@@ -470,18 +524,41 @@ async function processFollowups() {
 
 /**
  * Check if the follow-up target has been resolved (no longer needs follow-up).
+ *
+ * For unsigned quotes this runs two checks:
+ *   1. The quote's status field is already "approved" in the CRM.
+ *   2. AI scans recent conversation messages to detect informal acceptance
+ *      (e.g. customer replied "yes, let's do it" via SMS or email).
+ *      If the AI detects acceptance it also updates the quote status so the
+ *      CRM reflects reality and future scans don't re-check the same quote.
  */
 async function targetResolved(followup) {
   if (followup.type === "unsigned_quote") {
     const doc = await db.collection("quotes").doc(followup.targetId).get();
     if (!doc.exists) return true;
-    return doc.data().status === "approved";
+    const quote = doc.data();
+
+    // 1. Formal approval recorded in the CRM
+    if (quote.status === "approved") return true;
+
+    // 2. AI check — did the customer accept in conversation without the status
+    //    being updated?  Only runs when we have the IDs needed to query messages.
+    if (followup.orgId && followup.customerId) {
+      const acceptedInConversation = await isQuoteAcceptedInConversation(
+        followup.orgId, followup.customerId, followup.targetId, quote
+      );
+      if (acceptedInConversation) return true;
+    }
+
+    return false;
   }
+
   if (followup.type === "overdue_invoice") {
     const doc = await db.collection("invoices").doc(followup.targetId).get();
     if (!doc.exists) return true;
     return doc.data().status === "paid";
   }
+
   // Review requests and re-engagement don't have a "resolved" state
   return false;
 }

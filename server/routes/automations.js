@@ -4,6 +4,7 @@ const { db } = require("../firebase");
 const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
+const { isQuoteAcceptedInConversation } = require("../utils/quoteConversationCheck");
 
 const APP_URL = process.env.APP_URL || "https://goswft.com";
 
@@ -263,16 +264,34 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
  */
 async function scheduledMsgResolved(msg) {
   if (!msg.targetId) return false;
+
   if (msg.trigger === "quote_sent" || msg.targetType === "quote") {
     const doc = await db.collection("quotes").doc(msg.targetId).get();
     if (!doc.exists) return true;
-    return doc.data().status === "approved";
+    const quote = doc.data();
+
+    // 1. Formal approval via the CRM
+    if (quote.status === "approved") return true;
+
+    // 2. AI check — customer may have accepted in a reply without the quote
+    //    status ever being updated in the system.  Only run if we have enough
+    //    context (orgId + customerId) to look up the conversation.
+    if (msg.orgId && msg.customerId) {
+      const acceptedInConversation = await isQuoteAcceptedInConversation(
+        msg.orgId, msg.customerId, msg.targetId, quote
+      );
+      if (acceptedInConversation) return true;
+    }
+
+    return false;
   }
+
   if (msg.trigger === "invoice_sent" || msg.targetType === "invoice") {
     const doc = await db.collection("invoices").doc(msg.targetId).get();
     if (!doc.exists) return true;
     return doc.data().status === "paid";
   }
+
   return false;
 }
 
