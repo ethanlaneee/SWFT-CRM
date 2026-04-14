@@ -483,6 +483,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div>
         <label style="font-size:11px;color:#7a7a7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:block;">Message</label>
         <textarea id="email-body" rows="5" style="width:100%;padding:10px 14px;background:#181818;border:1px solid #2c2c2c;border-radius:8px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical;line-height:1.5;"></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">
+          <span onclick="insertVar('email-body','{firstName}')" style="display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;" onmouseover="this.style.background='rgba(200,241,53,0.15)'" onmouseout="this.style.background='rgba(200,241,53,0.07)'">{firstName}</span>
+          <span onclick="insertVar('email-body','{customerName}')" style="display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;" onmouseover="this.style.background='rgba(200,241,53,0.15)'" onmouseout="this.style.background='rgba(200,241,53,0.07)'">{customerName}</span>
+          <span onclick="insertVar('email-body','{yourName}')" style="display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;" onmouseover="this.style.background='rgba(200,241,53,0.15)'" onmouseout="this.style.background='rgba(200,241,53,0.07)'">{yourName}</span>
+          <span onclick="insertVar('email-body','{yourFirstName}')" style="display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;" onmouseover="this.style.background='rgba(200,241,53,0.15)'" onmouseout="this.style.background='rgba(200,241,53,0.07)'">{yourFirstName}</span>
+          <span onclick="insertVar('email-body','{companyName}')" style="display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;" onmouseover="this.style.background='rgba(200,241,53,0.15)'" onmouseout="this.style.background='rgba(200,241,53,0.07)'">{companyName}</span>
+        </div>
       </div>
       <div style="font-size:12px;color:#7a7a7a;display:flex;align-items:center;gap:6px;">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.5"/></svg>
@@ -504,6 +511,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
 
 <script>
+function insertVar(id, v) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var s = el.selectionStart, e = el.selectionEnd;
+  el.value = el.value.slice(0, s) + v + el.value.slice(e);
+  el.selectionStart = el.selectionEnd = s + v.length;
+  el.focus();
+}
+
 window._quotes = {};
 window._invoicesData = {};
 let _invCounter = 1050;

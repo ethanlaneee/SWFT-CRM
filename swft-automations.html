@@ -142,6 +142,9 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .form-field{margin-bottom:18px;}
 .form-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;margin-bottom:6px;display:block;}
 .form-sub{font-size:11px;color:var(--gray);margin-bottom:6px;}
+.var-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;margin-bottom:2px;}
+.var-chip{display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;}
+.var-chip:hover{background:rgba(200,241,53,0.15);border-color:rgba(200,241,53,0.35);}
 .form-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
 .form-input:focus{border-color:var(--green);}
 .form-input::placeholder{color:var(--gray2);}
@@ -369,8 +372,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     <div class="form-field">
       <label class="form-label" id="template-label">Message Template</label>
-      <div class="form-sub" id="template-sub">Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}</div>
-      <textarea class="form-textarea" id="f-template" placeholder="Hi {{customer_name}}, just a reminder that your quote is waiting for your review. Reply to confirm or ask any questions!"></textarea>
+      <div class="var-chips">
+        <span class="var-chip" onclick="insertVar('f-template','{firstName}')">{firstName}</span>
+        <span class="var-chip" onclick="insertVar('f-template','{customerName}')">{customerName}</span>
+        <span class="var-chip" onclick="insertVar('f-template','{yourName}')">{yourName}</span>
+        <span class="var-chip" onclick="insertVar('f-template','{yourFirstName}')">{yourFirstName}</span>
+        <span class="var-chip" onclick="insertVar('f-template','{companyName}')">{companyName}</span>
+      </div>
+      <div class="form-sub" id="template-sub" style="margin-top:4px;">For surveys, also use: {survey_link}</div>
+      <textarea class="form-textarea" id="f-template" placeholder="Hi {firstName}, just a reminder that your quote is waiting for your review. Reply to confirm or ask any questions!"></textarea>
     </div>
 
     <div class="form-field">
@@ -403,8 +413,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <div class="form-field" style="margin-bottom:0;">
         <label class="form-label">Follow-up Template (Review Request)</label>
-        <div class="form-sub">Variables: {{customer_name}}, {{review_link}} (your Google Business Profile review URL)</div>
-        <textarea class="form-textarea" id="f-followup-template" placeholder="Hi {{customer_name}}, thanks for the great rating! Would you mind leaving us a quick Google review? It really helps: {{review_link}}"></textarea>
+        <div class="var-chips">
+          <span class="var-chip" onclick="insertVar('f-followup-template','{firstName}')">{firstName}</span>
+          <span class="var-chip" onclick="insertVar('f-followup-template','{customerName}')">{customerName}</span>
+          <span class="var-chip" onclick="insertVar('f-followup-template','{yourName}')">{yourName}</span>
+          <span class="var-chip" onclick="insertVar('f-followup-template','{yourFirstName}')">{yourFirstName}</span>
+          <span class="var-chip" onclick="insertVar('f-followup-template','{companyName}')">{companyName}</span>
+          <span class="var-chip" onclick="insertVar('f-followup-template','{review_link}')">{review_link}</span>
+        </div>
+        <div class="form-sub" style="margin-top:4px;">{review_link} requires Google Business Profile connected in Settings → Integrations.</div>
+        <textarea class="form-textarea" id="f-followup-template" placeholder="Hi {firstName}, thanks for the great rating! Would you mind leaving us a quick Google review? It really helps: {review_link}"></textarea>
         <div style="margin-top:6px;font-size:11px;color:var(--gray2);">Connect Google Business Profile in Settings → Integrations to enable review link.</div>
       </div>
     </div>
@@ -438,6 +456,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <script>
+function insertVar(id, v) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var s = el.selectionStart, e = el.selectionEnd;
+  el.value = el.value.slice(0, s) + v + el.value.slice(e);
+  el.selectionStart = el.selectionEnd = s + v.length;
+  el.focus();
+}
+
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
   document.getElementById('main').classList.toggle('expanded');
