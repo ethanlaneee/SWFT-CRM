@@ -18,12 +18,37 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   }
 }
 
-admin.initializeApp({ credential });
+const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || "swft-ai26.firebasestorage.app";
+admin.initializeApp({ credential, storageBucket });
 
-const db       = admin.firestore();
+const db        = admin.firestore();
 const authAdmin = admin.auth();
+
+// Resolve the correct Storage bucket at startup (try primary, then appspot fallback)
+const BUCKET_CANDIDATES = [
+  storageBucket,
+  "swft-ai26.appspot.com",
+];
+let _resolvedBucket = admin.storage().bucket();
+
+(async () => {
+  for (const name of BUCKET_CANDIDATES) {
+    try {
+      const b = admin.storage().bucket(name);
+      const [exists] = await b.exists();
+      if (exists) {
+        _resolvedBucket = b;
+        console.log("[firebase] Storage bucket resolved:", name);
+        return;
+      }
+    } catch (e) {
+      console.warn("[firebase] Bucket check failed for", name, ":", e.message);
+    }
+  }
+  console.warn("[firebase] No valid storage bucket found — photo uploads will fail.");
+})();
 
 const projectId = admin.app().options?.projectId || "unknown";
 console.log("[firebase] Admin SDK project ID:", projectId);
 
-module.exports = { admin, db, authAdmin, projectId };
+module.exports = { admin, db, authAdmin, projectId, get bucket() { return _resolvedBucket; } };

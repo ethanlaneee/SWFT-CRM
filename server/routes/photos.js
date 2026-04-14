@@ -1,8 +1,6 @@
 const router = require("express").Router();
 const multer = require("multer");
-const { db } = require("../firebase");
-const { r2, bucketName, publicUrl } = require("../utils/r2");
-const { PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { db, bucket } = require("../firebase");
 const path = require("path");
 
 const upload = multer({
@@ -30,22 +28,29 @@ router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) =>
     const uploaded = [];
     for (const file of req.files) {
       const ext = path.extname(file.originalname) || ".jpg";
-      const key = `jobs/${req.params.jobId}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+      const filename = `jobs/${req.params.jobId}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+      const fileRef = bucket.file(filename);
 
-      await r2.send(new PutObjectCommand({
-        Bucket:      bucketName,
-        Key:         key,
-        Body:        file.buffer,
-        ContentType: file.mimetype,
-      }));
+      await fileRef.save(file.buffer, { metadata: { contentType: file.mimetype } });
 
-      const url = `${publicUrl}/${key}`;
+      // Try public URL first, fall back to signed URL
+      let url;
+      try {
+        await fileRef.makePublic();
+        url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+      } catch (_) {
+        const [signedUrl] = await fileRef.getSignedUrl({
+          action:  "read",
+          expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000, // 10 years
+        });
+        url = signedUrl;
+      }
 
       const photoData = {
         orgId:        req.orgId,
         jobId:        req.params.jobId,
         url,
-        filename:     key,
+        filename,
         originalName: file.originalname,
         mimeType:     file.mimetype,
         size:         file.size,
@@ -83,10 +88,7 @@ router.delete("/:photoId", async (req, res, next) => {
       return res.status(404).json({ error: "Photo not found" });
     }
     try {
-      await r2.send(new DeleteObjectCommand({
-        Bucket: bucketName,
-        Key:    doc.data().filename,
-      }));
+      await bucket.file(doc.data().filename).delete();
     } catch (_) { /* file may already be gone */ }
     await db.collection("jobPhotos").doc(req.params.photoId).delete();
     res.json({ success: true });
