@@ -22,15 +22,16 @@ router.get("/", async (req, res, next) => {
     if (!doc.exists) {
       // Return sensible defaults if no config has been saved yet
       return res.json({
-        orgId:        req.orgId,
-        active:       false,
-        formTitle:    "Request a Service",
-        formSubtitle: "Fill out the form below and we'll be in touch shortly.",
-        services:     [],
-        quoteEnabled: false,
-        requirePhotos: false,
-        createdAt:    null,
-        updatedAt:    null,
+        orgId:             req.orgId,
+        active:            false,
+        formTitle:         "Request a Quote",
+        formSubtitle:      "Fill out the form below and we'll be in touch shortly.",
+        services:          [],
+        quoteEnabled:      false,
+        requirePhotos:     false,
+        hearAboutOptions:  "",
+        createdAt:         null,
+        updatedAt:         null,
       });
     }
     res.json({ orgId: req.orgId, ...doc.data() });
@@ -59,14 +60,15 @@ router.put("/", async (req, res, next) => {
       : [];
 
     const data = {
-      orgId:        req.orgId,
-      active:       body.active === true || body.active === "true",
-      formTitle:    (body.formTitle    || "Request a Service").trim(),
-      formSubtitle: (body.formSubtitle || "").trim(),
+      orgId:             req.orgId,
+      active:            body.active === true || body.active === "true",
+      formTitle:         (body.formTitle    || "Request a Quote").trim(),
+      formSubtitle:      (body.formSubtitle || "").trim(),
       services,
-      quoteEnabled:  body.quoteEnabled  === true || body.quoteEnabled  === "true",
-      requirePhotos: body.requirePhotos === true || body.requirePhotos === "true",
-      updatedAt:    Date.now(),
+      quoteEnabled:      body.quoteEnabled  === true || body.quoteEnabled  === "true",
+      requirePhotos:     body.requirePhotos === true || body.requirePhotos === "true",
+      hearAboutOptions:  (body.hearAboutOptions || "").trim(),
+      updatedAt:         Date.now(),
     };
 
     const doc = await col().doc(req.orgId).get();

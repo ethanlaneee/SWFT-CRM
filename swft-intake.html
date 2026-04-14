@@ -204,6 +204,13 @@ html,body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-ser
         <textarea class="field-input field-textarea" id="f-notes" placeholder="Describe the project, special requirements, or anything else we should know..."></textarea>
       </div>
 
+      <div class="field" id="hear-about-field">
+        <label class="field-label" for="f-hear-about">How Did You Hear About Us?</label>
+        <select class="field-input field-select" id="f-hear-about">
+          <option value="">Select an option...</option>
+        </select>
+      </div>
+
       <div class="divider"></div>
 
       <!-- PHOTOS -->
@@ -316,6 +323,17 @@ const uploadedPhotos = []; // array of { file, url, uploading }
       opt.textContent = "General Service";
       sel.appendChild(opt);
     }
+
+    // "How did you hear about us?" dropdown
+    const defaultHearOptions = "Google, Social Media, Email, Referral, Trade Show, Door Hanger, Flyer, Other";
+    const hearRaw = formConfig.hearAboutOptions || defaultHearOptions;
+    const hearOptions = hearRaw.split(",").map(s => s.trim()).filter(Boolean);
+    const hearSel = document.getElementById("f-hear-about");
+    hearOptions.forEach(opt => {
+      const el = document.createElement("option");
+      el.value = opt; el.textContent = opt;
+      hearSel.appendChild(el);
+    });
 
     // Photo section
     if (formConfig.requirePhotos) {
@@ -510,6 +528,7 @@ async function submitForm(e) {
     service,
     squareFootage: document.getElementById("f-sqft").value || null,
     notes:         document.getElementById("f-notes").value.trim(),
+    hearAbout:     (document.getElementById("f-hear-about") || {}).value || "",
     photos:        uploadedPhotos.filter(p => p.url).map(p => p.url),
   };
 

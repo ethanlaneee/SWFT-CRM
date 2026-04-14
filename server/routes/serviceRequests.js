@@ -74,14 +74,15 @@ publicRouter.get("/:orgId/config", async (req, res) => {
       : cfg.services || [];
 
     res.json({
-      companyName:   userData.company || userData.name || "SWFT Business",
-      logoUrl:       userData.companyLogo || userData.logoUrl || null,
+      companyName:      userData.company || userData.name || "SWFT Business",
+      logoUrl:          userData.companyLogo || userData.logoUrl || null,
       services,
-      quoteEnabled:  cfg.quoteEnabled || false,
-      formTitle:     cfg.formTitle  || "Request a Quote",
-      formSubtitle:  cfg.formSubtitle || "Fill out the form below and we'll be in touch shortly.",
-      requirePhotos: cfg.requirePhotos || false,
-      active:        cfg.active !== false, // default true
+      quoteEnabled:     cfg.quoteEnabled || false,
+      formTitle:        cfg.formTitle  || "Request a Quote",
+      formSubtitle:     cfg.formSubtitle || "Fill out the form below and we'll be in touch shortly.",
+      requirePhotos:    cfg.requirePhotos || false,
+      hearAboutOptions: cfg.hearAboutOptions || "",
+      active:           cfg.active !== false, // default true
     });
   } catch (err) {
     console.error("[intake/config]", err.message);
@@ -185,6 +186,7 @@ publicRouter.post("/:orgId", async (req, res) => {
       service:       (body.service || "").trim(),
       squareFootage: body.squareFootage ? parseFloat(body.squareFootage) : null,
       notes:         (body.notes || "").trim(),
+      hearAbout:     (body.hearAbout || "").trim(),
       // Photos uploaded separately, URLs passed in body
       photos:        Array.isArray(body.photos) ? body.photos : [],
       // Computed quote

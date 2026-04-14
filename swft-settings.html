@@ -549,6 +549,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
     </div>
 
+    <!-- How did you hear about us options -->
+    <div class="settings-row">
+      <div class="settings-row-info"><div class="settings-row-label">How Did You Hear About Us?</div><div class="settings-row-desc">Options shown in the dropdown on the form. Separate with commas.</div></div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <input class="settings-input" id="intake-hear-about" style="width:300px;" placeholder="e.g. Google, Social Media, Referral, Other"/>
+        <span style="font-size:10px;color:var(--gray2);">Separate with commas</span>
+      </div>
+    </div>
+
     <!-- Quote automation toggle -->
     <div class="settings-row">
       <div class="settings-row-info">
@@ -1825,7 +1834,7 @@ function escHtml(s) {
 // INTAKE FORM SETTINGS
 // ══════════════════════════════════════════════════
 
-var _intakeConfig = { active: false, quoteEnabled: false, formTitle: '', formSubtitle: '', services: [] };
+var _intakeConfig = { active: false, quoteEnabled: false, formTitle: '', formSubtitle: '', services: [], hearAboutOptions: '' };
 var _intakeUrl = '';
 
 async function loadIntakeForm() {
@@ -1851,6 +1860,8 @@ function renderIntakeSettings() {
   if (titleEl) titleEl.value = _intakeConfig.formTitle || '';
   var subEl = document.getElementById('intake-subtitle');
   if (subEl) subEl.value = _intakeConfig.formSubtitle || '';
+  var hearEl = document.getElementById('intake-hear-about');
+  if (hearEl) hearEl.value = _intakeConfig.hearAboutOptions || '';
   renderIntakeServicesList();
 }
 
@@ -1917,13 +1928,16 @@ async function saveIntakeForm() {
     return { name: name, ratePerSqft: rate };
   });
 
+  var hearVal = (document.getElementById('intake-hear-about') || {}).value || '';
+
   var payload = {
-    active:        _intakeConfig.active,
-    formTitle:     titleVal,
-    formSubtitle:  subVal,
-    services:      services,
-    quoteEnabled:  _intakeConfig.quoteEnabled,
-    requirePhotos: _intakeConfig.requirePhotos || false,
+    active:           _intakeConfig.active,
+    formTitle:        titleVal,
+    formSubtitle:     subVal,
+    services:         services,
+    quoteEnabled:     _intakeConfig.quoteEnabled,
+    requirePhotos:    _intakeConfig.requirePhotos || false,
+    hearAboutOptions: hearVal,
   };
 
   try {
