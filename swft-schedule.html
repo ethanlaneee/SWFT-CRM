@@ -285,25 +285,16 @@
 .wk-evt.other{background:rgba(77,159,255,0.1);border:1px solid rgba(77,159,255,0.3);border-left:3px solid var(--blue);color:var(--blue);}
 /* Type badge inside block */
 .wk-evt-badge{font-size:8px;letter-spacing:1px;text-transform:uppercase;opacity:0.6;font-family:'JetBrains Mono',monospace;margin-bottom:2px;}
-/* Time utilization report card */
-.util-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px;}
-.util-card.util-empty{color:var(--gray);font-size:13px;text-align:center;padding:16px 20px;}
-.util-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:16px;}
-.util-month-label{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);}
-.util-total-label{font-size:11px;color:var(--gray);margin-top:2px;}
-.util-stats{display:flex;gap:18px;}
-.util-stat{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
-.util-stat-n{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;}
-.util-stat-l{font-size:9px;letter-spacing:1px;text-transform:uppercase;opacity:0.6;}
-.util-stat-pct{font-size:11px;font-weight:700;}
-.util-stat.billable .util-stat-n,.util-stat.billable .util-stat-pct{color:var(--green);}
-.util-stat.internal .util-stat-n,.util-stat.internal .util-stat-pct{color:var(--blue);}
-.util-stat.buffer .util-stat-n,.util-stat.buffer .util-stat-pct{color:var(--amber);}
-.util-bar{display:flex;height:8px;border-radius:6px;overflow:hidden;background:var(--surface2);gap:1px;}
-.util-bar-seg{height:100%;border-radius:6px;transition:width 0.5s cubic-bezier(0.22,1,0.36,1);}
-.util-bar-seg.billable{background:var(--green);}
-.util-bar-seg.internal{background:var(--blue);}
-.util-bar-seg.buffer{background:var(--amber);}
+/* Time utilization — compact pill (sits in week nav bar) */
+.util-mini{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:5px 11px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;white-space:nowrap;margin-left:auto;}
+.util-mini-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.util-mini-dot.billable{background:var(--green);}
+.util-mini-dot.internal{background:var(--blue);}
+.util-mini-dot.buffer{background:var(--amber);}
+.util-mini-val.billable{color:var(--green);}
+.util-mini-val.internal{color:var(--blue);}
+.util-mini-val.buffer{color:var(--amber);}
+.util-mini-sep{color:var(--border2);font-size:9px;}
 /* Event creation modal */
 .evt-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
 .evt-overlay.open{display:flex;}
@@ -490,8 +481,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <!-- ═══ TIME BLOCKS VIEW ═══ -->
 <div id="timeblock-view" style="display:none">
-  <!-- Monthly utilization report -->
-  <div id="time-report"></div>
   <div class="wk-nav">
     <div class="cal-nav-btn" onclick="prevWeek()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6" stroke-width="2" stroke-linecap="round"/></svg>
@@ -501,6 +490,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
     <button class="cal-today-btn" onclick="goTodayWeek()">Today</button>
+    <!-- Monthly utilization — compact pill on far right -->
+    <div id="time-report"></div>
   </div>
   <div class="wk-wrap">
     <div class="wk-day-hdrs" id="wk-day-hdrs"><div class="wk-gutter-hdr"></div></div>
@@ -908,16 +899,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     return 'internal'; // meeting, other, internal, anything else
   }
 
-  /* ── Time utilization report ── */
+  /* ── Time utilization report (compact pill) ── */
   function renderTimeReport() {
     var reportEl = document.getElementById('time-report');
     if (!reportEl) return;
     var now = new Date();
-    var year = now.getFullYear();
-    var month = now.getMonth();
-    var monthName = now.toLocaleString('en-US', { month: 'long' });
+    var year = now.getFullYear(), month = now.getMonth();
 
-    // Filter schedule events to the current month
     var monthEvts = _schedEvents.filter(function(e) {
       if (!e.date) return false;
       var d = new Date(e.date + 'T12:00:00');
@@ -926,46 +914,25 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     var mins = { billable: 0, internal: 0, buffer: 0 };
     monthEvts.forEach(function(e) {
-      var dur = e.durationMins || 60;
       var t = normalizeBlockType(e.type || 'internal');
-      mins[t] += dur;
+      mins[t] += e.durationMins || 60;
     });
 
     var total = mins.billable + mins.internal + mins.buffer;
+    if (total === 0) { reportEl.innerHTML = ''; return; }
 
-    if (total === 0) {
-      reportEl.innerHTML = '<div class="util-card util-empty">No blocks tracked yet this month — add Billable, Internal, or Buffer blocks to see your time breakdown.</div>';
-      return;
-    }
-
-    var pct = function(m) { return total > 0 ? Math.round(m / total * 100) : 0; };
-    var fmtH = function(m) {
-      var h = Math.floor(m / 60), min = m % 60;
-      if (!h) return min + 'm';
-      if (!min) return h + 'h';
-      return h + 'h ' + min + 'm';
-    };
-
+    var pct = function(m) { return Math.round(m / total * 100); };
     var bp = pct(mins.billable), ip = pct(mins.internal), bufp = Math.max(0, 100 - bp - ip);
+    var mo = now.toLocaleString('en-US', { month: 'short' }).toUpperCase();
 
-    reportEl.innerHTML = '<div class="util-card">'
-      + '<div class="util-top">'
-        + '<div>'
-          + '<div class="util-month-label">' + monthName.toUpperCase() + ' ' + year + '</div>'
-          + '<div class="util-total-label">' + fmtH(total) + ' tracked this month</div>'
-        + '</div>'
-        + '<div class="util-stats">'
-          + '<div class="util-stat billable"><div class="util-stat-pct">' + bp + '%</div><div class="util-stat-n">' + fmtH(mins.billable) + '</div><div class="util-stat-l">Billable</div></div>'
-          + '<div class="util-stat internal"><div class="util-stat-pct">' + ip + '%</div><div class="util-stat-n">' + fmtH(mins.internal) + '</div><div class="util-stat-l">Internal</div></div>'
-          + '<div class="util-stat buffer"><div class="util-stat-pct">' + bufp + '%</div><div class="util-stat-n">' + fmtH(mins.buffer) + '</div><div class="util-stat-l">Buffer</div></div>'
-        + '</div>'
-      + '</div>'
-      + '<div class="util-bar">'
-        + (bp > 0 ? '<div class="util-bar-seg billable" style="width:' + bp + '%"></div>' : '')
-        + (ip > 0 ? '<div class="util-bar-seg internal" style="width:' + ip + '%"></div>' : '')
-        + (bufp > 0 ? '<div class="util-bar-seg buffer" style="width:' + bufp + '%"></div>' : '')
-      + '</div>'
-    + '</div>';
+    reportEl.innerHTML =
+      '<div class="util-mini" title="' + mo + ' time breakdown">'
+      + '<span class="util-mini-dot billable"></span><span class="util-mini-val billable">' + bp + '%</span>'
+      + '<span class="util-mini-sep">·</span>'
+      + '<span class="util-mini-dot internal"></span><span class="util-mini-val internal">' + ip + '%</span>'
+      + '<span class="util-mini-sep">·</span>'
+      + '<span class="util-mini-dot buffer"></span><span class="util-mini-val buffer">' + bufp + '%</span>'
+      + '</div>';
   }
 
   /* ── Event modal ── */

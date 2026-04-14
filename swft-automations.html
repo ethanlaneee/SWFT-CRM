@@ -165,16 +165,6 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 .toast-dot.red{background:var(--red);}
-/* System (built-in) rules */
-.sys-badge{padding:2px 9px;border-radius:6px;font-size:10px;letter-spacing:1.2px;font-family:'JetBrains Mono',monospace;background:rgba(179,136,255,0.1);color:var(--purple);border:1px solid rgba(179,136,255,0.2);}
-.scenario.system-rule{border-color:rgba(179,136,255,0.12);}
-.scenario.system-rule:hover{border-color:rgba(179,136,255,0.28);}
-.scenario.system-rule .scenario-header{background:rgba(179,136,255,0.03);}
-.system-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.system-section-left{display:flex;align-items:center;gap:10px;}
-.agent-disabled-notice{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.18);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-.btn-link{background:none;border:none;color:var(--purple);font-size:11px;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;text-decoration:underline;opacity:0.8;}
-.btn-link:hover{opacity:1;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 .swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;}
@@ -301,31 +291,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
   </div>
 
-  <!-- Built-in Follow-ups (system rules) -->
-  <div class="system-section-head">
-    <div class="system-section-left">
-      <div class="section-title">Built-in Follow-ups</div>
-      <span class="sys-badge">AUTO</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:12px;color:var(--gray);">Follow-up Agent</span>
-      <button class="toggle" id="followup-master-toggle" onclick="toggleFollowupAgent()" title="Enable/disable all built-in follow-ups"></button>
-    </div>
-  </div>
-  <div id="followup-agent-notice" style="display:none;" class="agent-disabled-notice">
-    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="1.8"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2" stroke-linecap="round"/></svg>
-    Follow-up Agent is disabled — toggle it on to activate these automations.
-    <button class="btn-link" onclick="window.location.href='swft-ai-agents'">Configure →</button>
-  </div>
-  <div class="rules-list" id="system-rules-list" style="margin-bottom:32px;">
-    <div style="padding:20px;color:var(--gray);font-size:13px;">Loading...</div>
-  </div>
-
-  <!-- Custom Scenarios -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-    <div class="section-title">Custom Scenarios</div>
-  </div>
-
   <div class="rules-list" id="rules-list">
     <div style="padding:20px;color:var(--gray);font-size:13px;">Loading...</div>
   </div>
@@ -409,7 +374,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <label class="form-label" id="template-label">Message Template</label>
       <div class="var-chips">
         <span class="var-chip" onclick="insertVar('f-template','{customerFirstName}')">{customerFirstName}</span>
-        <span class="var-chip" onclick="insertVar('f-template','{customerName}')">{customerName}</span>
+        <span class="var-chip" onclick="insertVar('f-template','{customerFullName}')">{customerFullName}</span>
         <span class="var-chip" onclick="insertVar('f-template','{yourName}')">{yourName}</span>
         <span class="var-chip" onclick="insertVar('f-template','{yourFirstName}')">{yourFirstName}</span>
         <span class="var-chip" onclick="insertVar('f-template','{companyName}')">{companyName}</span>
@@ -450,7 +415,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <label class="form-label">Follow-up Template (Review Request)</label>
         <div class="var-chips">
           <span class="var-chip" onclick="insertVar('f-followup-template','{customerFirstName}')">{customerFirstName}</span>
-          <span class="var-chip" onclick="insertVar('f-followup-template','{customerName}')">{customerName}</span>
+          <span class="var-chip" onclick="insertVar('f-followup-template','{customerFullName}')">{customerFullName}</span>
           <span class="var-chip" onclick="insertVar('f-followup-template','{yourName}')">{yourName}</span>
           <span class="var-chip" onclick="insertVar('f-followup-template','{yourFirstName}')">{yourFirstName}</span>
           <span class="var-chip" onclick="insertVar('f-followup-template','{companyName}')">{companyName}</span>
@@ -525,7 +490,6 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 
 let _rules = [];
-let _followupConfig = null;
 let _editId = null;
 let _surveyOn = false;
 let _enabledOn = true;
@@ -570,25 +534,20 @@ async function init() {
 
 async function loadAll() {
   try {
-    // Load rules, pending, and followup config in parallel
+    // Load rules and pending separately so one failing doesn't block the other
     let rulesData = { automations: [] };
     let pendingData = { messages: [] };
-    let followupCfg = null;
-    const [rulesRes, pendingRes, followupRes] = await Promise.allSettled([
-      API.automations.list(),
-      API.automations.pending(),
-      API.agents.get("followup"),
-    ]);
-    if (rulesRes.status === 'fulfilled') rulesData = rulesRes.value;
-    else console.error('Failed to load automations:', rulesRes.reason);
-    if (pendingRes.status === 'fulfilled') pendingData = pendingRes.value;
-    else console.error('Failed to load pending:', pendingRes.reason);
-    if (followupRes.status === 'fulfilled') followupCfg = followupRes.value;
-    else console.error('Failed to load followup config:', followupRes.reason);
-
+    try {
+      rulesData = await API.automations.list();
+    } catch(e) {
+      console.error('Failed to load automations:', e);
+    }
+    try {
+      pendingData = await API.automations.pending();
+    } catch(e) {
+      console.error('Failed to load pending:', e);
+    }
     _rules = rulesData.automations || [];
-    _followupConfig = followupCfg;
-    renderSystemRules(_followupConfig);
     renderRules(_rules);
     renderPending(pendingData.messages || []);
     updateStats(_rules, pendingData.messages || []);
@@ -611,132 +570,6 @@ function updateStats(rules, pending) {
   document.getElementById('st-failed').textContent = pending.filter(m=>m.status==='failed').length;
 }
 
-// ── System (Built-in) Follow-up Rules ──
-
-const SYSTEM_RULES = [
-  {
-    id: 'unsigned_quote',
-    typeKey: 'unsignedQuoteEnabled',
-    name: 'Unsigned Quote Follow-ups',
-    triggerLabel: 'Quote Sent',
-    triggerIcon: '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>',
-    waitLabel: cfg => { const d = (cfg.unsignedQuoteDays || [1,3,7]); return `Day ${d.join(', ')}`; },
-    waitSub: 'after sending',
-    preview: 'Hey [Customer], just following up on your quote. Any questions or ready to move forward?',
-  },
-  {
-    id: 'overdue_invoice',
-    typeKey: 'overdueInvoiceEnabled',
-    name: 'Overdue Invoice Reminders',
-    triggerLabel: 'Invoice Past Due',
-    triggerIcon: '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg>',
-    waitLabel: cfg => { const d = (cfg.overdueInvoiceDays || [1,3,7]); return `Day ${d.join(', ')}`; },
-    waitSub: 'after due date',
-    preview: 'Hi [Customer], friendly reminder that your invoice is overdue. Let us know if there are any issues!',
-  },
-  {
-    id: 'review_request',
-    typeKey: 'reviewRequestEnabled',
-    name: 'Post-Job Review Requests',
-    triggerLabel: 'Job Completed',
-    triggerIcon: '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>',
-    waitLabel: cfg => { const h = cfg.reviewRequestDelay || 24; return h === 24 ? '24 hours' : `${h}h`; },
-    waitSub: 'after completion',
-    preview: 'Hey [Customer]! It was great working on your project. If you\'re happy with how it turned out, a quick Google review would mean a lot to us!',
-  },
-];
-
-function renderSystemRules(cfg) {
-  const list = document.getElementById('system-rules-list');
-  const masterToggle = document.getElementById('followup-master-toggle');
-  const notice = document.getElementById('followup-agent-notice');
-
-  const agentEnabled = cfg ? cfg.enabled : false;
-  masterToggle.className = 'toggle' + (agentEnabled ? ' on' : '');
-  notice.style.display = agentEnabled ? 'none' : 'block';
-
-  const waitIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8"/></svg>';
-  const smsIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
-  const lockIcon = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="1.8"/></svg>';
-
-  list.innerHTML = SYSTEM_RULES.map(rule => {
-    const typeEnabled = cfg ? cfg[rule.typeKey] !== false : true;
-    const active = agentEnabled && typeEnabled;
-    const wLabel = cfg ? rule.waitLabel(cfg) : rule.waitLabel({});
-    const preview = rule.id === 'review_request' && cfg && cfg.reviewMessage
-      ? cfg.reviewMessage.replace(/\{[^}]+\}/g, '[…]').substring(0, 60) + '…'
-      : rule.preview;
-
-    return `<div class="scenario system-rule${active ? '' : ' disabled'}" id="sys-${rule.id}">
-      <div class="scenario-header">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="scenario-name">${rule.name}</div>
-          <span class="sys-badge">BUILT-IN</span>
-        </div>
-        <div class="scenario-actions">
-          <button class="toggle${typeEnabled ? ' on' : ''}" onclick="toggleSystemRule('${rule.typeKey}')" title="${typeEnabled ? 'Disable' : 'Enable'} this follow-up type"></button>
-          <button class="btn-icon" onclick="window.location.href='swft-ai-agents'" title="Configure in AI Agents" style="color:var(--purple);border-color:rgba(179,136,255,0.3);">${lockIcon}</button>
-        </div>
-      </div>
-      <div class="scenario-flow">
-        <div class="flow-node">
-          <div class="flow-node-circle trigger">${rule.triggerIcon}</div>
-          <div class="flow-node-text">
-            <div class="flow-node-label trigger">TRIGGER</div>
-            <div class="flow-node-value">${rule.triggerLabel}</div>
-          </div>
-        </div>
-        <div class="flow-connector"></div>
-        <div class="flow-node">
-          <div class="flow-node-circle wait">${waitIcon}</div>
-          <div class="flow-node-text">
-            <div class="flow-node-label wait">WAIT</div>
-            <div class="flow-node-value">${wLabel}</div>
-            <div class="flow-node-sub">${rule.waitSub}</div>
-          </div>
-        </div>
-        <div class="flow-connector"></div>
-        <div class="flow-node">
-          <div class="flow-node-circle action">${smsIcon}</div>
-          <div class="flow-node-text">
-            <div class="flow-node-label action">ACTION</div>
-            <div class="flow-node-value">Send SMS</div>
-            <div class="flow-node-sub">${esc(preview.substring(0,50))}…</div>
-          </div>
-        </div>
-      </div>
-      <div class="scenario-footer">
-        <div class="scenario-meta">
-          <span><span class="badge badge-sms">SMS</span></span>
-          <span style="color:${active ? 'var(--green)' : 'var(--gray)'};">${active ? 'Active' : agentEnabled ? 'Paused' : 'Agent Off'}</span>
-        </div>
-        <span style="font-size:11px;color:var(--gray);">Sends at 9 AM Eastern</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-window.toggleFollowupAgent = async function() {
-  try {
-    const res = await API.agents.toggle("followup");
-    if (_followupConfig) _followupConfig.enabled = res.enabled;
-    else _followupConfig = { enabled: res.enabled };
-    renderSystemRules(_followupConfig);
-    toast(res.enabled ? 'Follow-up Agent enabled' : 'Follow-up Agent disabled');
-  } catch(e) { toast(e.message || 'Failed to toggle agent', true); }
-};
-
-window.toggleSystemRule = async function(typeKey) {
-  try {
-    const current = _followupConfig ? _followupConfig[typeKey] !== false : true;
-    const update = { [typeKey]: !current };
-    const res = await API.agents.update("followup", update);
-    _followupConfig = { ..._followupConfig, ...update };
-    renderSystemRules(_followupConfig);
-    toast(!current ? 'Follow-up enabled' : 'Follow-up paused');
-  } catch(e) { toast(e.message || 'Failed to update', true); }
-};
-
 const TRIG_LABELS = {quote_sent:'Quote Sent', invoice_sent:'Invoice Sent', invoice_paid:'Invoice Paid', job_completed:'Job Completed', customer_created:'Customer Created'};
 const TRIG_ICONS = {
   quote_sent:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>',
@@ -749,7 +582,7 @@ const TRIG_ICONS = {
 function renderRules(rules) {
   const list = document.getElementById('rules-list');
   if (!rules.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-title" style="font-size:13px;">No custom scenarios yet</div><div style="font-size:12px;color:var(--gray);margin-top:4px;">Use Quick Start above or click <strong style="color:var(--white);">+ New Scenario</strong> to create one.</div></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">No scenarios yet</div><div style="font-size:13px;color:var(--gray);">Create your first automation to start sending messages automatically.</div></div>`;
     return;
   }
   list.innerHTML = rules.map(r => {

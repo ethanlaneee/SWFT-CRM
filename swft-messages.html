@@ -222,6 +222,14 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .swft-modal-btn.confirm:hover{box-shadow:0 0 20px rgba(200,241,53,0.2);}
 .swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
 .swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
+
+/* Crew channel styling */
+.chat-channel-pill.crew{background:rgba(245,166,35,0.1);color:var(--amber);}
+.crew-avatar{background:rgba(245,166,35,0.1)!important;border-color:rgba(245,166,35,0.2)!important;color:var(--amber)!important;}
+.contact-item.crew-contact.active{background:rgba(245,166,35,0.04);border-left:3px solid var(--amber);}
+.contact-item.crew-contact.active .c-avatar{background:rgba(245,166,35,0.12)!important;color:var(--amber)!important;border-color:rgba(245,166,35,0.25)!important;}
+.msg-bubble.outbound.crew-msg{background:rgba(245,166,35,0.1);}
+.msg-bubble.outbound.crew-msg .msg-bubble-body{color:var(--amber);}
 </style>
 
 <!-- Meta Pixel Code -->
@@ -311,6 +319,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <option value="facebook">Facebook</option>
         <option value="instagram">Instagram</option>
         <option value="whatsapp">WhatsApp</option>
+        <option value="crew">Crew — Internal</option>
         <option value="ai">AI</option>
         <option value="deleted">Deleted</option>
       </select>
@@ -368,8 +377,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div style="display:flex;gap:6px;align-items:center;" id="attach-chip-bar"></div>
       <div class="file-attach-bar" id="file-attach-bar"></div>
       <div class="var-chips" id="compose-var-chips">
-        <span class="var-chip" onclick="insertVar('compose-body','{firstName}')">{firstName}</span>
-        <span class="var-chip" onclick="insertVar('compose-body','{customerName}')">{customerName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{customerFirstName}')">{customerFirstName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{customerFullName}')">{customerFullName}</span>
         <span class="var-chip" onclick="insertVar('compose-body','{yourName}')">{yourName}</span>
         <span class="var-chip" onclick="insertVar('compose-body','{yourFirstName}')">{yourFirstName}</span>
         <span class="var-chip" onclick="insertVar('compose-body','{companyName}')">{companyName}</span>
@@ -580,6 +589,14 @@ function setChannel(ch){
   _channel=ch;
   var sel=document.getElementById('channel-select');
   if(sel&&sel.value!==ch) sel.value=ch;
+  // Toggle new-conversation button: hide in crew mode
+  var newMsgBtn=document.getElementById('new-msg-btn');
+  if(newMsgBtn) newMsgBtn.style.display=ch==='crew'?'none':'';
+  if(ch==='crew'){
+    if(_activeContact&&!_activeContact.isCrew) clearChat();
+    loadCrewContacts();
+    return;
+  }
   buildContacts();
   renderContacts();
   // If active contact doesn't match filter, clear it
@@ -728,13 +745,14 @@ function showConnectEmailPopup(){
 
 // ── Build contact list from messages ──
 function buildContacts(){
+  if(_channel==='crew') return;
   var map={};
   var msgs=_allMessages;
   if(_channel==='deleted'){
     msgs=msgs.filter(function(m){return m.deleted;});
   } else {
-    // Normal views: exclude deleted messages
-    msgs=msgs.filter(function(m){return !m.deleted;});
+    // Normal views: exclude deleted and crew messages
+    msgs=msgs.filter(function(m){return !m.deleted && m.type!=='crew';});
     if(_channel==='ai'){
       msgs=msgs.filter(function(m){return m.isReceptionist||m.isFollowup;});
     } else if(_channel!=='all'){
@@ -801,6 +819,7 @@ function channelTag(ch) {
 
 // ── Render contacts ──
 function renderContacts(){
+  if(_channel==='crew'){ renderCrewContacts(); return; }
   var list=document.getElementById('contact-list');
   var filtered=_contacts;
   if(_searchQuery){
@@ -839,6 +858,127 @@ function renderContacts(){
 function filterContacts(q){
   _searchQuery=q;
   renderContacts();
+}
+
+// ── Crew messaging ──
+var _crewMembers = [];
+
+async function loadCrewContacts(){
+  try{
+    document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;">Loading crew...</div>';
+    var res=await API.team.list();
+    _crewMembers=(res.members||[]).filter(function(m){return m.status==='active';});
+    renderCrewContacts();
+  }catch(e){
+    document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;color:var(--gray);">Failed to load crew</div>';
+  }
+}
+
+function buildCrewContact(member){
+  var msgs=_allMessages.filter(function(m){
+    return m.type==='crew'&&(m.crewMemberId===member.id||(member.phone&&(m.to===member.phone||m.from===member.phone)));
+  });
+  var lastTime=msgs.reduce(function(max,m){return Math.max(max,m.sentAt||0);},0);
+  return {
+    customerId:'',
+    customerName:member.name||member.email||'Crew Member',
+    channel:'crew',
+    to:member.phone||member.email||'',
+    phone:member.phone||'',
+    email:member.email||'',
+    isCrew:true,
+    crewId:member.id,
+    crewRole:member.role||'technician',
+    messages:msgs,
+    lastTime:lastTime
+  };
+}
+
+function renderCrewContacts(){
+  var list=document.getElementById('contact-list');
+  if(!_crewMembers.length){
+    list.innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;text-align:center;line-height:1.8;">No crew members.<br><a href="swft-team" style="color:var(--amber);font-size:11px;">Add on Team page →</a></div>';
+    return;
+  }
+  list.innerHTML=_crewMembers.map(function(m){
+    var c=buildCrewContact(m);
+    var isActive=_activeContact&&_activeContact.isCrew&&_activeContact.crewId===m.id;
+    var initials=getInitials(m.name||m.email||'?');
+    var roleLabel=(m.role||'technician');
+    roleLabel=roleLabel[0].toUpperCase()+roleLabel.slice(1);
+    var lastMsg=c.messages.length?c.messages.reduce(function(a,b){return(a.sentAt||0)>(b.sentAt||0)?a:b;}):null;
+    var preview=lastMsg?(lastMsg.body||'').replace(/<[^>]*>/g,'').substring(0,50)||'No content':'Send a message...';
+    var time=lastMsg&&lastMsg.sentAt?formatTime(lastMsg.sentAt):'';
+    return '<div class="contact-item crew-contact'+(isActive?' active':'')+'" onclick="selectCrewMember(\''+escape(JSON.stringify(c))+'\')">' +
+      '<div class="c-avatar" style="background:rgba(245,166,35,0.1);color:var(--amber);border-color:rgba(245,166,35,0.2);">'+initials+'</div>' +
+      '<div class="c-info">' +
+        '<div class="c-name">'+esc(m.name||m.email)+' <span style="font-size:9px;font-weight:700;color:var(--amber);background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2);border-radius:4px;padding:1px 5px;letter-spacing:0.5px;">'+roleLabel.toUpperCase()+'</span></div>' +
+        '<div class="c-preview">'+esc(preview)+'</div>' +
+      '</div>' +
+      '<div class="c-meta"><div class="c-time">'+time+'</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+function selectCrewMember(escaped){
+  var c=JSON.parse(unescape(escaped));
+  _activeContact=c;
+  renderCrewContacts();
+  renderCrewChat(c);
+  showCompose();
+}
+
+function renderCrewChat(c){
+  // Header
+  var header=document.getElementById('chat-header');
+  header.style.display='flex';
+  var avatarEl=document.getElementById('chat-avatar');
+  avatarEl.textContent=getInitials(c.customerName);
+  avatarEl.className='chat-header-avatar crew-avatar';
+  document.getElementById('chat-name').textContent=c.customerName;
+  var detailParts=[];
+  if(c.phone) detailParts.push(c.phone);
+  if(c.email) detailParts.push(c.email);
+  document.getElementById('chat-detail').textContent=detailParts.join(' · ');
+  var pill=document.getElementById('chat-channel-pill');
+  pill.style.display='';
+  pill.className='chat-channel-pill crew';
+  var roleLabel=c.crewRole?c.crewRole[0].toUpperCase()+c.crewRole.slice(1):'Crew';
+  pill.textContent=roleLabel;
+  var addBtn=document.getElementById('add-contact-btn');
+  if(addBtn) addBtn.style.display='none';
+  var aiModeBtn=document.getElementById('ai-mode-btn');
+  if(aiModeBtn) aiModeBtn.style.display='none';
+  // Hide email-specific compose elements
+  document.getElementById('subject-row').style.display='none';
+  var fileBtn=document.getElementById('file-attach-btn');
+  if(fileBtn) fileBtn.style.display='none';
+  var tmplBtn=document.getElementById('template-btn');
+  if(tmplBtn) tmplBtn.style.display='none';
+  // Messages
+  var msgs=c.messages.slice().sort(function(a,b){return(a.sentAt||0)-(b.sentAt||0);});
+  var area=document.getElementById('chat-messages');
+  if(!msgs.length){
+    area.innerHTML='<div class="chat-empty"><div>' +
+      '<svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.12;margin-bottom:10px;color:var(--amber);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.5"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.5"/></svg>' +
+      '<div>No messages yet. Send the first one!</div></div></div>';
+    return;
+  }
+  var html='';
+  var lastDate='';
+  msgs.forEach(function(m){
+    var d=m.sentAt?new Date(m.sentAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    if(d&&d!==lastDate){html+='<div class="msg-date-sep">'+d+'</div>';lastDate=d;}
+    var time=m.sentAt?new Date(m.sentAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
+    var bodyText=(m.body||'').replace(/<[^>]*>/g,'').substring(0,500);
+    var dir=m.direction==='inbound'?'inbound':'outbound';
+    html+='<div class="msg-bubble '+dir+(dir==='outbound'?' crew-msg':'')+'">'+
+      '<div class="msg-bubble-body">'+esc(bodyText||'(no content)')+'</div>'+
+      '<div class="msg-bubble-time">'+(dir==='inbound'?'↙ ':'')+time+'</div>'+
+    '</div>';
+  });
+  area.innerHTML=html;
+  area.scrollTop=area.scrollHeight;
 }
 
 // ── Delete thread ──
@@ -897,6 +1037,7 @@ function clearChat(){
 // ── Render chat ──
 function renderChat(){
   if(!_activeContact)return;
+  if(_activeContact.isCrew){ renderCrewChat(_activeContact); return; }
   var c=_activeContact;
 
   // Header
@@ -1263,6 +1404,33 @@ async function sendMessage(){
 
   var c=_activeContact;
 
+  // ── Crew message send ──
+  if(c.isCrew){
+    if(!c.phone){showToast('Crew member has no phone number on file');return;}
+    try{
+      await API.messages.send({
+        to:c.phone,
+        body:body,
+        type:'crew',
+        crewMemberId:c.crewId,
+        customerName:c.customerName,
+        isCrewMessage:true
+      });
+      showToast('Message sent to '+c.customerName);
+      document.getElementById('compose-body').value='';
+      document.getElementById('compose-body').style.height='auto';
+      var fresh=await API.messages.list();
+      _allMessages=fresh;
+      var updated=_crewMembers.find(function(m){return m.id===c.crewId;});
+      if(updated){
+        _activeContact=buildCrewContact(updated);
+        renderCrewChat(_activeContact);
+      }
+      renderCrewContacts();
+    }catch(e){showToast('Error: '+e.message);}
+    return;
+  }
+
   // Block email sending if Gmail not connected
   if(c.channel==='email'&&!_gmailConnected){
     showConnectEmailPopup();
@@ -1529,6 +1697,17 @@ async function refreshMessages(){
     var fresh=await API.messages.list();
     if(fresh.length!==_allMessages.length||JSON.stringify(fresh.map(function(m){return m.id;}))!==JSON.stringify(_allMessages.map(function(m){return m.id;}))){
       _allMessages=fresh;
+      if(_channel==='crew'){
+        renderCrewContacts();
+        if(_activeContact&&_activeContact.isCrew){
+          var updatedMember=_crewMembers.find(function(m){return m.id===_activeContact.crewId;});
+          if(updatedMember){
+            _activeContact=buildCrewContact(updatedMember);
+            renderCrewChat(_activeContact);
+          }
+        }
+        return;
+      }
       var activeKey=_activeContact?(_activeContact.customerId||'')+'_'+_activeContact.channel+'_'+(_activeContact.to||''):'';
       buildContacts();
       renderContacts();
@@ -1688,6 +1867,8 @@ function applyTemplate(t) {
   function sub(s) {
     return (s || '')
       .replace(/\{firstName\}/g, firstName)
+      .replace(/\{customerFirstName\}/g, firstName)
+      .replace(/\{customerFullName\}/g, name)
       .replace(/\{lastName\}/g, lastName)
       .replace(/\{company\}/g, c.customerName || '')
       .replace(/\{amount\}/g, '')

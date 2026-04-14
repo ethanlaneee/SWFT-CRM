@@ -466,7 +466,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="settings-header"><span class="settings-header-icon">📝</span><h3>EMAIL TEMPLATES</h3></div>
   <div class="settings-body" style="gap:0;">
     <div class="settings-row" style="padding-bottom:12px;">
-      <div class="settings-row-info"><div class="settings-row-label">Saved Templates</div><div class="settings-row-desc">Create reusable email templates for follow-ups, offers, retention, and more. Use {firstName}, {lastName}, {company}, {amount} as placeholders.</div></div>
+      <div class="settings-row-info"><div class="settings-row-label">Saved Templates</div><div class="settings-row-desc">Create reusable email templates for follow-ups, offers, retention, and more. Use {customerFirstName}, {customerFullName}, {lastName}, {company}, {amount} as placeholders.</div></div>
       <button class="settings-btn primary" onclick="openTemplateModal()">+ New Template</button>
     </div>
     <div id="templates-list" style="display:flex;flex-direction:column;gap:0;"></div>
@@ -503,8 +503,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
     <div style="display:flex;flex-direction:column;gap:5px;">
       <label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#f0f0f0;font-weight:600;">Body</label>
-      <textarea id="template-body" rows="8" placeholder="Hi {firstName}, ..." style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;line-height:1.6;"></textarea>
-      <div style="font-size:10.5px;color:#7a7a7a;">Placeholders: <span style="color:#c8f135;">{firstName}</span> <span style="color:#c8f135;">{lastName}</span> <span style="color:#c8f135;">{company}</span> <span style="color:#c8f135;">{amount}</span> <span style="color:#c8f135;">{jobTitle}</span></div>
+      <textarea id="template-body" rows="8" placeholder="Hi {customerFirstName}, ..." style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;line-height:1.6;"></textarea>
+      <div style="font-size:10.5px;color:#7a7a7a;">Placeholders: <span style="color:#c8f135;">{customerFirstName}</span> <span style="color:#c8f135;">{customerFullName}</span> <span style="color:#c8f135;">{lastName}</span> <span style="color:#c8f135;">{company}</span> <span style="color:#c8f135;">{amount}</span> <span style="color:#c8f135;">{jobTitle}</span></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px;">
       <button onclick="closeTemplateModal()" style="flex:1;padding:10px;border-radius:10px;border:1px solid #2c2c2c;background:transparent;color:#7a7a7a;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>

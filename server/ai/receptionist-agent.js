@@ -119,7 +119,8 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   // Auto-discover business context from job history
   const bizContext = await getBusinessContext(orgId, ownerUid);
 
-  // Fetch any pending (sent) quotes for this customer so Claude can detect approval
+  // Fetch any pending (sent but not approved) quotes for this customer so the
+  // AI can recognize when they're verbally approving one via SMS.
   let pendingQuotes = [];
   if (customer?.customerId) {
     try {
@@ -128,8 +129,8 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
         .where("status", "==", "sent")
         .get();
       pendingQuotes = qSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) {
-      console.error("[receptionist] Failed to fetch pending quotes:", e.message);
+    } catch (err) {
+      console.error("[receptionist] pending quotes lookup error:", err.message);
     }
   }
 
@@ -186,18 +187,22 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
       isReceptionist: true,
     });
 
-    // Create task documents for each detected signal
+    // Handle each detected signal
     for (const task of detectedTasks) {
+      // APPROVE_QUOTE — flip the quote's status to approved directly instead
+      // of creating a pending task. Owner gets a notification so they know.
       if (task.type === "APPROVE_QUOTE" && task.details) {
-        // Auto-approve the quote in Firestore
         const quoteId = task.details.trim();
-        try {
+        // Verify the quote belongs to this customer + org before approving
+        const qDoc = await db.collection("quotes").doc(quoteId).get();
+        if (qDoc.exists && qDoc.data().orgId === orgId &&
+            (!customer?.customerId || qDoc.data().customerId === customer.customerId) &&
+            qDoc.data().status === "sent") {
           await db.collection("quotes").doc(quoteId).update({
             status: "approved",
             approvedAt: Date.now(),
             approvedVia: "sms",
           });
-          console.log(`[receptionist] Auto-approved quote ${quoteId} for org ${orgId}`);
           await db.collection("notifications").add({
             orgId,
             userId: ownerUid,
@@ -209,10 +214,11 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
             read: false,
             createdAt: Date.now(),
           });
-        } catch (approveErr) {
-          console.error(`[receptionist] Failed to auto-approve quote ${quoteId}:`, approveErr.message);
+          console.log(`[receptionist] Quote ${quoteId} auto-approved via SMS for org ${orgId}`);
+        } else {
+          console.log(`[receptionist] APPROVE_QUOTE signal ignored for ${quoteId} (not found / wrong org / already resolved)`);
         }
-        continue; // don't also create a generic task doc
+        continue;
       }
       await db.collection("tasks").add({
         orgId,
@@ -383,15 +389,20 @@ TASK SIGNALS — embed ONE in your reply (customer never sees it) when triggered
 • [TASK:QUOTE:brief summary] — Lead gave enough detail (measurements, scope, material type) that the owner can prepare a quote
 • [TASK:ESTIMATE:brief summary] — Lead explicitly wants a physical walkthrough or on-site visit
 • [TASK:CALL:brief summary] — Situation needs a real phone call (emergency, complex specs, unclear scope, frustrated lead)
-• [TASK:PAYMENT:brief summary] — Lead is ready to pay, book with deposit, or explicitly mentions payment now
-Only emit a signal when clearly triggered. Never emit more than one per reply. Strip it yourself — it goes to the owner's task dashboard, not to the customer.`
-    + (pendingQuotes.length > 0
-      ? `\n\nPENDING QUOTES AWAITING APPROVAL:\n` +
-        pendingQuotes.map((q, i) =>
-          `${i + 1}. ${q.title || q.service || "Quote"} — $${q.total || 0}${q.address ? ` at ${q.address}` : ""} (quoteId: ${q.id})`
-        ).join("\n") +
-        `\n\nIf the customer clearly approves one of these quotes (says "yes", "looks good", "let's do it", "approved", "go ahead", "sounds great", etc.), emit:\n• [TASK:APPROVE_QUOTE:quoteId] — using the exact quoteId from the list above. Only emit this if their approval is unambiguous.`
-      : "");
+• [TASK:PAYMENT:brief summary] — Lead is ready to pay, book with deposit, or explicitly mentions payment now${pendingQuotes.length > 0 ? `
+• [TASK:APPROVE_QUOTE:quoteId] — Customer clearly approves a pending quote (e.g. "looks good", "yes let's do it", "approved", "go ahead", "sounds good let's book it"). Use the EXACT quoteId from PENDING QUOTES below. Only use when the approval is unambiguous.` : ""}
+Only emit a signal when clearly triggered. Never emit more than one per reply. Strip it yourself — it goes to the owner's task dashboard, not to the customer.`;
+
+  // Pending quotes context — enables auto-approval via reply
+  if (pendingQuotes.length > 0) {
+    prompt += `\n\nPENDING QUOTES (awaiting approval from this customer):`;
+    pendingQuotes.slice(0, 5).forEach((q, i) => {
+      const summary = q.service || q.title || (q.items && q.items[0] && q.items[0].description) || "Quote";
+      const total = q.total ? `$${Number(q.total).toLocaleString("en-US")}` : "";
+      prompt += `\n• #${i + 1} — ${summary}${total ? `, ${total}` : ""} (quoteId: ${q.id})`;
+    });
+    prompt += `\nIf the customer clearly approves one, emit [TASK:APPROVE_QUOTE:<quoteId>] in your reply and briefly confirm you'll get them on the schedule.`;
+  }
 
   if (config.greeting) {
     prompt += `\n\nGREETING STYLE: "${config.greeting}"`;
