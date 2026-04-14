@@ -61,10 +61,22 @@ publicRouter.get("/:orgId/config", async (req, res) => {
     const cfgDoc = await db.collection("intakeForms").doc(orgId).get();
     const cfg = cfgDoc.exists ? cfgDoc.data() : {};
 
+    // Build services list: pull names from company Service Types setting,
+    // then layer in any per-service rates saved in the intake form config.
+    const serviceTypeNames = (userData.serviceTypes || "")
+      .split(",").map(s => s.trim()).filter(Boolean);
+
+    const rateMap = {};
+    (cfg.services || []).forEach(svc => { if (svc.name) rateMap[svc.name] = svc.ratePerSqft || null; });
+
+    const services = serviceTypeNames.length > 0
+      ? serviceTypeNames.map(name => ({ name, ratePerSqft: rateMap[name] || null }))
+      : cfg.services || [];
+
     res.json({
       companyName:   userData.company || userData.name || "SWFT Business",
       logoUrl:       userData.companyLogo || userData.logoUrl || null,
-      services:      cfg.services || [],
+      services,
       quoteEnabled:  cfg.quoteEnabled || false,
       formTitle:     cfg.formTitle  || "Request a Service",
       formSubtitle:  cfg.formSubtitle || "Fill out the form below and we'll be in touch shortly.",
