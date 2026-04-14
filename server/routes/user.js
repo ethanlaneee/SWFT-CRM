@@ -2,6 +2,7 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const { DEFAULT_PLAN, getPlan } = require("../plans");
 const { getUsage } = require("../usage");
+const Anthropic = require("@anthropic-ai/sdk");
 const {
   createMessagingProfile, buyPhoneNumber, closeMessagingProfile,
   searchAvailableNumbers, orderPhoneNumber, releasePhoneNumber,
@@ -239,6 +240,80 @@ router.post("/find-google-business", async (req, res, next) => {
       address: place.formatted_address,
       reviewUrl,
     });
+  } catch (err) { next(err); }
+});
+
+// POST /api/me/analyze-website — fetch a business website and use AI to extract profile info
+router.post("/analyze-website", async (req, res, next) => {
+  try {
+    let { url } = req.body;
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({ error: "URL is required" });
+    }
+    // Ensure URL has a protocol
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+
+    // Fetch the website
+    let html = "";
+    try {
+      const response = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; SWFTBot/1.0)" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      html = await response.text();
+    } catch (fetchErr) {
+      return res.status(422).json({ error: "Could not fetch website: " + fetchErr.message });
+    }
+
+    // Strip HTML tags and collapse whitespace — keep first 6000 chars for context
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      .slice(0, 6000);
+
+    if (!text.length) {
+      return res.status(422).json({ error: "Could not extract text from website" });
+    }
+
+    const anthropic = new Anthropic();
+    const message = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 600,
+      messages: [{
+        role: "user",
+        content: `You are extracting business profile information from a company website.
+
+Website text:
+${text}
+
+Extract the following and return ONLY valid JSON (no markdown, no explanation):
+{
+  "about": "2-3 sentence description of the business (what they do, where they're based, how long they've been operating)",
+  "services": "comma-separated list of services offered",
+  "serviceArea": "city/region they serve",
+  "hours": "business hours if mentioned",
+  "company": "business name",
+  "phone": "phone number if found",
+  "address": "physical address if found"
+}
+
+If a field cannot be determined from the text, use an empty string "".`
+      }],
+    });
+
+    let extracted = {};
+    try {
+      const raw = message.content[0]?.text?.trim() || "{}";
+      extracted = JSON.parse(raw.replace(/^```json?\s*/i, "").replace(/```\s*$/i, ""));
+    } catch (_) {
+      return res.status(500).json({ error: "AI returned unexpected format. Try again." });
+    }
+
+    res.json({ success: true, data: extracted });
   } catch (err) { next(err); }
 });
 
