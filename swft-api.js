@@ -107,6 +107,7 @@ const API = {
     create: (data)   => apiFetch("/api/customers",      { method: "POST",   body: JSON.stringify(data) }),
     update: (id, data) => apiFetch(`/api/customers/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id)     => apiFetch(`/api/customers/${id}`, { method: "DELETE" }),
+    bulkDelete: (ids)=> apiFetch("/api/customers/bulk-delete", { method: "POST", body: JSON.stringify({ ids }) }),
   },
 
   // ── Jobs ──

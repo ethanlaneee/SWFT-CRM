@@ -902,16 +902,15 @@ async function deleteSelected() {
   var ok = await swftConfirm('Permanently delete ' + label + '?', 'DELETE CUSTOMERS', '🗑️');
   if (!ok) return;
   showToast('Deleting ' + label + '...');
-  var failed = 0, firstError = null;
-  await Promise.all(ids.map(async function(id) {
-    try { await API.customers.delete(id); }
-    catch(e) { failed++; if (!firstError) firstError = e.message || String(e); }
-  }));
-  clearSelection();
-  await loadCustomers();
-  showToast(failed === 0
-    ? 'Deleted ' + label
-    : 'Failed: ' + firstError + ' (' + (ids.length - failed) + '/' + ids.length + ' deleted)');
+  try {
+    var result = await API.customers.bulkDelete(ids);
+    clearSelection();
+    await loadCustomers();
+    showToast('Deleted ' + result.deleted + ' customer' + (result.deleted !== 1 ? 's' : ''));
+  } catch(e) {
+    await loadCustomers();
+    showToast('Error: ' + (e.message || String(e)));
+  }
 }
 
 // ── Render tags in the Notes drawer panel ──

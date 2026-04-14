@@ -72,6 +72,37 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Bulk delete customers — single request, batched writes
+router.post("/bulk-delete", async (req, res, next) => {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(x => typeof x === "string" && x) : [];
+    if (!ids.length) return res.status(400).json({ error: "No ids provided" });
+
+    // Fetch all docs in parallel, keep only ones the user owns
+    const snaps = await Promise.all(ids.map(id => col().doc(id).get()));
+    const deletable = [];
+    const skipped = [];
+    snaps.forEach((snap, idx) => {
+      if (!snap.exists) { skipped.push(ids[idx]); return; }
+      const data = snap.data();
+      const owns = data.orgId === req.orgId || data.userId === req.uid || data.orgId === req.uid;
+      if (!owns) { skipped.push(ids[idx]); return; }
+      deletable.push(snap.ref);
+    });
+
+    // Commit in batches of 499 (Firestore batch limit = 500)
+    for (let i = 0; i < deletable.length; i += 499) {
+      const batch = db.batch();
+      deletable.slice(i, i + 499).forEach(ref => batch.delete(ref));
+      await batch.commit();
+    }
+    res.json({ success: true, deleted: deletable.length, skipped: skipped.length });
+  } catch (err) {
+    console.error("[customers.bulk-delete] error:", err);
+    next(err);
+  }
+});
+
 // Delete customer
 router.delete("/:id", async (req, res, next) => {
   try {
