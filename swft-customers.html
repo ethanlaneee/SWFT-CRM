@@ -899,7 +899,7 @@ async function deleteSelected() {
   var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
   if (!ids.length) return;
   var label = ids.length + ' customer' + (ids.length !== 1 ? 's' : '');
-  var ok = await swftConfirm('Delete ' + label + ' permanently?', 'This action cannot be undone.', { danger: true });
+  var ok = await swftConfirm('Permanently delete ' + label + '?', 'DELETE CUSTOMERS', '🗑️');
   if (!ok) return;
   showToast('Deleting ' + label + '...');
   var failed = 0;

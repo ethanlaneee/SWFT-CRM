@@ -72,27 +72,15 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Delete customer — cascading delete
+// Delete customer
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
     if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Customer not found" });
     }
-    const customerId = req.params.id;
-    const [jobsSnap, quotesSnap, invoicesSnap] = await Promise.all([
-      db.collection("jobs").where("orgId", "==", req.orgId).where("customerId", "==", customerId).get(),
-      db.collection("quotes").where("orgId", "==", req.orgId).where("customerId", "==", customerId).get(),
-      db.collection("invoices").where("orgId", "==", req.orgId).where("customerId", "==", customerId).get(),
-    ]);
-    const allDocs = [...jobsSnap.docs, ...quotesSnap.docs, ...invoicesSnap.docs];
-    for (let i = 0; i < allDocs.length; i += 499) {
-      const batch = db.batch();
-      allDocs.slice(i, i + 499).forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    }
-    await col().doc(customerId).delete();
-    res.json({ success: true, deleted: { jobs: jobsSnap.size, quotes: quotesSnap.size, invoices: invoicesSnap.size } });
+    await col().doc(req.params.id).delete();
+    res.json({ success: true });
   } catch (err) { next(err); }
 });
 
