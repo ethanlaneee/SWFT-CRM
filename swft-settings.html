@@ -400,7 +400,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <div class="settings-field">
         <label>Business Website</label>
-        <input class="settings-input" id="s-biz-website" style="width:100%;" placeholder="e.g. https://yourcompany.com"/>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="settings-input" id="s-biz-website" style="flex:1;" placeholder="e.g. https://yourcompany.com"/>
+          <button class="settings-btn" id="analyze-website-btn" onclick="analyzeWebsite()" title="Let AI read your website and fill in your profile automatically" style="white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0;border-color:rgba(200,241,53,0.3);color:var(--green);">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            Auto-fill with AI
+          </button>
+        </div>
+        <div style="font-size:10.5px;color:var(--gray);margin-top:4px;">Enter your website URL and click Auto-fill — AI will read your site and fill in your profile.</div>
       </div>
     </div>
     <div class="settings-field">
@@ -727,6 +734,55 @@ async function findGoogleBusiness() {
     resultEl.textContent = 'Error: ' + (e.message || 'unknown error');
   } finally {
     btn.textContent = 'Find My Business';
+    btn.disabled = false;
+  }
+}
+
+async function analyzeWebsite() {
+  var btn = document.getElementById('analyze-website-btn');
+  var url = (document.getElementById('s-biz-website').value || '').trim();
+  if (!url) { showToast('Enter your website URL first'); return; }
+
+  var origHtml = btn.innerHTML;
+  btn.innerHTML = 'Analyzing...';
+  btn.disabled = true;
+
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/me/analyze-website', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    var json = await res.json();
+    if (!res.ok) { showToast(json.error || 'Could not analyze website'); return; }
+
+    var d = json.data || {};
+    var filled = [];
+
+    // Fill in Business Profile fields — only overwrite if AI found something
+    if (d.about) { document.getElementById('s-biz-about').value = d.about; filled.push('About'); }
+    if (d.services) { document.getElementById('s-biz-services').value = d.services; filled.push('Services'); }
+    if (d.serviceArea) { document.getElementById('s-biz-area').value = d.serviceArea; filled.push('Service Area'); }
+    if (d.hours) { document.getElementById('s-biz-hours').value = d.hours; filled.push('Hours'); }
+
+    // Also offer to fill Company Profile fields if they're blank
+    var companyInput = document.getElementById('s-company');
+    var phoneInput = document.getElementById('s-phone');
+    var addressInput = document.getElementById('s-address');
+    if (d.company && companyInput && !companyInput.value.trim()) { companyInput.value = d.company; filled.push('Company Name'); }
+    if (d.phone && phoneInput && !phoneInput.value.trim()) { phoneInput.value = d.phone; filled.push('Phone'); }
+    if (d.address && addressInput && !addressInput.value.trim()) { addressInput.value = d.address; filled.push('Address'); }
+
+    if (filled.length) {
+      showToast('Filled: ' + filled.join(', ') + ' — review and save');
+    } else {
+      showToast('AI could not extract enough info from that page. Try your homepage or About page.');
+    }
+  } catch(e) {
+    showToast('Error: ' + (e.message || 'Could not analyze website'));
+  } finally {
+    btn.innerHTML = origHtml;
     btn.disabled = false;
   }
 }
