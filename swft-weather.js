@@ -57,13 +57,16 @@
     if (browserLoc) return browserLoc;
 
     // Fallback: IP-based geolocation (no permission needed)
+    // ipwho.is is free + CORS-friendly; ipapi.co blocks direct browser use.
     try {
-      const res = await fetch("https://ipapi.co/json/");
-      const data = await res.json();
-      if (data.latitude && data.longitude) {
-        return { lat: data.latitude, lon: data.longitude };
+      const res = await fetch("https://ipwho.is/");
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && data.latitude && data.longitude) {
+          return { lat: data.latitude, lon: data.longitude };
+        }
       }
-    } catch (e) {}
+    } catch (e) { /* swallow — fall through to default location */ }
 
     // Last resort: Austin TX
     return { lat: 30.27, lon: -97.74 };
