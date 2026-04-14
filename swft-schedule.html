@@ -256,7 +256,9 @@
 .wk-body-wrap{display:grid;grid-template-columns:52px repeat(7,1fr);overflow-y:auto;max-height:600px;}
 .wk-time-gutter{border-right:1px solid var(--border);}
 .wk-hour-lbl{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0 0;font-size:9px;color:var(--gray2);font-family:'JetBrains Mono',monospace;flex-shrink:0;}
-.wk-day-col{position:relative;border-left:1px solid var(--border);height:900px;}
+.wk-day-col{position:relative;border-left:1px solid var(--border);height:900px;cursor:crosshair;}
+.wk-day-col:hover::after{content:'+';position:absolute;top:8px;right:8px;font-size:16px;color:rgba(200,241,53,0.4);pointer-events:none;line-height:1;}
+.wk-hover-slot{position:absolute;left:0;right:0;background:rgba(200,241,53,0.05);pointer-events:none;border-radius:4px;transition:opacity 0.1s;}
 .wk-hour-line{position:absolute;left:0;right:0;border-top:1px solid rgba(255,255,255,0.04);pointer-events:none;}
 .wk-now-line{position:absolute;left:0;right:0;border-top:2px solid rgba(200,241,53,0.6);pointer-events:none;z-index:3;}
 .wk-now-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--green);}
@@ -268,6 +270,49 @@
 .wk-block.gray{background:rgba(100,100,100,0.12);border:1px solid rgba(100,100,100,0.2);color:var(--gray);}
 .wk-block-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .wk-block-time{font-size:9px;opacity:0.65;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+/* Schedule event blocks (distinct from job blocks) */
+.wk-evt{position:absolute;left:3px;right:3px;border-radius:7px;padding:5px 7px;cursor:pointer;overflow:hidden;font-size:11px;line-height:1.35;z-index:1;border-style:dashed!important;}
+.wk-evt:hover{filter:brightness(1.2);z-index:2;}
+.wk-evt.meeting{background:rgba(77,159,255,0.12);border:1px dashed rgba(77,159,255,0.4);color:var(--blue);}
+.wk-evt.free{background:rgba(200,241,53,0.1);border:1px dashed rgba(200,241,53,0.35);color:var(--green);}
+.wk-evt.travel{background:rgba(245,166,35,0.1);border:1px dashed rgba(245,166,35,0.35);color:var(--amber);}
+.wk-evt.personal{background:rgba(179,136,255,0.1);border:1px dashed rgba(179,136,255,0.35);color:var(--purple);}
+.wk-evt.other{background:rgba(100,100,100,0.1);border:1px dashed rgba(100,100,100,0.3);color:var(--gray);}
+.wk-buffer{position:absolute;left:2px;right:2px;border-radius:4px;pointer-events:none;opacity:0.35;background:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,0.06) 4px,rgba(255,255,255,0.06) 8px);}
+/* Event creation modal */
+.evt-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.evt-overlay.open{display:flex;}
+.evt-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:22px;width:340px;max-width:94vw;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.evt-modal-header{display:flex;align-items:center;justify-content:space-between;}
+.evt-modal-title{font-size:15px;font-weight:600;color:var(--white);}
+.evt-modal-close{width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.evt-modal-close:hover{color:var(--white);background:var(--surface2);}
+.evt-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.14s;}
+.evt-input:focus{border-color:rgba(200,241,53,0.5);}
+.evt-input option{background:var(--surface2);}
+.evt-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;margin-bottom:5px;}
+.evt-field{display:flex;flex-direction:column;gap:4px;}
+.evt-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.evt-types{display:flex;flex-wrap:wrap;gap:6px;}
+.evt-type-btn{font-size:11px;font-weight:500;padding:4px 11px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;transition:all 0.12s;font-family:'DM Sans',sans-serif;}
+.evt-type-btn:hover{color:var(--white);border-color:var(--gray2);}
+.evt-type-btn.active[data-type="meeting"]{background:rgba(77,159,255,0.15);border-color:rgba(77,159,255,0.4);color:var(--blue);}
+.evt-type-btn.active[data-type="free"]{background:rgba(200,241,53,0.12);border-color:rgba(200,241,53,0.35);color:var(--green);}
+.evt-type-btn.active[data-type="travel"]{background:rgba(245,166,35,0.12);border-color:rgba(245,166,35,0.35);color:var(--amber);}
+.evt-type-btn.active[data-type="personal"]{background:rgba(179,136,255,0.12);border-color:rgba(179,136,255,0.35);color:var(--purple);}
+.evt-type-btn.active[data-type="other"]{background:rgba(100,100,100,0.12);border-color:rgba(100,100,100,0.3);color:var(--gray);}
+.evt-buffer-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:10px 12px;}
+.evt-actions{display:flex;gap:10px;}
+.evt-btn{flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);font-family:'DM Sans',sans-serif;transition:all 0.14s;}
+.evt-btn.cancel{background:transparent;color:var(--gray);}
+.evt-btn.cancel:hover{color:var(--white);}
+.evt-btn.save{background:var(--green);color:#0a0a0a;border-color:var(--green);}
+.evt-btn.save:hover{filter:brightness(1.1);}
+/* Toggle (reused from automations) */
+.ev-toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0;}
+.ev-toggle.on{background:var(--green);}
+.ev-toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#f0f0f0;transition:transform 0.2s;}
+.ev-toggle.on::after{transform:translateX(16px);}
 
 </style>
 
@@ -656,7 +701,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script>
   /* ── Calendar Jobs Data ── */
   let calendarJobs = [];
-  let _allJobs = []; // full job objects for week view
+  let _allJobs = [];       // full job objects for week view
+  let _schedEvents = [];   // lightweight calendar events
 
   /* ── View switching ── */
   function switchSchedView(view, btn) {
@@ -730,6 +776,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       var isToday = dd.getTime() === today.getTime();
       var dateStr = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
       var dayJobs = _allJobs.filter(function(j) { return j.scheduledDate === dateStr; });
+      var dayEvts = _schedEvents.filter(function(e) { return e.date === dateStr; });
 
       var colHtml = '';
       // Hour lines
@@ -770,8 +817,48 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
           + '<div class="wk-block-time">' + (fmtTime || 'No time set') + (j.duration ? ' · ' + j.duration : '') + '</div>'
           + '</div>';
       });
+      // Schedule event blocks (dashed — not jobs)
+      dayEvts.forEach(function(ev) {
+        if (!ev.startTime) return;
+        var parts = ev.startTime.split(':');
+        var evHr = parseInt(parts[0], 10), evMin = parseInt(parts[1]||'0', 10);
+        if (evHr < WK_START_HOUR || evHr >= WK_END_HOUR) return;
+        var durMins = ev.durationMins || 60;
+        var topPx = (evHr - WK_START_HOUR) * HOUR_HEIGHT + (evMin/60) * HOUR_HEIGHT;
+        var htPx = Math.max((durMins/60) * HOUR_HEIGHT, 28);
+        var h12 = evHr > 12 ? evHr-12 : (evHr===0?12:evHr);
+        var fmtT = h12 + ':' + String(evMin).padStart(2,'0') + (evHr>=12?' PM':' AM');
+        var typ = ev.type || 'other';
+        // Buffer blocks (before + after)
+        if (ev.buffer > 0) {
+          var bufHt = (ev.buffer/60) * HOUR_HEIGHT;
+          var bufTop = Math.max(topPx - bufHt, 0);
+          colHtml += '<div class="wk-buffer" style="top:' + bufTop + 'px;height:' + Math.min(bufHt, topPx) + 'px;"></div>';
+          colHtml += '<div class="wk-buffer" style="top:' + (topPx+htPx) + 'px;height:' + bufHt + 'px;"></div>';
+        }
+        colHtml += '<div class="wk-evt ' + typ + '" style="top:' + topPx + 'px;height:' + htPx + 'px;" onclick="deleteEvtPrompt(\'' + ev.id + '\')">'
+          + '<div class="wk-block-title">' + (ev.title||'Event') + '</div>'
+          + '<div class="wk-block-time">' + fmtT + (ev.buffer?' · '+ev.buffer+'m buffer':'') + '</div>'
+          + '</div>';
+      });
+
       var colEl = document.getElementById('wk-col-' + di);
-      if (colEl) colEl.innerHTML = colHtml;
+      if (colEl) {
+        colEl.innerHTML = colHtml;
+        // Click on empty slot → open event modal pre-filled with date + time
+        (function(ds) {
+          colEl.onclick = function(e) {
+            if (e.target.closest('.wk-block') || e.target.closest('.wk-evt')) return;
+            var rect = colEl.getBoundingClientRect();
+            var y = e.clientY - rect.top;
+            var rawMin = (y / HOUR_HEIGHT) * 60 + WK_START_HOUR * 60;
+            var snapped = Math.round(rawMin / 15) * 15;
+            var hr = Math.min(Math.floor(snapped / 60), WK_END_HOUR - 1);
+            var mn = snapped % 60;
+            openEvtModal(ds, String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0'));
+          };
+        })(dateStr);
+      }
     }
   }
 
@@ -786,12 +873,95 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     weekStart = d; renderWeekView();
   }
 
+  function openNewJobAt(dateStr, timeStr) {
+    openNewJob();
+    document.getElementById('e-date').value = dateStr;
+    document.getElementById('e-time').value = timeStr;
+    var d = new Date(dateStr + 'T12:00:00');
+    var dayLabel = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    var hr = parseInt(timeStr.split(':')[0], 10);
+    var mn = parseInt(timeStr.split(':')[1] || '0', 10);
+    var h12 = hr > 12 ? hr-12 : (hr === 0 ? 12 : hr);
+    var ampm = hr >= 12 ? 'PM' : 'AM';
+    document.getElementById('d-date').textContent = dayLabel + ' · ' + h12 + ':' + String(mn).padStart(2,'0') + ' ' + ampm;
+  }
+
+  /* ── Event modal (lightweight calendar events) ── */
+  var _evtType = 'meeting';
+
+  function openEvtModal(dateStr, timeStr) {
+    document.getElementById('evt-title').value = '';
+    document.getElementById('evt-date').value = dateStr || '';
+    document.getElementById('evt-start').value = timeStr || '09:00';
+    document.getElementById('evt-dur').value = '60';
+    document.getElementById('evt-notes').value = '';
+    document.getElementById('evt-buf-toggle').classList.remove('on');
+    document.getElementById('evt-buf-opts').style.display = 'none';
+    document.getElementById('evt-buf-mins').value = '30';
+    // Reset type
+    _evtType = 'meeting';
+    document.querySelectorAll('.evt-type-btn').forEach(function(b) { b.classList.remove('active'); });
+    var defBtn = document.querySelector('.evt-type-btn[data-type="meeting"]');
+    if (defBtn) defBtn.classList.add('active');
+    document.getElementById('evt-overlay').classList.add('open');
+    setTimeout(function() { document.getElementById('evt-title').focus(); }, 80);
+  }
+
+  function closeEvtModal() {
+    document.getElementById('evt-overlay').classList.remove('open');
+  }
+
+  function setEvtType(type, btn) {
+    _evtType = type;
+    document.querySelectorAll('.evt-type-btn').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+  }
+
+  function toggleEvtBuffer() {
+    var tog = document.getElementById('evt-buf-toggle');
+    var opts = document.getElementById('evt-buf-opts');
+    tog.classList.toggle('on');
+    opts.style.display = tog.classList.contains('on') ? 'block' : 'none';
+  }
+
+  async function saveEvt() {
+    var title = document.getElementById('evt-title').value.trim();
+    if (!title) { document.getElementById('evt-title').focus(); return; }
+    var date = document.getElementById('evt-date').value;
+    var startTime = document.getElementById('evt-start').value;
+    var durMins = parseInt(document.getElementById('evt-dur').value, 10) || 60;
+    var notes = document.getElementById('evt-notes').value.trim();
+    var bufOn = document.getElementById('evt-buf-toggle').classList.contains('on');
+    var buffer = bufOn ? parseInt(document.getElementById('evt-buf-mins').value, 10) : 0;
+    // Compute endTime
+    var startParts = startTime.split(':');
+    var endTotalMin = parseInt(startParts[0],10)*60 + parseInt(startParts[1]||'0',10) + durMins;
+    var endTime = String(Math.floor(endTotalMin/60)).padStart(2,'0') + ':' + String(endTotalMin%60).padStart(2,'0');
+    try {
+      var saved = await API.schedule.create({ title, type: _evtType, date, startTime, endTime, durationMins: durMins, buffer, notes });
+      _schedEvents.push(saved);
+      closeEvtModal();
+      renderWeekView();
+    } catch(e) { alert('Error saving event: ' + e.message); }
+  }
+
+  async function deleteEvtPrompt(id) {
+    var ok = await swftConfirm('Remove this event?', 'DELETE EVENT', '🗑️');
+    if (!ok) return;
+    try {
+      await API.schedule.delete(id);
+      _schedEvents = _schedEvents.filter(function(e) { return e.id !== id; });
+      renderWeekView();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
   async function loadCalendarJobs() {
     try {
-      const jobs = await API.jobs.list();
+      const [jobs, evts] = await Promise.all([API.jobs.list(), API.schedule.list().catch(()=>[])]);
       // Store full job objects so the drawer can show all fields
       jobs.forEach(function(j) { _jobsCache[j.id] = j; });
-      _allJobs = jobs; // keep full objects for week view
+      _allJobs = jobs;
+      _schedEvents = evts;
       calendarJobs = jobs.map(function(j) {
         var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
         return {
@@ -1428,5 +1598,74 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
+
+<!-- Event creation modal -->
+<div class="evt-overlay" id="evt-overlay" onclick="if(event.target===this)closeEvtModal()">
+  <div class="evt-modal">
+    <div class="evt-modal-header">
+      <div class="evt-modal-title">New Event</div>
+      <button class="evt-modal-close" onclick="closeEvtModal()">×</button>
+    </div>
+    <div class="evt-field">
+      <input class="evt-input" id="evt-title" type="text" placeholder="Event title (e.g. Team meeting)"/>
+    </div>
+    <div class="evt-field">
+      <div class="evt-label">Type</div>
+      <div class="evt-types">
+        <button class="evt-type-btn active" data-type="meeting" onclick="setEvtType('meeting',this)">Meeting</button>
+        <button class="evt-type-btn" data-type="free" onclick="setEvtType('free',this)">Free Time</button>
+        <button class="evt-type-btn" data-type="travel" onclick="setEvtType('travel',this)">Travel</button>
+        <button class="evt-type-btn" data-type="personal" onclick="setEvtType('personal',this)">Personal</button>
+        <button class="evt-type-btn" data-type="other" onclick="setEvtType('other',this)">Other</button>
+      </div>
+    </div>
+    <div class="evt-row-2">
+      <div class="evt-field">
+        <div class="evt-label">Date</div>
+        <input class="evt-input" id="evt-date" type="date"/>
+      </div>
+      <div class="evt-field">
+        <div class="evt-label">Start Time</div>
+        <input class="evt-input" id="evt-start" type="time"/>
+      </div>
+    </div>
+    <div class="evt-field">
+      <div class="evt-label">Duration</div>
+      <select class="evt-input" id="evt-dur">
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="45">45 min</option>
+        <option value="60" selected>1 hour</option>
+        <option value="90">1.5 hours</option>
+        <option value="120">2 hours</option>
+        <option value="180">3 hours</option>
+        <option value="240">4 hours</option>
+        <option value="480">All Day (8 hrs)</option>
+      </select>
+    </div>
+    <div class="evt-buffer-row">
+      <div>
+        <div style="font-size:12px;font-weight:500;color:var(--white);">Buffer Time</div>
+        <div style="font-size:10.5px;color:var(--gray);margin-top:2px;">Travel / setup time around this event</div>
+      </div>
+      <button class="ev-toggle" id="evt-buf-toggle" onclick="toggleEvtBuffer()" type="button"></button>
+    </div>
+    <div id="evt-buf-opts" style="display:none">
+      <select class="evt-input" id="evt-buf-mins">
+        <option value="15">15 min buffer</option>
+        <option value="30" selected>30 min buffer</option>
+        <option value="45">45 min buffer</option>
+        <option value="60">1 hour buffer</option>
+      </select>
+    </div>
+    <div class="evt-field">
+      <input class="evt-input" id="evt-notes" type="text" placeholder="Notes (optional)"/>
+    </div>
+    <div class="evt-actions">
+      <button class="evt-btn cancel" onclick="closeEvtModal()">Cancel</button>
+      <button class="evt-btn save" onclick="saveEvt()">Add Event</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

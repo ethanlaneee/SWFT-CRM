@@ -21,9 +21,12 @@ router.post("/", async (req, res, next) => {
       userId: req.uid,
       jobId: req.body.jobId || null,
       title: req.body.title || "",
+      type: req.body.type || "other",
       date: req.body.date || null,
       startTime: req.body.startTime || null,
       endTime: req.body.endTime || null,
+      durationMins: req.body.durationMins || 60,
+      buffer: req.body.buffer || 0,
       location: req.body.location || "",
       notes: req.body.notes || "",
       createdAt: Date.now(),
@@ -41,7 +44,7 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Schedule entry not found" });
     }
     const updates = {};
-    for (const key of ["jobId", "title", "date", "startTime", "endTime", "location", "notes"]) {
+    for (const key of ["jobId", "title", "type", "date", "startTime", "endTime", "durationMins", "buffer", "location", "notes"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     updates.updatedAt = Date.now();
