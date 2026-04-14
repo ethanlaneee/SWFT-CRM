@@ -65,6 +65,15 @@ router.post("/", async (req, res, next) => {
     };
     const ref = await col().add(data);
 
+    // Notify org about new job
+    db.collection("notifications").add({
+      orgId: req.orgId, userId: req.orgId,
+      type: "job",
+      title: `New Job Added${data.title ? ": " + data.title : ""}`,
+      body: [data.customerName, data.service].filter(Boolean).join(" · ") || "A new job was created",
+      read: false, createdAt: Date.now(),
+    }).catch(() => {});
+
     // Sync to Google Calendar if connected and job has a date (await to store event ID)
     if (data.scheduledDate) {
       try {

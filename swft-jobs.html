@@ -1828,7 +1828,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       } else if (r.status === 'approved') {
         footerHtml = '<span class="sr-notes">Converted to job on ' + (r.approvedAt ? new Date(r.approvedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—') + '</span>' +
           '<span class="sr-status-badge sr-badge-approved">Approved</span>' +
-          (r.jobId ? '<button class="sr-btn" style="border-color:rgba(200,241,53,0.25);color:var(--green);" onclick="switchPageTab(\'jobs\')">View Job →</button>' : '');
+          (r.jobId ? '<button class="sr-btn sr-btn-approve" onclick="switchPageTab(\'jobs\')">View Job →</button>' : '');
       } else if (r.status === 'denied') {
         footerHtml = '<span class="sr-notes">' + esc(r.denyReason || r.notes || '') + '</span>' +
           '<span class="sr-status-badge sr-badge-denied">Denied</span>' +

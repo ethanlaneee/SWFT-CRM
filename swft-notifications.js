@@ -64,19 +64,34 @@
     .notif-text { font-size: 12px; color: #999; line-height: 1.4; }
     .notif-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; margin-top: 3px; }
     .notif-empty { text-align: center; padding: 40px 20px; color: #444; font-size: 13px; }
+    @keyframes bell-ring {
+      0%, 55%, 100% { transform: rotate(0deg); }
+      5%  { transform: rotate(18deg); }
+      15% { transform: rotate(-15deg); }
+      25% { transform: rotate(11deg); }
+      35% { transform: rotate(-7deg); }
+      45% { transform: rotate(4deg); }
+    }
+    .bell-ringing svg {
+      animation: bell-ring 2.4s ease-in-out infinite;
+      transform-origin: 50% 12%;
+      display: block;
+    }
   `;
   document.head.appendChild(style);
 
   var _notifications = [];
   var _isOpen = false;
+  var _bellBtn = null;
 
   // Icon map by type
   var TYPE_ICONS = {
-    payment: { icon: '💰', bg: 'rgba(200,241,53,0.1)' },
-    job:     { icon: '🔧', bg: 'rgba(77,159,255,0.1)' },
-    message: { icon: '💬', bg: 'rgba(179,136,255,0.1)' },
-    team:    { icon: '👥', bg: 'rgba(245,166,35,0.1)' },
-    info:    { icon: '🔔', bg: 'rgba(200,241,53,0.07)' },
+    payment:         { icon: '💰', bg: 'rgba(200,241,53,0.1)' },
+    job:             { icon: '🔧', bg: 'rgba(77,159,255,0.1)' },
+    message:         { icon: '💬', bg: 'rgba(179,136,255,0.1)' },
+    team:            { icon: '👥', bg: 'rgba(245,166,35,0.1)' },
+    service_request: { icon: '📋', bg: 'rgba(200,241,53,0.07)' },
+    info:            { icon: '🔔', bg: 'rgba(200,241,53,0.07)' },
   };
 
   function formatTimeAgo(ts) {
@@ -129,6 +144,7 @@
     document.querySelectorAll('.badge-dot').forEach(function(d) {
       d.style.display = hasUnread ? '' : 'none';
     });
+    if (_bellBtn) _bellBtn.classList.toggle('bell-ringing', hasUnread);
   }
 
   window._notifClick = function(id, link) {
@@ -169,6 +185,7 @@
     document.querySelectorAll('.icon-btn').forEach(function(btn) {
       // target the bell icon button by checking SVG content
       if (btn.innerHTML.indexOf('M18 8A6') > -1 || btn.querySelector('.badge-dot')) {
+        _bellBtn = btn;
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           _isOpen = !_isOpen;
