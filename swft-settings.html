@@ -244,27 +244,22 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <header class="topbar">
     <div class="topbar-page">SETTINGS</div>
     <span class="topbar-slash">/</span>
-    <div class="topbar-sub">Manage your SWFT account</div>
+    <div class="topbar-sub" id="settings-topbar-sub">Profile</div>
   </header>
 
   <div class="page-body">
 
 <!-- Settings section nav -->
 <nav class="settings-nav" id="settingsNav">
-  <div class="settings-nav-item active" data-target="sec-company"><span class="settings-nav-icon">🏢</span>Company</div>
-  <div class="settings-nav-item" data-target="sec-billing"><span class="settings-nav-icon">💳</span>Billing</div>
-  <div class="settings-nav-item" data-target="sec-ai-profile"><span class="settings-nav-icon">🧠</span>AI Profile</div>
-  <div class="settings-nav-item" data-target="sec-defaults"><span class="settings-nav-icon">⚙️</span>Defaults</div>
-  <div class="settings-nav-item" data-target="sec-templates"><span class="settings-nav-icon">📝</span>Templates</div>
-  <div class="settings-nav-item" data-target="sec-integrations"><span class="settings-nav-icon">🔗</span>Integrations</div>
-  <div class="settings-nav-item" data-target="sec-phone"><span class="settings-nav-icon">📱</span>Phone Number</div>
-  <div class="settings-nav-item" data-target="sec-preferences"><span class="settings-nav-icon">🎨</span>Preferences</div>
-  <div class="settings-nav-item" data-target="sec-import"><span class="settings-nav-icon">📥</span>Import</div>
-  <div class="settings-nav-item" data-target="sec-privacy"><span class="settings-nav-icon">🔒</span>Privacy</div>
+  <div class="settings-nav-item active" data-group="profile"><span class="settings-nav-icon">🏢</span>Profile</div>
+  <div class="settings-nav-item" data-group="operations"><span class="settings-nav-icon">⚙️</span>Operations</div>
+  <div class="settings-nav-item" data-group="connections"><span class="settings-nav-icon">🔗</span>Connections</div>
+  <div class="settings-nav-item" data-group="billing"><span class="settings-nav-icon">💳</span>Billing</div>
+  <div class="settings-nav-item" data-group="account"><span class="settings-nav-icon">👤</span>Account</div>
 </nav>
 
 <!-- Company Profile -->
-<div class="settings-section" id="sec-company">
+<div class="settings-section" data-group="profile" id="sec-company">
   <div class="settings-header"><span class="settings-header-icon">🏢</span><h3>COMPANY PROFILE</h3></div>
   <div class="settings-body">
     <div class="settings-2col">
@@ -301,7 +296,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Plan & Billing -->
-<div class="settings-section" id="sec-billing">
+<div class="settings-section" data-group="billing" id="sec-billing">
   <div class="settings-header"><span class="settings-header-icon">💳</span><h3>PLAN & BILLING</h3></div>
   <div class="settings-body">
 
@@ -380,7 +375,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Business Profile for AI -->
-<div class="settings-section" id="sec-ai-profile">
+<div class="settings-section" data-group="profile" id="sec-ai-profile">
   <div class="settings-header"><span class="settings-header-icon">🧠</span><h3>BUSINESS PROFILE FOR AI</h3></div>
   <div class="settings-body">
     <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.5;">This info powers your AI agents. The more you fill in, the smarter your estimator and follow-up agents will be. As you add jobs and customers, the AI also learns automatically.</div>
@@ -419,7 +414,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Default Values -->
-<div class="settings-section" id="sec-defaults">
+<div class="settings-section" data-group="operations" id="sec-defaults">
   <div class="settings-header"><span class="settings-header-icon">⚙️</span><h3>DEFAULT VALUES</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -460,7 +455,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Email Templates -->
-<div class="settings-section" id="sec-templates">
+<div class="settings-section" data-group="operations" id="sec-templates">
   <div class="settings-header"><span class="settings-header-icon">📝</span><h3>EMAIL TEMPLATES</h3></div>
   <div class="settings-body" style="gap:0;">
     <div class="settings-row" style="padding-bottom:12px;">
@@ -512,7 +507,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Integrations -->
-<div class="settings-section" id="sec-integrations">
+<div class="settings-section" data-group="connections" id="sec-integrations">
   <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
   <div class="settings-body" id="integrations-list" style="gap:0;">
     <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
@@ -535,7 +530,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- SMS Phone Number -->
-<div class="settings-section" id="sec-phone">
+<div class="settings-section" data-group="connections" id="sec-phone">
   <div class="settings-header"><span class="settings-header-icon">📱</span><h3>SMS PHONE NUMBER</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -584,7 +579,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Preferences -->
-<div class="settings-section" id="sec-preferences">
+<div class="settings-section" data-group="account" id="sec-preferences">
   <div class="settings-header"><span class="settings-header-icon">🎨</span><h3>PREFERENCES</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -601,7 +596,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Import Data -->
-<div class="settings-section" id="sec-import">
+<div class="settings-section" data-group="account" id="sec-import">
   <div class="settings-header"><span class="settings-header-icon">📥</span><h3>IMPORT DATA</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -612,7 +607,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Privacy & Data -->
-<div class="settings-section" id="sec-privacy">
+<div class="settings-section" data-group="account" id="sec-privacy">
   <div class="settings-header"><span class="settings-header-icon">🔒</span><h3>PRIVACY & DATA</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -660,41 +655,33 @@ function toggleSidebar(){
   document.getElementById('sidebar-toggle').classList.toggle('visible');
 }
 
-/* ── Settings section nav ── */
+/* ── Settings tab-panel nav ── */
 (function() {
   var nav = document.getElementById('settingsNav');
   if (!nav) return;
-  var items = nav.querySelectorAll('.settings-nav-item');
+  var items    = nav.querySelectorAll('.settings-nav-item');
+  var sections = document.querySelectorAll('.settings-section');
 
-  // Click to scroll
+  var tabLabels = { profile: 'Profile', operations: 'Operations', connections: 'Connections', billing: 'Billing', account: 'Account' };
+
+  function switchTab(group) {
+    items.forEach(function(item) {
+      item.classList.toggle('active', item.dataset.group === group);
+    });
+    sections.forEach(function(sec) {
+      sec.hidden = sec.dataset.group !== group;
+    });
+    var sub = document.getElementById('settings-topbar-sub');
+    if (sub) sub.textContent = tabLabels[group] || group;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
   items.forEach(function(item) {
-    item.addEventListener('click', function() {
-      var target = document.getElementById(item.dataset.target);
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    item.addEventListener('click', function() { switchTab(item.dataset.group); });
   });
 
-  // Scroll spy — highlight the nav item for the section currently in view
-  var sections = Array.from(items).map(function(i) { return document.getElementById(i.dataset.target); }).filter(Boolean);
-  var ticking = false;
-  window.addEventListener('scroll', function() {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function() {
-      var scrollY = window.scrollY + 140;
-      var current = sections[0];
-      for (var i = 0; i < sections.length; i++) {
-        if (sections[i].offsetTop <= scrollY) current = sections[i];
-      }
-      items.forEach(function(item) {
-        item.classList.toggle('active', item.dataset.target === current.id);
-      });
-      // Keep active item visible in horizontal scroll
-      var active = nav.querySelector('.settings-nav-item.active');
-      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-      ticking = false;
-    });
-  });
+  // Activate the first tab on load
+  switchTab('profile');
 })();
 
 async function saveReviewLink(val) {
