@@ -377,8 +377,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div style="display:flex;gap:6px;align-items:center;" id="attach-chip-bar"></div>
       <div class="file-attach-bar" id="file-attach-bar"></div>
       <div class="var-chips" id="compose-var-chips">
-        <span class="var-chip" onclick="insertVar('compose-body','{firstName}')">{firstName}</span>
-        <span class="var-chip" onclick="insertVar('compose-body','{customerName}')">{customerName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{customerFirstName}')">{customerFirstName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{customerFullName}')">{customerFullName}</span>
         <span class="var-chip" onclick="insertVar('compose-body','{yourName}')">{yourName}</span>
         <span class="var-chip" onclick="insertVar('compose-body','{yourFirstName}')">{yourFirstName}</span>
         <span class="var-chip" onclick="insertVar('compose-body','{companyName}')">{companyName}</span>
@@ -1867,6 +1867,8 @@ function applyTemplate(t) {
   function sub(s) {
     return (s || '')
       .replace(/\{firstName\}/g, firstName)
+      .replace(/\{customerFirstName\}/g, firstName)
+      .replace(/\{customerFullName\}/g, name)
       .replace(/\{lastName\}/g, lastName)
       .replace(/\{company\}/g, c.customerName || '')
       .replace(/\{amount\}/g, '')

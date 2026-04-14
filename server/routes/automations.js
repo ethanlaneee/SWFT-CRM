@@ -156,7 +156,9 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
       const vars = {
         customer_name: customer.name || "",
         customerName: customer.name || "",
+        customerFullName: customer.name || "",         // alias — clear label
         firstName: (customer.name || "").split(" ")[0] || "",
+        customerFirstName: (customer.name || "").split(" ")[0] || "", // alias — clear label
         company_name: companyName,
         companyName: companyName,
         your_name: senderFullName,

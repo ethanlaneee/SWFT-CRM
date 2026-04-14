@@ -534,6 +534,8 @@ function buildReviewRequest(customer, job, companyName, reviewLink, config) {
   if (config.reviewMessage) {
     return config.reviewMessage
       .replace("{firstName}", firstName(customer))
+      .replace("{customerFirstName}", firstName(customer))   // new clear alias
+      .replace("{customerFullName}", customer.name || "")    // new clear alias
       .replace("{service}", job.service || job.title || "your project")
       .replace("{address}", job.address || "your property")
       .replace("{reviewLink}", reviewLink || "")
