@@ -74,9 +74,10 @@ router.get("/job/:jobId", async (req, res, next) => {
     }
     const snap = await db.collection("jobPhotos")
       .where("jobId", "==", req.params.jobId)
-      .orderBy("createdAt", "desc")
       .get();
-    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    photos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    res.json(photos);
   } catch (err) { next(err); }
 });
 
