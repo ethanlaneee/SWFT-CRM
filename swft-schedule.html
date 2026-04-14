@@ -836,7 +836,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
           colHtml += '<div class="wk-buffer" style="top:' + bufTop + 'px;height:' + Math.min(bufHt, topPx) + 'px;"></div>';
           colHtml += '<div class="wk-buffer" style="top:' + (topPx+htPx) + 'px;height:' + bufHt + 'px;"></div>';
         }
-        colHtml += '<div class="wk-evt ' + typ + '" style="top:' + topPx + 'px;height:' + htPx + 'px;" onclick="deleteEvtPrompt(\'' + ev.id + '\')">'
+        colHtml += '<div class="wk-evt ' + typ + '" style="top:' + topPx + 'px;height:' + htPx + 'px;" onclick="openEvtEditModal(\'' + ev.id + '\')">'
           + '<div class="wk-block-title">' + (ev.title||'Event') + '</div>'
           + '<div class="wk-block-time">' + fmtT + (ev.buffer?' · '+ev.buffer+'m buffer':'') + '</div>'
           + '</div>';
@@ -888,8 +888,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   /* ── Event modal (lightweight calendar events) ── */
   var _evtType = 'meeting';
+  var _editEvtId = null;
+
+  function _setEvtModalMode(isEdit) {
+    document.querySelector('.evt-modal-title').textContent = isEdit ? 'Edit Event' : 'New Event';
+    document.getElementById('evt-save-btn').textContent = isEdit ? 'Save Changes' : 'Add Event';
+    var delBtn = document.getElementById('evt-delete-btn');
+    if (delBtn) delBtn.style.display = isEdit ? '' : 'none';
+  }
 
   function openEvtModal(dateStr, timeStr) {
+    _editEvtId = null;
     document.getElementById('evt-title').value = '';
     document.getElementById('evt-date').value = dateStr || '';
     document.getElementById('evt-start').value = timeStr || '09:00';
@@ -898,17 +907,53 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('evt-buf-toggle').classList.remove('on');
     document.getElementById('evt-buf-opts').style.display = 'none';
     document.getElementById('evt-buf-mins').value = '30';
-    // Reset type
     _evtType = 'meeting';
     document.querySelectorAll('.evt-type-btn').forEach(function(b) { b.classList.remove('active'); });
     var defBtn = document.querySelector('.evt-type-btn[data-type="meeting"]');
     if (defBtn) defBtn.classList.add('active');
+    _setEvtModalMode(false);
+    document.getElementById('evt-overlay').classList.add('open');
+    setTimeout(function() { document.getElementById('evt-title').focus(); }, 80);
+  }
+
+  function openEvtEditModal(id) {
+    var ev = _schedEvents.find(function(e) { return e.id === id; });
+    if (!ev) return;
+    _editEvtId = id;
+    document.getElementById('evt-title').value = ev.title || '';
+    document.getElementById('evt-date').value = ev.date || '';
+    document.getElementById('evt-start').value = ev.startTime || '09:00';
+    var durMins = ev.durationMins || 60;
+    // Find closest matching duration option
+    var durEl = document.getElementById('evt-dur');
+    var opts = Array.from(durEl.options).map(function(o) { return parseInt(o.value, 10); });
+    var closest = opts.reduce(function(a, b) { return Math.abs(b - durMins) < Math.abs(a - durMins) ? b : a; });
+    durEl.value = closest;
+    document.getElementById('evt-notes').value = ev.notes || '';
+    var buffer = ev.buffer || 0;
+    var bufToggle = document.getElementById('evt-buf-toggle');
+    var bufOpts = document.getElementById('evt-buf-opts');
+    if (buffer > 0) {
+      bufToggle.classList.add('on');
+      bufOpts.style.display = 'block';
+      document.getElementById('evt-buf-mins').value = buffer;
+    } else {
+      bufToggle.classList.remove('on');
+      bufOpts.style.display = 'none';
+      document.getElementById('evt-buf-mins').value = '30';
+    }
+    _evtType = ev.type || 'meeting';
+    document.querySelectorAll('.evt-type-btn').forEach(function(b) { b.classList.remove('active'); });
+    var typeBtn = document.querySelector('.evt-type-btn[data-type="' + _evtType + '"]');
+    if (typeBtn) typeBtn.classList.add('active');
+    _setEvtModalMode(true);
     document.getElementById('evt-overlay').classList.add('open');
     setTimeout(function() { document.getElementById('evt-title').focus(); }, 80);
   }
 
   function closeEvtModal() {
     document.getElementById('evt-overlay').classList.remove('open');
+    _editEvtId = null;
   }
 
   function setEvtType(type, btn) {
@@ -933,24 +978,31 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     var notes = document.getElementById('evt-notes').value.trim();
     var bufOn = document.getElementById('evt-buf-toggle').classList.contains('on');
     var buffer = bufOn ? parseInt(document.getElementById('evt-buf-mins').value, 10) : 0;
-    // Compute endTime
     var startParts = startTime.split(':');
     var endTotalMin = parseInt(startParts[0],10)*60 + parseInt(startParts[1]||'0',10) + durMins;
     var endTime = String(Math.floor(endTotalMin/60)).padStart(2,'0') + ':' + String(endTotalMin%60).padStart(2,'0');
+    var payload = { title, type: _evtType, date, startTime, endTime, durationMins: durMins, buffer, notes };
     try {
-      var saved = await API.schedule.create({ title, type: _evtType, date, startTime, endTime, durationMins: durMins, buffer, notes });
-      _schedEvents.push(saved);
+      if (_editEvtId) {
+        var updated = await API.schedule.update(_editEvtId, payload);
+        var idx = _schedEvents.findIndex(function(e) { return e.id === _editEvtId; });
+        if (idx >= 0) _schedEvents[idx] = Object.assign(_schedEvents[idx], payload);
+      } else {
+        var saved = await API.schedule.create(payload);
+        _schedEvents.push(saved);
+      }
       closeEvtModal();
       renderWeekView();
     } catch(e) { alert('Error saving event: ' + e.message); }
   }
 
   async function deleteEvtPrompt(id) {
-    var ok = await swftConfirm('Remove this event?', 'DELETE EVENT', '🗑️');
+    var ok = await swftConfirm('Delete this event?', 'This cannot be undone.', { danger: true, confirmLabel: 'Delete' });
     if (!ok) return;
     try {
       await API.schedule.delete(id);
       _schedEvents = _schedEvents.filter(function(e) { return e.id !== id; });
+      closeEvtModal();
       renderWeekView();
     } catch(e) { alert('Error: ' + e.message); }
   }
@@ -1661,9 +1713,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="evt-field">
       <input class="evt-input" id="evt-notes" type="text" placeholder="Notes (optional)"/>
     </div>
-    <div class="evt-actions">
+    <div class="evt-actions" style="display:flex;gap:8px;align-items:center;">
+      <button class="evt-btn cancel" id="evt-delete-btn" style="display:none;color:var(--red);border-color:rgba(255,82,82,0.3);" onclick="deleteEvtPrompt(_editEvtId)" type="button">Delete</button>
+      <div style="flex:1;"></div>
       <button class="evt-btn cancel" onclick="closeEvtModal()">Cancel</button>
-      <button class="evt-btn save" onclick="saveEvt()">Add Event</button>
+      <button class="evt-btn save" id="evt-save-btn" onclick="saveEvt()">Add Event</button>
     </div>
   </div>
 </div>
