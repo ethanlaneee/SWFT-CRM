@@ -550,18 +550,29 @@ async function loadQuotes() {
       maxNum++;
     });
     window._nextQuoteNum = maxNum + 1;
-    // Update quote stats
-    var sent = quotes.filter(function(q){return q.status==='sent';}).length;
-    var approved = quotes.filter(function(q){return q.status==='approved';}).length;
-    var waiting = quotes.filter(function(q){return q.status==='sent'||q.status==='draft';}).length;
-    var declined = quotes.filter(function(q){return q.status==='declined';}).length;
-    var totalVal = quotes.reduce(function(s,q){return s+(q.total||0);},0);
-    ['q-stat-sent','q-stat-approved','q-stat-waiting','q-stat-declined'].forEach(function(id,i){
-      var el=document.getElementById(id);if(!el)return;
-      var val=[sent,approved,waiting,declined][i];
-      if(window.swftCountUp){window.swftCountUp(el,String(val));}else{el.textContent=val;}
-    });
-    if(document.getElementById('q-stat-sent-sub'))document.getElementById('q-stat-sent-sub').textContent='$'+totalVal.toLocaleString()+' total value';
+    // ── Quote stats ──
+    function parseAmt(v){if(typeof v==='number')return v;if(typeof v==='string')return parseFloat(v.replace(/[$,]/g,''))||0;return 0;}
+    var now=new Date(), mStart=new Date(now.getFullYear(),now.getMonth(),1);
+    var qSentMTD   = quotes.filter(function(q){return q.status==='sent'&&new Date(q.createdAt)>=mStart;});
+    var qApproved  = quotes.filter(function(q){return q.status==='approved';});
+    var qWaiting   = quotes.filter(function(q){return q.status==='sent';});
+    var qDeclined  = quotes.filter(function(q){return q.status==='declined';});
+    var sentMTDVal = qSentMTD.reduce(function(s,q){return s+parseAmt(q.total);},0);
+    var approvedVal= qApproved.reduce(function(s,q){return s+parseAmt(q.total);},0);
+    var waitingVal = qWaiting.reduce(function(s,q){return s+parseAmt(q.total);},0);
+    var declinedVal= qDeclined.reduce(function(s,q){return s+parseAmt(q.total);},0);
+    var eligible   = qApproved.length + qWaiting.length + qDeclined.length;
+    var closeRate  = eligible>0?Math.round((qApproved.length/eligible)*100):0;
+    var setStatEl  = function(id,val){var el=document.getElementById(id);if(!el)return;if(window.swftCountUp){window.swftCountUp(el,String(val));}else{el.textContent=val;}};
+    setStatEl('q-stat-sent',     qSentMTD.length);
+    setStatEl('q-stat-approved', qApproved.length);
+    setStatEl('q-stat-waiting',  qWaiting.length);
+    setStatEl('q-stat-declined', qDeclined.length);
+    var sub=function(id,t){var el=document.getElementById(id);if(el)el.textContent=t;};
+    sub('q-stat-sent-sub',     '$'+sentMTDVal.toLocaleString()+' total value');
+    sub('q-stat-approved-sub', closeRate+'% close rate');
+    sub('q-stat-waiting-sub',  '$'+waitingVal.toLocaleString()+' pipeline');
+    sub('q-stat-declined-sub', '$'+declinedVal.toLocaleString()+' lost');
   } catch(e) { console.error('loadQuotes error:', e); }
 }
 
@@ -599,22 +610,26 @@ async function loadInvoices() {
       tbody.appendChild(row);
     });
   window._nextInvNum = invoices.length + 1;
-    // Update invoice stats
-    var paid = invoices.filter(function(i){return i.status==='paid';});
-    var paidTotal = paid.reduce(function(s,i){return s+(i.total||0);},0);
-    var open = invoices.filter(function(i){return i.status==='open';});
-    var openTotal = open.reduce(function(s,i){return s+(i.total||0);},0);
-    var overdue = invoices.filter(function(i){return i.status==='overdue';});
-    var overdueTotal = overdue.reduce(function(s,i){return s+(i.total||0);},0);
-    var allTotal = invoices.reduce(function(s,i){return s+(i.total||0);},0);
-    [['inv-stat-collected','$'+paidTotal.toLocaleString()],['inv-stat-outstanding','$'+openTotal.toLocaleString()],['inv-stat-overdue','$'+overdueTotal.toLocaleString()],['inv-stat-total','$'+allTotal.toLocaleString()]].forEach(function(pair){
-      var el=document.getElementById(pair[0]);if(!el)return;
-      if(window.swftCountUp){window.swftCountUp(el,pair[1]);}else{el.textContent=pair[1];}
-    });
-    if(document.getElementById('inv-stat-collected-sub'))document.getElementById('inv-stat-collected-sub').textContent=paid.length+' invoices paid';
-    if(document.getElementById('inv-stat-outstanding-sub'))document.getElementById('inv-stat-outstanding-sub').textContent=open.length+' outstanding';
-    if(document.getElementById('inv-stat-overdue-sub'))document.getElementById('inv-stat-overdue-sub').textContent=overdue.length+' past due';
-    if(document.getElementById('inv-stat-total-sub'))document.getElementById('inv-stat-total-sub').textContent=invoices.length+' invoices';
+    // ── Invoice stats ──
+    function parseInvAmt(v){if(typeof v==='number')return v;if(typeof v==='string')return parseFloat(v.replace(/[$,]/g,''))||0;return 0;}
+    var iNow=new Date(), iMStart=new Date(iNow.getFullYear(),iNow.getMonth(),1);
+    var iPaidMTD  = invoices.filter(function(i){return i.status==='paid'&&new Date(i.createdAt)>=iMStart;});
+    var iOpen     = invoices.filter(function(i){return i.status==='open';});
+    var iOverdue  = invoices.filter(function(i){return i.status==='overdue';});
+    var iPaidMTDTotal  = iPaidMTD.reduce(function(s,i){return s+parseInvAmt(i.total);},0);
+    var iOpenTotal     = iOpen.reduce(function(s,i){return s+parseInvAmt(i.total);},0);
+    var iOverdueTotal  = iOverdue.reduce(function(s,i){return s+parseInvAmt(i.total);},0);
+    var iAllTotal      = invoices.reduce(function(s,i){return s+parseInvAmt(i.total);},0);
+    var setInvEl=function(id,val){var el=document.getElementById(id);if(!el)return;if(window.swftCountUp){window.swftCountUp(el,val);}else{el.textContent=val;}};
+    setInvEl('inv-stat-collected',  '$'+iPaidMTDTotal.toLocaleString());
+    setInvEl('inv-stat-outstanding','$'+iOpenTotal.toLocaleString());
+    setInvEl('inv-stat-overdue',    '$'+iOverdueTotal.toLocaleString());
+    setInvEl('inv-stat-total',      '$'+iAllTotal.toLocaleString());
+    var isub=function(id,t){var el=document.getElementById(id);if(el)el.textContent=t;};
+    isub('inv-stat-collected-sub',  iPaidMTD.length+' invoices paid');
+    isub('inv-stat-outstanding-sub',iOpen.length+' open');
+    isub('inv-stat-overdue-sub',    iOverdue.length+' past due');
+    isub('inv-stat-total-sub',      invoices.length+' invoices');
   } catch(e) { console.error('loadInvoices error:', e); }
 }
 
