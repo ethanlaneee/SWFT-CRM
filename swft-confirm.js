@@ -138,12 +138,35 @@
 
   let _confirmResolve = null;
 
-  window.swftConfirm = function (msg, title, icon, actionLabel) {
+  // Supports two call signatures:
+  //   New: swftConfirm(title, message, { danger, confirmLabel, cancelLabel })
+  //   Old: swftConfirm(message, title, icon, actionLabel)
+  // Detected by whether the 3rd argument is a plain object.
+  window.swftConfirm = function (arg1, arg2, arg3, arg4) {
+    var title, msg, icon, actionLabel, danger;
+    if (arg3 !== null && typeof arg3 === 'object') {
+      // New signature: (title, message, opts)
+      title       = arg1;
+      msg         = arg2;
+      danger      = !!arg3.danger;
+      actionLabel = arg3.confirmLabel || (danger ? 'Delete' : 'Confirm');
+      icon        = danger ? '🗑️' : '✓';
+    } else {
+      // Old signature: (message, title, icon, actionLabel)
+      msg         = arg1;
+      title       = arg2;
+      icon        = arg3;
+      actionLabel = arg4;
+      danger      = true; // old calls are always destructive
+    }
     document.getElementById("swft-confirm-icon").textContent = icon || "🗑️";
     document.getElementById("swft-confirm-title").textContent = title || "DELETE ITEM";
     document.getElementById("swft-confirm-msg").innerHTML = msg;
     var actionBtn = document.getElementById("swft-confirm-action-btn");
-    if (actionBtn) actionBtn.textContent = actionLabel || title || "Delete";
+    if (actionBtn) {
+      actionBtn.textContent = actionLabel || title || "Delete";
+      actionBtn.className = 'swft-confirm-btn ' + (danger ? 'danger' : 'confirm');
+    }
     confirmOverlay.classList.add("open");
     return new Promise((resolve) => { _confirmResolve = resolve; });
   };
