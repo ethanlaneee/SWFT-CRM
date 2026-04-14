@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { generateEstimate } = require("../ai/estimator-agent");
+const { convKey } = require("../ai/auto-reply");
 
 // ── Firestore path helper ──
 function agentsRef(orgId) {
@@ -9,14 +10,6 @@ function agentsRef(orgId) {
 
 // Default configs for each agent type
 const DEFAULTS = {
-  receptionist: {
-    enabled: false,
-    businessHours: "24/7",
-    channels: "voice_sms",
-    escalateRule: "if_confused",
-    tone: "friendly_professional",
-    greeting: `Hi, thanks for calling! I'm the SWFT assistant. I can help you get a free estimate or answer questions. What are you looking for today?`,
-  },
   estimator: {
     enabled: false,
     inputTypes: "photos_text",
@@ -24,18 +17,6 @@ const DEFAULTS = {
     basePriceMax: 17,
     markupPct: 22,
     autoSend: false,
-  },
-  followup: {
-    enabled: false,
-    unsignedQuoteEnabled: true,
-    overdueInvoiceEnabled: true,
-    reviewRequestEnabled: true,
-    unsignedQuoteDays: [1, 3, 7],
-    overdueInvoiceDays: [1, 3, 7],
-    reviewRequestDelay: 24,
-    reEngagementMonths: 12,
-    channel: "sms",
-    reviewMessage: `Hey {customerFirstName}! It was great working on your {service} at {address}. If you're happy with how it turned out, a quick Google review would mean a lot to us. {reviewLink}`,
   },
 };
 
@@ -109,20 +90,6 @@ router.post("/:agentId/toggle", async (req, res, next) => {
     } else {
       await ref.update({ enabled: newEnabled, updatedAt: Date.now() });
     }
-    // When follow-up agent is disabled, cancel all its pending followups
-    if (!newEnabled && agentId === "followup") {
-      const pendingSnap = await db.collection("followups")
-        .where("orgId", "==", req.orgId)
-        .where("status", "==", "pending")
-        .get();
-      if (!pendingSnap.empty) {
-        const batch = db.batch();
-        pendingSnap.docs.forEach(d => batch.update(d.ref, { status: "skipped", reason: "agent_disabled", updatedAt: Date.now() }));
-        await batch.commit();
-        console.log(`[agents] Cancelled ${pendingSnap.docs.length} pending followups for disabled follow-up agent`);
-      }
-    }
-
     res.json({ enabled: newEnabled });
   } catch (err) { next(err); }
 });
@@ -145,66 +112,10 @@ router.get("/:agentId/activity", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// ── Receptionist task endpoints ──
+// ── Automation stats ──
 
-// GET /api/agents/receptionist/tasks — list pending AI tasks for this org
-router.get("/receptionist/tasks", async (req, res, next) => {
-  try {
-    const snap = await db.collection("tasks")
-      .where("orgId", "==", req.orgId)
-      .where("status", "==", "pending")
-      .orderBy("createdAt", "desc")
-      .limit(50)
-      .get();
-    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-  } catch (err) { next(err); }
-});
-
-// PUT /api/agents/receptionist/tasks/:taskId — mark task done or dismissed
-router.put("/receptionist/tasks/:taskId", async (req, res, next) => {
-  try {
-    const { taskId } = req.params;
-    const { status } = req.body;
-    if (!["done", "dismissed"].includes(status)) {
-      return res.status(400).json({ error: "status must be 'done' or 'dismissed'" });
-    }
-    const ref = db.collection("tasks").doc(taskId);
-    const doc = await ref.get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
-      return res.status(404).json({ error: "Task not found" });
-    }
-    await ref.update({ status, updatedAt: Date.now() });
-    res.json({ ok: true });
-  } catch (err) { next(err); }
-});
-
-// GET /api/agents/receptionist/threads/:phone/mode — get manual mode state
-router.get("/receptionist/threads/:phone/mode", async (req, res, next) => {
-  try {
-    const phone = req.params.phone.replace(/\D/g, "");
-    const chatId = `${req.orgId}_${phone}`;
-    const doc = await db.collection("receptionistChats").doc(chatId).get();
-    const manualMode = doc.exists ? (doc.data().manualMode === true) : false;
-    res.json({ manualMode });
-  } catch (err) { next(err); }
-});
-
-// PUT /api/agents/receptionist/threads/:phone/mode — toggle manual/auto mode
-router.put("/receptionist/threads/:phone/mode", async (req, res, next) => {
-  try {
-    const phone = req.params.phone.replace(/\D/g, "");
-    const { manualMode } = req.body;
-    const chatId = `${req.orgId}_${phone}`;
-    await db.collection("receptionistChats").doc(chatId).set(
-      { manualMode: !!manualMode, modeUpdatedAt: Date.now() },
-      { merge: true }
-    );
-    res.json({ manualMode: !!manualMode });
-  } catch (err) { next(err); }
-});
-
-// GET /api/agents/followup/stats — follow-up agent stats (real data)
-router.get("/followup/stats", async (req, res, next) => {
+// GET /api/agents/automations/stats — scheduled-message stats for this org
+router.get("/automations/stats", async (req, res, next) => {
   try {
     const orgId = req.orgId;
     const monthStart = new Date();
@@ -212,68 +123,67 @@ router.get("/followup/stats", async (req, res, next) => {
     monthStart.setHours(0, 0, 0, 0);
     const monthMs = monthStart.getTime();
 
-    // Query by orgId + status only, filter sentAt in code (avoids composite index)
-    const sentSnap = await db.collection("followups")
+    const sentSnap = await db.collection("scheduledMessages")
       .where("orgId", "==", orgId)
       .where("status", "==", "sent")
       .get();
-    const sentDocs = sentSnap.docs.filter(d => (d.data().sentAt || 0) >= monthMs);
+    const sentMTD = sentSnap.docs.filter(d => (d.data().sentAt || 0) >= monthMs);
 
-    let invoicesCollected = 0;
-    let reviewsSent = 0;
-    let quoteFollowups = 0;
-
-    for (const doc of sentDocs) {
-      const f = doc.data();
-      if (f.type === "overdue_invoice") invoicesCollected += (f.total || 0);
-      if (f.type === "review_request") reviewsSent++;
-      if (f.type === "unsigned_quote") quoteFollowups++;
-    }
-
-    // Also count sent scheduled messages from automations this month
-    const schedSentSnap = await db.collection("scheduledMessages")
-      .where("orgId", "==", orgId)
-      .where("status", "==", "sent")
-      .get();
-    const schedSentMTD = schedSentSnap.docs.filter(d => (d.data().sentAt || 0) >= monthMs);
-    const automationsSentMTD = schedSentMTD.length;
-
-    // Break down by trigger type
-    let emailsSentMTD = 0;
-    let smsSentMTD = 0;
-    let quoteTriggers = 0;
-    let invoiceTriggers = 0;
-    for (const doc of schedSentMTD) {
+    let emailsSentMTD = 0, smsSentMTD = 0, quoteTriggers = 0, invoiceTriggers = 0;
+    for (const doc of sentMTD) {
       const d = doc.data();
       if (d.messageType === "email") emailsSentMTD++;
-      if (d.messageType === "sms") smsSentMTD++;
+      if (d.messageType === "sms")   smsSentMTD++;
       if (d.trigger === "quote_sent") quoteTriggers++;
       if (d.trigger === "invoice_sent" || d.trigger === "invoice_paid") invoiceTriggers++;
     }
 
-    // Count pending follow-ups
-    const pendingSnap = await db.collection("followups")
-      .where("orgId", "==", orgId)
-      .where("status", "==", "pending")
-      .get();
-
-    // Count pending scheduled messages
-    const schedPendingSnap = await db.collection("scheduledMessages")
+    const pendingSnap = await db.collection("scheduledMessages")
       .where("orgId", "==", orgId)
       .where("status", "==", "pending")
       .get();
 
     res.json({
-      invoicesCollected,
-      reviewsSent,
-      quoteFollowups,
-      pendingCount: pendingSnap.size + schedPendingSnap.size,
-      totalSentMTD: sentDocs.length + automationsSentMTD,
+      totalSentMTD: sentMTD.length,
       emailsSentMTD,
       smsSentMTD,
       quoteTriggers,
       invoiceTriggers,
+      pendingCount: pendingSnap.size,
     });
+  } catch (err) { next(err); }
+});
+
+// ── Conversation mode endpoints ──
+// Used by the Messages UI to toggle per-thread auto / manual mode.
+// Default is "auto" — AI replies to everything.  Switch to "manual" to
+// take over a specific conversation yourself.
+
+// GET /api/agents/conversations/:customerId/mode
+router.get("/conversations/:customerId/mode", async (req, res, next) => {
+  try {
+    const key = `${req.orgId}_${req.params.customerId}`;
+    const doc = await db.collection("conversationModes").doc(key).get();
+    const mode = doc.exists ? (doc.data().mode || "auto") : "auto";
+    res.json({ mode });
+  } catch (err) { next(err); }
+});
+
+// PUT /api/agents/conversations/:customerId/mode
+router.put("/conversations/:customerId/mode", async (req, res, next) => {
+  try {
+    const { mode } = req.body;
+    if (!["auto", "manual"].includes(mode)) {
+      return res.status(400).json({ error: "mode must be 'auto' or 'manual'" });
+    }
+    const key = `${req.orgId}_${req.params.customerId}`;
+    await db.collection("conversationModes").doc(key).set({
+      orgId: req.orgId,
+      customerId: req.params.customerId,
+      mode,
+      updatedAt: Date.now(),
+    }, { merge: true });
+    res.json({ mode });
   } catch (err) { next(err); }
 });
 

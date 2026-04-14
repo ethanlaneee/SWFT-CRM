@@ -1055,12 +1055,12 @@ function renderChat(){
   var addBtn=document.getElementById('add-contact-btn');
   if(addBtn) addBtn.style.display=c.customerId?'none':'';
 
-  // AI mode toggle — only for SMS threads
+  // AI mode toggle — show for all channels that have a known customer
   var aiModeBtn=document.getElementById('ai-mode-btn');
   if(aiModeBtn){
-    if(c.channel==='sms'){
+    if(c.customerId){
       aiModeBtn.style.display='';
-      loadAiThreadMode(c.phone||c.to);
+      loadAiThreadMode(c.customerId);
     } else {
       aiModeBtn.style.display='none';
     }
@@ -1109,8 +1109,8 @@ function renderChat(){
 
     var dir=m.direction==='inbound'?'inbound':'outbound';
     var aiBadge='';
-    if(m.isReceptionist) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(200,241,53,0.12);border:1px solid rgba(200,241,53,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#c8f135;letter-spacing:0.5px;">📞 AI RECEPTIONIST</div>';
-    if(m.isFollowup) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;">🔔 AI FOLLOW-UP</div>';
+    if(m.isAutoReply) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(200,241,53,0.12);border:1px solid rgba(200,241,53,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#c8f135;letter-spacing:0.5px;">AI AUTO</div>';
+    if(m.isAutomation) aiBadge='<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.2);border-radius:6px;padding:2px 7px;margin-bottom:4px;font-size:9.5px;font-weight:600;color:#f5a623;letter-spacing:0.5px;">AUTOMATION</div>';
     var replyBtn='';
     if(_activeContact&&_activeContact.channel==='email'){
       var msgId=m.rfcMessageId||m.gmailMessageId||'';
@@ -1891,20 +1891,21 @@ function escHtml2(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── AI Thread Mode (Automation / In Conversation) ──
-var _aiThreadManual = false;
+// ── AI Thread Mode (AI Auto / Manual) ──
+// Every conversation defaults to "auto" — the AI handles replies.
+// Toggle to "manual" when you want to take over the thread yourself.
+var _aiThreadMode = 'auto'; // 'auto' | 'manual'
 
-async function loadAiThreadMode(phone) {
+async function loadAiThreadMode(customerId) {
   try {
-    var digits = (phone||'').replace(/\D/g,'');
-    if(!digits) return;
+    if(!customerId) return;
     var token = await getAuthToken();
-    var res = await fetch('/api/agents/receptionist/threads/' + encodeURIComponent(digits) + '/mode', {
+    var res = await fetch('/api/agents/conversations/' + encodeURIComponent(customerId) + '/mode', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     if(res.ok){
       var data = await res.json();
-      _aiThreadManual = data.manualMode || false;
+      _aiThreadMode = data.mode || 'auto';
       updateAiModeBtn();
     }
   } catch(e) { /* ignore */ }
@@ -1913,30 +1914,30 @@ async function loadAiThreadMode(phone) {
 function updateAiModeBtn() {
   var btn = document.getElementById('ai-mode-btn');
   if(!btn) return;
-  if(_aiThreadManual){
-    btn.textContent = 'In Conversation';
+  if(_aiThreadMode === 'manual'){
+    btn.textContent = 'Manual';
     btn.classList.add('manual');
+    btn.title = 'You are handling this conversation. Click to let AI take over.';
   } else {
-    btn.textContent = 'Automation';
+    btn.textContent = 'AI Auto';
     btn.classList.remove('manual');
+    btn.title = 'AI is auto-replying. Click to take over manually.';
   }
 }
 
 async function toggleAiMode() {
-  if(!_activeContact || _activeContact.channel !== 'sms') return;
-  var phone = (_activeContact.phone || _activeContact.to || '').replace(/\D/g,'');
-  if(!phone) return;
-  var newManual = !_aiThreadManual;
+  if(!_activeContact || !_activeContact.customerId) return;
+  var newMode = _aiThreadMode === 'manual' ? 'auto' : 'manual';
   try {
     var token = await getAuthToken();
-    await fetch('/api/agents/receptionist/threads/' + encodeURIComponent(phone) + '/mode', {
+    await fetch('/api/agents/conversations/' + encodeURIComponent(_activeContact.customerId) + '/mode', {
       method: 'PUT',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ manualMode: newManual })
+      body: JSON.stringify({ mode: newMode })
     });
-    _aiThreadManual = newManual;
+    _aiThreadMode = newMode;
     updateAiModeBtn();
-    showToast(newManual ? 'In Conversation — AI paused for this thread' : 'Automation — AI is responding');
+    showToast(newMode === 'manual' ? 'Manual mode — AI paused for this thread' : 'AI Auto — AI is now responding');
   } catch(e) { showToast('Error updating mode'); }
 }
 </script>

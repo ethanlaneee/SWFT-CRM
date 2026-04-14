@@ -158,14 +158,16 @@ const API = {
     clearHistory: ()        => apiFetch("/api/ai/history", { method: "DELETE" }),
   },
 
-  // ── AI Agents (Receptionist, Estimator, Follow-up) ──
+  // ── AI Agents ──
   agents: {
     list:     ()           => apiFetch("/api/agents"),
     get:      (id)         => apiFetch(`/api/agents/${id}`),
     update:   (id, data)   => apiFetch(`/api/agents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     toggle:   (id)         => apiFetch(`/api/agents/${id}/toggle`, { method: "POST", body: JSON.stringify({}) }),
     activity: (id)         => apiFetch(`/api/agents/${id}/activity`),
-    followupStats: ()      => apiFetch("/api/agents/followup/stats"),
+    automationStats: ()    => apiFetch("/api/agents/automations/stats"),
+    conversationMode:    (customerId)       => apiFetch(`/api/agents/conversations/${encodeURIComponent(customerId)}/mode`),
+    setConversationMode: (customerId, mode) => apiFetch(`/api/agents/conversations/${encodeURIComponent(customerId)}/mode`, { method: "PUT", body: JSON.stringify({ mode }) }),
     estimate:  (data)      => apiFetch("/api/agents/estimator/estimate", { method: "POST", body: JSON.stringify(data) }),
   },
 

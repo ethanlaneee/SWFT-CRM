@@ -734,62 +734,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         });
       }
     } catch(e) { console.error('loadSchedule error:', e); }
-    // Load AI tasks into the same panel
-    loadAiTasks();
-  }
-
-  async function loadAiTasks() {
-    try {
-      var token = await getDashToken();
-      var res = await fetch('/api/agents/receptionist/tasks', {
-        headers: { Authorization: 'Bearer ' + token }
-      });
-      if (!res.ok) return;
-      var tasks = await res.json();
-      var section = document.getElementById('ai-tasks-section');
-      var list = document.getElementById('ai-tasks-list');
-      var badge = document.getElementById('ai-tasks-badge');
-      if (!section || !list) return;
-
-      if (!tasks.length) {
-        section.style.display = 'none';
-        if (badge) badge.style.display = 'none';
-        return;
-      }
-
-      section.style.display = '';
-      if (badge) { badge.textContent = tasks.length + ' task' + (tasks.length !== 1 ? 's' : ''); badge.style.display = ''; }
-
-      var TASK_META = {
-        QUOTE: { label: 'Quote Request', color: '#c8f135', bg: 'rgba(200,241,53,0.08)' },
-        ESTIMATE: { label: 'On-Site Estimate', color: '#4d9fff', bg: 'rgba(77,159,255,0.08)' },
-        CALL: { label: 'Follow-Up Call', color: '#f5a623', bg: 'rgba(245,166,35,0.08)' },
-        PAYMENT: { label: 'Payment Ready', color: '#c8f135', bg: 'rgba(200,241,53,0.08)' },
-      };
-
-      list.innerHTML = tasks.map(function(t) {
-        var m = TASK_META[t.type] || { label: t.type, color: 'var(--gray)', bg: 'var(--surface2)' };
-        var ago = t.createdAt ? timeAgo(t.createdAt) : '';
-        var name = t.customerName || t.phone || 'Unknown';
-        return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);transition:background 0.12s;" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">' +
-          '<div style="width:8px;height:8px;border-radius:50%;background:' + m.color + ';flex-shrink:0;margin-top:5px;box-shadow:0 0 5px ' + m.color + '40;"></div>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">' +
-              '<span style="font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:' + m.bg + ';color:' + m.color + ';letter-spacing:0.3px;">' + m.label + '</span>' +
-              '<span style="font-size:11px;color:var(--white);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(name) + '</span>' +
-            '</div>' +
-            '<div style="font-size:11.5px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(t.details || '') + '</div>' +
-          '</div>' +
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">' +
-            '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9.5px;color:var(--gray2);">' + ago + '</span>' +
-            '<div style="display:flex;gap:4px;">' +
-              '<button onclick="dismissAiTask(\'' + t.id + '\',\'done\')" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);cursor:pointer;font-family:\'DM Sans\',sans-serif;font-weight:600;">Done</button>' +
-              '<button onclick="dismissAiTask(\'' + t.id + '\',\'dismissed\')" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;font-family:\'DM Sans\',sans-serif;">Skip</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    } catch(e) { console.error('loadAiTasks error:', e); }
   }
 
   function escHtml(str) {
@@ -802,18 +746,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
     if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
     return Math.floor(diff/86400000) + 'd ago';
-  }
-
-  async function dismissAiTask(taskId, status) {
-    try {
-      var token = await getDashToken();
-      await fetch('/api/agents/receptionist/tasks/' + taskId, {
-        method: 'PUT',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: status })
-      });
-      loadAiTasks();
-    } catch(e) { showToast('Could not update task'); }
   }
 
 
@@ -1004,19 +936,19 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     // ── Load Automations stats strip ──
     try {
-      const followupStats = await API.agents.followupStats().catch(() => null);
-      if (followupStats) {
+      const stats = await API.agents.automationStats().catch(() => null);
+      if (stats) {
         const strip = document.getElementById('agent-strip');
         const statsEl = document.getElementById('agent-strip-stats');
         strip.style.display = 'flex';
-        const fSent = followupStats.totalSentMTD || 0;
-        const emails = followupStats.emailsSentMTD || 0;
-        const sms = followupStats.smsSentMTD || 0;
-        const quotes = followupStats.quoteTriggers || 0;
-        const invoices = followupStats.invoiceTriggers || 0;
-        const pending = followupStats.pendingCount || 0;
+        const sent = stats.totalSentMTD || 0;
+        const emails = stats.emailsSentMTD || 0;
+        const sms = stats.smsSentMTD || 0;
+        const quotes = stats.quoteTriggers || 0;
+        const invoices = stats.invoiceTriggers || 0;
+        const pending = stats.pendingCount || 0;
         let html = '';
-        html += `<span style="font-size:12px;color:var(--white);"><strong>${fSent}</strong> <span style="color:var(--gray);">messages sent MTD</span></span>`;
+        html += `<span style="font-size:12px;color:var(--white);"><strong>${sent}</strong> <span style="color:var(--gray);">messages sent MTD</span></span>`;
         if (emails > 0) html += `<span style="font-size:12px;color:var(--white);"><strong>${emails}</strong> <span style="color:var(--gray);">emails</span></span>`;
         if (sms > 0) html += `<span style="font-size:12px;color:var(--white);"><strong>${sms}</strong> <span style="color:var(--gray);">SMS</span></span>`;
         if (quotes > 0) html += `<span style="font-size:12px;color:var(--white);"><strong>${quotes}</strong> <span style="color:var(--gray);">quote follow-ups</span></span>`;

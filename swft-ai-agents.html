@@ -180,10 +180,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <!-- Stat Strip -->
 <div class="stat-strip">
-  <div class="stat-card c-green"><div class="stat-label">Follow-ups sent MTD</div><div class="stat-value" id="stat-sent">0</div><div class="stat-sub" id="stat-sent-sub">this month</div></div>
+  <div class="stat-card c-green"><div class="stat-label">Automations sent MTD</div><div class="stat-value" id="stat-sent">0</div><div class="stat-sub" id="stat-sent-sub">this month</div></div>
   <div class="stat-card c-blue"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">0</div><div class="stat-sub">scheduled to send</div></div>
-  <div class="stat-card c-amber"><div class="stat-label">Invoices collected</div><div class="stat-value" id="stat-invoices">$0</div><div class="stat-sub">via follow-up</div></div>
-  <div class="stat-card c-green"><div class="stat-label">Reviews requested</div><div class="stat-value" id="stat-reviews">0</div><div class="stat-sub" id="stat-reviews-sub">this month</div></div>
+  <div class="stat-card c-amber"><div class="stat-label">Quote follow-ups</div><div class="stat-value" id="stat-quotes">0</div><div class="stat-sub">this month</div></div>
+  <div class="stat-card c-green"><div class="stat-label">Invoice follow-ups</div><div class="stat-value" id="stat-invoices">0</div><div class="stat-sub">this month</div></div>
 </div>
 
 <!-- Toolbar -->
@@ -245,7 +245,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   // ── Automations State ──
   let _automations = [];
   let _filter = 'all';
-  let _followupStats = {};
 
   const TRIGGERS = {
     quote_sent: 'Quote sent',
@@ -317,22 +316,22 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   async function loadStats() {
     try {
-      _followupStats = await API.agents.followupStats();
-      document.getElementById('stat-sent').textContent = _followupStats.totalSentMTD || 0;
-      document.getElementById('stat-pending').textContent = _followupStats.pendingCount || 0;
-      document.getElementById('stat-invoices').textContent = '$' + (_followupStats.invoicesCollected || 0).toLocaleString();
-      document.getElementById('stat-reviews').textContent = _followupStats.reviewsSent || 0;
+      const stats = await API.agents.automationStats();
+      document.getElementById('stat-sent').textContent = stats.totalSentMTD || 0;
+      document.getElementById('stat-pending').textContent = stats.pendingCount || 0;
+      document.getElementById('stat-quotes').textContent = stats.quoteTriggers || 0;
+      document.getElementById('stat-invoices').textContent = stats.invoiceTriggers || 0;
     } catch (e) { console.error('Failed to load stats:', e); }
   }
 
   async function loadActivity() {
     try {
-      const activity = await API.agents.activity('followup');
+      const activity = await API.agents.activity('automation');
       const container = document.getElementById('activity-list');
       if (!activity.length) return;
       container.innerHTML = activity.slice(0, 15).map(a => {
-        const colors = { review_request: 'var(--green)', overdue_invoice: 'var(--amber)', unsigned_quote: 'var(--blue)', automation_send: 'var(--green)' };
-        const labels = { review_request: 'Review request sent', overdue_invoice: 'Invoice reminder', unsigned_quote: 'Quote follow-up', automation_send: 'Automation sent' };
+        const colors = { automation_send: 'var(--green)', quote_sent: 'var(--blue)', invoice_sent: 'var(--amber)' };
+        const labels = { automation_send: 'Automation sent', quote_sent: 'Quote follow-up', invoice_sent: 'Invoice follow-up' };
         const color = colors[a.type] || 'var(--gray)';
         const label = labels[a.type] || a.type;
         const who = a.customerName ? ' to ' + a.customerName : '';
