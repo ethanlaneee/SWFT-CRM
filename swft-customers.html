@@ -895,22 +895,40 @@ function clearSelection() {
 }
 
 async function deleteSelected() {
-  var checked = document.querySelectorAll('.cust-row .row-cb:checked');
-  var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
-  if (!ids.length) return;
-  var label = ids.length + ' customer' + (ids.length !== 1 ? 's' : '');
-  var ok = await swftConfirm('Permanently delete ' + label + '?', 'DELETE CUSTOMERS', '🗑️');
-  if (!ok) return;
-  showToast('Deleting ' + label + '...');
-  var failed = 0;
-  await Promise.all(ids.map(async function(id) {
-    try { await API.customers.delete(id); } catch(e) { console.error('Delete failed for', id, e); failed++; }
-  }));
-  clearSelection();
-  await loadCustomers();
-  showToast(failed === 0
-    ? 'Deleted ' + label
-    : (ids.length - failed) + ' deleted, ' + failed + ' failed');
+  try {
+    var checked = document.querySelectorAll('.cust-row .row-cb:checked');
+    var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
+    console.log('[deleteSelected] ids:', ids);
+    if (!ids.length) { showToast('No customers selected'); return; }
+    var label = ids.length + ' customer' + (ids.length !== 1 ? 's' : '');
+    var ok = await swftConfirm('Permanently delete ' + label + '?', 'DELETE CUSTOMERS', '🗑️');
+    console.log('[deleteSelected] confirm result:', ok);
+    if (!ok) return;
+    showToast('Deleting ' + label + '...');
+    var failed = 0;
+    var firstError = null;
+    for (var i = 0; i < ids.length; i++) {
+      try {
+        console.log('[deleteSelected] deleting', ids[i]);
+        await API.customers.delete(ids[i]);
+        console.log('[deleteSelected] deleted', ids[i]);
+      } catch(e) {
+        console.error('[deleteSelected] failed for', ids[i], e);
+        failed++;
+        if (!firstError) firstError = e.message || String(e);
+      }
+    }
+    clearSelection();
+    await loadCustomers();
+    if (failed === 0) {
+      showToast('Deleted ' + label);
+    } else {
+      showToast('Failed: ' + (firstError || 'unknown error') + ' (' + (ids.length - failed) + '/' + ids.length + ' deleted)');
+    }
+  } catch(e) {
+    console.error('[deleteSelected] outer error:', e);
+    showToast('Error: ' + (e.message || String(e)));
+  }
 }
 
 // ── Render tags in the Notes drawer panel ──

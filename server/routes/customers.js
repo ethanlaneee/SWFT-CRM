@@ -76,12 +76,26 @@ router.put("/:id", async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
   try {
     const doc = await col().doc(req.params.id).get();
-    if (!doc.exists || doc.data().orgId !== req.orgId) {
+    if (!doc.exists) {
+      console.warn("[customers.delete] doc not found:", req.params.id);
       return res.status(404).json({ error: "Customer not found" });
     }
+    const data = doc.data();
+    // Allow delete if orgId matches OR legacy userId matches (pre-orgId customers)
+    const owns = data.orgId === req.orgId || data.userId === req.uid || data.orgId === req.uid;
+    if (!owns) {
+      console.warn("[customers.delete] permission denied:", {
+        docOrgId: data.orgId, docUserId: data.userId, reqOrgId: req.orgId, reqUid: req.uid,
+      });
+      return res.status(403).json({ error: "Not authorized to delete this customer" });
+    }
     await col().doc(req.params.id).delete();
+    console.log("[customers.delete] success:", req.params.id);
     res.json({ success: true });
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error("[customers.delete] error:", err);
+    next(err);
+  }
 });
 
 module.exports = router;
