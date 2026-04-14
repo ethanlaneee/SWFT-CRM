@@ -99,13 +99,26 @@ transition:border-color 0.15s;
 
 .sort-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid var(--border2); background:transparent; color:var(--gray); font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all 0.14s; margin-left:auto; }
 .sort-btn:hover { color:var(--white); border-color:var(--gray2); }
+/* ── BULK SELECT ── */
+.row-cb{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1.5px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;position:relative;flex-shrink:0;transition:all 0.12s;display:block;}
+.row-cb:checked{background:var(--green);border-color:var(--green);}
+.row-cb:checked::after{content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #0a0a0a;border-width:0 2px 2px 0;transform:rotate(45deg);}
+.row-cb:hover:not(:checked){border-color:var(--gray);}
+.cust-row.selected{background:rgba(200,241,53,0.04);}
+.bulk-bar{display:none;align-items:center;gap:12px;padding:9px 20px;background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.15);border-radius:10px;margin-bottom:4px;animation:sharpIn 0.2s ease both;}
+.bulk-bar.show{display:flex;}
+.bulk-count{font-size:12.5px;color:var(--green);font-weight:600;}
+.bulk-del-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1px solid rgba(255,82,82,0.35);background:rgba(255,82,82,0.08);color:#ff5252;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
+.bulk-del-btn:hover{background:rgba(255,82,82,0.16);border-color:#ff5252;}
+.bulk-clear-btn{margin-left:auto;font-size:11px;color:var(--gray);cursor:pointer;padding:4px 8px;border-radius:6px;transition:all 0.12s;}
+.bulk-clear-btn:hover{color:var(--white);background:var(--surface2);}
 
 /* ── CUSTOMER TABLE ── */
 .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
 
 .table-head {
 display:grid;
-grid-template-columns: 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
+grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
 padding:11px 20px;
 border-bottom:1px solid var(--border);
 background:var(--surface2);
@@ -124,7 +137,7 @@ user-select:none; transition:color 0.14s;
 
 .cust-row {
 display:grid;
-grid-template-columns: 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
+grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
 padding:13px 20px;
 border-bottom:1px solid var(--border);
 align-items:center;
@@ -535,9 +548,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
+<!-- Bulk action bar -->
+<div class="bulk-bar" id="bulk-bar">
+  <span class="bulk-count" id="bulk-count">0 selected</span>
+  <button class="bulk-del-btn" onclick="deleteSelected()">
+    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="2"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="2"/><path d="M10,11v6M14,11v6" stroke-width="2" stroke-linecap="round"/></svg>
+    Delete Selected
+  </button>
+  <span class="bulk-clear-btn" onclick="clearSelection()">Clear</span>
+</div>
+
 <!-- Table -->
 <div class="table-wrap">
   <div class="table-head">
+    <div class="th"><input type="checkbox" class="row-cb" id="select-all-cb" onclick="toggleSelectAll(this.checked)" title="Select all"/></div>
     <div class="th sort-active">Customer <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg></div>
     <div class="th">Address</div>
     <div class="th">Phone</div>
@@ -763,8 +787,10 @@ async function loadCustomers() {
       var row = document.createElement('div');
       row.className = 'cust-row';
       row.dataset.status = 'active';
-      row.onclick = function(){ openDrawer(cust.id); };
-      row.innerHTML = '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + esc(initials) + '</div><div><div class="cust-name">' + esc(cust.name||'') + '</div></div></div>' +
+      row.dataset.id = cust.id;
+      row.onclick = function(e){ if(e.target.classList.contains('row-cb')) return; openDrawer(cust.id); };
+      row.innerHTML = '<div onclick="event.stopPropagation();toggleRowSelect(\'' + cust.id + '\')"><input type="checkbox" class="row-cb" data-id="' + cust.id + '" onclick="event.stopPropagation();toggleRowSelect(\'' + cust.id + '\')"/></div>' +
+        '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + esc(initials) + '</div><div><div class="cust-name">' + esc(cust.name||'') + '</div></div></div>' +
         '<div class="cust-addr" style="font-size:12px;color:var(--gray);align-self:center;">' + esc(cust.address||'—') + '</div>' +
         '<div class="cust-phone">' + esc(cust.phone||'—') + '</div>' +
         '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(cust.email||'—') + '</div>' +
@@ -784,6 +810,72 @@ async function deleteCustById(id) {
     loadCustomers();
     showToast('Customer deleted');
   } catch(e) { showToast('Error: ' + e.message); }
+}
+
+// ── Bulk select ──
+function toggleRowSelect(id) {
+  var cb = document.querySelector('.row-cb[data-id="' + id + '"]');
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  var row = cb.closest('.cust-row');
+  if (row) row.classList.toggle('selected', cb.checked);
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('.cust-row .row-cb').forEach(function(cb) {
+    cb.checked = checked;
+    var row = cb.closest('.cust-row');
+    if (row) row.classList.toggle('selected', checked);
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  var checked = document.querySelectorAll('.cust-row .row-cb:checked');
+  var bar = document.getElementById('bulk-bar');
+  var countEl = document.getElementById('bulk-count');
+  var n = checked.length;
+  if (n > 0) {
+    bar.classList.add('show');
+    countEl.textContent = n + ' customer' + (n !== 1 ? 's' : '') + ' selected';
+  } else {
+    bar.classList.remove('show');
+  }
+  // Sync select-all checkbox state
+  var allCbs = document.querySelectorAll('.cust-row .row-cb');
+  var allCb = document.getElementById('select-all-cb');
+  if (allCb) allCb.checked = allCbs.length > 0 && n === allCbs.length;
+}
+
+function clearSelection() {
+  document.querySelectorAll('.cust-row .row-cb').forEach(function(cb) {
+    cb.checked = false;
+    var row = cb.closest('.cust-row');
+    if (row) row.classList.remove('selected');
+  });
+  var allCb = document.getElementById('select-all-cb');
+  if (allCb) allCb.checked = false;
+  document.getElementById('bulk-bar').classList.remove('show');
+}
+
+async function deleteSelected() {
+  var checked = document.querySelectorAll('.cust-row .row-cb:checked');
+  var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
+  if (!ids.length) return;
+  var ok = await swftConfirm('Delete ' + ids.length + ' customer' + (ids.length !== 1 ? 's' : '') + ' permanently?', 'DELETE CUSTOMERS', '🗑️');
+  if (!ok) return;
+  showToast('Deleting ' + ids.length + ' customer' + (ids.length !== 1 ? 's' : '') + '...');
+  var failed = 0;
+  await Promise.all(ids.map(async function(id) {
+    try { await API.customers.delete(id); }
+    catch(_) { failed++; }
+  }));
+  clearSelection();
+  await loadCustomers();
+  showToast(failed === 0
+    ? 'Deleted ' + ids.length + ' customer' + (ids.length !== 1 ? 's' : '')
+    : (ids.length - failed) + ' deleted, ' + failed + ' failed');
 }
 
 // ── Render tags in the Notes drawer panel ──
