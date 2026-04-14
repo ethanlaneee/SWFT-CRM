@@ -72,6 +72,9 @@
 .form-row select{cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7a7a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
 .form-row select option{background:var(--surface2);color:var(--white);}
 .var-hint{font-size:10px;color:var(--gray2);margin-top:2px;}
+.var-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+.var-chip{display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;}
+.var-chip:hover{background:rgba(200,241,53,0.15);border-color:rgba(200,241,53,0.35);}
 .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
 .tag-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--gray);cursor:pointer;transition:all 0.12s;user-select:none;}
 .tag-chip:hover{border-color:var(--green);color:var(--white);}
@@ -222,7 +225,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="form-row">
         <label>Message</label>
         <textarea id="bc-message" rows="6" placeholder="Hey {firstName}, we wanted to let you know about..."></textarea>
-        <span class="var-hint">Variables: {firstName}, {customerName}, {yourName}, {yourFirstName}, {companyName}</span>
+        <div class="var-chips">
+          <span class="var-chip" onclick="insertVar('bc-message','{firstName}')">{firstName}</span>
+          <span class="var-chip" onclick="insertVar('bc-message','{customerName}')">{customerName}</span>
+          <span class="var-chip" onclick="insertVar('bc-message','{yourName}')">{yourName}</span>
+          <span class="var-chip" onclick="insertVar('bc-message','{yourFirstName}')">{yourFirstName}</span>
+          <span class="var-chip" onclick="insertVar('bc-message','{companyName}')">{companyName}</span>
+        </div>
       </div>
 
       <div class="btn-actions">
@@ -285,6 +294,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script src="swft-account.js"></script>
 
 <script>
+function insertVar(id, v) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var s = el.selectionStart, e = el.selectionEnd;
+  el.value = el.value.slice(0, s) + v + el.value.slice(e);
+  el.selectionStart = el.selectionEnd = s + v.length;
+  el.focus();
+}
+
 // State
 var allCustomers = [];
 var allTags = [];

@@ -113,6 +113,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
 /* Compose bar */
 .compose-bar{padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;gap:8px;}
+.var-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.var-chip{display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;}
+.var-chip:hover{background:rgba(200,241,53,0.15);border-color:rgba(200,241,53,0.35);}
 .compose-subject-row{display:flex;gap:8px;}
 .compose-subject-row input{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;outline:none;transition:border-color 0.15s;}
 .compose-subject-row input:focus{border-color:var(--green);}
@@ -364,6 +367,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <div style="display:flex;gap:6px;align-items:center;" id="attach-chip-bar"></div>
       <div class="file-attach-bar" id="file-attach-bar"></div>
+      <div class="var-chips" id="compose-var-chips">
+        <span class="var-chip" onclick="insertVar('compose-body','{firstName}')">{firstName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{customerName}')">{customerName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{yourName}')">{yourName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{yourFirstName}')">{yourFirstName}</span>
+        <span class="var-chip" onclick="insertVar('compose-body','{companyName}')">{companyName}</span>
+      </div>
       <div class="compose-row">
         <div class="compose-input-wrap">
           <textarea id="compose-body" placeholder="Type a message..." rows="1" oninput="autoResize(this)"></textarea>
@@ -525,6 +535,15 @@ window.swftConfirm = function(title, message, opts = {}) {
     overlay.classList.add('open');
   });
 };
+
+function insertVar(id, v) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var s = el.selectionStart, e = el.selectionEnd;
+  el.value = el.value.slice(0, s) + v + el.value.slice(e);
+  el.selectionStart = el.selectionEnd = s + v.length;
+  el.focus();
+}
 
 // ── State ──
 var _channel = 'all';       // current channel filter
