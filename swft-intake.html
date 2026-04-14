@@ -155,12 +155,14 @@ html,body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-ser
 
       <div class="row-2">
         <div class="field">
-          <label class="field-label" for="f-phone">Phone Number</label>
-          <input class="field-input" id="f-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel"/>
+          <label class="field-label" for="f-phone">Phone Number <span class="req">*</span></label>
+          <input class="field-input" id="f-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel" required/>
+          <div class="field-error" id="err-phone">Please enter a phone number.</div>
         </div>
         <div class="field">
-          <label class="field-label" for="f-email">Email Address</label>
-          <input class="field-input" id="f-email" type="email" placeholder="jane@example.com" autocomplete="email"/>
+          <label class="field-label" for="f-email">Email Address <span class="req">*</span></label>
+          <input class="field-input" id="f-email" type="email" placeholder="jane@example.com" autocomplete="email" required/>
+          <div class="field-error" id="err-email">Please enter a valid email address.</div>
         </div>
       </div>
 
@@ -308,12 +310,11 @@ const uploadedPhotos = []; // array of { file, url, uploading }
         sel.appendChild(opt);
       });
     } else {
-      // No services configured — add a free-text fallback
-      sel.parentElement.innerHTML = `
-        <label class="field-label" for="f-service">Service Type <span class="req">*</span></label>
-        <input class="field-input" id="f-service" type="text" placeholder="Describe the service you need..." required/>
-        <div class="field-error" id="err-service">Please enter the service type.</div>
-      `;
+      // No services configured — add a generic option so the dropdown still works
+      const opt = document.createElement("option");
+      opt.value = "General Service";
+      opt.textContent = "General Service";
+      sel.appendChild(opt);
     }
 
     // Photo section
@@ -350,6 +351,8 @@ function updateEstimate() {
   const service = getSelectedService();
   const sqft = parseFloat(document.getElementById("f-sqft").value) || 0;
   const box = document.getElementById("estimate-box");
+  const valEl = document.getElementById("estimate-value");
+  const noteEl = box.querySelector(".estimate-note");
 
   if (!service || sqft <= 0) {
     box.classList.remove("show");
@@ -357,13 +360,14 @@ function updateEstimate() {
   }
 
   const svc = (formConfig.services || []).find(s => s.name === service);
-  if (!svc || !svc.ratePerSqft) {
-    box.classList.remove("show");
-    return;
+  if (svc && svc.ratePerSqft) {
+    const est = Math.round(sqft * svc.ratePerSqft * 100) / 100;
+    valEl.textContent = "$" + est.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    if (noteEl) noteEl.textContent = "Estimated based on " + sqft.toLocaleString() + " sq ft × $" + svc.ratePerSqft + "/sq ft. Final pricing confirmed by our team.";
+  } else {
+    valEl.textContent = "TBD";
+    if (noteEl) noteEl.textContent = "Our team will review your request and provide a quote shortly.";
   }
-
-  const est = Math.round(sqft * svc.ratePerSqft * 100) / 100;
-  document.getElementById("estimate-value").textContent = "$" + est.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   box.classList.add("show");
 }
 
@@ -445,6 +449,15 @@ function validateForm() {
   const name = document.getElementById("f-name").value.trim();
   setFieldError("f-name", "err-name", !name);
   if (!name) ok = false;
+
+  const phone = document.getElementById("f-phone").value.trim();
+  setFieldError("f-phone", "err-phone", !phone);
+  if (!phone) ok = false;
+
+  const email = document.getElementById("f-email").value.trim();
+  const emailOk = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  setFieldError("f-email", "err-email", !emailOk);
+  if (!emailOk) ok = false;
 
   const address = document.getElementById("f-address").value.trim();
   setFieldError("f-address", "err-address", !address);
