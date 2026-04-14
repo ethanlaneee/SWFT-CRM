@@ -237,6 +237,37 @@
 .topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
 .main.expanded .topbar { padding-left: 56px; }
 
+/* ── Schedule view tabs (billing-style pill) ── */
+.sched-view-pill{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:3px;gap:2px;}
+.sched-vtab{font-size:12px;font-weight:600;padding:6px 20px;border:none;background:transparent;color:var(--gray);cursor:pointer;border-radius:9px;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
+.sched-vtab.active{background:var(--green);color:#0a0a0a;}
+.sched-vtab:hover:not(.active){color:var(--white);background:var(--surface2);}
+
+/* ── Week time-block view ── */
+.wk-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.wk-range{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--white);}
+.wk-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both;}
+.wk-day-hdrs{display:grid;grid-template-columns:52px repeat(7,1fr);border-bottom:1px solid var(--border);background:var(--surface2);}
+.wk-gutter-hdr{border-right:1px solid var(--border);}
+.wk-day-hdr{padding:10px 0 8px;text-align:center;border-left:1px solid var(--border);}
+.wk-day-name{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
+.wk-day-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-top:2px;}
+.wk-day-hdr.today .wk-day-num{color:var(--green);}
+.wk-body-wrap{display:grid;grid-template-columns:52px repeat(7,1fr);overflow-y:auto;max-height:600px;}
+.wk-time-gutter{border-right:1px solid var(--border);}
+.wk-hour-lbl{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0 0;font-size:9px;color:var(--gray2);font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.wk-day-col{position:relative;border-left:1px solid var(--border);height:900px;}
+.wk-hour-line{position:absolute;left:0;right:0;border-top:1px solid rgba(255,255,255,0.04);pointer-events:none;}
+.wk-now-line{position:absolute;left:0;right:0;border-top:2px solid rgba(200,241,53,0.6);pointer-events:none;z-index:3;}
+.wk-now-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--green);}
+.wk-block{position:absolute;left:3px;right:3px;border-radius:7px;padding:5px 7px;cursor:pointer;overflow:hidden;transition:filter 0.12s;font-size:11px;line-height:1.35;z-index:1;}
+.wk-block:hover{filter:brightness(1.2);z-index:2;}
+.wk-block.green{background:rgba(200,241,53,0.14);border:1px solid rgba(200,241,53,0.28);color:var(--green);}
+.wk-block.blue{background:rgba(77,159,255,0.14);border:1px solid rgba(77,159,255,0.28);color:var(--blue);}
+.wk-block.amber{background:rgba(245,166,35,0.14);border:1px solid rgba(245,166,35,0.28);color:var(--amber);}
+.wk-block.gray{background:rgba(100,100,100,0.12);border:1px solid rgba(100,100,100,0.2);color:var(--gray);}
+.wk-block-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wk-block-time{font-size:9px;opacity:0.65;margin-top:2px;font-family:'JetBrains Mono',monospace;}
 
 </style>
 
@@ -329,6 +360,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   <div class="page-body">
 
+<!-- View tabs -->
+<div style="display:flex;justify-content:center;margin-bottom:18px;">
+  <div class="sched-view-pill">
+    <button class="sched-vtab active" onclick="switchSchedView('calendar',this)">Schedule</button>
+    <button class="sched-vtab" onclick="switchSchedView('timeblocks',this)">Time Blocks</button>
+  </div>
+</div>
+
+<!-- ═══ CALENDAR VIEW ═══ -->
+<div id="cal-view">
+
 <!-- Cal controls -->
 <div class="cal-header">
   <div class="cal-nav-btn" onclick="prevMonth()">
@@ -373,6 +415,35 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="cal-dow">Sat</div>
   </div>
   <div class="cal-grid" id="cal-grid"></div>
+</div>
+
+</div><!-- /#cal-view -->
+
+<!-- ═══ TIME BLOCKS VIEW ═══ -->
+<div id="timeblock-view" style="display:none">
+  <div class="wk-nav">
+    <div class="cal-nav-btn" onclick="prevWeek()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="wk-range" id="wk-range-label"></div>
+    <div class="cal-nav-btn" onclick="nextWeek()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <button class="cal-today-btn" onclick="goTodayWeek()">Today</button>
+  </div>
+  <div class="wk-wrap">
+    <div class="wk-day-hdrs" id="wk-day-hdrs"><div class="wk-gutter-hdr"></div></div>
+    <div class="wk-body-wrap">
+      <div class="wk-time-gutter" id="wk-time-gutter"></div>
+      <div class="wk-day-col" id="wk-col-0"></div>
+      <div class="wk-day-col" id="wk-col-1"></div>
+      <div class="wk-day-col" id="wk-col-2"></div>
+      <div class="wk-day-col" id="wk-col-3"></div>
+      <div class="wk-day-col" id="wk-col-4"></div>
+      <div class="wk-day-col" id="wk-col-5"></div>
+      <div class="wk-day-col" id="wk-col-6"></div>
+    </div>
+  </div>
 </div>
 
   </div>
@@ -585,12 +656,142 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script>
   /* ── Calendar Jobs Data ── */
   let calendarJobs = [];
+  let _allJobs = []; // full job objects for week view
+
+  /* ── View switching ── */
+  function switchSchedView(view, btn) {
+    document.querySelectorAll('.sched-vtab').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    if (view === 'calendar') {
+      document.getElementById('cal-view').style.display = '';
+      document.getElementById('timeblock-view').style.display = 'none';
+    } else {
+      document.getElementById('cal-view').style.display = 'none';
+      document.getElementById('timeblock-view').style.display = '';
+      renderWeekView();
+    }
+  }
+
+  /* ── Week view state ── */
+  var weekStart = (function() {
+    var d = new Date(); d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay()); // back to Sunday
+    return d;
+  })();
+
+  function parseDurationHours(str) {
+    if (!str) return 2;
+    var s = str.toLowerCase();
+    var hr = s.match(/(\d+\.?\d*)\s*h/);
+    if (hr) return parseFloat(hr[1]);
+    var mn = s.match(/(\d+)\s*min/);
+    if (mn) return parseFloat(mn[1]) / 60;
+    return 2;
+  }
+
+  function renderWeekView() {
+    var WK_START_HOUR = 6, WK_END_HOUR = 21, HOUR_HEIGHT = 60;
+    var DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var today = new Date(); today.setHours(0,0,0,0);
+    var now = new Date();
+
+    // Week label
+    var wkEnd = new Date(weekStart); wkEnd.setDate(weekStart.getDate() + 6);
+    var lbl = MONTH_SHORT[weekStart.getMonth()] + ' ' + weekStart.getDate() + ' – ';
+    if (weekStart.getMonth() !== wkEnd.getMonth()) lbl += MONTH_SHORT[wkEnd.getMonth()] + ' ';
+    lbl += wkEnd.getDate() + ', ' + wkEnd.getFullYear();
+    var lblEl = document.getElementById('wk-range-label');
+    if (lblEl) lblEl.textContent = lbl;
+
+    // Day headers
+    var hdrHtml = '<div class="wk-gutter-hdr"></div>';
+    for (var di = 0; di < 7; di++) {
+      var dd = new Date(weekStart); dd.setDate(weekStart.getDate() + di);
+      var isToday = dd.getTime() === today.getTime();
+      hdrHtml += '<div class="wk-day-hdr' + (isToday ? ' today' : '') + '">'
+        + '<div class="wk-day-name">' + DAY_NAMES[dd.getDay()] + '</div>'
+        + '<div class="wk-day-num">' + dd.getDate() + '</div>'
+        + '</div>';
+    }
+    document.getElementById('wk-day-hdrs').innerHTML = hdrHtml;
+
+    // Time gutter
+    var gutHtml = '';
+    for (var h = WK_START_HOUR; h < WK_END_HOUR; h++) {
+      var lh = h === 12 ? '12 PM' : h > 12 ? (h-12)+' PM' : h+' AM';
+      gutHtml += '<div class="wk-hour-lbl">' + lh + '</div>';
+    }
+    document.getElementById('wk-time-gutter').innerHTML = gutHtml;
+
+    // Day columns
+    for (var di = 0; di < 7; di++) {
+      var dd = new Date(weekStart); dd.setDate(weekStart.getDate() + di);
+      var isToday = dd.getTime() === today.getTime();
+      var dateStr = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
+      var dayJobs = _allJobs.filter(function(j) { return j.scheduledDate === dateStr; });
+
+      var colHtml = '';
+      // Hour lines
+      for (var h = WK_START_HOUR; h < WK_END_HOUR; h++) {
+        colHtml += '<div class="wk-hour-line" style="top:' + ((h-WK_START_HOUR)*HOUR_HEIGHT) + 'px"></div>';
+      }
+      // Current time indicator
+      if (isToday) {
+        var nowHr = now.getHours() + now.getMinutes()/60;
+        if (nowHr >= WK_START_HOUR && nowHr < WK_END_HOUR) {
+          var nowTop = (nowHr - WK_START_HOUR) * HOUR_HEIGHT;
+          colHtml += '<div class="wk-now-line" style="top:' + nowTop + 'px"><div class="wk-now-dot"></div></div>';
+        }
+      }
+      // Job blocks
+      dayJobs.forEach(function(j) {
+        var timeStr = j.startTime || j.scheduledTime || '';
+        var startHr = WK_START_HOUR + 2; // default 8 AM
+        var startMin = 0;
+        if (timeStr) {
+          var parts = timeStr.split(':');
+          startHr = parseInt(parts[0], 10);
+          startMin = parseInt(parts[1] || '0', 10);
+        }
+        if (startHr < WK_START_HOUR) startHr = WK_START_HOUR;
+        if (startHr >= WK_END_HOUR) return;
+        var durHrs = parseDurationHours(j.duration);
+        var topPx = (startHr - WK_START_HOUR) * HOUR_HEIGHT + (startMin/60) * HOUR_HEIGHT;
+        var htPx = Math.max(durHrs * HOUR_HEIGHT, 32);
+        var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
+        var fmtTime = timeStr ? (function() {
+          var h12 = startHr > 12 ? startHr-12 : (startHr === 0 ? 12 : startHr);
+          return h12 + ':' + String(startMin).padStart(2,'0') + (startHr >= 12 ? ' PM' : ' AM');
+        })() : '';
+        var title = j.title || ((j.customerName||'') + (j.service ? ' — '+j.service : ''));
+        colHtml += '<div class="wk-block ' + color + '" style="top:' + topPx + 'px;height:' + htPx + 'px;" onclick="openDrawer(\'' + j.id + '\')">'
+          + '<div class="wk-block-title">' + title + '</div>'
+          + '<div class="wk-block-time">' + (fmtTime || 'No time set') + (j.duration ? ' · ' + j.duration : '') + '</div>'
+          + '</div>';
+      });
+      var colEl = document.getElementById('wk-col-' + di);
+      if (colEl) colEl.innerHTML = colHtml;
+    }
+  }
+
+  function prevWeek() {
+    weekStart = new Date(weekStart); weekStart.setDate(weekStart.getDate()-7); renderWeekView();
+  }
+  function nextWeek() {
+    weekStart = new Date(weekStart); weekStart.setDate(weekStart.getDate()+7); renderWeekView();
+  }
+  function goTodayWeek() {
+    var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-d.getDay());
+    weekStart = d; renderWeekView();
+  }
 
   async function loadCalendarJobs() {
     try {
       const jobs = await API.jobs.list();
       // Store full job objects so the drawer can show all fields
       jobs.forEach(function(j) { _jobsCache[j.id] = j; });
+      _allJobs = jobs; // keep full objects for week view
       calendarJobs = jobs.map(function(j) {
         var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
         return {
@@ -601,6 +802,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         };
       });
       renderCalendar(calYear, calMonth);
+      if (document.getElementById('timeblock-view').style.display !== 'none') renderWeekView();
     } catch(e) { console.error('loadCalendarJobs error:', e); }
   }
 
