@@ -186,9 +186,9 @@ html,body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-ser
           <div class="field-error" id="err-service">Please select a service.</div>
         </div>
         <div class="field" id="sqft-field">
-          <label class="field-label" for="f-sqft">Square Footage</label>
-          <input class="field-input" id="f-sqft" type="number" placeholder="e.g. 500" min="1" oninput="onSqftChange()"/>
-          <div class="field-hint">Approximate area to be serviced</div>
+          <label class="field-label" for="f-sqft">Square Footage <span class="req">*</span></label>
+          <input class="field-input" id="f-sqft" type="number" placeholder="e.g. 500" min="1" oninput="onSqftChange()" required/>
+          <div class="field-error" id="err-sqft">Please enter the approximate square footage.</div>
         </div>
       </div>
 
@@ -480,6 +480,10 @@ function validateForm() {
   const address = document.getElementById("f-address").value.trim();
   setFieldError("f-address", "err-address", !address);
   if (!address) ok = false;
+
+  const sqft = parseFloat(document.getElementById("f-sqft").value) || 0;
+  setFieldError("f-sqft", "err-sqft", sqft <= 0);
+  if (sqft <= 0) ok = false;
 
   const serviceEl = document.getElementById("f-service");
   const service = serviceEl ? serviceEl.value.trim() : "";
