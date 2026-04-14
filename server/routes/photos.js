@@ -1,14 +1,17 @@
 const router = require("express").Router();
 const multer = require("multer");
-const { db, bucket } = require("../firebase");
+const { db } = require("../firebase");
+const { r2, bucketName, publicUrl } = require("../utils/r2");
+const { PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const path = require("path");
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB max
   fileFilter: (req, file, cb) => {
-    // Accept all images (including HEIC/HEIF from iPhone) and videos
-    const ok = file.mimetype.startsWith("image/") || file.mimetype === "video/mp4" || file.mimetype === "video/quicktime";
+    const ok = file.mimetype.startsWith("image/") ||
+               file.mimetype === "video/mp4"       ||
+               file.mimetype === "video/quicktime";
     cb(ok ? null : new Error("Only images and videos are allowed"), ok);
   },
 });
@@ -20,58 +23,34 @@ router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) =>
     if (!jobDoc.exists || jobDoc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Job not found" });
     }
-
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: "No files uploaded" });
-    }
-
-    // Verify bucket is available before processing files
-    if (!bucket || !bucket.name) {
-      return res.status(503).json({ error: "Photo storage is not configured. Enable Firebase Storage in the Firebase Console and set the FIREBASE_STORAGE_BUCKET environment variable." });
     }
 
     const uploaded = [];
     for (const file of req.files) {
       const ext = path.extname(file.originalname) || ".jpg";
-      const filename = `jobs/${req.params.jobId}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-      const fileRef = bucket.file(filename);
+      const key = `jobs/${req.params.jobId}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
 
-      try {
-        await fileRef.save(file.buffer, {
-          metadata: { contentType: file.mimetype },
-        });
-      } catch (saveErr) {
-        const msg = saveErr.message || "";
-        if (msg.includes("does not exist") || msg.includes("notFound") || saveErr.code === 404) {
-          return res.status(503).json({ error: "Firebase Storage bucket not found. Please enable Storage in the Firebase Console for this project." });
-        }
-        throw saveErr;
-      }
+      await r2.send(new PutObjectCommand({
+        Bucket:      bucketName,
+        Key:         key,
+        Body:        file.buffer,
+        ContentType: file.mimetype,
+      }));
 
-      // Try to make public — fall back gracefully if Storage rules block it
-      let url;
-      try {
-        await fileRef.makePublic();
-        url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-      } catch (e) {
-        console.warn("[photos] makePublic failed, using signed URL:", e.message);
-        const [signedUrl] = await fileRef.getSignedUrl({
-          action: "read",
-          expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000, // 10 years
-        });
-        url = signedUrl;
-      }
+      const url = `${publicUrl}/${key}`;
 
       const photoData = {
-        orgId: req.orgId,
-        jobId: req.params.jobId,
+        orgId:        req.orgId,
+        jobId:        req.params.jobId,
         url,
-        filename,
+        filename:     key,
         originalName: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-        uploadedBy: req.uid,
-        createdAt: Date.now(),
+        mimeType:     file.mimetype,
+        size:         file.size,
+        uploadedBy:   req.uid,
+        createdAt:    Date.now(),
       };
       const ref = await db.collection("jobPhotos").add(photoData);
       uploaded.push({ id: ref.id, ...photoData });
@@ -88,23 +67,11 @@ router.get("/job/:jobId", async (req, res, next) => {
     if (!jobDoc.exists || jobDoc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Job not found" });
     }
-    let photos = [];
-    try {
-      const snap = await db.collection("jobPhotos")
-        .where("jobId", "==", req.params.jobId)
-        .orderBy("createdAt", "desc")
-        .get();
-      photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (indexErr) {
-      // Firestore composite index may not exist yet — fall back to unordered query
-      console.warn("[photos] Index missing for jobPhotos, falling back:", indexErr.message);
-      const snap = await db.collection("jobPhotos")
-        .where("jobId", "==", req.params.jobId)
-        .get();
-      photos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    }
-    res.json(photos);
+    const snap = await db.collection("jobPhotos")
+      .where("jobId", "==", req.params.jobId)
+      .orderBy("createdAt", "desc")
+      .get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   } catch (err) { next(err); }
 });
 
@@ -115,10 +82,12 @@ router.delete("/:photoId", async (req, res, next) => {
     if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Photo not found" });
     }
-    // Delete from Storage
     try {
-      await bucket.file(doc.data().filename).delete();
-    } catch (e) { /* file may already be gone */ }
+      await r2.send(new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key:    doc.data().filename,
+      }));
+    } catch (_) { /* file may already be gone */ }
     await db.collection("jobPhotos").doc(req.params.photoId).delete();
     res.json({ success: true });
   } catch (err) { next(err); }
