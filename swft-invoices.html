@@ -369,7 +369,7 @@ function toggleSidebar(){document.querySelector('.sidebar').classList.toggle('co
 var _tt;function showToast(m){var t=document.getElementById('toast');document.getElementById('toast-msg').textContent=m;t.classList.remove('swft-success');t.classList.add('show');void t.offsetWidth;t.classList.add('swft-success');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},2500);}
 
 async function loadInvoices(){
-  try{var res=await Promise.all([API.invoices.list(),API.customers.list()]);_invoices=res[0];_customers=res[1];renderStats();renderTable();}catch(e){console.error(e);}
+  try{var res=await Promise.all([API.invoices.list(),API.customers.list()]);_invoices=res[0];_customers=res[1].slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});renderStats();renderTable();}catch(e){console.error(e);}
 }
 
 function renderStats(){

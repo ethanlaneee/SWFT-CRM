@@ -766,7 +766,8 @@ function esc(s) { var d = document.createElement('div'); d.appendChild(document.
 
 async function loadCustomers() {
   try {
-    const list = await API.customers.list();
+    const rawList = await API.customers.list();
+    const list = rawList.slice().sort(function(a, b) { return (a.name||'').localeCompare(b.name||''); });
     window._customers = {};
     window._custList = list;
     const countEl = document.getElementById('cust-count');
@@ -788,8 +789,8 @@ async function loadCustomers() {
       row.className = 'cust-row';
       row.dataset.status = 'active';
       row.dataset.id = cust.id;
-      row.onclick = function(e){ if(e.target.classList.contains('row-cb')) return; openDrawer(cust.id); };
-      row.innerHTML = '<div onclick="event.stopPropagation();toggleRowSelect(\'' + cust.id + '\')"><input type="checkbox" class="row-cb" data-id="' + cust.id + '" onclick="event.stopPropagation();toggleRowSelect(\'' + cust.id + '\')"/></div>' +
+      row.onclick = function(e){ if(e.target.classList.contains('row-cb') || e.target.closest('[data-cb]')) return; openDrawer(cust.id); };
+      row.innerHTML = '<div data-cb="1" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb" data-id="' + cust.id + '" onchange="updateCustSelect(this)" onclick="event.stopPropagation()"/></div>' +
         '<div class="cust-name-cell"><div class="cust-avatar" style="background:' + color + ';">' + esc(initials) + '</div><div><div class="cust-name">' + esc(cust.name||'') + '</div></div></div>' +
         '<div class="cust-addr" style="font-size:12px;color:var(--gray);align-self:center;">' + esc(cust.address||'—') + '</div>' +
         '<div class="cust-phone">' + esc(cust.phone||'—') + '</div>' +
@@ -813,10 +814,7 @@ async function deleteCustById(id) {
 }
 
 // ── Bulk select ──
-function toggleRowSelect(id) {
-  var cb = document.querySelector('.row-cb[data-id="' + id + '"]');
-  if (!cb) return;
-  cb.checked = !cb.checked;
+function updateCustSelect(cb) {
   var row = cb.closest('.cust-row');
   if (row) row.classList.toggle('selected', cb.checked);
   updateBulkBar();
@@ -836,13 +834,8 @@ function updateBulkBar() {
   var bar = document.getElementById('bulk-bar');
   var countEl = document.getElementById('bulk-count');
   var n = checked.length;
-  if (n > 0) {
-    bar.classList.add('show');
-    countEl.textContent = n + ' customer' + (n !== 1 ? 's' : '') + ' selected';
-  } else {
-    bar.classList.remove('show');
-  }
-  // Sync select-all checkbox state
+  bar.classList.toggle('show', n > 0);
+  if (countEl) countEl.textContent = n + ' customer' + (n !== 1 ? 's' : '') + ' selected';
   var allCbs = document.querySelectorAll('.cust-row .row-cb');
   var allCb = document.getElementById('select-all-cb');
   if (allCb) allCb.checked = allCbs.length > 0 && n === allCbs.length;
