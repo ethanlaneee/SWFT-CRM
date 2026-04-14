@@ -609,7 +609,7 @@ async function loadInvoices() {
       const balClass = balance <= 0 ? 'bal-green' : inv.status === 'overdue' ? 'bal-red' : 'bal-amber';
       const statusStyle = inv.status === 'paid' ? 'background:rgba(200,241,53,0.1);color:#c8f135;' : inv.status === 'overdue' ? 'background:rgba(255,82,82,0.1);color:#ff5252;' : 'background:rgba(245,166,35,0.1);color:#f5a623;';
       row.onclick = function() { openInvoiceModal(inv); };
-      row.innerHTML = '<div class="inv-num">#INV-' + (inv.id.substring(0,6)) + '</div>' +
+      row.innerHTML = '<div class="inv-num">' + (inv.invoiceNum ? '#INV-' + inv.invoiceNum : '#INV-' + inv.id.substring(0,6)) + '</div>' +
         '<div><div class="inv-customer">' + (inv.customerName||'—') + '</div><div class="inv-job">' + (inv.notes||'—') + '</div></div>' +
         '<div class="inv-total">' + total + '</div>' +
         '<div class="inv-date">' + paid + '</div>' +
@@ -624,7 +624,9 @@ async function loadInvoices() {
         '<div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></div>';
       tbody.appendChild(row);
     });
-  window._nextInvNum = invoices.length + 1;
+  var maxInvNum = 0;
+  invoices.forEach(function(inv) { if (inv.invoiceNum && inv.invoiceNum > maxInvNum) maxInvNum = inv.invoiceNum; });
+  window._nextInvNum = maxInvNum + 1;
     // ── Invoice stats ──
     function parseInvAmt(v){if(typeof v==='number')return v;if(typeof v==='string')return parseFloat(v.replace(/[$,]/g,''))||0;return 0;}
     var iNow=new Date(), iMStart=new Date(iNow.getFullYear(),iNow.getMonth(),1);
@@ -653,7 +655,7 @@ function openInvoiceModal(inv) {
   _q = {
     id: inv.id,
     isInvoice: true,
-    num: '#INV-' + (inv.id||'').substring(0,6),
+    num: inv.invoiceNum ? '#INV-' + inv.invoiceNum : '#INV-' + (inv.id||'').substring(0,6),
     created: inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
     customer: inv.customerName || '',
     customerId: inv.customerId || '',
@@ -1346,7 +1348,14 @@ async function saveEdit(silent){
         await API.invoices.update(_q.id, data);
       } else {
         var created = await API.invoices.create(data);
-        if (created && created.id) _q.id = created.id;
+        if (created && created.id) {
+          _q.id = created.id;
+          if (created.invoiceNum) {
+            _q.num = '#INV-' + created.invoiceNum;
+            var eNum = document.getElementById('e-num');
+            if (eNum) eNum.value = _q.num;
+          }
+        }
       }
       if (!silent) { loadInvoices(); switchView('invoices', document.querySelectorAll('.view-toggle-btn')[1]); closeModal(); showToast('Invoice for ' + _q.customer + ' saved — $' + total.toLocaleString()); }
     } else {

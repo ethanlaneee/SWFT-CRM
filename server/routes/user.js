@@ -122,6 +122,8 @@ router.put("/", async (req, res, next) => {
       "gmailAddress", "gmailAppPassword",
       // Logo
       "companyLogo",
+      // Business Profile for AI
+      "bizAbout", "bizServices", "bizArea", "bizHours", "bizWebsite", "bizNotes",
       // Subscription
       "plan", "isSubscribed", "stripeCustomerId", "accountStatus"
     ];

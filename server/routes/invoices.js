@@ -34,9 +34,19 @@ router.get("/:id", async (req, res, next) => {
 // Create invoice
 router.post("/", async (req, res, next) => {
   try {
+    // Assign next sequential invoice number for this org
+    const existing = await col().where("orgId", "==", req.orgId).select("invoiceNum").get();
+    let maxNum = 0;
+    existing.docs.forEach(d => {
+      const n = parseInt(d.data().invoiceNum || 0, 10);
+      if (n > maxNum) maxNum = n;
+    });
+    const invoiceNum = maxNum + 1;
+
     const data = {
       orgId: req.orgId,
       userId: req.uid,
+      invoiceNum,
       customerId: req.body.customerId || "",
       customerName: req.body.customerName || "",
       quoteId: req.body.quoteId || null,

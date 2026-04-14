@@ -113,6 +113,18 @@ transition:border-color 0.15s;
 .bulk-clear-btn{margin-left:auto;font-size:11px;color:var(--gray);cursor:pointer;padding:4px 8px;border-radius:6px;transition:all 0.12s;}
 .bulk-clear-btn:hover{color:var(--white);background:var(--surface2);}
 
+/* ── CONFIRM MODAL ── */
+.swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.swft-modal-overlay.open{display:flex;}
+.swft-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
+.swft-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:12px;}
+.swft-modal-body{font-size:13px;line-height:1.6;color:var(--gray);margin-bottom:24px;white-space:pre-line;}
+.swft-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.swft-modal-btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid;transition:all 0.14s;}
+.swft-modal-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray);}
+.swft-modal-btn.confirm{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
+
 /* ── CUSTOMER TABLE ── */
 .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
 
@@ -550,23 +562,12 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <!-- Bulk action bar -->
 <div class="bulk-bar" id="bulk-bar">
-  <!-- Default state -->
-  <div id="bulk-default" style="display:flex;align-items:center;gap:12px;width:100%;">
-    <span class="bulk-count" id="bulk-count">0 selected</span>
-    <button class="bulk-del-btn" onclick="showBulkConfirm()">
-      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="2"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="2"/><path d="M10,11v6M14,11v6" stroke-width="2" stroke-linecap="round"/></svg>
-      Delete Selected
-    </button>
-    <span class="bulk-clear-btn" onclick="clearSelection()">Clear</span>
-  </div>
-  <!-- Confirm state -->
-  <div id="bulk-confirm" style="display:none;align-items:center;gap:10px;width:100%;">
-    <span id="bulk-confirm-label" style="font-size:12px;color:var(--white);flex:1;">Delete these customers permanently?</span>
-    <button class="bulk-del-btn" onclick="executeDelete()" style="background:rgba(255,82,82,0.18);border-color:#ff5252;">
-      Yes, Delete
-    </button>
-    <span class="bulk-clear-btn" onclick="hideBulkConfirm()">Cancel</span>
-  </div>
+  <span class="bulk-count" id="bulk-count">0 selected</span>
+  <button class="bulk-del-btn" onclick="deleteSelected()">
+    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="2"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="2"/><path d="M10,11v6M14,11v6" stroke-width="2" stroke-linecap="round"/></svg>
+    Delete Selected
+  </button>
+  <span class="bulk-clear-btn" onclick="clearSelection()">Clear</span>
 </div>
 
 <!-- Table -->
@@ -772,6 +773,36 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <script>
 
+window.swftConfirm = function(title, message, opts) {
+  opts = opts || {};
+  return new Promise(function(resolve) {
+    var overlay = document.getElementById('swftModalOverlay');
+    var titleEl = document.getElementById('swftModalTitle');
+    var bodyEl = document.getElementById('swftModalBody');
+    var cancelBtn = document.getElementById('swftModalCancel');
+    var confirmBtn = document.getElementById('swftModalConfirm');
+    titleEl.textContent = title;
+    bodyEl.textContent = message;
+    confirmBtn.className = 'swft-modal-btn ' + (opts.danger ? 'danger' : 'confirm');
+    confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Delete' : 'Confirm');
+    cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      cancelBtn.removeEventListener('click', onCancel);
+      confirmBtn.removeEventListener('click', onConfirm);
+      overlay.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onCancel() { cleanup(false); }
+    function onConfirm() { cleanup(true); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
+    overlay.addEventListener('click', onOverlay);
+    overlay.classList.add('open');
+  });
+};
+
 window._customers = {};
 function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
@@ -860,37 +891,21 @@ function clearSelection() {
   });
   var allCb = document.getElementById('select-all-cb');
   if (allCb) allCb.checked = false;
-  hideBulkConfirm();
   document.getElementById('bulk-bar').classList.remove('show');
 }
 
-function showBulkConfirm() {
+async function deleteSelected() {
   var checked = document.querySelectorAll('.cust-row .row-cb:checked');
   var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
-  if (!ids.length) { showToast('No customers selected'); return; }
+  if (!ids.length) return;
   var label = ids.length + ' customer' + (ids.length !== 1 ? 's' : '');
-  document.getElementById('bulk-confirm-label').textContent = 'Permanently delete ' + label + '?';
-  document.getElementById('bulk-default').style.display = 'none';
-  document.getElementById('bulk-confirm').style.display = 'flex';
-}
-
-function hideBulkConfirm() {
-  document.getElementById('bulk-default').style.display = 'flex';
-  document.getElementById('bulk-confirm').style.display = 'none';
-}
-
-async function executeDelete() {
-  var checked = document.querySelectorAll('.cust-row .row-cb:checked');
-  var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
-  if (!ids.length) { hideBulkConfirm(); showToast('No customers selected'); return; }
-  var label = ids.length + ' customer' + (ids.length !== 1 ? 's' : '');
-  hideBulkConfirm();
+  var ok = await swftConfirm('Delete ' + label + ' permanently?', 'This action cannot be undone.', { danger: true });
+  if (!ok) return;
   showToast('Deleting ' + label + '...');
   var failed = 0;
-  for (var i = 0; i < ids.length; i++) {
-    try { await API.customers.delete(ids[i]); }
-    catch(e) { console.error('Delete failed for', ids[i], e); failed++; }
-  }
+  await Promise.all(ids.map(async function(id) {
+    try { await API.customers.delete(id); } catch(e) { console.error('Delete failed for', id, e); failed++; }
+  }));
   clearSelection();
   await loadCustomers();
   showToast(failed === 0
@@ -1581,5 +1596,17 @@ function applySort(key) {
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
+
+<!-- Confirm modal -->
+<div class="swft-modal-overlay" id="swftModalOverlay">
+  <div class="swft-modal">
+    <div class="swft-modal-title" id="swftModalTitle"></div>
+    <div class="swft-modal-body" id="swftModalBody"></div>
+    <div class="swft-modal-actions">
+      <button class="swft-modal-btn cancel" id="swftModalCancel">Cancel</button>
+      <button class="swft-modal-btn confirm" id="swftModalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
 </body>
 </html><!-- deploy 1775518209 -->
