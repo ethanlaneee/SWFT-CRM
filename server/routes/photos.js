@@ -25,15 +25,28 @@ router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) =>
       return res.status(400).json({ error: "No files uploaded" });
     }
 
+    // Verify bucket is available before processing files
+    if (!bucket || !bucket.name) {
+      return res.status(503).json({ error: "Photo storage is not configured. Enable Firebase Storage in the Firebase Console and set the FIREBASE_STORAGE_BUCKET environment variable." });
+    }
+
     const uploaded = [];
     for (const file of req.files) {
       const ext = path.extname(file.originalname) || ".jpg";
       const filename = `jobs/${req.params.jobId}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
       const fileRef = bucket.file(filename);
 
-      await fileRef.save(file.buffer, {
-        metadata: { contentType: file.mimetype },
-      });
+      try {
+        await fileRef.save(file.buffer, {
+          metadata: { contentType: file.mimetype },
+        });
+      } catch (saveErr) {
+        const msg = saveErr.message || "";
+        if (msg.includes("does not exist") || msg.includes("notFound") || saveErr.code === 404) {
+          return res.status(503).json({ error: "Firebase Storage bucket not found. Please enable Storage in the Firebase Console for this project." });
+        }
+        throw saveErr;
+      }
 
       // Try to make public — fall back gracefully if Storage rules block it
       let url;
@@ -75,11 +88,22 @@ router.get("/job/:jobId", async (req, res, next) => {
     if (!jobDoc.exists || jobDoc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Job not found" });
     }
-    const snap = await db.collection("jobPhotos")
-      .where("jobId", "==", req.params.jobId)
-      .orderBy("createdAt", "desc")
-      .get();
-    const photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let photos = [];
+    try {
+      const snap = await db.collection("jobPhotos")
+        .where("jobId", "==", req.params.jobId)
+        .orderBy("createdAt", "desc")
+        .get();
+      photos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (indexErr) {
+      // Firestore composite index may not exist yet — fall back to unordered query
+      console.warn("[photos] Index missing for jobPhotos, falling back:", indexErr.message);
+      const snap = await db.collection("jobPhotos")
+        .where("jobId", "==", req.params.jobId)
+        .get();
+      photos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
     res.json(photos);
   } catch (err) { next(err); }
 });

@@ -9,6 +9,31 @@ const ADMIN_EMAILS = ["ethan@goswft.com"];
 const accessCache = new Map();
 const ACCESS_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
+// Cache org-specific custom role permissions for 5 minutes
+const customPermCache = new Map();
+const CUSTOM_PERM_CACHE_TTL = 5 * 60 * 1000;
+
+async function getCustomPermissions(orgId, role) {
+  if (!orgId || !role) return null;
+  const cacheKey = `${orgId}:${role}`;
+  const cached = customPermCache.get(cacheKey);
+  if (cached && (Date.now() - cached.ts) < CUSTOM_PERM_CACHE_TTL) return cached.perms;
+  try {
+    const doc = await db.collection("orgRoles").doc(orgId).get();
+    if (doc.exists) {
+      const customRoles = doc.data().roles || {};
+      const roleConfig = customRoles[role];
+      if (roleConfig && Array.isArray(roleConfig.permissions)) {
+        const perms = new Set(roleConfig.permissions);
+        customPermCache.set(cacheKey, { perms, ts: Date.now() });
+        return perms;
+      }
+    }
+  } catch (_) {}
+  customPermCache.set(cacheKey, { perms: null, ts: Date.now() });
+  return null;
+}
+
 // Maps (baseUrl, HTTP method) → required permission key
 const METHOD_PERMISSION = {
   "/api/dashboard":     { GET: "dashboard.view" },
@@ -20,7 +45,7 @@ const METHOD_PERMISSION = {
   "/api/messages":      { GET: "messages.view",   POST: "messages.send",   DELETE: "messages.view" },
   "/api/social":        { GET: "messages.view",   POST: "messages.send" },
   "/api/payments":      { GET: "invoices.view",   POST: "invoices.edit" },
-  "/api/photos":        { GET: "jobs.view",        POST: "jobs.edit",       DELETE: "jobs.edit" },
+  "/api/photos":        { GET: "jobs.view",        POST: "photos.upload",   DELETE: "photos.upload" },
   "/api/ai":            { GET: "ai.use",           POST: "ai.use",          DELETE: "ai.use" },
   "/api/notifications": { GET: "dashboard.view",  POST: "dashboard.view",  DELETE: "dashboard.view" },
   "/api/team":          { GET: "team.manage",      POST: "team.manage",     PUT: "team.manage",      DELETE: "team.manage" },
@@ -52,6 +77,7 @@ const PERM_LABEL = {
   "schedule.delete":       "delete schedule entries",
   "messages.view":         "view messages",
   "messages.send":         "send messages",
+  "photos.upload":         "upload job photos",
   "ai.use":                "use the AI assistant",
   "team.manage":           "manage team members",
   "integrations.manage":   "manage integrations",
@@ -69,6 +95,7 @@ const ROLE_PERMISSIONS = {
     "invoices.view","invoices.add","invoices.edit","invoices.delete",
     "schedule.view","schedule.add","schedule.edit","schedule.delete",
     "messages.view","messages.send",
+    "photos.upload",
     "ai.use",
     "team.manage",
     "integrations.manage",
@@ -82,6 +109,7 @@ const ROLE_PERMISSIONS = {
     "invoices.view","invoices.add","invoices.edit","invoices.delete",
     "schedule.view","schedule.add","schedule.edit","schedule.delete",
     "messages.view","messages.send",
+    "photos.upload",
     "ai.use",
   ]),
   technician: new Set([
@@ -90,6 +118,7 @@ const ROLE_PERMISSIONS = {
     "jobs.edit",
     "schedule.view",
     "messages.view","messages.send",
+    // photos.upload intentionally omitted — owner grants it via team permissions
     "ai.use",
   ]),
 };
@@ -164,9 +193,13 @@ async function checkAccess(req, res, next) {
 
     // ── Step 3: Role-based permission check ───────────────────────────────
     const role = req.userRole || "owner";
-    const allowedPerms = ROLE_PERMISSIONS[role]; // null = owner (unrestricted)
+    let allowedPerms = ROLE_PERMISSIONS[role]; // null = owner (unrestricted)
 
     if (allowedPerms) {
+      // Override with org-specific custom permissions if the org has configured them
+      const customPerms = await getCustomPermissions(req.orgId, role);
+      if (customPerms) allowedPerms = customPerms;
+
       const routePerms = METHOD_PERMISSION[req.baseUrl];
       if (routePerms) {
         const requiredPerm = routePerms[req.method] || null;
@@ -186,4 +219,11 @@ async function checkAccess(req, res, next) {
   }
 }
 
-module.exports = { checkAccess, ROLE_PERMISSIONS, METHOD_PERMISSION };
+function clearCustomPermCache(orgId) {
+  if (!orgId) { customPermCache.clear(); return; }
+  for (const key of customPermCache.keys()) {
+    if (key.startsWith(orgId + ":")) customPermCache.delete(key);
+  }
+}
+
+module.exports = { checkAccess, ROLE_PERMISSIONS, METHOD_PERMISSION, clearCustomPermCache };
