@@ -815,13 +815,22 @@ function handleOverlayClick(e) {
 
 async function loadBillingCustomers() {
   try {
-    var customers = await API.customers.list();
-    window._billingCustomers = customers;
-    // Populate address suggestions
+    var [allCustomers, jobs] = await Promise.all([API.customers.list(), API.jobs.list()]);
+    window._billingCustomers = allCustomers;
+
+    // Build set of customer IDs that have at least one job
+    var jobCustIds = new Set(jobs.map(function(j) { return j.customerId; }).filter(Boolean));
+    // Filter to job-customers only; fall back to all if none found
+    var customers = allCustomers.filter(function(c) { return jobCustIds.has(c.id); });
+    if (customers.length === 0) customers = allCustomers;
+    // Sort alphabetically
+    customers = customers.slice().sort(function(a, b) { return (a.name||'').localeCompare(b.name||''); });
+
+    // Address suggestions (all customers, sorted)
     var datalist = document.getElementById('addr-suggestions');
     if (datalist) {
       datalist.innerHTML = '';
-      customers.forEach(function(c) {
+      allCustomers.forEach(function(c) {
         if (c.address) {
           var opt = document.createElement('option');
           opt.value = c.address;
@@ -829,6 +838,7 @@ async function loadBillingCustomers() {
         }
       });
     }
+
     var select = document.getElementById('e-customer');
     if (!select) return;
     select.innerHTML = '<option value="">Select a customer...</option>';

@@ -392,7 +392,7 @@ window.swftConfirm = function(title, message, opts = {}) {
 async function loadQuotes(){
   try{
     var res=await Promise.all([API.quotes.list(),API.customers.list()]);
-    _quotes=res[0];_customers=res[1];
+    _quotes=res[0];_customers=res[1].slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
     renderStats();renderTable();
   }catch(e){console.error(e);}
 }

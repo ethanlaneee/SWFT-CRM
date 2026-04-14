@@ -109,12 +109,25 @@
 
 /* ── TABLE ── */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both;}
-.table-head{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.table-head{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;transition:color 0.14s;}
 .th:hover{color:var(--gray);}
 .th.sort-active{color:var(--green);}
+/* ── BULK SELECT ── */
+.row-cb{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1.5px solid var(--border2);border-radius:4px;background:var(--surface2);cursor:pointer;position:relative;flex-shrink:0;transition:all 0.12s;display:block;}
+.row-cb:checked{background:var(--green);border-color:var(--green);}
+.row-cb:checked::after{content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #0a0a0a;border-width:0 2px 2px 0;transform:rotate(45deg);}
+.row-cb:hover:not(:checked){border-color:var(--gray);}
+.job-row.selected{background:rgba(200,241,53,0.04);}
+.bulk-bar{display:none;align-items:center;gap:12px;padding:9px 20px;background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.15);border-radius:10px;margin-bottom:4px;animation:sharpIn 0.2s ease both;}
+.bulk-bar.show{display:flex;}
+.bulk-count{font-size:12.5px;color:var(--green);font-weight:600;}
+.bulk-del-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1px solid rgba(255,82,82,0.35);background:rgba(255,82,82,0.08);color:#ff5252;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
+.bulk-del-btn:hover{background:rgba(255,82,82,0.16);border-color:#ff5252;}
+.bulk-clear-btn{margin-left:auto;font-size:11px;color:var(--gray);cursor:pointer;padding:4px 8px;border-radius:6px;transition:all 0.12s;}
+.bulk-clear-btn:hover{color:var(--white);background:var(--surface2);}
 
-.job-row{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
+.job-row{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
 .job-row:last-child{border-bottom:none;}
 .job-row:hover{background:var(--surface2);}
 .job-row:nth-child(1){animation-delay:0.04s;} .job-row:nth-child(2){animation-delay:0.08s;} .job-row:nth-child(3){animation-delay:0.12s;} .job-row:nth-child(4){animation-delay:0.16s;} .job-row:nth-child(5){animation-delay:0.20s;} .job-row:nth-child(6){animation-delay:0.20s;}
@@ -430,9 +443,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
+<!-- Bulk action bar -->
+<div class="bulk-bar" id="bulk-bar">
+  <span class="bulk-count" id="bulk-count">0 selected</span>
+  <button class="bulk-del-btn" onclick="deleteSelectedJobs()">
+    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="2"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="2"/><path d="M10,11v6M14,11v6" stroke-width="2" stroke-linecap="round"/></svg>
+    Delete Selected
+  </button>
+  <span class="bulk-clear-btn" onclick="clearJobSelection()">Clear</span>
+</div>
+
 <!-- Table -->
 <div class="table-wrap">
   <div class="table-head">
+    <div class="th"><input type="checkbox" class="row-cb" id="select-all-cb" onchange="toggleSelectAllJobs(this.checked)" onclick="event.stopPropagation()" title="Select all"/></div>
     <div class="th sort-active">Job <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg></div>
     <div class="th">Customer</div>
     <div class="th">Address</div>
@@ -717,6 +741,59 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   let _currentJob = null;
   let _currentJobId = null;
 
+  /* ── Bulk select ── */
+  function updateJobSelect(cb) {
+    var row = cb.closest('.job-row');
+    if (row) row.classList.toggle('selected', cb.checked);
+    updateBulkBarJobs();
+  }
+  function toggleSelectAllJobs(checked) {
+    document.querySelectorAll('.job-cb').forEach(function(cb) {
+      cb.checked = checked;
+      var row = cb.closest('.job-row');
+      if (row) row.classList.toggle('selected', checked);
+    });
+    updateBulkBarJobs();
+  }
+  function updateBulkBarJobs() {
+    var checked = document.querySelectorAll('.job-cb:checked');
+    var bar = document.getElementById('bulk-bar');
+    var countEl = document.getElementById('bulk-count');
+    var n = checked.length;
+    bar.classList.toggle('show', n > 0);
+    if (countEl) countEl.textContent = n + ' job' + (n !== 1 ? 's' : '') + ' selected';
+    var allCbs = document.querySelectorAll('.job-cb');
+    var allCb = document.getElementById('select-all-cb');
+    if (allCb) allCb.checked = allCbs.length > 0 && n === allCbs.length;
+  }
+  function clearJobSelection() {
+    document.querySelectorAll('.job-cb').forEach(function(cb) {
+      cb.checked = false;
+      var row = cb.closest('.job-row');
+      if (row) row.classList.remove('selected');
+    });
+    var allCb = document.getElementById('select-all-cb');
+    if (allCb) allCb.checked = false;
+    document.getElementById('bulk-bar').classList.remove('show');
+  }
+  async function deleteSelectedJobs() {
+    var checked = document.querySelectorAll('.job-cb:checked');
+    var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
+    if (!ids.length) return;
+    var ok = await swftConfirm('Delete ' + ids.length + ' job' + (ids.length !== 1 ? 's' : '') + ' permanently?', 'DELETE JOBS', '🗑️');
+    if (!ok) return;
+    showToast('Deleting ' + ids.length + ' job' + (ids.length !== 1 ? 's' : '') + '...');
+    var failed = 0;
+    await Promise.all(ids.map(async function(id) {
+      try { await API.jobs.delete(id); } catch(_) { failed++; }
+    }));
+    clearJobSelection();
+    await loadJobs();
+    showToast(failed === 0
+      ? 'Deleted ' + ids.length + ' job' + (ids.length !== 1 ? 's' : '')
+      : (ids.length - failed) + ' deleted, ' + failed + ' failed');
+  }
+
   /* ── Status helpers ── */
   const STATUS_MAP = {
     'scheduled': { pip: 'pip-blue',  tag: 'tag-sched',    label: 'Scheduled' },
@@ -790,8 +867,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         var row = document.createElement('div');
         row.className = 'job-row';
         row.dataset.status = status;
-        row.setAttribute('onclick', "openDrawer('" + job.id + "')");
+        row.dataset.id = job.id;
+        row.onclick = function(e) { if (e.target.classList.contains('row-cb') || e.target.closest('[data-cb]')) return; openDrawer(job.id); };
         row.innerHTML =
+          '<div data-cb="1" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb job-cb" data-id="' + job.id + '" onchange="updateJobSelect(this)" onclick="event.stopPropagation()"/></div>' +
           '<div class="job-id-cell">' +
             '<div class="status-pip ' + sm.pip + '"></div>' +
             '<div>' +
@@ -840,10 +919,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   async function loadCustomerDropdown() {
     try {
-      var customers = await API.customers.list();
+      var customers = (await API.customers.list()).slice().sort(function(a, b) {
+        return (a.name||'').localeCompare(b.name||'');
+      });
       var select = document.getElementById('e-customer');
       if (!select) return;
-      // Keep the first option
       select.innerHTML = '<option value="">Select a customer...</option>';
       customers.forEach(function(c) {
         var opt = document.createElement('option');
