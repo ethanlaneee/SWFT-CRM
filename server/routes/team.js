@@ -305,6 +305,7 @@ const DEFAULT_PERMISSIONS = [
   { id: "jobs.add",             label: "Add Jobs",               group: "Jobs" },
   { id: "jobs.edit",            label: "Edit Jobs",              group: "Jobs" },
   { id: "jobs.delete",          label: "Delete Jobs",            group: "Jobs" },
+  { id: "photos.upload",        label: "Upload Job Photos",      group: "Jobs" },
   // Quotes
   { id: "quotes.view",          label: "View Quotes",            group: "Quotes" },
   { id: "quotes.add",           label: "Create Quotes",          group: "Quotes" },
@@ -341,6 +342,7 @@ const BUILT_IN_ROLES = {
     "invoices.view","invoices.add","invoices.edit","invoices.delete",
     "schedule.view","schedule.add","schedule.edit","schedule.delete",
     "messages.view","messages.send",
+    "photos.upload",
     "ai.use",
     "team.manage","integrations.manage","settings.manage",
   ]},
@@ -352,6 +354,7 @@ const BUILT_IN_ROLES = {
     "invoices.view","invoices.add","invoices.edit","invoices.delete",
     "schedule.view","schedule.add","schedule.edit","schedule.delete",
     "messages.view","messages.send",
+    "photos.upload",
     "ai.use",
   ]},
   technician: { name: "Technician", builtIn: true, permissions: [
@@ -359,6 +362,7 @@ const BUILT_IN_ROLES = {
     "jobs.view","jobs.edit",
     "schedule.view",
     "messages.view","messages.send",
+    // photos.upload intentionally omitted — grant via Roles & Permissions in team settings
     "ai.use",
   ]},
 };
@@ -421,6 +425,9 @@ router.post("/roles", async (req, res, next) => {
       // If role was previously hidden, un-hide it when explicitly saved
       hiddenRoles: FV.arrayRemove(roleId),
     }, { merge: true });
+
+    // Invalidate permission cache for this org so changes take effect immediately
+    try { require("../middleware/checkAccess").clearCustomPermCache(req.orgId); } catch (_) {}
 
     res.json({ success: true, roleId, permissions: filtered });
   } catch (err) { next(err); }
