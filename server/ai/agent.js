@@ -120,10 +120,13 @@ async function executeTool(toolName, input, uid, orgId) {
         }
       }
 
-      // Trigger automations (same as the HTTP endpoint)
+      // Trigger automations (same as the HTTP endpoint).
+      // quoteId MUST be passed so scheduledMessages store the targetId and can
+      // check later whether the quote was approved before sending follow-ups.
       if (custId) {
         triggerAutomation(oid, "quote_sent", {
-          id: custId, name: custName, phone: custPhone, email: custEmail,
+          id: custId, quoteId: input.quoteId,
+          name: custName, phone: custPhone, email: custEmail,
           total: q.total || 0, service: q.service || "", address: q.address || "",
         }).catch(console.error);
       }
