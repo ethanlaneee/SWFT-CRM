@@ -853,22 +853,32 @@ function clearSelection() {
 }
 
 async function deleteSelected() {
-  var checked = document.querySelectorAll('.cust-row .row-cb:checked');
-  var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
-  if (!ids.length) return;
-  var ok = await swftConfirm('Delete ' + ids.length + ' customer' + (ids.length !== 1 ? 's' : '') + ' permanently?', 'DELETE CUSTOMERS', '🗑️');
-  if (!ok) return;
-  showToast('Deleting ' + ids.length + ' customer' + (ids.length !== 1 ? 's' : '') + '...');
-  var failed = 0;
-  await Promise.all(ids.map(async function(id) {
-    try { await API.customers.delete(id); }
-    catch(_) { failed++; }
-  }));
-  clearSelection();
-  await loadCustomers();
-  showToast(failed === 0
-    ? 'Deleted ' + ids.length + ' customer' + (ids.length !== 1 ? 's' : '')
-    : (ids.length - failed) + ' deleted, ' + failed + ' failed');
+  try {
+    var checked = document.querySelectorAll('.cust-row .row-cb:checked');
+    var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
+    if (!ids.length) { showToast('No customers selected'); return; }
+    var label = ids.length + ' customer' + (ids.length !== 1 ? 's' : '');
+    var ok = await swftConfirm(
+      'Delete ' + label + '?',
+      'This will permanently remove ' + label + ' and all their jobs, quotes, and invoices.',
+      { danger: true, confirmLabel: 'Delete ' + label }
+    );
+    if (!ok) return;
+    showToast('Deleting ' + label + '...');
+    var failed = 0;
+    await Promise.all(ids.map(async function(id) {
+      try { await API.customers.delete(id); }
+      catch(_) { failed++; }
+    }));
+    clearSelection();
+    await loadCustomers();
+    showToast(failed === 0
+      ? 'Deleted ' + label
+      : (ids.length - failed) + ' deleted, ' + failed + ' failed');
+  } catch(e) {
+    console.error('deleteSelected error:', e);
+    showToast('Error: ' + (e.message || 'Could not delete customers'));
+  }
 }
 
 // ── Render tags in the Notes drawer panel ──
