@@ -237,6 +237,97 @@
 .topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
 .main.expanded .topbar { padding-left: 56px; }
 
+/* ── Schedule view tabs (billing-style pill) ── */
+.sched-view-pill{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:3px;gap:2px;}
+.sched-vtab{font-size:12px;font-weight:600;padding:6px 20px;border:none;background:transparent;color:var(--gray);cursor:pointer;border-radius:9px;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
+.sched-vtab.active{background:var(--green);color:#0a0a0a;}
+.sched-vtab:hover:not(.active){color:var(--white);background:var(--surface2);}
+
+/* ── Week time-block view ── */
+.wk-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.wk-range{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--white);}
+.wk-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both;}
+.wk-day-hdrs{display:grid;grid-template-columns:52px repeat(7,1fr);border-bottom:1px solid var(--border);background:var(--surface2);}
+.wk-gutter-hdr{border-right:1px solid var(--border);}
+.wk-day-hdr{padding:10px 0 8px;text-align:center;border-left:1px solid var(--border);}
+.wk-day-name{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
+.wk-day-num{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-top:2px;}
+.wk-day-hdr.today .wk-day-num{color:var(--green);}
+.wk-body-wrap{display:grid;grid-template-columns:52px repeat(7,1fr);overflow-y:auto;max-height:600px;}
+.wk-time-gutter{border-right:1px solid var(--border);}
+.wk-hour-lbl{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0 0;font-size:9px;color:var(--gray2);font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.wk-day-col{position:relative;border-left:1px solid var(--border);height:900px;cursor:crosshair;}
+.wk-day-col:hover::after{content:'+';position:absolute;top:8px;right:8px;font-size:16px;color:rgba(200,241,53,0.4);pointer-events:none;line-height:1;}
+.wk-hover-slot{position:absolute;left:0;right:0;background:rgba(200,241,53,0.05);pointer-events:none;border-radius:4px;transition:opacity 0.1s;}
+.wk-hour-line{position:absolute;left:0;right:0;border-top:1px solid rgba(255,255,255,0.04);pointer-events:none;}
+.wk-now-line{position:absolute;left:0;right:0;border-top:2px solid rgba(200,241,53,0.6);pointer-events:none;z-index:3;}
+.wk-now-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--green);}
+.wk-block{position:absolute;left:3px;right:3px;border-radius:7px;padding:5px 7px;cursor:pointer;overflow:hidden;transition:filter 0.12s;font-size:11px;line-height:1.35;z-index:1;}
+.wk-block:hover{filter:brightness(1.2);z-index:2;}
+.wk-block.green{background:rgba(200,241,53,0.14);border:1px solid rgba(200,241,53,0.28);color:var(--green);}
+.wk-block.blue{background:rgba(77,159,255,0.14);border:1px solid rgba(77,159,255,0.28);color:var(--blue);}
+.wk-block.amber{background:rgba(245,166,35,0.14);border:1px solid rgba(245,166,35,0.28);color:var(--amber);}
+.wk-block.gray{background:rgba(100,100,100,0.12);border:1px solid rgba(100,100,100,0.2);color:var(--gray);}
+.wk-block-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wk-block-time{font-size:9px;opacity:0.65;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+/* ── Block types — 3-tier system ── */
+.wk-evt{position:absolute;left:3px;right:3px;border-radius:7px;padding:5px 8px;cursor:pointer;overflow:hidden;font-size:11px;line-height:1.35;z-index:1;}
+.wk-evt:hover{filter:brightness(1.15);z-index:2;}
+/* Billable — solid green left accent, money blocks */
+.wk-evt.billable{background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.3);border-left:3px solid var(--green);color:var(--green);}
+/* Internal — blue, meetings/admin */
+.wk-evt.internal{background:rgba(77,159,255,0.1);border:1px solid rgba(77,159,255,0.3);border-left:3px solid var(--blue);color:var(--blue);}
+/* Buffer — amber, travel/lunch */
+.wk-evt.buffer{background:rgba(245,166,35,0.08);border:1px dashed rgba(245,166,35,0.35);border-left:3px solid var(--amber);color:var(--amber);}
+/* Legacy type mappings (for old data) */
+.wk-evt.meeting{background:rgba(77,159,255,0.1);border:1px solid rgba(77,159,255,0.3);border-left:3px solid var(--blue);color:var(--blue);}
+.wk-evt.free,.wk-evt.travel,.wk-evt.personal{background:rgba(245,166,35,0.08);border:1px dashed rgba(245,166,35,0.35);border-left:3px solid var(--amber);color:var(--amber);}
+.wk-evt.other{background:rgba(77,159,255,0.1);border:1px solid rgba(77,159,255,0.3);border-left:3px solid var(--blue);color:var(--blue);}
+/* Type badge inside block */
+.wk-evt-badge{font-size:8px;letter-spacing:1px;text-transform:uppercase;opacity:0.6;font-family:'JetBrains Mono',monospace;margin-bottom:2px;}
+/* Time utilization — compact pill (sits in week nav bar) */
+.util-mini{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:5px 11px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;white-space:nowrap;margin-left:auto;}
+.util-mini-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.util-mini-dot.billable{background:var(--green);}
+.util-mini-dot.internal{background:var(--blue);}
+.util-mini-dot.buffer{background:var(--amber);}
+.util-mini-val.billable{color:var(--green);}
+.util-mini-val.internal{color:var(--blue);}
+.util-mini-val.buffer{color:var(--amber);}
+.util-mini-sep{color:var(--border2);font-size:9px;}
+/* Event creation modal */
+.evt-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.evt-overlay.open{display:flex;}
+.evt-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:22px;width:360px;max-width:94vw;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.evt-modal-header{display:flex;align-items:center;justify-content:space-between;}
+.evt-modal-title{font-size:15px;font-weight:600;color:var(--white);}
+.evt-modal-close{width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.evt-modal-close:hover{color:var(--white);background:var(--surface2);}
+.evt-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.14s;}
+.evt-input:focus{border-color:rgba(200,241,53,0.5);}
+.evt-input option{background:var(--surface2);}
+.evt-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);font-weight:600;margin-bottom:5px;}
+.evt-field{display:flex;flex-direction:column;gap:4px;}
+.evt-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+/* 3-type card selector */
+.evt-type-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.evt-type-card{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 11px;border-radius:10px;border:1.5px solid var(--border2);background:transparent;cursor:pointer;transition:all 0.14s;text-align:left;font-family:'DM Sans',sans-serif;}
+.evt-type-card:hover{background:var(--surface2);}
+.etc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.evt-type-card[data-type="billable"] .etc-dot{background:var(--green);}
+.evt-type-card[data-type="internal"] .etc-dot{background:var(--blue);}
+.evt-type-card[data-type="buffer"] .etc-dot{background:var(--amber);}
+.etc-label{font-size:12px;font-weight:700;color:var(--white);}
+.etc-sub{font-size:9.5px;color:var(--gray);line-height:1.3;}
+.evt-type-card.active[data-type="billable"]{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.4);}
+.evt-type-card.active[data-type="internal"]{background:rgba(77,159,255,0.08);border-color:rgba(77,159,255,0.4);}
+.evt-type-card.active[data-type="buffer"]{background:rgba(245,166,35,0.08);border-color:rgba(245,166,35,0.4);}
+.evt-actions{display:flex;gap:10px;}
+.evt-btn{flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);font-family:'DM Sans',sans-serif;transition:all 0.14s;}
+.evt-btn.cancel{background:transparent;color:var(--gray);}
+.evt-btn.cancel:hover{color:var(--white);}
+.evt-btn.save{background:var(--green);color:#0a0a0a;border-color:var(--green);}
+.evt-btn.save:hover{filter:brightness(1.1);}
 
 </style>
 
@@ -329,6 +420,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   <div class="page-body">
 
+<!-- View tabs -->
+<div style="display:flex;justify-content:center;margin-bottom:18px;">
+  <div class="sched-view-pill">
+    <button class="sched-vtab active" onclick="switchSchedView('calendar',this)">Schedule</button>
+    <button class="sched-vtab" onclick="switchSchedView('timeblocks',this)">Time Blocks</button>
+  </div>
+</div>
+
+<!-- ═══ CALENDAR VIEW ═══ -->
+<div id="cal-view">
+
 <!-- Cal controls -->
 <div class="cal-header">
   <div class="cal-nav-btn" onclick="prevMonth()">
@@ -373,6 +475,37 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="cal-dow">Sat</div>
   </div>
   <div class="cal-grid" id="cal-grid"></div>
+</div>
+
+</div><!-- /#cal-view -->
+
+<!-- ═══ TIME BLOCKS VIEW ═══ -->
+<div id="timeblock-view" style="display:none">
+  <div class="wk-nav">
+    <div class="cal-nav-btn" onclick="prevWeek()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="wk-range" id="wk-range-label"></div>
+    <div class="cal-nav-btn" onclick="nextWeek()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <button class="cal-today-btn" onclick="goTodayWeek()">Today</button>
+    <!-- Monthly utilization — compact pill on far right -->
+    <div id="time-report"></div>
+  </div>
+  <div class="wk-wrap">
+    <div class="wk-day-hdrs" id="wk-day-hdrs"><div class="wk-gutter-hdr"></div></div>
+    <div class="wk-body-wrap">
+      <div class="wk-time-gutter" id="wk-time-gutter"></div>
+      <div class="wk-day-col" id="wk-col-0"></div>
+      <div class="wk-day-col" id="wk-col-1"></div>
+      <div class="wk-day-col" id="wk-col-2"></div>
+      <div class="wk-day-col" id="wk-col-3"></div>
+      <div class="wk-day-col" id="wk-col-4"></div>
+      <div class="wk-day-col" id="wk-col-5"></div>
+      <div class="wk-day-col" id="wk-col-6"></div>
+    </div>
+  </div>
 </div>
 
   </div>
@@ -428,6 +561,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="detail-row">
       <div class="detail-icon">👥</div>
       <div><div class="detail-label">Crew</div><div class="detail-value" id="d-crew-detail">Crew A — Marcus T., Devon R., Luis M.</div></div>
+    </div>
+    <div class="detail-row" id="d-notes-row" style="display:none;">
+      <div class="detail-icon">📝</div>
+      <div><div class="detail-label">Notes</div><div class="detail-value" id="d-notes-val" style="white-space:pre-wrap;"></div></div>
     </div>
     <div class="section-title" style="margin-top:4px;">Weather Forecast</div>
     <div class="wx-card" id="d-wx">
@@ -537,14 +674,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg>
       Edit
     </button>
-    <button class="dfooter-btn" onclick="showToast('Feature coming soon')">
-      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 0 2 2z" stroke-width="1.8"/></svg>
-      Text Crew
-    </button>
-    <button class="dfooter-btn primary" onclick="showToast('Job marked complete ✓')">
-      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Mark Complete
-    </button>
   </div>
 
   <!-- EDIT footer -->
@@ -581,22 +710,347 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script>
   /* ── Calendar Jobs Data ── */
   let calendarJobs = [];
+  let _allJobs = [];       // full job objects for week view
+  let _schedEvents = [];   // lightweight calendar events
+
+  /* ── View switching ── */
+  function switchSchedView(view, btn) {
+    document.querySelectorAll('.sched-vtab').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    if (view === 'calendar') {
+      document.getElementById('cal-view').style.display = '';
+      document.getElementById('timeblock-view').style.display = 'none';
+    } else {
+      document.getElementById('cal-view').style.display = 'none';
+      document.getElementById('timeblock-view').style.display = '';
+      renderWeekView();
+      renderTimeReport();
+    }
+  }
+
+  /* ── Week view state ── */
+  var weekStart = (function() {
+    var d = new Date(); d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay()); // back to Sunday
+    return d;
+  })();
+
+  function parseDurationHours(str) {
+    if (!str) return 2;
+    var s = str.toLowerCase();
+    var hr = s.match(/(\d+\.?\d*)\s*h/);
+    if (hr) return parseFloat(hr[1]);
+    var mn = s.match(/(\d+)\s*min/);
+    if (mn) return parseFloat(mn[1]) / 60;
+    return 2;
+  }
+
+  function renderWeekView() {
+    var WK_START_HOUR = 6, WK_END_HOUR = 21, HOUR_HEIGHT = 60;
+    var DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var today = new Date(); today.setHours(0,0,0,0);
+    var now = new Date();
+
+    // Week label
+    var wkEnd = new Date(weekStart); wkEnd.setDate(weekStart.getDate() + 6);
+    var lbl = MONTH_SHORT[weekStart.getMonth()] + ' ' + weekStart.getDate() + ' – ';
+    if (weekStart.getMonth() !== wkEnd.getMonth()) lbl += MONTH_SHORT[wkEnd.getMonth()] + ' ';
+    lbl += wkEnd.getDate() + ', ' + wkEnd.getFullYear();
+    var lblEl = document.getElementById('wk-range-label');
+    if (lblEl) lblEl.textContent = lbl;
+
+    // Day headers
+    var hdrHtml = '<div class="wk-gutter-hdr"></div>';
+    for (var di = 0; di < 7; di++) {
+      var dd = new Date(weekStart); dd.setDate(weekStart.getDate() + di);
+      var isToday = dd.getTime() === today.getTime();
+      hdrHtml += '<div class="wk-day-hdr' + (isToday ? ' today' : '') + '">'
+        + '<div class="wk-day-name">' + DAY_NAMES[dd.getDay()] + '</div>'
+        + '<div class="wk-day-num">' + dd.getDate() + '</div>'
+        + '</div>';
+    }
+    document.getElementById('wk-day-hdrs').innerHTML = hdrHtml;
+
+    // Time gutter
+    var gutHtml = '';
+    for (var h = WK_START_HOUR; h < WK_END_HOUR; h++) {
+      var lh = h === 12 ? '12 PM' : h > 12 ? (h-12)+' PM' : h+' AM';
+      gutHtml += '<div class="wk-hour-lbl">' + lh + '</div>';
+    }
+    document.getElementById('wk-time-gutter').innerHTML = gutHtml;
+
+    // Day columns
+    for (var di = 0; di < 7; di++) {
+      var dd = new Date(weekStart); dd.setDate(weekStart.getDate() + di);
+      var isToday = dd.getTime() === today.getTime();
+      var dateStr = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
+      var dayJobs = _allJobs.filter(function(j) { return j.scheduledDate === dateStr; });
+      var dayEvts = _schedEvents.filter(function(e) { return e.date === dateStr; });
+
+      var colHtml = '';
+      // Hour lines
+      for (var h = WK_START_HOUR; h < WK_END_HOUR; h++) {
+        colHtml += '<div class="wk-hour-line" style="top:' + ((h-WK_START_HOUR)*HOUR_HEIGHT) + 'px"></div>';
+      }
+      // Current time indicator
+      if (isToday) {
+        var nowHr = now.getHours() + now.getMinutes()/60;
+        if (nowHr >= WK_START_HOUR && nowHr < WK_END_HOUR) {
+          var nowTop = (nowHr - WK_START_HOUR) * HOUR_HEIGHT;
+          colHtml += '<div class="wk-now-line" style="top:' + nowTop + 'px"><div class="wk-now-dot"></div></div>';
+        }
+      }
+      // Job blocks
+      dayJobs.forEach(function(j) {
+        var timeStr = j.startTime || j.scheduledTime || '';
+        var startHr = WK_START_HOUR + 2; // default 8 AM
+        var startMin = 0;
+        if (timeStr) {
+          var parts = timeStr.split(':');
+          startHr = parseInt(parts[0], 10);
+          startMin = parseInt(parts[1] || '0', 10);
+        }
+        if (startHr < WK_START_HOUR) startHr = WK_START_HOUR;
+        if (startHr >= WK_END_HOUR) return;
+        var durHrs = parseDurationHours(j.duration);
+        var topPx = (startHr - WK_START_HOUR) * HOUR_HEIGHT + (startMin/60) * HOUR_HEIGHT;
+        var htPx = Math.max(durHrs * HOUR_HEIGHT, 32);
+        var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
+        var fmtTime = timeStr ? (function() {
+          var h12 = startHr > 12 ? startHr-12 : (startHr === 0 ? 12 : startHr);
+          return h12 + ':' + String(startMin).padStart(2,'0') + (startHr >= 12 ? ' PM' : ' AM');
+        })() : '';
+        var title = j.title || ((j.customerName||'') + (j.service ? ' — '+j.service : ''));
+        colHtml += '<div class="wk-block ' + color + '" style="top:' + topPx + 'px;height:' + htPx + 'px;" onclick="openDrawer(\'' + j.id + '\')">'
+          + '<div class="wk-block-title">' + title + '</div>'
+          + '<div class="wk-block-time">' + (fmtTime || 'No time set') + (j.duration ? ' · ' + j.duration : '') + '</div>'
+          + '</div>';
+      });
+      // Schedule blocks — typed: billable / internal / buffer
+      dayEvts.forEach(function(ev) {
+        if (!ev.startTime) return;
+        var parts = ev.startTime.split(':');
+        var evHr = parseInt(parts[0], 10), evMin = parseInt(parts[1]||'0', 10);
+        if (evHr < WK_START_HOUR || evHr >= WK_END_HOUR) return;
+        var durMins = ev.durationMins || 60;
+        var topPx = (evHr - WK_START_HOUR) * HOUR_HEIGHT + (evMin/60) * HOUR_HEIGHT;
+        var htPx = Math.max((durMins/60) * HOUR_HEIGHT, 28);
+        var h12 = evHr > 12 ? evHr-12 : (evHr===0?12:evHr);
+        var fmtT = h12 + ':' + String(evMin).padStart(2,'0') + (evHr>=12?' PM':' AM');
+        var typ = normalizeBlockType(ev.type || 'internal');
+        var typLabel = typ.charAt(0).toUpperCase() + typ.slice(1);
+        colHtml += '<div class="wk-evt ' + typ + '" style="top:' + topPx + 'px;height:' + htPx + 'px;" onclick="openEvtEditModal(\'' + ev.id + '\')">'
+          + (htPx > 36 ? '<div class="wk-evt-badge">' + typLabel + '</div>' : '')
+          + '<div class="wk-block-title">' + (ev.title||'Block') + '</div>'
+          + (htPx > 50 ? '<div class="wk-block-time">' + fmtT + ' · ' + (durMins >= 60 ? Math.floor(durMins/60) + 'h' + (durMins%60?String(durMins%60)+'m':'') : durMins + 'm') + '</div>' : '')
+          + '</div>';
+      });
+
+      var colEl = document.getElementById('wk-col-' + di);
+      if (colEl) {
+        colEl.innerHTML = colHtml;
+        // Click on empty slot → open event modal pre-filled with date + time
+        (function(ds) {
+          colEl.onclick = function(e) {
+            if (e.target.closest('.wk-block') || e.target.closest('.wk-evt')) return;
+            var rect = colEl.getBoundingClientRect();
+            var y = e.clientY - rect.top;
+            var rawMin = (y / HOUR_HEIGHT) * 60 + WK_START_HOUR * 60;
+            var snapped = Math.round(rawMin / 15) * 15;
+            var hr = Math.min(Math.floor(snapped / 60), WK_END_HOUR - 1);
+            var mn = snapped % 60;
+            openEvtModal(ds, String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0'));
+          };
+        })(dateStr);
+      }
+    }
+  }
+
+  function prevWeek() {
+    weekStart = new Date(weekStart); weekStart.setDate(weekStart.getDate()-7); renderWeekView();
+  }
+  function nextWeek() {
+    weekStart = new Date(weekStart); weekStart.setDate(weekStart.getDate()+7); renderWeekView();
+  }
+  function goTodayWeek() {
+    var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-d.getDay());
+    weekStart = d; renderWeekView();
+  }
+
+  function openNewJobAt(dateStr, timeStr) {
+    openNewJob();
+    document.getElementById('e-date').value = dateStr;
+    document.getElementById('e-time').value = timeStr;
+    var d = new Date(dateStr + 'T12:00:00');
+    var dayLabel = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    var hr = parseInt(timeStr.split(':')[0], 10);
+    var mn = parseInt(timeStr.split(':')[1] || '0', 10);
+    var h12 = hr > 12 ? hr-12 : (hr === 0 ? 12 : hr);
+    var ampm = hr >= 12 ? 'PM' : 'AM';
+    document.getElementById('d-date').textContent = dayLabel + ' · ' + h12 + ':' + String(mn).padStart(2,'0') + ' ' + ampm;
+  }
+
+  /* ── Block type system ── */
+  // Normalize legacy types and new types to the three-tier system
+  function normalizeBlockType(type) {
+    if (type === 'billable') return 'billable';
+    if (type === 'buffer' || type === 'travel' || type === 'free' || type === 'personal') return 'buffer';
+    return 'internal'; // meeting, other, internal, anything else
+  }
+
+  /* ── Time utilization report (compact pill) ── */
+  function renderTimeReport() {
+    var reportEl = document.getElementById('time-report');
+    if (!reportEl) return;
+    var now = new Date();
+    var year = now.getFullYear(), month = now.getMonth();
+
+    var monthEvts = _schedEvents.filter(function(e) {
+      if (!e.date) return false;
+      var d = new Date(e.date + 'T12:00:00');
+      return d.getFullYear() === year && d.getMonth() === month;
+    });
+
+    var mins = { billable: 0, internal: 0, buffer: 0 };
+    monthEvts.forEach(function(e) {
+      var t = normalizeBlockType(e.type || 'internal');
+      mins[t] += e.durationMins || 60;
+    });
+
+    var total = mins.billable + mins.internal + mins.buffer;
+    if (total === 0) { reportEl.innerHTML = ''; return; }
+
+    var pct = function(m) { return Math.round(m / total * 100); };
+    var bp = pct(mins.billable), ip = pct(mins.internal), bufp = Math.max(0, 100 - bp - ip);
+    var mo = now.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+
+    reportEl.innerHTML =
+      '<div class="util-mini" title="' + mo + ' time breakdown">'
+      + '<span class="util-mini-dot billable"></span><span class="util-mini-val billable">' + bp + '%</span>'
+      + '<span class="util-mini-sep">·</span>'
+      + '<span class="util-mini-dot internal"></span><span class="util-mini-val internal">' + ip + '%</span>'
+      + '<span class="util-mini-sep">·</span>'
+      + '<span class="util-mini-dot buffer"></span><span class="util-mini-val buffer">' + bufp + '%</span>'
+      + '</div>';
+  }
+
+  /* ── Event modal ── */
+  var _evtType = 'billable';
+  var _editEvtId = null;
+
+  function _setEvtModalMode(isEdit) {
+    document.querySelector('.evt-modal-title').textContent = isEdit ? 'Edit Block' : 'New Block';
+    document.getElementById('evt-save-btn').textContent = isEdit ? 'Save Changes' : 'Add Block';
+    var delBtn = document.getElementById('evt-delete-btn');
+    if (delBtn) delBtn.style.display = isEdit ? '' : 'none';
+  }
+
+  function openEvtModal(dateStr, timeStr) {
+    _editEvtId = null;
+    document.getElementById('evt-title').value = '';
+    document.getElementById('evt-date').value = dateStr || '';
+    document.getElementById('evt-start').value = timeStr || '09:00';
+    document.getElementById('evt-dur').value = '60';
+    document.getElementById('evt-notes').value = '';
+    _evtType = 'billable';
+    document.querySelectorAll('.evt-type-card').forEach(function(b) { b.classList.remove('active'); });
+    var defBtn = document.querySelector('.evt-type-card[data-type="billable"]');
+    if (defBtn) defBtn.classList.add('active');
+    _setEvtModalMode(false);
+    document.getElementById('evt-overlay').classList.add('open');
+    setTimeout(function() { document.getElementById('evt-title').focus(); }, 80);
+  }
+
+  function openEvtEditModal(id) {
+    var ev = _schedEvents.find(function(e) { return e.id === id; });
+    if (!ev) return;
+    _editEvtId = id;
+    document.getElementById('evt-title').value = ev.title || '';
+    document.getElementById('evt-date').value = ev.date || '';
+    document.getElementById('evt-start').value = ev.startTime || '09:00';
+    var durMins = ev.durationMins || 60;
+    var durEl = document.getElementById('evt-dur');
+    var opts = Array.from(durEl.options).map(function(o) { return parseInt(o.value, 10); });
+    var closest = opts.reduce(function(a, b) { return Math.abs(b - durMins) < Math.abs(a - durMins) ? b : a; });
+    durEl.value = closest;
+    document.getElementById('evt-notes').value = ev.notes || '';
+    _evtType = normalizeBlockType(ev.type || 'internal');
+    document.querySelectorAll('.evt-type-card').forEach(function(b) { b.classList.remove('active'); });
+    var typeBtn = document.querySelector('.evt-type-card[data-type="' + _evtType + '"]');
+    if (typeBtn) typeBtn.classList.add('active');
+    _setEvtModalMode(true);
+    document.getElementById('evt-overlay').classList.add('open');
+    setTimeout(function() { document.getElementById('evt-title').focus(); }, 80);
+  }
+
+  function closeEvtModal() {
+    document.getElementById('evt-overlay').classList.remove('open');
+    _editEvtId = null;
+  }
+
+  function setEvtType(type, btn) {
+    _evtType = type;
+    document.querySelectorAll('.evt-type-card').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+  }
+
+  async function saveEvt() {
+    var title = document.getElementById('evt-title').value.trim();
+    if (!title) { document.getElementById('evt-title').focus(); return; }
+    var date = document.getElementById('evt-date').value;
+    var startTime = document.getElementById('evt-start').value;
+    var durMins = parseInt(document.getElementById('evt-dur').value, 10) || 60;
+    var notes = document.getElementById('evt-notes').value.trim();
+    var startParts = startTime.split(':');
+    var endTotalMin = parseInt(startParts[0],10)*60 + parseInt(startParts[1]||'0',10) + durMins;
+    var endTime = String(Math.floor(endTotalMin/60)).padStart(2,'0') + ':' + String(endTotalMin%60).padStart(2,'0');
+    var payload = { title: title, type: _evtType, date: date, startTime: startTime, endTime: endTime, durationMins: durMins, notes: notes };
+    try {
+      if (_editEvtId) {
+        await API.schedule.update(_editEvtId, payload);
+        var idx = _schedEvents.findIndex(function(e) { return e.id === _editEvtId; });
+        if (idx >= 0) _schedEvents[idx] = Object.assign(_schedEvents[idx], payload);
+      } else {
+        var saved = await API.schedule.create(payload);
+        _schedEvents.push(saved);
+      }
+      closeEvtModal();
+      renderWeekView();
+      renderTimeReport();
+    } catch(e) { alert('Error saving block: ' + e.message); }
+  }
+
+  async function deleteEvtPrompt(id) {
+    var ok = await swftConfirm('Delete this block?', 'This cannot be undone.', { danger: true, confirmLabel: 'Delete' });
+    if (!ok) return;
+    try {
+      await API.schedule.delete(id);
+      _schedEvents = _schedEvents.filter(function(e) { return e.id !== id; });
+      closeEvtModal();
+      renderWeekView();
+      renderTimeReport();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
 
   async function loadCalendarJobs() {
     try {
-      const jobs = await API.jobs.list();
+      const [jobs, evts] = await Promise.all([API.jobs.list(), API.schedule.list().catch(()=>[])]);
+      // Store full job objects so the drawer can show all fields
+      jobs.forEach(function(j) { _jobsCache[j.id] = j; });
+      _allJobs = jobs;
+      _schedEvents = evts;
       calendarJobs = jobs.map(function(j) {
         var color = j.status === 'active' ? 'green' : j.status === 'scheduled' ? 'blue' : j.status === 'pending' ? 'amber' : 'gray';
         return {
           date: j.scheduledDate || '',
           title: j.title || (j.customerName + ' - ' + (j.service||'')),
-          crew: '',
-          address: j.address || '',
           color: color,
           drawerId: j.id
         };
       });
       renderCalendar(calYear, calMonth);
+      if (document.getElementById('timeblock-view').style.display !== 'none') { renderWeekView(); renderTimeReport(); }
     } catch(e) { console.error('loadCalendarJobs error:', e); }
   }
 
@@ -673,7 +1127,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       const dayJobs = calendarJobs.filter(function(j) { return j.date === dateStr; });
       for (let ji = 0; ji < dayJobs.length; ji++) {
         const job = dayJobs[ji];
-        html += '<div class="job-block ' + job.color + '" onclick="showCalPopup(event,\'' + job.drawerId + '\',' + JSON.stringify(job).replace(/'/g,"\\'") + ')">' + job.title + '</div>';
+        html += '<div class="job-block ' + job.color + '" onclick="event.stopPropagation();openDrawer(\'' + job.drawerId + '\')">' + job.title + '</div>';
       }
 
       html += '</div>';
@@ -769,36 +1223,121 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
   })();
 
-  const jobs = {};
+  const _jobsCache = {};
+
+  const _STATUS_LABELS = { active:'In Progress', scheduled:'Scheduled', pending:'Pending', complete:'Complete' };
+  const _STATUS_COLORS = { active:'var(--green)', scheduled:'#4d9fff', pending:'var(--amber)', complete:'var(--gray)' };
+  const _STATUS_BKGS   = { active:'rgba(200,241,53,0.12)', scheduled:'rgba(77,159,255,0.12)', pending:'rgba(245,166,35,0.12)', complete:'rgba(122,122,122,0.12)' };
+  const tagStyles = {
+    'In Progress':'background:rgba(200,241,53,0.12);color:var(--green);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+    'Scheduled':  'background:rgba(77,159,255,0.12);color:#4d9fff;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+    'Pending':    'background:rgba(245,166,35,0.12);color:var(--amber);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+    'Complete':   'background:rgba(122,122,122,0.12);color:var(--gray);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:0.8px;',
+  };
+
+  const WMO_ICONS_DRW = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};
+  const WMO_DESC_DRW  = {0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Light showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm w/ hail',99:'Severe thunderstorm'};
 
   let _currentJob = null;
+  let _currentJobId = null;
+
   function openDrawer(id) {
-    const j = jobs[id]; if(!j) return;
-    _currentJob = j;
-    document.getElementById('d-date').textContent     = j.date;
-    document.getElementById('d-title').textContent    = j.title;
-    document.getElementById('d-customer').textContent = j.customer;
-    document.getElementById('d-tag').textContent      = j.tag;
-    document.getElementById('d-tag').style.cssText    = j.tagStyle;
-    document.getElementById('d-crew').innerHTML       = j.crew;
-    document.getElementById('d-amount').textContent   = j.amount;
-    document.getElementById('d-sqft').textContent     = j.sqft;
-    document.getElementById('d-dur').textContent      = j.dur;
-    document.getElementById('d-num').textContent      = j.num;
-    document.getElementById('d-address').textContent  = j.address;
-    document.getElementById('d-service').textContent  = j.service;
-    document.getElementById('d-crew-detail').textContent = j.crew.replace(/<[^>]+>/g,'').trim();
-    document.getElementById('d-wx').innerHTML = `
-      <div class="wx-big">${j.wx}</div>
-      <div class="wx-info">
-        <div class="wx-desc">${j.wxDesc}</div>
-        <div class="wx-note">${j.wxNote}</div>
-      </div>
-      <span class="wx-badge ${j.wxBadge}">${j.wxText}</span>`;
-    document.getElementById('d-edit').style.display='none';
-    document.getElementById('d-view').style.display='flex';
-    document.getElementById('footer-edit').style.display='none';
-    document.getElementById('footer-view').style.display='flex';
+    const raw = _jobsCache[id];
+    if (!raw) return;
+    _currentJobId = id;
+
+    // Derive display and edit-mode values from the raw API job
+    var statusLabel = _STATUS_LABELS[raw.status] || raw.status || 'Scheduled';
+    var tagStyle    = tagStyles[statusLabel] || tagStyles['Scheduled'];
+    var crewNames   = (raw.crew || '').split(',').map(function(c){ return c.trim(); }).filter(Boolean);
+    var crewHtml    = crewNames.length
+      ? crewNames.map(function(c){ return '<span class="crew-pill">' + c + '</span>'; }).join('')
+      : '<span style="color:var(--gray);font-size:11px;">No crew assigned</span>';
+    var serviceStr  = [raw.service, raw.finish].filter(Boolean).join(' — ') || '—';
+    var amountStr   = raw.cost ? '$' + Number(raw.cost).toLocaleString() : (raw.payStatus || '—');
+
+    // Store _currentJob in the shape enterEditMode expects
+    _currentJob = {
+      title:    raw.title || ((raw.customerName || '') + (raw.service ? ' — ' + raw.service : '')),
+      customer: raw.customerName || '',
+      date:     (raw.scheduledDate || '') + (raw.scheduledTime ? ' · ' + raw.scheduledTime : ''),
+      address:  raw.address || '',
+      sqft:     raw.sqft || '',
+      dur:      raw.duration || '',
+      amount:   raw.cost ? '$' + Number(raw.cost).toLocaleString() : '',
+      service:  serviceStr,
+      tag:      statusLabel,
+      tagStyle: tagStyle,
+      crew:     crewHtml,
+      num:      '#' + id.slice(-4).toUpperCase(),
+    };
+
+    // ── Populate drawer ──
+    // Header
+    var displayDate = '—';
+    if (raw.scheduledDate) {
+      var d = new Date(raw.scheduledDate + 'T12:00:00');
+      displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      if (raw.scheduledTime) displayDate += ' · ' + raw.scheduledTime;
+    }
+    document.getElementById('d-date').textContent     = displayDate;
+    document.getElementById('d-title').textContent    = _currentJob.title;
+    document.getElementById('d-customer').textContent = _currentJob.customer;
+    document.getElementById('d-tag').textContent      = statusLabel;
+    document.getElementById('d-tag').style.cssText    = tagStyle;
+    document.getElementById('d-crew').innerHTML       = crewHtml;
+
+    // Stats
+    document.getElementById('d-amount').textContent = amountStr;
+    document.getElementById('d-sqft').textContent   = raw.sqft     || '—';
+    document.getElementById('d-dur').textContent    = raw.duration || '—';
+    document.getElementById('d-num').textContent    = '#' + id.slice(-4).toUpperCase();
+
+    // Detail rows
+    document.getElementById('d-address').textContent     = raw.address || '—';
+    document.getElementById('d-service').textContent     = serviceStr;
+    document.getElementById('d-crew-detail').textContent = crewNames.join(', ') || 'No crew assigned';
+
+    // Notes row (show/hide)
+    var notesRow = document.getElementById('d-notes-row');
+    if (notesRow) {
+      if (raw.notes && raw.notes.trim()) {
+        document.getElementById('d-notes-val').textContent = raw.notes;
+        notesRow.style.display = '';
+      } else {
+        notesRow.style.display = 'none';
+      }
+    }
+
+    // Weather
+    var wxEl = document.getElementById('d-wx');
+    var wxData = window._swftWeatherData;
+    if (wxData && wxData.daily && raw.scheduledDate) {
+      var idx = wxData.daily.time.indexOf(raw.scheduledDate);
+      if (idx !== -1) {
+        var code = wxData.daily.weathercode[idx];
+        var high = Math.round(wxData.daily.temperature_2m_max[idx]);
+        var low  = Math.round(wxData.daily.temperature_2m_min[idx]);
+        var unit = (wxData.daily_units && wxData.daily_units.temperature_2m_max === '°C') ? '°C' : '°F';
+        var wxIcon = WMO_ICONS_DRW[code] || '☁️';
+        var wxDesc = WMO_DESC_DRW[code] || '';
+        var badgeCls = 'wx-ok', badgeText = '✓ Good';
+        if (code >= 95)      { badgeCls = 'wx-warn'; badgeText = '⚠ Storm';  }
+        else if (code >= 61) { badgeCls = 'wx-warn'; badgeText = '⚠ Rain';   }
+        else if (low  < 35)  { badgeCls = 'wx-warn'; badgeText = '⚠ Freeze'; }
+        else if (high > 100) { badgeCls = 'wx-warn'; badgeText = '⚠ Heat';   }
+        wxEl.innerHTML = '<div class="wx-big">' + wxIcon + '</div><div class="wx-info"><div class="wx-desc">' + high + unit + ' / ' + low + unit + ' — ' + wxDesc + '</div></div><span class="wx-badge ' + badgeCls + '">' + badgeText + '</span>';
+      } else {
+        wxEl.innerHTML = '<div class="wx-info"><div class="wx-desc" style="color:var(--gray)">No forecast for this date</div></div>';
+      }
+    } else {
+      wxEl.innerHTML = '<div class="wx-info"><div class="wx-desc" style="color:var(--gray)">No forecast available</div></div>';
+    }
+
+    document.getElementById('d-edit').style.display  = 'none';
+    document.getElementById('d-view').style.display  = 'flex';
+    document.getElementById('footer-edit').style.display = 'none';
+    document.getElementById('footer-view').style.display = 'flex';
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open');
   }
@@ -918,18 +1457,19 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   function enterEditMode() {
     const j = _currentJob;
     if (!j) return;
+    const raw = _currentJobId ? _jobsCache[_currentJobId] : null;
 
     // Populate edit fields from current job data
     document.getElementById('e-title').value    = j.title || '';
     document.getElementById('e-customer').value = j.customer || '';
-    const dateParts = j.date.split(' · ');
+    const dateParts = (j.date || '').split(' · ');
     document.getElementById('e-date').value     = dateParts[0] || '';
     document.getElementById('e-time').value     = dateParts[1] || '12:00';
     document.getElementById('e-address').value  = j.address || '';
     document.getElementById('e-sqft').value     = j.sqft || '';
     document.getElementById('e-dur').value      = j.dur || '';
-    document.getElementById('e-amount').value   = j.amount.replace('$','') || '';
-    document.getElementById('e-notes').value    = '';
+    document.getElementById('e-amount').value   = (j.amount || '').replace(/[$,]/g, '') || '';
+    document.getElementById('e-notes').value    = (raw && raw.notes) ? raw.notes : '';
 
     // Match service select
     const svcEl = document.getElementById('e-service');
@@ -1136,5 +1676,71 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
+
+<!-- Event creation modal -->
+<div class="evt-overlay" id="evt-overlay" onclick="if(event.target===this)closeEvtModal()">
+  <div class="evt-modal">
+    <div class="evt-modal-header">
+      <div class="evt-modal-title">New Event</div>
+      <button class="evt-modal-close" onclick="closeEvtModal()">×</button>
+    </div>
+    <div class="evt-field">
+      <input class="evt-input" id="evt-title" type="text" placeholder="Event title (e.g. Team meeting)"/>
+    </div>
+    <div class="evt-field">
+      <div class="evt-label">Block Type</div>
+      <div class="evt-type-cards">
+        <button class="evt-type-card active" data-type="billable" onclick="setEvtType('billable',this)">
+          <div class="etc-dot"></div>
+          <div class="etc-label">Billable</div>
+          <div class="etc-sub">Jobs · installs · service calls</div>
+        </button>
+        <button class="evt-type-card" data-type="internal" onclick="setEvtType('internal',this)">
+          <div class="etc-dot"></div>
+          <div class="etc-label">Internal</div>
+          <div class="etc-sub">Meetings · admin · planning</div>
+        </button>
+        <button class="evt-type-card" data-type="buffer" onclick="setEvtType('buffer',this)">
+          <div class="etc-dot"></div>
+          <div class="etc-label">Buffer</div>
+          <div class="etc-sub">Travel · lunch · setup</div>
+        </button>
+      </div>
+    </div>
+    <div class="evt-row-2">
+      <div class="evt-field">
+        <div class="evt-label">Date</div>
+        <input class="evt-input" id="evt-date" type="date"/>
+      </div>
+      <div class="evt-field">
+        <div class="evt-label">Start Time</div>
+        <input class="evt-input" id="evt-start" type="time"/>
+      </div>
+    </div>
+    <div class="evt-field">
+      <div class="evt-label">Duration</div>
+      <select class="evt-input" id="evt-dur">
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="45">45 min</option>
+        <option value="60" selected>1 hour</option>
+        <option value="90">1.5 hours</option>
+        <option value="120">2 hours</option>
+        <option value="180">3 hours</option>
+        <option value="240">4 hours</option>
+        <option value="480">All Day (8 hrs)</option>
+      </select>
+    </div>
+    <div class="evt-field">
+      <input class="evt-input" id="evt-notes" type="text" placeholder="Notes (optional)"/>
+    </div>
+    <div class="evt-actions" style="display:flex;gap:8px;align-items:center;">
+      <button class="evt-btn cancel" id="evt-delete-btn" style="display:none;color:var(--red);border-color:rgba(255,82,82,0.3);" onclick="deleteEvtPrompt(_editEvtId)" type="button">Delete</button>
+      <div style="flex:1;"></div>
+      <button class="evt-btn cancel" onclick="closeEvtModal()">Cancel</button>
+      <button class="evt-btn save" id="evt-save-btn" onclick="saveEvt()">Add Event</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
