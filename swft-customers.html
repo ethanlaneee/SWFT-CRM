@@ -897,25 +897,21 @@ function clearSelection() {
 async function deleteSelected() {
   var checked = document.querySelectorAll('.cust-row .row-cb:checked');
   var ids = Array.from(checked).map(function(cb) { return cb.dataset.id; }).filter(Boolean);
-  if (!ids.length) { alert('No customers selected'); return; }
+  if (!ids.length) return;
   var label = ids.length + ' customer' + (ids.length !== 1 ? 's' : '');
-  if (!window.confirm('Permanently delete ' + label + '?')) return;
+  var ok = await swftConfirm('Permanently delete ' + label + '?', 'DELETE CUSTOMERS', '🗑️');
+  if (!ok) return;
+  showToast('Deleting ' + label + '...');
   var failed = 0, firstError = null;
-  for (var i = 0; i < ids.length; i++) {
-    try {
-      await API.customers.delete(ids[i]);
-    } catch(e) {
-      failed++;
-      if (!firstError) firstError = e.message || String(e);
-    }
-  }
+  await Promise.all(ids.map(async function(id) {
+    try { await API.customers.delete(id); }
+    catch(e) { failed++; if (!firstError) firstError = e.message || String(e); }
+  }));
   clearSelection();
   await loadCustomers();
-  if (failed === 0) {
-    alert('Deleted ' + label);
-  } else {
-    alert('FAILED: ' + firstError + '\n\n(' + (ids.length - failed) + ' deleted, ' + failed + ' failed)');
-  }
+  showToast(failed === 0
+    ? 'Deleted ' + label
+    : 'Failed: ' + firstError + ' (' + (ids.length - failed) + '/' + ids.length + ' deleted)');
 }
 
 // ── Render tags in the Notes drawer panel ──
