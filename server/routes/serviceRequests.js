@@ -78,7 +78,7 @@ publicRouter.get("/:orgId/config", async (req, res) => {
       logoUrl:       userData.companyLogo || userData.logoUrl || null,
       services,
       quoteEnabled:  cfg.quoteEnabled || false,
-      formTitle:     cfg.formTitle  || "Request a Service",
+      formTitle:     cfg.formTitle  || "Request a Quote",
       formSubtitle:  cfg.formSubtitle || "Fill out the form below and we'll be in touch shortly.",
       requirePhotos: cfg.requirePhotos || false,
       active:        cfg.active !== false, // default true

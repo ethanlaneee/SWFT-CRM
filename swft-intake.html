@@ -139,7 +139,7 @@ html,body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-ser
   <!-- Form card -->
   <div class="form-card" id="form-card" style="display:none;">
 
-    <div class="form-title" id="form-title">Request a Service</div>
+    <div class="form-title" id="form-title">Request a Quote</div>
     <div class="form-subtitle" id="form-subtitle">Fill out the form below and we'll be in touch shortly.</div>
 
     <form id="intake-form" onsubmit="submitForm(event)" novalidate>
@@ -294,10 +294,10 @@ const uploadedPhotos = []; // array of { file, url, uploading }
     if (formConfig.logoUrl) {
       brandWrap.innerHTML = `<img class="company-logo" src="${formConfig.logoUrl}" alt="${formConfig.companyName || 'Company logo'}"/>`;
     } else {
-      brandWrap.innerHTML = `<div class="company-name">${formConfig.companyName || "Request a Service"}</div>`;
+      brandWrap.innerHTML = `<div class="company-name">${formConfig.companyName || "Request a Quote"}</div>`;
     }
     document.title = `Service Request — ${formConfig.companyName || ""}`;
-    document.getElementById("form-title").textContent = formConfig.formTitle || "Request a Service";
+    document.getElementById("form-title").textContent = formConfig.formTitle || "Request a Quote";
     document.getElementById("form-subtitle").textContent = formConfig.formSubtitle || "";
 
     // Populate services dropdown
