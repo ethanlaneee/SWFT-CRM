@@ -32,7 +32,7 @@ const DEFAULTS = {
     reviewRequestDelay: 24,
     reEngagementMonths: 12,
     channel: "sms",
-    reviewMessage: `Hey {firstName}! It was great working on your {service} at {address}. If you're happy with how it turned out, a quick Google review would mean a lot to us. {reviewLink}`,
+    reviewMessage: `Hey {customerFirstName}! It was great working on your {service} at {address}. If you're happy with how it turned out, a quick Google review would mean a lot to us. {reviewLink}`,
   },
 };
 

@@ -157,6 +157,7 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
         customer_name: customer.name || "",
         customerName: customer.name || "",
         firstName: (customer.name || "").split(" ")[0] || "",
+        customerFirstName: (customer.name || "").split(" ")[0] || "",
         company_name: companyName,
         companyName: companyName,
         your_name: senderFullName,

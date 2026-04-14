@@ -533,6 +533,7 @@ function buildReviewRequest(customer, job, companyName, reviewLink, config) {
   // Use custom template if provided in config
   if (config.reviewMessage) {
     return config.reviewMessage
+      .replace("{customerFirstName}", firstName(customer))
       .replace("{firstName}", firstName(customer))
       .replace("{service}", job.service || job.title || "your project")
       .replace("{address}", job.address || "your property")
