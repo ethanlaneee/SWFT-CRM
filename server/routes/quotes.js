@@ -31,8 +31,18 @@ router.get("/:id", async (req, res, next) => {
 // Create
 router.post("/", async (req, res, next) => {
   try {
+    // Assign next sequential quote number for this org
+    const existing = await col().where("orgId", "==", req.orgId).select("quoteNum").get();
+    let maxNum = 0;
+    existing.docs.forEach(d => {
+      const n = parseInt(d.data().quoteNum || 0, 10);
+      if (n > maxNum) maxNum = n;
+    });
+    const quoteNum = maxNum + 1;
+
     const data = {
       orgId: req.orgId, userId: req.uid,
+      quoteNum,
       customerId: req.body.customerId || "",
       customerName: req.body.customerName || "",
       items: normalizeItems(req.body.items),

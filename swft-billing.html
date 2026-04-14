@@ -542,7 +542,7 @@ async function loadQuotes() {
       row.onclick = function(){ openModalById(q.id); };
       var rawTotal = q.total; if (typeof rawTotal === 'string') rawTotal = parseFloat(rawTotal.replace(/[\$,]/g,'')) || 0; const total = rawTotal ? '$' + Number(rawTotal).toLocaleString() : '$0';
       const created = q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
-      row.innerHTML = '<div class="q-num">' + (q.id.substring(0,8)) + '</div>' +
+      row.innerHTML = '<div class="q-num">#Q-' + (q.quoteNum || q.id.substring(0,6)) + '</div>' +
         '<div><div class="q-customer">' + (q.customerName||'—') + '</div><div class="q-job">' + (q.notes||'—') + '</div></div>' +
         '<div class="q-date">' + created + '</div>' +
         '<div class="q-expires exp-ok">—</div>' +
@@ -559,11 +559,10 @@ async function loadQuotes() {
         '<div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></div>';
       tbody.appendChild(row);
     });
-  // Calculate next quote number (always count up)
+  // Next quote number: use server-assigned quoteNum field
     var maxNum = 0;
     quotes.forEach(function(q) {
-      // Extract number from notes or count
-      maxNum++;
+      if (q.quoteNum && q.quoteNum > maxNum) maxNum = q.quoteNum;
     });
     window._nextQuoteNum = maxNum + 1;
     // ── Quote stats ──
@@ -759,7 +758,7 @@ function openModalById(id) {
   if (!q) return;
   _q = {
     id: q.id,
-    num: q.id.substring(0,8),
+    num: q.quoteNum ? '#Q-' + q.quoteNum : '#Q-' + q.id.substring(0,6),
     created: q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
     customer: q.customerName || '',
     customerId: q.customerId || '',
@@ -961,7 +960,7 @@ function renderPdfBrand() {
 
 function openNewQuote() {
   loadBillingCustomers();
-  _q = {num:'#Q-' + (window._nextQuoteNum || 1),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
+  _q = {num:'#Q-' + (window._nextQuoteNum || '…'),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
   renderPdfBrand();
   document.getElementById('m-doc-type').textContent = 'QUOTE';
   populateEditForm();
@@ -1356,7 +1355,13 @@ async function saveEdit(silent){
         await API.quotes.update(_q.id, data);
       } else {
         var created = await API.quotes.create(data);
-        if (created && created.id) _q.id = created.id;
+        if (created && created.id) {
+          _q.id = created.id;
+          if (created.quoteNum) {
+            _q.num = '#Q-' + created.quoteNum;
+            document.getElementById('e-num').value = _q.num;
+          }
+        }
       }
       if (!silent) { loadQuotes(); closeModal(); showToast('Quote for ' + _q.customer + ' saved — $' + total.toLocaleString()); }
     }
