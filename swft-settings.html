@@ -1016,6 +1016,9 @@ async function loadSettings() {
     if (data.bizWebsite) document.getElementById('s-biz-website').value = data.bizWebsite;
     if (data.bizNotes) document.getElementById('s-biz-notes').value = data.bizNotes;
 
+    // Refresh intake rates list now that service types are populated
+    renderIntakeServicesList();
+
     // Populate billing section
     loadBillingInfo(data, token);
 
@@ -1951,7 +1954,7 @@ function renderIntakeQR() {
   }
 
   // Generate QR code using QR Server API (no library needed)
-  var qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=0a0a0a&color=c8f135&data=' + encodeURIComponent(_intakeUrl);
+  var qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=ffffff&color=000000&data=' + encodeURIComponent(_intakeUrl);
   wrap.innerHTML = '<a href="' + escHtml(_intakeUrl) + '" target="_blank"><img src="' + escHtml(qrApiUrl) + '" style="width:160px;height:160px;border-radius:10px;display:block;" alt="QR Code"/></a>';
 
   if (urlEl)   { urlEl.textContent = _intakeUrl; urlEl.style.display = ''; }

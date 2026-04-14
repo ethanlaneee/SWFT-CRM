@@ -63,7 +63,7 @@ publicRouter.get("/:orgId/config", async (req, res) => {
 
     res.json({
       companyName:   userData.company || userData.name || "SWFT Business",
-      logoUrl:       userData.logoUrl || null,
+      logoUrl:       userData.companyLogo || userData.logoUrl || null,
       services:      cfg.services || [],
       quoteEnabled:  cfg.quoteEnabled || false,
       formTitle:     cfg.formTitle  || "Request a Service",

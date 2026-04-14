@@ -21,9 +21,8 @@ html,body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-ser
 
 /* ── BRAND HEADER ── */
 .brand{text-align:center;margin-bottom:36px;}
-.brand-name{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:4px;color:var(--gray);text-transform:uppercase;margin-bottom:10px;}
 .company-name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--white);line-height:1;}
-.company-logo{max-height:60px;max-width:200px;margin-bottom:10px;border-radius:8px;}
+.company-logo{max-height:72px;max-width:220px;border-radius:8px;object-fit:contain;}
 
 /* ── FORM CARD ── */
 .form-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px 28px;}
@@ -121,8 +120,7 @@ html,body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-ser
 <div class="page">
   <!-- Brand -->
   <div class="brand" id="brand">
-    <div class="brand-name">POWERED BY SWFT</div>
-    <div class="company-name" id="company-name">Loading...</div>
+    <div id="brand-logo-wrap"></div>
   </div>
 
   <!-- Loading state -->
@@ -289,8 +287,13 @@ const uploadedPhotos = []; // array of { file, url, uploading }
       return;
     }
 
-    // Populate brand
-    document.getElementById("company-name").textContent = formConfig.companyName || "Service Request";
+    // Populate brand (logo if available, otherwise company name text)
+    const brandWrap = document.getElementById("brand-logo-wrap");
+    if (formConfig.logoUrl) {
+      brandWrap.innerHTML = `<img class="company-logo" src="${formConfig.logoUrl}" alt="${formConfig.companyName || 'Company logo'}"/>`;
+    } else {
+      brandWrap.innerHTML = `<div class="company-name">${formConfig.companyName || "Request a Service"}</div>`;
+    }
     document.title = `Service Request — ${formConfig.companyName || ""}`;
     document.getElementById("form-title").textContent = formConfig.formTitle || "Request a Service";
     document.getElementById("form-subtitle").textContent = formConfig.formSubtitle || "";
