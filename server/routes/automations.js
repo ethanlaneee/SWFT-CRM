@@ -213,6 +213,8 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
         gmailMessageId: emailContext?.gmailMessageId || null,
         rfcMessageId: emailContext?.rfcMessageId || null,
         originalSubject: emailContext?.originalSubject || null,
+        targetId: customer.quoteId || customer.invoiceId || null,
+        targetType: customer.quoteId ? "quote" : customer.invoiceId ? "invoice" : null,
       };
 
       const newRef = db.collection("scheduledMessages").doc();
@@ -248,6 +250,25 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
   } catch (err) {
     console.error("triggerAutomation error:", err);
   }
+}
+
+/**
+ * Check if a scheduled message's target (quote or invoice) has already been resolved.
+ * Returns true if the message should be skipped.
+ */
+async function scheduledMsgResolved(msg) {
+  if (!msg.targetId) return false; // legacy doc without targetId — send as normal
+  if (msg.trigger === "quote_sent" || msg.targetType === "quote") {
+    const doc = await db.collection("quotes").doc(msg.targetId).get();
+    if (!doc.exists) return true; // quote deleted — skip
+    return doc.data().status === "approved";
+  }
+  if (msg.trigger === "invoice_sent" || msg.targetType === "invoice") {
+    const doc = await db.collection("invoices").doc(msg.targetId).get();
+    if (!doc.exists) return true; // invoice deleted — skip
+    return doc.data().status === "paid";
+  }
+  return false;
 }
 
 /**
@@ -321,6 +342,14 @@ async function processScheduledMessages() {
         }
       }
       console.log(`[automation worker] Processing ${msgDoc.id}: type=${msg.messageType}, to=${msg.email || msg.phone}, orgUser found=${!!orgUser._uid}, gmailConnected=${!!orgUser.gmailConnected}`);
+
+      // Skip if the target quote/invoice has already been resolved (approved/paid)
+      const resolved = await scheduledMsgResolved(msg);
+      if (resolved) {
+        await ref.update({ status: "skipped", reason: "resolved", updatedAt: Date.now() });
+        console.log(`[automation worker] Skipping ${msgDoc.id} — target already resolved (quote approved or invoice paid)`);
+        continue;
+      }
 
       let emailResult = null;
       if (msg.messageType === "tag_customer") {

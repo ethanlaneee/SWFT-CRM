@@ -559,6 +559,38 @@ router.post("/sync-gmail", async (req, res, next) => {
         rfcMessageId: messageIdHeader ? messageIdHeader.value : null,
         sentAt,
       });
+
+      // Auto-approve a pending quote if the email clearly signals approval
+      try {
+        const approvalKeywords = /\b(yes|approved|approve|looks good|sounds good|let('s| us) (do it|proceed|go ahead)|go ahead|confirmed?|great|perfect|i('m| am) in|ready to (go|proceed|start))\b/i;
+        const combinedText = ((subjectHeader ? subjectHeader.value : "") + " " + bodyText).slice(0, 1000);
+        if (approvalKeywords.test(combinedText)) {
+          const pendingQSnap = await db.collection("quotes")
+            .where("customerId", "==", cust.id)
+            .where("status", "==", "sent")
+            .get();
+          if (!pendingQSnap.empty) {
+            const quoteDoc = pendingQSnap.docs[0];
+            await quoteDoc.ref.update({ status: "approved", approvedAt: Date.now(), approvedVia: "email" });
+            const orgId = req.orgId;
+            await db.collection("notifications").add({
+              orgId,
+              userId: req.uid,
+              type: "quote_approved",
+              title: "Quote Approved via Email",
+              message: `${cust.name || fromEmail} approved a quote by email: "${combinedText.slice(0, 100)}"`,
+              customerId: cust.id,
+              quoteId: quoteDoc.id,
+              read: false,
+              createdAt: Date.now(),
+            });
+            console.log(`[sync-gmail] Auto-approved quote ${quoteDoc.id} for customer ${cust.id}`);
+          }
+        }
+      } catch (approveErr) {
+        console.error("[sync-gmail] Auto-approve check error:", approveErr.message);
+      }
+
       synced++;
     }
 

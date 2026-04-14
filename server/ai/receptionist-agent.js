@@ -119,8 +119,22 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   // Auto-discover business context from job history
   const bizContext = await getBusinessContext(orgId, ownerUid);
 
+  // Fetch any pending (sent) quotes for this customer so Claude can detect approval
+  let pendingQuotes = [];
+  if (customer?.customerId) {
+    try {
+      const qSnap = await db.collection("quotes")
+        .where("customerId", "==", customer.customerId)
+        .where("status", "==", "sent")
+        .get();
+      pendingQuotes = qSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error("[receptionist] Failed to fetch pending quotes:", e.message);
+    }
+  }
+
   // Build system prompt
-  const systemPrompt = buildReceptionistPrompt(config, owner, customer, bizContext);
+  const systemPrompt = buildReceptionistPrompt(config, owner, customer, bizContext, pendingQuotes);
 
   // Call Claude
   const response = await anthropic.messages.create({
@@ -134,7 +148,7 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   if (!replyText) return { replied: false, response: null, action: null };
 
   // Parse task signals: [TASK:TYPE:details]
-  const taskRegex = /\[TASK:(QUOTE|ESTIMATE|CALL|PAYMENT):([^\]]*)\]/gi;
+  const taskRegex = /\[TASK:(QUOTE|ESTIMATE|CALL|PAYMENT|APPROVE_QUOTE):([^\]]*)\]/gi;
   const detectedTasks = [];
   let tm;
   while ((tm = taskRegex.exec(replyText)) !== null) {
@@ -174,6 +188,32 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
 
     // Create task documents for each detected signal
     for (const task of detectedTasks) {
+      if (task.type === "APPROVE_QUOTE" && task.details) {
+        // Auto-approve the quote in Firestore
+        const quoteId = task.details.trim();
+        try {
+          await db.collection("quotes").doc(quoteId).update({
+            status: "approved",
+            approvedAt: Date.now(),
+            approvedVia: "sms",
+          });
+          console.log(`[receptionist] Auto-approved quote ${quoteId} for org ${orgId}`);
+          await db.collection("notifications").add({
+            orgId,
+            userId: ownerUid,
+            type: "quote_approved",
+            title: "Quote Approved via SMS",
+            message: `${customer?.customerName || fromPhone} approved a quote by replying: "${messageBody.slice(0, 100)}"`,
+            customerId: customer?.customerId || "",
+            quoteId,
+            read: false,
+            createdAt: Date.now(),
+          });
+        } catch (approveErr) {
+          console.error(`[receptionist] Failed to auto-approve quote ${quoteId}:`, approveErr.message);
+        }
+        continue; // don't also create a generic task doc
+      }
       await db.collection("tasks").add({
         orgId,
         ownerUid,
@@ -293,7 +333,7 @@ async function getBusinessContext(orgId, ownerUid) {
  * and accumulates jobs/quotes, the prompt automatically becomes more specific
  * and fine-tuned to that business — no manual prompt editing required.
  */
-function buildReceptionistPrompt(config, owner, customer, bizContext) {
+function buildReceptionistPrompt(config, owner, customer, bizContext, pendingQuotes = []) {
   const companyName = config.businessName || owner.company || owner.name || "our company";
   const ownerName = owner.name || "the owner";
   const tone = config.tone === "casual" ? "casual and friendly" : "friendly and professional";
@@ -344,7 +384,14 @@ TASK SIGNALS — embed ONE in your reply (customer never sees it) when triggered
 • [TASK:ESTIMATE:brief summary] — Lead explicitly wants a physical walkthrough or on-site visit
 • [TASK:CALL:brief summary] — Situation needs a real phone call (emergency, complex specs, unclear scope, frustrated lead)
 • [TASK:PAYMENT:brief summary] — Lead is ready to pay, book with deposit, or explicitly mentions payment now
-Only emit a signal when clearly triggered. Never emit more than one per reply. Strip it yourself — it goes to the owner's task dashboard, not to the customer.`;
+Only emit a signal when clearly triggered. Never emit more than one per reply. Strip it yourself — it goes to the owner's task dashboard, not to the customer.`
+    + (pendingQuotes.length > 0
+      ? `\n\nPENDING QUOTES AWAITING APPROVAL:\n` +
+        pendingQuotes.map((q, i) =>
+          `${i + 1}. ${q.title || q.service || "Quote"} — $${q.total || 0}${q.address ? ` at ${q.address}` : ""} (quoteId: ${q.id})`
+        ).join("\n") +
+        `\n\nIf the customer clearly approves one of these quotes (says "yes", "looks good", "let's do it", "approved", "go ahead", "sounds great", etc.), emit:\n• [TASK:APPROVE_QUOTE:quoteId] — using the exact quoteId from the list above. Only emit this if their approval is unambiguous.`
+      : "");
 
   if (config.greeting) {
     prompt += `\n\nGREETING STYLE: "${config.greeting}"`;

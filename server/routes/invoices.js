@@ -101,6 +101,7 @@ router.post("/:id/send", async (req, res, next) => {
         const cust = custDoc.exists ? custDoc.data() : {};
         triggerAutomation(req.orgId, "invoice_sent", {
           id: invoiceData.customerId,
+          invoiceId: req.params.id,
           name: cust.name || invoiceData.customerName || "",
           phone: cust.phone || "",
           email: cust.email || "",
@@ -136,6 +137,7 @@ router.post("/:id/pay", async (req, res, next) => {
         const cust = custDoc.exists ? custDoc.data() : {};
         triggerAutomation(req.orgId, "invoice_paid", {
           id: invoiceData.customerId,
+          invoiceId: req.params.id,
           name: cust.name || invoiceData.customerName || "",
           phone: cust.phone || "",
           email: cust.email || "",
@@ -205,6 +207,7 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     if (invData.customerId) {
       triggerAutomation(req.orgId, "invoice_sent", {
         id: invData.customerId,
+        invoiceId: req.params.id,
         name: cust.name || invData.customerName || "",
         phone: cust.phone || "",
         email: cust.email || "",
