@@ -177,9 +177,9 @@ async function scanForFollowups() {
       const config = await getFollowupConfig(orgId);
       if (!config) continue;
 
-      await scanUnsignedQuotes(orgId, config);
-      await scanOverdueInvoices(orgId, config);
-      await scanReviewRequests(orgId, config);
+      if (config.unsignedQuoteEnabled !== false) await scanUnsignedQuotes(orgId, config);
+      if (config.overdueInvoiceEnabled !== false) await scanOverdueInvoices(orgId, config);
+      if (config.reviewRequestEnabled !== false) await scanReviewRequests(orgId, config);
     } catch (err) {
       console.error(`[followup-agent] Scan error for org ${orgId}:`, err.message);
     }

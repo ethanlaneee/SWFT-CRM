@@ -27,6 +27,9 @@ const DEFAULTS = {
   },
   followup: {
     enabled: false,
+    unsignedQuoteEnabled: true,
+    overdueInvoiceEnabled: true,
+    reviewRequestEnabled: true,
     unsignedQuoteDays: [1, 3, 7],
     overdueInvoiceDays: [1, 3, 7],
     reviewRequestDelay: 24,
