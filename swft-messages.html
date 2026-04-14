@@ -1812,6 +1812,7 @@ async function loadMessages(){
 <script>
 var _allTemplates = [];
 var _tmplFilterCat = 'all';
+var _filteredTemplates = [];
 
 async function openTemplatePicker() {
   document.getElementById('tmpl-picker-modal').style.display = 'flex';
@@ -1845,9 +1846,10 @@ function renderTemplatePicker() {
     return;
   }
   var catColors = { 'follow-up': '#4d9fff', 'retention': '#c8f135', 'offer': '#f5a623', 'review': '#a855f7', 'general': '#7a7a7a' };
-  list.innerHTML = filtered.map(function(t) {
+  _filteredTemplates = filtered;
+  list.innerHTML = filtered.map(function(t, i) {
     var color = catColors[t.category] || '#7a7a7a';
-    return '<div class="tmpl-item" onclick="applyTemplate(' + JSON.stringify(t).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026') + ')">' +
+    return '<div class="tmpl-item" onclick="applyTemplateByIdx(' + i + ')">' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
         '<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:' + color + ';background:' + color + '18;border:1px solid ' + color + '33;border-radius:4px;padding:2px 6px;">' + escHtml2(t.category||'general') + '</span>' +
         '<div class="tmpl-item-name">' + escHtml2(t.name) + '</div>' +
@@ -1855,6 +1857,10 @@ function renderTemplatePicker() {
       '<div class="tmpl-item-subject">' + escHtml2(t.subject) + '</div>' +
     '</div>';
   }).join('');
+}
+
+function applyTemplateByIdx(i) {
+  applyTemplate(_filteredTemplates[i]);
 }
 
 function applyTemplate(t) {

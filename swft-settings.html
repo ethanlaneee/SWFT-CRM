@@ -504,7 +504,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div style="display:flex;flex-direction:column;gap:5px;">
       <label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#f0f0f0;font-weight:600;">Body</label>
       <textarea id="template-body" rows="8" placeholder="Hi {customerFirstName}, ..." style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;line-height:1.6;"></textarea>
-      <div style="font-size:10.5px;color:#7a7a7a;">Placeholders: <span style="color:#c8f135;">{customerFirstName}</span> <span style="color:#c8f135;">{customerFullName}</span> <span style="color:#c8f135;">{lastName}</span> <span style="color:#c8f135;">{company}</span> <span style="color:#c8f135;">{amount}</span> <span style="color:#c8f135;">{jobTitle}</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;">
+        <span style="font-size:10.5px;color:#7a7a7a;align-self:center;margin-right:2px;">Insert:</span>
+        <button type="button" onclick="insertTplVar('{customerFirstName}')" style="font-size:10.5px;padding:3px 9px;border-radius:6px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.07);color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;">{customerFirstName}</button>
+        <button type="button" onclick="insertTplVar('{customerFullName}')" style="font-size:10.5px;padding:3px 9px;border-radius:6px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.07);color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;">{customerFullName}</button>
+        <button type="button" onclick="insertTplVar('{company}')" style="font-size:10.5px;padding:3px 9px;border-radius:6px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.07);color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;">{company}</button>
+        <button type="button" onclick="insertTplVar('{amount}')" style="font-size:10.5px;padding:3px 9px;border-radius:6px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.07);color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;">{amount}</button>
+        <button type="button" onclick="insertTplVar('{jobTitle}')" style="font-size:10.5px;padding:3px 9px;border-radius:6px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.07);color:#c8f135;cursor:pointer;font-family:'JetBrains Mono',monospace;">{jobTitle}</button>
+      </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px;">
       <button onclick="closeTemplateModal()" style="flex:1;padding:10px;border-radius:10px;border:1px solid #2c2c2c;background:transparent;color:#7a7a7a;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
@@ -1649,6 +1656,23 @@ async function loadTemplates() {
   } catch(e) {
     list.innerHTML = '<div style="padding:16px 0;color:#ff5252;font-size:13px;">Failed to load templates.</div>';
   }
+}
+
+// Insert a variable token at the cursor position in whichever template field
+// was last focused, defaulting to the body textarea.
+var _lastTplFocus = 'template-body';
+document.addEventListener('focusin', function(e) {
+  if (e.target.id === 'template-subject' || e.target.id === 'template-body') {
+    _lastTplFocus = e.target.id;
+  }
+});
+function insertTplVar(token) {
+  var el = document.getElementById(_lastTplFocus);
+  if (!el) return;
+  var start = el.selectionStart, end = el.selectionEnd;
+  el.value = el.value.slice(0, start) + token + el.value.slice(end);
+  el.selectionStart = el.selectionEnd = start + token.length;
+  el.focus();
 }
 
 function openTemplateModal(template) {
