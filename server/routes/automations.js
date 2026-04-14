@@ -237,7 +237,7 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
           customer_created: "automation_send",
         };
         await db.collection("orgs").doc(orgId).collection("agentActivity").add({
-          agent: "followup",
+          agent: "automation",
           type: triggerLabels[trigger] || "automation_send",
           targetId: autoDoc.id,
           customerId: customer.id || "",
@@ -468,7 +468,7 @@ async function processScheduledMessages() {
       if (msg.automationId) {
         try {
           await db.collection("orgs").doc(msg.orgId).collection("agentActivity").add({
-            agent: "followup",
+            agent: "automation",
             type: msg.automationType || "automation_send",
             targetId: msg.automationId,
             customerId: msg.customerId || "",

@@ -7,8 +7,7 @@
  * sending "did you see our quote?" messages to someone who already said yes.
  *
  * Used by:
- *   - automations.js  → scheduledMsgResolved()
- *   - followup-agent.js → targetResolved()
+ *   - automations.js → scheduledMsgResolved()
  */
 
 const Anthropic = require("@anthropic-ai/sdk");

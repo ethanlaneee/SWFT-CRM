@@ -1209,7 +1209,7 @@ function renderCustomerTabs(cust) {
     }
   }
 
-  // AI Activity — load receptionist + follow-up activity for this customer
+  // AI Activity — load automation + estimator activity for this customer
   var aiEl = document.getElementById('cust-ai-activity');
   if (aiEl && cust.name) {
     loadCustomerAIActivity(aiEl, cust.name);
@@ -1218,22 +1218,21 @@ function renderCustomerTabs(cust) {
 
 async function loadCustomerAIActivity(container, customerName) {
   try {
-    var [recAct, fuAct, estAct] = await Promise.all([
-      API.agents.activity('receptionist').catch(function(){return[];}),
-      API.agents.activity('followup').catch(function(){return[];}),
+    var [autoAct, estAct] = await Promise.all([
+      API.agents.activity('automation').catch(function(){return[];}),
       API.agents.activity('estimator').catch(function(){return[];})
     ]);
-    var all = [].concat(recAct, fuAct, estAct).filter(function(a) {
+    var all = [].concat(autoAct, estAct).filter(function(a) {
       return a.customerName && a.customerName.toLowerCase().indexOf(customerName.toLowerCase()) > -1;
     }).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
 
     if (!all.length) {
-      container.innerHTML = '<div style="font-size:12px;color:#444;text-align:center;padding:20px 0;">No AI agent activity for this customer yet</div>';
+      container.innerHTML = '<div style="font-size:12px;color:#444;text-align:center;padding:20px 0;">No AI activity for this customer yet</div>';
       return;
     }
     container.innerHTML = all.slice(0, 15).map(function(a) {
-      var colors = {receptionist:'#c8f135', estimator:'#4d9fff', followup:'#f5a623'};
-      var icons = {receptionist:'📞', estimator:'📐', followup:'🔔'};
+      var colors = {automation:'#c8f135', estimator:'#4d9fff'};
+      var icons = {automation:'⚡', estimator:'📐'};
       var color = colors[a.agent] || '#7a7a7a';
       var icon = icons[a.agent] || '🤖';
       var label = a.type || a.agent;

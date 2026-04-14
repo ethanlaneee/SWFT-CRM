@@ -5,7 +5,7 @@ const { google } = require("googleapis");
 const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getPlan } = require("../plans");
 const { getUsage, incrementSms } = require("../usage");
-const { handleInboundMessage } = require("../ai/receptionist-agent");
+const { handleInbound } = require("../ai/auto-reply");
 const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email");
 
 /**
@@ -751,13 +751,12 @@ async function telnyxIncomingHandler(req, res) {
 
     console.log("[telnyx-webhook] Message saved:", savedMsg.id);
 
-    // ── AI Receptionist — auto-reply if enabled ──
+    // ── Auto-reply — AI responds unless thread is in manual mode ──
     if (orgId && ownerUid && ownerData) {
       try {
-        console.log("[telnyx-webhook] Calling receptionist agent for org:", orgId);
-        await handleInboundMessage(orgId, ownerUid, ownerData, from, body, matched || null);
+        await handleInbound(orgId, ownerUid, ownerData, from, body, matched || null);
       } catch (err) {
-        console.error("[receptionist] Error handling inbound:", err.message, err.stack);
+        console.error("[auto-reply] Error handling inbound:", err.message, err.stack);
       }
     }
 

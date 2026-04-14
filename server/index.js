@@ -33,7 +33,6 @@ const { router: metaRouter, webhookVerify: metaWebhookVerify, webhookReceive: me
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
-const { runFollowupAgent } = require("./ai/followup-agent");
 const surveyRouter = require("./routes/survey");
 const publicChatRouter = require("./routes/publicChat");
 const { router: serviceRequestsRouter, publicRouter: intakePublicRouter } = require("./routes/serviceRequests");
@@ -201,102 +200,67 @@ app.post("/api/webhooks/telnyx/transcription", async (req, res) => {
   }
 });
 
-// Full end-to-end diagnostic — simulates inbound SMS and reports every step
+// Diagnostic — checks Telnyx + Anthropic config
 app.get("/api/webhooks/telnyx/test", async (req, res) => {
   const { db } = require("./firebase");
-  const { getReceptionistConfig } = require("./ai/receptionist-agent");
   const { getPlan } = require("./plans");
   const { getUsage } = require("./usage");
   const diag = { steps: [] };
 
   try {
-    // Step 1: Find user
     const allUsers = await db.collection("users").limit(1).get();
     if (allUsers.empty) { diag.steps.push("FAIL: No users in database"); return res.json(diag); }
     const user = allUsers.docs[0];
     const userData = user.data();
     const ownerUid = user.id;
-    const orgId = userData.orgId || ownerUid;
-    diag.steps.push(`OK: Found user ${userData.name || userData.email} (uid: ${ownerUid}, orgId: ${orgId})`);
+    diag.steps.push(`OK: Found user ${userData.name || userData.email} (uid: ${ownerUid})`);
 
-    // Step 2: Check receptionist config
-    const config = await getReceptionistConfig(orgId);
-    diag.receptionistConfig = config;
-    if (!config) {
-      diag.steps.push(`FAIL: Receptionist not enabled for orgId: ${orgId}`);
-    } else {
-      diag.steps.push(`OK: Receptionist enabled (tone: ${config.tone})`);
-    }
-
-    // Step 3: Check SMS limits
     const plan = getPlan(userData.plan);
     const usage = await getUsage(ownerUid);
     diag.plan = { name: plan.name, smsLimit: plan.smsLimit };
     diag.usage = usage;
-    if (usage.smsCount >= plan.smsLimit) {
-      diag.steps.push(`FAIL: SMS limit reached (${usage.smsCount}/${plan.smsLimit})`);
-    } else {
-      diag.steps.push(`OK: SMS limit fine (${usage.smsCount}/${plan.smsLimit})`);
-    }
+    diag.steps.push(
+      usage.smsCount >= plan.smsLimit
+        ? `FAIL: SMS limit reached (${usage.smsCount}/${plan.smsLimit})`
+        : `OK: SMS limit fine (${usage.smsCount}/${plan.smsLimit})`
+    );
 
-    // Step 4: Check Telnyx credentials
     const hasTelnyx = !!process.env.TELNYX_API_KEY;
     diag.telnyxConfigured = hasTelnyx;
-    diag.telnyxPhone = process.env.TELNYX_PHONE_NUMBER || "not set";
-    diag.userTelnyxPhone = userData.telnyxPhoneNumber || "not provisioned";
-    if (!hasTelnyx) {
-      diag.steps.push("FAIL: TELNYX_API_KEY not configured");
-    } else {
-      diag.steps.push("OK: Telnyx API key configured");
-    }
+    diag.steps.push(hasTelnyx ? "OK: Telnyx API key configured" : "FAIL: TELNYX_API_KEY not configured");
 
-    // Step 5: Check Anthropic key
     const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
-    if (!hasAnthropic) {
-      diag.steps.push("FAIL: ANTHROPIC_API_KEY not set");
-    } else {
-      diag.steps.push("OK: Anthropic API key configured");
-    }
+    diag.steps.push(hasAnthropic ? "OK: Anthropic API key configured" : "FAIL: ANTHROPIC_API_KEY not set");
 
-    // Step 6: Actually test the receptionist (dry run with Claude, skip SMS send)
     if (req.query.run === "1") {
       try {
         const Anthropic = require("@anthropic-ai/sdk");
         const anthropic = new Anthropic();
-        diag.steps.push("INFO: Testing Claude API call...");
         const testReply = await anthropic.messages.create({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 100,
-          system: "You are a test. Reply with exactly: TEST_OK",
+          max_tokens: 50,
+          system: "Reply with exactly: TEST_OK",
           messages: [{ role: "user", content: "ping" }],
         });
-        const replyText = testReply.content[0]?.text || "";
-        diag.steps.push(`OK: Claude replied: "${replyText.slice(0, 50)}"`);
-
-        // Test Telnyx SMS send
-        try {
+        diag.steps.push(`OK: Claude replied: "${(testReply.content[0]?.text || "").slice(0, 50)}"`);
+        const testPhone = req.query.to || "";
+        if (testPhone) {
           const { sendSms } = require("./telnyx");
-          const testPhone = req.query.to || "";
-          if (testPhone) {
-            await sendSms(testPhone, "SWFT AI Receptionist test — Telnyx SMS confirmed!");
-            diag.steps.push(`OK: Test SMS sent to ${testPhone}`);
-          } else {
-            diag.steps.push("SKIP: Add ?to=+1XXXXXXXXXX to test SMS sending");
-          }
-        } catch (smsErr) {
-          diag.steps.push(`FAIL: SMS send error: ${smsErr.message}`);
+          await sendSms(testPhone, "SWFT auto-reply test — SMS pipeline confirmed!");
+          diag.steps.push(`OK: Test SMS sent to ${testPhone}`);
+        } else {
+          diag.steps.push("SKIP: Add &to=+1XXXXXXXXXX to test SMS");
         }
       } catch (aiErr) {
-        diag.steps.push(`FAIL: Claude API error: ${aiErr.message}`);
+        diag.steps.push(`FAIL: ${aiErr.message}`);
       }
     } else {
-      diag.steps.push("INFO: Add ?run=1 to actually test Claude + SMS. Add &to=+1XXXXXXXXXX to test sending.");
+      diag.steps.push("INFO: Add ?run=1 to test Claude + SMS");
     }
 
     res.json(diag);
   } catch (err) {
     diag.steps.push(`ERROR: ${err.message}`);
-    diag.stack = err.stack?.split("\n").slice(0, 3);
     res.json(diag);
   }
 });
@@ -306,26 +270,6 @@ app.get("/api/auth/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
 
-// ── Diagnostic: test follow-up email ──
-app.get("/api/debug/followup-test", async (req, res) => {
-  try {
-    const { sendFollowupEmail } = require("./ai/followup-agent");
-    const { db } = require("./firebase");
-    const snap = await db.collection("users").limit(1).get();
-    if (snap.empty) return res.json({ error: "No users found" });
-    const ownerUid = snap.docs[0].id;
-    const to = req.query.to || "ethanmlane@gmail.com";
-    await sendFollowupEmail(
-      ownerUid,
-      to,
-      "SWFT Follow-up Agent — Test Email",
-      `Hi Ethan,\n\nThis is a test from the SWFT Follow-up Agent. If you're seeing this, the email pipeline is working!\n\nThe agent will automatically send follow-ups for:\n- Unsigned quotes (day 1, 3, 7)\n- Overdue invoices (day 1, 3, 7)\n- Review requests (24h after job completion)\n\n— SWFT AI`
-    );
-    res.json({ success: true, sentTo: to });
-  } catch (e) {
-    res.json({ error: e.message });
-  }
-});
 
 // ── Diagnostic: test calendar event creation ──
 app.get("/api/debug/calendar-test", async (req, res) => {
@@ -708,15 +652,6 @@ setInterval(() => {
 
 // Run once on startup after 10 seconds
 setTimeout(() => processScheduledMessages().catch(console.error), 10000);
-
-// ── Follow-up Agent worker ──
-// Scans for unsigned quotes, overdue invoices, completed jobs every 10 minutes (was 60s)
-setInterval(() => {
-  runFollowupAgent().catch(err => console.error("Follow-up agent error:", err));
-}, 10 * 60 * 1000);
-
-// Run once on startup after 30 seconds
-setTimeout(() => runFollowupAgent().catch(console.error), 30000);
 
 // ── Outreach lead finder worker ──
 // Auto-discovers 15 leads per day via Google Places API.
