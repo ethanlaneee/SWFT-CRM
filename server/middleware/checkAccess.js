@@ -45,11 +45,13 @@ const METHOD_PERMISSION = {
   "/api/messages":      { GET: "messages.view",   POST: "messages.send",   DELETE: "messages.view" },
   "/api/social":        { GET: "messages.view",   POST: "messages.send" },
   "/api/payments":      { GET: "invoices.view",   POST: "invoices.edit" },
-  "/api/photos":        { GET: "jobs.view",        POST: "photos.upload",   DELETE: "photos.upload" },
-  "/api/ai":            { GET: "ai.use",           POST: "ai.use",          DELETE: "ai.use" },
-  "/api/notifications": { GET: "dashboard.view",  POST: "dashboard.view",  DELETE: "dashboard.view" },
-  "/api/team":          { GET: "team.manage",      POST: "team.manage",     PUT: "team.manage",      DELETE: "team.manage" },
-  "/api/integrations":  { GET: "integrations.manage", POST: "integrations.manage" },
+  "/api/photos":            { GET: "jobs.view",        POST: "photos.upload",          DELETE: "photos.upload" },
+  "/api/ai":                { GET: "ai.use",           POST: "ai.use",                 DELETE: "ai.use" },
+  "/api/notifications":     { GET: "dashboard.view",  POST: "dashboard.view",         DELETE: "dashboard.view" },
+  "/api/team":              { GET: "team.manage",      POST: "team.manage",            PUT: "team.manage",      DELETE: "team.manage" },
+  "/api/integrations":      { GET: "integrations.manage", POST: "integrations.manage" },
+  "/api/service-requests":  { GET: "jobs.view",        POST: "jobs.add",               DELETE: "jobs.delete" },
+  "/api/intake-forms":      { GET: "settings.manage",  PUT:  "settings.manage" },
 };
 
 // Human-readable labels for 403 messages
@@ -80,6 +82,7 @@ const PERM_LABEL = {
   "photos.upload":         "upload job photos",
   "ai.use":                "use the AI assistant",
   "team.manage":           "manage team members",
+  "settings.manage":       "manage settings",
   "integrations.manage":   "manage integrations",
   "settings.manage":       "change settings",
 };

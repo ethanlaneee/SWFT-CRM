@@ -297,6 +297,72 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
 .swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
 
+/* ── PAGE-LEVEL TABS (Jobs / Service Requests) ── */
+.page-tabs{display:flex;align-items:center;gap:4px;padding:0 2px 2px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.ptab{font-size:13px;font-weight:500;padding:10px 18px;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.14s;user-select:none;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.ptab:hover{color:var(--white);}
+.ptab.active{color:var(--green);border-bottom-color:var(--green);}
+.ptab-badge{background:var(--amber);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:'JetBrains Mono',monospace;line-height:1;}
+.ptab-badge.green{background:var(--green);}
+.ptab-badge.hidden{display:none;}
+
+/* ── SR FILTER TABS ── */
+.sr-filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px;}
+.sr-ftab{font-size:11.5px;font-weight:500;padding:6px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;display:flex;align-items:center;gap:6px;}
+.sr-ftab:hover{color:var(--white);border-color:var(--gray2);}
+.sr-ftab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
+.sr-count{font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;font-family:'JetBrains Mono',monospace;background:var(--surface2);color:var(--gray2);}
+.sr-ftab.active .sr-count{background:rgba(200,241,53,0.15);color:var(--green);}
+
+/* ── SR CARD ── */
+.sr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:10px;animation:sharpIn 0.3s cubic-bezier(0.22,1,0.36,1) both;transition:border-color 0.14s;}
+.sr-card:hover{border-color:var(--border2);}
+.sr-card-header{display:flex;align-items:flex-start;gap:14px;padding:16px 18px 12px;}
+.sr-card-avatar{width:38px;height:38px;border-radius:10px;background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--green);flex-shrink:0;}
+.sr-card-info{flex:1;min-width:0;}
+.sr-card-name{font-size:14px;font-weight:600;color:var(--white);}
+.sr-card-meta{font-size:11.5px;color:var(--gray);margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sr-meta-sep{color:var(--border2);}
+.sr-card-time{font-size:10.5px;color:var(--gray2);font-family:'JetBrains Mono',monospace;margin-left:auto;white-space:nowrap;}
+.sr-card-body{padding:0 18px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.sr-field{display:flex;flex-direction:column;gap:3px;}
+.sr-field-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);}
+.sr-field-value{font-size:12.5px;color:var(--white);}
+.sr-field-value.green{color:var(--green);font-family:'JetBrains Mono',monospace;}
+.sr-photos{display:flex;gap:6px;padding:0 18px 14px;flex-wrap:wrap;}
+.sr-photo-thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid var(--border2);cursor:pointer;transition:transform 0.15s;}
+.sr-photo-thumb:hover{transform:scale(1.05);}
+.sr-card-footer{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--border);background:var(--surface2);}
+.sr-notes{flex:1;font-size:11.5px;color:var(--gray);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sr-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;border:1px solid;white-space:nowrap;}
+.sr-btn-approve{background:rgba(200,241,53,0.1);border-color:rgba(200,241,53,0.25);color:var(--green);}
+.sr-btn-approve:hover{background:rgba(200,241,53,0.18);}
+.sr-btn-deny{background:rgba(255,82,82,0.08);border-color:rgba(255,82,82,0.2);color:var(--red);}
+.sr-btn-deny:hover{background:rgba(255,82,82,0.15);}
+.sr-status-badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;letter-spacing:0.4px;}
+.sr-badge-pending{background:rgba(245,166,35,0.1);color:var(--amber);}
+.sr-badge-approved{background:rgba(200,241,53,0.1);color:var(--green);}
+.sr-badge-denied{background:rgba(255,82,82,0.1);color:var(--red);}
+
+/* ── SR EMPTY STATE ── */
+.sr-empty{text-align:center;padding:60px 20px;color:var(--gray);font-size:13px;}
+.sr-empty-icon{font-size:36px;margin-bottom:12px;opacity:0.5;}
+.sr-empty-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--gray);margin-bottom:6px;}
+
+/* ── APPROVE MODAL ── */
+.approve-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.approve-modal-overlay.open{display:flex;}
+.approve-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:460px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
+.approve-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);margin-bottom:6px;}
+.approve-modal-sub{font-size:12.5px;color:var(--gray);margin-bottom:20px;}
+.approve-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.approve-field{display:flex;flex-direction:column;gap:5px;}
+.approve-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:600;}
+.approve-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
+.approve-input:focus{border-color:var(--green);}
+.approve-input option{background:var(--surface2);}
+.approve-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+
 </style>
 
 <!-- Meta Pixel Code -->
@@ -388,6 +454,22 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   <div class="page-body">
 
+<!-- Page-level tabs: Jobs / Service Requests -->
+<div class="page-tabs">
+  <div class="ptab active" id="ptab-jobs" onclick="switchPageTab('jobs')">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
+    Jobs
+  </div>
+  <div class="ptab" id="ptab-sr" onclick="switchPageTab('sr')">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.8"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.8"/><polyline points="10,9 9,9 8,9" stroke-width="1.8"/></svg>
+    Service Requests
+    <span class="ptab-badge hidden" id="sr-pending-badge">0</span>
+  </div>
+</div>
+
+<!-- ═════════ JOBS VIEW ═════════ -->
+<div id="jobs-view">
+
 <!-- Stat strip -->
 <div class="stat-strip">
   <div class="stat-card c-green">
@@ -466,9 +548,68 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="table-body" id="table-body">
   </div>
 </div>
+</div><!-- /jobs-view -->
 
+<!-- ═════════ SERVICE REQUESTS VIEW ═════════ -->
+<div id="sr-view" style="display:none;">
+
+  <!-- SR toolbar -->
+  <div class="toolbar" style="margin-bottom:16px;">
+    <div class="search-wrap">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.8"/></svg>
+      <input class="search-input" placeholder="Search requests..." oninput="filterSR(this.value)" id="sr-search"/>
+    </div>
+    <div class="sr-filter-bar" style="margin-bottom:0;">
+      <div class="sr-ftab active" id="sr-tab-pending" onclick="setSRFilter('pending',this)">
+        Pending <span class="sr-count" id="sr-cnt-pending">0</span>
+      </div>
+      <div class="sr-ftab" id="sr-tab-approved" onclick="setSRFilter('approved',this)">
+        Approved <span class="sr-count" id="sr-cnt-approved">0</span>
+      </div>
+      <div class="sr-ftab" id="sr-tab-denied" onclick="setSRFilter('denied',this)">
+        Denied <span class="sr-count" id="sr-cnt-denied">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SR list -->
+  <div id="sr-list"></div>
+
+</div><!-- /sr-view -->
+
+<!-- ═════════ APPROVE MODAL ═════════ -->
+<div class="approve-modal-overlay" id="approve-modal-overlay">
+  <div class="approve-modal">
+    <div class="approve-modal-title">Approve Request</div>
+    <div class="approve-modal-sub" id="approve-modal-sub">Converting service request into a job.</div>
+    <div class="approve-modal-grid">
+      <div class="approve-field">
+        <label class="approve-label">Scheduled Date</label>
+        <input class="approve-input" type="date" id="approve-date"/>
+      </div>
+      <div class="approve-field">
+        <label class="approve-label">Start Time</label>
+        <input class="approve-input" type="time" id="approve-time"/>
+      </div>
+      <div class="approve-field" style="grid-column:1/-1;">
+        <label class="approve-label">Assign To (optional)</label>
+        <select class="approve-input" id="approve-assign">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+    </div>
+    <div class="approve-modal-actions">
+      <button class="swft-modal-btn cancel" onclick="closeApproveModal()">Cancel</button>
+      <button class="swft-modal-btn confirm" onclick="confirmApprove()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Approve &amp; Create Job
+      </button>
+    </div>
   </div>
 </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main -->
 
 <!-- OVERLAY -->
 
@@ -1540,6 +1681,255 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
   }
 
+  // ══════════════════════════════════════════════════════════
+  // PAGE-LEVEL TAB SWITCHING (Jobs ↔ Service Requests)
+  // ══════════════════════════════════════════════════════════
+
+  var _currentPageTab = 'jobs';
+
+  function switchPageTab(tab) {
+    _currentPageTab = tab;
+    document.getElementById('ptab-jobs').classList.toggle('active', tab === 'jobs');
+    document.getElementById('ptab-sr').classList.toggle('active', tab === 'sr');
+    document.getElementById('jobs-view').style.display  = tab === 'jobs' ? '' : 'none';
+    document.getElementById('sr-view').style.display    = tab === 'sr'   ? '' : 'none';
+    // Update topbar button
+    var newJobBtn = document.querySelector('.btn-primary');
+    if (newJobBtn) {
+      if (tab === 'sr') {
+        newJobBtn.style.display = 'none';
+      } else {
+        newJobBtn.style.display = '';
+      }
+    }
+    if (tab === 'sr') loadServiceRequests();
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // SERVICE REQUESTS
+  // ══════════════════════════════════════════════════════════
+
+  var _allSR = [];
+  var _srFilter = 'pending';
+  var _srSearch = '';
+  var _pendingSRId = null; // for approve flow
+
+  async function loadServiceRequests() {
+    try {
+      _allSR = await API.serviceRequests.list();
+      renderSRCounts();
+      renderSRList();
+    } catch(err) {
+      document.getElementById('sr-list').innerHTML =
+        '<div class="sr-empty"><div class="sr-empty-icon">⚠️</div><div class="sr-empty-title">Could not load requests</div><div>' + (err.message||'') + '</div></div>';
+    }
+  }
+
+  function renderSRCounts() {
+    var pending  = _allSR.filter(function(r){return r.status === 'pending';}).length;
+    var approved = _allSR.filter(function(r){return r.status === 'approved';}).length;
+    var denied   = _allSR.filter(function(r){return r.status === 'denied';}).length;
+
+    document.getElementById('sr-cnt-pending').textContent  = pending;
+    document.getElementById('sr-cnt-approved').textContent = approved;
+    document.getElementById('sr-cnt-denied').textContent   = denied;
+
+    // Badge on the page tab
+    var badge = document.getElementById('sr-pending-badge');
+    if (badge) {
+      badge.textContent = pending;
+      badge.classList.toggle('hidden', pending === 0);
+    }
+  }
+
+  function setSRFilter(status, el) {
+    _srFilter = status;
+    document.querySelectorAll('.sr-ftab').forEach(function(t){ t.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    renderSRList();
+  }
+
+  function filterSR(q) {
+    _srSearch = (q || '').toLowerCase();
+    renderSRList();
+  }
+
+  function fmtAge(ts) {
+    if (!ts) return '';
+    var diff = Date.now() - ts;
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  function renderSRList() {
+    var list = document.getElementById('sr-list');
+    var items = _allSR.filter(function(r){ return r.status === _srFilter; });
+    if (_srSearch) {
+      items = items.filter(function(r){
+        return (r.name||'').toLowerCase().includes(_srSearch) ||
+               (r.service||'').toLowerCase().includes(_srSearch) ||
+               (r.address||'').toLowerCase().includes(_srSearch) ||
+               (r.email||'').toLowerCase().includes(_srSearch) ||
+               (r.phone||'').includes(_srSearch);
+      });
+    }
+
+    if (items.length === 0) {
+      var labels = { pending: 'No pending requests', approved: 'No approved requests', denied: 'No denied requests' };
+      var subs = { pending: 'New requests will appear here when customers submit the intake form.', approved: 'Approved requests become jobs automatically.', denied: 'Denied requests will appear here.' };
+      list.innerHTML = '<div class="sr-empty"><div class="sr-empty-icon">📋</div><div class="sr-empty-title">' + (labels[_srFilter]||'') + '</div><div>' + (subs[_srFilter]||'') + '</div></div>';
+      return;
+    }
+
+    list.innerHTML = items.map(function(r, i) {
+      var initials = (r.name||'?').split(' ').map(function(n){return n[0]||'';}).join('').slice(0,2).toUpperCase();
+      var metaParts = [];
+      if (r.phone) metaParts.push(r.phone);
+      if (r.email) metaParts.push(r.email);
+      var metaHtml = metaParts.join(' <span class="sr-meta-sep">·</span> ');
+
+      var fields = '';
+      if (r.service) {
+        fields += '<div class="sr-field"><div class="sr-field-label">Service</div><div class="sr-field-value">' + esc(r.service) + '</div></div>';
+      }
+      if (r.address) {
+        fields += '<div class="sr-field"><div class="sr-field-label">Address</div><div class="sr-field-value">' + esc(r.address) + '</div></div>';
+      }
+      if (r.squareFootage) {
+        fields += '<div class="sr-field"><div class="sr-field-label">Square Ft</div><div class="sr-field-value">' + r.squareFootage.toLocaleString() + ' sqft</div></div>';
+      }
+      if (r.estimatedQuote) {
+        fields += '<div class="sr-field"><div class="sr-field-label">Est. Quote</div><div class="sr-field-value green">$' + r.estimatedQuote.toLocaleString() + '</div></div>';
+      }
+
+      var photosHtml = '';
+      if (r.photos && r.photos.length > 0) {
+        photosHtml = '<div class="sr-photos">' + r.photos.slice(0,6).map(function(url){
+          return '<img class="sr-photo-thumb" src="' + esc(url) + '" onclick="window.open(\'' + esc(url) + '\',\'_blank\')" title="View photo"/>';
+        }).join('') + (r.photos.length > 6 ? '<div style="width:56px;height:56px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray);">+' + (r.photos.length-6) + '</div>' : '') + '</div>';
+      }
+
+      var footerHtml = '';
+      if (r.status === 'pending') {
+        footerHtml = '<span class="sr-notes">' + esc(r.notes || '') + '</span>' +
+          '<button class="sr-btn sr-btn-deny" onclick="denyRequest(\'' + r.id + '\')">' +
+            '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2.5"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2.5"/></svg> Deny' +
+          '</button>' +
+          '<button class="sr-btn sr-btn-approve" onclick="openApproveModal(\'' + r.id + '\')">' +
+            '<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Approve' +
+          '</button>';
+      } else if (r.status === 'approved') {
+        footerHtml = '<span class="sr-notes">Converted to job on ' + (r.approvedAt ? new Date(r.approvedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—') + '</span>' +
+          '<span class="sr-status-badge sr-badge-approved">Approved</span>' +
+          (r.jobId ? '<button class="sr-btn" style="border-color:rgba(200,241,53,0.25);color:var(--green);" onclick="switchPageTab(\'jobs\')">View Job →</button>' : '');
+      } else if (r.status === 'denied') {
+        footerHtml = '<span class="sr-notes">' + esc(r.denyReason || r.notes || '') + '</span>' +
+          '<span class="sr-status-badge sr-badge-denied">Denied</span>' +
+          '<button class="sr-btn sr-btn-deny" onclick="deleteRequest(\'' + r.id + '\')" style="font-size:10.5px;padding:5px 10px;">Delete</button>';
+      }
+
+      return '<div class="sr-card" style="animation-delay:' + (i*0.04) + 's">' +
+        '<div class="sr-card-header">' +
+          '<div class="sr-card-avatar">' + initials + '</div>' +
+          '<div class="sr-card-info">' +
+            '<div class="sr-card-name">' + esc(r.name||'Unknown') + '</div>' +
+            '<div class="sr-card-meta">' + metaHtml + '</div>' +
+          '</div>' +
+          '<div class="sr-card-time">' + fmtAge(r.createdAt) + '</div>' +
+        '</div>' +
+        (fields ? '<div class="sr-card-body">' + fields + '</div>' : '') +
+        photosHtml +
+        '<div class="sr-card-footer">' + footerHtml + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Deny request ──
+  async function denyRequest(id) {
+    var reason = window.prompt('Optional: enter a reason for denial (or leave blank):');
+    if (reason === null) return; // cancelled
+    try {
+      await API.serviceRequests.deny(id, reason);
+      await loadServiceRequests();
+      showToast('Request denied');
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  // ── Delete denied request ──
+  async function deleteRequest(id) {
+    var ok = await swftConfirm('Delete Request', 'Permanently delete this service request?', { danger: true, confirmLabel: 'Delete' });
+    if (!ok) return;
+    try {
+      await API.serviceRequests.delete(id);
+      await loadServiceRequests();
+      showToast('Request deleted');
+    } catch(e) { showToast('Error: ' + e.message); }
+  }
+
+  // ── Approve flow ──
+  function openApproveModal(id) {
+    _pendingSRId = id;
+    var sr = _allSR.find(function(r){ return r.id === id; });
+    if (sr) {
+      document.getElementById('approve-modal-sub').textContent = 'Converting "' + (sr.service||'Service') + '" request from ' + (sr.name||'customer') + ' into a job.';
+    }
+    // Pre-populate team members
+    var sel = document.getElementById('approve-assign');
+    sel.innerHTML = '<option value="">Unassigned</option>';
+    if (window._teamMembers) {
+      window._teamMembers.forEach(function(m) {
+        var opt = document.createElement('option');
+        opt.value = m.uid || m.id;
+        opt.textContent = m.name || m.email || 'Team member';
+        sel.appendChild(opt);
+      });
+    }
+    document.getElementById('approve-modal-overlay').classList.add('open');
+  }
+
+  function closeApproveModal() {
+    document.getElementById('approve-modal-overlay').classList.remove('open');
+    _pendingSRId = null;
+  }
+
+  async function confirmApprove() {
+    if (!_pendingSRId) return;
+    var btn = document.querySelector('.approve-modal .swft-modal-btn.confirm');
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating Job...'; }
+    try {
+      var result = await API.serviceRequests.approve(_pendingSRId, {
+        scheduledDate: document.getElementById('approve-date').value || null,
+        startTime:     document.getElementById('approve-time').value || null,
+        assignedTo:    document.getElementById('approve-assign').value || null,
+      });
+      closeApproveModal();
+      await loadServiceRequests();
+      await loadJobs();
+      showToast('Request approved — job created');
+    } catch(e) {
+      showToast('Error: ' + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Approve &amp; Create Job'; }
+    }
+  }
+
+  // Load team members for approve dropdown
+  (async function() {
+    try {
+      var resp = await fetch('/api/team', { headers: { 'Authorization': 'Bearer ' + (await getAuthToken()) } });
+      if (resp.ok) window._teamMembers = (await resp.json()).filter(function(m){ return m.status === 'active'; });
+    } catch(_) {}
+  })();
+
 </script>
 
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
@@ -1575,8 +1965,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     } else {
       document.body.style.opacity = "1";
       window.__swftUser = user;
-      // Load jobs from API
+      // Load jobs and SR badge count
       await loadJobs();
+      // Load SR counts (for badge) in background
+      try {
+        var srList = await API.serviceRequests.list();
+        window._allSR = srList;
+        var pending = srList.filter(function(r){ return r.status === 'pending'; }).length;
+        var badge = document.getElementById('sr-pending-badge');
+        if (badge) { badge.textContent = pending; badge.classList.toggle('hidden', pending === 0); }
+      } catch(_) {}
       // Auto-open new job if ?customer= param
       var params = new URLSearchParams(window.location.search);
       if (params.get('customer')) {

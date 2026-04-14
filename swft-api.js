@@ -257,6 +257,22 @@ const API = {
     submit: (token, rating) => fetch(`/api/survey/${token}`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ rating }) }).then(r => r.json()),
   },
 
+  // ── Service Requests ──
+  serviceRequests: {
+    list:    (status) => apiFetch(`/api/service-requests${status ? `?status=${status}` : ""}`),
+    get:     (id)     => apiFetch(`/api/service-requests/${id}`),
+    approve: (id, data) => apiFetch(`/api/service-requests/${id}/approve`, { method: "POST", body: JSON.stringify(data || {}) }),
+    deny:    (id, reason) => apiFetch(`/api/service-requests/${id}/deny`, { method: "POST", body: JSON.stringify({ reason: reason || "" }) }),
+    delete:  (id)     => apiFetch(`/api/service-requests/${id}`, { method: "DELETE" }),
+  },
+
+  // ── Intake Forms (config for QR code / public form) ──
+  intakeForms: {
+    get:    ()       => apiFetch("/api/intake-forms"),
+    save:   (data)   => apiFetch("/api/intake-forms", { method: "PUT", body: JSON.stringify(data) }),
+    qrUrl:  ()       => apiFetch("/api/intake-forms/qr-url"),
+  },
+
 };
 
 // ── Auth guard — call on every protected page ──

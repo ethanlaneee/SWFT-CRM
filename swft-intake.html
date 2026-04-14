@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>Service Request</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#0a0a0a; --surface:#111111; --surface2:#181818;
+  --border:#1f1f1f; --border2:#2c2c2c;
+  --green:#c8f135; --white:#f0f0f0; --gray:#7a7a7a; --gray2:#444444;
+  --blue:#4d9fff; --amber:#f5a623; --red:#ff5252;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* ── LAYOUT ── */
+.page{max-width:600px;margin:0 auto;padding:32px 20px 60px;}
+
+/* ── BRAND HEADER ── */
+.brand{text-align:center;margin-bottom:36px;}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:4px;color:var(--gray);text-transform:uppercase;margin-bottom:10px;}
+.company-name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--white);line-height:1;}
+.company-logo{max-height:60px;max-width:200px;margin-bottom:10px;border-radius:8px;}
+
+/* ── FORM CARD ── */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px 28px;}
+.form-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--white);margin-bottom:6px;}
+.form-subtitle{font-size:13px;color:var(--gray);line-height:1.5;margin-bottom:28px;}
+
+/* ── FIELD ── */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
+.field-label{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;}
+.field-label .req{color:var(--green);}
+.field-input{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.15s;width:100%;}
+.field-input:focus{border-color:var(--green);}
+.field-input::placeholder{color:var(--gray2);}
+.field-input.error{border-color:var(--red);}
+.field-textarea{resize:vertical;min-height:90px;line-height:1.5;}
+.field-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%237a7a7a' viewBox='0 0 24 24'%3E%3Cpolyline points='6,9 12,15 18,9' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+.field-select option{background:#141414;color:#e0e0e0;}
+.field-hint{font-size:11px;color:var(--gray2);margin-top:2px;}
+.field-error{font-size:11px;color:var(--red);margin-top:2px;display:none;}
+.field-error.show{display:block;}
+
+/* ── TWO-COL ── */
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:480px){.row-2{grid-template-columns:1fr;}}
+
+/* ── ESTIMATE BOX ── */
+.estimate-box{background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.2);border-radius:12px;padding:16px 18px;margin-bottom:20px;display:none;}
+.estimate-box.show{display:block;}
+.estimate-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:5px;}
+.estimate-value{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--white);line-height:1;}
+.estimate-note{font-size:11.5px;color:var(--gray);margin-top:4px;line-height:1.4;}
+
+/* ── PHOTO UPLOAD ── */
+.photo-zone{border:2px dashed var(--border2);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative;}
+.photo-zone:hover,.photo-zone.drag-over{border-color:var(--green);background:rgba(200,241,53,0.03);}
+.photo-zone-icon{font-size:28px;margin-bottom:8px;}
+.photo-zone-text{font-size:13px;color:var(--gray);line-height:1.5;}
+.photo-zone-text span{color:var(--green);font-weight:600;}
+.photo-zone-sub{font-size:11px;color:var(--gray2);margin-top:4px;}
+.photo-input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.photo-preview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--border2);}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.photo-uploading{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--white);}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:24px 0;}
+.section-label{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── SUBMIT ── */
+.submit-btn{width:100%;padding:15px;background:var(--green);color:#0a0a0a;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:12px;cursor:pointer;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
+.submit-btn:hover:not(:disabled){background:#d5ff40;transform:translateY(-1px);box-shadow:0 6px 24px rgba(200,241,53,0.25);}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+/* ── SUCCESS STATE ── */
+.success-state{text-align:center;padding:48px 20px;display:none;}
+.success-state.show{display:block;}
+.success-icon{width:64px;height:64px;background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;}
+.success-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white);margin-bottom:10px;}
+.success-body{font-size:14px;color:var(--gray);line-height:1.6;max-width:380px;margin:0 auto 24px;}
+.success-estimate{background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.2);border-radius:12px;padding:16px;display:inline-block;margin-bottom:20px;}
+.success-estimate-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);}
+.success-estimate-value{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--white);margin-top:4px;}
+.success-note{font-size:11px;color:var(--gray2);}
+
+/* ── LOADING STATE ── */
+.loading-state{text-align:center;padding:60px 20px;}
+.spinner{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:13px;color:var(--gray);}
+
+/* ── ERROR STATE ── */
+.error-state{text-align:center;padding:60px 20px;display:none;}
+.error-state.show{display:block;}
+.error-icon{font-size:40px;margin-bottom:16px;}
+.error-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--red);margin-bottom:8px;}
+.error-body{font-size:13px;color:var(--gray);line-height:1.5;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 18px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;}
+.toast-dot.green{background:var(--green);}
+
+/* ── POWERED BY ── */
+.powered{text-align:center;margin-top:28px;font-size:11px;color:var(--gray2);}
+.powered a{color:var(--gray);text-decoration:none;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;}
+.powered a:hover{color:var(--green);}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Brand -->
+  <div class="brand" id="brand">
+    <div class="brand-name">POWERED BY SWFT</div>
+    <div class="company-name" id="company-name">Loading...</div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-state" id="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading form...</div>
+  </div>
+
+  <!-- Error state (org not found, form inactive, etc.) -->
+  <div class="error-state" id="error-state">
+    <div class="error-icon">⚠️</div>
+    <div class="error-title" id="error-title">Form Unavailable</div>
+    <div class="error-body" id="error-body">This form is currently unavailable. Please contact the business directly.</div>
+  </div>
+
+  <!-- Form card -->
+  <div class="form-card" id="form-card" style="display:none;">
+
+    <div class="form-title" id="form-title">Request a Service</div>
+    <div class="form-subtitle" id="form-subtitle">Fill out the form below and we'll be in touch shortly.</div>
+
+    <form id="intake-form" onsubmit="submitForm(event)" novalidate>
+
+      <!-- CONTACT INFO -->
+      <div class="section-label">Contact Information</div>
+
+      <div class="field">
+        <label class="field-label" for="f-name">Full Name <span class="req">*</span></label>
+        <input class="field-input" id="f-name" type="text" placeholder="Jane Smith" autocomplete="name" required/>
+        <div class="field-error" id="err-name">Please enter your name.</div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label" for="f-phone">Phone Number</label>
+          <input class="field-input" id="f-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel"/>
+        </div>
+        <div class="field">
+          <label class="field-label" for="f-email">Email Address</label>
+          <input class="field-input" id="f-email" type="email" placeholder="jane@example.com" autocomplete="email"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="f-address">Service Address <span class="req">*</span></label>
+        <input class="field-input" id="f-address" type="text" placeholder="123 Main St, Austin TX 78701" autocomplete="street-address" required/>
+        <div class="field-error" id="err-address">Please enter a service address.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- SERVICE INFO -->
+      <div class="section-label">Service Details</div>
+
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label" for="f-service">Service Type <span class="req">*</span></label>
+          <select class="field-input field-select" id="f-service" required onchange="onServiceChange()">
+            <option value="">Select a service...</option>
+          </select>
+          <div class="field-error" id="err-service">Please select a service.</div>
+        </div>
+        <div class="field" id="sqft-field">
+          <label class="field-label" for="f-sqft">Square Footage</label>
+          <input class="field-input" id="f-sqft" type="number" placeholder="e.g. 500" min="1" oninput="onSqftChange()"/>
+          <div class="field-hint">Approximate area to be serviced</div>
+        </div>
+      </div>
+
+      <!-- Estimate box (shown when quote automation is enabled) -->
+      <div class="estimate-box" id="estimate-box">
+        <div class="estimate-label">Estimated Quote</div>
+        <div class="estimate-value" id="estimate-value">$0</div>
+        <div class="estimate-note">This is a rough estimate based on your square footage. Final pricing will be confirmed by our team.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="f-notes">Additional Notes</label>
+        <textarea class="field-input field-textarea" id="f-notes" placeholder="Describe the project, special requirements, or anything else we should know..."></textarea>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- PHOTOS -->
+      <div class="section-label" id="photo-section-label">Photos <span style="font-size:9px;color:var(--gray2);letter-spacing:0;text-transform:none;">(optional)</span></div>
+
+      <div class="field">
+        <div class="photo-zone" id="photo-zone"
+             ondragover="onDragOver(event)"
+             ondragleave="onDragLeave(event)"
+             ondrop="onDrop(event)">
+          <input class="photo-input" type="file" id="photo-input" accept="image/*" multiple onchange="onFileSelect(event)"/>
+          <div class="photo-zone-icon">📷</div>
+          <div class="photo-zone-text">Drop photos here or <span>click to browse</span></div>
+          <div class="photo-zone-sub">Up to 10 photos · JPG, PNG, HEIC · Max 20MB each</div>
+        </div>
+        <div class="photo-preview-grid" id="photo-preview"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <button class="submit-btn" type="submit" id="submit-btn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="2" stroke-linejoin="round"/></svg>
+        Submit Request
+      </button>
+
+    </form>
+
+  </div>
+
+  <!-- Success state -->
+  <div class="success-state" id="success-state">
+    <div class="form-card">
+      <div class="success-icon">✓</div>
+      <div class="success-title">Request Submitted!</div>
+      <div class="success-body" id="success-body">
+        Thank you! We've received your service request and will be in touch shortly.
+      </div>
+      <div class="success-estimate" id="success-estimate" style="display:none;">
+        <div class="success-estimate-label">Your Estimated Quote</div>
+        <div class="success-estimate-value" id="success-estimate-value">$0</div>
+        <div class="success-note">Final pricing confirmed by our team.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="powered">
+    Powered by <a href="https://goswft.com" target="_blank">SWFT</a>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ── State ──
+let orgId = null;
+let formConfig = null;
+const uploadedPhotos = []; // array of { file, url, uploading }
+
+// ── Init ──
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  orgId = params.get("org");
+
+  if (!orgId) {
+    showError("Invalid Link", "This link is missing a required parameter. Please ask the business to share the correct QR code link.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/public/intake/${orgId}/config`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showError("Form Unavailable", data.error || "This form is currently unavailable.");
+      return;
+    }
+    formConfig = await res.json();
+
+    if (!formConfig.active) {
+      showError("Form Unavailable", "This intake form is not currently accepting submissions. Please contact the business directly.");
+      return;
+    }
+
+    // Populate brand
+    document.getElementById("company-name").textContent = formConfig.companyName || "Service Request";
+    document.title = `Service Request — ${formConfig.companyName || ""}`;
+    document.getElementById("form-title").textContent = formConfig.formTitle || "Request a Service";
+    document.getElementById("form-subtitle").textContent = formConfig.formSubtitle || "";
+
+    // Populate services dropdown
+    const sel = document.getElementById("f-service");
+    if (formConfig.services && formConfig.services.length > 0) {
+      formConfig.services.forEach(svc => {
+        const opt = document.createElement("option");
+        opt.value = svc.name;
+        opt.textContent = svc.name;
+        sel.appendChild(opt);
+      });
+    } else {
+      // No services configured — add a free-text fallback
+      sel.parentElement.innerHTML = `
+        <label class="field-label" for="f-service">Service Type <span class="req">*</span></label>
+        <input class="field-input" id="f-service" type="text" placeholder="Describe the service you need..." required/>
+        <div class="field-error" id="err-service">Please enter the service type.</div>
+      `;
+    }
+
+    // Photo section
+    if (formConfig.requirePhotos) {
+      document.getElementById("photo-section-label").innerHTML =
+        `Photos <span class="req" style="font-size:11px;">*</span>`;
+    }
+
+    // Show form
+    document.getElementById("loading-state").style.display = "none";
+    document.getElementById("form-card").style.display = "block";
+
+  } catch (err) {
+    showError("Connection Error", "Failed to load the form. Please check your connection and try again.");
+  }
+})();
+
+// ── Quote estimation ──
+function getSelectedService() {
+  const el = document.getElementById("f-service");
+  return el ? el.value : "";
+}
+
+function onServiceChange() {
+  updateEstimate();
+}
+
+function onSqftChange() {
+  updateEstimate();
+}
+
+function updateEstimate() {
+  if (!formConfig || !formConfig.quoteEnabled) return;
+  const service = getSelectedService();
+  const sqft = parseFloat(document.getElementById("f-sqft").value) || 0;
+  const box = document.getElementById("estimate-box");
+
+  if (!service || sqft <= 0) {
+    box.classList.remove("show");
+    return;
+  }
+
+  const svc = (formConfig.services || []).find(s => s.name === service);
+  if (!svc || !svc.ratePerSqft) {
+    box.classList.remove("show");
+    return;
+  }
+
+  const est = Math.round(sqft * svc.ratePerSqft * 100) / 100;
+  document.getElementById("estimate-value").textContent = "$" + est.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  box.classList.add("show");
+}
+
+// ── Photo handling ──
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById("photo-zone").classList.add("drag-over");
+}
+function onDragLeave(e) {
+  document.getElementById("photo-zone").classList.remove("drag-over");
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById("photo-zone").classList.remove("drag-over");
+  handleFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/")));
+}
+function onFileSelect(e) {
+  handleFiles(Array.from(e.target.files));
+  e.target.value = ""; // reset so same file can be re-selected
+}
+
+function handleFiles(files) {
+  const remaining = 10 - uploadedPhotos.length;
+  if (remaining <= 0) { showToast("Maximum 10 photos allowed"); return; }
+  files.slice(0, remaining).forEach(uploadPhoto);
+}
+
+async function uploadPhoto(file) {
+  const idx = uploadedPhotos.length;
+  uploadedPhotos.push({ file, url: null, uploading: true });
+  renderPhotoPreviews();
+
+  try {
+    const formData = new FormData();
+    formData.append("photos", file);
+    const res = await fetch(`/api/public/intake/${orgId}/photos`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) throw new Error("Upload failed");
+    const data = await res.json();
+    uploadedPhotos[idx].url = data.urls[0];
+    uploadedPhotos[idx].uploading = false;
+  } catch (err) {
+    uploadedPhotos.splice(idx, 1);
+    showToast("Photo upload failed — please try again");
+  }
+  renderPhotoPreviews();
+}
+
+function renderPhotoPreviews() {
+  const grid = document.getElementById("photo-preview");
+  grid.innerHTML = "";
+  uploadedPhotos.forEach((p, i) => {
+    const thumb = document.createElement("div");
+    thumb.className = "photo-thumb";
+    if (p.uploading) {
+      thumb.innerHTML = `<div style="width:100%;height:100%;background:var(--surface2);display:flex;align-items:center;justify-content:center;"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div></div>`;
+    } else {
+      const objectUrl = p.url || URL.createObjectURL(p.file);
+      thumb.innerHTML = `
+        <img src="${objectUrl}" alt="photo"/>
+        <button class="photo-remove" type="button" onclick="removePhoto(${i})">✕</button>
+      `;
+    }
+    grid.appendChild(thumb);
+  });
+}
+
+function removePhoto(idx) {
+  uploadedPhotos.splice(idx, 1);
+  renderPhotoPreviews();
+}
+
+// ── Validation ──
+function validateForm() {
+  let ok = true;
+
+  const name = document.getElementById("f-name").value.trim();
+  setFieldError("f-name", "err-name", !name);
+  if (!name) ok = false;
+
+  const address = document.getElementById("f-address").value.trim();
+  setFieldError("f-address", "err-address", !address);
+  if (!address) ok = false;
+
+  const serviceEl = document.getElementById("f-service");
+  const service = serviceEl ? serviceEl.value.trim() : "";
+  setFieldError("f-service", "err-service", !service);
+  if (!service) ok = false;
+
+  if (formConfig && formConfig.requirePhotos && uploadedPhotos.length === 0) {
+    showToast("Please add at least one photo");
+    ok = false;
+  }
+
+  return ok;
+}
+
+function setFieldError(inputId, errId, isError) {
+  const input = document.getElementById(inputId);
+  const err = document.getElementById(errId);
+  if (input) input.classList.toggle("error", isError);
+  if (err) err.classList.toggle("show", isError);
+}
+
+// ── Submit ──
+async function submitForm(e) {
+  e.preventDefault();
+  if (!validateForm()) return;
+
+  // Wait for any pending uploads
+  const pending = uploadedPhotos.filter(p => p.uploading);
+  if (pending.length > 0) {
+    showToast("Please wait for photos to finish uploading");
+    return;
+  }
+
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></div> Submitting...`;
+
+  const serviceEl = document.getElementById("f-service");
+  const service = serviceEl ? serviceEl.value.trim() : "";
+
+  const body = {
+    name:          document.getElementById("f-name").value.trim(),
+    phone:         document.getElementById("f-phone").value.trim(),
+    email:         document.getElementById("f-email").value.trim(),
+    address:       document.getElementById("f-address").value.trim(),
+    service,
+    squareFootage: document.getElementById("f-sqft").value || null,
+    notes:         document.getElementById("f-notes").value.trim(),
+    photos:        uploadedPhotos.filter(p => p.url).map(p => p.url),
+  };
+
+  try {
+    const res = await fetch(`/api/public/intake/${orgId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Submission failed");
+
+    // Show success
+    document.getElementById("form-card").style.display = "none";
+    const successEl = document.getElementById("success-state");
+    successEl.classList.add("show");
+
+    const companyName = formConfig.companyName || "the team";
+    document.getElementById("success-body").textContent =
+      `Thank you, ${body.name}! We've received your service request and ${companyName} will be in touch shortly.`;
+
+    if (data.estimatedQuote) {
+      const estEl = document.getElementById("success-estimate");
+      estEl.style.display = "inline-block";
+      document.getElementById("success-estimate-value").textContent =
+        "$" + data.estimatedQuote.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="2" stroke-linejoin="round"/></svg> Submit Request`;
+    showToast(err.message || "Submission failed. Please try again.");
+  }
+}
+
+// ── Helpers ──
+function showError(title, body) {
+  document.getElementById("loading-state").style.display = "none";
+  document.getElementById("form-card").style.display = "none";
+  document.getElementById("error-title").textContent = title;
+  document.getElementById("error-body").textContent = body;
+  document.getElementById("error-state").classList.add("show");
+}
+
+let _toastTimer = null;
+function showToast(msg, isGood = false) {
+  const t = document.getElementById("toast");
+  const dot = document.getElementById("toast-dot");
+  document.getElementById("toast-msg").textContent = msg;
+  dot.className = "toast-dot" + (isGood ? " green" : "");
+  t.classList.add("show");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove("show"), 3500);
+}
+</script>
+</body>
+</html>

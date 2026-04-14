@@ -520,6 +520,86 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
+<!-- Intake Form & QR Code -->
+<div class="settings-section" data-group="operations" id="sec-intake">
+  <div class="settings-header"><span class="settings-header-icon">📋</span><h3>CUSTOMER INTAKE FORM</h3></div>
+  <div class="settings-body">
+
+    <!-- Enable toggle -->
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Enable Intake Form</div>
+        <div class="settings-row-desc">Allow customers to submit service requests via a public QR code link. Requests land in your Jobs → Service Requests tab for review.</div>
+      </div>
+      <div class="settings-toggle" id="intake-toggle" onclick="toggleIntakeActive()"></div>
+    </div>
+
+    <!-- Form title / subtitle -->
+    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:12px;">
+      <div class="settings-row-info"><div class="settings-row-label">Form Appearance</div></div>
+      <div class="settings-2col">
+        <div class="settings-field">
+          <label>Form Title</label>
+          <input class="settings-input" id="intake-title" placeholder="Request a Service" style="width:100%;"/>
+        </div>
+        <div class="settings-field">
+          <label>Form Subtitle</label>
+          <input class="settings-input" id="intake-subtitle" placeholder="Fill out the form below..." style="width:100%;"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quote automation toggle -->
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Automatic Quote Estimation</div>
+        <div class="settings-row-desc">When enabled, customers see a live estimated quote based on square footage × your service rate as they fill out the form.</div>
+      </div>
+      <div class="settings-toggle" id="intake-quote-toggle" onclick="toggleIntakeQuote()"></div>
+    </div>
+
+    <!-- Services list -->
+    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="settings-row-info"><div class="settings-row-label">Services &amp; Rates</div><div class="settings-row-desc">Services shown in the dropdown. Set a rate per sq ft to enable automatic quote estimation.</div></div>
+        <button class="settings-btn primary" onclick="addIntakeService()" style="white-space:nowrap;">+ Add Service</button>
+      </div>
+      <div id="intake-services-list" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px;">No services added yet</div>
+      </div>
+    </div>
+
+    <!-- Save button -->
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px;">
+      <button class="settings-btn primary" onclick="saveIntakeForm()">Save Intake Form</button>
+    </div>
+
+  </div>
+
+  <!-- QR Code section -->
+  <div class="settings-body" style="border-top:1px solid var(--border);">
+    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:16px;">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Your QR Code</div>
+        <div class="settings-row-desc">Print or share this QR code. When scanned, customers land directly on your intake form. Great for trade shows, trucks, job sites, and marketing materials.</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;">
+        <div id="intake-qr-wrap" style="width:160px;height:160px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <div style="font-size:11px;color:var(--gray2);text-align:center;padding:12px;">Enable the form<br/>to generate QR code</div>
+        </div>
+        <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px;justify-content:center;">
+          <div id="intake-form-url" style="font-size:11.5px;color:var(--gray);word-break:break-all;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-family:'JetBrains Mono',monospace;display:none;"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="settings-btn" id="intake-copy-btn" onclick="copyIntakeUrl()" style="display:none;">Copy Link</button>
+            <button class="settings-btn primary" id="intake-download-btn" onclick="downloadQR()" style="display:none;">Download QR</button>
+            <a id="intake-open-btn" href="#" target="_blank" class="settings-btn" style="display:none;">Open Form ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Integrations -->
 <div class="settings-section" data-group="connections" id="sec-integrations">
   <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
@@ -1737,6 +1817,173 @@ function escHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ══════════════════════════════════════════════════
+// INTAKE FORM SETTINGS
+// ══════════════════════════════════════════════════
+
+var _intakeConfig = { active: false, quoteEnabled: false, formTitle: '', formSubtitle: '', services: [] };
+var _intakeUrl = '';
+
+async function loadIntakeForm() {
+  try {
+    var data = await API.intakeForms.get();
+    _intakeConfig = data;
+    renderIntakeSettings();
+    // Load QR URL
+    var urlData = await API.intakeForms.qrUrl();
+    _intakeUrl = urlData.url || '';
+    renderIntakeQR();
+  } catch(e) {
+    console.warn('[intake-settings] load error:', e.message);
+  }
+}
+
+function renderIntakeSettings() {
+  var toggle = document.getElementById('intake-toggle');
+  if (toggle) toggle.classList.toggle('on', !!_intakeConfig.active);
+  var qtog = document.getElementById('intake-quote-toggle');
+  if (qtog) qtog.classList.toggle('on', !!_intakeConfig.quoteEnabled);
+  var titleEl = document.getElementById('intake-title');
+  if (titleEl) titleEl.value = _intakeConfig.formTitle || '';
+  var subEl = document.getElementById('intake-subtitle');
+  if (subEl) subEl.value = _intakeConfig.formSubtitle || '';
+  renderIntakeServicesList();
+}
+
+function renderIntakeServicesList() {
+  var container = document.getElementById('intake-services-list');
+  if (!container) return;
+  var services = _intakeConfig.services || [];
+  if (services.length === 0) {
+    container.innerHTML = '<div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px;">No services added yet. Click "+ Add Service" to add one.</div>';
+    return;
+  }
+  container.innerHTML = services.map(function(svc, i) {
+    return '<div style="display:grid;grid-template-columns:1fr 160px 36px;gap:8px;align-items:center;">' +
+      '<div class="settings-field">' +
+        '<label>Service Name</label>' +
+        '<input class="settings-input" style="width:100%;" value="' + escHtml(svc.name) + '" oninput="updateIntakeService(' + i + ',\'name\',this.value)" placeholder="e.g. Stamped Concrete"/>' +
+      '</div>' +
+      '<div class="settings-field">' +
+        '<label>Rate per Sqft ($)</label>' +
+        '<input class="settings-input" type="number" min="0" step="0.01" style="width:100%;" value="' + (svc.ratePerSqft != null ? svc.ratePerSqft : '') + '" oninput="updateIntakeService(' + i + ',\'ratePerSqft\',this.value)" placeholder="Optional"/>' +
+      '</div>' +
+      '<button onclick="removeIntakeService(' + i + ')" style="margin-top:16px;width:36px;height:36px;border-radius:8px;background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);color:#ff5252;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">×</button>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleIntakeActive() {
+  _intakeConfig.active = !_intakeConfig.active;
+  var toggle = document.getElementById('intake-toggle');
+  if (toggle) toggle.classList.toggle('on', _intakeConfig.active);
+  renderIntakeQR();
+}
+
+function toggleIntakeQuote() {
+  _intakeConfig.quoteEnabled = !_intakeConfig.quoteEnabled;
+  var qtog = document.getElementById('intake-quote-toggle');
+  if (qtog) qtog.classList.toggle('on', _intakeConfig.quoteEnabled);
+}
+
+function addIntakeService() {
+  if (!_intakeConfig.services) _intakeConfig.services = [];
+  _intakeConfig.services.push({ name: '', ratePerSqft: null });
+  renderIntakeServicesList();
+}
+
+function removeIntakeService(i) {
+  _intakeConfig.services.splice(i, 1);
+  renderIntakeServicesList();
+}
+
+function updateIntakeService(i, field, val) {
+  if (_intakeConfig.services[i]) {
+    _intakeConfig.services[i][field] = field === 'ratePerSqft' ? (val !== '' ? parseFloat(val) : null) : val;
+  }
+}
+
+async function saveIntakeForm() {
+  var titleVal   = (document.getElementById('intake-title')    || {}).value || '';
+  var subVal     = (document.getElementById('intake-subtitle') || {}).value || '';
+
+  // Collect service values from DOM inputs (in case user didn't trigger oninput)
+  var svcRows = document.querySelectorAll('#intake-services-list > div');
+  svcRows.forEach(function(row, i) {
+    var inputs = row.querySelectorAll('input');
+    if (inputs[0] && _intakeConfig.services[i] !== undefined) _intakeConfig.services[i].name = inputs[0].value.trim();
+    if (inputs[1] && _intakeConfig.services[i] !== undefined) _intakeConfig.services[i].ratePerSqft = inputs[1].value !== '' ? parseFloat(inputs[1].value) : null;
+  });
+
+  var payload = {
+    active:        _intakeConfig.active,
+    formTitle:     titleVal,
+    formSubtitle:  subVal,
+    services:      (_intakeConfig.services || []).filter(function(s){ return s.name; }),
+    quoteEnabled:  _intakeConfig.quoteEnabled,
+    requirePhotos: _intakeConfig.requirePhotos || false,
+  };
+
+  try {
+    await API.intakeForms.save(payload);
+    _intakeConfig = { ..._intakeConfig, ...payload };
+    renderIntakeQR();
+    showToast('Intake form saved');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
+function renderIntakeQR() {
+  var wrap = document.getElementById('intake-qr-wrap');
+  var urlEl = document.getElementById('intake-form-url');
+  var copyBtn  = document.getElementById('intake-copy-btn');
+  var dlBtn    = document.getElementById('intake-download-btn');
+  var openBtn  = document.getElementById('intake-open-btn');
+  if (!wrap) return;
+
+  if (!_intakeConfig.active || !_intakeUrl) {
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--gray2);text-align:center;padding:12px;">Enable the form<br/>to generate QR code</div>';
+    if (urlEl)   { urlEl.style.display = 'none'; }
+    if (copyBtn) { copyBtn.style.display = 'none'; }
+    if (dlBtn)   { dlBtn.style.display = 'none'; }
+    if (openBtn) { openBtn.style.display = 'none'; }
+    return;
+  }
+
+  // Generate QR code using QR Server API (no library needed)
+  var qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=0a0a0a&color=c8f135&data=' + encodeURIComponent(_intakeUrl);
+  wrap.innerHTML = '<a href="' + escHtml(_intakeUrl) + '" target="_blank"><img src="' + escHtml(qrApiUrl) + '" style="width:160px;height:160px;border-radius:10px;display:block;" alt="QR Code"/></a>';
+
+  if (urlEl)   { urlEl.textContent = _intakeUrl; urlEl.style.display = ''; }
+  if (copyBtn) { copyBtn.style.display = ''; }
+  if (dlBtn)   { dlBtn.style.display = ''; dlBtn.dataset.qrurl = qrApiUrl; }
+  if (openBtn) { openBtn.href = _intakeUrl; openBtn.style.display = ''; }
+}
+
+function copyIntakeUrl() {
+  if (!_intakeUrl) return;
+  navigator.clipboard.writeText(_intakeUrl).then(function(){
+    showToast('Link copied to clipboard');
+  }).catch(function(){
+    showToast('Could not copy — copy manually from the URL field');
+  });
+}
+
+function downloadQR() {
+  var btn = document.getElementById('intake-download-btn');
+  var qrUrl = btn ? btn.dataset.qrurl : null;
+  if (!qrUrl) return;
+  // Use a larger size for the download
+  var dlUrl = qrUrl.replace('size=160x160', 'size=512x512');
+  var a = document.createElement('a');
+  a.href = dlUrl;
+  a.download = 'swft-intake-qr.png';
+  a.target = '_blank';
+  a.click();
+}
+
 </script>
 
 <!-- Firebase Auth -->
@@ -1767,6 +2014,7 @@ function escHtml(s) {
       window.__swftUser = user;
       loadSettings();
       loadTemplates();
+      loadIntakeForm();
       verifyPackPurchase(user);
       loadIntegrations().then(function(){
         if(window.location.hash){

@@ -36,6 +36,8 @@ const { router: automationsRouter, processScheduledMessages } = require("./route
 const { runFollowupAgent } = require("./ai/followup-agent");
 const surveyRouter = require("./routes/survey");
 const publicChatRouter = require("./routes/publicChat");
+const { router: serviceRequestsRouter, publicRouter: intakePublicRouter } = require("./routes/serviceRequests");
+const intakeFormsRouter = require("./routes/intakeForms");
 
 // ── Validate required environment variables on startup ──
 const REQUIRED_ENV = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "ANTHROPIC_API_KEY"];
@@ -438,6 +440,17 @@ const publicChatLimiter = rateLimit({
 app.use("/api/public/chat", publicChatLimiter);
 app.use("/api/public/chat", publicChatRouter);
 
+// ── Public intake form (no auth — customers submit from QR-code link) ──
+const intakeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,                   // 30 submissions per 15 min per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many submissions. Please try again later." },
+});
+app.use("/api/public/intake", intakeLimiter);
+app.use("/api/public/intake", intakePublicRouter);
+
 // ── Serve frontend files ──
 const staticRoot = path.join(__dirname, "..");
 
@@ -640,11 +653,13 @@ app.use("/api/import",        auth, checkAccess,  require("./routes/import"));
 app.post("/api/calendar/token", auth, checkAccess, require("./routes/calendar").tokenHandler);
 app.use("/api/calendar",      require("./routes/calendar"));
 app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
-app.use("/api/automations",   auth, checkAccess,  automationsRouter);
-app.use("/api/broadcasts",  auth, checkAccess,  require("./routes/broadcasts"));
-app.use("/api/transcribe",    auth, checkAccess,  require("./routes/transcribe"));
-app.use("/api/dev",           auth,               require("./routes/dev"));
-app.use("/api/outreach",      auth,               require("./routes/outreach"));
+app.use("/api/automations",       auth, checkAccess,  automationsRouter);
+app.use("/api/broadcasts",        auth, checkAccess,  require("./routes/broadcasts"));
+app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
+app.use("/api/dev",               auth,               require("./routes/dev"));
+app.use("/api/outreach",          auth,               require("./routes/outreach"));
+app.use("/api/service-requests",  auth, checkAccess,  serviceRequestsRouter);
+app.use("/api/intake-forms",      auth, checkAccess,  intakeFormsRouter);
 
 // ── Public one-click unsubscribe for outreach emails (no auth — recipient clicks this) ──
 app.get("/unsubscribe", async (req, res) => {
