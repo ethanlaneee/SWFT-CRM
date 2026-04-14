@@ -119,8 +119,23 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   // Auto-discover business context from job history
   const bizContext = await getBusinessContext(orgId, ownerUid);
 
+  // Fetch any pending (sent but not approved) quotes for this customer so the
+  // AI can recognize when they're verbally approving one via SMS.
+  let pendingQuotes = [];
+  if (customer?.customerId) {
+    try {
+      const qSnap = await db.collection("quotes")
+        .where("customerId", "==", customer.customerId)
+        .where("status", "==", "sent")
+        .get();
+      pendingQuotes = qSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      console.error("[receptionist] pending quotes lookup error:", err.message);
+    }
+  }
+
   // Build system prompt
-  const systemPrompt = buildReceptionistPrompt(config, owner, customer, bizContext);
+  const systemPrompt = buildReceptionistPrompt(config, owner, customer, bizContext, pendingQuotes);
 
   // Call Claude
   const response = await anthropic.messages.create({
@@ -134,7 +149,7 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
   if (!replyText) return { replied: false, response: null, action: null };
 
   // Parse task signals: [TASK:TYPE:details]
-  const taskRegex = /\[TASK:(QUOTE|ESTIMATE|CALL|PAYMENT):([^\]]*)\]/gi;
+  const taskRegex = /\[TASK:(QUOTE|ESTIMATE|CALL|PAYMENT|APPROVE_QUOTE):([^\]]*)\]/gi;
   const detectedTasks = [];
   let tm;
   while ((tm = taskRegex.exec(replyText)) !== null) {
@@ -172,8 +187,39 @@ async function handleInboundMessage(orgId, ownerUid, owner, fromPhone, messageBo
       isReceptionist: true,
     });
 
-    // Create task documents for each detected signal
+    // Handle each detected signal
     for (const task of detectedTasks) {
+      // APPROVE_QUOTE — flip the quote's status to approved directly instead
+      // of creating a pending task. Owner gets a notification so they know.
+      if (task.type === "APPROVE_QUOTE" && task.details) {
+        const quoteId = task.details.trim();
+        // Verify the quote belongs to this customer + org before approving
+        const qDoc = await db.collection("quotes").doc(quoteId).get();
+        if (qDoc.exists && qDoc.data().orgId === orgId &&
+            (!customer?.customerId || qDoc.data().customerId === customer.customerId) &&
+            qDoc.data().status === "sent") {
+          await db.collection("quotes").doc(quoteId).update({
+            status: "approved",
+            approvedAt: Date.now(),
+            approvedVia: "sms",
+          });
+          await db.collection("notifications").add({
+            orgId,
+            userId: ownerUid,
+            type: "quote_approved",
+            title: "Quote Approved via SMS",
+            message: `${customer?.customerName || fromPhone} approved a quote by replying: "${messageBody.slice(0, 100)}"`,
+            customerId: customer?.customerId || "",
+            quoteId,
+            read: false,
+            createdAt: Date.now(),
+          });
+          console.log(`[receptionist] Quote ${quoteId} auto-approved via SMS for org ${orgId}`);
+        } else {
+          console.log(`[receptionist] APPROVE_QUOTE signal ignored for ${quoteId} (not found / wrong org / already resolved)`);
+        }
+        continue;
+      }
       await db.collection("tasks").add({
         orgId,
         ownerUid,
@@ -293,7 +339,7 @@ async function getBusinessContext(orgId, ownerUid) {
  * and accumulates jobs/quotes, the prompt automatically becomes more specific
  * and fine-tuned to that business — no manual prompt editing required.
  */
-function buildReceptionistPrompt(config, owner, customer, bizContext) {
+function buildReceptionistPrompt(config, owner, customer, bizContext, pendingQuotes = []) {
   const companyName = config.businessName || owner.company || owner.name || "our company";
   const ownerName = owner.name || "the owner";
   const tone = config.tone === "casual" ? "casual and friendly" : "friendly and professional";
@@ -343,8 +389,20 @@ TASK SIGNALS — embed ONE in your reply (customer never sees it) when triggered
 • [TASK:QUOTE:brief summary] — Lead gave enough detail (measurements, scope, material type) that the owner can prepare a quote
 • [TASK:ESTIMATE:brief summary] — Lead explicitly wants a physical walkthrough or on-site visit
 • [TASK:CALL:brief summary] — Situation needs a real phone call (emergency, complex specs, unclear scope, frustrated lead)
-• [TASK:PAYMENT:brief summary] — Lead is ready to pay, book with deposit, or explicitly mentions payment now
+• [TASK:PAYMENT:brief summary] — Lead is ready to pay, book with deposit, or explicitly mentions payment now${pendingQuotes.length > 0 ? `
+• [TASK:APPROVE_QUOTE:quoteId] — Customer clearly approves a pending quote (e.g. "looks good", "yes let's do it", "approved", "go ahead", "sounds good let's book it"). Use the EXACT quoteId from PENDING QUOTES below. Only use when the approval is unambiguous.` : ""}
 Only emit a signal when clearly triggered. Never emit more than one per reply. Strip it yourself — it goes to the owner's task dashboard, not to the customer.`;
+
+  // Pending quotes context — enables auto-approval via reply
+  if (pendingQuotes.length > 0) {
+    prompt += `\n\nPENDING QUOTES (awaiting approval from this customer):`;
+    pendingQuotes.slice(0, 5).forEach((q, i) => {
+      const summary = q.service || q.title || (q.items && q.items[0] && q.items[0].description) || "Quote";
+      const total = q.total ? `$${Number(q.total).toLocaleString("en-US")}` : "";
+      prompt += `\n• #${i + 1} — ${summary}${total ? `, ${total}` : ""} (quoteId: ${q.id})`;
+    });
+    prompt += `\nIf the customer clearly approves one, emit [TASK:APPROVE_QUOTE:<quoteId>] in your reply and briefly confirm you'll get them on the schedule.`;
+  }
 
   if (config.greeting) {
     prompt += `\n\nGREETING STYLE: "${config.greeting}"`;
