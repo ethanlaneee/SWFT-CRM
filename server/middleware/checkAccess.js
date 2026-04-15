@@ -151,7 +151,7 @@ async function checkAccess(req, res, next) {
   }
 
   // ── Admin bypass ──────────────────────────────────────────────────────────
-  if (req.user?.email && ADMIN_EMAILS.includes(req.user.email)) {
+  if (req.user?.email && ADMIN_EMAILS.includes(req.user.email.toLowerCase())) {
     return next();
   }
 

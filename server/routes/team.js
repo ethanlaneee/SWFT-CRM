@@ -12,6 +12,10 @@ const PROTECTED_EMAILS = ["ethan@goswft.com"];
 
 // Plan-based team gating helper (Pro+ only)
 async function requireTeamPlan(req, res) {
+  // Protected accounts bypass the plan gate entirely
+  if (req.user?.email && PROTECTED_EMAILS.includes(req.user.email.toLowerCase())) {
+    return true;
+  }
   const userDoc = await db.collection("users").doc(req.uid).get();
   const plan = userDoc.exists ? (userDoc.data().plan || "starter") : "starter";
   if (plan === "starter") {
