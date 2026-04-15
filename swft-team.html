@@ -689,6 +689,11 @@ function updateInviteRoleDropdown(){
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+      user = auth.currentUser;
+    }
+    if (!user) {
+      console.warn("[SWFT-REDIRECT] team onAuthStateChanged saw no user");
       window.location.href = "swft-login";
     } else {
       document.body.style.visibility = "visible";

@@ -1542,6 +1542,11 @@ function filterInvoices(q) {
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+      user = auth.currentUser;
+    }
+    if (!user) {
+      console.warn("[SWFT-REDIRECT] billing onAuthStateChanged saw no user");
       window.location.href = "swft-login";
       return;
     }

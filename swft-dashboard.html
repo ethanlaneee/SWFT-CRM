@@ -882,11 +882,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   const db   = getFirestore(app);
 
   onAuthStateChanged(auth, async (user) => {
+    // Firebase can briefly emit null during the initial hydration from
+    // IndexedDB on some browsers. Use authStateReady + a re-check against
+    // currentUser before giving up, so a transient null doesn't bounce us
+    // to login.
     if (!user) {
+      try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+      user = auth.currentUser;
+    }
+    if (!user) {
+      console.warn('[SWFT-REDIRECT] dashboard onAuthStateChanged saw no user — redirecting to login');
       window.location.href = 'swft-login';
       return;
     }
-    
+
 
     // ── Verify Stripe payment on return from Checkout ──
     // Stripe appends ?session_id=cs_xxx to the success_url.

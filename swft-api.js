@@ -13,6 +13,43 @@
 
 const API_BASE = ""; // Uses same origin (works for both localhost and deployed)
 
+// ── Diagnostic: trace any redirect to swft-login ──
+// Every page has its own onAuthStateChanged handler that redirects to login
+// when Firebase reports no user. We want to know exactly which handler fires
+// when someone gets unexpectedly kicked out. Wrap the location setter so any
+// write to swft-login prints a stack trace we can copy from the browser
+// console. Safe no-op in production — only prints when redirect actually
+// happens, which should be rare.
+try {
+  const _loc = window.location;
+  const _origAssign = _loc.assign ? _loc.assign.bind(_loc) : null;
+  const _trace = (dest, method) => {
+    if (typeof dest === "string" && dest.indexOf("swft-login") !== -1) {
+      console.warn("[SWFT-REDIRECT]", method, "→", dest, "\n", new Error().stack);
+    }
+  };
+  if (_origAssign) {
+    _loc.assign = function (url) { _trace(url, "assign"); return _origAssign(url); };
+  }
+  const _origReplace = _loc.replace ? _loc.replace.bind(_loc) : null;
+  if (_origReplace) {
+    _loc.replace = function (url) { _trace(url, "replace"); return _origReplace(url); };
+  }
+  // Chrome does not allow re-defining `location.href` directly, so we intercept
+  // at the href setter on the Location prototype. When that fails (SSR/older
+  // browsers), fall back to a beforeunload hint.
+  const _hrefDesc = Object.getOwnPropertyDescriptor(window.Location.prototype, "href");
+  if (_hrefDesc && _hrefDesc.set) {
+    const _origSet = _hrefDesc.set;
+    Object.defineProperty(window.Location.prototype, "href", {
+      configurable: true,
+      enumerable: true,
+      get: _hrefDesc.get,
+      set: function (v) { _trace(v, "href="); return _origSet.call(this, v); },
+    });
+  }
+} catch (_) { /* diagnostic only — never block app */ }
+
 // ── Get the Firebase ID token for the current user ──
 // Requires Firebase SDK to be loaded on the page
 // Caches token and reuses for 5 minutes to avoid hammering Firebase
@@ -20,29 +57,38 @@ let _cachedToken = null;
 let _cachedTokenTime = 0;
 const TOKEN_CACHE_MS = 5 * 60 * 1000; // 5 minutes
 
-// Wait for Firebase to restore the persisted auth state before deciding the
-// user is signed out. Without this, API calls fired on page load can race
-// ahead of IndexedDB rehydration and see currentUser === null, which would
-// incorrectly bounce the user back to the login screen.
+// Wait for Firebase to finish restoring the persisted auth state. Uses
+// authStateReady() when available (Firebase v9.7+), which is the canonical
+// signal that the initial auth state has settled. Falls back to the first
+// onAuthStateChanged emission on older SDKs.
 let _authReadyPromise = null;
 async function waitForAuthUser() {
   const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
   const auth = getAuth();
-  if (auth.currentUser) return auth.currentUser;
   if (!_authReadyPromise) {
-    _authReadyPromise = new Promise((resolve) => {
-      const unsub = onAuthStateChanged(auth, (user) => {
-        unsub();
-        resolve(user);
+    _authReadyPromise = (async () => {
+      if (typeof auth.authStateReady === "function") {
+        try { await auth.authStateReady(); } catch (_) { /* fall through */ }
+        return auth.currentUser;
+      }
+      return new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (user) => {
+          unsub();
+          resolve(user);
+        });
       });
-    });
+    })();
   }
-  return _authReadyPromise;
+  const settled = await _authReadyPromise;
+  // authStateReady's snapshot can go stale if the user signed in a moment
+  // later. Prefer the live currentUser when it exists.
+  return auth.currentUser || settled;
 }
 
 async function getAuthToken() {
   const user = await waitForAuthUser();
   if (!user) {
+    console.warn("[SWFT-REDIRECT] getAuthToken saw no user — redirecting to login");
     window.location.href = "swft-login";
     throw new Error("Not authenticated");
   }
@@ -294,13 +340,14 @@ const API = {
 };
 
 // ── Auth guard — call on every protected page ──
-// Redirects to login if not signed in
+// Redirects to login if not signed in, but only after Firebase has
+// definitively settled the initial auth state.
 async function requireAuth() {
-  const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
-  return new Promise((resolve) => {
-    onAuthStateChanged(getAuth(), (user) => {
-      if (!user) window.location.href = "swft-login";
-      else resolve(user);
-    });
-  });
+  const user = await waitForAuthUser();
+  if (!user) {
+    console.warn("[SWFT-REDIRECT] requireAuth saw no user — redirecting to login");
+    window.location.href = "swft-login";
+    return;
+  }
+  return user;
 }

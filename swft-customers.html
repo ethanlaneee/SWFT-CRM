@@ -1572,8 +1572,13 @@ function applySort(key) {
 
   // body starts at opacity:0 via CSS
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+      user = auth.currentUser;
+    }
+    if (!user) {
+      console.warn("[SWFT-REDIRECT] customers onAuthStateChanged saw no user");
       window.location.href = "swft-login";
     } else {
       document.body.style.opacity = "1";

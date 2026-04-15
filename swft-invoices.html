@@ -651,7 +651,7 @@ function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent
   const firebaseConfig={apiKey:"AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",authDomain:"swft-ai26.firebaseapp.com",projectId:"swft-ai26",storageBucket:"swft-ai26.firebasestorage.app",messagingSenderId:"170879575187",appId:"1:170879575187:web:e329382b0adf9518ead966",measurementId:"G-B8BEW7E87V"};
   const app=initializeApp(firebaseConfig);const auth=getAuth(app);
   // body starts at opacity:0 via CSS
-  onAuthStateChanged(auth,(user)=>{if(!user){window.location.href="swft-login";}else{window.__swftUser=user;loadInvoices();}});
+  onAuthStateChanged(auth, async (user)=>{ if(!user){ try{ if(auth.authStateReady) await auth.authStateReady(); }catch(_){}; user=auth.currentUser; } if(!user){ console.warn("[SWFT-REDIRECT] invoices onAuthStateChanged saw no user"); window.location.href="swft-login"; } else { window.__swftUser=user; loadInvoices(); }});
 </script>
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-settings-loader.js"></script>

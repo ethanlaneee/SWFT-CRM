@@ -275,8 +275,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+      user = auth.currentUser;
+    }
+    if (!user) {
+      console.warn("[SWFT-REDIRECT] broadcasts onAuthStateChanged saw no user");
       window.location.href = "swft-login";
     } else {
       document.body.style.visibility = "visible";
