@@ -62,6 +62,8 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .card-btn.connect:hover{background:#d5ff40;}
 .card-btn.disconnect{background:rgba(255,82,82,0.08);color:var(--red);border:1px solid rgba(255,82,82,0.2);}
 .card-btn.disconnect:hover{background:rgba(255,82,82,0.15);}
+.badge-soon{background:rgba(255,193,7,0.12);color:#ffc107;font-size:9.5px;font-weight:700;letter-spacing:1.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase;display:inline-block;margin-top:3px;}
+.card-btn.soon{background:var(--surface2);color:var(--gray2);cursor:default;}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
@@ -207,12 +209,47 @@ initializeApp(firebaseConfig);
 
 const CATEGORIES = [
   { label: 'Google Workspace', ids: ['gmail','google_sheets','google_business'] },
-  { label: 'Payments & Accounting', ids: ['stripe','quickbooks'] },
-  { label: 'Social & Messaging', ids: ['facebook','instagram','whatsapp'] },
+  { label: 'Microsoft', ids: ['outlook','outlook_calendar'] },
+  { label: 'Payments & Accounting', ids: ['stripe','quickbooks','square','paypal'] },
+  { label: 'Buy Now Pay Later', ids: ['affirm','klarna'] },
+  { label: 'Social & Messaging', ids: ['facebook','instagram','whatsapp','meta_lead_ads'] },
+  { label: 'Email Marketing', ids: ['mailchimp'] },
+  { label: 'Documents & E-Sign', ids: ['docusign'] },
+  { label: 'File Storage', ids: ['dropbox','google_drive','onedrive'] },
 ];
-const ICONS = { gmail:'📧', google_calendar:'📅', google_sheets:'📊', quickbooks:'💰', stripe:'💳', google_business:'⭐', facebook:'💬', instagram:'📸', whatsapp:'📱' };
+const ICONS = {
+  gmail:'📧', google_calendar:'📅', google_sheets:'📊', quickbooks:'💰', stripe:'💳',
+  google_business:'⭐', facebook:'💬', instagram:'📸', whatsapp:'📱',
+  outlook:'📨', outlook_calendar:'📆', onedrive:'☁️',
+  square:'⬛', paypal:'🅿️', affirm:'💳', klarna:'🛍️',
+  meta_lead_ads:'📢', mailchimp:'🐵', docusign:'✍️',
+  dropbox:'📦', google_drive:'📁',
+};
+const COMING_SOON = {
+  outlook:       { name:'Outlook',            description:'Send and receive emails from your Microsoft Outlook or Office 365 inbox.' },
+  outlook_calendar: { name:'Outlook Calendar',description:'Sync your SWFT jobs with Microsoft Outlook and Office 365 calendar.' },
+  onedrive:      { name:'OneDrive',           description:'Attach photos and documents from OneDrive directly to jobs and customers.' },
+  square:        { name:'Square',             description:'Accept payments and sync Square transactions to your SWFT billing.' },
+  paypal:        { name:'PayPal',             description:'Send invoices and accept PayPal payments from your customers.' },
+  affirm:        { name:'Affirm',             description:'Offer buy-now-pay-later financing for high-ticket jobs.' },
+  klarna:        { name:'Klarna',             description:'Let customers split payments into installments with Klarna.' },
+  meta_lead_ads: { name:'Meta Lead Ads',      description:'Automatically pull leads from Facebook and Instagram ad forms into your CRM.' },
+  mailchimp:     { name:'Mailchimp',          description:'Sync your customer list to Mailchimp for newsletters and email campaigns.' },
+  docusign:      { name:'DocuSign',           description:'Send quotes and contracts for e-signature directly from SWFT.' },
+  dropbox:       { name:'Dropbox',            description:'Attach photos and documents from Dropbox directly to jobs and customers.' },
+  google_drive:  { name:'Google Drive',       description:'Attach photos and documents from Google Drive directly to jobs and customers.' },
+};
 
 function cardHtml(i) {
+  if (i.comingSoon) {
+    return '<div class="int-card">' +
+      '<div class="card-top"><div class="card-icon">' + (ICONS[i.id] || '🔗') + '</div>' +
+      '<div><div class="card-name">' + i.name + '</div>' +
+      '<span class="badge-soon">Coming Soon</span></div></div>' +
+      '<div class="card-desc">' + i.description + '</div>' +
+      '<button class="card-btn soon" disabled>Coming Soon</button>' +
+    '</div>';
+  }
   return '<div class="int-card' + (i.connected ? ' connected' : '') + '">' +
     '<div class="card-top">' +
       '<div class="card-icon">' + (ICONS[i.id] || '🔗') + '</div>' +
@@ -249,18 +286,24 @@ async function loadIntegrations() {
 
     var connected = integrations.filter(function(i){ return i.connected; }).length;
     document.getElementById('st-connected').textContent = connected;
-    document.getElementById('st-total').textContent = integrations.length + 1; // +1 for Apple
+    document.getElementById('st-total').textContent = integrations.length + 1 + Object.keys(COMING_SOON).length; // +1 Apple
 
     var map = {};
     integrations.forEach(function(i){ map[i.id] = i; });
 
     var html = '';
     CATEGORIES.forEach(function(cat) {
-      var cards = cat.ids.map(function(id){ return map[id] ? cardHtml(map[id]) : ''; }).join('');
+      var cards = cat.ids.map(function(id) {
+        if (map[id]) return cardHtml(map[id]);
+        if (COMING_SOON[id]) return cardHtml({ id: id, comingSoon: true, name: COMING_SOON[id].name, description: COMING_SOON[id].description });
+        return '';
+      }).join('');
       if (!cards) return;
       html += '<div class="section-label">' + cat.label + '</div><div class="cards-grid">' + cards + '</div>';
     });
-    var calCards = (map.google_calendar ? cardHtml(map.google_calendar) : '') + APPLE_CARD;
+    var calCards = (map.google_calendar ? cardHtml(map.google_calendar) : '') +
+      cardHtml({ id:'outlook_calendar', comingSoon:true, name:'Outlook Calendar', description:'Sync your SWFT jobs with Microsoft Outlook and Office 365 calendar.' }) +
+      APPLE_CARD;
     html += '<div class="section-label">Calendar Sync</div><div class="cards-grid">' + calCards + '</div>';
 
     document.getElementById('integrations-grid').innerHTML = html;
