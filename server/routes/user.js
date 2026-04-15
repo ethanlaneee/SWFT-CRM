@@ -124,6 +124,9 @@ router.put("/", async (req, res, next) => {
       "companyLogo",
       // Business Profile for AI
       "bizAbout", "bizServices", "bizArea", "bizHours", "bizWebsite", "bizNotes",
+      "bizPricing", "bizPaymentMethods", "bizBookingLink", "bizFaqs",
+      // AI custom instructions
+      "aiCustomInstructions",
       // Subscription
       "plan", "isSubscribed", "stripeCustomerId", "accountStatus"
     ];

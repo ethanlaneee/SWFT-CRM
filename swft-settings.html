@@ -410,12 +410,48 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div style="font-size:10.5px;color:var(--gray);margin-top:4px;">Enter your website URL and click Auto-fill — AI will read your site and fill in your profile.</div>
       </div>
     </div>
+    <div class="settings-2col">
+      <div class="settings-field">
+        <label>Pricing Info</label>
+        <textarea class="settings-input" id="s-biz-pricing" rows="2" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. Window cleaning starts at $75. Pressure washing from $150. Free estimates on all jobs."></textarea>
+      </div>
+      <div class="settings-field">
+        <label>Payment Methods Accepted</label>
+        <input class="settings-input" id="s-biz-payment-methods" style="width:100%;" placeholder="e.g. Credit card, e-Transfer, cash, cheque"/>
+      </div>
+    </div>
+    <div class="settings-2col">
+      <div class="settings-field">
+        <label>Booking / Scheduling Link</label>
+        <input class="settings-input" id="s-biz-booking-link" style="width:100%;" placeholder="e.g. https://calendly.com/yourcompany"/>
+      </div>
+      <div class="settings-field">
+        <label>Anything Else the AI Should Know</label>
+        <textarea class="settings-input" id="s-biz-notes" rows="2" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. We don't do roofs. Free estimates always. Licensed and insured."></textarea>
+      </div>
+    </div>
     <div class="settings-field">
-      <label>Anything Else the AI Should Know</label>
-      <textarea class="settings-input" id="s-biz-notes" rows="2" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. We don't do roofs. Free estimates always. Licensed and insured. We offer a 2-year warranty."></textarea>
+      <label>Common FAQs</label>
+      <textarea class="settings-input" id="s-biz-faqs" rows="3" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. Q: Do you offer same-day service? A: Yes, subject to availability. Q: Are you insured? A: Yes, fully insured and licensed."></textarea>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
       <button class="settings-btn primary" onclick="saveSettings('bizprofile')">Save Business Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- Train Your AI -->
+<div class="settings-section" data-group="profile" id="sec-ai-train">
+  <div class="settings-header"><span class="settings-header-icon">🎯</span><h3>TRAIN YOUR AI</h3></div>
+  <div class="settings-body">
+    <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.6;">Write custom instructions that are always injected into your AI's behaviour. Use this to define its personality, set hard rules, or tell it exactly how to handle specific situations.</div>
+    <div class="settings-field">
+      <label>Custom AI Instructions</label>
+      <textarea class="settings-input" id="s-ai-instructions" rows="6" style="width:100%;resize:vertical;line-height:1.6;font-family:'DM Sans',sans-serif;" placeholder="e.g.&#10;- Always greet customers by first name&#10;- Never quote prices over the phone — always say we'll send a formal quote&#10;- If someone asks about competitor pricing, stay positive and highlight our warranty&#10;- Offer a 10% discount to returning customers if they ask about pricing&#10;- Always end messages with 'Have a great day!'"></textarea>
+      <div style="font-size:10.5px;color:var(--gray2);margin-top:5px;">These instructions override defaults. The AI will always follow these rules for every conversation.</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+      <button class="settings-btn primary" onclick="saveSettings('aiinstructions')">Save AI Instructions</button>
     </div>
   </div>
 </div>
@@ -957,6 +993,12 @@ async function saveSettings(section) {
       data.bizHours = document.getElementById('s-biz-hours').value.trim();
       data.bizWebsite = document.getElementById('s-biz-website').value.trim();
       data.bizNotes = document.getElementById('s-biz-notes').value.trim();
+      data.bizPricing = document.getElementById('s-biz-pricing').value.trim();
+      data.bizPaymentMethods = document.getElementById('s-biz-payment-methods').value.trim();
+      data.bizBookingLink = document.getElementById('s-biz-booking-link').value.trim();
+      data.bizFaqs = document.getElementById('s-biz-faqs').value.trim();
+    } else if (section === 'aiinstructions') {
+      data.aiCustomInstructions = document.getElementById('s-ai-instructions').value.trim();
     } else if (section === 'defaults') {
       data.taxRate = document.getElementById('s-tax').value.trim();
       data.paymentTerms = document.getElementById('s-terms').value;
@@ -1001,6 +1043,12 @@ async function loadSettings() {
     if (data.bizHours) document.getElementById('s-biz-hours').value = data.bizHours;
     if (data.bizWebsite) document.getElementById('s-biz-website').value = data.bizWebsite;
     if (data.bizNotes) document.getElementById('s-biz-notes').value = data.bizNotes;
+    if (data.bizPricing) document.getElementById('s-biz-pricing').value = data.bizPricing;
+    if (data.bizPaymentMethods) document.getElementById('s-biz-payment-methods').value = data.bizPaymentMethods;
+    if (data.bizBookingLink) document.getElementById('s-biz-booking-link').value = data.bizBookingLink;
+    if (data.bizFaqs) document.getElementById('s-biz-faqs').value = data.bizFaqs;
+    // Train your AI
+    if (data.aiCustomInstructions) document.getElementById('s-ai-instructions').value = data.aiCustomInstructions;
 
     // Refresh intake rates list now that service types are populated
     renderIntakeServicesList();

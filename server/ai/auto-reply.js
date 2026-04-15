@@ -16,6 +16,7 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const { db } = require("../firebase");
 const { sendSms, getUserTelnyxConfig } = require("../telnyx");
+const { getCustomerMemory, extractAndSaveMemory } = require("./customer-memory");
 
 const anthropic = new Anthropic();
 
@@ -125,22 +126,41 @@ async function getCustomerContext(orgId, customerId) {
 /**
  * Build the Claude system prompt from org owner profile.
  */
-function buildSystemPrompt(orgUser, customerContext) {
-  const bizName  = orgUser.company || orgUser.name || "this business";
-  const ownerFN  = (orgUser.name || "").split(" ")[0] || "the owner";
-  let prompt = `You are the AI assistant for ${bizName}. You handle inbound customer text messages on behalf of the business owner.\n\n`;
-  if (orgUser.bizAbout)    prompt += `About the business: ${orgUser.bizAbout}\n\n`;
-  if (orgUser.bizServices) prompt += `Services: ${orgUser.bizServices}\n\n`;
-  if (orgUser.bizArea)     prompt += `Service area: ${orgUser.bizArea}\n\n`;
-  if (orgUser.bizHours)    prompt += `Hours: ${orgUser.bizHours}\n\n`;
-  if (customerContext)     prompt += `${customerContext}\n\n`;
+function buildSystemPrompt(orgUser, customerContext, customerMemory = []) {
+  const bizName = orgUser.company || orgUser.name || "this business";
+  const ownerFN = (orgUser.name || "").split(" ")[0] || "the owner";
+
+  let prompt = `You are the AI assistant for ${bizName}. You handle inbound customer messages on behalf of the business owner.\n\n`;
+
+  if (orgUser.bizAbout)          prompt += `About the business: ${orgUser.bizAbout}\n\n`;
+  if (orgUser.bizServices)       prompt += `Services offered: ${orgUser.bizServices}\n\n`;
+  if (orgUser.bizArea)           prompt += `Service area: ${orgUser.bizArea}\n\n`;
+  if (orgUser.bizHours)          prompt += `Business hours: ${orgUser.bizHours}\n\n`;
+  if (orgUser.bizPricing)        prompt += `Pricing info: ${orgUser.bizPricing}\n\n`;
+  if (orgUser.bizPaymentMethods) prompt += `Payment methods accepted: ${orgUser.bizPaymentMethods}\n\n`;
+  if (orgUser.bizBookingLink)    prompt += `Booking / scheduling link: ${orgUser.bizBookingLink}\n\n`;
+  if (orgUser.bizFaqs)           prompt += `Common FAQs:\n${orgUser.bizFaqs}\n\n`;
+  if (orgUser.bizNotes)          prompt += `Additional info: ${orgUser.bizNotes}\n\n`;
+  if (customerContext)           prompt += `${customerContext}\n\n`;
+
+  if (customerMemory.length) {
+    prompt += `What we know about this customer:\n`;
+    prompt += customerMemory.map(f => `- ${f}`).join("\n");
+    prompt += "\n\n";
+  }
+
+  // Custom owner instructions go last — they override everything above
+  if (orgUser.aiCustomInstructions) {
+    prompt += `OWNER'S CUSTOM INSTRUCTIONS (follow these exactly):\n${orgUser.aiCustomInstructions}\n\n`;
+  }
+
   prompt +=
     `Rules:\n` +
     `- Keep replies SHORT — 1 to 3 sentences, SMS-style\n` +
     `- Be warm and professional\n` +
     `- Reference the customer's open quotes or invoices if relevant\n` +
     `- If they want to schedule or need a human decision, let them know ${ownerFN} will follow up shortly\n` +
-    `- Never invent pricing, never commit to dates or guarantees\n` +
+    `- Never invent pricing beyond what's provided above, never commit to dates or guarantees\n` +
     `- If you genuinely cannot help, say so and offer to have ${ownerFN} reach out`;
   return prompt;
 }
@@ -167,9 +187,10 @@ async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, b
     return null;
   }
 
-  const [recentMessages, customerContext] = await Promise.all([
+  const [recentMessages, customerContext, customerMemory] = await Promise.all([
     getRecentMessages(orgId, customerId, fromIdentifier),
     getCustomerContext(orgId, customerId),
+    getCustomerMemory(orgId, customerId),
   ]);
 
   const history = recentMessages
@@ -187,11 +208,19 @@ async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, b
   const aiResp = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 200,
-    system: buildSystemPrompt(ownerData, customerContext),
+    system: buildSystemPrompt(ownerData, customerContext, customerMemory),
     messages: history,
   });
 
-  return aiResp.content[0]?.text?.trim() || null;
+  const replyText = aiResp.content[0]?.text?.trim() || null;
+
+  // Async memory extraction — fire and forget, never blocks the reply
+  if (replyText && customerId) {
+    const fullHistory = [...history, { role: "assistant", content: replyText }];
+    extractAndSaveMemory(orgId, customerId, fullHistory).catch(() => {});
+  }
+
+  return replyText;
 }
 
 // ── SMS (Telnyx) ──────────────────────────────────────────────────────────────
