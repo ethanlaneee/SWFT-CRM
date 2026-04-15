@@ -20,9 +20,28 @@ let _cachedToken = null;
 let _cachedTokenTime = 0;
 const TOKEN_CACHE_MS = 5 * 60 * 1000; // 5 minutes
 
+// Wait for Firebase to restore the persisted auth state before deciding the
+// user is signed out. Without this, API calls fired on page load can race
+// ahead of IndexedDB rehydration and see currentUser === null, which would
+// incorrectly bounce the user back to the login screen.
+let _authReadyPromise = null;
+async function waitForAuthUser() {
+  const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+  const auth = getAuth();
+  if (auth.currentUser) return auth.currentUser;
+  if (!_authReadyPromise) {
+    _authReadyPromise = new Promise((resolve) => {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        unsub();
+        resolve(user);
+      });
+    });
+  }
+  return _authReadyPromise;
+}
+
 async function getAuthToken() {
-  const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
-  const user = getAuth().currentUser;
+  const user = await waitForAuthUser();
   if (!user) {
     window.location.href = "swft-login";
     throw new Error("Not authenticated");
