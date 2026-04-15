@@ -311,13 +311,7 @@ window.swftConfirm = function(title, message, opts) {
 
 window.connectIntegration = async function(id) {
   if (id === 'facebook' || id === 'instagram' || id === 'whatsapp') {
-    try {
-      var token = await getAuth().currentUser.getIdToken();
-      var res = await fetch('/api/meta/connect', { headers: { Authorization: 'Bearer ' + token } });
-      var data = await res.json();
-      if (data.url) { window.location.href = data.url; }
-      else { showToast(data.error || 'Failed to start Meta connection'); }
-    } catch(e) { showToast('Failed to start connection'); }
+    openSocialConnectModal(id);
     return;
   }
   try {
