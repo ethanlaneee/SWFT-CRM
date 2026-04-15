@@ -16,6 +16,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const meta = require("../meta");
+const { handleInboundMeta } = require("../ai/auto-reply");
 
 const col = () => db.collection("users");
 
@@ -333,10 +334,12 @@ async function webhookReceive(req, res) {
           }
         }
 
+        const orgId = owner.orgId || owner.uid;
+
         // Save to messages collection (unified inbox)
         await db.collection("messages").add({
           userId: owner.uid,
-          orgId: owner.orgId || owner.uid,
+          orgId,
           from: senderId,
           to: recipientId,
           body: text,
@@ -349,7 +352,19 @@ async function webhookReceive(req, res) {
           sentAt: Date.now(),
         });
 
-        console.log(`[meta] ${channel} message from ${customerName} (${senderId}) → org ${owner.orgId || owner.uid}`);
+        console.log(`[meta] ${channel} message from ${customerName} (${senderId}) → org ${orgId}`);
+
+        // Auto-reply via AI unless thread is in manual mode
+        const matched = customerId ? { customerId, customerName } : null;
+        const metaSendFn = async (replyText) => {
+          if (channel === "instagram") {
+            await meta.sendInstagramMessage(owner.facebookPageAccessToken, owner.instagramUserId, senderId, replyText);
+          } else {
+            await meta.sendFacebookMessage(owner.facebookPageAccessToken, senderId, replyText);
+          }
+        };
+        handleInboundMeta(orgId, owner.uid, owner, senderId, text, channel, matched, metaSendFn)
+          .catch(err => console.error("[meta] auto-reply error:", err.message));
       } catch (err) {
         console.error("[meta] Error processing webhook message:", err.message);
       }

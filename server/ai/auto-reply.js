@@ -145,65 +145,68 @@ function buildSystemPrompt(orgUser, customerContext) {
   return prompt;
 }
 
-// ── Main entry point ─────────────────────────────────────────────────────────
+// ── Core: generate AI reply text ─────────────────────────────────────────────
+
+/**
+ * Check mode and generate an AI reply for any inbound message channel.
+ * Returns the reply string, or null if the thread is in manual mode or
+ * the AI has nothing to say.
+ *
+ * @param {string} orgId
+ * @param {object} ownerData
+ * @param {string|null} customerId
+ * @param {string} fromIdentifier  - phone number (SMS) or sender ID (Meta)
+ * @param {string} body
+ * @param {{ customerName }|null} matched
+ * @returns {Promise<string|null>}
+ */
+async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, body, matched) {
+  const mode = await getConversationMode(orgId, customerId, fromIdentifier);
+  if (mode === "manual") {
+    console.log(`[auto-reply] Thread ${customerId || fromIdentifier} is manual — skipping`);
+    return null;
+  }
+
+  const [recentMessages, customerContext] = await Promise.all([
+    getRecentMessages(orgId, customerId, fromIdentifier),
+    getCustomerContext(orgId, customerId),
+  ]);
+
+  const history = recentMessages
+    .filter(m => m.body)
+    .map(m => ({
+      role: m.direction === "inbound" ? "user" : "assistant",
+      content: m.body,
+    }));
+
+  const last = history[history.length - 1];
+  if (!last || last.role !== "user" || last.content !== body) {
+    history.push({ role: "user", content: body });
+  }
+
+  const aiResp = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 200,
+    system: buildSystemPrompt(ownerData, customerContext),
+    messages: history,
+  });
+
+  return aiResp.content[0]?.text?.trim() || null;
+}
+
+// ── SMS (Telnyx) ──────────────────────────────────────────────────────────────
 
 /**
  * Called for every inbound SMS after the message is saved to Firestore.
- * Checks conversation mode and — if "auto" — generates and sends an AI reply.
- *
- * @param {string} orgId
- * @param {string} ownerUid
- * @param {object} ownerData  - User doc data (company, bizAbout, …)
- * @param {string} from       - Caller's phone number
- * @param {string} body       - Message text
- * @param {{ customerId, customerName } | null} matched - Matched customer, or null for unknown callers
  */
 async function handleInbound(orgId, ownerUid, ownerData, from, body, matched) {
   try {
     const customerId = matched?.customerId || null;
-
-    const mode = await getConversationMode(orgId, customerId, from);
-    if (mode === "manual") {
-      console.log(`[auto-reply] Thread ${customerId || from} is in manual mode — skipping`);
-      return;
-    }
-
-    const [recentMessages, customerContext] = await Promise.all([
-      getRecentMessages(orgId, customerId, from),
-      getCustomerContext(orgId, customerId),
-    ]);
-
-    // Build message history for Claude (skip the current message — it may not
-    // be in Firestore yet or may be the very last entry)
-    const history = recentMessages
-      .filter(m => m.body)
-      .map(m => ({
-        role: m.direction === "inbound" ? "user" : "assistant",
-        content: m.body,
-      }));
-
-    // Ensure the current inbound message is last
-    const last = history[history.length - 1];
-    if (!last || last.role !== "user" || last.content !== body) {
-      history.push({ role: "user", content: body });
-    }
-
-    const systemPrompt = buildSystemPrompt(ownerData, customerContext);
-
-    const aiResp = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 200,
-      system: systemPrompt,
-      messages: history,
-    });
-
-    const replyText = aiResp.content[0]?.text?.trim();
+    const replyText = await generateAutoReply(orgId, ownerData, customerId, from, body, matched);
     if (!replyText) return;
 
-    // Send SMS
     await sendSms(from, replyText, getUserTelnyxConfig(ownerData));
 
-    // Log the outbound auto-reply to messages
     await db.collection("messages").add({
       userId: ownerUid,
       orgId,
@@ -219,10 +222,53 @@ async function handleInbound(orgId, ownerUid, ownerData, from, body, matched) {
       sentAt: Date.now(),
     });
 
-    console.log(`[auto-reply] Sent reply to ${from} (org ${orgId})`);
+    console.log(`[auto-reply] SMS reply sent to ${from} (org ${orgId})`);
   } catch (err) {
-    console.error("[auto-reply] Error:", err.message);
+    console.error("[auto-reply] SMS error:", err.message);
   }
 }
 
-module.exports = { handleInbound, getConversationMode, setConversationMode, convKey };
+// ── Meta (Facebook / Instagram) ───────────────────────────────────────────────
+
+/**
+ * Called for every inbound Meta message after it is saved to Firestore.
+ *
+ * @param {string} orgId
+ * @param {string} ownerUid
+ * @param {object} ownerData        - User doc (facebookPageAccessToken, instagramUserId, …)
+ * @param {string} senderId         - Meta sender ID
+ * @param {string} body             - Message text
+ * @param {string} channel          - "instagram" | "facebook"
+ * @param {{ customerId, customerName }|null} matched
+ * @param {Function} metaSendFn     - async (text) => void  — channel-specific send
+ */
+async function handleInboundMeta(orgId, ownerUid, ownerData, senderId, body, channel, matched, metaSendFn) {
+  try {
+    const customerId = matched?.customerId || null;
+    const replyText = await generateAutoReply(orgId, ownerData, customerId, senderId, body, matched);
+    if (!replyText) return;
+
+    await metaSendFn(replyText);
+
+    await db.collection("messages").add({
+      userId: ownerUid,
+      orgId,
+      to: senderId,
+      body: replyText,
+      customerId: customerId || "",
+      customerName: matched?.customerName || senderId,
+      type: channel,
+      status: "sent",
+      sentVia: channel,
+      direction: "outbound",
+      isAutoReply: true,
+      sentAt: Date.now(),
+    });
+
+    console.log(`[auto-reply] ${channel} reply sent to ${senderId} (org ${orgId})`);
+  } catch (err) {
+    console.error(`[auto-reply] ${channel} error:`, err.message);
+  }
+}
+
+module.exports = { handleInbound, handleInboundMeta, getConversationMode, setConversationMode, convKey };
