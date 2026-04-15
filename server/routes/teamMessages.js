@@ -12,31 +12,22 @@ function makeConvId(uid1, uid2) {
 }
 
 // GET /api/team-messages — list all conversations for the current user (latest message per thread)
+// Uses a single-field query to avoid requiring a composite Firestore index.
 router.get("/", async (req, res, next) => {
   try {
-    const [sentSnap, recvSnap] = await Promise.all([
-      db.collection("teamMessages")
-        .where("orgId", "==", req.orgId)
-        .where("fromUid", "==", req.uid)
-        .orderBy("sentAt", "desc")
-        .limit(200)
-        .get(),
-      db.collection("teamMessages")
-        .where("orgId", "==", req.orgId)
-        .where("toUid", "==", req.uid)
-        .orderBy("sentAt", "desc")
-        .limit(200)
-        .get(),
-    ]);
+    // Fetch recent messages for the org and filter to ones involving req.uid in JS
+    const snap = await db.collection("teamMessages")
+      .where("orgId", "==", req.orgId)
+      .limit(500)
+      .get();
 
-    // Merge, deduplicate, then keep only the latest per conversation
-    const msgMap = new Map();
-    [...sentSnap.docs, ...recvSnap.docs].forEach(doc => {
-      if (!msgMap.has(doc.id)) msgMap.set(doc.id, { id: doc.id, ...doc.data() });
-    });
-
+    const myUid = req.uid;
     const convMap = new Map();
-    for (const msg of msgMap.values()) {
+
+    for (const doc of snap.docs) {
+      const msg = { id: doc.id, ...doc.data() };
+      // Only include conversations this user is part of
+      if (msg.fromUid !== myUid && msg.toUid !== myUid) continue;
       const prev = convMap.get(msg.conversationId);
       if (!prev || msg.sentAt > prev.sentAt) convMap.set(msg.conversationId, msg);
     }
@@ -49,24 +40,26 @@ router.get("/", async (req, res, next) => {
 });
 
 // GET /api/team-messages/:conversationId — get messages in a conversation
+// Uses a single-field query (conversationId only) — no composite index needed.
 router.get("/:conversationId", async (req, res, next) => {
   try {
     const convId = req.params.conversationId;
 
-    // Security: make sure this user is a participant
+    // Security: make sure this user is a participant (convId = sorted UIDs joined by _)
     const [uid1, uid2] = convId.split("_");
     if (req.uid !== uid1 && req.uid !== uid2) {
       return res.status(403).json({ error: "Access denied" });
     }
 
     const snap = await db.collection("teamMessages")
-      .where("orgId", "==", req.orgId)
       .where("conversationId", "==", convId)
-      .orderBy("sentAt", "asc")
       .limit(100)
       .get();
 
-    const messages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const messages = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.sentAt || 0) - (b.sentAt || 0));
+
     res.json({ messages });
   } catch (err) { next(err); }
 });
@@ -82,7 +75,7 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: "Cannot message yourself" });
     }
 
-    // Verify recipient is in the same org
+    // Verify recipient is in the same org (two equality filters — no composite index needed)
     const teamSnap = await db.collection("team")
       .where("orgId", "==", req.orgId)
       .where("uid", "==", toUid)
@@ -136,9 +129,9 @@ router.post("/:conversationId/read", async (req, res, next) => {
 
     const { FieldValue } = require("firebase-admin/firestore");
     const snap = await db.collection("teamMessages")
-      .where("orgId", "==", req.orgId)
       .where("conversationId", "==", convId)
       .where("toUid", "==", req.uid)
+      .limit(50)
       .get();
 
     const batch = db.batch();
