@@ -57,7 +57,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
@@ -108,9 +108,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
           authSection.innerHTML =
             '<p style="font-size:13px;color:var(--gray);margin-bottom:12px;">Signed in as <strong style="color:var(--white);">' + user.email + '</strong></p>' +
             '<button class="btn btn-green" id="join-btn">Join Team</button>' +
-            '<button class="btn btn-outline" onclick="window.location.href=\'swft-login\'">Use Different Account</button>' +
+            '<button class="btn btn-outline" id="switch-btn">Use Different Account</button>' +
             '<div id="join-msg"></div>';
           document.getElementById('join-btn').addEventListener('click', function() { acceptInvite(user); });
+          document.getElementById('switch-btn').addEventListener('click', function() { signOut(auth); });
         } else {
           authSection.innerHTML =
             '<p style="font-size:13px;color:var(--gray);margin-bottom:16px;">Sign in or create an account to join.</p>' +
