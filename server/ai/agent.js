@@ -68,11 +68,21 @@ async function executeTool(toolName, input, uid, orgId) {
     }
 
     case "create_quote": {
+      // Assign next sequential quote number for this org (mirrors HTTP route behavior)
+      const existingQuotes = await db.collection("quotes").where("orgId", "==", oid).select("quoteNum").get();
+      let maxNum = 0;
+      existingQuotes.docs.forEach(d => {
+        const n = parseInt(d.data().quoteNum || 0, 10);
+        if (n > maxNum) maxNum = n;
+      });
+      const quoteNum = maxNum + 1;
+
       const normalizedItems = normalizeItems(input.items);
       const total = normalizedItems.reduce((sum, i) => sum + i.total, 0);
       const data = {
         orgId: oid,
         userId: uid,
+        quoteNum,
         customerId: input.customerId || "",
         customerName: input.customerName || "",
         jobId: input.jobId || null,
