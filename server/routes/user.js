@@ -459,8 +459,9 @@ router.get("/status", async (req, res, next) => {
 
     const data = doc.data();
 
-    // Team members don't have their own subscription — check the org owner's status
-    const isTeamMember = data.accountType === "team" && data.orgId && data.orgId !== req.uid;
+    // Team members don't have their own subscription — check the org owner's status.
+    // Detect by orgId pointing to another user (accountType may not always be set).
+    const isTeamMember = data.orgId && data.orgId !== req.uid;
     if (isTeamMember) {
       const orgDoc = await col().doc(data.orgId).get();
       if (!orgDoc.exists) {
@@ -482,9 +483,10 @@ router.get("/status", async (req, res, next) => {
     }
 
     const checkedData = await checkTrialExpired(doc.id, data);
-    // If accountStatus was never written (pre-subscription-fields user), treat as trialing
+    // Only known "bad" statuses block access — anything else (null, "unknown", etc.) is allowed
+    const BLOCKED_STATUSES = new Set(["expired", "canceled"]);
     const accountStatus = checkedData.accountStatus || "trialing";
-    const allowed = accountStatus === "active" || accountStatus === "trialing";
+    const allowed = !BLOCKED_STATUSES.has(accountStatus);
 
     if (!allowed) {
       return res.status(402).json({
