@@ -552,9 +552,9 @@ publicRouter.post("/join", authMiddleware, async (req, res, next) => {
     }
 
     // Any user who is the primary owner of their own org cannot be demoted via an invite.
-    // orgId === uid means they created their own org and are its owner.
-    const currentOrgId = userData.orgId || req.uid;
-    if (currentOrgId === req.uid && memberData.role !== "owner") {
+    // Only applies if they have an existing Firestore profile with orgId === uid.
+    // New accounts (no Firestore profile yet) are always allowed through.
+    if (userDoc.exists && userData.orgId && userData.orgId === req.uid && memberData.role !== "owner") {
       return res.status(403).json({ error: "Org owners cannot join another team as a non-owner. Contact support if you need to transfer ownership." });
     }
 
