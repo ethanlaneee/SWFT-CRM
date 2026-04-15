@@ -25,10 +25,28 @@ async function auth(req, res, next) {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 
-  // Protected accounts always get owner role — skip cache and Firestore role lookup
+  // Protected accounts always get owner role.
+  // Also repair Firestore if the role/orgId was ever corrupted (e.g. by joining a team).
   if (req.user?.email && PROTECTED_EMAILS.includes(req.user.email)) {
     req.orgId = req.uid;
     req.userRole = "owner";
+    userCache.delete(req.uid); // never serve a stale role from cache for this account
+    // Fire-and-forget: correct Firestore if it has the wrong role or orgId
+    db.collection("users").doc(req.uid).get().then(doc => {
+      if (doc.exists) {
+        const d = doc.data();
+        if (d.role !== "owner" || d.orgId !== req.uid) {
+          db.collection("users").doc(req.uid).set(
+            { role: "owner", orgId: req.uid },
+            { merge: true }
+          ).then(() => {
+            console.log("[auth] Repaired protected account role for", req.user.email);
+          }).catch(err => {
+            console.error("[auth] Failed to repair protected account role:", err.message);
+          });
+        }
+      }
+    }).catch(() => {});
     return next();
   }
 
@@ -46,6 +64,15 @@ async function auth(req, res, next) {
       const userData = userDoc.data();
       req.orgId = userData.orgId || req.uid;
       req.userRole = userData.role || "owner";
+
+      // Any user who is the primary owner of their own org (orgId === uid) must
+      // always be treated as owner. Repair Firestore silently if it drifted.
+      if (req.orgId === req.uid && req.userRole !== "owner") {
+        req.userRole = "owner";
+        db.collection("users").doc(req.uid).set({ role: "owner" }, { merge: true })
+          .then(() => console.log("[auth] Repaired owner role for uid", req.uid))
+          .catch(err => console.error("[auth] Failed to repair owner role:", err.message));
+      }
     } else {
       req.orgId = req.uid;
       req.userRole = "owner";
