@@ -79,10 +79,11 @@ router.get("/callback", async (req, res) => {
     return res.redirect("/swft-connect?error=missing_code");
   }
 
-  let uid;
+  let uid, integration;
   try {
     const decoded = JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
     uid = decoded.uid;
+    integration = decoded.integration || "facebook";
   } catch {
     return res.redirect("/swft-connect?error=invalid_state");
   }
@@ -92,13 +93,40 @@ router.get("/callback", async (req, res) => {
     const shortToken = await meta.exchangeCodeForToken(code);
     const longToken = await meta.getLongLivedToken(shortToken);
 
-    // Get the pages this user manages
+    // ── Meta Lead Ads flow ──
+    if (integration === "meta_lead_ads") {
+      const pages = await meta.getUserPages(longToken);
+      if (!pages.length) {
+        return res.redirect("/swft-connect?error=no_pages_found_for_lead_ads");
+      }
+      // Store all pages for lead ads (subscribe webhooks for leadgen events)
+      const leadPages = pages.map(p => ({
+        id: p.id,
+        name: p.name,
+        accessToken: p.access_token,
+      }));
+      await db.collection("users").doc(uid).set({
+        metaLeadAdsConnected: true,
+        metaLeadAdsPages: leadPages,
+        metaLeadAdsUserToken: longToken,
+        metaLeadAdsConnectedAt: Date.now(),
+      }, { merge: true });
+      // Subscribe each page to leadgen webhooks
+      for (const page of pages) {
+        try {
+          await meta.subscribePageWebhook(page.id, page.access_token);
+        } catch (_) { /* non-fatal */ }
+      }
+      return res.redirect("/swft-connect?connected=meta_lead_ads");
+    }
+
+    // ── Facebook / Instagram / WhatsApp flow ──
     const pages = await meta.getUserPages(longToken);
     if (!pages.length) {
       return res.redirect("/swft-connect?error=no_facebook_pages_select_a_page_during_login_or_create_one_at_facebook.com");
     }
 
-    // Store temp data for page selection and redirect to settings
+    // Store temp data for page selection
     await db.collection("metaConnectTemp").doc(uid).set({
       userAccessToken: longToken,
       pages: pages.map(p => ({

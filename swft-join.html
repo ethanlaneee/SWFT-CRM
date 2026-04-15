@@ -104,42 +104,64 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       // Check if user is already logged in
       onAuthStateChanged(auth, async (user) => {
         const authSection = document.getElementById('auth-section');
+        if (!authSection) return;
         if (user) {
           authSection.innerHTML =
-            '<p style="font-size:13px;color:var(--gray);margin-bottom:12px;">Signed in as <strong style="color:var(--white);">' + user.email + '</strong></p>' +
-            '<button class="btn btn-green" id="join-btn">Join Team</button>' +
+            '<p style="font-size:13px;color:var(--gray);margin-bottom:12px;">Signing in as <strong style="color:var(--white);">' + user.email + '</strong></p>' +
+            '<button class="btn btn-green" id="join-btn">Accept Invite</button>' +
             '<button class="btn btn-outline" id="switch-btn">Use Different Account</button>' +
             '<div id="join-msg"></div>';
           document.getElementById('join-btn').addEventListener('click', function() { acceptInvite(user); });
           document.getElementById('switch-btn').addEventListener('click', function() { signOut(auth); });
         } else {
+          const inviteEmail = invite.email || '';
           authSection.innerHTML =
-            '<p style="font-size:13px;color:var(--gray);margin-bottom:16px;">Sign in or create an account to join.</p>' +
-            '<input type="email" id="j-email" placeholder="Email" value="' + (invite.email || '') + '" style="width:100%;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-family:DM Sans,sans-serif;font-size:13px;outline:none;margin-bottom:10px;"/>' +
-            '<input type="password" id="j-pass" placeholder="Password" style="width:100%;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-family:DM Sans,sans-serif;font-size:13px;outline:none;margin-bottom:10px;"/>' +
-            '<button class="btn btn-green" id="signup-btn">Create Account & Join</button>' +
-            '<button class="btn btn-outline" id="signin-btn">I Have an Account — Sign In & Join</button>' +
+            (inviteEmail
+              ? '<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--white);text-align:left;margin-bottom:14px;">📧 ' + inviteEmail + '</div>'
+              : '<input type="email" id="j-email" placeholder="Your email" style="width:100%;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-family:DM Sans,sans-serif;font-size:13px;outline:none;margin-bottom:10px;"/>') +
+            '<input type="password" id="j-pass" placeholder="Choose a password" autofocus style="width:100%;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-family:DM Sans,sans-serif;font-size:13px;outline:none;margin-bottom:4px;"/>' +
+            '<p style="font-size:11px;color:var(--gray);text-align:left;margin-bottom:12px;">At least 6 characters</p>' +
+            '<button class="btn btn-green" id="signup-btn">Create Account & Join Team</button>' +
+            '<button class="btn btn-outline" id="signin-toggle" style="font-size:12px;padding:8px;margin-top:8px;">Already have an account? Sign in instead</button>' +
             '<div id="join-msg"></div>';
 
           document.getElementById('signup-btn').addEventListener('click', async function() {
-            const email = document.getElementById('j-email').value.trim();
+            const email = inviteEmail || document.getElementById('j-email')?.value.trim();
             const pass = document.getElementById('j-pass').value;
             if (!email || !pass) { showMsg('Enter email and password', true); return; }
             if (pass.length < 6) { showMsg('Password must be at least 6 characters', true); return; }
             try {
+              document.getElementById('signup-btn').textContent = 'Creating account...';
+              document.getElementById('signup-btn').disabled = true;
               const cred = await createUserWithEmailAndPassword(auth, email, pass);
               await acceptInvite(cred.user);
-            } catch(e) { showMsg(e.message, true); }
+            } catch(e) {
+              document.getElementById('signup-btn').textContent = 'Create Account & Join Team';
+              document.getElementById('signup-btn').disabled = false;
+              showMsg(e.message, true);
+            }
           });
 
-          document.getElementById('signin-btn').addEventListener('click', async function() {
-            const email = document.getElementById('j-email').value.trim();
-            const pass = document.getElementById('j-pass').value;
-            if (!email || !pass) { showMsg('Enter email and password', true); return; }
-            try {
-              const cred = await signInWithEmailAndPassword(auth, email, pass);
-              await acceptInvite(cred.user);
-            } catch(e) { showMsg(e.message, true); }
+          document.getElementById('signin-toggle').addEventListener('click', function() {
+            const passInput = document.getElementById('j-pass');
+            passInput.placeholder = 'Your password';
+            document.getElementById('signup-btn').textContent = 'Sign In & Join Team';
+            document.getElementById('signin-toggle').style.display = 'none';
+            document.getElementById('signup-btn').onclick = async function() {
+              const email = inviteEmail || document.getElementById('j-email')?.value.trim();
+              const pass = document.getElementById('j-pass').value;
+              if (!email || !pass) { showMsg('Enter email and password', true); return; }
+              try {
+                document.getElementById('signup-btn').textContent = 'Signing in...';
+                document.getElementById('signup-btn').disabled = true;
+                const cred = await signInWithEmailAndPassword(auth, email, pass);
+                await acceptInvite(cred.user);
+              } catch(e) {
+                document.getElementById('signup-btn').textContent = 'Sign In & Join Team';
+                document.getElementById('signup-btn').disabled = false;
+                showMsg(e.message, true);
+              }
+            };
           });
         }
       });

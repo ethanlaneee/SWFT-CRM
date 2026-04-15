@@ -211,9 +211,26 @@ async function getInstagramUserName(igScopedId, pageAccessToken) {
   }
 }
 
+/**
+ * Build the Facebook OAuth URL for Lead Ads (leadgen_forms permission).
+ */
+function getLeadAdsOAuthUrl(state) {
+  const { appId, appUrl } = cfg();
+  const redirectUri = encodeURIComponent(`${appUrl}/api/meta/callback`);
+  const scope = [
+    "pages_show_list",
+    "pages_manage_ads",
+    "pages_read_engagement",
+    "leads_retrieval",
+    "business_management",
+  ].join(",");
+  return `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scope}&state=${encodeURIComponent(state)}&response_type=code`;
+}
+
 module.exports = {
   isConfigured,
   getOAuthUrl,
+  getLeadAdsOAuthUrl,
   exchangeCodeForToken,
   getLongLivedToken,
   getUserPages,

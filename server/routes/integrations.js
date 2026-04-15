@@ -60,6 +60,25 @@ const INTEGRATIONS = [
     ],
   },
   {
+    id: "google_drive",
+    name: "Google Drive",
+    icon: "folder",
+    description: "Attach photos and documents from Google Drive to jobs and customers",
+    provider: "google",
+    scopes: [
+      "https://www.googleapis.com/auth/drive.file",
+      "https://www.googleapis.com/auth/drive.readonly",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
+  },
+  {
+    id: "meta_lead_ads",
+    name: "Meta Lead Ads",
+    icon: "zap",
+    description: "Automatically import leads from Facebook and Instagram ad forms into your CRM",
+    provider: "meta_lead_ads",
+  },
+  {
     id: "quickbooks",
     name: "QuickBooks",
     icon: "dollar-sign",
@@ -145,6 +164,15 @@ router.get("/", async (req, res, next) => {
         connected = true;
         account = userData.instagramUsername ? '@' + userData.instagramUsername : null;
       }
+      if (!connected && integration.id === "meta_lead_ads" && userData.metaLeadAdsConnected) {
+        connected = true;
+        const pages = userData.metaLeadAdsPages || [];
+        account = pages.length ? pages.map(p => p.name).join(", ") : null;
+      }
+      if (!connected && integration.id === "google_drive" && connections.google_drive?.connected) {
+        connected = true;
+        account = connections.google_drive?.account || null;
+      }
       return { ...integration, connected, account };
     });
 
@@ -198,6 +226,14 @@ router.post("/:id/connect", (req, res, next) => {
         `&state=${state}`;
 
       return res.json({ url });
+    }
+
+    // Meta Lead Ads — use same Meta OAuth flow
+    if (integration.provider === "meta_lead_ads") {
+      const meta = require("../meta");
+      if (!meta.isConfigured()) return res.status(503).json({ error: "Meta app not configured" });
+      const state = Buffer.from(JSON.stringify({ uid: req.uid, integration: "meta_lead_ads" })).toString("base64url");
+      return res.json({ url: meta.getLeadAdsOAuthUrl(state) });
     }
 
     // Social messaging platforms — redirect to the social connect endpoint
