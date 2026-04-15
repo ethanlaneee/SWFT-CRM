@@ -188,6 +188,7 @@ function toggleSidebar(){
   document.getElementById('sidebar-toggle').classList.toggle('visible');
 }
 </script>
+<script type="module" src="swft-user-sync.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-api.js"></script>
 <script src="swft-confirm.js"></script>
@@ -498,7 +499,6 @@ window.subscribeAppleCalendar = async function() {
 
 async function init() {
   try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
-  try { loadUser && loadUser(); } catch(e) {}
   document.body.style.visibility = 'visible';
   await loadIntegrations();
 }
