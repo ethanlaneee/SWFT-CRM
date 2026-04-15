@@ -312,9 +312,11 @@ window.swftConfirm = function(title, message, opts) {
 window.connectIntegration = async function(id) {
   try {
     var token = await getAuth().currentUser.getIdToken();
-    var res = await fetch('/api/integrations/' + id + '/connect', {
-      method: 'POST', headers: { Authorization: 'Bearer ' + token }
-    });
+    var endpoint = (id === 'facebook' || id === 'instagram' || id === 'whatsapp')
+      ? '/api/meta/connect'
+      : '/api/integrations/' + id + '/connect';
+    var method = (id === 'facebook' || id === 'instagram' || id === 'whatsapp') ? 'GET' : 'POST';
+    var res = await fetch(endpoint, { method: method, headers: { Authorization: 'Bearer ' + token } });
     var data = await res.json();
     if (data.url) { window.location.href = data.url; }
     else if (data.socialConnect) { openSocialConnectModal(data.provider); }
