@@ -205,7 +205,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
 /* AI Mode Toggle */
-.ai-mode-btn{padding:5px 12px;border-radius:7px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:10.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap;display:none;}
+.ai-mode-btn{padding:5px 12px;border-radius:7px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:10.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap;}
 .ai-mode-btn.manual{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.08);color:#f5a623;}
 .ai-mode-btn:hover{filter:brightness(1.15);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
@@ -348,7 +348,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="chat-header-detail" id="chat-detail"></div>
       </div>
       <span class="chat-channel-pill" id="chat-channel-pill" style="display:none;"></span>
-      <button id="ai-mode-btn" class="ai-mode-btn" onclick="toggleAiMode()">Automation</button>
+      <button id="ai-mode-btn" class="ai-mode-btn" onclick="toggleAiMode()" style="display:none;">AI Auto</button>
       <button id="add-contact-btn" onclick="openAddToContact()" style="display:none;margin-left:auto;padding:6px 14px;border-radius:8px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">+ Add to Customer</button>
     </div>
     <!-- Connect email inline banner (hidden by default) -->
@@ -1060,7 +1060,7 @@ function renderChat(){
   var aiModeBtn=document.getElementById('ai-mode-btn');
   if(aiModeBtn){
     if(c.customerId){
-      aiModeBtn.style.display='';
+      aiModeBtn.style.display='inline-block';
       loadAiThreadMode(c.customerId);
     } else {
       aiModeBtn.style.display='none';
