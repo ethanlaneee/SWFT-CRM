@@ -289,24 +289,46 @@ async function webhookReceive(req, res) {
   if (!body || (body.object !== "page" && body.object !== "instagram")) return;
 
   for (const entry of body.entry || []) {
-    for (const event of entry.messaging || []) {
-      if (!event.message || event.message.is_echo) continue; // skip echoes (our own messages)
+    // Meta sends events in entry.messaging (Messenger Platform) OR
+    // entry.changes[].value (some Instagram webhook subscriptions).
+    // Normalise both into a single list of events.
+    let events = entry.messaging || [];
+    if (!events.length && Array.isArray(entry.changes)) {
+      events = entry.changes
+        .filter(c => c.field === "messages" && c.value)
+        .map(c => c.value);
+    }
+
+    for (const event of events) {
+      if (!event.message || event.message.is_echo) continue;
 
       const senderId = event.sender?.id;
-      const recipientId = event.recipient?.id; // page ID or IG user ID
+      const recipientId = event.recipient?.id;
       const text = event.message?.text;
       if (!senderId || !text) continue;
 
       try {
-        const isInstagram = body.object === "instagram";
-
-        // Find the SWFT user who owns this page/IG account
-        const owner = isInstagram
+        // ── Owner lookup with fallback ──────────────────────────────────────
+        // Meta can deliver Instagram DMs with object="instagram" (recipientId = IG user ID)
+        // or with object="page" (recipientId may still be the IG user ID, not the page ID).
+        // Try the "natural" lookup first, then fall back to the other.
+        let isInstagram = body.object === "instagram";
+        let owner = isInstagram
           ? await findUserByIgId(recipientId)
           : await findUserByPageId(recipientId);
 
         if (!owner) {
-          console.log(`[meta] No SWFT user found for ${isInstagram ? "IG" : "FB"} account ${recipientId}`);
+          // Fallback: try the opposite lookup
+          if (isInstagram) {
+            owner = await findUserByPageId(recipientId);
+          } else {
+            owner = await findUserByIgId(recipientId);
+            if (owner) isInstagram = true; // Instagram DM delivered via page webhook
+          }
+        }
+
+        if (!owner) {
+          console.log(`[meta] No SWFT user found for account ${recipientId} (object=${body.object})`);
           continue;
         }
 
@@ -357,7 +379,7 @@ async function webhookReceive(req, res) {
         // Auto-reply via AI unless thread is in manual mode
         const matched = customerId ? { customerId, customerName } : null;
         const metaSendFn = async (replyText) => {
-          if (channel === "instagram") {
+          if (isInstagram) {
             await meta.sendInstagramMessage(owner.facebookPageAccessToken, owner.instagramUserId, senderId, replyText);
           } else {
             await meta.sendFacebookMessage(owner.facebookPageAccessToken, senderId, replyText);
