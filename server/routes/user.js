@@ -480,11 +480,6 @@ router.get("/status", async (req, res, next) => {
 
     return res.json({ accountStatus, allowed: true });
   } catch (err) { next(err); }
-      });
-    }
-
-    return res.json({ accountStatus, allowed: true });
-  } catch (err) { next(err); }
 });
 
 // DELETE /api/me/delete-account — permanently delete all user data
