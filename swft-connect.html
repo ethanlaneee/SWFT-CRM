@@ -206,7 +206,7 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 
 const CATEGORIES = [
-  { label: 'Google Workspace', ids: ['gmail','google_calendar','google_sheets','google_business'] },
+  { label: 'Google Workspace', ids: ['gmail','google_sheets','google_business'] },
   { label: 'Payments & Accounting', ids: ['stripe','quickbooks'] },
   { label: 'Social & Messaging', ids: ['facebook','instagram','whatsapp'] },
 ];
@@ -260,7 +260,8 @@ async function loadIntegrations() {
       if (!cards) return;
       html += '<div class="section-label">' + cat.label + '</div><div class="cards-grid">' + cards + '</div>';
     });
-    html += '<div class="section-label">Calendar Sync</div><div class="cards-grid">' + APPLE_CARD + '</div>';
+    var calCards = (map.google_calendar ? cardHtml(map.google_calendar) : '') + APPLE_CARD;
+    html += '<div class="section-label">Calendar Sync</div><div class="cards-grid">' + calCards + '</div>';
 
     document.getElementById('integrations-grid').innerHTML = html;
   } catch(e) {
