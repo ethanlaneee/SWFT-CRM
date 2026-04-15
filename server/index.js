@@ -11,8 +11,6 @@ process.on("unhandledRejection", (err) => {
 const http = require("http");
 const path = require("path");
 const express = require("express");
-const { WebSocketServer } = require("ws");
-const { addClient, removeClient } = require("./wsClients");
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -607,8 +605,6 @@ app.use("/api/dev",               auth,               require("./routes/dev"));
 app.use("/api/outreach",          auth,               require("./routes/outreach"));
 app.use("/api/service-requests",  auth, checkAccess,  serviceRequestsRouter);
 app.use("/api/intake-forms",      auth, checkAccess,  intakeFormsRouter);
-app.use("/api/team-messages",     auth, checkAccess,  require("./routes/teamMessages"));
-
 // ── Public one-click unsubscribe for outreach emails (no auth — recipient clicks this) ──
 app.get("/unsubscribe", async (req, res) => {
   const { id } = req.query;
@@ -644,34 +640,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || "Internal server error" });
 });
 
-// ── HTTP server + WebSocket for internal team messaging ──
+// ── HTTP server ──
 const server = http.createServer(app);
-
-const wss = new WebSocketServer({ server, path: "/ws/team" });
-
-wss.on("connection", (ws) => {
-  let uid = null;
-
-  ws.on("message", async (rawData) => {
-    try {
-      const msg = JSON.parse(rawData.toString());
-      if (msg.type === "auth") {
-        const { authAdmin } = require("./firebase");
-        const decoded = await authAdmin.verifyIdToken(msg.token);
-        uid = decoded.uid;
-        addClient(uid, ws);
-        ws.send(JSON.stringify({ type: "auth_ok", uid }));
-      } else if (msg.type === "ping") {
-        ws.send(JSON.stringify({ type: "pong" }));
-      }
-    } catch (_) {
-      ws.send(JSON.stringify({ type: "error", message: "Invalid message" }));
-    }
-  });
-
-  ws.on("close", () => { if (uid) removeClient(uid, ws); });
-  ws.on("error", () => { if (uid) removeClient(uid, ws); });
-});
 
 server.listen(PORT, () => {
   console.log(`SWFT server running on port ${PORT}`);

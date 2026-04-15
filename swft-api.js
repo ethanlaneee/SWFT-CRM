@@ -68,9 +68,6 @@ async function apiFetch(path, options = {}, _retried) {
       }
     }
     const msg = data.error || "API error";
-    if (res.status === 403 && typeof window !== "undefined" && typeof window.swftNoPermission === "function") {
-      window.swftNoPermission(msg);
-    }
     throw new Error(msg);
   }
   return data;

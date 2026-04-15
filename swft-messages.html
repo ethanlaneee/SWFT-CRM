@@ -232,13 +232,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
 .swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
 
-/* Crew channel styling */
-.chat-channel-pill.crew{background:rgba(245,166,35,0.1);color:var(--amber);}
-.crew-avatar{background:rgba(245,166,35,0.1)!important;border-color:rgba(245,166,35,0.2)!important;color:var(--amber)!important;}
-.contact-item.crew-contact.active{background:rgba(245,166,35,0.04);border-left:3px solid var(--amber);}
-.contact-item.crew-contact.active .c-avatar{background:rgba(245,166,35,0.12)!important;color:var(--amber)!important;border-color:rgba(245,166,35,0.25)!important;}
-.msg-bubble.outbound.crew-msg{background:rgba(245,166,35,0.1);}
-.msg-bubble.outbound.crew-msg .msg-bubble-body{color:var(--amber);}
 </style>
 
 <!-- Meta Pixel Code -->
@@ -332,7 +325,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <option value="facebook">Facebook</option>
         <option value="instagram">Instagram</option>
         <option value="whatsapp">WhatsApp</option>
-        <option value="crew">Crew — Internal</option>
         <option value="ai">AI</option>
         <option value="deleted">Deleted</option>
       </select>
@@ -572,11 +564,6 @@ var _replyContext = null;    // { inReplyTo, threadId, subject } when replying t
 var _attachedDoc = null;
 var _searchQuery = '';
 
-// ── Internal team messaging state ──
-var _teamConversations = [];  // [{conversationId, fromUid, toUid, body, sentAt, readBy}]
-var _teamMsgCache = {};       // conversationId -> messages[]
-var _teamWs = null;           // WebSocket connection for real-time delivery
-
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
   document.getElementById('main').classList.toggle('expanded');
@@ -602,14 +589,6 @@ function setChannel(ch){
   _channel=ch;
   var sel=document.getElementById('channel-select');
   if(sel&&sel.value!==ch) sel.value=ch;
-  // Toggle new-conversation button: hide in crew mode
-  var newMsgBtn=document.getElementById('new-msg-btn');
-  if(newMsgBtn) newMsgBtn.style.display=ch==='crew'?'none':'';
-  if(ch==='crew'){
-    if(_activeContact&&!_activeContact.isCrew) clearChat();
-    loadCrewContacts();
-    return;
-  }
   buildContacts();
   renderContacts();
   // If active contact doesn't match filter, clear it
@@ -752,14 +731,13 @@ function showConnectEmailPopup(){
 
 // ── Build contact list from messages ──
 function buildContacts(){
-  if(_channel==='crew') return;
   var map={};
   var msgs=_allMessages;
   if(_channel==='deleted'){
     msgs=msgs.filter(function(m){return m.deleted;});
   } else {
-    // Normal views: exclude deleted and crew messages
-    msgs=msgs.filter(function(m){return !m.deleted && m.type!=='crew';});
+    // Normal views: exclude deleted messages
+    msgs=msgs.filter(function(m){return !m.deleted;});
     if(_channel==='ai'){
       msgs=msgs.filter(function(m){return m.isReceptionist||m.isFollowup;});
     } else if(_channel!=='all'){
@@ -867,221 +845,6 @@ function filterContacts(q){
   renderContacts();
 }
 
-// ── Internal crew/team messaging ──
-var _crewMembers = [];
-
-function getMyUid(){ return window.__swftUser ? window.__swftUser.uid : null; }
-
-function makeConvId(uid1, uid2){ return [uid1, uid2].sort().join('_'); }
-
-// Connect WebSocket for real-time team message delivery
-function connectTeamWs(){
-  if(_teamWs && _teamWs.readyState < 2) return; // already open/connecting
-  try{
-    var proto=location.protocol==='https:'?'wss:':'ws:';
-    _teamWs=new WebSocket(proto+'//'+location.host+'/ws/team');
-    _teamWs.onopen=async function(){
-      var token=await getAuthToken();
-      _teamWs.send(JSON.stringify({type:'auth',token:token}));
-    };
-    _teamWs.onmessage=function(ev){
-      try{
-        var msg=JSON.parse(ev.data);
-        if(msg.type==='team_message'){
-          var d=msg.data;
-          var convId=d.conversationId;
-          if(!_teamMsgCache[convId]) _teamMsgCache[convId]=[];
-          // Avoid duplicates
-          if(!_teamMsgCache[convId].find(function(m){return m.id===d.id;})){
-            _teamMsgCache[convId].push(d);
-          }
-          // Update conversations list
-          var existing=_teamConversations.findIndex(function(c){return c.conversationId===convId;});
-          if(existing>=0) _teamConversations[existing]=d;
-          else _teamConversations.unshift(d);
-          // Re-render if this is the active conversation
-          if(_activeContact&&_activeContact.isCrew&&_activeContact.crewUid){
-            var myUid=getMyUid();
-            var activeConv=myUid?makeConvId(myUid,_activeContact.crewUid):null;
-            if(activeConv===convId) renderCrewMessages(convId);
-          }
-          renderCrewContacts();
-        }
-      }catch(_){}
-    };
-    _teamWs.onclose=function(){
-      // Reconnect after 5s
-      setTimeout(function(){ if(_channel==='crew') connectTeamWs(); }, 5000);
-    };
-  }catch(e){}
-}
-
-async function loadCrewContacts(){
-  try{
-    document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;">Loading crew...</div>';
-    var teamRes=await API.team.list();
-    _crewMembers=(teamRes.members||[]).filter(function(m){return m.status==='active';});
-    // Load team conversations for last-message previews
-    try{
-      var convRes=await apiFetch('/api/team-messages');
-      _teamConversations=convRes.conversations||[];
-    }catch(_){ _teamConversations=[]; }
-    renderCrewContacts();
-    connectTeamWs();
-  }catch(e){
-    document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;color:var(--gray);">Failed to load crew</div>';
-  }
-}
-
-function buildCrewContact(member){
-  var myUid=getMyUid();
-  var convId=myUid&&member.uid?makeConvId(myUid,member.uid):null;
-  var conv=convId?_teamConversations.find(function(c){return c.conversationId===convId;}):null;
-  var unread=conv&&conv.toUid===myUid&&!(conv.readBy||[]).includes(myUid);
-  return {
-    customerName:member.name||member.email||'Team Member',
-    channel:'crew',
-    isCrew:true,
-    crewId:member.id,
-    crewUid:member.uid||null,
-    crewRole:member.role||'technician',
-    lastTime:conv?conv.sentAt:0,
-    lastBody:conv?conv.body:'',
-    unread:!!unread,
-  };
-}
-
-function renderCrewContacts(){
-  var list=document.getElementById('contact-list');
-  // Filter out self
-  var myUid=getMyUid();
-  var others=_crewMembers.filter(function(m){return m.uid!==myUid;});
-  if(!others.length){
-    list.innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;text-align:center;line-height:1.8;">No other team members yet.<br><a href="swft-team" style="color:var(--amber);font-size:11px;">Invite on Team page →</a></div>';
-    return;
-  }
-  // Sort by last message time desc
-  var contacts=others.map(buildCrewContact).sort(function(a,b){return b.lastTime-a.lastTime;});
-  list.innerHTML=contacts.map(function(c){
-    var m=_crewMembers.find(function(x){return x.id===c.crewId;});
-    var isActive=_activeContact&&_activeContact.isCrew&&_activeContact.crewId===c.crewId;
-    var initials=getInitials(c.customerName);
-    var roleLabel=(c.crewRole||'technician');
-    roleLabel=roleLabel[0].toUpperCase()+roleLabel.slice(1);
-    var preview=c.lastBody?c.lastBody.substring(0,50):'Send a message...';
-    var time=c.lastTime?formatTime(c.lastTime):'';
-    var unreadDot=c.unread?'<span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block;margin-left:4px;flex-shrink:0;"></span>':'';
-    var notJoined=!c.crewUid?'<span style="font-size:9px;color:var(--gray2);margin-left:4px;">(pending)</span>':'';
-    return '<div class="contact-item crew-contact'+(isActive?' active':'')+'" onclick="selectCrewMember(\''+escape(JSON.stringify(c))+'\')">' +
-      '<div class="c-avatar" style="background:rgba(245,166,35,0.1);color:var(--amber);border-color:rgba(245,166,35,0.2);">'+initials+'</div>' +
-      '<div class="c-info">' +
-        '<div class="c-name" style="display:flex;align-items:center;gap:4px;">'+esc(c.customerName)+'<span style="font-size:9px;font-weight:700;color:var(--amber);background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2);border-radius:4px;padding:1px 5px;letter-spacing:0.5px;">'+roleLabel.toUpperCase()+'</span>'+notJoined+unreadDot+'</div>' +
-        '<div class="c-preview">'+esc(preview)+'</div>' +
-      '</div>' +
-      '<div class="c-meta"><div class="c-time">'+time+'</div></div>' +
-    '</div>';
-  }).join('');
-}
-
-async function selectCrewMember(escaped){
-  var c=JSON.parse(unescape(escaped));
-  _activeContact=c;
-  renderCrewContacts();
-  setupCrewChatHeader(c);
-  showCompose();
-  if(!c.crewUid){
-    document.getElementById('chat-messages').innerHTML=
-      '<div class="chat-empty"><div style="line-height:1.8;">'+esc(c.customerName)+' hasn\'t accepted their invite yet.<br><span style="font-size:11px;color:var(--gray2);">They\'ll appear here once they join.</span></div></div>';
-    document.getElementById('compose-bar').style.display='none';
-    return;
-  }
-  var myUid=getMyUid();
-  var convId=makeConvId(myUid,c.crewUid);
-  // Load messages if not cached
-  if(!_teamMsgCache[convId]){
-    document.getElementById('chat-messages').innerHTML='<div class="chat-empty" style="font-size:12px;">Loading...</div>';
-    try{
-      var data=await apiFetch('/api/team-messages/'+convId);
-      _teamMsgCache[convId]=data.messages||[];
-    }catch(_){ _teamMsgCache[convId]=[]; }
-  }
-  renderCrewMessages(convId);
-  // Mark as read (fire and forget)
-  apiFetch('/api/team-messages/'+convId+'/read',{method:'POST'}).then(function(){
-    // Clear unread dot
-    if(_activeContact) _activeContact.unread=false;
-    var conv=_teamConversations.find(function(x){return x.conversationId===convId;});
-    if(conv&&conv.readBy&&!conv.readBy.includes(myUid)) conv.readBy.push(myUid);
-    renderCrewContacts();
-  }).catch(function(){});
-}
-
-function setupCrewChatHeader(c){
-  var header=document.getElementById('chat-header');
-  header.style.display='flex';
-  var avatarEl=document.getElementById('chat-avatar');
-  avatarEl.textContent=getInitials(c.customerName);
-  avatarEl.className='chat-header-avatar crew-avatar';
-  document.getElementById('chat-name').textContent=c.customerName;
-  document.getElementById('chat-detail').textContent=c.crewUid?'Team member — internal chat':'Invite pending';
-  var pill=document.getElementById('chat-channel-pill');
-  pill.style.display='';
-  pill.className='chat-channel-pill crew';
-  pill.textContent=(c.crewRole?c.crewRole[0].toUpperCase()+c.crewRole.slice(1):'Team');
-  var addBtn=document.getElementById('add-contact-btn');
-  if(addBtn) addBtn.style.display='none';
-  var aiBar=document.getElementById('ai-mode-bar');
-  if(aiBar) aiBar.classList.remove('visible');
-  document.getElementById('subject-row').style.display='none';
-  var fileBtn=document.getElementById('file-attach-btn');
-  if(fileBtn) fileBtn.style.display='none';
-  var tmplBtn=document.getElementById('template-btn');
-  if(tmplBtn) tmplBtn.style.display='none';
-}
-
-function renderCrewMessages(convId){
-  var myUid=getMyUid();
-  var msgs=(_teamMsgCache[convId]||[]).slice().sort(function(a,b){return(a.sentAt||0)-(b.sentAt||0);});
-  var area=document.getElementById('chat-messages');
-  if(!msgs.length){
-    area.innerHTML='<div class="chat-empty"><div>' +
-      '<svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.12;margin-bottom:10px;color:var(--amber);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.5"/></svg>' +
-      '<div>No messages yet. Send the first one!</div></div></div>';
-    return;
-  }
-  var html='';
-  var lastDate='';
-  msgs.forEach(function(m){
-    var d=m.sentAt?new Date(m.sentAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-    if(d&&d!==lastDate){html+='<div class="msg-date-sep">'+d+'</div>';lastDate=d;}
-    var time=m.sentAt?new Date(m.sentAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
-    var bodyText=(m.body||'').substring(0,1000);
-    var isMe=m.fromUid===myUid;
-    var dir=isMe?'outbound':'inbound';
-    var senderLabel=!isMe?'<div style="font-size:10px;color:var(--amber);font-weight:600;margin-bottom:3px;">'+esc(m.fromName||'Team Member')+'</div>':'';
-    html+='<div class="msg-bubble '+dir+(isMe?' crew-msg':'')+'">'+
-      senderLabel+
-      '<div class="msg-bubble-body">'+esc(bodyText)+'</div>'+
-      '<div class="msg-bubble-time">'+time+'</div>'+
-    '</div>';
-  });
-  area.innerHTML=html;
-  area.scrollTop=area.scrollHeight;
-}
-
-// Kept for compatibility — renderCrewChat is called from renderChat()
-function renderCrewChat(c){
-  setupCrewChatHeader(c);
-  if(!c.crewUid){
-    document.getElementById('chat-messages').innerHTML=
-      '<div class="chat-empty"><div>'+esc(c.customerName)+' hasn\'t accepted their invite yet.</div></div>';
-    return;
-  }
-  var myUid=getMyUid();
-  var convId=makeConvId(myUid,c.crewUid);
-  renderCrewMessages(convId);
-}
-
 // ── Delete thread ──
 async function deleteThread(escaped){
   var c=JSON.parse(unescape(escaped));
@@ -1140,7 +903,6 @@ function clearChat(){
 // ── Render chat ──
 function renderChat(){
   if(!_activeContact)return;
-  if(_activeContact.isCrew){ renderCrewChat(_activeContact); return; }
   var c=_activeContact;
 
   // Header
@@ -1507,28 +1269,6 @@ async function sendMessage(){
 
   var c=_activeContact;
 
-  // ── Internal crew/team message send ──
-  if(c.isCrew){
-    if(!c.crewUid){showToast('This team member hasn\'t joined yet');return;}
-    try{
-      var result=await apiFetch('/api/team-messages',{method:'POST',body:JSON.stringify({toUid:c.crewUid,body:body})});
-      var sent=result.message;
-      var myUid=getMyUid();
-      var convId=makeConvId(myUid,c.crewUid);
-      if(!_teamMsgCache[convId]) _teamMsgCache[convId]=[];
-      _teamMsgCache[convId].push(sent);
-      // Update conversations list
-      var existIdx=_teamConversations.findIndex(function(x){return x.conversationId===convId;});
-      if(existIdx>=0) _teamConversations[existIdx]=sent;
-      else _teamConversations.unshift(sent);
-      document.getElementById('compose-body').value='';
-      document.getElementById('compose-body').style.height='auto';
-      renderCrewMessages(convId);
-      renderCrewContacts();
-    }catch(e){showToast('Error: '+e.message);}
-    return;
-  }
-
   // Block email sending if Gmail not connected
   if(c.channel==='email'&&!_gmailConnected){
     showConnectEmailPopup();
@@ -1826,32 +1566,11 @@ async function syncGmailInbox(){
   }catch(e){}
 }
 
-// ── Poll team messages (fallback for when WebSocket isn't connected) ──
-var _teamRefreshTimer=null;
-async function refreshTeamMessages(){
-  if(_channel!=='crew') return;
-  try{
-    var convRes=await apiFetch('/api/team-messages');
-    _teamConversations=convRes.conversations||[];
-    renderCrewContacts();
-    // Refresh active conversation
-    if(_activeContact&&_activeContact.isCrew&&_activeContact.crewUid){
-      var myUid=getMyUid();
-      var convId=makeConvId(myUid,_activeContact.crewUid);
-      var data=await apiFetch('/api/team-messages/'+convId);
-      _teamMsgCache[convId]=data.messages||[];
-      renderCrewMessages(convId);
-    }
-  }catch(e){}
-}
-
 function startAutoRefresh(){
   if(_refreshTimer) clearInterval(_refreshTimer);
   if(_gmailSyncTimer) clearInterval(_gmailSyncTimer);
-  if(_teamRefreshTimer) clearInterval(_teamRefreshTimer);
   _refreshTimer=setInterval(refreshMessages,30000);
   _gmailSyncTimer=setInterval(syncGmailInbox,60000);
-  _teamRefreshTimer=setInterval(refreshTeamMessages,8000);
 }
 
 // ── Init ──

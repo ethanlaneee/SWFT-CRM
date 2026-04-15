@@ -841,10 +841,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         if (evHr < WK_START_HOUR || evHr >= WK_END_HOUR) return;
         var durMins = ev.durationMins || 60;
         var topPx = (evHr - WK_START_HOUR) * HOUR_HEIGHT + (evMin/60) * HOUR_HEIGHT;
-        var htPx = Math.max((durMins/60) * HOUR_HEIGHT, 28);
         var h12 = evHr > 12 ? evHr-12 : (evHr===0?12:evHr);
         var fmtT = h12 + ':' + String(evMin).padStart(2,'0') + (evHr>=12?' PM':' AM');
         var typ = normalizeBlockType(ev.type || 'internal');
+        // Buffer blocks use exact height; other blocks get a minimum so content is readable
+        var htPx = typ === 'buffer' ? Math.max((durMins/60) * HOUR_HEIGHT, 4) : Math.max((durMins/60) * HOUR_HEIGHT, 28);
         var typLabel = typ.charAt(0).toUpperCase() + typ.slice(1);
         colHtml += '<div class="wk-evt ' + typ + '" style="top:' + topPx + 'px;height:' + htPx + 'px;" onclick="openEvtEditModal(\'' + ev.id + '\')">'
           + (htPx > 36 ? '<div class="wk-evt-badge">' + typLabel + '</div>' : '')
