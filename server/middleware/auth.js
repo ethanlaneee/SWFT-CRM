@@ -53,4 +53,12 @@ async function auth(req, res, next) {
   next();
 }
 
-module.exports = { auth };
+function clearUserCache(uid) {
+  if (uid) {
+    userCache.delete(uid);
+  } else {
+    userCache.clear();
+  }
+}
+
+module.exports = { auth, clearUserCache };

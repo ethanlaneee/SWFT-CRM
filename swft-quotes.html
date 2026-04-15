@@ -826,6 +826,7 @@ async function createQuoteFromEstimate(){
   onAuthStateChanged(auth,(user)=>{if(!user){window.location.href="swft-login";}else{document.body.style.visibility="visible";window.__swftUser=user;loadQuotes();}});
 </script>
 <script type="module" src="swft-user-sync.js"></script>
+<script type="module" src="swft-nav-perms.js"></script>
 <script src="swft-settings-loader.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>

@@ -868,7 +868,8 @@ async function loadCrewContacts(){
   try{
     document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;">Loading crew...</div>';
     var res=await API.team.list();
-    _crewMembers=(res.members||[]).filter(function(m){return m.status==='active';});
+    // Show all joined members regardless of role — owner included
+    _crewMembers=(res.members||[]).filter(function(m){return m.status==='active'||m.role==='owner';});
     renderCrewContacts();
   }catch(e){
     document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;color:var(--gray);">Failed to load crew</div>';
@@ -1943,6 +1944,7 @@ async function toggleAiMode() {
 }
 </script>
 <script type="module" src="swft-user-sync.js"></script>
+<script type="module" src="swft-nav-perms.js"></script>
 <script src="swft-settings-loader.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>

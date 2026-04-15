@@ -48,10 +48,15 @@ const METHOD_PERMISSION = {
   "/api/photos":            { GET: "jobs.view",        POST: "photos.upload",          DELETE: "photos.upload" },
   "/api/ai":                { GET: "ai.use",           POST: "ai.use",                 DELETE: "ai.use" },
   "/api/notifications":     { GET: "dashboard.view",  POST: "dashboard.view",         DELETE: "dashboard.view" },
-  "/api/team":              { GET: "team.manage",      POST: "team.manage",            PUT: "team.manage",      DELETE: "team.manage" },
+  // Team: only mutating operations require team.manage; GET is open (needed for crew messaging)
+  "/api/team":              { POST: "team.manage",     PUT: "team.manage",              DELETE: "team.manage" },
   "/api/integrations":      { GET: "integrations.manage", POST: "integrations.manage" },
   "/api/service-requests":  { GET: "jobs.view",        POST: "jobs.add",               DELETE: "jobs.delete" },
   "/api/intake-forms":      { GET: "settings.manage",  PUT:  "settings.manage" },
+  "/api/broadcasts":        { GET: "broadcasts.view",  POST: "broadcasts.send",        DELETE: "broadcasts.view" },
+  "/api/automations":       { GET: "automations.view", POST: "automations.manage",     PUT: "automations.manage",  DELETE: "automations.manage" },
+  "/api/reviews":           { GET: "reviews.view",     POST: "reviews.manage",         PUT: "reviews.manage",      DELETE: "reviews.manage" },
+  "/api/ai-agents":         { GET: "ai_agents.view",   POST: "ai_agents.manage",       PUT: "ai_agents.manage",    DELETE: "ai_agents.manage" },
 };
 
 // Human-readable labels for 403 messages
@@ -84,7 +89,15 @@ const PERM_LABEL = {
   "team.manage":           "manage team members",
   "settings.manage":       "manage settings",
   "integrations.manage":   "manage integrations",
-  "settings.manage":       "change settings",
+  "broadcasts.view":       "view broadcasts",
+  "broadcasts.send":       "send broadcasts",
+  "automations.view":      "view automations",
+  "automations.manage":    "manage automations",
+  "connect.view":          "view SWFT Connect",
+  "reviews.view":          "view reviews",
+  "reviews.manage":        "manage reviews",
+  "ai_agents.view":        "view AI agents",
+  "ai_agents.manage":      "manage AI agents",
 };
 
 // Permissions per built-in role
@@ -100,6 +113,11 @@ const ROLE_PERMISSIONS = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view","automations.manage",
+    "connect.view",
+    "reviews.view","reviews.manage",
+    "ai_agents.view","ai_agents.manage",
     "team.manage",
     "integrations.manage",
     "settings.manage",
@@ -114,6 +132,11 @@ const ROLE_PERMISSIONS = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view",
+    "connect.view",
+    "reviews.view",
+    "ai_agents.view",
   ]),
   technician: new Set([
     "dashboard.view",

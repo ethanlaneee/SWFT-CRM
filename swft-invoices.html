@@ -654,6 +654,7 @@ function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent
   onAuthStateChanged(auth,(user)=>{if(!user){window.location.href="swft-login";}else{window.__swftUser=user;loadInvoices();}});
 </script>
 <script type="module" src="swft-user-sync.js"></script>
+<script type="module" src="swft-nav-perms.js"></script>
 <script src="swft-settings-loader.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>

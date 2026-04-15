@@ -324,6 +324,20 @@ const DEFAULT_PERMISSIONS = [
   // Messages
   { id: "messages.view",        label: "View Messages",          group: "Messages" },
   { id: "messages.send",        label: "Send Messages",          group: "Messages" },
+  // Broadcasts
+  { id: "broadcasts.view",      label: "View Broadcasts",        group: "Broadcasts" },
+  { id: "broadcasts.send",      label: "Send Broadcasts",        group: "Broadcasts" },
+  // Automations
+  { id: "automations.view",     label: "View Automations",       group: "Automations" },
+  { id: "automations.manage",   label: "Manage Automations",     group: "Automations" },
+  // SWFT Connect
+  { id: "connect.view",         label: "View SWFT Connect",      group: "SWFT Connect" },
+  // Reviews
+  { id: "reviews.view",         label: "View Reviews",           group: "Reviews" },
+  { id: "reviews.manage",       label: "Manage Reviews",         group: "Reviews" },
+  // AI Agents
+  { id: "ai_agents.view",       label: "View AI Agents",         group: "AI Agents" },
+  { id: "ai_agents.manage",     label: "Manage AI Agents",       group: "AI Agents" },
   // Admin
   { id: "team.manage",          label: "Manage Team",            group: "Admin" },
   { id: "integrations.manage",  label: "Manage Integrations",    group: "Admin" },
@@ -344,6 +358,11 @@ const BUILT_IN_ROLES = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view","automations.manage",
+    "connect.view",
+    "reviews.view","reviews.manage",
+    "ai_agents.view","ai_agents.manage",
     "team.manage","integrations.manage","settings.manage",
   ]},
   office: { name: "Office", builtIn: true, permissions: [
@@ -356,6 +375,11 @@ const BUILT_IN_ROLES = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view",
+    "connect.view",
+    "reviews.view",
+    "ai_agents.view",
   ]},
   technician: { name: "Technician", builtIn: true, permissions: [
     "dashboard.view",
@@ -366,6 +390,39 @@ const BUILT_IN_ROLES = {
     "ai.use",
   ]},
 };
+
+// GET /api/team/me — return the current user's role and effective permissions
+router.get("/me", async (req, res, next) => {
+  try {
+    const role = req.userRole || "owner";
+
+    // Owners get all permissions (null = unrestricted on the server)
+    if (role === "owner" || !BUILT_IN_ROLES[role]) {
+      return res.json({
+        uid: req.uid,
+        role,
+        permissions: null, // null = all permissions
+        isOwner: true,
+      });
+    }
+
+    // Check for org-level custom permissions first
+    const orgRolesDoc = await db.collection("orgRoles").doc(req.orgId).get();
+    let permissions;
+    if (orgRolesDoc.exists) {
+      const customRoles = orgRolesDoc.data().roles || {};
+      if (customRoles[role] && Array.isArray(customRoles[role].permissions)) {
+        permissions = customRoles[role].permissions;
+      }
+    }
+    // Fall back to built-in role permissions
+    if (!permissions) {
+      permissions = BUILT_IN_ROLES[role]?.permissions || [];
+    }
+
+    res.json({ uid: req.uid, role, permissions, isOwner: false });
+  } catch (err) { next(err); }
+});
 
 // GET /api/team/roles — get all roles and permissions for this org
 router.get("/roles", async (req, res, next) => {
@@ -473,7 +530,7 @@ router.delete("/roles/:roleId", async (req, res, next) => {
 
 // ── Public routes (no auth required for validate, auth-only for join) ──
 const publicRouter = require("express").Router();
-const { auth: authMiddleware } = require("../middleware/auth");
+const { auth: authMiddleware, clearUserCache } = require("../middleware/auth");
 
 // GET /api/team/invite/:token — validate an invite token (no auth)
 publicRouter.get("/invite/:token", async (req, res, next) => {
@@ -545,6 +602,9 @@ publicRouter.post("/join", authMiddleware, async (req, res, next) => {
       role: memberData.role,
       joinedOrgAt: Date.now(),
     }, { merge: true });
+
+    // Bust the auth cache immediately so the next request sees the new orgId/role
+    clearUserCache(req.uid);
 
     // Add owner to team record if not already there
     const ownerSnap = await db.collection("team")
