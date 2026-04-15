@@ -669,12 +669,30 @@ window._toggleUserDetail = async function(uid, rowEl) {
           ${detailItem('Invoice Revenue', fmtCurrency(u.revenue), 'green')}
         </div>
       </div>
-      <!-- DELETE USER -->
-      <div style="margin-top:16px;display:flex;justify-content:flex-end;">
-        <button onclick="window._deleteUser('${u.id}', '${escHtml(u.email || u.name || u.id)}')" style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.25);color:var(--red);font-size:11.5px;font-weight:600;padding:8px 18px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,82,82,0.2)'" onmouseout="this.style.background='rgba(255,82,82,0.1)'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          Delete User &amp; All Data
-        </button>
+      <!-- USER ACTIONS -->
+      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+        <div style="font-size:9.5px;letter-spacing:2px;color:var(--gray2);text-transform:uppercase;font-weight:600;margin-bottom:12px;">Admin Actions</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <button onclick="window._editUser('${u.id}','${escHtml(u.name||'')}','${escHtml(u.plan||'')}','${u.smsLimit||''}','${u.aiLimit||''}','${escHtml(u.adminNote||'')}')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);color:var(--green);font-size:11.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Profile
+          </button>
+          <button onclick="window._suspendUser('${u.id}','${escHtml(u.email||u.id)}',${!!u.suspended})" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:${u.suspended ? 'rgba(200,241,53,0.08)' : 'rgba(245,166,35,0.08)'};border:1px solid ${u.suspended ? 'rgba(200,241,53,0.2)' : 'rgba(245,166,35,0.2)'};color:${u.suspended ? 'var(--green)' : 'var(--amber)'};font-size:11.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/>${u.suspended ? '<path d="M10 8l6 4-6 4V8z"/>' : '<rect x="9" y="7" width="2" height="10"/><rect x="13" y="7" width="2" height="10"/>'}</svg>
+            ${u.suspended ? 'Unsuspend' : 'Suspend Access'}
+          </button>
+          <button onclick="window._signOutUser('${u.id}','${escHtml(u.email||u.id)}')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.2);color:var(--blue);font-size:11.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Force Sign Out
+          </button>
+          ${u.stripeSubscriptionId ? `<a href="https://dashboard.stripe.com/subscriptions/${escHtml(u.stripeSubscriptionId)}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:rgba(99,91,255,0.08);border:1px solid rgba(99,91,255,0.2);color:#a78bfa;font-size:11.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Stripe Sub</a>` : ''}
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button onclick="window._deleteUser('${u.id}', '${escHtml(u.email || u.name || u.id)}')" style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.25);color:var(--red);font-size:11.5px;font-weight:600;padding:8px 18px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='rgba(255,82,82,0.2)'" onmouseout="this.style.background='rgba(255,82,82,0.1)'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete User &amp; All Data
+          </button>
+        </div>
       </div>
     </div></td>`;
   } catch (e) {
@@ -688,6 +706,98 @@ function detailItem(label, value, colorClass) {
   const cls = colorClass ? ` ${colorClass}` : '';
   return `<div class="detail-item"><span class="dlabel">${label}</span><span class="dvalue${cls}">${escHtml(value != null ? String(value) : '—')}</span></div>`;
 }
+
+/* ── EDIT USER ── */
+window._editUser = async function(uid, name, plan, smsLimit, aiLimit, adminNote) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:420px;max-width:calc(100vw - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:20px;">Edit User Profile</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <label style="font-size:11px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;font-weight:600;">Display Name
+          <input id="eu-name" value="${escHtml(name)}" style="display:block;width:100%;margin-top:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
+        </label>
+        <label style="font-size:11px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;font-weight:600;">Plan
+          <select id="eu-plan" style="display:block;width:100%;margin-top:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
+            <option value="trial" ${plan==='trial'?'selected':''}>Trial</option>
+            <option value="starter" ${plan==='starter'?'selected':''}>Starter</option>
+            <option value="pro" ${plan==='pro'?'selected':''}>Pro</option>
+            <option value="agency" ${plan==='agency'?'selected':''}>Agency</option>
+            <option value="custom" ${plan==='custom'?'selected':''}>Custom</option>
+            <option value="suspended" ${plan==='suspended'?'selected':''}>Suspended</option>
+          </select>
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <label style="font-size:11px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;font-weight:600;">SMS Limit
+            <input id="eu-sms" type="number" value="${smsLimit||''}" placeholder="default" style="display:block;width:100%;margin-top:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
+          </label>
+          <label style="font-size:11px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;font-weight:600;">AI Msg Limit
+            <input id="eu-ai" type="number" value="${aiLimit||''}" placeholder="default" style="display:block;width:100%;margin-top:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
+          </label>
+        </div>
+        <label style="font-size:11px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;font-weight:600;">Admin Note (internal)
+          <textarea id="eu-note" rows="3" placeholder="Private notes about this user..." style="display:block;width:100%;margin-top:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;resize:vertical;">${escHtml(adminNote)}</textarea>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button id="eu-cancel" style="padding:10px 20px;border-radius:8px;background:transparent;border:1px solid var(--border2);color:var(--gray);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancel</button>
+        <button id="eu-save" style="padding:10px 20px;border-radius:8px;background:var(--green);border:none;color:#0a0a0a;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Save Changes</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#eu-cancel').onclick = () => overlay.remove();
+  overlay.querySelector('#eu-save').onclick = async () => {
+    const body = {
+      displayName: overlay.querySelector('#eu-name').value.trim(),
+      plan: overlay.querySelector('#eu-plan').value,
+      smsLimit: overlay.querySelector('#eu-sms').value || null,
+      aiLimit: overlay.querySelector('#eu-ai').value || null,
+      adminNote: overlay.querySelector('#eu-note').value.trim(),
+    };
+    try {
+      const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+      const token = await getAuth().currentUser.getIdToken();
+      const res = await fetch(`/api/dev/user/${uid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      overlay.remove();
+      showToast('User updated');
+      loadAllData();
+    } catch(e) { showToast('Error: ' + e.message); }
+  };
+};
+
+/* ── SUSPEND / UNSUSPEND USER ── */
+window._suspendUser = async function(uid, label, isSuspended) {
+  const action = isSuspended ? 'unsuspend' : 'suspend';
+  const msg = isSuspended
+    ? `Re-enable access for "${label}"? They will be able to log in again.`
+    : `Suspend "${label}"?\n\nThey will be immediately signed out and blocked from logging in. Their data is preserved.`;
+  if (!await swftConfirm(isSuspended ? 'Unsuspend User' : 'Suspend User', msg, { danger: !isSuspended, confirmLabel: isSuspended ? 'Unsuspend' : 'Suspend' })) return;
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const token = await getAuth().currentUser.getIdToken();
+    const res = await fetch(`/api/dev/user/${uid}/${action}`, { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    showToast(isSuspended ? 'User unsuspended' : 'User suspended');
+    loadAllData();
+  } catch(e) { showToast('Error: ' + e.message); }
+};
+
+/* ── FORCE SIGN OUT ── */
+window._signOutUser = async function(uid, label) {
+  if (!await swftConfirm('Force Sign Out', `Sign out "${label}" from all devices?\n\nTheir session will be revoked immediately. They can log back in normally.`, { confirmLabel: 'Sign Out' })) return;
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const token = await getAuth().currentUser.getIdToken();
+    const res = await fetch(`/api/dev/user/${uid}/signout`, { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    showToast('User signed out from all devices');
+  } catch(e) { showToast('Error: ' + e.message); }
+};
 
 /* ── DELETE USER ── */
 window._deleteUser = async function(uid, label) {

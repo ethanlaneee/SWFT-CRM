@@ -387,4 +387,57 @@ router.delete("/user/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── POST /api/dev/user/:id/suspend — disable Firebase Auth (blocks all login) ──
+router.post("/user/:id/suspend", async (req, res, next) => {
+  try {
+    const { authAdmin } = require("../firebase");
+    await authAdmin.updateUser(req.params.id, { disabled: true });
+    await db.collection("users").doc(req.params.id).set({ suspended: true, suspendedAt: Date.now() }, { merge: true });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+// ── POST /api/dev/user/:id/unsuspend — re-enable Firebase Auth ──
+router.post("/user/:id/unsuspend", async (req, res, next) => {
+  try {
+    const { authAdmin } = require("../firebase");
+    await authAdmin.updateUser(req.params.id, { disabled: false });
+    await db.collection("users").doc(req.params.id).set({ suspended: false, suspendedAt: null }, { merge: true });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+// ── POST /api/dev/user/:id/signout — revoke all refresh tokens (force sign out) ──
+router.post("/user/:id/signout", async (req, res, next) => {
+  try {
+    const { authAdmin } = require("../firebase");
+    await authAdmin.revokeRefreshTokens(req.params.id);
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+// ── PATCH /api/dev/user/:id — update user profile fields ──
+router.patch("/user/:id", async (req, res, next) => {
+  try {
+    const uid = req.params.id;
+    const { displayName, plan, smsLimit, aiLimit, adminNote } = req.body;
+    const update = {};
+    if (displayName !== undefined) update.displayName = displayName;
+    if (plan !== undefined) update.plan = plan;
+    if (smsLimit !== undefined) update.smsLimit = Number(smsLimit);
+    if (aiLimit !== undefined) update.aiLimit = Number(aiLimit);
+    if (adminNote !== undefined) update.adminNote = adminNote;
+    update.updatedByAdmin = Date.now();
+    await db.collection("users").doc(uid).set(update, { merge: true });
+    // Sync displayName to Firebase Auth if provided
+    if (displayName) {
+      try {
+        const { authAdmin } = require("../firebase");
+        await authAdmin.updateUser(uid, { displayName });
+      } catch (_) { /* non-fatal */ }
+    }
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
