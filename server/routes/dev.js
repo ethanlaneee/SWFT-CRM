@@ -46,11 +46,15 @@ router.get("/stats", async (req, res, next) => {
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-    // ── User stats — mutually exclusive categories ──
-    const totalUsers = users.length;
-    const subscribedUsers = users.filter(u => u.isSubscribed).length;
-    const trialUsers = users.filter(u => !u.isSubscribed && u.accountStatus === "trialing").length;
-    const expiredUsers = users.filter(u => !u.isSubscribed && (u.accountStatus === "expired" || u.accountStatus === "canceled")).length;
+    // Separate org owners from team members — team members don't own subscriptions
+    const isTeamMember = u => u.orgId && u.orgId !== u.id;
+    const orgOwners = users.filter(u => !isTeamMember(u));
+
+    // ── User stats — org owners only ──
+    const totalUsers = orgOwners.length;
+    const subscribedUsers = orgOwners.filter(u => u.isSubscribed).length;
+    const trialUsers = orgOwners.filter(u => !u.isSubscribed && u.accountStatus === "trialing").length;
+    const expiredUsers = orgOwners.filter(u => !u.isSubscribed && (u.accountStatus === "expired" || u.accountStatus === "canceled")).length;
 
     // ── Paid users from Stripe (actually paying > $0) ──
     let paidUsers = 0;
@@ -86,22 +90,22 @@ router.get("/stats", async (req, res, next) => {
       stripeMRR = Math.round(stripeMRR) / 100; // cents → dollars
     } catch (_) { /* Stripe unavailable */ }
 
-    // Plan breakdown
+    // Plan breakdown — org owners only
     const planBreakdown = {};
-    users.forEach(u => {
+    orgOwners.forEach(u => {
       const plan = u.plan || "starter";
       planBreakdown[plan] = (planBreakdown[plan] || 0) + 1;
     });
 
-    // Signups last 30 days
-    const monthlySignups = users.filter(u => {
+    // Signups last 30 days — org owners only
+    const monthlySignups = orgOwners.filter(u => {
       const ts = normTs(u.createdAt);
       return ts && ts >= thirtyDaysAgo;
     }).length;
 
-    // Trial conversion rate
-    const convertedFromTrial = users.filter(u => u.isSubscribed && u.trialStartDate).length;
-    const totalEverTrialed = users.filter(u => u.trialStartDate).length;
+    // Trial conversion rate — org owners only
+    const convertedFromTrial = orgOwners.filter(u => u.isSubscribed && u.trialStartDate).length;
+    const totalEverTrialed = orgOwners.filter(u => u.trialStartDate).length;
     const trialConversionRate = totalEverTrialed > 0
       ? Math.round((convertedFromTrial / totalEverTrialed) * 100)
       : 0;
@@ -159,15 +163,16 @@ router.get("/users", async (req, res, next) => {
         ? (typeof data.trialEndDate === "number" ? data.trialEndDate : data.trialEndDate._seconds ? data.trialEndDate._seconds * 1000 : new Date(data.trialEndDate).getTime())
         : null;
 
+      const isMember = data.orgId && data.orgId !== uid;
       return {
         id: uid,
         name: data.name || null,
         email: data.email || null,
         company: data.company || null,
         phone: data.phone || null,
-        plan: data.plan || "starter",
+        plan: isMember ? null : (data.plan || "starter"),
         accountStatus: data.accountStatus || "unknown",
-        isSubscribed: !!data.isSubscribed,
+        isSubscribed: isMember ? null : !!data.isSubscribed,
         role: data.role || "owner",
         orgId: data.orgId || null,
         accountType: data.accountType || null,
