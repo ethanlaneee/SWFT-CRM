@@ -204,10 +204,19 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
-/* AI Mode Toggle */
-.ai-mode-btn{padding:5px 12px;border-radius:7px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:10.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap;}
-.ai-mode-btn.manual{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.08);color:#f5a623;}
-.ai-mode-btn:hover{filter:brightness(1.15);}
+/* AI Mode Bar */
+.ai-mode-bar{display:none;align-items:center;justify-content:space-between;padding:8px 18px;border-bottom:1px solid var(--border);background:rgba(200,241,53,0.04);}
+.ai-mode-bar.visible{display:flex;}
+.ai-mode-bar-label{font-size:12px;color:var(--gray);display:flex;align-items:center;gap:7px;}
+.ai-mode-bar-status{font-size:12px;font-weight:600;}
+.ai-mode-bar-status.auto{color:var(--green);}
+.ai-mode-bar-status.manual{color:#f5a623;}
+.ai-mode-toggle-btn{padding:5px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;border:1px solid;}
+.ai-mode-toggle-btn.auto{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.08);color:#f5a623;}
+.ai-mode-toggle-btn.manual{border-color:rgba(200,241,53,0.3);background:rgba(200,241,53,0.08);color:var(--green);}
+.ai-mode-toggle-btn:hover{filter:brightness(1.15);}
+/* keep old button class for any leftover refs */
+.ai-mode-btn{display:none!important;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 .swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;}
 .swft-modal-overlay.open{display:flex;}
@@ -305,7 +314,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="contact-header">
       <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
         <div class="contact-title">CONVERSATIONS</div>
+      </div>
+      <div id="your-contact-info" style="margin-top:6px;display:flex;flex-direction:column;gap:2px;">
         <div id="your-number" style="font-size:10px;color:var(--gray);"></div>
+        <div id="your-email" style="font-size:10px;color:var(--gray);"></div>
       </div>
       <div class="contact-search">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.8"/></svg>
@@ -336,11 +348,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   <!-- Right: Chat view -->
   <div class="chat-panel" id="chat-panel">
-    <!-- Gmail connection banner -->
-    <div id="gmail-banner" style="display:none;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;color:var(--gray);display:flex;align-items:center;justify-content:space-between;">
-      <div id="gmail-banner-text"></div>
-      <button id="gmail-banner-btn" onclick="goToIntegrations()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--white);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;">Connect Gmail</button>
-    </div>
     <div class="chat-header" id="chat-header" style="display:none;">
       <div class="chat-header-avatar" id="chat-avatar">?</div>
       <div class="chat-header-info">
@@ -348,15 +355,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="chat-header-detail" id="chat-detail"></div>
       </div>
       <span class="chat-channel-pill" id="chat-channel-pill" style="display:none;"></span>
-      <button id="ai-mode-btn" class="ai-mode-btn" onclick="toggleAiMode()" style="display:none;">AI Auto</button>
       <button id="add-contact-btn" onclick="openAddToContact()" style="display:none;margin-left:auto;padding:6px 14px;border-radius:8px;border:1px solid rgba(200,241,53,0.25);background:rgba(200,241,53,0.08);color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">+ Add to Customer</button>
     </div>
-    <!-- Connect email inline banner (hidden by default) -->
-    <div id="connect-email-bar" style="display:none;padding:10px 16px;background:rgba(200,241,53,0.04);border-bottom:1px solid rgba(200,241,53,0.12);font-size:12.5px;color:var(--gray);align-items:center;gap:12px;">
-      <svg width="16" height="16" fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="1.8" style="flex-shrink:0;"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-      <span style="flex:1;">Connect your Gmail to send emails from your own address</span>
-      <button onclick="goToIntegrations()" style="padding:5px 14px;border-radius:7px;border:none;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">Connect Gmail</button>
-      <span onclick="document.getElementById('connect-email-bar').style.display='none'" style="cursor:pointer;color:var(--gray2);font-size:16px;line-height:1;">&times;</span>
+    <!-- AI Mode Bar — shown below header for known customers -->
+    <div class="ai-mode-bar" id="ai-mode-bar">
+      <div class="ai-mode-bar-label">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        AI Reply: <span class="ai-mode-bar-status auto" id="ai-mode-status">ON — Auto</span>
+      </div>
+      <button class="ai-mode-toggle-btn auto" id="ai-mode-toggle" onclick="toggleAiMode()">Switch to Manual</button>
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="chat-empty">
@@ -622,28 +629,22 @@ async function loadData(){
         el.title='Change number in Settings';
         el.onclick=function(){ window.location.href='swft-settings'; };
       } else {
-        el.textContent='No number — set up in Settings';
+        el.textContent='No SMS number — set up in Settings';
         el.style.color='var(--amber)';
         el.style.cursor='pointer';
         el.onclick=function(){ window.location.href='swft-settings'; };
       }
     }
-
-    // Gmail connection status
     _gmailConnected=!!user.gmailConnected;
-    var banner=document.getElementById('gmail-banner');
-    var bannerText=document.getElementById('gmail-banner-text');
-    var bannerBtn=document.getElementById('gmail-banner-btn');
-    if(banner){
-      banner.style.display='flex';
-      if(_gmailConnected){
-        bannerText.innerHTML='✉️ <span style="color:var(--green);">Gmail connected</span> — '+esc(user.gmailAddress||'');
-        bannerBtn.textContent='Manage';
-        bannerBtn.onclick=goToIntegrations;
-      }else{
-        bannerText.textContent='Connect Gmail to send emails directly from SWFT';
-        bannerBtn.textContent='Connect Gmail';
-        bannerBtn.onclick=goToIntegrations;
+    var emailEl=document.getElementById('your-email');
+    if(emailEl){
+      if(_gmailConnected && user.gmailAddress){
+        emailEl.innerHTML='Your email: <span style="color:var(--green);">'+esc(user.gmailAddress)+'</span>';
+        emailEl.style.cursor='pointer';
+        emailEl.title='Manage Gmail in Integrations';
+        emailEl.onclick=goToIntegrations;
+      } else {
+        emailEl.innerHTML='Email: <span style="color:var(--amber);cursor:pointer;" onclick="goToIntegrations()">Connect Gmail</span>';
       }
     }
 
@@ -1032,6 +1033,8 @@ function clearChat(){
   _activeContact=null;
   document.getElementById('chat-header').style.display='none';
   document.getElementById('compose-bar').style.display='none';
+  var aiBar=document.getElementById('ai-mode-bar');
+  if(aiBar) aiBar.classList.remove('visible');
   document.getElementById('chat-messages').innerHTML='<div class="chat-empty"><div><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.15;margin-bottom:12px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.5"/></svg><div>Select a contact to view conversation</div></div></div>';
 }
 
@@ -1056,14 +1059,14 @@ function renderChat(){
   var addBtn=document.getElementById('add-contact-btn');
   if(addBtn) addBtn.style.display=c.customerId?'none':'';
 
-  // AI mode toggle — show for all channels that have a known customer
-  var aiModeBtn=document.getElementById('ai-mode-btn');
-  if(aiModeBtn){
+  // AI mode bar — show for all channels that have a known customer
+  var aiBar=document.getElementById('ai-mode-bar');
+  if(aiBar){
     if(c.customerId){
-      aiModeBtn.style.display='inline-block';
+      aiBar.classList.add('visible');
       loadAiThreadMode(c.customerId);
     } else {
-      aiModeBtn.style.display='none';
+      aiBar.classList.remove('visible');
     }
   }
 
@@ -1893,36 +1896,32 @@ function escHtml2(s) {
 }
 
 // ── AI Thread Mode (AI Auto / Manual) ──
-// Every conversation defaults to "auto" — the AI handles replies.
-// Toggle to "manual" when you want to take over the thread yourself.
 var _aiThreadMode = 'auto'; // 'auto' | 'manual'
 
 async function loadAiThreadMode(customerId) {
   try {
     if(!customerId) return;
-    var token = await getAuthToken();
-    var res = await fetch('/api/agents/conversations/' + encodeURIComponent(customerId) + '/mode', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    if(res.ok){
-      var data = await res.json();
-      _aiThreadMode = data.mode || 'auto';
-      updateAiModeBtn();
-    }
-  } catch(e) { /* ignore */ }
+    var data = await API.agents.conversationMode(customerId);
+    _aiThreadMode = data.mode || 'auto';
+    updateAiModeBar();
+  } catch(e) { _aiThreadMode = 'auto'; updateAiModeBar(); }
 }
 
-function updateAiModeBtn() {
-  var btn = document.getElementById('ai-mode-btn');
-  if(!btn) return;
+function updateAiModeBar() {
+  var bar    = document.getElementById('ai-mode-bar');
+  var status = document.getElementById('ai-mode-status');
+  var toggle = document.getElementById('ai-mode-toggle');
+  if(!bar) return;
   if(_aiThreadMode === 'manual'){
-    btn.textContent = 'Manual';
-    btn.classList.add('manual');
-    btn.title = 'You are handling this conversation. Click to let AI take over.';
+    status.textContent = 'OFF — Manual';
+    status.className = 'ai-mode-bar-status manual';
+    toggle.textContent = 'Switch to AI Auto';
+    toggle.className = 'ai-mode-toggle-btn manual';
   } else {
-    btn.textContent = 'AI Auto';
-    btn.classList.remove('manual');
-    btn.title = 'AI is auto-replying. Click to take over manually.';
+    status.textContent = 'ON — Auto';
+    status.className = 'ai-mode-bar-status auto';
+    toggle.textContent = 'Switch to Manual';
+    toggle.className = 'ai-mode-toggle-btn auto';
   }
 }
 
@@ -1930,14 +1929,9 @@ async function toggleAiMode() {
   if(!_activeContact || !_activeContact.customerId) return;
   var newMode = _aiThreadMode === 'manual' ? 'auto' : 'manual';
   try {
-    var token = await getAuthToken();
-    await fetch('/api/agents/conversations/' + encodeURIComponent(_activeContact.customerId) + '/mode', {
-      method: 'PUT',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: newMode })
-    });
+    await API.agents.setConversationMode(_activeContact.customerId, newMode);
     _aiThreadMode = newMode;
-    updateAiModeBtn();
+    updateAiModeBar();
     showToast(newMode === 'manual' ? 'Manual mode — AI paused for this thread' : 'AI Auto — AI is now responding');
   } catch(e) { showToast('Error updating mode'); }
 }
