@@ -457,9 +457,33 @@ router.get("/status", async (req, res, next) => {
       return res.json({ accountStatus: "trialing", allowed: true });
     }
 
-    const data = await checkTrialExpired(doc.id, doc.data());
+    const data = doc.data();
+
+    // Team members don't have their own subscription — check the org owner's status
+    const isTeamMember = data.accountType === "team" && data.orgId && data.orgId !== req.uid;
+    if (isTeamMember) {
+      const orgDoc = await col().doc(data.orgId).get();
+      if (!orgDoc.exists) {
+        // Org owner not found — allow through rather than locking out the member
+        return res.json({ accountStatus: "trialing", allowed: true });
+      }
+      const orgData = await checkTrialExpired(data.orgId, orgDoc.data());
+      const orgStatus = orgData.accountStatus || "trialing";
+      const allowed = orgStatus === "active" || orgStatus === "trialing";
+      if (!allowed) {
+        return res.status(402).json({
+          error: "Payment required.",
+          message: "Your organization's trial has ended. Please contact your admin.",
+          accountStatus: orgStatus,
+          redirect: "/swft-billing",
+        });
+      }
+      return res.json({ accountStatus: orgStatus, allowed: true });
+    }
+
+    const checkedData = await checkTrialExpired(doc.id, data);
     // If accountStatus was never written (pre-subscription-fields user), treat as trialing
-    const accountStatus = data.accountStatus || "trialing";
+    const accountStatus = checkedData.accountStatus || "trialing";
     const allowed = accountStatus === "active" || accountStatus === "trialing";
 
     if (!allowed) {
