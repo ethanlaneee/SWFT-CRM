@@ -310,10 +310,6 @@ window.swftConfirm = function(title, message, opts) {
 };
 
 window.connectIntegration = async function(id) {
-  if (id === 'facebook' || id === 'instagram' || id === 'whatsapp') {
-    openSocialConnectModal(id);
-    return;
-  }
   try {
     var token = await getAuth().currentUser.getIdToken();
     var res = await fetch('/api/integrations/' + id + '/connect', {
