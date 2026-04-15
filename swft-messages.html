@@ -572,6 +572,11 @@ var _replyContext = null;    // { inReplyTo, threadId, subject } when replying t
 var _attachedDoc = null;
 var _searchQuery = '';
 
+// ── Internal team messaging state ──
+var _teamConversations = [];  // [{conversationId, fromUid, toUid, body, sentAt, readBy}]
+var _teamMsgCache = {};       // conversationId -> messages[]
+var _teamWs = null;           // WebSocket connection for real-time delivery
+
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
   document.getElementById('main').classList.toggle('expanded');
@@ -862,59 +867,115 @@ function filterContacts(q){
   renderContacts();
 }
 
-// ── Crew messaging ──
+// ── Internal crew/team messaging ──
 var _crewMembers = [];
+
+function getMyUid(){ return window.__swftUser ? window.__swftUser.uid : null; }
+
+function makeConvId(uid1, uid2){ return [uid1, uid2].sort().join('_'); }
+
+// Connect WebSocket for real-time team message delivery
+function connectTeamWs(){
+  if(_teamWs && _teamWs.readyState < 2) return; // already open/connecting
+  try{
+    var proto=location.protocol==='https:'?'wss:':'ws:';
+    _teamWs=new WebSocket(proto+'//'+location.host+'/ws/team');
+    _teamWs.onopen=async function(){
+      var token=await getAuthToken();
+      _teamWs.send(JSON.stringify({type:'auth',token:token}));
+    };
+    _teamWs.onmessage=function(ev){
+      try{
+        var msg=JSON.parse(ev.data);
+        if(msg.type==='team_message'){
+          var d=msg.data;
+          var convId=d.conversationId;
+          if(!_teamMsgCache[convId]) _teamMsgCache[convId]=[];
+          // Avoid duplicates
+          if(!_teamMsgCache[convId].find(function(m){return m.id===d.id;})){
+            _teamMsgCache[convId].push(d);
+          }
+          // Update conversations list
+          var existing=_teamConversations.findIndex(function(c){return c.conversationId===convId;});
+          if(existing>=0) _teamConversations[existing]=d;
+          else _teamConversations.unshift(d);
+          // Re-render if this is the active conversation
+          if(_activeContact&&_activeContact.isCrew&&_activeContact.crewUid){
+            var myUid=getMyUid();
+            var activeConv=myUid?makeConvId(myUid,_activeContact.crewUid):null;
+            if(activeConv===convId) renderCrewMessages(convId);
+          }
+          renderCrewContacts();
+        }
+      }catch(_){}
+    };
+    _teamWs.onclose=function(){
+      // Reconnect after 5s
+      setTimeout(function(){ if(_channel==='crew') connectTeamWs(); }, 5000);
+    };
+  }catch(e){}
+}
 
 async function loadCrewContacts(){
   try{
     document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;">Loading crew...</div>';
-    var res=await API.team.list();
-    _crewMembers=(res.members||[]).filter(function(m){return m.status==='active';});
+    var teamRes=await API.team.list();
+    _crewMembers=(teamRes.members||[]).filter(function(m){return m.status==='active';});
+    // Load team conversations for last-message previews
+    try{
+      var convRes=await apiFetch('/api/team-messages');
+      _teamConversations=convRes.conversations||[];
+    }catch(_){ _teamConversations=[]; }
     renderCrewContacts();
+    connectTeamWs();
   }catch(e){
     document.getElementById('contact-list').innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;color:var(--gray);">Failed to load crew</div>';
   }
 }
 
 function buildCrewContact(member){
-  var msgs=_allMessages.filter(function(m){
-    return m.type==='crew'&&(m.crewMemberId===member.id||(member.phone&&(m.to===member.phone||m.from===member.phone)));
-  });
-  var lastTime=msgs.reduce(function(max,m){return Math.max(max,m.sentAt||0);},0);
+  var myUid=getMyUid();
+  var convId=myUid&&member.uid?makeConvId(myUid,member.uid):null;
+  var conv=convId?_teamConversations.find(function(c){return c.conversationId===convId;}):null;
+  var unread=conv&&conv.toUid===myUid&&!(conv.readBy||[]).includes(myUid);
   return {
-    customerId:'',
-    customerName:member.name||member.email||'Crew Member',
+    customerName:member.name||member.email||'Team Member',
     channel:'crew',
-    to:member.phone||member.email||'',
-    phone:member.phone||'',
-    email:member.email||'',
     isCrew:true,
     crewId:member.id,
+    crewUid:member.uid||null,
     crewRole:member.role||'technician',
-    messages:msgs,
-    lastTime:lastTime
+    lastTime:conv?conv.sentAt:0,
+    lastBody:conv?conv.body:'',
+    unread:!!unread,
   };
 }
 
 function renderCrewContacts(){
   var list=document.getElementById('contact-list');
-  if(!_crewMembers.length){
-    list.innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;text-align:center;line-height:1.8;">No crew members.<br><a href="swft-team" style="color:var(--amber);font-size:11px;">Add on Team page →</a></div>';
+  // Filter out self
+  var myUid=getMyUid();
+  var others=_crewMembers.filter(function(m){return m.uid!==myUid;});
+  if(!others.length){
+    list.innerHTML='<div class="chat-empty" style="padding:30px;font-size:12px;text-align:center;line-height:1.8;">No other team members yet.<br><a href="swft-team" style="color:var(--amber);font-size:11px;">Invite on Team page →</a></div>';
     return;
   }
-  list.innerHTML=_crewMembers.map(function(m){
-    var c=buildCrewContact(m);
-    var isActive=_activeContact&&_activeContact.isCrew&&_activeContact.crewId===m.id;
-    var initials=getInitials(m.name||m.email||'?');
-    var roleLabel=(m.role||'technician');
+  // Sort by last message time desc
+  var contacts=others.map(buildCrewContact).sort(function(a,b){return b.lastTime-a.lastTime;});
+  list.innerHTML=contacts.map(function(c){
+    var m=_crewMembers.find(function(x){return x.id===c.crewId;});
+    var isActive=_activeContact&&_activeContact.isCrew&&_activeContact.crewId===c.crewId;
+    var initials=getInitials(c.customerName);
+    var roleLabel=(c.crewRole||'technician');
     roleLabel=roleLabel[0].toUpperCase()+roleLabel.slice(1);
-    var lastMsg=c.messages.length?c.messages.reduce(function(a,b){return(a.sentAt||0)>(b.sentAt||0)?a:b;}):null;
-    var preview=lastMsg?(lastMsg.body||'').replace(/<[^>]*>/g,'').substring(0,50)||'No content':'Send a message...';
-    var time=lastMsg&&lastMsg.sentAt?formatTime(lastMsg.sentAt):'';
+    var preview=c.lastBody?c.lastBody.substring(0,50):'Send a message...';
+    var time=c.lastTime?formatTime(c.lastTime):'';
+    var unreadDot=c.unread?'<span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block;margin-left:4px;flex-shrink:0;"></span>':'';
+    var notJoined=!c.crewUid?'<span style="font-size:9px;color:var(--gray2);margin-left:4px;">(pending)</span>':'';
     return '<div class="contact-item crew-contact'+(isActive?' active':'')+'" onclick="selectCrewMember(\''+escape(JSON.stringify(c))+'\')">' +
       '<div class="c-avatar" style="background:rgba(245,166,35,0.1);color:var(--amber);border-color:rgba(245,166,35,0.2);">'+initials+'</div>' +
       '<div class="c-info">' +
-        '<div class="c-name">'+esc(m.name||m.email)+' <span style="font-size:9px;font-weight:700;color:var(--amber);background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2);border-radius:4px;padding:1px 5px;letter-spacing:0.5px;">'+roleLabel.toUpperCase()+'</span></div>' +
+        '<div class="c-name" style="display:flex;align-items:center;gap:4px;">'+esc(c.customerName)+'<span style="font-size:9px;font-weight:700;color:var(--amber);background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2);border-radius:4px;padding:1px 5px;letter-spacing:0.5px;">'+roleLabel.toUpperCase()+'</span>'+notJoined+unreadDot+'</div>' +
         '<div class="c-preview">'+esc(preview)+'</div>' +
       '</div>' +
       '<div class="c-meta"><div class="c-time">'+time+'</div></div>' +
@@ -922,47 +983,69 @@ function renderCrewContacts(){
   }).join('');
 }
 
-function selectCrewMember(escaped){
+async function selectCrewMember(escaped){
   var c=JSON.parse(unescape(escaped));
   _activeContact=c;
   renderCrewContacts();
-  renderCrewChat(c);
+  setupCrewChatHeader(c);
   showCompose();
+  if(!c.crewUid){
+    document.getElementById('chat-messages').innerHTML=
+      '<div class="chat-empty"><div style="line-height:1.8;">'+esc(c.customerName)+' hasn\'t accepted their invite yet.<br><span style="font-size:11px;color:var(--gray2);">They\'ll appear here once they join.</span></div></div>';
+    document.getElementById('compose-bar').style.display='none';
+    return;
+  }
+  var myUid=getMyUid();
+  var convId=makeConvId(myUid,c.crewUid);
+  // Load messages if not cached
+  if(!_teamMsgCache[convId]){
+    document.getElementById('chat-messages').innerHTML='<div class="chat-empty" style="font-size:12px;">Loading...</div>';
+    try{
+      var data=await apiFetch('/api/team-messages/'+convId);
+      _teamMsgCache[convId]=data.messages||[];
+    }catch(_){ _teamMsgCache[convId]=[]; }
+  }
+  renderCrewMessages(convId);
+  // Mark as read (fire and forget)
+  apiFetch('/api/team-messages/'+convId+'/read',{method:'POST'}).then(function(){
+    // Clear unread dot
+    if(_activeContact) _activeContact.unread=false;
+    var conv=_teamConversations.find(function(x){return x.conversationId===convId;});
+    if(conv&&conv.readBy&&!conv.readBy.includes(myUid)) conv.readBy.push(myUid);
+    renderCrewContacts();
+  }).catch(function(){});
 }
 
-function renderCrewChat(c){
-  // Header
+function setupCrewChatHeader(c){
   var header=document.getElementById('chat-header');
   header.style.display='flex';
   var avatarEl=document.getElementById('chat-avatar');
   avatarEl.textContent=getInitials(c.customerName);
   avatarEl.className='chat-header-avatar crew-avatar';
   document.getElementById('chat-name').textContent=c.customerName;
-  var detailParts=[];
-  if(c.phone) detailParts.push(c.phone);
-  if(c.email) detailParts.push(c.email);
-  document.getElementById('chat-detail').textContent=detailParts.join(' · ');
+  document.getElementById('chat-detail').textContent=c.crewUid?'Team member — internal chat':'Invite pending';
   var pill=document.getElementById('chat-channel-pill');
   pill.style.display='';
   pill.className='chat-channel-pill crew';
-  var roleLabel=c.crewRole?c.crewRole[0].toUpperCase()+c.crewRole.slice(1):'Crew';
-  pill.textContent=roleLabel;
+  pill.textContent=(c.crewRole?c.crewRole[0].toUpperCase()+c.crewRole.slice(1):'Team');
   var addBtn=document.getElementById('add-contact-btn');
   if(addBtn) addBtn.style.display='none';
-  var aiModeBtn=document.getElementById('ai-mode-btn');
-  if(aiModeBtn) aiModeBtn.style.display='none';
-  // Hide email-specific compose elements
+  var aiBar=document.getElementById('ai-mode-bar');
+  if(aiBar) aiBar.classList.remove('visible');
   document.getElementById('subject-row').style.display='none';
   var fileBtn=document.getElementById('file-attach-btn');
   if(fileBtn) fileBtn.style.display='none';
   var tmplBtn=document.getElementById('template-btn');
   if(tmplBtn) tmplBtn.style.display='none';
-  // Messages
-  var msgs=c.messages.slice().sort(function(a,b){return(a.sentAt||0)-(b.sentAt||0);});
+}
+
+function renderCrewMessages(convId){
+  var myUid=getMyUid();
+  var msgs=(_teamMsgCache[convId]||[]).slice().sort(function(a,b){return(a.sentAt||0)-(b.sentAt||0);});
   var area=document.getElementById('chat-messages');
   if(!msgs.length){
     area.innerHTML='<div class="chat-empty"><div>' +
-      '<svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.12;margin-bottom:10px;color:var(--amber);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.5"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.5"/></svg>' +
+      '<svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.12;margin-bottom:10px;color:var(--amber);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.5"/></svg>' +
       '<div>No messages yet. Send the first one!</div></div></div>';
     return;
   }
@@ -972,15 +1055,31 @@ function renderCrewChat(c){
     var d=m.sentAt?new Date(m.sentAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
     if(d&&d!==lastDate){html+='<div class="msg-date-sep">'+d+'</div>';lastDate=d;}
     var time=m.sentAt?new Date(m.sentAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
-    var bodyText=(m.body||'').replace(/<[^>]*>/g,'').substring(0,500);
-    var dir=m.direction==='inbound'?'inbound':'outbound';
-    html+='<div class="msg-bubble '+dir+(dir==='outbound'?' crew-msg':'')+'">'+
-      '<div class="msg-bubble-body">'+esc(bodyText||'(no content)')+'</div>'+
-      '<div class="msg-bubble-time">'+(dir==='inbound'?'↙ ':'')+time+'</div>'+
+    var bodyText=(m.body||'').substring(0,1000);
+    var isMe=m.fromUid===myUid;
+    var dir=isMe?'outbound':'inbound';
+    var senderLabel=!isMe?'<div style="font-size:10px;color:var(--amber);font-weight:600;margin-bottom:3px;">'+esc(m.fromName||'Team Member')+'</div>':'';
+    html+='<div class="msg-bubble '+dir+(isMe?' crew-msg':'')+'">'+
+      senderLabel+
+      '<div class="msg-bubble-body">'+esc(bodyText)+'</div>'+
+      '<div class="msg-bubble-time">'+time+'</div>'+
     '</div>';
   });
   area.innerHTML=html;
   area.scrollTop=area.scrollHeight;
+}
+
+// Kept for compatibility — renderCrewChat is called from renderChat()
+function renderCrewChat(c){
+  setupCrewChatHeader(c);
+  if(!c.crewUid){
+    document.getElementById('chat-messages').innerHTML=
+      '<div class="chat-empty"><div>'+esc(c.customerName)+' hasn\'t accepted their invite yet.</div></div>';
+    return;
+  }
+  var myUid=getMyUid();
+  var convId=makeConvId(myUid,c.crewUid);
+  renderCrewMessages(convId);
 }
 
 // ── Delete thread ──
@@ -1408,28 +1507,23 @@ async function sendMessage(){
 
   var c=_activeContact;
 
-  // ── Crew message send ──
+  // ── Internal crew/team message send ──
   if(c.isCrew){
-    if(!c.phone){showToast('Crew member has no phone number on file');return;}
+    if(!c.crewUid){showToast('This team member hasn\'t joined yet');return;}
     try{
-      await API.messages.send({
-        to:c.phone,
-        body:body,
-        type:'crew',
-        crewMemberId:c.crewId,
-        customerName:c.customerName,
-        isCrewMessage:true
-      });
-      showToast('Message sent to '+c.customerName);
+      var result=await apiFetch('/api/team-messages',{method:'POST',body:JSON.stringify({toUid:c.crewUid,body:body})});
+      var sent=result.message;
+      var myUid=getMyUid();
+      var convId=makeConvId(myUid,c.crewUid);
+      if(!_teamMsgCache[convId]) _teamMsgCache[convId]=[];
+      _teamMsgCache[convId].push(sent);
+      // Update conversations list
+      var existIdx=_teamConversations.findIndex(function(x){return x.conversationId===convId;});
+      if(existIdx>=0) _teamConversations[existIdx]=sent;
+      else _teamConversations.unshift(sent);
       document.getElementById('compose-body').value='';
       document.getElementById('compose-body').style.height='auto';
-      var fresh=await API.messages.list();
-      _allMessages=fresh;
-      var updated=_crewMembers.find(function(m){return m.id===c.crewId;});
-      if(updated){
-        _activeContact=buildCrewContact(updated);
-        renderCrewChat(_activeContact);
-      }
+      renderCrewMessages(convId);
       renderCrewContacts();
     }catch(e){showToast('Error: '+e.message);}
     return;
@@ -1702,14 +1796,7 @@ async function refreshMessages(){
     if(fresh.length!==_allMessages.length||JSON.stringify(fresh.map(function(m){return m.id;}))!==JSON.stringify(_allMessages.map(function(m){return m.id;}))){
       _allMessages=fresh;
       if(_channel==='crew'){
-        renderCrewContacts();
-        if(_activeContact&&_activeContact.isCrew){
-          var updatedMember=_crewMembers.find(function(m){return m.id===_activeContact.crewId;});
-          if(updatedMember){
-            _activeContact=buildCrewContact(updatedMember);
-            renderCrewChat(_activeContact);
-          }
-        }
+        // Crew uses its own polling via refreshTeamMessages()
         return;
       }
       var activeKey=_activeContact?(_activeContact.customerId||'')+'_'+_activeContact.channel+'_'+(_activeContact.to||''):'';
@@ -1739,11 +1826,32 @@ async function syncGmailInbox(){
   }catch(e){}
 }
 
+// ── Poll team messages (fallback for when WebSocket isn't connected) ──
+var _teamRefreshTimer=null;
+async function refreshTeamMessages(){
+  if(_channel!=='crew') return;
+  try{
+    var convRes=await apiFetch('/api/team-messages');
+    _teamConversations=convRes.conversations||[];
+    renderCrewContacts();
+    // Refresh active conversation
+    if(_activeContact&&_activeContact.isCrew&&_activeContact.crewUid){
+      var myUid=getMyUid();
+      var convId=makeConvId(myUid,_activeContact.crewUid);
+      var data=await apiFetch('/api/team-messages/'+convId);
+      _teamMsgCache[convId]=data.messages||[];
+      renderCrewMessages(convId);
+    }
+  }catch(e){}
+}
+
 function startAutoRefresh(){
   if(_refreshTimer) clearInterval(_refreshTimer);
   if(_gmailSyncTimer) clearInterval(_gmailSyncTimer);
+  if(_teamRefreshTimer) clearInterval(_teamRefreshTimer);
   _refreshTimer=setInterval(refreshMessages,30000);
   _gmailSyncTimer=setInterval(syncGmailInbox,60000);
+  _teamRefreshTimer=setInterval(refreshTeamMessages,8000);
 }
 
 // ── Init ──

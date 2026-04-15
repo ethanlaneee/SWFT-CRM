@@ -522,7 +522,7 @@ publicRouter.get("/invite/:token", async (req, res, next) => {
 // POST /api/team/join — accept an invite (auth required, no checkAccess)
 publicRouter.post("/join", authMiddleware, async (req, res, next) => {
   try {
-    const { token } = req.body;
+    const { token, name: providedName } = req.body;
     if (!token) return res.status(400).json({ error: "Invite token required" });
 
     const snap = await db.collection("team")
@@ -558,17 +558,24 @@ publicRouter.post("/join", authMiddleware, async (req, res, next) => {
       return res.status(403).json({ error: "Org owners cannot join another team as a non-owner. Contact support if you need to transfer ownership." });
     }
 
+    // Resolve the member's display name: prefer what they typed on the join page,
+    // then their existing Firebase display name, then whatever was on the invite.
+    const resolvedName = providedName?.trim() || req.user?.name || userData.name || memberData.name || "";
+
     await db.collection("team").doc(memberDoc.id).update({
       uid: req.uid,
       status: "active",
       joinedAt: Date.now(),
       inviteToken: null,
-      name: userData.name || memberData.name || "",
+      name: resolvedName,
     });
 
     await db.collection("users").doc(req.uid).set({
       orgId: memberData.orgId,
       role: memberData.role,
+      name: resolvedName || undefined,
+      email: req.user?.email || userData.email || memberData.email || undefined,
+      accountType: "team",
       joinedOrgAt: Date.now(),
     }, { merge: true });
 
