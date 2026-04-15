@@ -94,7 +94,7 @@ router.get("/callback", async (req, res) => {
     // Get the pages this user manages
     const pages = await meta.getUserPages(longToken);
     if (!pages.length) {
-      return res.redirect("/swft-connect?error=no_pages_found");
+      return res.redirect("/swft-connect?error=no_facebook_pages_select_a_page_during_login_or_create_one_at_facebook.com");
     }
 
     // Store temp data for page selection and redirect to settings
