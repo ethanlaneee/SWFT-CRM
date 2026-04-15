@@ -189,43 +189,51 @@ async function checkAccess(req, res, next) {
     return next();
   }
 
-  // ── Step 2: Account status ────────────────────────────────────────────────
+  // Team members belong to an org owned by someone else. Their subscription
+  // access is governed by the org owner's plan, not their own user doc. If
+  // their own user doc carries stale trial fields (e.g. they were a trial
+  // signup before being invited), we must NOT block them on Step 2.
+  const isTeamMember = !!(req.orgId && req.orgId !== req.uid);
+
   try {
-    // Check cache first
-    const cached = accessCache.get(req.uid);
-    let accountStatus, isSubscribed, trialEndDate;
+    // ── Step 2: Account status (owners only) ────────────────────────────────
+    if (!isTeamMember) {
+      // Check cache first
+      const cached = accessCache.get(req.uid);
+      let accountStatus, isSubscribed, trialEndDate;
 
-    if (cached && (Date.now() - cached.cachedAt) < ACCESS_CACHE_TTL) {
-      accountStatus = cached.accountStatus;
-      isSubscribed = cached.isSubscribed;
-      trialEndDate = cached.trialEndDate;
-    } else {
-      const doc = await col().doc(req.uid).get();
-      if (!doc.exists) {
-        accessCache.set(req.uid, { accountStatus: null, isSubscribed: false, trialEndDate: null, cachedAt: Date.now() });
-        return next(); // new user — let them through
+      if (cached && (Date.now() - cached.cachedAt) < ACCESS_CACHE_TTL) {
+        accountStatus = cached.accountStatus;
+        isSubscribed = cached.isSubscribed;
+        trialEndDate = cached.trialEndDate;
+      } else {
+        const doc = await col().doc(req.uid).get();
+        if (!doc.exists) {
+          accessCache.set(req.uid, { accountStatus: null, isSubscribed: false, trialEndDate: null, cachedAt: Date.now() });
+          return next(); // new user — let them through
+        }
+        const data = doc.data();
+        accountStatus = data.accountStatus;
+        isSubscribed = data.isSubscribed;
+        trialEndDate = data.trialEndDate;
+        accessCache.set(req.uid, { accountStatus, isSubscribed, trialEndDate, cachedAt: Date.now() });
       }
-      const data = doc.data();
-      accountStatus = data.accountStatus;
-      isSubscribed = data.isSubscribed;
-      trialEndDate = data.trialEndDate;
-      accessCache.set(req.uid, { accountStatus, isSubscribed, trialEndDate, cachedAt: Date.now() });
-    }
 
-    if (!isSubscribed && trialEndDate && Date.now() > trialEndDate) {
-      if (accountStatus !== "expired") {
-        await col().doc(req.uid).set({ accountStatus: "expired" }, { merge: true });
-        accessCache.delete(req.uid); // invalidate cache
+      if (!isSubscribed && trialEndDate && Date.now() > trialEndDate) {
+        if (accountStatus !== "expired") {
+          await col().doc(req.uid).set({ accountStatus: "expired" }, { merge: true });
+          accessCache.delete(req.uid); // invalidate cache
+        }
+        accountStatus = "expired";
       }
-      accountStatus = "expired";
-    }
 
-    if (accountStatus === "expired" || accountStatus === "canceled") {
-      return res.status(403).json({
-        error: "Access denied.",
-        message: "Your trial has ended. Please upgrade to continue.",
-        redirect: "/billing",
-      });
+      if (accountStatus === "expired" || accountStatus === "canceled") {
+        return res.status(403).json({
+          error: "Access denied.",
+          message: "Your trial has ended. Please upgrade to continue.",
+          redirect: "/billing",
+        });
+      }
     }
 
     // ── Step 3: Role-based permission check ───────────────────────────────
