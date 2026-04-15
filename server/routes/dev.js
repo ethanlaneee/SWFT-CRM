@@ -169,6 +169,8 @@ router.get("/users", async (req, res, next) => {
         accountStatus: data.accountStatus || "unknown",
         isSubscribed: !!data.isSubscribed,
         role: data.role || "owner",
+        orgId: data.orgId || null,
+        accountType: data.accountType || null,
         createdAt,
         trialEndDate,
         gmailConnected: !!data.gmailConnected,

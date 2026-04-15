@@ -105,6 +105,15 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .plan-badge.business{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
 .plan-badge.none{background:rgba(122,122,122,0.1);color:var(--gray);border:1px solid rgba(122,122,122,0.2);}
 
+/* MEMBER SUB-ROWS */
+.member-row td{background:rgba(10,10,10,0.35);border-bottom:1px solid var(--border);}
+.member-row:hover td{background:rgba(30,30,30,0.55)!important;}
+.member-indent{display:flex;align-items:center;gap:8px;padding-left:20px;}
+.role-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;font-family:'JetBrains Mono',monospace;background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);white-space:nowrap;}
+.role-badge.owner{background:rgba(200,241,53,0.08);color:var(--green);border-color:rgba(200,241,53,0.2);}
+.role-badge.admin{background:rgba(179,136,255,0.1);color:var(--purple);border-color:rgba(179,136,255,0.2);}
+.role-badge.office{background:rgba(245,166,35,0.1);color:var(--amber);border-color:rgba(245,166,35,0.2);}
+
 /* EXPANDED ROW */
 .detail-row td{padding:0!important;border-bottom:1px solid var(--border);}
 .detail-content{padding:20px 24px;background:var(--bg);border-top:1px solid var(--border);animation:fadeUp 0.25s ease both;}
@@ -548,16 +557,34 @@ function planBar(name, count, total, cls) {
 function renderUserTable(users) {
   const tbody = document.getElementById('userTableBody');
   const countEl = document.getElementById('userCount');
-  if (countEl) countEl.textContent = `(${users.length})`;
   if (!tbody) return;
 
-  tbody.innerHTML = users.map(u => {
+  // Separate org owners from team members
+  const isTeamMember = u => u.accountType === 'team' && u.orgId && u.orgId !== u.id;
+  const orgs = users.filter(u => !isTeamMember(u));
+  const members = users.filter(isTeamMember);
+
+  if (countEl) {
+    countEl.textContent = members.length > 0
+      ? `(${orgs.length} org${orgs.length !== 1 ? 's' : ''} · ${members.length} member${members.length !== 1 ? 's' : ''})`
+      : `(${orgs.length})`;
+  }
+
+  let html = '';
+  orgs.forEach(u => {
+    const orgMembers = members.filter(m => m.orgId === u.id);
     const usage = u.usage || {};
     const counts = u.counts || {};
     const status = u.accountStatus || 'unknown';
     const plan = (u.plan || 'none').toLowerCase();
-    return `<tr data-uid="${u.id}" onclick="window._toggleUserDetail('${u.id}', this)">
-      <td>${escHtml(u.name || '—')}</td>
+
+    html += `<tr data-uid="${u.id}" onclick="window._toggleUserDetail('${u.id}', this)">
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${escHtml(u.name || '—')}
+          ${orgMembers.length > 0 ? `<span style="font-size:9px;background:rgba(77,159,255,0.08);border:1px solid rgba(77,159,255,0.18);color:var(--blue);border-radius:20px;padding:1px 7px;font-family:'JetBrains Mono',monospace;">${orgMembers.length} member${orgMembers.length !== 1 ? 's' : ''}</span>` : ''}
+        </div>
+      </td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${escHtml(u.email || '—')}</td>
       <td>${escHtml(u.company || '—')}</td>
       <td><span class="plan-badge ${plan}">${plan}</span></td>
@@ -570,7 +597,33 @@ function renderUserTable(users) {
       <td style="font-family:'JetBrains Mono',monospace;">${fmt(counts.invoices)}</td>
       <td style="font-size:11px;">${timeAgo(u.createdAt)}</td>
     </tr>`;
-  }).join('');
+
+    // Team member sub-rows under this org
+    orgMembers.forEach(m => {
+      const roleKey = (m.role || 'member').toLowerCase();
+      const roleLabel = roleKey.charAt(0).toUpperCase() + roleKey.slice(1);
+      const mStatus = m.accountStatus || 'active';
+      html += `<tr class="member-row" data-uid="${m.id}" onclick="window._toggleUserDetail('${m.id}', this)">
+        <td>
+          <div class="member-indent">
+            <svg width="10" height="14" viewBox="0 0 10 14" fill="none" style="flex-shrink:0;opacity:0.3;"><line x1="2" y1="0" x2="2" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="9" x2="9" y2="9" stroke="currentColor" stroke-width="1.5"/></svg>
+            ${escHtml(m.name || '—')}
+            <span class="role-badge ${roleKey}">${escHtml(roleLabel)}</span>
+          </div>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gray2);">${escHtml(m.email || '—')}</td>
+        <td style="font-size:11px;color:var(--gray2);">↳ ${escHtml(u.company || u.name || 'Unknown Org')}</td>
+        <td style="color:var(--gray2);">—</td>
+        <td><span class="status-dot ${mStatus}">${mStatus}</span></td>
+        <td style="color:var(--gray2);">—</td><td style="color:var(--gray2);">—</td>
+        <td style="color:var(--gray2);">—</td><td style="color:var(--gray2);">—</td>
+        <td style="color:var(--gray2);">—</td><td style="color:var(--gray2);">—</td>
+        <td style="font-size:11px;color:var(--gray2);">${timeAgo(m.createdAt)}</td>
+      </tr>`;
+    });
+  });
+
+  tbody.innerHTML = html;
 }
 
 /* ── USER DETAIL ── */
@@ -1397,13 +1450,35 @@ window.loadOutreachData = async function() {
 /* ── FILTER ── */
 window._filterUsers = function(query) {
   const q = query.toLowerCase().trim();
-  const filtered = q ? allUsers.filter(u =>
+  if (!q) { renderUserTable(allUsers); return; }
+
+  const isTeamMember = u => u.accountType === 'team' && u.orgId && u.orgId !== u.id;
+  const matchesQuery = u =>
     (u.name || '').toLowerCase().includes(q) ||
     (u.email || '').toLowerCase().includes(q) ||
     (u.company || '').toLowerCase().includes(q) ||
     (u.plan || '').toLowerCase().includes(q) ||
-    (u.accountStatus || '').toLowerCase().includes(q)
-  ) : allUsers;
+    (u.accountStatus || '').toLowerCase().includes(q) ||
+    (u.role || '').toLowerCase().includes(q);
+
+  // Collect org IDs that have a matching member, and org IDs that directly match
+  const matchedOrgIds = new Set();
+  const memberOrgIds = new Set();
+  allUsers.forEach(u => {
+    if (!matchesQuery(u)) return;
+    if (!isTeamMember(u)) matchedOrgIds.add(u.id); // org matched directly
+    else memberOrgIds.add(u.orgId);                 // member matched → include parent org
+  });
+
+  const filtered = allUsers.filter(u => {
+    if (matchesQuery(u)) return true;
+    // Include org header if one of its members matched
+    if (!isTeamMember(u) && memberOrgIds.has(u.id)) return true;
+    // Include all members of a matched org
+    if (isTeamMember(u) && matchedOrgIds.has(u.orgId)) return true;
+    return false;
+  });
+
   renderUserTable(filtered);
 };
 

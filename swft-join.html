@@ -129,9 +129,15 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
     // Not logged in — show signup form (primary) and sign-in toggle (secondary)
     content.innerHTML = inviteBox + `
       <div id="form-area">
-        <div class="field">
-          <label>Your Name</label>
-          <input type="text" id="j-name" placeholder="First and last name" autocomplete="name"/>
+        <div style="display:flex;gap:10px;">
+          <div class="field" style="flex:1;">
+            <label>First Name</label>
+            <input type="text" id="j-firstname" placeholder="First" autocomplete="given-name"/>
+          </div>
+          <div class="field" style="flex:1;">
+            <label>Last Name</label>
+            <input type="text" id="j-lastname" placeholder="Last" autocomplete="family-name"/>
+          </div>
         </div>
         <div class="field">
           <label>Email</label>
@@ -171,11 +177,14 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
   }
 
   async function handleSignup() {
-    const name = document.getElementById('j-name')?.value?.trim() || '';
+    const firstName = document.getElementById('j-firstname')?.value?.trim() || '';
+    const lastName = document.getElementById('j-lastname')?.value?.trim() || '';
+    const name = [firstName, lastName].filter(Boolean).join(' ');
     const email = document.getElementById('j-email').value.trim();
     const pass = document.getElementById('j-pass').value;
 
-    if (!name) { showMsg('Enter your name', true); return; }
+    if (!firstName) { showMsg('Enter your first name', true); return; }
+    if (!lastName) { showMsg('Enter your last name', true); return; }
     if (!email) { showMsg('Enter your email', true); return; }
     if (pass.length < 6) { showMsg('Password must be at least 6 characters', true); return; }
 
