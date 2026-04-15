@@ -35,10 +35,6 @@ Disallow: /swft-customers
 Disallow: /swft-customers.html
 Disallow: /swft-jobs
 Disallow: /swft-jobs.html
-Disallow: /swft-invoices
-Disallow: /swft-invoices.html
-Disallow: /swft-quotes
-Disallow: /swft-quotes.html
 Disallow: /swft-schedule
 Disallow: /swft-schedule.html
 Disallow: /swft-settings
