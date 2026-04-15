@@ -254,7 +254,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <nav class="settings-nav" id="settingsNav">
   <div class="settings-nav-item active" data-group="profile"><span class="settings-nav-icon">🏢</span>Profile</div>
   <div class="settings-nav-item" data-group="operations"><span class="settings-nav-icon">⚙️</span>Operations</div>
-  <div class="settings-nav-item" data-group="connections"><span class="settings-nav-icon">🔗</span>Connections</div>
   <div class="settings-nav-item" data-group="billing"><span class="settings-nav-icon">💳</span>Billing</div>
   <div class="settings-nav-item" data-group="account"><span class="settings-nav-icon">👤</span>Account</div>
 </nav>
@@ -610,31 +609,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
-<!-- Integrations -->
-<div class="settings-section" data-group="connections" id="sec-integrations">
-  <div class="settings-header"><span class="settings-header-icon">🔗</span><h3>CONNECT YOUR TOOLS</h3></div>
-  <div class="settings-body" id="integrations-list" style="gap:0;">
-    <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading integrations...</div>
-  </div>
-  <div class="settings-body" style="border-top:1px solid var(--border);padding-top:16px;">
-    <div class="settings-row" style="border-bottom:none;flex-wrap:wrap;gap:10px;">
-      <div class="settings-row-info">
-        <div class="settings-row-label">Google Review Link</div>
-        <div class="settings-row-desc">Sent to customers when the AI follow-up agent requests a review.</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <input id="google-review-link" type="text" placeholder="https://search.google.com/local/writereview?placeid=..." style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--white);font-family:inherit;font-size:13px;outline:none;width:280px;max-width:100%;transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border2)'" onchange="saveReviewLink(this.value)">
-        <button id="find-biz-btn" class="settings-btn primary" onclick="findGoogleBusiness()" style="white-space:nowrap;">
-          Find My Business
-        </button>
-      </div>
-      <div id="find-biz-result" style="width:100%;font-size:11.5px;margin-top:2px;display:none;"></div>
-    </div>
-  </div>
-</div>
-
 <!-- SMS Phone Number -->
-<div class="settings-section" data-group="connections" id="sec-phone">
+<div class="settings-section" data-group="account" id="sec-phone">
   <div class="settings-header"><span class="settings-header-icon">📱</span><h3>SMS PHONE NUMBER</h3></div>
   <div class="settings-body">
     <div class="settings-row">
@@ -766,7 +742,7 @@ function toggleSidebar(){
   var items    = nav.querySelectorAll('.settings-nav-item');
   var sections = document.querySelectorAll('.settings-section');
 
-  var tabLabels = { profile: 'Profile', operations: 'Operations', connections: 'Connections', billing: 'Billing', account: 'Account' };
+  var tabLabels = { profile: 'Profile', operations: 'Operations', billing: 'Billing', account: 'Account' };
 
   function switchTab(group) {
     items.forEach(function(item) {

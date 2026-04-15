@@ -72,10 +72,10 @@ router.get("/connect", (req, res) => {
 router.get("/callback", async (req, res) => {
   const { code, state, error } = req.query;
   if (error) {
-    return res.redirect(`/swft-settings?meta_error=${encodeURIComponent(error)}`);
+    return res.redirect(`/swft-connect?error=${encodeURIComponent(error)}`);
   }
   if (!code || !state) {
-    return res.redirect("/swft-settings?meta_error=missing_code");
+    return res.redirect("/swft-connect?error=missing_code");
   }
 
   let uid;
@@ -83,7 +83,7 @@ router.get("/callback", async (req, res) => {
     const decoded = JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
     uid = decoded.uid;
   } catch {
-    return res.redirect("/swft-settings?meta_error=invalid_state");
+    return res.redirect("/swft-connect?error=invalid_state");
   }
 
   try {
@@ -94,7 +94,7 @@ router.get("/callback", async (req, res) => {
     // Get the pages this user manages
     const pages = await meta.getUserPages(longToken);
     if (!pages.length) {
-      return res.redirect("/swft-settings?meta_error=no_pages");
+      return res.redirect("/swft-connect?error=no_pages_found");
     }
 
     // Store temp data for page selection and redirect to settings
@@ -117,14 +117,14 @@ router.get("/callback", async (req, res) => {
         accessToken: pages[0].access_token,
         igUserId: pages[0].instagram_business_account?.id || null,
       });
-      return res.redirect("/swft-settings?meta_connected=1");
+      return res.redirect("/swft-connect?connected=facebook");
     }
 
     // Multiple pages — let user pick in Settings
     return res.redirect("/swft-settings?meta_select=1");
   } catch (err) {
     console.error("[meta] OAuth callback error:", err.message);
-    return res.redirect(`/swft-settings?meta_error=${encodeURIComponent(err.message)}`);
+    return res.redirect(`/swft-connect?error=${encodeURIComponent(err.message)}`);
   }
 });
 
