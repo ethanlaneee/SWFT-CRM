@@ -35,11 +35,13 @@ function getOAuthUrl(state) {
   const { appId, appUrl } = cfg();
   const redirectUri = encodeURIComponent(`${appUrl}/api/meta/callback`);
   const scope = [
+    "pages_show_list",
     "pages_messaging",
     "pages_read_engagement",
     "pages_manage_metadata",
     "instagram_manage_messages",
     "instagram_basic",
+    "business_management",
   ].join(",");
   return `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scope}&state=${encodeURIComponent(state)}&response_type=code`;
 }
@@ -78,6 +80,34 @@ async function getUserPages(userAccessToken) {
   const res = await fetch(url);
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
+  console.log("[meta] /me/accounts returned:", JSON.stringify({ count: (data.data || []).length, paging: data.paging }));
+  if (!data.data || data.data.length === 0) {
+    // Fall back: check granted scopes and list businesses
+    try {
+      const permRes = await fetch(`${GRAPH}/me/permissions?access_token=${userAccessToken}`);
+      const permData = await permRes.json();
+      console.log("[meta] granted permissions:", JSON.stringify(permData.data));
+      const bizRes = await fetch(`${GRAPH}/me/businesses?access_token=${userAccessToken}`);
+      const bizData = await bizRes.json();
+      console.log("[meta] /me/businesses returned:", JSON.stringify(bizData));
+      // Try to get pages from each business
+      const businesses = bizData.data || [];
+      let allPages = [];
+      for (const biz of businesses) {
+        const ownedRes = await fetch(`${GRAPH}/${biz.id}/owned_pages?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`);
+        const ownedData = await ownedRes.json();
+        console.log(`[meta] business ${biz.id} owned_pages:`, JSON.stringify(ownedData));
+        if (ownedData.data) allPages = allPages.concat(ownedData.data);
+        const clientRes = await fetch(`${GRAPH}/${biz.id}/client_pages?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`);
+        const clientData = await clientRes.json();
+        console.log(`[meta] business ${biz.id} client_pages:`, JSON.stringify(clientData));
+        if (clientData.data) allPages = allPages.concat(clientData.data);
+      }
+      if (allPages.length > 0) return allPages;
+    } catch (e) {
+      console.error("[meta] fallback page lookup failed:", e.message);
+    }
+  }
   return data.data || [];
 }
 
