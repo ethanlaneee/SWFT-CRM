@@ -526,9 +526,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     const timeVal = document.getElementById('nj-time').value;
     const crewEl = document.getElementById('nj-crew');
     let crew = crewEl.value;
-    if (crew === 'Other') {
-      crew = document.getElementById('nj-custom-crew').value.trim() || 'TBD';
-    }
+    const assignedTo = crewEl.options[crewEl.selectedIndex]
+      ? (crewEl.options[crewEl.selectedIndex].dataset.uid || null)
+      : null;
 
     // Format time for display
     let timeDisplay = '';
@@ -569,7 +569,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         status: 'scheduled',
         cost: parseFloat(document.getElementById('nj-amount').value) || 0,
         sqft: document.getElementById('nj-sqft').value.trim() || '',
-        crew: crew
+        crew: crew,
+        assignedTo: assignedTo
       });
     } catch(e) { showToast('Save error: ' + e.message); return; }
     loadSchedule();

@@ -1097,7 +1097,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('d-customer').textContent  = j.customerName || '';
     document.getElementById('d-status-tag').textContent= sm.label;
     document.getElementById('d-status-tag').className  = 'd-status-tag ' + sm.tag;
-    document.getElementById('d-crew').innerHTML        = '';
+    if (j.crew && j.crew !== 'Unassigned') {
+      document.getElementById('d-crew').innerHTML = '<span class="crew-pill">' + j.crew + '</span>';
+    } else {
+      document.getElementById('d-crew').innerHTML = '';
+    }
     // Amount removed from UI — tracked via quotes/invoices instead
     document.getElementById('d-sqft').textContent      = j.sqft || '—';
     document.getElementById('d-service').textContent   = j.service || '—';
@@ -1562,6 +1566,23 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       if (statEl.options[i2].value === sm.label) { statEl.selectedIndex = i2; break; }
     }
 
+    // Set crew dropdown — match by assignedTo UID first, then by crew name
+    var crewEl = document.getElementById('e-crew');
+    var crewMatched = false;
+    if (crewEl) {
+      if (j.assignedTo) {
+        for (var ic = 0; ic < crewEl.options.length; ic++) {
+          if (crewEl.options[ic].dataset.uid === j.assignedTo) { crewEl.selectedIndex = ic; crewMatched = true; break; }
+        }
+      }
+      if (!crewMatched && j.crew) {
+        for (var ic2 = 0; ic2 < crewEl.options.length; ic2++) {
+          if (crewEl.options[ic2].value === j.crew) { crewEl.selectedIndex = ic2; crewMatched = true; break; }
+        }
+      }
+      if (!crewMatched) crewEl.selectedIndex = 0;
+    }
+
     document.getElementById('d-view-mode').style.display = 'none';
     document.getElementById('d-edit-mode').style.display = 'flex';
     document.getElementById('footer-view').style.display = 'none';
@@ -1638,7 +1659,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
     var title    = customer ? customer + ' - ' + service : service;
     var sqft     = document.getElementById('e-sqft').value.trim();
-    var crew     = document.getElementById('e-crew').value;
+    var crewSelEl  = document.getElementById('e-crew');
+    var crew       = crewSelEl ? crewSelEl.value : '';
+    var assignedTo = crewSelEl && crewSelEl.options[crewSelEl.selectedIndex]
+                     ? (crewSelEl.options[crewSelEl.selectedIndex].dataset.uid || null)
+                     : null;
     var dur      = document.getElementById('e-dur').value.trim();
     var statusLabel = document.getElementById('e-status').value;
     var finish   = document.getElementById('e-finish').value.trim();
@@ -1655,7 +1680,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       sqft: sqft,
       duration: dur,
       finish: finish || service,
-      crew: crew
+      crew: crew,
+      assignedTo: assignedTo
     };
 
     try {

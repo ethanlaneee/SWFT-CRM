@@ -375,21 +375,36 @@
 
   // onclick → permission needed to run it (used to intercept or hide buttons)
   const ONCLICK_PERM = {
-    "openNewJob":        "jobs.add",
-    "openNewCustomer":   "customers.add",
-    "openNewQuote":      "quotes.add",
-    "openNewInvoice":    "invoices.add",
-    "deleteJob":         "jobs.delete",
-    "deleteJobRow":      "jobs.delete",
-    "deleteCustomer":    "customers.delete",
-    "deleteQuote":       "quotes.delete",
-    "deleteInvoice":     "invoices.delete",
-    "deletePhoto":       "photos.delete",
-    "deleteMessage":     "messages.delete",
-    "deleteBroadcast":   "broadcasts.delete",
+    // Jobs
+    "openNewJob":          "jobs.add",
+    "enterEditMode":       "jobs.edit",
+    "saveEdit":            "jobs.edit",
+    "deleteJob":           "jobs.delete",
+    "deleteJobRow":        "jobs.delete",
+    // Customers
+    "openNewCustomer":     "customers.add",
+    "enterCustomerEdit":   "customers.edit",
+    "saveCustomerEdit":    "customers.edit",
+    "deleteCustomer":      "customers.delete",
+    "deleteSelected":      "customers.delete",
+    // Quotes
+    "openNewQuote":        "quotes.add",
+    "saveQuote":           "quotes.edit",
+    "deleteQuote":         "quotes.delete",
+    // Invoices
+    "openNewInvoice":      "invoices.add",
+    "saveInvoice":         "invoices.edit",
+    "deleteInvoice":       "invoices.delete",
+    // Schedule
     "deleteScheduleEvent": "schedule.delete",
-    "sendBroadcast":     "broadcasts.send",
-    "respondToReview":   "reviews.respond",
+    // Photos
+    "deletePhoto":         "photos.delete",
+    // Messages / Broadcasts
+    "deleteMessage":       "messages.delete",
+    "deleteBroadcast":     "broadcasts.delete",
+    "sendBroadcast":       "broadcasts.send",
+    // Reviews
+    "respondToReview":     "reviews.respond",
   };
 
   // Nav item onclick patterns → permission needed to see that nav item

@@ -1568,7 +1568,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     var address  = document.getElementById('e-address-edit') ? document.getElementById('e-address-edit').value : (document.getElementById('e-address') ? document.getElementById('e-address').value : '');
     var service  = document.getElementById('e-service').value || '';
     var sqft     = document.getElementById('e-sqft') ? document.getElementById('e-sqft').value : '';
-    var crew     = document.getElementById('e-crew') ? document.getElementById('e-crew').value : '';
+    var crewSelEl  = document.getElementById('e-crew');
+    var crew       = crewSelEl ? crewSelEl.value : '';
+    var assignedTo = crewSelEl && crewSelEl.options[crewSelEl.selectedIndex]
+                     ? (crewSelEl.options[crewSelEl.selectedIndex].dataset.uid || null)
+                     : null;
     var dur      = document.getElementById('e-dur') ? document.getElementById('e-dur').value : '';
     var amount   = document.getElementById('e-amount') ? document.getElementById('e-amount').value : '';
     var status   = document.getElementById('e-status') ? document.getElementById('e-status').value : 'Scheduled';
@@ -1580,7 +1584,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       service: service,
       address: address,
       sqft: sqft,
-      crew: crew
+      crew: crew,
+      assignedTo: assignedTo
     };
     if (title) data.title = title;
     if (time) data.startTime = time;

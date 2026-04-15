@@ -65,10 +65,11 @@
       .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
     document.querySelectorAll("#e-crew, #nj-crew").forEach(function (sel) {
       const current = sel.value;
+      const currentUid = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].dataset.uid : "";
       sel.innerHTML = "";
       if (crewNames.length === 0) {
         const blank = document.createElement("option");
-        blank.value = ""; blank.textContent = "—";
+        blank.value = "Unassigned"; blank.textContent = "Unassigned";
         sel.appendChild(blank);
       } else {
         crewNames.forEach(function (c) {
@@ -79,12 +80,61 @@
         var ua = document.createElement("option");
         ua.value = "Unassigned"; ua.textContent = "Unassigned";
         sel.appendChild(ua);
-        var other = document.createElement("option");
-        other.value = "Other"; other.textContent = "Other";
-        sel.appendChild(other);
-        if (current) sel.value = current;
       }
+      if (current && current !== "Other") sel.value = current;
+      // Team members will be appended by appendTeamMembers() below
+      sel.dataset.pendingValue = currentUid ? current : "";
     });
+  }
+
+  // Fetch team members and append them as a group under each crew dropdown
+  async function appendTeamMembers(token) {
+    const sels = document.querySelectorAll("#e-crew, #nj-crew");
+    if (!sels.length) return;
+    try {
+      const res = await fetch("/api/team", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const members = (data.members || []).filter(function (m) {
+        return m.status === "active" && m.uid && m.name;
+      });
+      if (!members.length) return;
+
+      sels.forEach(function (sel) {
+        // Remove any existing team member optgroup before re-adding
+        var existing = sel.querySelector("optgroup[data-team]");
+        if (existing) existing.remove();
+
+        var group = document.createElement("optgroup");
+        group.label = "Team Members";
+        group.dataset.team = "1";
+        members.forEach(function (m) {
+          var opt = document.createElement("option");
+          opt.value = m.name;
+          opt.dataset.uid = m.uid;
+          opt.textContent = m.name;
+          group.appendChild(opt);
+        });
+        sel.appendChild(group);
+
+        // Restore selection if it was a team member
+        var pending = sel.dataset.pendingValue;
+        if (pending) {
+          for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].dataset.uid && sel.options[i].value === pending) {
+              sel.selectedIndex = i;
+              break;
+            }
+          }
+          delete sel.dataset.pendingValue;
+        }
+      });
+
+      // Expose members globally so job save handlers can use it
+      window._swftTeamMembers = members;
+    } catch (e) { /* fail silently */ }
   }
 
   async function fetchAndApplySettings() {
@@ -106,6 +156,7 @@
       // Update the cache so subsequent navigations are also fast
       sessionStorage.setItem(ME_CACHE_KEY, JSON.stringify({ data: settings, ts: Date.now() }));
       applySettings(settings);
+      appendTeamMembers(token);
     } catch (e) {
       // Settings load failed — use defaults silently
     }
@@ -119,8 +170,24 @@
         const { data, ts } = JSON.parse(raw);
         if (Date.now() - ts < ME_CACHE_TTL) {
           applySettings(data);
-          // Background refresh so the cache stays warm
+          // Fetch team members + background-refresh settings
           setTimeout(fetchAndApplySettings, 5000);
+          // Also fetch team members immediately (separate from settings cache)
+          (async function () {
+            try {
+              const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+              const auth = getAuth();
+              if (!auth.currentUser) {
+                await new Promise((r) => {
+                  const u = auth.onAuthStateChanged((user) => { u(); r(user); });
+                });
+              }
+              if (auth.currentUser) {
+                const tok = await auth.currentUser.getIdToken();
+                appendTeamMembers(tok);
+              }
+            } catch (_) {}
+          })();
           return;
         }
       }
