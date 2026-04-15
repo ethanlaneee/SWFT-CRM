@@ -440,12 +440,11 @@ router.post("/check-trial", async (req, res, next) => {
 });
 
 // GET /api/me/status — called immediately after login to gate dashboard access.
-// Returns 200 for payable/active accounts, 402 for expired/canceled.
-// The frontend uses this to decide whether to proceed to the dashboard or
-// sign the user out and redirect them to the billing/payment page.
+// Returns 200 for active/trialing accounts, 402 for expired/canceled owners.
+// Team members always pass — their access is governed by the org owner's plan.
 router.get("/status", async (req, res, next) => {
   try {
-    // Admin accounts always get full access — never blocked by trial/subscription checks
+    // Admin accounts always get full access
     if (ADMIN_EMAILS.includes(req.user?.email)) {
       return res.json({ accountStatus: "active", allowed: true });
     }
@@ -459,41 +458,28 @@ router.get("/status", async (req, res, next) => {
 
     const data = doc.data();
 
-    // Team members don't have their own subscription — check the org owner's status.
-    // Detect by orgId pointing to another user (accountType may not always be set).
-    const isTeamMember = data.orgId && data.orgId !== req.uid;
-    if (isTeamMember) {
-      const orgDoc = await col().doc(data.orgId).get();
-      if (!orgDoc.exists) {
-        // Org owner not found — allow through rather than locking out the member
-        return res.json({ accountStatus: "trialing", allowed: true });
-      }
-      const orgData = await checkTrialExpired(data.orgId, orgDoc.data());
-      const orgStatus = orgData.accountStatus || "trialing";
-      const allowed = orgStatus === "active" || orgStatus === "trialing";
-      if (!allowed) {
-        return res.status(402).json({
-          error: "Payment required.",
-          message: "Your organization's trial has ended. Please contact your admin.",
-          accountStatus: orgStatus,
-          redirect: "/swft-billing",
-        });
-      }
-      return res.json({ accountStatus: orgStatus, allowed: true });
+    // Team members belong to an org — they always get through.
+    // Their subscription access is enforced server-side by checkAccess, not here.
+    if (data.orgId && data.orgId !== req.uid) {
+      return res.json({ accountStatus: "team", allowed: true });
     }
 
+    // Owner accounts: only block if explicitly expired or canceled
     const checkedData = await checkTrialExpired(doc.id, data);
-    // Only known "bad" statuses block access — anything else (null, "unknown", etc.) is allowed
-    const BLOCKED_STATUSES = new Set(["expired", "canceled"]);
     const accountStatus = checkedData.accountStatus || "trialing";
-    const allowed = !BLOCKED_STATUSES.has(accountStatus);
+    const blocked = accountStatus === "expired" || accountStatus === "canceled";
 
-    if (!allowed) {
+    if (blocked) {
       return res.status(402).json({
         error: "Payment required.",
         message: "Your trial has ended. Please upgrade to continue.",
         accountStatus,
         redirect: "/swft-billing",
+      });
+    }
+
+    return res.json({ accountStatus, allowed: true });
+  } catch (err) { next(err); }
       });
     }
 

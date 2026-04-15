@@ -844,20 +844,22 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      // Only block + sign out on explicit 402 with allowed:false in body
       if (res.status === 402) {
-        const { message } = await res.json();
-        // Invalidate the Firebase session — prevents direct-URL bypass
-        await auth.signOut();
-        showGlobalError(message || 'Your trial has ended. Please upgrade to continue.');
-        setTimeout(() => { window.location.href = 'swft-checkout'; }, 2000);
-        return;
+        const body = await res.json().catch(() => ({}));
+        if (body.allowed === false || body.allowed === undefined) {
+          await auth.signOut();
+          showGlobalError(body.message || 'Your trial has ended. Please upgrade to continue.');
+          setTimeout(() => { window.location.href = 'swft-checkout'; }, 2000);
+          return;
+        }
       }
 
-      // 200 — active or trialing
+      // Any other response (200, 5xx, network hiccup) — proceed to dashboard
       window.location.href = getDestination();
     } catch {
-      // Network error or unexpected failure — fail safe: stay on login page
-      showGlobalError('Unable to verify account status. Please try again.');
+      // Network error — don't sign the user out, just go to dashboard
+      window.location.href = getDestination();
     }
   };
 
