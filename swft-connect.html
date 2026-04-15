@@ -447,7 +447,8 @@ window.subscribeAppleCalendar = async function() {
     window.history.replaceState({}, '', window.location.pathname);
   }
   if (params.get('error')) {
-    setTimeout(function(){ showToast('Connection failed — please try again'); }, 500);
+    var errMsg = params.get('error').replace(/_/g, ' ');
+    setTimeout(function(){ showToast('Connection failed: ' + errMsg); }, 500);
     window.history.replaceState({}, '', window.location.pathname);
   }
 })();
