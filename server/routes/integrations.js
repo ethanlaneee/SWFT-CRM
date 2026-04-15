@@ -136,6 +136,15 @@ router.get("/", async (req, res, next) => {
         connected = true;
         account = connections.whatsapp?.displayPhone || null;
       }
+      // Legacy fields from /api/meta/callback (Facebook OAuth flow)
+      if (!connected && integration.id === "facebook" && userData.facebookPageAccessToken) {
+        connected = true;
+        account = userData.facebookPageName || null;
+      }
+      if (!connected && integration.id === "instagram" && userData.instagramUserId) {
+        connected = true;
+        account = userData.instagramUsername ? '@' + userData.instagramUsername : null;
+      }
       return { ...integration, connected, account };
     });
 
