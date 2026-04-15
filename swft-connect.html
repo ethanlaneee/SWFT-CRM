@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>Swift Connect — SWFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{background:#0a0a0a;}
+body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
+.logo-mark em{color:var(--green);font-style:normal;}
+.logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(--surface2);}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--white);}
+.user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
+.main{margin-left:var(--sidebar-w);flex:1;padding:32px 36px;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white);margin-bottom:4px;}
+.subtitle{color:var(--gray);font-size:13px;}
+.stats-strip{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;min-width:130px;}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);}
+.stat-l{font-size:11px;color:var(--gray);margin-top:2px;}
+.section-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;margin:24px 0 12px;font-weight:600;}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:8px;}
+.int-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color 0.15s;}
+.int-card:hover{border-color:var(--border2);}
+.int-card.connected{border-color:rgba(200,241,53,0.25);}
+.card-top{display:flex;align-items:center;gap:12px;}
+.card-icon{width:44px;height:44px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.card-name{font-size:15px;font-weight:600;color:var(--white);}
+.badge-connected{background:rgba(200,241,53,0.12);color:var(--green);font-size:9.5px;font-weight:700;letter-spacing:1.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase;display:inline-block;margin-top:3px;}
+.badge-disconnected{background:var(--surface2);color:var(--gray2);font-size:9.5px;font-weight:700;letter-spacing:1.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase;display:inline-block;margin-top:3px;}
+.card-desc{font-size:12px;color:var(--gray);line-height:1.5;flex:1;}
+.card-account{font-size:11px;color:var(--green);background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.12);border-radius:6px;padding:5px 10px;font-family:'JetBrains Mono',monospace;}
+.card-btn{width:100%;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all 0.15s;}
+.card-btn.connect{background:var(--green);color:#0a0a0a;}
+.card-btn.connect:hover{background:#d5ff40;}
+.card-btn.disconnect{background:rgba(255,82,82,0.08);color:var(--red);border:1px solid rgba(255,82,82,0.2);}
+.card-btn.disconnect:hover{background:rgba(255,82,82,0.15);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+.swft-modal-overlay.open{display:flex;}
+.swft-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
+.swft-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:12px;}
+.swft-modal-body{font-size:13px;line-height:1.6;color:var(--gray);margin-bottom:24px;white-space:pre-line;}
+.swft-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.swft-modal-btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid;transition:all 0.14s;}
+.swft-modal-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray);}
+.swft-modal-btn.cancel:hover{background:var(--surface2);color:var(--white);}
+.swft-modal-btn.confirm{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.swft-modal-btn.confirm:hover{box-shadow:0 0 20px rgba(200,241,53,0.2);}
+.swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
+.swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
+</style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '952032957792473');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div><div class="logo-mark">SWFT<em>.</em></div><div class="logo-sub">simple. smart. swft.</div></div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item" onclick="window.location.href='swft-dashboard'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-label">CRM</div>
+    <div class="nav-item" onclick="window.location.href='swft-customers'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
+      Customers
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-jobs'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Jobs
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
+    <div class="nav-item" onclick="window.location.href='swft-schedule'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
+      Schedule
+    </div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
+    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
+    <div class="nav-item active" onclick="return false;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Swift Connect</div>
+    <div class="nav-label">Admin</div>
+    <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
+    <div class="user-tile">
+      <div class="s-avatar"></div>
+      <div><div class="user-name"></div><div class="user-role"></div></div>
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<main class="main" id="main">
+  <div class="page-header">
+    <div>
+      <h1>Swift Connect</h1>
+      <p class="subtitle">Connect your tools and services to supercharge your CRM</p>
+    </div>
+  </div>
+  <div class="stats-strip">
+    <div class="stat"><div class="stat-n" id="st-connected">—</div><div class="stat-l">Connected</div></div>
+    <div class="stat"><div class="stat-n" id="st-total">—</div><div class="stat-l">Available</div></div>
+  </div>
+  <div id="integrations-grid">
+    <div style="color:var(--gray);font-size:13px;padding:20px 0;">Loading integrations...</div>
+  </div>
+</main>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- Confirm modal -->
+<div class="swft-modal-overlay" id="swftModalOverlay">
+  <div class="swft-modal">
+    <div class="swft-modal-title" id="swftModalTitle"></div>
+    <div class="swft-modal-body" id="swftModalBody"></div>
+    <div class="swft-modal-actions">
+      <button class="swft-modal-btn cancel" id="swftModalCancel">Cancel</button>
+      <button class="swft-modal-btn confirm" id="swftModalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('expanded');
+  document.getElementById('sidebar-toggle').classList.toggle('visible');
+}
+</script>
+<script src="swft-account.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<!-- JS injected in next step -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+  authDomain: "swft-ai26.firebaseapp.com",
+  projectId: "swft-ai26",
+  storageBucket: "swft-ai26.firebasestorage.app",
+  messagingSenderId: "170879575187",
+  appId: "1:170879575187:web:e329382b0adf9518ead966",
+  measurementId: "G-B8BEW7E87V"
+};
+initializeApp(firebaseConfig);
+
+const CATEGORIES = [
+  { label: 'Google Workspace', ids: ['gmail','google_calendar','google_sheets','google_business'] },
+  { label: 'Payments & Accounting', ids: ['stripe','quickbooks'] },
+  { label: 'Social & Messaging', ids: ['facebook','instagram','whatsapp'] },
+];
+const ICONS = { gmail:'📧', google_calendar:'📅', google_sheets:'📊', quickbooks:'💰', stripe:'💳', google_business:'⭐', facebook:'💬', instagram:'📸', whatsapp:'📱' };
+
+function cardHtml(i) {
+  return '<div class="int-card' + (i.connected ? ' connected' : '') + '">' +
+    '<div class="card-top">' +
+      '<div class="card-icon">' + (ICONS[i.id] || '🔗') + '</div>' +
+      '<div>' +
+        '<div class="card-name">' + i.name + '</div>' +
+        '<span class="' + (i.connected ? 'badge-connected' : 'badge-disconnected') + '">' + (i.connected ? 'Connected' : 'Not Connected') + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card-desc">' + i.description + '</div>' +
+    (i.connected && i.account ? '<div class="card-account">' + i.account + '</div>' : '') +
+    '<button class="card-btn ' + (i.connected ? 'disconnect' : 'connect') + '" onclick="' + (i.connected ? 'disconnectIntegration(\'' + i.id + '\',\'' + i.name + '\')' : 'connectIntegration(\'' + i.id + '\')') + '">' +
+      (i.connected ? 'Disconnect' : 'Connect') +
+    '</button>' +
+  '</div>';
+}
+
+const APPLE_CARD = '<div class="int-card">' +
+  '<div class="card-top"><div class="card-icon">🍎</div>' +
+  '<div><div class="card-name">Apple Calendar</div>' +
+  '<span class="badge-disconnected">ICS Feed</span></div></div>' +
+  '<div class="card-desc">Subscribe to your SWFT jobs in Apple Calendar or any ICS-compatible app. Syncs automatically.</div>' +
+  '<button class="card-btn connect" id="apple-cal-btn" onclick="subscribeAppleCalendar()">Get Link</button>' +
+'</div>';
+
+async function loadIntegrations() {
+  try {
+    var auth = getAuth();
+    var user = auth.currentUser;
+    if (!user) return;
+    var token = await user.getIdToken();
+    var res = await fetch('/api/integrations', { headers: { Authorization: 'Bearer ' + token } });
+    var data = await res.json();
+    var integrations = data.integrations || [];
+
+    var connected = integrations.filter(function(i){ return i.connected; }).length;
+    document.getElementById('st-connected').textContent = connected;
+    document.getElementById('st-total').textContent = integrations.length + 1; // +1 for Apple
+
+    var map = {};
+    integrations.forEach(function(i){ map[i.id] = i; });
+
+    var html = '';
+    CATEGORIES.forEach(function(cat) {
+      var cards = cat.ids.map(function(id){ return map[id] ? cardHtml(map[id]) : ''; }).join('');
+      if (!cards) return;
+      html += '<div class="section-label">' + cat.label + '</div><div class="cards-grid">' + cards + '</div>';
+    });
+    html += '<div class="section-label">Calendar Sync</div><div class="cards-grid">' + APPLE_CARD + '</div>';
+
+    document.getElementById('integrations-grid').innerHTML = html;
+  } catch(e) {
+    document.getElementById('integrations-grid').innerHTML = '<div style="color:var(--red);font-size:13px;padding:20px 0;">Could not load integrations. Please refresh.</div>';
+  }
+}
+
+let _toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+window.showToast = showToast;
+
+window.swftConfirm = function(title, message, opts) {
+  opts = opts || {};
+  return new Promise(function(resolve) {
+    var overlay = document.getElementById('swftModalOverlay');
+    var titleEl = document.getElementById('swftModalTitle');
+    var bodyEl = document.getElementById('swftModalBody');
+    var cancelBtn = document.getElementById('swftModalCancel');
+    var confirmBtn = document.getElementById('swftModalConfirm');
+    titleEl.textContent = title;
+    bodyEl.innerHTML = message;
+    confirmBtn.className = 'swft-modal-btn ' + (opts.danger ? 'danger' : 'confirm');
+    confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Delete' : 'Confirm');
+    cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      cancelBtn.removeEventListener('click', onCancel);
+      confirmBtn.removeEventListener('click', onConfirm);
+      overlay.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onCancel() { cleanup(false); }
+    function onConfirm() { cleanup(true); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
+    overlay.addEventListener('click', onOverlay);
+    overlay.classList.add('open');
+  });
+};
+
+window.connectIntegration = async function(id) {
+  if (id === 'facebook' || id === 'instagram' || id === 'whatsapp') {
+    try {
+      var token = await getAuth().currentUser.getIdToken();
+      var res = await fetch('/api/meta/connect', { headers: { Authorization: 'Bearer ' + token } });
+      var data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else { showToast(data.error || 'Failed to start Meta connection'); }
+    } catch(e) { showToast('Failed to start connection'); }
+    return;
+  }
+  try {
+    var token = await getAuth().currentUser.getIdToken();
+    var res = await fetch('/api/integrations/' + id + '/connect', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + token }
+    });
+    var data = await res.json();
+    if (data.url) { window.location.href = data.url; }
+    else if (data.socialConnect) { openSocialConnectModal(data.provider); }
+    else if (data.error) { showToast(data.error); }
+  } catch(e) { showToast('Failed to start connection'); }
+};
+
+window.disconnectIntegration = async function(id, name) {
+  var ok = await window.swftConfirm('Disconnect ' + (name || id) + '?', 'You can reconnect at any time.', { danger: true, confirmLabel: 'Disconnect' });
+  if (!ok) return;
+  try {
+    var token = await getAuth().currentUser.getIdToken();
+    var resp = await fetch('/api/integrations/' + id + '/disconnect', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!resp.ok) { var e = await resp.json().catch(function(){ return {}; }); throw new Error(e.error || 'Server error'); }
+    showToast(name + ' disconnected');
+    loadIntegrations();
+  } catch(e) { showToast('Error disconnecting: ' + (e.message || 'Unknown')); }
+};
+
+function openSocialConnectModal(provider) {
+  var labels = {
+    facebook: { title: 'CONNECT FACEBOOK MESSENGER', fields: [
+      { id: 'social-pageId', label: 'Page ID', placeholder: 'Your Facebook Page ID' },
+      { id: 'social-pageName', label: 'Page Name', placeholder: 'My Business Page' },
+      { id: 'social-accessToken', label: 'Page Access Token', placeholder: 'Paste your long-lived Page Access Token' }
+    ]},
+    instagram: { title: 'CONNECT INSTAGRAM DMS', fields: [
+      { id: 'social-igBusinessId', label: 'Instagram Business Account ID', placeholder: 'Your IG Business Account ID' },
+      { id: 'social-accountName', label: 'Account Name', placeholder: '@mybusiness' },
+      { id: 'social-accessToken', label: 'Access Token', placeholder: 'Paste your long-lived Access Token' }
+    ]},
+    whatsapp: { title: 'CONNECT WHATSAPP BUSINESS', fields: [
+      { id: 'social-phoneNumberId', label: 'Phone Number ID', placeholder: 'Your WhatsApp Phone Number ID' },
+      { id: 'social-displayPhone', label: 'Display Phone', placeholder: '+1 555 123 4567' },
+      { id: 'social-accessToken', label: 'Access Token', placeholder: 'Paste your permanent Access Token' }
+    ]}
+  };
+  var cfg = labels[provider];
+  if (!cfg) return;
+  var fieldsHtml = cfg.fields.map(function(f) {
+    return '<div style="display:flex;flex-direction:column;gap:5px;">' +
+      '<label style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">' + f.label + '</label>' +
+      '<input id="' + f.id + '" type="text" placeholder="' + f.placeholder + '" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--white);font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;"/>' +
+    '</div>';
+  }).join('');
+  var overlay = document.createElement('div');
+  overlay.id = 'social-connect-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:9600;display:flex;align-items:center;justify-content:center;padding:24px;';
+  overlay.innerHTML = '<div style="background:#111;border:1px solid #2c2c2c;border-radius:16px;width:100%;max-width:440px;overflow:hidden;">' +
+    '<div style="padding:20px 24px;border-bottom:1px solid #1f1f1f;display:flex;justify-content:space-between;align-items:center;">' +
+      '<h3 style="margin:0;font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:#f0f0f0;letter-spacing:1.5px;">' + cfg.title + '</h3>' +
+      '<div style="cursor:pointer;color:#7a7a7a;font-size:22px;" onclick="document.getElementById(\'social-connect-overlay\').remove()">&times;</div>' +
+    '</div>' +
+    '<div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;">' +
+      '<div style="font-size:11px;color:var(--gray);line-height:1.5;">Enter your credentials from the Meta Developer Portal.</div>' +
+      fieldsHtml +
+    '</div>' +
+    '<div style="padding:16px 24px;border-top:1px solid #1f1f1f;display:flex;gap:10px;">' +
+      '<button onclick="document.getElementById(\'social-connect-overlay\').remove()" style="flex:1;padding:12px;border-radius:9px;border:1px solid #2c2c2c;background:transparent;color:#7a7a7a;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;">Cancel</button>' +
+      '<button onclick="saveSocialConnect(\'' + provider + '\')" style="flex:1;padding:12px;border-radius:9px;border:none;background:#c8f135;color:#0a0a0a;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Connect</button>' +
+    '</div>' +
+  '</div>';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+window.openSocialConnectModal = openSocialConnectModal;
+
+window.saveSocialConnect = async function(provider) {
+  var accessToken = (document.getElementById('social-accessToken') || {}).value || '';
+  if (!accessToken) { showToast('Access token is required'); return; }
+  var payload = { accessToken: accessToken };
+  if (provider === 'facebook') {
+    payload.pageId = (document.getElementById('social-pageId') || {}).value || '';
+    payload.pageName = (document.getElementById('social-pageName') || {}).value || '';
+    if (!payload.pageId) { showToast('Page ID is required'); return; }
+  } else if (provider === 'instagram') {
+    payload.igBusinessId = (document.getElementById('social-igBusinessId') || {}).value || '';
+    payload.accountName = (document.getElementById('social-accountName') || {}).value || '';
+    if (!payload.igBusinessId) { showToast('Business Account ID is required'); return; }
+  } else if (provider === 'whatsapp') {
+    payload.phoneNumberId = (document.getElementById('social-phoneNumberId') || {}).value || '';
+    payload.displayPhone = (document.getElementById('social-displayPhone') || {}).value || '';
+    if (!payload.phoneNumberId) { showToast('Phone Number ID is required'); return; }
+  }
+  try {
+    var token = await getAuth().currentUser.getIdToken();
+    var resp = await fetch('/api/social/connect/' + provider, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    var data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Connection failed');
+    var overlay = document.getElementById('social-connect-overlay');
+    if (overlay) overlay.remove();
+    var names = { facebook: 'Facebook Messenger', instagram: 'Instagram DMs', whatsapp: 'WhatsApp Business' };
+    showToast((names[provider] || provider) + ' connected!');
+    loadIntegrations();
+  } catch(e) { showToast('Error: ' + (e.message || 'Connection failed')); }
+};
+
+window.subscribeAppleCalendar = async function() {
+  var btn = document.getElementById('apple-cal-btn');
+  if (btn) btn.textContent = 'Generating...';
+  try {
+    var token = await getAuth().currentUser.getIdToken();
+    var res = await fetch('/api/calendar/token', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+    var data = await res.json();
+    if (data.error) { showToast('Error: ' + data.error); if (btn) btn.textContent = 'Get Link'; return; }
+    var webcalUrl = ('https://goswft.com/api/calendar/' + data.token + '/feed.ics').replace('https://', 'webcal://');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(function(){ btn.textContent = 'Get Link'; }, 3000); }
+    navigator.clipboard.writeText(webcalUrl).catch(function(){});
+    window.open(webcalUrl, '_blank');
+    showToast('Calendar link copied — opening Apple Calendar');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+    if (btn) btn.textContent = 'Get Link';
+  }
+};
+
+// Handle OAuth return params
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('connected')) {
+    setTimeout(function(){ showToast(params.get('connected').replace(/_/g, ' ') + ' connected!'); }, 500);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  if (params.get('error')) {
+    setTimeout(function(){ showToast('Connection failed — please try again'); }, 500);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
+async function init() {
+  try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
+  try { loadUser && loadUser(); } catch(e) {}
+  document.body.style.visibility = 'visible';
+  await loadIntegrations();
+}
+init();
+</script>
+</body>
+</html>
