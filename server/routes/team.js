@@ -319,6 +319,7 @@ const DEFAULT_PERMISSIONS = [
   { id: "jobs.edit",            label: "Edit Jobs",              group: "Jobs" },
   { id: "jobs.delete",          label: "Delete Jobs",            group: "Jobs" },
   { id: "photos.upload",        label: "Upload Job Photos",      group: "Jobs" },
+  { id: "photos.delete",        label: "Delete Job Photos",      group: "Jobs" },
   // Quotes
   { id: "quotes.view",          label: "View Quotes",            group: "Quotes" },
   { id: "quotes.add",           label: "Create Quotes",          group: "Quotes" },
@@ -329,6 +330,9 @@ const DEFAULT_PERMISSIONS = [
   { id: "invoices.add",         label: "Create Invoices",        group: "Invoices" },
   { id: "invoices.edit",        label: "Edit Invoices",          group: "Invoices" },
   { id: "invoices.delete",      label: "Delete Invoices",        group: "Invoices" },
+  // Billing
+  { id: "billing.view",         label: "View Billing & Subscription", group: "Billing" },
+  { id: "billing.manage",       label: "Manage Subscription",    group: "Billing" },
   // Schedule
   { id: "schedule.view",        label: "View Schedule",          group: "Schedule" },
   { id: "schedule.add",         label: "Add Schedule Entries",   group: "Schedule" },
@@ -337,12 +341,24 @@ const DEFAULT_PERMISSIONS = [
   // Messages
   { id: "messages.view",        label: "View Messages",          group: "Messages" },
   { id: "messages.send",        label: "Send Messages",          group: "Messages" },
+  { id: "messages.delete",      label: "Delete Messages",        group: "Messages" },
+  { id: "email.send",           label: "Send Emails",            group: "Messages" },
+  { id: "email.templates",      label: "Manage Email Templates", group: "Messages" },
   // Broadcasts
   { id: "broadcasts.view",      label: "View Broadcasts",        group: "Broadcasts" },
   { id: "broadcasts.send",      label: "Send Broadcasts",        group: "Broadcasts" },
+  { id: "broadcasts.delete",    label: "Delete Broadcasts",      group: "Broadcasts" },
   // Automations
   { id: "automations.view",     label: "View Automations",       group: "Automations" },
   { id: "automations.manage",   label: "Manage Automations",     group: "Automations" },
+  // Reviews
+  { id: "reviews.view",         label: "View Reviews",           group: "Reviews" },
+  { id: "reviews.respond",      label: "Respond to Reviews",     group: "Reviews" },
+  // Intake Forms
+  { id: "intake.view",          label: "View Intake Requests",   group: "Intake" },
+  { id: "intake.manage",        label: "Manage Intake Forms",    group: "Intake" },
+  // Data
+  { id: "import.use",           label: "Import Customer Data",   group: "Data" },
   // Admin
   { id: "team.manage",          label: "Manage Team",            group: "Admin" },
   { id: "integrations.manage",  label: "Manage SWFT Connect",    group: "Admin" },
@@ -359,12 +375,17 @@ const BUILT_IN_ROLES = {
     "jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete",
     "quotes.view","quotes.add","quotes.edit","quotes.delete",
     "invoices.view","invoices.add","invoices.edit","invoices.delete",
+    "billing.view","billing.manage",
     "schedule.view","schedule.add","schedule.edit","schedule.delete",
-    "messages.view","messages.send",
-    "photos.upload",
+    "messages.view","messages.send","messages.delete",
+    "email.send","email.templates",
+    "photos.upload","photos.delete",
     "ai.use",
-    "broadcasts.view","broadcasts.send",
+    "broadcasts.view","broadcasts.send","broadcasts.delete",
     "automations.view","automations.manage",
+    "reviews.view","reviews.respond",
+    "intake.view","intake.manage",
+    "import.use",
     "team.manage","integrations.manage","settings.manage",
   ]},
   office: { name: "Office", builtIn: true, permissions: [
@@ -375,10 +396,13 @@ const BUILT_IN_ROLES = {
     "invoices.view","invoices.add","invoices.edit","invoices.delete",
     "schedule.view","schedule.add","schedule.edit","schedule.delete",
     "messages.view","messages.send",
+    "email.send","email.templates",
     "photos.upload",
     "ai.use",
     "broadcasts.view","broadcasts.send",
     "automations.view",
+    "reviews.view","reviews.respond",
+    "intake.view",
   ]},
   technician: { name: "Technician", builtIn: true, permissions: [
     "dashboard.view",
