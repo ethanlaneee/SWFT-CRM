@@ -1569,7 +1569,9 @@ onAuthStateChanged(auth, (user) => {
     document.body.style.visibility = 'visible';
     if (user && user.email !== ALLOWED_EMAIL) {
       loginError.textContent = 'Access denied — unauthorized account.';
-      signOut(auth);
+      // Do NOT call signOut here — it would sign out every other open tab
+      // (including team member tabs) via the shared Firebase localStorage state.
+      return;
     }
     return;
   }
