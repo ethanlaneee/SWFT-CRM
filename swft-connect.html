@@ -188,7 +188,6 @@ function toggleSidebar(){
   document.getElementById('sidebar-toggle').classList.toggle('visible');
 }
 </script>
-<script type="module" src="swft-user-sync.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-api.js"></script>
 <script src="swft-confirm.js"></script>
@@ -210,7 +209,7 @@ initializeApp(firebaseConfig);
 
 const CATEGORIES = [
   { label: 'Google Workspace', ids: ['gmail','google_sheets','google_business'] },
-  { label: 'Microsoft', ids: ['outlook','outlook_calendar'] },
+  { label: 'Microsoft', ids: ['outlook','onedrive'] },
   { label: 'Payments & Accounting', ids: ['stripe','quickbooks','square','paypal'] },
   { label: 'Buy Now Pay Later', ids: ['affirm','klarna'] },
   { label: 'Social & Messaging', ids: ['facebook','instagram','whatsapp','meta_lead_ads'] },
@@ -275,10 +274,9 @@ const APPLE_CARD = '<div class="int-card">' +
   '<button class="card-btn connect" id="apple-cal-btn" onclick="subscribeAppleCalendar()">Get Link</button>' +
 '</div>';
 
-async function loadIntegrations() {
+async function loadIntegrations(user) {
   try {
-    var auth = getAuth();
-    var user = auth.currentUser;
+    if (!user) user = getAuth().currentUser;
     if (!user) return;
     var token = await user.getIdToken();
     var res = await fetch('/api/integrations', { headers: { Authorization: 'Bearer ' + token } });
@@ -498,11 +496,13 @@ window.subscribeAppleCalendar = async function() {
 })();
 
 async function init() {
-  try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
+  var user;
+  try { user = await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
   document.body.style.visibility = 'visible';
-  await loadIntegrations();
+  await loadIntegrations(user);
 }
 init();
 </script>
+<script type="module" src="swft-user-sync.js"></script>
 </body>
 </html>
