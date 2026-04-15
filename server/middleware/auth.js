@@ -1,5 +1,9 @@
 const { authAdmin, db } = require("../firebase");
 
+// These accounts always get owner-level access regardless of what's in Firestore.
+// Their role can never be changed by any team operation.
+const PROTECTED_EMAILS = ["ethan@goswft.com"];
+
 // Cache user profiles for 5 minutes to reduce Firestore reads
 // Key: uid, Value: { orgId, role, cachedAt }
 const userCache = new Map();
@@ -19,6 +23,13 @@ async function auth(req, res, next) {
   } catch (err) {
     console.error("[auth] Token verification failed:", err.code || err.message);
     return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
+  // Protected accounts always get owner role — skip cache and Firestore role lookup
+  if (req.user?.email && PROTECTED_EMAILS.includes(req.user.email)) {
+    req.orgId = req.uid;
+    req.userRole = "owner";
+    return next();
   }
 
   // Check cache first to avoid burning Firestore reads

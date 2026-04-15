@@ -7,6 +7,9 @@ const { db } = require("../firebase");
 const crypto = require("crypto");
 const { sendSimpleGmail } = require("../utils/email");
 
+// Accounts whose role can never be changed by any team operation
+const PROTECTED_EMAILS = ["ethan@goswft.com"];
+
 // Plan-based team gating helper (Pro+ only)
 async function requireTeamPlan(req, res) {
   const userDoc = await db.collection("users").doc(req.uid).get();
@@ -232,7 +235,14 @@ router.put("/:memberId", async (req, res, next) => {
       return res.status(404).json({ error: "Member not found" });
     }
 
-    const targetRole = memberDoc.data().role;
+    const memberData = memberDoc.data();
+
+    // Protected accounts can never have their role changed
+    if (memberData.email && PROTECTED_EMAILS.includes(memberData.email.toLowerCase())) {
+      return res.status(403).json({ error: "This account's role cannot be changed" });
+    }
+
+    const targetRole = memberData.role;
     if (!canChangeRole(req.userRole, targetRole)) {
       return res.status(403).json({ error: "You cannot change this member's role" });
     }
@@ -245,7 +255,6 @@ router.put("/:memberId", async (req, res, next) => {
     await db.collection("team").doc(req.params.memberId).update({ role });
 
     // Also update user's role in their profile if they've joined
-    const memberData = memberDoc.data();
     if (memberData.uid) {
       await db.collection("users").doc(memberData.uid).set({ role }, { merge: true });
     }
@@ -531,6 +540,12 @@ publicRouter.post("/join", authMiddleware, async (req, res, next) => {
 
     const userDoc = await db.collection("users").doc(req.uid).get();
     const userData = userDoc.exists ? userDoc.data() : {};
+
+    // Protected accounts cannot be assigned a non-owner role via invite
+    const joiningEmail = req.user?.email || userData.email || "";
+    if (PROTECTED_EMAILS.includes(joiningEmail.toLowerCase())) {
+      return res.status(403).json({ error: "This account cannot join a team as a non-owner" });
+    }
 
     await db.collection("team").doc(memberDoc.id).update({
       uid: req.uid,
