@@ -547,6 +547,13 @@ publicRouter.post("/join", authMiddleware, async (req, res, next) => {
       return res.status(403).json({ error: "This account cannot join a team as a non-owner" });
     }
 
+    // Any user who is the primary owner of their own org cannot be demoted via an invite.
+    // orgId === uid means they created their own org and are its owner.
+    const currentOrgId = userData.orgId || req.uid;
+    if (currentOrgId === req.uid && memberData.role !== "owner") {
+      return res.status(403).json({ error: "Org owners cannot join another team as a non-owner. Contact support if you need to transfer ownership." });
+    }
+
     await db.collection("team").doc(memberDoc.id).update({
       uid: req.uid,
       status: "active",
