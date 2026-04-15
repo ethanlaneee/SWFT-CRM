@@ -49,9 +49,12 @@ const METHOD_PERMISSION = {
   "/api/ai":                { GET: "ai.use",           POST: "ai.use",                 DELETE: "ai.use" },
   "/api/notifications":     { GET: "dashboard.view",  POST: "dashboard.view",         DELETE: "dashboard.view" },
   "/api/team":              { GET: "team.manage",      POST: "team.manage",            PUT: "team.manage",      DELETE: "team.manage" },
-  "/api/integrations":      { GET: "integrations.manage", POST: "integrations.manage" },
+  "/api/integrations":      { GET: "integrations.manage", POST: "integrations.manage", PUT: "integrations.manage", DELETE: "integrations.manage" },
   "/api/service-requests":  { GET: "jobs.view",        POST: "jobs.add",               DELETE: "jobs.delete" },
   "/api/intake-forms":      { GET: "settings.manage",  PUT:  "settings.manage" },
+  "/api/broadcasts":        { GET: "broadcasts.view",  POST: "broadcasts.send",        DELETE: "broadcasts.view" },
+  "/api/agents":            { GET: "automations.view", POST: "automations.manage",     PUT: "automations.manage", DELETE: "automations.manage" },
+  "/api/automations":       { GET: "automations.view", POST: "automations.manage",     PUT: "automations.manage", DELETE: "automations.manage" },
 };
 
 // Human-readable labels for 403 messages
@@ -81,6 +84,10 @@ const PERM_LABEL = {
   "messages.send":         "send messages",
   "photos.upload":         "upload job photos",
   "ai.use":                "use the AI assistant",
+  "broadcasts.view":       "view broadcasts",
+  "broadcasts.send":       "send broadcasts",
+  "automations.view":      "view automations",
+  "automations.manage":    "manage automations",
   "team.manage":           "manage team members",
   "settings.manage":       "manage settings",
   "integrations.manage":   "manage integrations",
@@ -100,6 +107,8 @@ const ROLE_PERMISSIONS = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view","automations.manage",
     "team.manage",
     "integrations.manage",
     "settings.manage",
@@ -114,6 +123,8 @@ const ROLE_PERMISSIONS = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view",
   ]),
   technician: new Set([
     "dashboard.view",

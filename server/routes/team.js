@@ -337,9 +337,15 @@ const DEFAULT_PERMISSIONS = [
   // Messages
   { id: "messages.view",        label: "View Messages",          group: "Messages" },
   { id: "messages.send",        label: "Send Messages",          group: "Messages" },
+  // Broadcasts
+  { id: "broadcasts.view",      label: "View Broadcasts",        group: "Broadcasts" },
+  { id: "broadcasts.send",      label: "Send Broadcasts",        group: "Broadcasts" },
+  // Automations
+  { id: "automations.view",     label: "View Automations",       group: "Automations" },
+  { id: "automations.manage",   label: "Manage Automations",     group: "Automations" },
   // Admin
   { id: "team.manage",          label: "Manage Team",            group: "Admin" },
-  { id: "integrations.manage",  label: "Manage Integrations",    group: "Admin" },
+  { id: "integrations.manage",  label: "Manage SWFT Connect",    group: "Admin" },
   { id: "settings.manage",      label: "Edit Settings",          group: "Admin" },
 ];
 
@@ -357,6 +363,8 @@ const BUILT_IN_ROLES = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view","automations.manage",
     "team.manage","integrations.manage","settings.manage",
   ]},
   office: { name: "Office", builtIn: true, permissions: [
@@ -369,6 +377,8 @@ const BUILT_IN_ROLES = {
     "messages.view","messages.send",
     "photos.upload",
     "ai.use",
+    "broadcasts.view","broadcasts.send",
+    "automations.view",
   ]},
   technician: { name: "Technician", builtIn: true, permissions: [
     "dashboard.view",

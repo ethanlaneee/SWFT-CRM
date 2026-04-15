@@ -101,7 +101,33 @@ router.get("/", async (req, res, next) => {
       return res.json({ id: req.uid, ...profile });
     }
     const data = await checkTrialExpired(doc.id, doc.data());
-    res.json({ id: doc.id, ...data });
+
+    // Return effective permissions so the frontend can gate nav/pages correctly.
+    // For non-owner roles, check orgRoles for custom overrides, then fall back to built-in defaults.
+    const role = data.role || "owner";
+    let permissions; // undefined = owner (frontend treats missing as unrestricted)
+    if (role !== "owner") {
+      const orgId = data.orgId || req.uid;
+      const BUILT_IN_PERMS = {
+        admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view","automations.manage","team.manage","integrations.manage","settings.manage"],
+        office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view"],
+        technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use"],
+      };
+      try {
+        const orgRolesDoc = await db.collection("orgRoles").doc(orgId).get();
+        if (orgRolesDoc.exists) {
+          const customRoles = orgRolesDoc.data().roles || {};
+          if (customRoles[role] && Array.isArray(customRoles[role].permissions)) {
+            permissions = customRoles[role].permissions;
+          }
+        }
+      } catch (_) {}
+      if (!permissions) {
+        permissions = BUILT_IN_PERMS[role] || [];
+      }
+    }
+
+    res.json({ id: doc.id, ...data, ...(permissions !== undefined ? { permissions } : {}) });
   } catch (err) { next(err); }
 });
 

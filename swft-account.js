@@ -361,7 +361,9 @@
     "swft-quotes":     "quotes.view",
     "swft-team":       "team.manage",
     "swft-settings":   "settings.manage",
-    "swft-ai-agents":  "ai.use",
+    "swft-ai-agents":  "automations.view",
+    "swft-broadcasts": "broadcasts.view",
+    "swft-connect":    "integrations.manage",
   };
 
   // onclick → permission needed to run it (used to intercept or hide buttons)
@@ -379,13 +381,15 @@
 
   // Nav item onclick patterns → permission needed to see that nav item
   const NAV_PERM = {
-    "swft-customers": "customers.view",
-    "swft-billing":   "invoices.view",
-    "swft-invoices":  "invoices.view",
-    "swft-quotes":    "quotes.view",
-    "swft-team":      "team.manage",
-    "swft-settings":  "settings.manage",
-    "swft-ai-agents": "ai.use",
+    "swft-customers":  "customers.view",
+    "swft-billing":    "invoices.view",
+    "swft-invoices":   "invoices.view",
+    "swft-quotes":     "quotes.view",
+    "swft-team":       "team.manage",
+    "swft-settings":   "settings.manage",
+    "swft-ai-agents":  "automations.view",
+    "swft-broadcasts": "broadcasts.view",
+    "swft-connect":    "integrations.manage",
   };
 
   function applyPermGuard(perms) {
@@ -445,8 +449,8 @@
           // Build permissions array from role + BUILT_IN defaults
           var BUILT_IN = {
             owner: null, // null = all
-            admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","team.manage","integrations.manage","settings.manage"],
-            office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use"],
+            admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view","automations.manage","team.manage","integrations.manage","settings.manage"],
+            office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view"],
             technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use"],
           };
           var role = data.role || "owner";
