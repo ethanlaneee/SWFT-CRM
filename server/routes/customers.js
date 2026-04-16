@@ -4,6 +4,48 @@ const { triggerAutomation } = require("./automations");
 
 const col = () => db.collection("customers");
 
+// Collections that hold records tied to a customer via customerId.
+// When a customer is deleted, every record in these collections with a
+// matching customerId is deleted too.
+const CASCADE_COLLECTIONS = [
+  "quotes",
+  "invoices",
+  "jobs",
+  "messages",
+  "schedule",
+  "scheduledMessages",
+  "photos",
+];
+
+// Delete every record in CASCADE_COLLECTIONS with customerId in `customerIds`,
+// scoped to this org. Uses Firestore batched writes (500/batch limit).
+async function cascadeDeleteForCustomers(customerIds, orgId) {
+  if (!customerIds.length) return { total: 0, perCollection: {} };
+  const perCollection = {};
+  let total = 0;
+
+  for (const collectionName of CASCADE_COLLECTIONS) {
+    const refs = [];
+    // Firestore 'in' supports up to 30 values per query — chunk for safety.
+    for (let i = 0; i < customerIds.length; i += 30) {
+      const chunk = customerIds.slice(i, i + 30);
+      const snap = await db.collection(collectionName)
+        .where("orgId", "==", orgId)
+        .where("customerId", "in", chunk)
+        .get();
+      snap.docs.forEach(d => refs.push(d.ref));
+    }
+    for (let i = 0; i < refs.length; i += 499) {
+      const batch = db.batch();
+      refs.slice(i, i + 499).forEach(ref => batch.delete(ref));
+      await batch.commit();
+    }
+    perCollection[collectionName] = refs.length;
+    total += refs.length;
+  }
+  return { total, perCollection };
+}
+
 // List customers for the org
 router.get("/", async (req, res, next) => {
   try {
@@ -99,13 +141,23 @@ router.post("/bulk-delete", async (req, res, next) => {
       deletable.push(snap.ref);
     });
 
-    // Commit in batches of 499 (Firestore batch limit = 500)
+    // Cascade-delete related records FIRST, then the customers themselves.
+    const deletedIds = deletable.map(ref => ref.id);
+    const cascade = await cascadeDeleteForCustomers(deletedIds, req.orgId);
+
+    // Commit customer deletions in batches of 499 (Firestore batch limit = 500)
     for (let i = 0; i < deletable.length; i += 499) {
       const batch = db.batch();
       deletable.slice(i, i + 499).forEach(ref => batch.delete(ref));
       await batch.commit();
     }
-    res.json({ success: true, deleted: deletable.length, skipped: skipped.length });
+    res.json({
+      success: true,
+      deleted: deletable.length,
+      skipped: skipped.length,
+      cascadeDeleted: cascade.total,
+      cascadeByCollection: cascade.perCollection,
+    });
   } catch (err) {
     console.error("[customers.bulk-delete] error:", err);
     next(err);
@@ -129,9 +181,10 @@ router.delete("/:id", async (req, res, next) => {
       });
       return res.status(403).json({ error: "Not authorized to delete this customer" });
     }
+    const cascade = await cascadeDeleteForCustomers([req.params.id], req.orgId);
     await col().doc(req.params.id).delete();
-    console.log("[customers.delete] success:", req.params.id);
-    res.json({ success: true });
+    console.log("[customers.delete] success:", req.params.id, "cascade:", cascade.total);
+    res.json({ success: true, cascadeDeleted: cascade.total, cascadeByCollection: cascade.perCollection });
   } catch (err) {
     console.error("[customers.delete] error:", err);
     next(err);
