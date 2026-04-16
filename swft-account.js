@@ -415,6 +415,11 @@
   function applyPermGuard(perms) {
     window.SWFT_PERMS = perms; // null = owner (unrestricted)
 
+    // ── Cache for instant page transitions ──
+    try {
+      sessionStorage.setItem("swft_perms", perms === null ? "__owner__" : JSON.stringify(perms));
+    } catch (_) {}
+
     // ── Show allowed nav items (all were hidden on load) ─────────────────
     document.querySelectorAll('.nav-item[data-perm-gated="1"]').forEach(function (el) {
       var oc = el.getAttribute("onclick") || "";
@@ -472,9 +477,20 @@
   }
 
   async function initRoleGuard() {
+    // ── Instant apply from cache (no network wait on page transitions) ──
+    var _appliedFromCache = false;
+    try {
+      var cached = sessionStorage.getItem("swft_perms");
+      if (cached !== null) {
+        var cachedPerms = cached === "__owner__" ? null : JSON.parse(cached);
+        applyPermGuard(cachedPerms);
+        _appliedFromCache = true;
+      }
+    } catch (_) {}
+
     // Safety fallback: if permissions take too long, show page anyway
     // (backend still enforces access — this only prevents a blank screen)
-    var _permTimer = setTimeout(function () {
+    var _permTimer = _appliedFromCache ? null : setTimeout(function () {
       if (document.body.style.visibility !== "visible") {
         document.body.style.visibility = "visible";
       }
@@ -484,7 +500,8 @@
       const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
       onAuthStateChanged(getAuth(), async function (user) {
         if (!user) {
-          clearTimeout(_permTimer);
+          if (_permTimer) clearTimeout(_permTimer);
+          sessionStorage.removeItem("swft_perms");
           document.body.style.visibility = "visible";
           return;
         }
@@ -508,16 +525,16 @@
           } else {
             perms = data.permissions || BUILT_IN[role];
           }
-          clearTimeout(_permTimer);
+          if (_permTimer) clearTimeout(_permTimer);
           applyPermGuard(perms);
         } catch (e) {
-          clearTimeout(_permTimer);
-          document.body.style.visibility = "visible";
+          if (_permTimer) clearTimeout(_permTimer);
+          if (!_appliedFromCache) document.body.style.visibility = "visible";
         }
       });
     } catch (e) {
-      clearTimeout(_permTimer);
-      document.body.style.visibility = "visible";
+      if (_permTimer) clearTimeout(_permTimer);
+      if (!_appliedFromCache) document.body.style.visibility = "visible";
     }
   }
 
