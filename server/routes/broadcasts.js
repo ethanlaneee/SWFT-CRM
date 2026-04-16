@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
-const { sendSimpleGmail } = require("../utils/email");
+const { sendBroadcastEmail, isConfigured, generateUnsubToken, verifyUnsubToken } = require("../utils/broadcastEmail");
 const { resolveTemplate } = require("../utils/templates");
 
 /**
@@ -24,15 +24,15 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: "subject is required for email broadcasts" });
     }
 
+    if (!isConfigured()) {
+      return res.status(400).json({ error: "Broadcasting is not configured. Contact support." });
+    }
+
     // Fetch org user for sending
     const userDoc = await db.collection("users").doc(req.uid).get();
     if (!userDoc.exists) return res.status(400).json({ error: "User not found" });
     const orgUser = userDoc.data();
     orgUser._uid = req.uid;
-
-    if (channel === "email" && (!orgUser.gmailConnected || !orgUser.gmailTokens)) {
-      return res.status(400).json({ error: "Gmail not connected. Connect Gmail in Settings first." });
-    }
 
     // Fetch customers
     const custSnap = await db.collection("customers").where("orgId", "==", req.orgId).get();
@@ -88,10 +88,23 @@ router.post("/", async (req, res, next) => {
 
     for (const cust of customers) {
       try {
+        // Check if customer has unsubscribed
+        const unsubSnap = await db.collection("unsubscribes")
+          .where("orgId", "==", req.orgId)
+          .where("email", "==", cust.email)
+          .limit(1)
+          .get();
+        if (!unsubSnap.empty) {
+          console.log(`[broadcast] Skipping unsubscribed recipient: ${cust.email}`);
+          continue;
+        }
+
         const vars = {
           customer_name: cust.name || "",
           customerName: cust.name || "",
           firstName: (cust.name || "").split(" ")[0] || "",
+          customerFirstName: (cust.name || "").split(" ")[0] || "",
+          customerFullName: cust.name || "",
           company_name: companyName,
           companyName: companyName,
           your_name: senderName,
@@ -107,8 +120,14 @@ router.post("/", async (req, res, next) => {
         const resolvedMessage = resolveTemplate(message, vars);
         const resolvedSubject = subject ? resolveTemplate(subject, vars) : "";
 
-        const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${resolvedMessage}</div>`;
-        await sendSimpleGmail(orgUser, cust.email, resolvedSubject, resolvedMessage, htmlBody);
+        const unsubToken = generateUnsubToken(cust.email);
+        const unsubscribeUrl = `https://goswft.com/api/broadcasts/unsubscribe?token=${encodeURIComponent(unsubToken)}&org=${encodeURIComponent(req.orgId)}`;
+
+        await sendBroadcastEmail(cust.email, resolvedSubject, resolvedMessage, {
+          companyName,
+          replyTo: orgUser.gmailAddress || orgUser.email,
+          unsubscribeUrl,
+        });
 
         // Record in messages collection
         await db.collection("messages").add({
@@ -121,7 +140,7 @@ router.post("/", async (req, res, next) => {
           customerName: cust.name || "",
           type: "email",
           status: "sent",
-          sentVia: "gmail",
+          sentVia: "swft",
           broadcastId: broadcastRef.id,
           sentAt: Date.now(),
         });
@@ -173,4 +192,109 @@ router.get("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+/**
+ * Public unsubscribe handler — mounted separately in index.js BEFORE
+ * auth middleware so it's accessible without authentication.
+ *
+ * GET /api/broadcasts/unsubscribe?token=...&org=...
+ */
+async function unsubscribeHandler(req, res) {
+  const { token, org } = req.query;
+
+  if (!token || !org) {
+    return res.status(400).send("Invalid unsubscribe link.");
+  }
+
+  const email = verifyUnsubToken(token);
+  if (!email) {
+    return res.status(400).send("Invalid or expired unsubscribe link.");
+  }
+
+  try {
+    // Check if already unsubscribed to avoid duplicates
+    const existing = await db.collection("unsubscribes")
+      .where("orgId", "==", org)
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+
+    if (existing.empty) {
+      await db.collection("unsubscribes").add({
+        orgId: org,
+        email,
+        unsubscribedAt: Date.now(),
+      });
+    }
+
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unsubscribed - SWFT</title>
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0a0a0a;
+    color: #f0f0f0;
+  }
+  .container {
+    text-align: center;
+    max-width: 440px;
+    padding: 48px 32px;
+  }
+  .check {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(200, 241, 53, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 26px;
+    color: #c8f135;
+  }
+  h2 {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #f0f0f0;
+  }
+  p {
+    color: #7a7a7a;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .brand {
+    margin-top: 32px;
+    font-size: 12px;
+    color: #444;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="check">&#10003;</div>
+    <h2>You've been unsubscribed</h2>
+    <p>You won't receive any more broadcast emails from this sender. If this was a mistake, please contact them directly.</p>
+    <div class="brand">SWFT</div>
+  </div>
+</body>
+</html>`);
+  } catch (err) {
+    console.error("[broadcast-unsubscribe] Error:", err.message);
+    res.status(500).send("Something went wrong. Please try again or contact support.");
+  }
+}
+
 module.exports = router;
+module.exports.unsubscribeHandler = unsubscribeHandler;
