@@ -260,7 +260,9 @@ app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html
 app.get("/api/weather", auth, async (req, res) => {
   try {
     const { db } = require("./firebase");
-    const userDoc = await db.collection("users").doc(req.uid).get();
+    // Check the org owner's plan (team members inherit the owner's plan)
+    const planUid = req.orgId || req.uid;
+    const userDoc = await db.collection("users").doc(planUid).get();
     const plan = userDoc.exists ? (userDoc.data().plan || "starter") : "starter";
     if (plan === "starter") {
       return res.status(403).json({ error: "Weather forecasts require the Pro plan or higher.", plan: "starter" });

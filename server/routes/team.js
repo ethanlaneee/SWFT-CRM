@@ -16,7 +16,9 @@ async function requireTeamPlan(req, res) {
   if (req.user?.email && PROTECTED_EMAILS.includes(req.user.email.toLowerCase())) {
     return true;
   }
-  const userDoc = await db.collection("users").doc(req.uid).get();
+  // Check the org owner's plan (team members inherit the owner's plan)
+  const planUid = req.orgId || req.uid;
+  const userDoc = await db.collection("users").doc(planUid).get();
   const plan = userDoc.exists ? (userDoc.data().plan || "starter") : "starter";
   if (plan === "starter") {
     res.status(403).json({
