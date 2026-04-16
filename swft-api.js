@@ -343,6 +343,15 @@ const API = {
     qrUrl:  ()       => apiFetch("/api/intake-forms/qr-url"),
   },
 
+  // ── Team Chat ──
+  teamChat: {
+    list:       ()            => apiFetch("/api/team-chat"),
+    create:     (data)        => apiFetch("/api/team-chat", { method: "POST", body: JSON.stringify(data) }),
+    messages:   (chatId)      => apiFetch(`/api/team-chat/${chatId}/messages`),
+    send:       (chatId, data)=> apiFetch(`/api/team-chat/${chatId}/messages`, { method: "POST", body: JSON.stringify(data) }),
+    deleteChat: (chatId)      => apiFetch(`/api/team-chat/${chatId}`, { method: "DELETE" }),
+  },
+
 };
 
 // ── Auth guard — call on every protected page ──
