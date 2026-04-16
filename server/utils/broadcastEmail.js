@@ -50,8 +50,19 @@ function verifyUnsubToken(token) {
 
 // ── HTML email template ────────────────────────────────────────────────────
 
+function escHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function buildHtml(textBody, opts = {}) {
   const companyName = opts.companyName || "SWFT";
+  const companyAddress = opts.companyAddress || "";
+  const companyPhone = opts.companyPhone || "";
+  const companyEmail = opts.companyEmail || "";
   const unsubscribeUrl = opts.unsubscribeUrl || "#";
 
   const htmlContent = textBody
@@ -60,12 +71,20 @@ function buildHtml(textBody, opts = {}) {
     .replace(/>/g, "&gt;")
     .replace(/\n/g, "<br>");
 
+  const contactBits = [];
+  if (companyAddress) contactBits.push(escHtml(companyAddress));
+  if (companyPhone) contactBits.push(escHtml(companyPhone));
+  if (companyEmail) contactBits.push(`<a href="mailto:${escHtml(companyEmail)}" style="color:#999999;text-decoration:underline;">${escHtml(companyEmail)}</a>`);
+  const contactLine = contactBits.length
+    ? `<p style="margin:0 0 8px;font-size:12px;color:#999999;line-height:1.5;">${contactBits.join(" &middot; ")}</p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${companyName}</title>
+<title>${escHtml(companyName)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;">
@@ -74,7 +93,7 @@ function buildHtml(textBody, opts = {}) {
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
           <tr>
             <td style="padding:28px 32px 20px;border-bottom:1px solid #eeeeee;">
-              <h1 style="margin:0;font-size:20px;font-weight:700;color:#1a1a1a;letter-spacing:0.5px;">${companyName}</h1>
+              <h1 style="margin:0;font-size:20px;font-weight:700;color:#1a1a1a;letter-spacing:0.5px;">${escHtml(companyName)}</h1>
             </td>
           </tr>
           <tr>
@@ -84,8 +103,10 @@ function buildHtml(textBody, opts = {}) {
           </tr>
           <tr>
             <td style="padding:20px 32px 24px;border-top:1px solid #eeeeee;background-color:#fafafa;">
-              <p style="margin:0 0 6px;font-size:12px;color:#999999;">${companyName} &middot; Powered by <a href="https://goswft.com" style="color:#999999;text-decoration:underline;">SWFT</a></p>
-              <p style="margin:0;font-size:12px;"><a href="${unsubscribeUrl}" style="color:#999999;text-decoration:underline;">Unsubscribe</a></p>
+              <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#666666;">${escHtml(companyName)}</p>
+              ${contactLine}
+              <p style="margin:0 0 6px;font-size:11px;color:#bbbbbb;">You're receiving this because you're a customer of ${escHtml(companyName)}. <a href="${unsubscribeUrl}" style="color:#999999;text-decoration:underline;">Unsubscribe</a></p>
+              <p style="margin:12px 0 0;font-size:11px;color:#cccccc;">Powered by <a href="https://goswft.com" style="color:#cccccc;text-decoration:underline;">SWFT</a></p>
             </td>
           </tr>
         </table>

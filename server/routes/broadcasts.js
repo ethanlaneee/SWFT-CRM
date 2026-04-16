@@ -138,6 +138,9 @@ router.post("/", async (req, res, next) => {
 
         await sendBroadcastEmail(cust.email, resolvedSubject, resolvedMessage, {
           companyName,
+          companyAddress: orgUser.address || "",
+          companyPhone: orgUser.phone || "",
+          companyEmail: orgUser.email || "",
           fromName: companyName,
           fromEmail: customFromEmail,
           replyTo: orgUser.gmailAddress || orgUser.email,
