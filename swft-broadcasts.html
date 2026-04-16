@@ -103,6 +103,8 @@
 .history-badge.sent{background:rgba(200,241,53,0.1);color:var(--green);}
 .history-badge.sending{background:rgba(245,166,35,0.1);color:var(--amber);}
 .history-badge.failed{background:rgba(255,82,82,0.1);color:var(--red);}
+.show-more-btn{display:block;width:100%;margin-top:12px;padding:10px 14px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--gray);font-size:12px;font-weight:500;letter-spacing:0.3px;cursor:pointer;transition:all 0.14s;font-family:inherit;}
+.show-more-btn:hover{background:var(--surface2);color:var(--white);border-color:var(--white);}
 .empty-state{text-align:center;color:var(--gray2);font-size:13px;padding:20px 0;}
 
 /* ── TOAST ── */
@@ -399,30 +401,53 @@ async function sendBroadcast() {
   }
 }
 
+var RECENT_BROADCASTS_LIMIT = 5;
+var allBroadcasts = [];
+var showAllBroadcasts = false;
+
+function renderBroadcastRow(b) {
+  var date = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  var channelIcon = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke-width="2"/></svg>';
+  var statusClass = b.status || "sent";
+  var meta = (b.sentCount || 0) + ' sent' + (b.failedCount ? ', ' + b.failedCount + ' failed' : '') + ' of ' + (b.totalRecipients || 0);
+  var title = b.subject || "Email Broadcast";
+  return '<div class="history-row">' +
+    '<div class="history-channel email">' + channelIcon + '</div>' +
+    '<div class="history-info">' +
+      '<div class="history-subject">' + title + '</div>' +
+      '<div class="history-meta">' + date + ' &middot; ' + meta + '</div>' +
+    '</div>' +
+    '<div class="history-badge ' + statusClass + '">' + statusClass + '</div>' +
+  '</div>';
+}
+
+function renderHistory() {
+  var list = document.getElementById("history-list");
+  if (!allBroadcasts.length) {
+    list.innerHTML = '<div class="empty-state">No broadcasts yet</div>';
+    return;
+  }
+  var visible = showAllBroadcasts ? allBroadcasts : allBroadcasts.slice(0, RECENT_BROADCASTS_LIMIT);
+  var rows = visible.map(renderBroadcastRow).join("");
+  var footer = "";
+  if (allBroadcasts.length > RECENT_BROADCASTS_LIMIT) {
+    footer = showAllBroadcasts
+      ? '<button class="show-more-btn" onclick="toggleBroadcastsList()">Show less</button>'
+      : '<button class="show-more-btn" onclick="toggleBroadcastsList()">Show ' + (allBroadcasts.length - RECENT_BROADCASTS_LIMIT) + ' more</button>';
+  }
+  list.innerHTML = rows + footer;
+}
+
+function toggleBroadcastsList() {
+  showAllBroadcasts = !showAllBroadcasts;
+  renderHistory();
+}
+
 async function loadHistory() {
   try {
-    var broadcasts = await apiFetch("/api/broadcasts");
-    var list = document.getElementById("history-list");
-    if (!broadcasts.length) {
-      list.innerHTML = '<div class="empty-state">No broadcasts yet</div>';
-      return;
-    }
-    list.innerHTML = broadcasts.map(function(b) {
-      var date = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
-      var channelClass = b.channel || "email";
-      var channelIcon = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke-width="2"/></svg>';
-      var statusClass = b.status || "sent";
-      var meta = (b.sentCount || 0) + ' sent' + (b.failedCount ? ', ' + b.failedCount + ' failed' : '') + ' of ' + (b.totalRecipients || 0);
-      var title = b.subject || "Email Broadcast";
-      return '<div class="history-row">' +
-        '<div class="history-channel email">' + channelIcon + '</div>' +
-        '<div class="history-info">' +
-          '<div class="history-subject">' + title + '</div>' +
-          '<div class="history-meta">' + date + ' &middot; ' + meta + '</div>' +
-        '</div>' +
-        '<div class="history-badge ' + statusClass + '">' + statusClass + '</div>' +
-      '</div>';
-    }).join("");
+    allBroadcasts = await apiFetch("/api/broadcasts");
+    showAllBroadcasts = false;
+    renderHistory();
   } catch (e) { console.error("loadHistory:", e); }
 }
 
