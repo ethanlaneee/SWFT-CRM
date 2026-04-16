@@ -17,11 +17,9 @@ const { sendSimpleGmail, getGmailClient } = require("../utils/email");
 const Anthropic = require("@anthropic-ai/sdk");
 const claude = new Anthropic();
 
-// ── CAN-SPAM compliance constants ──
+// ── CASL / CAN-SPAM compliance constants ──
 const BASE_URL = process.env.BASE_URL || "https://goswft.com";
 const COMPANY_NAME = "SWFT";
-// CAN-SPAM requires a valid postal address. Set COMPANY_ADDRESS env var when available.
-const PHYSICAL_ADDRESS = process.env.COMPANY_ADDRESS || "";
 
 // ── Helper: get the outreach Gmail user (info@goswft.com) ──
 async function getOutreachSender() {
@@ -406,23 +404,100 @@ router.post("/approve", async (req, res) => {
         continue;
       }
 
-      // ── Build CAN-SPAM compliant footer ──
+      // ── Build CASL-compliant footer ──
+      // Covers: sender identification, physical mailing address, contact info, unsubscribe mechanism.
       const unsubUrl = `${BASE_URL}/unsubscribe?id=${email.leadId}`;
 
-      const addressLine = PHYSICAL_ADDRESS ? `<p style="margin: 0 0 4px;">${COMPANY_NAME} &mdash; ${PHYSICAL_ADDRESS}</p>` : "";
-      const addressText = PHYSICAL_ADDRESS ? `${COMPANY_NAME} — ${PHYSICAL_ADDRESS}\n` : "";
-
       const htmlBody = `
-        <div style="font-family: sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
+        <div style="font-family: 'DM Sans', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
           ${email.body.split("\n").map(p => `<p>${p}</p>`).join("")}
         </div>
-        <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #999; line-height: 1.5;">
-          ${addressLine}
-          <p style="margin: 0;">Not interested? <a href="${unsubUrl}" style="color: #666; text-decoration: underline;">Unsubscribe</a> — you won't hear from us again.</p>
-        </div>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+          style="background: #0a0a0a; border-top: 2px solid #c8f135; margin-top: 32px;">
+          <tr>
+            <td style="padding: 28px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align: middle;">
+                    <img src="https://goswft.com/assets/SWFT_MAIN_LOGO.png"
+                         alt="SWFT"
+                         width="80"
+                         style="display: block; height: auto; max-height: 36px; width: auto;">
+                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #555555;
+                               letter-spacing: 3px; font-family: Arial, sans-serif;">
+                      simple. smart. swft.
+                    </p>
+                  </td>
+                  <td style="vertical-align: middle; text-align: right;">
+                    <a href="https://goswft.com"
+                       style="font-size: 12px; color: #888888; text-decoration: none;
+                              font-family: Arial, sans-serif; margin-left: 20px;">
+                      Website
+                    </a>
+                    &nbsp;&nbsp;
+                    <a href="mailto:ethan@goswft.com"
+                       style="font-size: 12px; color: #888888; text-decoration: none;
+                              font-family: Arial, sans-serif; margin-left: 20px;">
+                      Contact
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 18px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="border-top: 1px solid #222222; font-size: 0; line-height: 0;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 18px 32px 28px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align: bottom;">
+                    <p style="margin: 0 0 4px 0; font-size: 11px; color: #888888;
+                               letter-spacing: 1px; text-transform: uppercase;
+                               font-family: Arial, sans-serif; font-weight: bold;">
+                      Sent by
+                    </p>
+                    <p style="margin: 0; font-size: 12px; color: #555555;
+                               line-height: 1.8; font-family: Arial, sans-serif;">
+                      Ethan Lane, CEO &amp; Founder<br>
+                      <a href="https://goswft.com"
+                         style="color: #555555; text-decoration: none;">goswft.com</a>
+                      &nbsp;&middot;&nbsp;
+                      <a href="mailto:ethan@goswft.com"
+                         style="color: #555555; text-decoration: none;">ethan@goswft.com</a><br>
+                      1215 9th Avenue SW Suite 1005<br>
+                      Calgary, AB &nbsp;T3C 0H9 &nbsp;Canada
+                    </p>
+                  </td>
+                  <td style="vertical-align: bottom; text-align: right; width: 160px;">
+                    <a href="${unsubUrl}"
+                       style="display: inline-block; font-size: 10px; color: #555555;
+                              letter-spacing: 1.5px; text-transform: uppercase;
+                              text-decoration: none; border: 1px solid #444444;
+                              padding: 5px 14px; font-family: Arial, sans-serif;">
+                      Unsubscribe
+                    </a>
+                    <p style="margin: 6px 0 0 0; font-size: 10px; color: #444444;
+                               font-family: Arial, sans-serif; letter-spacing: 0.3px;">
+                      You can opt out at any time.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `;
 
-      const textFooter = `\n\n---\n${addressText}Not interested? Unsubscribe here: ${unsubUrl}`;
+      const textFooter = `\n\n---\nSent by Ethan Lane, CEO & Founder — ${COMPANY_NAME}\ngoswft.com · ethan@goswft.com\n1215 9th Avenue SW Suite 1005, Calgary, AB  T3C 0H9  Canada\n\nUnsubscribe (you can opt out at any time): ${unsubUrl}`;
 
       // ── List-Unsubscribe headers (required by Gmail/Yahoo for bulk senders) ──
       const extraHeaders = {
