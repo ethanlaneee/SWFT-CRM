@@ -60,6 +60,11 @@ for (const key of RECOMMENDED_ENV) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Render terminates TLS upstream and forwards via an X-Forwarded-For header.
+// Trust one hop so req.ip reflects the real client and express-rate-limit keys
+// on the right address.
+app.set("trust proxy", 1);
+
 // ── Security headers ──
 app.use(helmet({
   contentSecurityPolicy: false,  // disabled — frontend uses inline scripts and external CDNs
