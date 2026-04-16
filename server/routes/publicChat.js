@@ -19,9 +19,9 @@ const SYSTEM_PROMPT = `You are SWFT's website assistant. You help visitors learn
 
 KEY FACTS:
 - SWFT replaces spreadsheets and 6+ different apps with one platform
-- Features: Customer management, job tracking, quotes, invoices, scheduling, SMS messaging, email (Gmail integration), AI assistant, team management, automations, Google Business reviews, QuickBooks integration, Google Calendar sync
-- Pricing: Starter $49/mo (200 SMS, 100 AI messages), Pro $99/mo (1,000 SMS, 500 AI messages), Business $149/mo (unlimited SMS & AI)
-- All plans include a 14-day free trial, no credit card required
+- Features: Customer management, job tracking, quotes, invoices, scheduling, email (Gmail integration), AI assistant, team management, team chat, automations, broadcasts, QuickBooks integration, Google Calendar sync, data import
+- Pricing: Starter $89/mo (75 AI messages, up to 5 users), Pro $179/mo (1,000 AI messages, up to 10 users, AI automations, broadcasts, weather), Business $349/mo (unlimited AI & team members)
+- All plans include a 14-day free trial
 - Built specifically for home service pros who are busy and need things simple
 - Sign up at goswft.com/swft-checkout
 

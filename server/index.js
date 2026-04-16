@@ -16,6 +16,7 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const { auth } = require("./middleware/auth");
 const { checkAccess } = require("./middleware/checkAccess");
+const { requirePlan } = require("./middleware/requirePlan");
 const { router: billingRouter, webhookHandler } = require("./routes/billing");
 const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = require("./routes/payments");
 const { router: squareRouter, squareWebhookHandler } = require("./routes/square");
@@ -257,17 +258,8 @@ app.get("/swft-shell.html", (req, res) => res.redirect("/swft-dashboard"));
 app.get("/", (req, res) => res.sendFile(path.join(staticRoot, "swft-landing.html")));
 
 // ── Weather proxy (Pro+ only, avoids CORS issues with Open-Meteo) ──
-app.get("/api/weather", auth, async (req, res) => {
+app.get("/api/weather", auth, requirePlan("pro"), async (req, res) => {
   try {
-    const { db } = require("./firebase");
-    // Check the org owner's plan (team members inherit the owner's plan)
-    const planUid = req.orgId || req.uid;
-    const userDoc = await db.collection("users").doc(planUid).get();
-    const plan = userDoc.exists ? (userDoc.data().plan || "starter") : "starter";
-    if (plan === "starter") {
-      return res.status(403).json({ error: "Weather forecasts require the Pro plan or higher.", plan: "starter" });
-    }
-
     const { lat, lon, units } = req.query;
     const latitude = parseFloat(lat) || 30.27;
     const longitude = parseFloat(lon) || -97.74;
@@ -431,7 +423,7 @@ app.use("/api/invoices",  auth, checkAccess,  require("./routes/invoices"));
 app.use("/api/payments",  auth, checkAccess,  paymentsRouter);
 app.use("/api/schedule",  auth, checkAccess,  require("./routes/schedule"));
 app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
-app.use("/api/agents",    auth, checkAccess,  require("./routes/agents"));
+app.use("/api/agents",    auth, checkAccess, requirePlan("pro"), require("./routes/agents"));
 const { router: teamRouter, publicRouter: teamPublicRouter } = require("./routes/team");
 app.use("/api/team",        teamPublicRouter);                        // validate invite (no auth), join (has own auth)
 app.use("/api/team",        auth, checkAccess, teamRouter);           // full auth — manage team
@@ -450,9 +442,9 @@ app.use("/api/import",        auth, checkAccess,  require("./routes/import"));
 app.post("/api/calendar/token", auth, checkAccess, require("./routes/calendar").tokenHandler);
 app.use("/api/calendar",      require("./routes/calendar"));
 app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
-app.use("/api/automations",       auth, checkAccess,  automationsRouter);
-app.use("/api/ai-settings",       auth, checkAccess,  aiSettingsRouter);
-app.use("/api/broadcasts",        auth, checkAccess,  require("./routes/broadcasts"));
+app.use("/api/automations",       auth, checkAccess, requirePlan("pro"), automationsRouter);
+app.use("/api/ai-settings",       auth, checkAccess, requirePlan("pro"), aiSettingsRouter);
+app.use("/api/broadcasts",        auth, checkAccess, requirePlan("pro"), require("./routes/broadcasts"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
 app.use("/api/dev",               auth,               require("./routes/dev"));
 app.use("/api/outreach",          auth,               require("./routes/outreach"));

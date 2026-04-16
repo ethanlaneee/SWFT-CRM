@@ -10,8 +10,8 @@ const { sendSimpleGmail } = require("../utils/email");
 // Accounts whose role can never be changed by any team operation
 const PROTECTED_EMAILS = ["ethan@goswft.com"];
 
-// Team member limits per plan: Starter = 10, Pro = 20, Business = unlimited
-const TEAM_LIMITS = { starter: 10, pro: 20, business: Infinity };
+// Team member limits per plan: Starter = 5, Pro = 10, Business = unlimited
+const TEAM_LIMITS = { starter: 5, pro: 10, business: Infinity };
 
 // Check team member limit before inviting new members
 async function checkTeamLimit(req, res) {

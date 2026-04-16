@@ -78,6 +78,101 @@
   };
   window.swftPermClose = function () { permOverlay.classList.remove("open"); };
 
+  // ── Plan upgrade modal ────────────────────────────────────────────────────
+  var upgradeStyle = document.createElement("style");
+  upgradeStyle.textContent = `
+    .upgrade-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .upgrade-overlay.open { opacity: 1; pointer-events: all; }
+    .upgrade-modal {
+      background: #111111;
+      border: 1px solid #2c2c2c;
+      border-radius: 16px;
+      width: 100%; max-width: 380px;
+      padding: 32px 28px 24px;
+      text-align: center;
+      transform: scale(0.95) translateY(10px);
+      transition: transform 0.22s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .upgrade-overlay.open .upgrade-modal { transform: scale(1) translateY(0); }
+    .upgrade-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(200,241,53,0.1);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    }
+    .upgrade-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px; letter-spacing: 2px;
+      color: #f0f0f0; margin: 0 0 8px;
+    }
+    .upgrade-body {
+      font-size: 13px; color: #7a7a7a;
+      line-height: 1.5; margin: 0 0 24px;
+    }
+    .upgrade-btns { display: flex; gap: 10px; justify-content: center; }
+    .upgrade-btn-cta {
+      background: #c8f135; border: none;
+      border-radius: 10px; padding: 10px 24px;
+      color: #0a0a0a; font-size: 13px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all 0.14s;
+    }
+    .upgrade-btn-cta:hover { background: #d4f75a; }
+    .upgrade-btn-close {
+      background: #181818; border: 1px solid #2c2c2c;
+      border-radius: 10px; padding: 10px 24px;
+      color: #f0f0f0; font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all 0.14s;
+    }
+    .upgrade-btn-close:hover { background: #222; }
+    .nav-pro-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 1px;
+      color: #c8f135; background: rgba(200,241,53,0.1);
+      padding: 2px 6px; border-radius: 4px; margin-left: auto;
+    }
+  `;
+  document.head.appendChild(upgradeStyle);
+
+  var upgradeOverlay = document.createElement("div");
+  upgradeOverlay.className = "upgrade-overlay";
+  upgradeOverlay.innerHTML = `
+    <div class="upgrade-modal">
+      <div class="upgrade-icon">&#9889;</div>
+      <div class="upgrade-title">UPGRADE TO PRO</div>
+      <div class="upgrade-body" id="upgrade-msg">This feature is available on the Pro plan and higher.</div>
+      <div class="upgrade-btns">
+        <button class="upgrade-btn-close" onclick="swftUpgradeClose()">Go back</button>
+        <a href="/swft-checkout?plan=pro" class="upgrade-btn-cta" style="text-decoration:none;">Upgrade now</a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(upgradeOverlay);
+  upgradeOverlay.addEventListener("click", function (e) { if (e.target === upgradeOverlay) swftUpgradeClose(); });
+
+  window.SWFT_PLAN = null; // set after auth
+
+  window.swftUpgradeRequired = function (msg, plan) {
+    document.getElementById("upgrade-msg").textContent = msg || "This feature is available on the Pro plan and higher.";
+    var cta = upgradeOverlay.querySelector(".upgrade-btn-cta");
+    if (cta) cta.href = "/swft-checkout?plan=" + (plan || "pro");
+    upgradeOverlay.querySelector(".upgrade-title").textContent = "UPGRADE TO " + (plan || "pro").toUpperCase();
+    upgradeOverlay.classList.add("open");
+  };
+  window.swftUpgradeClose = function () {
+    upgradeOverlay.classList.remove("open");
+  };
+
   // ── Permissions cache ─────────────────────────────────────────────────────
   window.SWFT_PERMS = null; // Set after auth, array of permission IDs
 
@@ -368,6 +463,19 @@
     "respondToReview":     "reviews.respond",
   };
 
+  // Plan hierarchy for comparison
+  const PLAN_LEVEL = { starter: 0, pro: 1, business: 2 };
+  function planMeetsMin(userPlan, requiredPlan) {
+    return (PLAN_LEVEL[userPlan] || 0) >= (PLAN_LEVEL[requiredPlan] || 0);
+  }
+
+  // Pages / nav items that require a minimum plan (Pro+)
+  const PLAN_GATE = {
+    "swft-ai-agents":   "pro",
+    "swft-automations": "pro",
+    "swft-broadcasts":  "pro",
+  };
+
   // Nav item onclick patterns → permission needed to see that nav item
   const NAV_PERM = {
     "swft-customers":   "customers.view",
@@ -412,12 +520,15 @@
     }
   })();
 
-  function applyPermGuard(perms) {
+  function applyPermGuard(perms, plan) {
     window.SWFT_PERMS = perms; // null = owner (unrestricted)
+    if (plan) window.SWFT_PLAN = plan;
+    var userPlan = window.SWFT_PLAN || "starter";
 
     // ── Cache for instant page transitions ──
     try {
       sessionStorage.setItem("swft_perms", perms === null ? "__owner__" : JSON.stringify(perms));
+      sessionStorage.setItem("swft_plan", userPlan);
     } catch (_) {}
 
     // ── Show allowed nav items (all were hidden on load) ─────────────────
@@ -432,11 +543,50 @@
           }
         }
       }
+      // Plan-based nav gating: hide or badge nav items gated to a higher plan
+      if (!blocked) {
+        for (var pkey in PLAN_GATE) {
+          if (oc.indexOf(pkey) > -1 && !planMeetsMin(userPlan, PLAN_GATE[pkey])) {
+            blocked = true;
+            // Show with PRO badge instead of hiding completely
+            el.style.display = "";
+            el.style.opacity = "0.5";
+            el.removeAttribute("data-perm-gated");
+            if (!el.querySelector(".nav-pro-badge")) {
+              var badge = document.createElement("span");
+              badge.className = "nav-pro-badge";
+              badge.textContent = "PRO";
+              el.appendChild(badge);
+            }
+            // Intercept click to show upgrade modal
+            (function (requiredPlan) {
+              el.setAttribute("onclick", "");
+              el.onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.swftUpgradeRequired("This feature is available on the " + requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1) + " plan and higher.", requiredPlan);
+              };
+            })(PLAN_GATE[pkey]);
+            break;
+          }
+        }
+      }
       if (!blocked) {
         el.style.display = "";
+        el.style.opacity = "";
         el.removeAttribute("data-perm-gated");
       }
     });
+
+    // ── Plan-based page redirect (check before role-based) ──────────────
+    var page = window.location.pathname.split("/").pop().replace(/\.html$/, "");
+    var planReq = PLAN_GATE[page];
+    if (planReq && !planMeetsMin(userPlan, planReq)) {
+      document.body.style.visibility = "visible";
+      window.swftUpgradeRequired("This feature is available on the " + planReq.charAt(0).toUpperCase() + planReq.slice(1) + " plan and higher.", planReq);
+      setTimeout(function () { window.location.href = "swft-dashboard"; }, 2500);
+      return;
+    }
 
     if (perms === null) {
       // Owner — show page immediately, skip remaining restrictions
@@ -444,8 +594,7 @@
       return;
     }
 
-    // ── Page redirect ────────────────────────────────────────────────────
-    var page = window.location.pathname.split("/").pop().replace(/\.html$/, "");
+    // ── Role-based page redirect ────────────────────────────────────────
     var pageReq = PAGE_PERM[page];
     if (pageReq && !perms.includes(pageReq)) {
       document.body.style.visibility = "visible";
@@ -481,9 +630,11 @@
     var _appliedFromCache = false;
     try {
       var cached = sessionStorage.getItem("swft_perms");
+      var cachedPlan = sessionStorage.getItem("swft_plan");
+      if (cachedPlan) window.SWFT_PLAN = cachedPlan;
       if (cached !== null) {
         var cachedPerms = cached === "__owner__" ? null : JSON.parse(cached);
-        applyPermGuard(cachedPerms);
+        applyPermGuard(cachedPerms, cachedPlan);
         _appliedFromCache = true;
       }
     } catch (_) {}
@@ -502,6 +653,7 @@
         if (!user) {
           if (_permTimer) clearTimeout(_permTimer);
           sessionStorage.removeItem("swft_perms");
+          sessionStorage.removeItem("swft_plan");
           document.body.style.visibility = "visible";
           return;
         }
@@ -519,6 +671,8 @@
             technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use","teamchat.view","teamchat.send"],
           };
           var role = data.role || "owner";
+          var userPlan = data.plan || "starter";
+          window.SWFT_PLAN = userPlan;
           var perms;
           if (role === "owner" || !BUILT_IN[role]) {
             perms = null; // unrestricted
@@ -526,7 +680,7 @@
             perms = data.permissions || BUILT_IN[role];
           }
           if (_permTimer) clearTimeout(_permTimer);
-          applyPermGuard(perms);
+          applyPermGuard(perms, userPlan);
         } catch (e) {
           if (_permTimer) clearTimeout(_permTimer);
           if (!_appliedFromCache) document.body.style.visibility = "visible";

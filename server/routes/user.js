@@ -77,7 +77,16 @@ router.get("/", async (req, res, next) => {
       }
     }
 
-    res.json({ id: doc.id, ...data, ...(permissions !== undefined ? { permissions } : {}) });
+    // Team members inherit the org owner's plan
+    let effectivePlan = data.plan || DEFAULT_PLAN;
+    if (data.orgId && data.orgId !== doc.id) {
+      try {
+        const ownerDoc = await db.collection("users").doc(data.orgId).get();
+        if (ownerDoc.exists) effectivePlan = ownerDoc.data().plan || DEFAULT_PLAN;
+      } catch (_) {}
+    }
+
+    res.json({ id: doc.id, ...data, plan: effectivePlan, ...(permissions !== undefined ? { permissions } : {}) });
   } catch (err) { next(err); }
 });
 
