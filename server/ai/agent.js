@@ -28,6 +28,26 @@ async function executeTool(toolName, input, uid, orgId) {
 
   switch (toolName) {
     case "create_customer": {
+      // Dedup: if a customer already exists in this org with the same email
+      // or same (normalized) name, return it instead of creating a duplicate.
+      const name = (input.name || "").trim();
+      const email = (input.email || "").trim().toLowerCase();
+      const phone = (input.phone || "").replace(/\D/g, "");
+      if (name || email || phone) {
+        const snap = await db.collection("customers").where("orgId", "==", oid).get();
+        const existing = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .find(c => {
+            if (email && (c.email || "").toLowerCase() === email) return true;
+            if (phone && (c.phone || "").replace(/\D/g, "") === phone) return true;
+            if (name && (c.name || "").trim().toLowerCase() === name.toLowerCase()) return true;
+            return false;
+          });
+        if (existing) {
+          return { ...existing, alreadyExisted: true, note: "Returned existing customer — not creating a duplicate." };
+        }
+      }
+
       const data = {
         orgId: oid,
         userId: uid,
@@ -521,6 +541,13 @@ async function runAgent(uid, userMessage, userProfile, orgId) {
   // Agent loop — keep calling Claude until it stops using tools
   let response;
   const actionsTaken = [];
+  // Dedup write tools across the agent loop — same tool + same args
+  // returns the cached result instead of hitting the DB twice.
+  const WRITE_TOOLS_TO_DEDUP = new Set([
+    "create_customer", "create_job", "create_quote", "create_invoice", "schedule_job",
+  ]);
+  const dedupCache = new Map();
+  const dedupKey = (name, input) => name + ":" + JSON.stringify(input);
 
   for (let i = 0; i < 10; i++) { // Max 10 tool-use rounds
     response = await client.messages.create({
@@ -543,8 +570,19 @@ async function runAgent(uid, userMessage, userProfile, orgId) {
     const toolResults = [];
     for (const block of assistantContent) {
       if (block.type === "tool_use") {
-        // Route to integration handler or CRM handler
+        // Dedup duplicate write calls within the same agent invocation.
         let result;
+        if (WRITE_TOOLS_TO_DEDUP.has(block.name)) {
+          const key = dedupKey(block.name, block.input);
+          if (dedupCache.has(key)) {
+            result = { ...dedupCache.get(key), dedupedFromSameTurn: true };
+            console.log(`[agent] Deduped repeat call to ${block.name}`);
+            actionsTaken.push({ tool: block.name, input: block.input, result });
+            toolResults.push({ type: "tool_result", tool_use_id: block.id, content: JSON.stringify(result) });
+            continue;
+          }
+        }
+
         try {
           result = INTEGRATION_TOOL_NAMES.includes(block.name)
             ? await executeIntegrationTool(block.name, block.input, uid)
@@ -553,6 +591,11 @@ async function runAgent(uid, userMessage, userProfile, orgId) {
           console.error(`Tool ${block.name} failed:`, toolErr.message);
           result = { error: `Tool failed: ${toolErr.message}` };
         }
+
+        if (WRITE_TOOLS_TO_DEDUP.has(block.name) && !result?.error) {
+          dedupCache.set(dedupKey(block.name, block.input), result);
+        }
+
         actionsTaken.push({ tool: block.name, input: block.input, result });
         toolResults.push({
           type: "tool_result",
