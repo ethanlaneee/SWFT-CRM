@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { sendBroadcastEmail, isConfigured, generateUnsubToken, verifyUnsubToken } = require("../utils/broadcastEmail");
+const { isSuppressed } = require("./sesWebhook");
 const { resolveTemplate } = require("../utils/templates");
 
 /**
@@ -101,6 +102,13 @@ router.post("/", async (req, res, next) => {
           .get();
         if (!unsubSnap.empty) {
           console.log(`[broadcast] Skipping unsubscribed recipient: ${cust.email}`);
+          continue;
+        }
+
+        // Check global SES suppression list (bounces + complaints)
+        if (await isSuppressed(cust.email)) {
+          console.log(`[broadcast] Skipping suppressed recipient: ${cust.email}`);
+          failedCount++;
           continue;
         }
 

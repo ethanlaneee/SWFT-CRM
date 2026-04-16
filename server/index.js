@@ -446,6 +446,7 @@ app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusin
 app.use("/api/automations",       auth, checkAccess, requirePlan("pro"), automationsRouter);
 app.use("/api/ai-settings",       auth, checkAccess, requirePlan("pro"), aiSettingsRouter);
 app.get("/api/broadcasts/unsubscribe", require("./routes/broadcasts").unsubscribeHandler);
+app.post("/api/ses/webhook", require("./routes/sesWebhook").sesWebhookHandler);
 app.use("/api/broadcasts",        auth, checkAccess, requirePlan("pro"), require("./routes/broadcasts"));
 app.use("/api/sending-domain",    auth, checkAccess, requirePlan("pro"), require("./routes/sendingDomain"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
