@@ -200,8 +200,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   <div class="page-body">
 
+    <!-- MAILCHIMP GATE -->
+    <div id="mailchimp-gate" style="display:none;animation:fadeUp 0.3s ease 0.1s both;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:48px 32px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:16px;">🐵</div>
+      <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;">Mailchimp Required</h3>
+      <p style="font-size:13px;color:var(--gray);line-height:1.6;max-width:420px;margin:0 auto 24px;">To send broadcasts, connect your Mailchimp account first. This lets SWFT sync your customer list and send email campaigns through Mailchimp.</p>
+      <a href="swft-connect" style="display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:10px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;text-decoration:none;font-family:'DM Sans',sans-serif;transition:background 0.15s;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">Go to SWFT Connect</a>
+    </div>
+
     <!-- COMPOSE -->
-    <div class="compose-card" style="animation:fadeUp 0.3s ease 0.1s both;">
+    <div class="compose-card" id="compose-card" style="display:none;animation:fadeUp 0.3s ease 0.1s both;">
       <h3>Compose Broadcast</h3>
 
       <input type="hidden" id="bc-channel" value="email">
@@ -315,6 +323,22 @@ var allTags = [];
 var selectedTags = new Set();
 
 async function initBroadcasts() {
+  // Check if Mailchimp is connected
+  try {
+    var integrations = await apiFetch("/api/integrations");
+    var mc = (integrations.integrations || integrations || []).find(function(i) { return i.id === "mailchimp"; });
+    if (mc && mc.connected) {
+      document.getElementById("compose-card").style.display = "";
+      document.getElementById("mailchimp-gate").style.display = "none";
+    } else {
+      document.getElementById("compose-card").style.display = "none";
+      document.getElementById("mailchimp-gate").style.display = "";
+    }
+  } catch (e) {
+    // If integrations check fails, show gate by default
+    document.getElementById("compose-card").style.display = "none";
+    document.getElementById("mailchimp-gate").style.display = "";
+  }
   await loadCustomers();
   await loadHistory();
 }

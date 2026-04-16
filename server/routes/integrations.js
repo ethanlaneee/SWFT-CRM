@@ -118,6 +118,14 @@ const INTEGRATIONS = [
     provider: "whatsapp",
     scopes: ["whatsapp_business_messaging"],
   },
+  {
+    id: "mailchimp",
+    name: "Mailchimp",
+    icon: "mail",
+    description: "Send email campaigns and broadcasts to your customer list via Mailchimp",
+    provider: "mailchimp",
+    scopes: [],
+  },
 ];
 
 // GET /api/integrations — list all available integrations with user's connection status
@@ -234,6 +242,29 @@ router.post("/:id/connect", (req, res, next) => {
       if (!meta.isConfigured()) return res.status(503).json({ error: "Meta app not configured" });
       const state = Buffer.from(JSON.stringify({ uid: req.uid, integration: "meta_lead_ads" })).toString("base64url");
       return res.json({ url: meta.getLeadAdsOAuthUrl(state) });
+    }
+
+    // Mailchimp OAuth
+    if (integration.provider === "mailchimp") {
+      const MC_CLIENT_ID = process.env.MAILCHIMP_CLIENT_ID;
+      const MC_REDIRECT_URI = process.env.MAILCHIMP_REDIRECT_URI || "https://goswft.com/api/integrations/mailchimp/callback";
+
+      if (!MC_CLIENT_ID) {
+        return res.status(501).json({ error: "Mailchimp integration not configured yet. Please add MAILCHIMP_CLIENT_ID to your environment." });
+      }
+
+      const state = Buffer.from(JSON.stringify({
+        uid: req.uid,
+        integration: "mailchimp",
+      })).toString("base64");
+
+      const url = `https://login.mailchimp.com/oauth2/authorize?` +
+        `client_id=${MC_CLIENT_ID}` +
+        `&redirect_uri=${encodeURIComponent(MC_REDIRECT_URI)}` +
+        `&response_type=code` +
+        `&state=${state}`;
+
+      return res.json({ url });
     }
 
     // Social messaging platforms — redirect to the social connect endpoint
