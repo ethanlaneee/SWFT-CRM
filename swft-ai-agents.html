@@ -125,7 +125,7 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:v
 .var-chip{display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;}
 .var-chip:hover{background:rgba(200,241,53,0.15);border-color:rgba(200,241,53,0.35);}
 
-/* Segmented control (SMS / Email) */
+/* Segmented control */
 .segment{display:inline-flex;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:3px;gap:2px;}
 .segment button{background:transparent;border:none;padding:7px 16px;font-size:12px;color:var(--gray);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all 0.14s;}
 .segment button.on{background:var(--surface3);color:var(--white);box-shadow:0 1px 2px rgba(0,0,0,0.2);}
@@ -286,7 +286,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="flow-step">
         <div class="flow-dot c1"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="2"/><polyline points="14,2 14,8 20,8" stroke-width="2"/></svg></div>
         <div class="flow-step-label" style="color:var(--blue);">Quote Sent</div>
-        <div class="flow-step-value">Customer receives the quote by SMS or email</div>
+        <div class="flow-step-value">Customer receives the quote by email</div>
       </div>
       <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
       <div class="flow-step">
@@ -341,30 +341,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
           <div class="field-hint">Never sends outside this local time window.</div>
         </div>
       </div>
-      <div class="field">
-        <label class="field-label">Channel</label>
-        <div class="segment" id="qf-channel-seg">
-          <button type="button" data-channel="sms" class="on">SMS</button>
-          <button type="button" data-channel="email">Email</button>
-        </div>
-        <div class="field-hint">Email replies thread into the original quote email so the customer sees the conversation.</div>
-      </div>
-      <div id="qf-sms-fields">
-        <div class="field">
-          <label class="field-label">SMS template</label>
-          <div class="var-chips">
-            <span class="var-chip" data-target="qf-sms-template" data-val="{customerFirstName}">{customerFirstName}</span>
-            <span class="var-chip" data-target="qf-sms-template" data-val="{customerFullName}">{customerFullName}</span>
-            <span class="var-chip" data-target="qf-sms-template" data-val="{yourFirstName}">{yourFirstName}</span>
-            <span class="var-chip" data-target="qf-sms-template" data-val="{yourName}">{yourName}</span>
-            <span class="var-chip" data-target="qf-sms-template" data-val="{companyName}">{companyName}</span>
-            <span class="var-chip" data-target="qf-sms-template" data-val="{service}">{service}</span>
-            <span class="var-chip" data-target="qf-sms-template" data-val="{total}">{total}</span>
-          </div>
-          <textarea class="form-textarea" id="qf-sms-template" data-bind="quoteFollowup.smsTemplate" placeholder="Hi {customerFirstName}, this is {yourFirstName} from {companyName}..."></textarea>
-        </div>
-      </div>
-      <div id="qf-email-fields" style="display:none;">
+      <div id="qf-email-fields">
         <div class="field">
           <label class="field-label">Email subject</label>
           <input class="form-input" id="qf-email-subject" data-bind="quoteFollowup.emailSubject" placeholder="Following up on your quote"/>
@@ -436,7 +413,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="flow-step">
         <div class="flow-dot c1"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div class="flow-step-label" style="color:var(--blue);">Invoice Sent</div>
-        <div class="flow-step-value">Customer receives the invoice by SMS or email</div>
+        <div class="flow-step-value">Customer receives the invoice by email</div>
       </div>
       <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
       <div class="flow-step">
@@ -491,30 +468,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
           <div class="field-hint">Never sends outside this local time window.</div>
         </div>
       </div>
-      <div class="field">
-        <label class="field-label">Channel</label>
-        <div class="segment" id="inv-channel-seg">
-          <button type="button" data-channel="sms" class="on">SMS</button>
-          <button type="button" data-channel="email">Email</button>
-        </div>
-        <div class="field-hint">Email replies thread into the original invoice email so the customer sees the conversation.</div>
-      </div>
-      <div id="inv-sms-fields">
-        <div class="field">
-          <label class="field-label">SMS template</label>
-          <div class="var-chips">
-            <span class="var-chip" data-target="inv-sms-template" data-val="{customerFirstName}">{customerFirstName}</span>
-            <span class="var-chip" data-target="inv-sms-template" data-val="{customerFullName}">{customerFullName}</span>
-            <span class="var-chip" data-target="inv-sms-template" data-val="{yourFirstName}">{yourFirstName}</span>
-            <span class="var-chip" data-target="inv-sms-template" data-val="{yourName}">{yourName}</span>
-            <span class="var-chip" data-target="inv-sms-template" data-val="{companyName}">{companyName}</span>
-            <span class="var-chip" data-target="inv-sms-template" data-val="{total}">{total}</span>
-            <span class="var-chip" data-target="inv-sms-template" data-val="{invoiceNumber}">{invoiceNumber}</span>
-          </div>
-          <textarea class="form-textarea" id="inv-sms-template" data-bind="invoiceFollowup.smsTemplate" placeholder="Hi {customerFirstName}, just a friendly reminder..."></textarea>
-        </div>
-      </div>
-      <div id="inv-email-fields" style="display:none;">
+      <div id="inv-email-fields">
         <div class="field">
           <label class="field-label">Email subject</label>
           <input class="form-input" id="inv-email-subject" data-bind="invoiceFollowup.emailSubject" placeholder="Friendly reminder: open invoice"/>
@@ -635,29 +589,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <input class="form-input" id="rev-link" data-bind="reviewRequest.reviewLink" placeholder="https://g.page/r/your-google-review-link"/>
         <div class="field-hint">Paste your Google review short-link, Yelp URL, or wherever you want reviews to land. Gets inserted wherever you use <code style="color:var(--gray);">{reviewLink}</code>.</div>
       </div>
-      <div class="field">
-        <label class="field-label">Channel</label>
-        <div class="segment" id="rev-channel-seg">
-          <button type="button" data-channel="sms" class="on">SMS</button>
-          <button type="button" data-channel="email">Email</button>
-        </div>
-        <div class="field-hint">SMS gets you more reviews — people click the link right from their phone.</div>
-      </div>
-      <div id="rev-sms-fields">
-        <div class="field">
-          <label class="field-label">SMS template</label>
-          <div class="var-chips">
-            <span class="var-chip" data-target="rev-sms-template" data-val="{customerFirstName}">{customerFirstName}</span>
-            <span class="var-chip" data-target="rev-sms-template" data-val="{customerFullName}">{customerFullName}</span>
-            <span class="var-chip" data-target="rev-sms-template" data-val="{yourFirstName}">{yourFirstName}</span>
-            <span class="var-chip" data-target="rev-sms-template" data-val="{yourName}">{yourName}</span>
-            <span class="var-chip" data-target="rev-sms-template" data-val="{companyName}">{companyName}</span>
-            <span class="var-chip" data-target="rev-sms-template" data-val="{reviewLink}">{reviewLink}</span>
-          </div>
-          <textarea class="form-textarea" id="rev-sms-template" data-bind="reviewRequest.smsTemplate" placeholder="Hi {customerFirstName}, thanks so much for choosing {companyName}..."></textarea>
-        </div>
-      </div>
-      <div id="rev-email-fields" style="display:none;">
+      <div id="rev-email-fields">
         <div class="field">
           <label class="field-label">Email subject</label>
           <input class="form-input" id="rev-email-subject" data-bind="reviewRequest.emailSubject" placeholder="Thanks from {companyName}"/>
@@ -709,7 +641,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="behavior-icon ar"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="13" cy="11" r="1" fill="currentColor"/><circle cx="17" cy="11" r="1" fill="currentColor"/></svg></div>
         <div>
           <div class="behavior-title">Inbound Auto-Reply</div>
-          <div class="behavior-desc">Every inbound SMS, Instagram DM, or Facebook message — SWFT reads the thread and replies on your behalf. Flip any conversation to manual mode from the Messages page to take over.</div>
+          <div class="behavior-desc">Every inbound Instagram DM or Facebook message — SWFT reads the thread and replies on your behalf. Flip any conversation to manual mode from the Messages page to take over.</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
@@ -722,7 +654,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="field">
         <label class="field-label">Active channels</label>
         <div class="chan-group">
-          <button type="button" class="chan-chip on" id="ar-ch-sms" data-channel="sms"><span class="chan-chip-dot"></span> SMS</button>
           <button type="button" class="chan-chip on" id="ar-ch-instagram" data-channel="instagram"><span class="chan-chip-dot"></span> Instagram DM</button>
           <button type="button" class="chan-chip on" id="ar-ch-facebook" data-channel="facebook"><span class="chan-chip-dot"></span> Facebook Messenger</button>
         </div>
@@ -739,7 +670,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="field">
           <label class="field-label">Max reply length</label>
           <input class="form-input" type="number" min="50" max="1000" step="25" id="ar-max-tokens" data-bind="autoReply.maxTokens" value="200"/>
-          <div class="field-hint">In tokens (~0.75 words each). 200 ≈ 3 SMS-sized sentences.</div>
+          <div class="field-hint">In tokens (~0.75 words each). 200 ≈ a short paragraph.</div>
         </div>
         <div class="field">
           <label class="field-label">Context window</label>
@@ -750,7 +681,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
       <div class="field">
         <label class="field-label">Custom instructions to SWFT</label>
-        <textarea class="form-textarea" id="ar-instructions" data-bind="autoReply.customInstructions" style="min-height:110px;" placeholder="Keep replies short and friendly — 1 to 3 sentences, SMS-style. Never quote prices beyond what's in business info..."></textarea>
+        <textarea class="form-textarea" id="ar-instructions" data-bind="autoReply.customInstructions" style="min-height:110px;" placeholder="Keep replies short and friendly — 1 to 3 sentences. Never quote prices beyond what's in business info..."></textarea>
         <div class="field-hint">These sit on top of your business info (set in <a href="swft-settings" style="color:var(--green);">Settings → Business Profile</a>) and override the defaults. Use this to lock in your tone, boundaries, and anything you <em>never</em> want the AI to do.</div>
       </div>
     </div>
@@ -876,27 +807,8 @@ function bindInputs() {
     }
   });
 
-  /* Channel segment (SMS/Email) for every scheduled automation */
-  [
-    { seg: 'qf-channel-seg',  key: 'quoteFollowup',   smsId: 'qf-sms-fields',  emailId: 'qf-email-fields'  },
-    { seg: 'inv-channel-seg', key: 'invoiceFollowup', smsId: 'inv-sms-fields', emailId: 'inv-email-fields' },
-    { seg: 'rev-channel-seg', key: 'reviewRequest',   smsId: 'rev-sms-fields', emailId: 'rev-email-fields' },
-  ].forEach(cfg => {
-    document.querySelectorAll(`#${cfg.seg} button`).forEach(b => {
-      b.addEventListener('click', () => {
-        const ch = b.getAttribute('data-channel');
-        document.querySelectorAll(`#${cfg.seg} button`).forEach(x => x.classList.toggle('on', x === b));
-        if (!_settings[cfg.key]) _settings[cfg.key] = {};
-        _settings[cfg.key].channel = ch;
-        document.getElementById(cfg.smsId).style.display = ch === 'sms' ? '' : 'none';
-        document.getElementById(cfg.emailId).style.display = ch === 'email' ? '' : 'none';
-        setDirty(true);
-      });
-    });
-  });
-
   /* Auto-reply channel chips */
-  ['sms','instagram','facebook'].forEach(ch => {
+  ['instagram','facebook'].forEach(ch => {
     document.getElementById('ar-ch-' + ch).addEventListener('click', function() {
       const next = !this.classList.contains('on');
       this.classList.toggle('on', next);
@@ -943,19 +855,8 @@ function populate(settings) {
       el.value = val;
     }
   });
-  /* Channel segment + SMS/email visibility for every scheduled automation */
-  [
-    { seg: 'qf-channel-seg',  key: 'quoteFollowup',   smsId: 'qf-sms-fields',  emailId: 'qf-email-fields'  },
-    { seg: 'inv-channel-seg', key: 'invoiceFollowup', smsId: 'inv-sms-fields', emailId: 'inv-email-fields' },
-    { seg: 'rev-channel-seg', key: 'reviewRequest',   smsId: 'rev-sms-fields', emailId: 'rev-email-fields' },
-  ].forEach(cfg => {
-    const ch = (settings[cfg.key] && settings[cfg.key].channel) || 'sms';
-    document.querySelectorAll(`#${cfg.seg} button`).forEach(b => b.classList.toggle('on', b.getAttribute('data-channel') === ch));
-    document.getElementById(cfg.smsId).style.display = ch === 'sms' ? '' : 'none';
-    document.getElementById(cfg.emailId).style.display = ch === 'email' ? '' : 'none';
-  });
   /* Auto-reply channels */
-  ['sms','instagram','facebook'].forEach(c => {
+  ['instagram','facebook'].forEach(c => {
     document.getElementById('ar-ch-' + c).classList.toggle('on', !!settings.autoReply.channels[c]);
   });
   refreshPills();
