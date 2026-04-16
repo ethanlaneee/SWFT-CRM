@@ -36,6 +36,27 @@ const DEFAULT_AUTO_REPLY_INSTRUCTIONS =
   "Never quote prices beyond what's provided in business info. " +
   "If the customer wants to schedule or needs a firm answer, let them know the owner will follow up.";
 
+const DEFAULT_INVOICE_FOLLOWUP_SMS =
+  "Hi {customerFirstName}, this is {yourFirstName} from {companyName}. " +
+  "Just a friendly reminder that your invoice for {total} is still open — " +
+  "let me know if you have any questions or need the payment link resent.";
+
+const DEFAULT_INVOICE_FOLLOWUP_EMAIL =
+  "Hi {customerFirstName},\n\n" +
+  "Just a friendly reminder that your invoice for {total} is still open. " +
+  "Let me know if you have any questions — happy to resend the payment link or set up a payment plan if that's easier.\n\n" +
+  "Thanks,\n{yourName}\n{companyName}";
+
+const DEFAULT_REVIEW_REQUEST_SMS =
+  "Hi {customerFirstName}, thanks again for choosing {companyName}! " +
+  "If you have a minute, we'd love a quick review — it really helps small businesses like ours: {reviewLink}";
+
+const DEFAULT_REVIEW_REQUEST_EMAIL =
+  "Hi {customerFirstName},\n\n" +
+  "Thanks again for choosing {companyName} — it was a pleasure working with you.\n\n" +
+  "If you have a minute, we'd love a quick review. Word-of-mouth means everything to a business like ours: {reviewLink}\n\n" +
+  "Thanks,\n{yourName}\n{companyName}";
+
 const DEFAULTS = Object.freeze({
   quoteFollowup: {
     enabled: true,
@@ -49,6 +70,32 @@ const DEFAULTS = Object.freeze({
     aiSkipIfAccepted: true,                   // run AI check before sending
     aiAutoApproveQuote: true,                 // mark quote approved when AI detects acceptance
     aiSkipIfRejected: true,                   // skip if AI detects rejection too
+    aiModel: "claude-haiku-4-5-20251001",
+  },
+  invoiceFollowup: {
+    enabled: true,
+    delayDays: 7,
+    delayHours: 0,
+    sendAtTime: "09:00",
+    channel: "sms",
+    smsTemplate: DEFAULT_INVOICE_FOLLOWUP_SMS,
+    emailSubject: "Friendly reminder: open invoice",
+    emailTemplate: DEFAULT_INVOICE_FOLLOWUP_EMAIL,
+    aiSkipIfPaid: true,                       // CRM already says paid → skip
+    aiSkipIfPromised: true,                   // AI detects "I'll pay Friday" → skip
+    aiModel: "claude-haiku-4-5-20251001",
+  },
+  reviewRequest: {
+    enabled: true,
+    delayDays: 1,
+    delayHours: 0,
+    sendAtTime: "10:00",
+    channel: "sms",
+    reviewLink: "",                           // Google / Yelp review URL
+    smsTemplate: DEFAULT_REVIEW_REQUEST_SMS,
+    emailSubject: "Thanks from {companyName}",
+    emailTemplate: DEFAULT_REVIEW_REQUEST_EMAIL,
+    aiSkipIfUnhappy: true,                    // skip if AI detects complaint in recent convo
     aiModel: "claude-haiku-4-5-20251001",
   },
   autoReply: {
@@ -74,7 +121,9 @@ const DEFAULTS = Object.freeze({
 function withDefaults(stored) {
   const s = stored || {};
   return {
-    quoteFollowup: { ...DEFAULTS.quoteFollowup, ...(s.quoteFollowup || {}) },
+    quoteFollowup:   { ...DEFAULTS.quoteFollowup,   ...(s.quoteFollowup   || {}) },
+    invoiceFollowup: { ...DEFAULTS.invoiceFollowup, ...(s.invoiceFollowup || {}) },
+    reviewRequest:   { ...DEFAULTS.reviewRequest,   ...(s.reviewRequest   || {}) },
     autoReply: {
       ...DEFAULTS.autoReply,
       ...(s.autoReply || {}),
@@ -134,6 +183,40 @@ router.put("/", async (req, res, next) => {
         aiAutoApproveQuote: Boolean(q.aiAutoApproveQuote),
         aiSkipIfRejected: Boolean(q.aiSkipIfRejected),
         aiModel: String(q.aiModel || DEFAULTS.quoteFollowup.aiModel),
+      };
+    }
+
+    if (body.invoiceFollowup && typeof body.invoiceFollowup === "object") {
+      const q = body.invoiceFollowup;
+      updates.invoiceFollowup = {
+        enabled: Boolean(q.enabled),
+        delayDays: Math.max(0, Math.min(365, Number(q.delayDays) || 0)),
+        delayHours: Math.max(0, Math.min(23, Number(q.delayHours) || 0)),
+        sendAtTime: String(q.sendAtTime || "09:00").slice(0, 5),
+        channel: q.channel === "email" ? "email" : "sms",
+        smsTemplate: String(q.smsTemplate || ""),
+        emailSubject: String(q.emailSubject || ""),
+        emailTemplate: String(q.emailTemplate || ""),
+        aiSkipIfPaid: Boolean(q.aiSkipIfPaid),
+        aiSkipIfPromised: Boolean(q.aiSkipIfPromised),
+        aiModel: String(q.aiModel || DEFAULTS.invoiceFollowup.aiModel),
+      };
+    }
+
+    if (body.reviewRequest && typeof body.reviewRequest === "object") {
+      const q = body.reviewRequest;
+      updates.reviewRequest = {
+        enabled: Boolean(q.enabled),
+        delayDays: Math.max(0, Math.min(365, Number(q.delayDays) || 0)),
+        delayHours: Math.max(0, Math.min(23, Number(q.delayHours) || 0)),
+        sendAtTime: String(q.sendAtTime || "10:00").slice(0, 5),
+        channel: q.channel === "email" ? "email" : "sms",
+        reviewLink: String(q.reviewLink || "").slice(0, 500),
+        smsTemplate: String(q.smsTemplate || ""),
+        emailSubject: String(q.emailSubject || ""),
+        emailTemplate: String(q.emailTemplate || ""),
+        aiSkipIfUnhappy: Boolean(q.aiSkipIfUnhappy),
+        aiModel: String(q.aiModel || DEFAULTS.reviewRequest.aiModel),
       };
     }
 

@@ -136,6 +136,18 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:v
 .sub-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .sub-label-icon{color:var(--amber);}
 
+/* Page-level tabs */
+.page-tabs{display:flex;align-items:center;gap:2px;padding:0 2px;border-bottom:1px solid var(--border);margin:0 0 26px;overflow-x:auto;scrollbar-width:none;}
+.page-tabs::-webkit-scrollbar{display:none;}
+.ptab{font-size:13px;font-weight:500;padding:11px 16px;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color 0.14s,border-color 0.14s;user-select:none;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.ptab:hover{color:var(--white);}
+.ptab.active{color:var(--green);border-bottom-color:var(--green);}
+.ptab-icon{width:14px;height:14px;flex-shrink:0;opacity:0.9;}
+.ptab-dot{width:6px;height:6px;border-radius:50%;background:var(--gray2);flex-shrink:0;}
+.ptab-dot.on{background:var(--green);box-shadow:0 0 6px rgba(200,241,53,0.5);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadeUp 0.25s cubic-bezier(0.22,1,0.36,1) both;}
+
 /* Pending messages */
 .section-head{display:flex;align-items:center;gap:10px;margin:36px 0 14px;cursor:pointer;user-select:none;}
 .section-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white);}
@@ -233,6 +245,38 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <span id="save-label">Saved</span>
     </button>
   </div>
+
+  <!-- Page-level tabs -->
+  <div class="page-tabs" id="page-tabs">
+    <div class="ptab active" data-tab="qf" onclick="switchTab('qf')">
+      <span class="ptab-dot on" id="dot-qf"></span>
+      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>
+      Quote Follow-Ups
+    </div>
+    <div class="ptab" data-tab="inv" onclick="switchTab('inv')">
+      <span class="ptab-dot on" id="dot-inv"></span>
+      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Invoice Follow-Ups
+    </div>
+    <div class="ptab" data-tab="rev" onclick="switchTab('rev')">
+      <span class="ptab-dot on" id="dot-rev"></span>
+      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Review Requests
+    </div>
+    <div class="ptab" data-tab="ar" onclick="switchTab('ar')">
+      <span class="ptab-dot on" id="dot-ar"></span>
+      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>
+      Inbound Replies
+    </div>
+    <div class="ptab" data-tab="mem" onclick="switchTab('mem')">
+      <span class="ptab-dot on" id="dot-mem"></span>
+      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z" stroke-width="1.8"/><path d="M8 14v3a4 4 0 0 0 8 0v-3" stroke-width="1.8"/></svg>
+      Customer Memory
+    </div>
+  </div>
+
+  <!-- Tab: Quote Follow-Ups -->
+  <div class="tab-panel active" id="panel-qf">
 
   <div class="flow-banner">
     <div class="flow-banner-title">How the quote follow-up works</div>
@@ -381,6 +425,288 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
   </div>
 
+  </div><!-- /panel-qf -->
+
+  <!-- Tab: Invoice Follow-Ups -->
+  <div class="tab-panel" id="panel-inv">
+
+  <div class="flow-banner">
+    <div class="flow-banner-title">How the invoice follow-up works</div>
+    <div class="flow-strip">
+      <div class="flow-step">
+        <div class="flow-dot c1"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="flow-step-label" style="color:var(--blue);">Invoice Sent</div>
+        <div class="flow-step-value">Customer receives the invoice by SMS or email</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c2"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--amber);">Wait</div>
+        <div class="flow-step-value" id="flow-wait-text-inv">7 days at 9:00 AM ET</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c3"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1M4.22 4.22l.71.71M1 12h1M20 12h1M19.07 4.22l-.71.71" stroke-width="2" stroke-linecap="round"/><path d="M12 17a5 5 0 0 0 5-5 5 5 0 1 0-10 0 5 5 0 0 0 5 5z" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--purple);">AI Check</div>
+        <div class="flow-step-value">Skip if invoice already paid or customer promised a payment time</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c4"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--green);">Nudge</div>
+        <div class="flow-step-value">Friendly reminder — never nagging</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="behavior" id="card-inv">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon qf"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+        <div>
+          <div class="behavior-title">Invoice Follow-Up</div>
+          <div class="behavior-desc">Gently reminds customers about unpaid invoices — only if they haven't already paid or promised a payment time in conversation.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="inv-pill">Active</span>
+        <button class="toggle on" id="inv-enabled" data-bind="invoiceFollowup.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="inv-body">
+      <div class="grid-3">
+        <div class="field">
+          <label class="field-label">Wait time (days)</label>
+          <input class="form-input" type="number" min="0" max="365" id="inv-delay-days" data-bind="invoiceFollowup.delayDays" value="7"/>
+          <div class="field-hint">How many days after the invoice is sent.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Extra hours</label>
+          <input class="form-input" type="number" min="0" max="23" id="inv-delay-hours" data-bind="invoiceFollowup.delayHours" value="0"/>
+          <div class="field-hint">Set to 0 unless you want sub-day delay.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Send at (ET)</label>
+          <input class="form-input" type="time" id="inv-send-time" data-bind="invoiceFollowup.sendAtTime" value="09:00"/>
+          <div class="field-hint">Never sends outside this local time window.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Channel</label>
+        <div class="segment" id="inv-channel-seg">
+          <button type="button" data-channel="sms" class="on">SMS</button>
+          <button type="button" data-channel="email">Email</button>
+        </div>
+        <div class="field-hint">Email replies thread into the original invoice email so the customer sees the conversation.</div>
+      </div>
+      <div id="inv-sms-fields">
+        <div class="field">
+          <label class="field-label">SMS template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="inv-sms-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="inv-sms-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="inv-sms-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="inv-sms-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="inv-sms-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="inv-sms-template" data-val="{total}">{total}</span>
+            <span class="var-chip" data-target="inv-sms-template" data-val="{invoiceNumber}">{invoiceNumber}</span>
+          </div>
+          <textarea class="form-textarea" id="inv-sms-template" data-bind="invoiceFollowup.smsTemplate" placeholder="Hi {customerFirstName}, just a friendly reminder..."></textarea>
+        </div>
+      </div>
+      <div id="inv-email-fields" style="display:none;">
+        <div class="field">
+          <label class="field-label">Email subject</label>
+          <input class="form-input" id="inv-email-subject" data-bind="invoiceFollowup.emailSubject" placeholder="Friendly reminder: open invoice"/>
+          <div class="field-hint">When this email threads onto an existing invoice conversation, the subject becomes <code style="color:var(--gray);">Re: &lt;original&gt;</code> automatically.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Email template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="inv-email-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="inv-email-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="inv-email-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="inv-email-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="inv-email-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="inv-email-template" data-val="{total}">{total}</span>
+            <span class="var-chip" data-target="inv-email-template" data-val="{invoiceNumber}">{invoiceNumber}</span>
+          </div>
+          <textarea class="form-textarea" id="inv-email-template" data-bind="invoiceFollowup.emailTemplate" style="min-height:140px;" placeholder="Hi {customerFirstName},&#10;&#10;Just a friendly reminder..."></textarea>
+        </div>
+      </div>
+      <div class="sub-section">
+        <div class="sub-label">
+          <svg class="sub-label-icon" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--purple);"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-width="2" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-width="2" stroke-linejoin="round"/><path d="M2 12l10 5 10-5" stroke-width="2" stroke-linejoin="round"/></svg>
+          AI Safeguards (before sending)
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Skip if the invoice is already paid</div>
+            <div class="toggle-row-desc">Checks the invoice record right before sending. If it's been marked paid (Stripe, Square, or manual), the reminder is skipped.</div>
+          </div>
+          <button class="toggle on" id="inv-ai-skip-paid" data-bind="invoiceFollowup.aiSkipIfPaid"></button>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Skip if the customer promised a payment time</div>
+            <div class="toggle-row-desc">Claude reads the thread. If the customer said "I'll send it Friday" or "paid via Zelle this morning," no reminder goes out.</div>
+          </div>
+          <button class="toggle on" id="inv-ai-skip-promised" data-bind="invoiceFollowup.aiSkipIfPromised"></button>
+        </div>
+        <div class="field" style="margin-top:18px;margin-bottom:0;">
+          <label class="field-label">Model used for the conversation check</label>
+          <select class="form-select" id="inv-ai-model" data-bind="invoiceFollowup.aiModel">
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast, cheap, recommended</option>
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — slower, better at subtle language</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — most accurate, highest cost</option>
+          </select>
+          <div class="field-hint">Haiku handles this job well — it just needs to classify PAID / PROMISED / PENDING.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /panel-inv -->
+
+  <!-- Tab: Review Requests -->
+  <div class="tab-panel" id="panel-rev">
+
+  <div class="flow-banner">
+    <div class="flow-banner-title">How the review request works</div>
+    <div class="flow-strip">
+      <div class="flow-step">
+        <div class="flow-dot c1"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="flow-step-label" style="color:var(--blue);">Job Complete</div>
+        <div class="flow-step-value">Triggered when a job is marked complete</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c2"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--amber);">Wait</div>
+        <div class="flow-step-value" id="flow-wait-text-rev">1 day at 10:00 AM ET</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c3"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1M4.22 4.22l.71.71M1 12h1M20 12h1M19.07 4.22l-.71.71" stroke-width="2" stroke-linecap="round"/><path d="M12 17a5 5 0 0 0 5-5 5 5 0 1 0-10 0 5 5 0 0 0 5 5z" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--purple);">AI Sentiment Check</div>
+        <div class="flow-step-value">Skip if Claude detects a frustrated or unhappy customer</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c4"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke-width="2" stroke-linejoin="round"/></svg></div>
+        <div class="flow-step-label" style="color:var(--green);">Ask</div>
+        <div class="flow-step-value">Happy customer → public review request</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="behavior" id="card-rev">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon qf"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="behavior-title">Review Request</div>
+          <div class="behavior-desc">Automatically asks happy customers for a review after the job wraps. Claude reads the thread first to avoid asking anyone who sounds unhappy.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="rev-pill">Active</span>
+        <button class="toggle on" id="rev-enabled" data-bind="reviewRequest.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="rev-body">
+      <div class="grid-3">
+        <div class="field">
+          <label class="field-label">Wait time (days)</label>
+          <input class="form-input" type="number" min="0" max="365" id="rev-delay-days" data-bind="reviewRequest.delayDays" value="1"/>
+          <div class="field-hint">Days after the job is marked complete.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Extra hours</label>
+          <input class="form-input" type="number" min="0" max="23" id="rev-delay-hours" data-bind="reviewRequest.delayHours" value="0"/>
+          <div class="field-hint">Set to 0 unless you want sub-day delay.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Send at (ET)</label>
+          <input class="form-input" type="time" id="rev-send-time" data-bind="reviewRequest.sendAtTime" value="10:00"/>
+          <div class="field-hint">Never sends outside this local time window.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Review link</label>
+        <input class="form-input" id="rev-link" data-bind="reviewRequest.reviewLink" placeholder="https://g.page/r/your-google-review-link"/>
+        <div class="field-hint">Paste your Google review short-link, Yelp URL, or wherever you want reviews to land. Gets inserted wherever you use <code style="color:var(--gray);">{reviewLink}</code>.</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Channel</label>
+        <div class="segment" id="rev-channel-seg">
+          <button type="button" data-channel="sms" class="on">SMS</button>
+          <button type="button" data-channel="email">Email</button>
+        </div>
+        <div class="field-hint">SMS gets you more reviews — people click the link right from their phone.</div>
+      </div>
+      <div id="rev-sms-fields">
+        <div class="field">
+          <label class="field-label">SMS template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="rev-sms-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="rev-sms-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="rev-sms-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="rev-sms-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="rev-sms-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="rev-sms-template" data-val="{reviewLink}">{reviewLink}</span>
+          </div>
+          <textarea class="form-textarea" id="rev-sms-template" data-bind="reviewRequest.smsTemplate" placeholder="Hi {customerFirstName}, thanks so much for choosing {companyName}..."></textarea>
+        </div>
+      </div>
+      <div id="rev-email-fields" style="display:none;">
+        <div class="field">
+          <label class="field-label">Email subject</label>
+          <input class="form-input" id="rev-email-subject" data-bind="reviewRequest.emailSubject" placeholder="Thanks from {companyName}"/>
+        </div>
+        <div class="field">
+          <label class="field-label">Email template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="rev-email-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="rev-email-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="rev-email-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="rev-email-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="rev-email-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="rev-email-template" data-val="{reviewLink}">{reviewLink}</span>
+          </div>
+          <textarea class="form-textarea" id="rev-email-template" data-bind="reviewRequest.emailTemplate" style="min-height:140px;" placeholder="Hi {customerFirstName},&#10;&#10;Thanks again for choosing..."></textarea>
+        </div>
+      </div>
+      <div class="sub-section">
+        <div class="sub-label">
+          <svg class="sub-label-icon" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--purple);"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-width="2" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-width="2" stroke-linejoin="round"/><path d="M2 12l10 5 10-5" stroke-width="2" stroke-linejoin="round"/></svg>
+          AI Safeguards (before sending)
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Skip if the customer sounds unhappy</div>
+            <div class="toggle-row-desc">Claude reads the recent conversation. If there's a complaint, frustration, or unresolved issue, no review ask is sent — this protects your star rating.</div>
+          </div>
+          <button class="toggle on" id="rev-ai-skip-unhappy" data-bind="reviewRequest.aiSkipIfUnhappy"></button>
+        </div>
+        <div class="field" style="margin-top:18px;margin-bottom:0;">
+          <label class="field-label">Model used for the sentiment check</label>
+          <select class="form-select" id="rev-ai-model" data-bind="reviewRequest.aiModel">
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast, cheap, recommended</option>
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — slower, better at subtle language</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — most accurate, highest cost</option>
+          </select>
+          <div class="field-hint">Haiku handles this well — it just needs to classify HAPPY / UNHAPPY / NEUTRAL.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /panel-rev -->
+
+  <!-- Tab: Inbound Auto-Reply -->
+  <div class="tab-panel" id="panel-ar">
+
   <div class="behavior" id="card-ar">
     <div class="behavior-head">
       <div class="behavior-head-left">
@@ -436,6 +762,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
   </div>
 
+  </div><!-- /panel-ar -->
+
+  <!-- Tab: Customer Memory -->
+  <div class="tab-panel" id="panel-mem">
+
   <div class="behavior" id="card-mem">
     <div class="behavior-head">
       <div class="behavior-head-left">
@@ -470,6 +801,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
   </div>
 
+  </div><!-- /panel-mem -->
+
   <div class="section-head" onclick="togglePending()">
     <div class="section-title">Upcoming AI Actions</div>
     <div class="section-count" id="pending-count">0</div>
@@ -479,7 +812,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="pending-wrap">
       <table class="pending-table" id="pending-table">
         <thead><tr><th>Customer</th><th>Action</th><th>Fires At</th><th>Status</th><th></th></tr></thead>
-        <tbody id="pending-body"><tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups show up here as quotes go out.</td></tr></tbody>
+        <tbody id="pending-body"><tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups, review asks, and reminders show up here as they get scheduled.</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -550,15 +883,22 @@ function bindInputs() {
     }
   });
 
-  /* Channel segment (SMS/Email) for Quote Follow-up */
-  document.querySelectorAll('#qf-channel-seg button').forEach(b => {
-    b.addEventListener('click', () => {
-      const ch = b.getAttribute('data-channel');
-      document.querySelectorAll('#qf-channel-seg button').forEach(x => x.classList.toggle('on', x === b));
-      _settings.quoteFollowup.channel = ch;
-      document.getElementById('qf-sms-fields').style.display = ch === 'sms' ? '' : 'none';
-      document.getElementById('qf-email-fields').style.display = ch === 'email' ? '' : 'none';
-      setDirty(true);
+  /* Channel segment (SMS/Email) for every scheduled automation */
+  [
+    { seg: 'qf-channel-seg',  key: 'quoteFollowup',   smsId: 'qf-sms-fields',  emailId: 'qf-email-fields'  },
+    { seg: 'inv-channel-seg', key: 'invoiceFollowup', smsId: 'inv-sms-fields', emailId: 'inv-email-fields' },
+    { seg: 'rev-channel-seg', key: 'reviewRequest',   smsId: 'rev-sms-fields', emailId: 'rev-email-fields' },
+  ].forEach(cfg => {
+    document.querySelectorAll(`#${cfg.seg} button`).forEach(b => {
+      b.addEventListener('click', () => {
+        const ch = b.getAttribute('data-channel');
+        document.querySelectorAll(`#${cfg.seg} button`).forEach(x => x.classList.toggle('on', x === b));
+        if (!_settings[cfg.key]) _settings[cfg.key] = {};
+        _settings[cfg.key].channel = ch;
+        document.getElementById(cfg.smsId).style.display = ch === 'sms' ? '' : 'none';
+        document.getElementById(cfg.emailId).style.display = ch === 'email' ? '' : 'none';
+        setDirty(true);
+      });
     });
   });
 
@@ -610,11 +950,17 @@ function populate(settings) {
       el.value = val;
     }
   });
-  /* Channel segment + SMS/email visibility */
-  const ch = settings.quoteFollowup.channel || 'sms';
-  document.querySelectorAll('#qf-channel-seg button').forEach(b => b.classList.toggle('on', b.getAttribute('data-channel') === ch));
-  document.getElementById('qf-sms-fields').style.display = ch === 'sms' ? '' : 'none';
-  document.getElementById('qf-email-fields').style.display = ch === 'email' ? '' : 'none';
+  /* Channel segment + SMS/email visibility for every scheduled automation */
+  [
+    { seg: 'qf-channel-seg',  key: 'quoteFollowup',   smsId: 'qf-sms-fields',  emailId: 'qf-email-fields'  },
+    { seg: 'inv-channel-seg', key: 'invoiceFollowup', smsId: 'inv-sms-fields', emailId: 'inv-email-fields' },
+    { seg: 'rev-channel-seg', key: 'reviewRequest',   smsId: 'rev-sms-fields', emailId: 'rev-email-fields' },
+  ].forEach(cfg => {
+    const ch = (settings[cfg.key] && settings[cfg.key].channel) || 'sms';
+    document.querySelectorAll(`#${cfg.seg} button`).forEach(b => b.classList.toggle('on', b.getAttribute('data-channel') === ch));
+    document.getElementById(cfg.smsId).style.display = ch === 'sms' ? '' : 'none';
+    document.getElementById(cfg.emailId).style.display = ch === 'email' ? '' : 'none';
+  });
   /* Auto-reply channels */
   ['sms','instagram','facebook'].forEach(c => {
     document.getElementById('ar-ch-' + c).classList.toggle('on', !!settings.autoReply.channels[c]);
@@ -624,24 +970,30 @@ function populate(settings) {
 
 function refreshPills() {
   const map = [
-    ['qf-pill', _settings?.quoteFollowup?.enabled, 'card-qf'],
-    ['ar-pill', _settings?.autoReply?.enabled, 'card-ar'],
-    ['mem-pill', _settings?.customerMemory?.enabled, 'card-mem'],
+    ['qf-pill',  _settings?.quoteFollowup?.enabled,   'card-qf',  'dot-qf'],
+    ['inv-pill', _settings?.invoiceFollowup?.enabled, 'card-inv', 'dot-inv'],
+    ['rev-pill', _settings?.reviewRequest?.enabled,   'card-rev', 'dot-rev'],
+    ['ar-pill',  _settings?.autoReply?.enabled,       'card-ar',  'dot-ar'],
+    ['mem-pill', _settings?.customerMemory?.enabled,  'card-mem', 'dot-mem'],
   ];
-  map.forEach(([pillId, on, cardId]) => {
+  map.forEach(([pillId, on, cardId, dotId]) => {
     const pill = document.getElementById(pillId);
     const card = document.getElementById(cardId);
+    const dot = document.getElementById(dotId);
     if (pill) {
       pill.className = 'behavior-pill ' + (on ? 'on' : 'off');
       pill.textContent = on ? 'Active' : 'Paused';
     }
     if (card) card.classList.toggle('off', !on);
+    if (dot) dot.classList.toggle('on', !!on);
   });
-  /* Update flow banner wait text */
-  if (_settings?.quoteFollowup) {
-    const d = _settings.quoteFollowup.delayDays || 0;
-    const h = _settings.quoteFollowup.delayHours || 0;
-    const t = _settings.quoteFollowup.sendAtTime || '09:00';
+
+  /* Flow-banner wait text — per scheduled automation */
+  const waitText = cfg => {
+    if (!cfg) return '';
+    const d = cfg.delayDays || 0;
+    const h = cfg.delayHours || 0;
+    const t = cfg.sendAtTime || '09:00';
     const parts = [];
     if (d) parts.push(d + ' day' + (d === 1 ? '' : 's'));
     if (h) parts.push(h + ' hr' + (h === 1 ? '' : 's'));
@@ -650,10 +1002,22 @@ function refreshPills() {
     const ap = hh >= 12 ? 'PM' : 'AM';
     const h12 = hh % 12 || 12;
     const timeText = mm === 0 ? `${h12}:00 ${ap}` : `${h12}:${String(mm).padStart(2,'0')} ${ap}`;
-    const el = document.getElementById('flow-wait-text');
-    if (el) el.textContent = `${delayText} at ${timeText} ET`;
-  }
+    return `${delayText} at ${timeText} ET`;
+  };
+  const qfEl  = document.getElementById('flow-wait-text');
+  const invEl = document.getElementById('flow-wait-text-inv');
+  const revEl = document.getElementById('flow-wait-text-rev');
+  if (qfEl)  qfEl.textContent  = waitText(_settings?.quoteFollowup);
+  if (invEl) invEl.textContent = waitText(_settings?.invoiceFollowup);
+  if (revEl) revEl.textContent = waitText(_settings?.reviewRequest);
 }
+
+/* Tab switching */
+window.switchTab = function(name) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  try { history.replaceState(null, '', '#' + name); } catch (_) {}
+};
 
 window.saveAll = async function() {
   if (!_settings) return;
@@ -697,7 +1061,7 @@ async function loadPending() {
     document.getElementById('pending-count').textContent = msgs.length;
     const body = document.getElementById('pending-body');
     if (!msgs.length) {
-      body.innerHTML = '<tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups show up here as quotes go out.</td></tr>';
+      body.innerHTML = '<tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups, review asks, and reminders show up here as they get scheduled.</td></tr>';
       return;
     }
     const statusMap = { pending: 'status-pending', sent: 'status-sent', failed: 'status-failed', retrying: 'status-pending' };
@@ -738,6 +1102,8 @@ async function init() {
     populate(s);
     bindInputs();
     setDirty(false);
+    const hash = (location.hash || '').replace('#', '');
+    if (['qf','inv','rev','ar','mem'].includes(hash)) switchTab(hash);
   } catch (e) {
     toast('Failed to load AI settings: ' + (e.message || 'error'), true);
   }

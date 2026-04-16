@@ -5,6 +5,8 @@ const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
 const { isQuoteAcceptedInConversation } = require("../utils/quoteConversationCheck");
+const { detectInvoicePaymentPromise } = require("../utils/invoiceConversationCheck");
+const { detectCustomerUnhappy } = require("../utils/reviewConversationCheck");
 const { getAiSettings } = require("./aiSettings");
 
 const APP_URL = process.env.APP_URL || "https://goswft.com";
@@ -171,6 +173,165 @@ async function scheduleQuoteFollowupFromSettings(orgId, customer, emailContext, 
   console.log(`[aiSettings] Scheduled quote follow-up for customer ${customer.id} at ${new Date(sendAt).toISOString()}`);
 }
 
+/**
+ * Build the common template-variable bag used by all AI-driven schedulers.
+ */
+function buildTemplateVars(customer, orgUser, extra = {}) {
+  const companyName = orgUser.company || orgUser.name || "";
+  const senderFullName = orgUser.name || "";
+  const senderFirstName = senderFullName.split(" ")[0] || "";
+  return {
+    customer_name: customer.name || "",
+    customerName: customer.name || "",
+    customerFullName: customer.name || "",
+    firstName: (customer.name || "").split(" ")[0] || "",
+    customerFirstName: (customer.name || "").split(" ")[0] || "",
+    company_name: companyName,
+    companyName: companyName,
+    your_name: senderFullName,
+    yourName: senderFullName,
+    your_first_name: senderFirstName,
+    yourFirstName: senderFirstName,
+    senderName: senderFullName,
+    service: customer.service || "",
+    total: customer.total != null ? `$${Number(customer.total).toLocaleString()}` : "",
+    address: customer.address || "",
+    link: "",
+    survey_link: "",
+    ...extra,
+  };
+}
+
+/**
+ * Schedule an invoice follow-up from aiSettings.invoiceFollowup.
+ * Fires on the `invoice_sent` trigger — skips if the invoice gets paid
+ * before sendAt (checked at worker time via scheduledMsgResolved).
+ */
+async function scheduleInvoiceFollowupFromSettings(orgId, customer, emailContext, orgUser) {
+  const settings = await getAiSettings(orgId);
+  const cfg = settings.invoiceFollowup;
+  if (!cfg.enabled) return;
+  if (!customer.invoiceId) return;
+
+  const now = Date.now();
+
+  const existingSnap = await db.collection("scheduledMessages")
+    .where("orgId", "==", orgId)
+    .where("targetId", "==", customer.invoiceId)
+    .where("source", "==", "aiSettings:invoiceFollowup")
+    .where("status", "==", "pending")
+    .limit(1)
+    .get();
+  if (!existingSnap.empty) {
+    console.log(`[aiSettings] Invoice follow-up already pending for invoice ${customer.invoiceId}`);
+    return;
+  }
+
+  const vars = buildTemplateVars(customer, orgUser, {
+    invoiceNumber: customer.invoiceNumber || customer.invoiceId || "",
+  });
+
+  const template = cfg.channel === "email" ? cfg.emailTemplate : cfg.smsTemplate;
+  const resolvedMessage = resolveTemplate(template || "", vars);
+  const resolvedSubject = cfg.channel === "email"
+    ? resolveTemplate(cfg.emailSubject || "Friendly reminder: open invoice", vars)
+    : "";
+  const sendAt = computeSendAt(now, cfg.delayDays, cfg.delayHours, cfg.sendAtTime);
+
+  await db.collection("scheduledMessages").add({
+    orgId,
+    source: "aiSettings:invoiceFollowup",
+    automationId: null,
+    automationName: "Invoice Follow-up (AI)",
+    trigger: "invoice_sent",
+    customerId: customer.id || "",
+    customerName: customer.name || "",
+    targetId: customer.invoiceId,
+    targetType: "invoice",
+    phone: customer.phone || "",
+    email: customer.email || "",
+    message: resolvedMessage,
+    subject: resolvedSubject,
+    messageType: cfg.channel,
+    sendAt,
+    status: "pending",
+    sentAt: null,
+    error: null,
+    createdAt: now,
+    gmailThreadId: emailContext?.gmailThreadId || null,
+    gmailMessageId: emailContext?.gmailMessageId || null,
+    rfcMessageId: emailContext?.rfcMessageId || null,
+    originalSubject: emailContext?.originalSubject || null,
+  });
+
+  console.log(`[aiSettings] Scheduled invoice follow-up for invoice ${customer.invoiceId} at ${new Date(sendAt).toISOString()}`);
+}
+
+/**
+ * Schedule a review request from aiSettings.reviewRequest.
+ * Fires on `job_completed`. Skipped later if AI detects an unhappy customer.
+ */
+async function scheduleReviewRequestFromSettings(orgId, customer, emailContext, orgUser) {
+  const settings = await getAiSettings(orgId);
+  const cfg = settings.reviewRequest;
+  if (!cfg.enabled) return;
+
+  const now = Date.now();
+
+  // Dedup on customer — don't queue two review asks per day for the same person
+  const existingSnap = await db.collection("scheduledMessages")
+    .where("orgId", "==", orgId)
+    .where("customerId", "==", customer.id || "")
+    .where("source", "==", "aiSettings:reviewRequest")
+    .where("status", "==", "pending")
+    .limit(1)
+    .get();
+  if (!existingSnap.empty) {
+    console.log(`[aiSettings] Review request already pending for customer ${customer.id}`);
+    return;
+  }
+
+  const vars = buildTemplateVars(customer, orgUser, {
+    reviewLink: cfg.reviewLink || "",
+    review_link: cfg.reviewLink || "",
+  });
+
+  const template = cfg.channel === "email" ? cfg.emailTemplate : cfg.smsTemplate;
+  const resolvedMessage = resolveTemplate(template || "", vars);
+  const resolvedSubject = cfg.channel === "email"
+    ? resolveTemplate(cfg.emailSubject || `Thanks from ${vars.companyName}`, vars)
+    : "";
+  const sendAt = computeSendAt(now, cfg.delayDays, cfg.delayHours, cfg.sendAtTime);
+
+  await db.collection("scheduledMessages").add({
+    orgId,
+    source: "aiSettings:reviewRequest",
+    automationId: null,
+    automationName: "Review Request (AI)",
+    trigger: "job_completed",
+    customerId: customer.id || "",
+    customerName: customer.name || "",
+    targetId: null,
+    targetType: null,
+    phone: customer.phone || "",
+    email: customer.email || "",
+    message: resolvedMessage,
+    subject: resolvedSubject,
+    messageType: cfg.channel,
+    sendAt,
+    status: "pending",
+    sentAt: null,
+    error: null,
+    createdAt: now,
+    gmailThreadId: emailContext?.gmailThreadId || null,
+    gmailMessageId: emailContext?.gmailMessageId || null,
+    rfcMessageId: emailContext?.rfcMessageId || null,
+    originalSubject: emailContext?.originalSubject || null,
+  });
+
+  console.log(`[aiSettings] Scheduled review request for customer ${customer.id} at ${new Date(sendAt).toISOString()}`);
+}
+
 async function triggerAutomation(orgId, trigger, customer, emailContext) {
   try {
     // Fetch org owner user doc once — needed by both paths
@@ -183,10 +344,20 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
       if (!usersSnap.empty) orgUser = usersSnap.docs[0].data();
     }
 
-    // Primary path: settings-driven quote follow-up
+    // Primary path: settings-driven schedulers
     if (trigger === "quote_sent") {
       await scheduleQuoteFollowupFromSettings(orgId, customer, emailContext, orgUser).catch(e =>
-        console.error("[aiSettings] schedule error:", e.message)
+        console.error("[aiSettings] quoteFollowup schedule error:", e.message)
+      );
+    }
+    if (trigger === "invoice_sent") {
+      await scheduleInvoiceFollowupFromSettings(orgId, customer, emailContext, orgUser).catch(e =>
+        console.error("[aiSettings] invoiceFollowup schedule error:", e.message)
+      );
+    }
+    if (trigger === "job_completed") {
+      await scheduleReviewRequestFromSettings(orgId, customer, emailContext, orgUser).catch(e =>
+        console.error("[aiSettings] reviewRequest schedule error:", e.message)
       );
     }
 
@@ -410,7 +581,39 @@ async function scheduledMsgResolved(msg) {
   if (msg.trigger === "invoice_sent" || msg.targetType === "invoice") {
     const doc = await db.collection("invoices").doc(msg.targetId).get();
     if (!doc.exists) return true;
-    return doc.data().status === "paid";
+    const invoice = doc.data();
+
+    // 1. Already paid per the CRM
+    if (invoice.status === "paid") return true;
+
+    // 2. AI safeguards for aiSettings-driven follow-ups
+    if (msg.source === "aiSettings:invoiceFollowup" && msg.orgId && msg.customerId) {
+      const settings = await getAiSettings(msg.orgId);
+      const cfg = settings.invoiceFollowup;
+      if (cfg.aiSkipIfPromised) {
+        const verdict = await detectInvoicePaymentPromise(
+          msg.orgId, msg.customerId, msg.targetId, invoice,
+          { model: cfg.aiModel }
+        );
+        if (verdict === "PROMISED" || verdict === "PAID") return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Review requests — AI-check for unhappy customer before sending
+  if (msg.source === "aiSettings:reviewRequest" && msg.orgId && msg.customerId) {
+    const settings = await getAiSettings(msg.orgId);
+    const cfg = settings.reviewRequest;
+    if (cfg.aiSkipIfUnhappy) {
+      const verdict = await detectCustomerUnhappy(
+        msg.orgId, msg.customerId,
+        { model: cfg.aiModel }
+      );
+      if (verdict === "UNHAPPY") return true;
+    }
+    return false;
   }
 
   return false;
