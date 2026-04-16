@@ -357,6 +357,9 @@ const DEFAULT_PERMISSIONS = [
   // Intake Forms
   { id: "intake.view",          label: "View Intake Requests",   group: "Intake" },
   { id: "intake.manage",        label: "Manage Intake Forms",    group: "Intake" },
+  // Team Chat
+  { id: "teamchat.view",        label: "View Team Chat",         group: "Team Chat" },
+  { id: "teamchat.send",        label: "Send Team Messages",     group: "Team Chat" },
   // Data
   { id: "import.use",           label: "Import Customer Data",   group: "Data" },
   // Admin
@@ -386,6 +389,7 @@ const BUILT_IN_ROLES = {
     "reviews.view","reviews.respond",
     "intake.view","intake.manage",
     "import.use",
+    "teamchat.view","teamchat.send",
     "team.manage","integrations.manage","settings.manage",
   ]},
   office: { name: "Office", builtIn: true, permissions: [
@@ -403,6 +407,7 @@ const BUILT_IN_ROLES = {
     "automations.view",
     "reviews.view","reviews.respond",
     "intake.view",
+    "teamchat.view","teamchat.send",
   ]},
   technician: { name: "Technician", builtIn: true, permissions: [
     "dashboard.view",
@@ -411,6 +416,7 @@ const BUILT_IN_ROLES = {
     "messages.view","messages.send",
     // photos.upload intentionally omitted — grant via Roles & Permissions in team settings
     "ai.use",
+    "teamchat.view","teamchat.send",
   ]},
 };
 
