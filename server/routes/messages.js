@@ -2,9 +2,8 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const multer = require("multer");
 const { google } = require("googleapis");
-const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getPlan } = require("../plans");
-const { getUsage, incrementSms } = require("../usage");
+const { getUsage } = require("../usage");
 const { handleInbound } = require("../ai/auto-reply");
 const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email");
 
@@ -119,62 +118,14 @@ const upload = multer({
   },
 });
 
-// POST /api/messages/send — send email (with file attachments) or SMS
+// POST /api/messages/send — send email (with file attachments)
 router.post("/send", upload.array("files", 10), async (req, res, next) => {
   try {
     const { to, subject, body, customerId, customerName, type, quoteId, invoiceId, inReplyTo, replyThreadId, replyReferences } = req.body;
-    const msgType = type || "email";
 
     // Get user profile
     const userDoc = await db.collection("users").doc(req.uid).get();
     const user = userDoc.exists ? userDoc.data() : {};
-
-    if (msgType === "sms") {
-      // ── SMS via Telnyx ──
-      if (!to) return res.status(400).json({ error: "Phone number is required" });
-      if (!body) return res.status(400).json({ error: "Message body is required" });
-
-      // Enforce SMS cap based on user's plan (includes bonus credits from packs)
-      const plan = getPlan(user.plan);
-      if (plan.smsLimit !== Infinity) {
-        const { getEffectiveUsage } = require("../usage");
-        const usage = await getEffectiveUsage(req.uid);
-        const effectiveLimit = plan.smsLimit + (usage.smsCredits || 0);
-        if (usage.smsCount >= effectiveLimit) {
-          return res.status(429).json({
-            error: `SMS limit reached (${plan.smsLimit}/month on the ${plan.name} plan).`,
-            limitReached: true,
-            type: "sms",
-            used: usage.smsCount,
-            limit: plan.smsLimit,
-            credits: usage.smsCredits || 0,
-            currentPlan: user.plan,
-            upgradeTo: user.plan === "starter" ? "pro" : "business",
-            packPrice: 15,
-            packUnits: 200,
-          });
-        }
-      }
-
-      const result = await sendSms(to, body, getUserTelnyxConfig(user));
-
-      await incrementSms(req.uid);
-
-      const msgRecord = {
-        userId: req.uid,
-        to,
-        body: body || "",
-        customerId: customerId || "",
-        customerName: customerName || "",
-        type: "sms",
-        platform: "sms",
-        status: "sent",
-        telnyxMessageId: result.sid,
-        sentAt: Date.now(),
-      };
-      const docRef = await db.collection("messages").add(msgRecord);
-      return res.json({ success: true, id: docRef.id, messageSid: result.sid });
-    }
 
     // ── Email ──
     if (!to || !subject) {
@@ -630,141 +581,4 @@ router.post("/:id/restore", async (req, res, next) => {
   }
 });
 
-/**
- * Telnyx incoming SMS webhook handler (no auth — called by Telnyx directly).
- *
- * Telnyx sends JSON webhooks with this shape:
- * {
- *   data: {
- *     event_type: "message.received",
- *     payload: {
- *       id: "...",
- *       from: { phone_number: "+1..." },
- *       to: [{ phone_number: "+1..." }],
- *       text: "Hello",
- *       direction: "inbound"
- *     }
- *   }
- * }
- */
-async function telnyxIncomingHandler(req, res) {
-  try {
-    console.log("[telnyx-webhook] Incoming event:", JSON.stringify(req.body || {}).slice(0, 300));
-
-    const event = req.body?.data;
-    if (!event || event.event_type !== "message.received") {
-      // Acknowledge non-SMS events (delivery receipts, etc.) silently
-      return res.sendStatus(200);
-    }
-
-    const payload = event.payload || {};
-    const from = payload.from?.phone_number || "";
-    const body = payload.text || "";
-    const toNumber = payload.to?.[0]?.phone_number || "";
-    const msgId = payload.id || "";
-
-    if (!from || !body) {
-      console.warn("[telnyx-webhook] Missing from or text in payload");
-      return res.sendStatus(200);
-    }
-
-    console.log("[telnyx-webhook] From:", from, "To:", toNumber, "Body:", body.slice(0, 100));
-
-    // Resolve the account owner by matching the "To" number to a user's dedicated number.
-    let ownerUid = null;
-    let ownerData = null;
-    let orgId = "";
-
-    if (toNumber) {
-      const usersSnap = await db.collection("users")
-        .where("telnyxPhoneNumber", "==", toNumber).limit(1).get();
-      if (!usersSnap.empty) {
-        ownerUid = usersSnap.docs[0].id;
-        ownerData = usersSnap.docs[0].data();
-        orgId = ownerData.orgId || ownerUid;
-        console.log("[telnyx-webhook] Matched owner by phone number:", ownerData.name || ownerUid);
-      }
-    }
-
-    // Fallback: first user in DB (for single-user / shared-number setups)
-    if (!ownerUid) {
-      const userSnap = await db.collection("users").limit(1).get();
-      if (!userSnap.empty) {
-        ownerUid = userSnap.docs[0].id;
-        ownerData = userSnap.docs[0].data();
-        orgId = ownerData.orgId || ownerUid;
-      }
-    }
-
-    // Match inbound phone to a known customer within this org
-    const digits = from.replace(/\D/g, "");
-    let matched = null;
-    if (ownerUid) {
-      const custQuery = orgId
-        ? db.collection("customers").where("orgId", "==", orgId)
-        : db.collection("customers").where("userId", "==", ownerUid);
-      const custSnap = await custQuery.get();
-      for (const doc of custSnap.docs) {
-        const data = doc.data();
-        const custDigits = (data.phone || "").replace(/\D/g, "");
-        if (custDigits && (custDigits === digits || custDigits === digits.slice(1) || "1" + custDigits === digits)) {
-          matched = {
-            customerId: doc.id,
-            customerName: data.name || "",
-            userId: data.userId || "",
-            orgId: data.orgId || "",
-          };
-          break;
-        }
-      }
-    }
-
-    if (matched) {
-      console.log("[telnyx-webhook] Matched customer:", matched.customerName, "id:", matched.customerId);
-    } else {
-      console.log("[telnyx-webhook] No customer matched for phone:", from);
-    }
-
-    if (!orgId || !ownerUid) {
-      console.warn("[telnyx-webhook] Could not resolve org/owner for inbound SMS from:", from);
-      return res.sendStatus(200);
-    }
-
-    console.log("[telnyx-webhook] Resolved orgId:", orgId, "ownerUid:", ownerUid);
-
-    // Store inbound message
-    const savedMsg = await db.collection("messages").add({
-      userId: ownerUid || matched?.userId || "",
-      orgId,
-      customerId: matched?.customerId || "",
-      customerName: matched?.customerName || from,
-      from,
-      to: "inbound",
-      body,
-      type: "sms",
-      platform: "sms",
-      direction: "inbound",
-      status: "received",
-      telnyxMessageId: msgId || "",
-      sentAt: Date.now(),
-    });
-
-    console.log("[telnyx-webhook] Message saved:", savedMsg.id);
-
-    // ── Auto-reply — AI responds unless thread is in manual mode ──
-    if (orgId && ownerUid && ownerData) {
-      try {
-        await handleInbound(orgId, ownerUid, ownerData, from, body, matched || null);
-      } catch (err) {
-        console.error("[auto-reply] Error handling inbound:", err.message, err.stack);
-      }
-    }
-
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("Telnyx incoming webhook error:", err);
-    res.sendStatus(200); // Always ACK to prevent Telnyx retries on our bugs
-  }
-}
-
-module.exports = { router, telnyxIncomingHandler, sendViaGmail };
+module.exports = { router, sendViaGmail };

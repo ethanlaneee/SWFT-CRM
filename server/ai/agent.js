@@ -4,11 +4,10 @@ const crmTools = require("./tools");
 const getSystemPrompt = require("./system-prompt");
 const { getConversationHistory, saveMessage } = require("./memory");
 const { getIntegrationTools, executeIntegrationTool, syncJobToCalendar } = require("./integration-tools");
-const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendViaGmail } = require("../routes/messages");
 const { triggerAutomation } = require("../routes/automations");
 const { getPlan } = require("../plans");
-const { getUsage, incrementSms, incrementAiMessage } = require("../usage");
+const { getUsage, incrementAiMessage } = require("../usage");
 const { generateEstimate } = require("./estimator-agent");
 const { normalizeItems } = require("../utils/normalizeItems");
 
@@ -353,38 +352,6 @@ async function executeTool(toolName, input, uid, orgId) {
 
       const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
       return { name, address, mapsUrl };
-    }
-
-    case "send_sms": {
-      try {
-        // Enforce SMS cap based on user's plan
-        const userDoc = await db.collection("users").doc(uid).get();
-        const userPlan = getPlan(userDoc.exists ? userDoc.data().plan : undefined);
-        if (userPlan.smsLimit !== Infinity) {
-          const usage = await getUsage(uid);
-          if (usage.smsCount >= userPlan.smsLimit) {
-            return { error: `SMS limit reached (${userPlan.smsLimit}/month on the ${userPlan.name} plan). The user needs to upgrade their plan for more SMS.` };
-          }
-        }
-        const userData = userDoc.exists ? userDoc.data() : {};
-        const result = await sendSms(input.to, input.body, getUserTelnyxConfig(userData));
-        await incrementSms(uid);
-        // Save to messages collection
-        await db.collection("messages").add({
-          orgId: oid,
-          userId: uid,
-          type: "sms",
-          direction: "outbound",
-          to: input.to,
-          body: input.body,
-          telnyxMessageId: result.sid,
-          status: result.status,
-          createdAt: Date.now(),
-        });
-        return { success: true, to: input.to, status: result.status };
-      } catch (err) {
-        return { error: `SMS failed: ${err.message}` };
-      }
     }
 
     case "get_weather": {

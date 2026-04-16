@@ -20,7 +20,7 @@ const { router: billingRouter, webhookHandler } = require("./routes/billing");
 const { router: paymentsRouter, webhookHandler: paymentsWebhookHandler } = require("./routes/payments");
 const { router: squareRouter, squareWebhookHandler } = require("./routes/square");
 const { router: notificationsRouter } = require("./routes/notifications");
-const { router: messagesRouter, telnyxIncomingHandler } = require("./routes/messages");
+const { router: messagesRouter } = require("./routes/messages");
 const {
   router: socialMessagesRouter,
   facebookVerifyWebhook,
@@ -103,9 +103,6 @@ app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 
-// ── Incoming message webhooks (no auth — called by external platforms) ──
-app.post("/api/webhooks/telnyx/sms", telnyxIncomingHandler);
-
 // ── Social messaging webhooks (no auth — called by Meta) ──
 app.get("/api/webhooks/facebook", facebookVerifyWebhook);
 app.post("/api/webhooks/facebook", facebookIncomingHandler);
@@ -118,154 +115,6 @@ app.get("/api/webhooks/meta", metaWebhookVerify);
 app.post("/api/webhooks/meta", metaWebhookReceive);
 // Meta OAuth callback — no auth, Facebook redirects here after user authorizes
 app.get("/api/meta/callback", metaOAuthCallback);
-
-// GET version — lets you verify the endpoint is reachable in a browser
-app.get("/api/webhooks/telnyx/sms", (req, res) => {
-  res.json({
-    status: "ok",
-    message: "Telnyx SMS webhook endpoint is reachable. Configure this URL in your Telnyx Messaging Profile.",
-    telnyxConfigured: !!process.env.TELNYX_API_KEY,
-    telnyxPhone: process.env.TELNYX_PHONE_NUMBER ? "configured" : "missing",
-    anthropicKey: process.env.ANTHROPIC_API_KEY ? "configured" : "missing",
-    appUrl: process.env.APP_URL || "not set",
-  });
-});
-
-// ── Inbound voice webhook — Telnyx calls this when someone dials your number ──
-// Responds with TeXML to greet the caller and optionally collect info.
-// Configure this URL in the Telnyx portal under your TeXML Application.
-app.post("/api/webhooks/telnyx/voice", async (req, res) => {
-  try {
-    const { db } = require("./firebase");
-    const toNumber = req.body?.To || req.body?.to || "";
-
-    // Look up the business name for a personalised greeting
-    let companyName = "our team";
-    if (toNumber) {
-      const snap = await db.collection("users").where("telnyxPhoneNumber", "==", toNumber).limit(1).get();
-      if (!snap.empty) {
-        const data = snap.docs[0].data();
-        companyName = data.company || data.name || companyName;
-      }
-    }
-
-    // TeXML response — greet the caller and record a voicemail
-    const texml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="Polly.Joanna">Thanks for calling ${companyName}. We are not available right now. Please leave your name, number, and a brief message after the tone and we will get back to you shortly.</Say>
-  <Record maxLength="120" playBeep="true" transcribe="true" transcribeCallback="/api/webhooks/telnyx/transcription" />
-  <Say voice="Polly.Joanna">Thank you. Goodbye.</Say>
-</Response>`;
-
-    res.type("text/xml").send(texml);
-  } catch (err) {
-    console.error("[voice-webhook] Error:", err.message);
-    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say>Thank you for calling. Please try again later.</Say>
-</Response>`;
-    res.type("text/xml").send(fallback);
-  }
-});
-
-// ── Voice transcription callback — stores voicemail text as a notification ──
-app.post("/api/webhooks/telnyx/transcription", async (req, res) => {
-  try {
-    const { db } = require("./firebase");
-    const transcriptionText = req.body?.TranscriptionText || req.body?.transcription_text || "";
-    const from = req.body?.From || req.body?.from || "";
-    const to = req.body?.To || req.body?.to || "";
-
-    if (transcriptionText && to) {
-      const snap = await db.collection("users").where("telnyxPhoneNumber", "==", to).limit(1).get();
-      if (!snap.empty) {
-        const ownerUid = snap.docs[0].id;
-        const ownerData = snap.docs[0].data();
-        const orgId = ownerData.orgId || ownerUid;
-        await db.collection("notifications").add({
-          orgId,
-          userId: ownerUid,
-          type: "voicemail",
-          title: `Voicemail from ${from}`,
-          message: transcriptionText,
-          phone: from,
-          read: false,
-          createdAt: Date.now(),
-        });
-        console.log(`[voice-webhook] Saved voicemail transcription for ${ownerUid} from ${from}`);
-      }
-    }
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("[transcription-webhook] Error:", err.message);
-    res.sendStatus(200);
-  }
-});
-
-// Diagnostic — checks Telnyx + Anthropic config
-app.get("/api/webhooks/telnyx/test", async (req, res) => {
-  const { db } = require("./firebase");
-  const { getPlan } = require("./plans");
-  const { getUsage } = require("./usage");
-  const diag = { steps: [] };
-
-  try {
-    const allUsers = await db.collection("users").limit(1).get();
-    if (allUsers.empty) { diag.steps.push("FAIL: No users in database"); return res.json(diag); }
-    const user = allUsers.docs[0];
-    const userData = user.data();
-    const ownerUid = user.id;
-    diag.steps.push(`OK: Found user ${userData.name || userData.email} (uid: ${ownerUid})`);
-
-    const plan = getPlan(userData.plan);
-    const usage = await getUsage(ownerUid);
-    diag.plan = { name: plan.name, smsLimit: plan.smsLimit };
-    diag.usage = usage;
-    diag.steps.push(
-      usage.smsCount >= plan.smsLimit
-        ? `FAIL: SMS limit reached (${usage.smsCount}/${plan.smsLimit})`
-        : `OK: SMS limit fine (${usage.smsCount}/${plan.smsLimit})`
-    );
-
-    const hasTelnyx = !!process.env.TELNYX_API_KEY;
-    diag.telnyxConfigured = hasTelnyx;
-    diag.steps.push(hasTelnyx ? "OK: Telnyx API key configured" : "FAIL: TELNYX_API_KEY not configured");
-
-    const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
-    diag.steps.push(hasAnthropic ? "OK: Anthropic API key configured" : "FAIL: ANTHROPIC_API_KEY not set");
-
-    if (req.query.run === "1") {
-      try {
-        const Anthropic = require("@anthropic-ai/sdk");
-        const anthropic = new Anthropic();
-        const testReply = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 50,
-          system: "Reply with exactly: TEST_OK",
-          messages: [{ role: "user", content: "ping" }],
-        });
-        diag.steps.push(`OK: Claude replied: "${(testReply.content[0]?.text || "").slice(0, 50)}"`);
-        const testPhone = req.query.to || "";
-        if (testPhone) {
-          const { sendSms } = require("./telnyx");
-          await sendSms(testPhone, "SWFT auto-reply test — SMS pipeline confirmed!");
-          diag.steps.push(`OK: Test SMS sent to ${testPhone}`);
-        } else {
-          diag.steps.push("SKIP: Add &to=+1XXXXXXXXXX to test SMS");
-        }
-      } catch (aiErr) {
-        diag.steps.push(`FAIL: ${aiErr.message}`);
-      }
-    } else {
-      diag.steps.push("INFO: Add ?run=1 to test Claude + SMS");
-    }
-
-    res.json(diag);
-  } catch (err) {
-    diag.steps.push(`ERROR: ${err.message}`);
-    res.json(diag);
-  }
-});
 
 // ── OAuth callbacks (no auth — providers redirect here directly) ──
 app.get("/api/auth/google/callback", googleIntegrationCallback);
@@ -502,7 +351,6 @@ app.get("/health", async (req, res) => {
     firebaseAuth: firebaseOk,
     firebaseError,
     adminProjectId: fb.projectId,
-    telnyxConfigured: !!process.env.TELNYX_API_KEY,
     appUrl: process.env.APP_URL || "not set",
   });
 });

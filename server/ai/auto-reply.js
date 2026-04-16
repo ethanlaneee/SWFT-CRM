@@ -1,7 +1,7 @@
 /**
  * SWFT — Auto-Reply Agent
  *
- * Every inbound SMS thread defaults to "auto" mode — Claude reads the
+ * Every inbound message thread defaults to "auto" mode — Claude reads the
  * conversation history and business context, then sends a reply.
  * The owner can flip any thread to "manual" mode from the Messages view
  * to take over personally.
@@ -15,7 +15,6 @@
 
 const Anthropic = require("@anthropic-ai/sdk");
 const { db } = require("../firebase");
-const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getCustomerMemory, extractAndSaveMemory } = require("./customer-memory");
 const { getAiSettings } = require("../routes/aiSettings");
 
@@ -161,7 +160,7 @@ function buildSystemPrompt(orgUser, customerContext, customerMemory = [], custom
 
   prompt +=
     `Rules:\n` +
-    `- Keep replies SHORT — 1 to 3 sentences, SMS-style\n` +
+    `- Keep replies SHORT — 1 to 3 sentences\n` +
     `- Be warm and professional\n` +
     `- Reference the customer's open quotes or invoices if relevant\n` +
     `- If they want to schedule or need a human decision, let them know ${ownerFN} will follow up shortly\n` +
@@ -180,7 +179,7 @@ function buildSystemPrompt(orgUser, customerContext, customerMemory = [], custom
  * @param {string} orgId
  * @param {object} ownerData
  * @param {string|null} customerId
- * @param {string} fromIdentifier  - phone number (SMS) or sender ID (Meta)
+ * @param {string} fromIdentifier  - sender ID (email, Meta, etc.)
  * @param {string} body
  * @param {{ customerName }|null} matched
  * @returns {Promise<string|null>}
@@ -241,40 +240,6 @@ async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, b
   return replyText;
 }
 
-// ── SMS (Telnyx) ──────────────────────────────────────────────────────────────
-
-/**
- * Called for every inbound SMS after the message is saved to Firestore.
- */
-async function handleInbound(orgId, ownerUid, ownerData, from, body, matched) {
-  try {
-    const customerId = matched?.customerId || null;
-    const replyText = await generateAutoReply(orgId, ownerData, customerId, from, body, matched, "sms");
-    if (!replyText) return;
-
-    await sendSms(from, replyText, getUserTelnyxConfig(ownerData));
-
-    await db.collection("messages").add({
-      userId: ownerUid,
-      orgId,
-      to: from,
-      body: replyText,
-      customerId: customerId || "",
-      customerName: matched?.customerName || from,
-      type: "sms",
-      status: "sent",
-      sentVia: "telnyx",
-      direction: "outbound",
-      isAutoReply: true,
-      sentAt: Date.now(),
-    });
-
-    console.log(`[auto-reply] SMS reply sent to ${from} (org ${orgId})`);
-  } catch (err) {
-    console.error("[auto-reply] SMS error:", err.message);
-  }
-}
-
 // ── Meta (Facebook / Instagram) ───────────────────────────────────────────────
 
 /**
@@ -318,4 +283,4 @@ async function handleInboundMeta(orgId, ownerUid, ownerData, senderId, body, cha
   }
 }
 
-module.exports = { handleInbound, handleInboundMeta, getConversationMode, setConversationMode, convKey };
+module.exports = { handleInboundMeta, getConversationMode, setConversationMode, convKey };

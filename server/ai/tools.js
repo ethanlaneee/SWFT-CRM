@@ -207,18 +207,6 @@ const tools = [
     },
   },
   {
-    name: "send_sms",
-    description: "Send a text message (SMS) to a customer or phone number. Use when the user says 'text', 'send a message to', 'let them know', or wants to notify a customer via SMS.",
-    input_schema: {
-      type: "object",
-      properties: {
-        to: { type: "string", description: "Phone number to text (e.g., '+15551234567')" },
-        body: { type: "string", description: "The text message to send" },
-      },
-      required: ["to", "body"],
-    },
-  },
-  {
     name: "get_weather",
     description: "Get the current weather and forecast for a location. Use when the user asks about weather, whether it's safe to work outside, or wants to check conditions before scheduling a job.",
     input_schema: {

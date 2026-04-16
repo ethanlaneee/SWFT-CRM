@@ -83,7 +83,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .chat-header-detail{font-size:11px;color:var(--gray);margin-top:1px;}
 .chat-channel-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;letter-spacing:0.3px;}
 .chat-channel-pill.email{background:rgba(77,159,255,0.1);color:var(--blue);}
-.chat-channel-pill.sms{background:rgba(200,241,53,0.1);color:var(--green);}
 .chat-channel-pill.facebook{background:rgba(24,119,242,0.1);color:#1877F2;}
 .chat-channel-pill.instagram{background:rgba(228,64,95,0.1);color:#E4405F;}
 .chat-channel-pill.whatsapp{background:rgba(37,211,102,0.1);color:#25D366;}
@@ -309,7 +308,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="contact-title">CONVERSATIONS</div>
       </div>
       <div id="your-contact-info" style="margin-top:6px;display:flex;flex-direction:column;gap:2px;">
-        <div id="your-number" style="font-size:10px;color:var(--gray);"></div>
         <div id="your-email" style="font-size:10px;color:var(--gray);"></div>
       </div>
       <div class="contact-search">
@@ -321,7 +319,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <select class="channel-select" id="channel-select" onchange="setChannel(this.value)">
         <option value="all">All Channels</option>
         <option value="email">Email</option>
-        <option value="sms">SMS</option>
         <option value="facebook">Facebook</option>
         <option value="instagram">Instagram</option>
         <option value="whatsapp">WhatsApp</option>
@@ -446,7 +443,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <label class="ncm-label">Channel</label>
         <select class="ncm-input" id="nc-channel">
           <option value="email">Email</option>
-          <option value="sms">SMS</option>
           <option value="facebook">Facebook Messenger</option>
           <option value="instagram">Instagram DM</option>
           <option value="whatsapp">WhatsApp</option>
@@ -605,20 +601,6 @@ async function loadData(){
     _allMessages=results[0];
     _customers=results[1];
     var user=results[2];
-    var el=document.getElementById('your-number');
-    if(el){
-      if(user.telnyxPhoneNumber){
-        el.textContent='Your #: '+user.telnyxPhoneNumber;
-        el.style.cursor='pointer';
-        el.title='Change number in Settings';
-        el.onclick=function(){ window.location.href='swft-settings'; };
-      } else {
-        el.textContent='No SMS number — set up in Settings';
-        el.style.color='var(--amber)';
-        el.style.cursor='pointer';
-        el.onclick=function(){ window.location.href='swft-settings'; };
-      }
-    }
     _gmailConnected=!!user.gmailConnected;
     var emailEl=document.getElementById('your-email');
     if(emailEl){

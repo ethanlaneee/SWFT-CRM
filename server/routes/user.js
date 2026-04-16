@@ -3,18 +3,6 @@ const { db } = require("../firebase");
 const { DEFAULT_PLAN, getPlan } = require("../plans");
 const { getUsage } = require("../usage");
 const Anthropic = require("@anthropic-ai/sdk");
-const {
-  createMessagingProfile, buyPhoneNumber, closeMessagingProfile,
-  searchAvailableNumbers, orderPhoneNumber, releasePhoneNumber,
-  normalizeRegion, cityToAreaCode, SHARED_MESSAGING_PROFILE_ID,
-} = require("../telnyx");
-
-// Use the shared Telnyx messaging profile if configured, otherwise create per-user profiles.
-async function getOrCreateMessagingProfile(friendlyName, webhookUrl) {
-  if (SHARED_MESSAGING_PROFILE_ID) return SHARED_MESSAGING_PROFILE_ID;
-  const result = await createMessagingProfile(friendlyName, webhookUrl);
-  return result.messagingProfileId;
-}
 
 const col = () => db.collection("users");
 
@@ -59,44 +47,6 @@ router.get("/", async (req, res, next) => {
         accountStatus: "trialing",
       };
       await col().doc(req.uid).set(profile);
-
-      // Provision a dedicated Telnyx Messaging Profile + phone number for this user.
-      // Use Cloudflare geo headers to get the most local number possible:
-      //   city → area code → province/state → country
-      try {
-        const friendlyName = `SWFT - ${req.user.email || req.uid}`;
-        const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
-        const countryCode = (
-          req.headers["cf-ipcountry"] ||
-          req.headers["x-vercel-ip-country"] ||
-          req.headers["x-country-code"] ||
-          "US"
-        ).toUpperCase();
-        const rawCity = req.headers["cf-ipcity"] || req.headers["x-vercel-ip-city"] || "";
-        const rawRegion = req.headers["cf-ipregion"] || req.headers["x-vercel-ip-region"] || "";
-        const regionCode = normalizeRegion(rawRegion, countryCode);
-        const areaCode = cityToAreaCode(rawCity);
-
-        console.log(`[user] Provisioning Telnyx for ${req.user.email} — country:${countryCode} region:${regionCode||"?"} city:${rawCity||"?"} areaCode:${areaCode||"?"}`);
-
-        const messagingProfileId = await getOrCreateMessagingProfile(friendlyName, webhookUrl);
-        const { phoneNumber, phoneSid } = await buyPhoneNumber(
-          messagingProfileId, webhookUrl,
-          { countryCode, region: regionCode, city: rawCity, areaCode }
-        );
-
-        const telnyxFields = {
-          telnyxMessagingProfileId: messagingProfileId,
-          telnyxPhoneNumber: phoneNumber,
-          telnyxPhoneSid: phoneSid,
-        };
-        await col().doc(req.uid).set(telnyxFields, { merge: true });
-        Object.assign(profile, telnyxFields);
-        console.log(`[user] Telnyx provisioned for ${req.user.email}: ${phoneNumber}`);
-      } catch (err) {
-        // Don't block account creation if Telnyx provisioning fails
-        console.error("[user] Telnyx provisioning failed:", err.message);
-      }
 
       return res.json({ id: req.uid, ...profile });
     }
@@ -180,46 +130,8 @@ router.get("/usage", async (req, res, next) => {
     res.json({
       plan: data.plan || DEFAULT_PLAN,
       planName: plan.name,
-      sms:  { used: usage.smsCount, limit: plan.smsLimit === Infinity ? "unlimited" : plan.smsLimit },
       ai:   { used: usage.aiMessageCount, limit: plan.aiMessageLimit === Infinity ? "unlimited" : plan.aiMessageLimit },
     });
-  } catch (err) { next(err); }
-});
-
-// POST /api/me/setup-telnyx — provision Telnyx for existing users who don't have a number yet
-router.post("/setup-telnyx", async (req, res, next) => {
-  try {
-    const doc = await col().doc(req.uid).get();
-    const data = doc.exists ? doc.data() : {};
-
-    if (data.telnyxMessagingProfileId && data.telnyxPhoneNumber) {
-      return res.json({ success: true, phoneNumber: data.telnyxPhoneNumber, message: "Telnyx already provisioned" });
-    }
-
-    const friendlyName = `SWFT - ${data.email || req.user.email || req.uid}`;
-    const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
-
-    const countryCode = (req.body.countryCode || data.country
-      || req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"]
-      || req.headers["x-country-code"] || "US").toUpperCase();
-    const rawCity = req.headers["cf-ipcity"] || req.headers["x-vercel-ip-city"] || "";
-    const rawRegion = req.headers["cf-ipregion"] || req.headers["x-vercel-ip-region"] || "";
-    const regionCode = req.body.region || normalizeRegion(rawRegion, countryCode);
-    const areaCode = req.body.areaCode || cityToAreaCode(rawCity) || undefined;
-
-    const messagingProfileId = await getOrCreateMessagingProfile(friendlyName, webhookUrl);
-    const { phoneNumber, phoneSid } = await buyPhoneNumber(
-      messagingProfileId, webhookUrl, { countryCode, region: regionCode, city: rawCity, areaCode }
-    );
-
-    await col().doc(req.uid).set({
-      telnyxMessagingProfileId: messagingProfileId,
-      telnyxPhoneNumber: phoneNumber,
-      telnyxPhoneSid: phoneSid,
-    }, { merge: true });
-
-    console.log(`[user] Telnyx provisioned for existing user ${data.email}: ${phoneNumber}`);
-    res.json({ success: true, phoneNumber, message: "Telnyx messaging profile and phone number provisioned" });
   } catch (err) { next(err); }
 });
 
@@ -348,87 +260,6 @@ If a field cannot be determined from the text, use an empty string "".`
   } catch (err) { next(err); }
 });
 
-// GET /api/me/available-numbers — search available phone numbers (for number picker)
-// Query params: country, region (province/state code), areaCode, city
-router.get("/available-numbers", async (req, res, next) => {
-  try {
-    const { country, region, areaCode, city } = req.query;
-    const countryCode = (country || req.headers["cf-ipcountry"] || "US").toUpperCase();
-    const regionCode = region || normalizeRegion(
-      req.headers["cf-ipregion"] || req.headers["x-vercel-ip-region"] || "",
-      countryCode
-    );
-    const resolvedAreaCode = areaCode || (city ? cityToAreaCode(city) : null) ||
-      (req.headers["cf-ipcity"] ? cityToAreaCode(req.headers["cf-ipcity"]) : null);
-
-    const numbers = await searchAvailableNumbers({
-      countryCode,
-      region: regionCode,
-      areaCode: resolvedAreaCode,
-      city,
-      limit: 12,
-    });
-    res.json({ numbers, countryCode, region: regionCode, areaCode: resolvedAreaCode });
-  } catch (err) { next(err); }
-});
-
-// POST /api/me/select-number — order a specific number the user chose from the picker
-// Body: { phoneNumber: "+14035551234" }
-//   OR: { autoAssign: true, countryCode: "CA", region: "AB", areaCode: "403" }
-router.post("/select-number", async (req, res, next) => {
-  try {
-    const { phoneNumber, autoAssign, countryCode: reqCountry, region: reqRegion, areaCode: reqAreaCode } = req.body;
-    if (!phoneNumber && !autoAssign) return res.status(400).json({ error: "phoneNumber or autoAssign required" });
-
-    const doc = await col().doc(req.uid).get();
-    const userData = doc.exists ? doc.data() : {};
-    const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
-
-    // Reuse existing messaging profile, or create one if none
-    let messagingProfileId = userData.telnyxMessagingProfileId;
-    if (!messagingProfileId) {
-      const friendlyName = `SWFT - ${userData.email || req.user.email || req.uid}`;
-      try {
-        messagingProfileId = await getOrCreateMessagingProfile(friendlyName, webhookUrl);
-      } catch (profileErr) {
-        console.error("[user] getOrCreateMessagingProfile failed:", profileErr.message);
-        return res.status(503).json({
-          error: "Telnyx messaging is not yet enabled on this account. Please contact SWFT support.",
-        });
-      }
-    }
-
-    let realNumber, phoneSid;
-
-    if (autoAssign) {
-      // Auto-assign: buy the best available number for the given geo params.
-      // Used for countries like CA where Telnyx doesn't pre-list specific numbers.
-      const countryCode = (reqCountry || "CA").toUpperCase();
-      console.log(`[user] Auto-assigning number for ${userData.email || req.uid} — country:${countryCode} region:${reqRegion || "?"} areaCode:${reqAreaCode || "?"}`);
-      ({ phoneNumber: realNumber, phoneSid } = await buyPhoneNumber(
-        messagingProfileId, webhookUrl,
-        { countryCode, region: reqRegion, areaCode: reqAreaCode }
-      ));
-    } else {
-      // Release old number if the user already has one
-      if (userData.telnyxPhoneSid && userData.telnyxPhoneNumber !== phoneNumber) {
-        try { await releasePhoneNumber(userData.telnyxPhoneSid); } catch (_) { /* non-fatal */ }
-      }
-      ({ phoneSid } = await orderPhoneNumber(phoneNumber, messagingProfileId));
-      realNumber = phoneNumber;
-    }
-
-    await col().doc(req.uid).set({
-      telnyxPhoneNumber: realNumber,
-      telnyxPhoneSid: phoneSid,
-      telnyxMessagingProfileId: messagingProfileId,
-    }, { merge: true });
-
-    console.log(`[user] Number changed for ${userData.email || req.uid}: ${realNumber}`);
-    res.json({ success: true, phoneNumber: realNumber, messagingProfileId });
-  } catch (err) { next(err); }
-});
-
 // POST /api/me/check-trial — manually trigger trial expiry check
 router.post("/check-trial", async (req, res, next) => {
   try {
@@ -486,18 +317,6 @@ router.get("/status", async (req, res, next) => {
 router.delete("/delete-account", async (req, res, next) => {
   try {
     const uid = req.uid;
-
-    // Release Telnyx phone number and messaging profile if provisioned
-    try {
-      const userDoc = await col().doc(uid).get();
-      const userData = userDoc.exists ? userDoc.data() : {};
-      if (userData.telnyxMessagingProfileId) {
-        await closeMessagingProfile(userData.telnyxMessagingProfileId, userData.telnyxPhoneSid);
-        console.log(`[user] Released Telnyx profile ${userData.telnyxMessagingProfileId}`);
-      }
-    } catch (err) {
-      console.error("[user] Failed to release Telnyx resources:", err.message);
-    }
 
     const collections = ["customers", "jobs", "quotes", "invoices", "schedule"];
 

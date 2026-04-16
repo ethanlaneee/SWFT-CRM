@@ -36,6 +36,7 @@ onAuthStateChanged(auth, async (user) => {
 
   let firstName = "";
   let lastName = "";
+  let companyEmail = "";
 
   // Try Firebase Auth displayName first
   if (user.displayName) {
@@ -44,17 +45,18 @@ onAuthStateChanged(auth, async (user) => {
     lastName = parts.slice(1).join(" ") || "";
   }
 
-  // Then try Firestore profile
-  if (!firstName) {
-    try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (snap.exists()) {
-        const data = snap.data();
+  // Then try Firestore profile (also grab company email)
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      if (!firstName) {
         firstName = data.firstName || data.name?.split(" ")[0] || "";
         lastName = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
       }
-    } catch (e) { /* ignore */ }
-  }
+      companyEmail = data.email || "";
+    }
+  } catch (e) { /* ignore */ }
 
   // Fallback to email
   if (!firstName && user.email) {
@@ -65,9 +67,10 @@ onAuthStateChanged(auth, async (user) => {
 
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
   const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "?";
+  const displayEmail = companyEmail || user.email || "";
 
   // Update cache under a simple key (no uid needed for lookup)
-  sessionStorage.setItem("swft_profile", JSON.stringify({ fullName, initials, email: user.email || "" }));
+  sessionStorage.setItem("swft_profile", JSON.stringify({ fullName, initials, email: displayEmail }));
 
-  applyProfile(fullName, initials, user.email);
+  applyProfile(fullName, initials, displayEmail);
 });

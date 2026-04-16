@@ -314,15 +314,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <a href="/swft-checkout" class="settings-btn primary" id="billing-upgrade-btn">Upgrade Plan</a>
     </div>
 
-    <!-- Usage: SMS -->
-    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:4px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="settings-row-label">SMS Usage</div>
-        <div class="billing-usage-labels"><span id="billing-sms-label">0 / 0</span></div>
-      </div>
-      <div class="billing-usage-bar"><div class="billing-usage-fill green" id="billing-sms-bar" style="width:0%"></div></div>
-    </div>
-
     <!-- Usage: AI Messages -->
     <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:4px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -363,10 +354,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="settings-row">
       <div class="settings-row-info">
         <div class="settings-row-label">Need More?</div>
-        <div class="settings-row-desc">Buy top-up packs anytime — $15 for 200 SMS or $10 for 100 AI messages.</div>
+        <div class="settings-row-desc">Buy top-up packs anytime — $10 for 100 AI messages.</div>
       </div>
       <div style="display:flex;gap:8px;">
-        <button class="settings-btn" onclick="buyPack('sms')">+ SMS Pack</button>
         <button class="settings-btn" onclick="buyPack('ai')">+ AI Pack</button>
       </div>
     </div>
@@ -640,55 +630,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
             <a id="intake-open-btn" href="#" target="_blank" class="settings-btn" style="display:none;">Open Form ↗</a>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SMS Phone Number -->
-<div class="settings-section" data-group="account" id="sec-phone">
-  <div class="settings-header"><span class="settings-header-icon">📱</span><h3>SMS PHONE NUMBER</h3></div>
-  <div class="settings-body">
-    <div class="settings-row">
-      <div class="settings-row-info">
-        <div class="settings-row-label">Your SWFT Number</div>
-        <div class="settings-row-desc">All inbound and outbound SMS uses this number. Your customers see and text this number.</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span id="sms-number-display" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--white);">Loading...</span>
-        <button class="settings-btn primary" onclick="openNumberPicker()">Browse Numbers</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Number Picker Modal -->
-<div class="np-overlay" id="np-overlay" onclick="if(event.target===this)closeNumberPicker()">
-  <div class="np-modal">
-    <div class="np-header">
-      <div class="np-title">Choose Your Number</div>
-      <button class="np-close" onclick="closeNumberPicker()">&times;</button>
-    </div>
-    <div class="np-body">
-      <div style="font-size:12.5px;color:var(--gray);line-height:1.5;">Search by country, province/state, or city to find a local number. Your existing number will be released when you select a new one.</div>
-      <div class="np-filters">
-        <select class="np-select" id="np-country" onchange="npCountryChange()" style="flex:0 0 auto;min-width:140px;">
-          <option value="US">🇺🇸 United States</option>
-          <option value="CA">🇨🇦 Canada</option>
-          <option value="GB">🇬🇧 United Kingdom</option>
-          <option value="AU">🇦🇺 Australia</option>
-          <option value="NZ">🇳🇿 New Zealand</option>
-        </select>
-        <select class="np-select" id="np-region" style="flex:0 0 auto;min-width:140px;">
-          <option value="">Any province/state</option>
-        </select>
-        <input class="np-input" id="np-city" placeholder="City (optional)" style="min-width:120px;"/>
-      </div>
-      <button onclick="npSearch()" style="align-self:flex-start;padding:9px 20px;border-radius:9px;background:var(--green);border:none;color:#0a0a0a;font-weight:700;font-size:12.5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;" onmouseover="this.style.background='#d5ff40'" onmouseout="this.style.background='var(--green)'">
-        Search Numbers
-      </button>
-      <div id="np-results">
-        <div class="np-empty" id="np-empty-state">Enter your location above and click Search.</div>
       </div>
     </div>
   </div>
@@ -1056,190 +997,7 @@ async function loadSettings() {
     // Populate billing section
     loadBillingInfo(data, token);
 
-    // Show current SMS number
-    var smsEl = document.getElementById('sms-number-display');
-    if (smsEl) {
-      smsEl.textContent = data.telnyxPhoneNumber || 'Not provisioned';
-      smsEl.style.color = data.telnyxPhoneNumber ? 'var(--white)' : 'var(--gray2)';
-    }
   } catch (e) {}
-}
-
-// ── Number Picker ──────────────────────────────────────────────────────────
-
-const NP_REGIONS = {
-  US: [
-    ['', 'Any state'],
-    ['AL','Alabama'],['AK','Alaska'],['AZ','Arizona'],['AR','Arkansas'],['CA','California'],
-    ['CO','Colorado'],['CT','Connecticut'],['FL','Florida'],['GA','Georgia'],['HI','Hawaii'],
-    ['ID','Idaho'],['IL','Illinois'],['IN','Indiana'],['IA','Iowa'],['KS','Kansas'],
-    ['KY','Kentucky'],['LA','Louisiana'],['ME','Maine'],['MD','Maryland'],['MA','Massachusetts'],
-    ['MI','Michigan'],['MN','Minnesota'],['MS','Mississippi'],['MO','Missouri'],['MT','Montana'],
-    ['NE','Nebraska'],['NV','Nevada'],['NJ','New Jersey'],['NM','New Mexico'],['NY','New York'],
-    ['NC','North Carolina'],['ND','North Dakota'],['OH','Ohio'],['OK','Oklahoma'],['OR','Oregon'],
-    ['PA','Pennsylvania'],['RI','Rhode Island'],['SC','South Carolina'],['SD','South Dakota'],
-    ['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],
-    ['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming'],
-  ],
-  CA: [
-    ['', 'Any province'],
-    ['AB','Alberta'],['BC','British Columbia'],['MB','Manitoba'],['NB','New Brunswick'],
-    ['NL','Newfoundland'],['NS','Nova Scotia'],['NT','Northwest Territories'],['NU','Nunavut'],
-    ['ON','Ontario'],['PE','Prince Edward Island'],['QC','Quebec'],['SK','Saskatchewan'],['YT','Yukon'],
-  ],
-  GB: [
-    ['', 'Any region'],
-    ['ENG','England'],['SCT','Scotland'],['WLS','Wales'],['NIR','Northern Ireland'],
-  ],
-  AU: [['', 'Any state'],['NSW','New South Wales'],['VIC','Victoria'],['QLD','Queensland'],['WA','Western Australia'],['SA','South Australia'],['TAS','Tasmania'],['ACT','Australian Capital Territory'],['NT','Northern Territory']],
-  NZ: [['', 'Any region']],
-};
-
-function npCountryChange() {
-  var country = document.getElementById('np-country').value;
-  var sel = document.getElementById('np-region');
-  var regions = NP_REGIONS[country] || [['', 'Any region']];
-  sel.innerHTML = regions.map(function(r) {
-    return '<option value="' + r[0] + '">' + r[1] + '</option>';
-  }).join('');
-}
-
-async function npSearch() {
-  var country = document.getElementById('np-country').value;
-  var region = document.getElementById('np-region').value;
-  var city = document.getElementById('np-city').value.trim();
-  var resultsEl = document.getElementById('np-results');
-  resultsEl.innerHTML = '<div class="np-empty">Searching...</div>';
-
-  try {
-    var token = await getToken();
-    var params = new URLSearchParams({ country });
-    if (region) params.set('region', region);
-    if (city) params.set('city', city);
-    var res = await fetch('/api/me/available-numbers?' + params.toString(), {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    var data = await res.json();
-    var numbers = data.numbers || [];
-
-    if (!numbers.length) {
-      var areaLabel = city ? city : (region ? region : country);
-      var areaCodeDisplay = data.areaCode ? ' (' + data.areaCode + ')' : '';
-      resultsEl.innerHTML =
-        '<div style="text-align:center;padding:16px 0 8px;">' +
-          '<div style="font-size:24px;margin-bottom:10px;">📱</div>' +
-          '<div style="font-size:13px;color:var(--white);font-weight:600;margin-bottom:4px;">Ready to assign your ' + areaLabel + areaCodeDisplay + ' number</div>' +
-          '<div style="font-size:11.5px;color:var(--gray);margin-bottom:16px;line-height:1.5;">We\'ll grab you the best available local number for this area. Takes just a few seconds.</div>' +
-          '<button class="settings-btn primary" style="width:100%;padding:12px;font-size:13px;" onclick="npAutoAssign(\'' +
-            country.replace(/'/g,'') + '\',\'' +
-            (region||'').replace(/'/g,'') + '\',\'' +
-            (data.areaCode||'').replace(/'/g,'') +
-          '\')">Get My ' + areaLabel + ' Number</button>' +
-        '</div>';
-      return;
-    }
-
-    resultsEl.innerHTML = '<div class="np-results">' +
-      numbers.map(function(n) {
-        var loc = [n.locality, n.region].filter(Boolean).join(', ') || n.countryCode;
-        // Telnyx sometimes returns wildcard patterns like "+18252------".
-        // Format these as readable area-code blocks; full numbers display as-is.
-        var raw = n.phoneNumber || '';
-        var displayNum = raw;
-        if (raw.includes('-')) {
-          // Pattern number — show area code + "local number" label
-          var digits = raw.replace(/\D/g, '');
-          var areaCode = digits.length >= 4 ? digits.slice(1, 4) : digits;
-          displayNum = '(' + areaCode + ') Local Number';
-        }
-        var isWildcard = raw.includes('-');
-        var btnLabel = isWildcard ? 'Order' : 'Select';
-        return '<div class="np-num-row">' +
-          '<div class="np-num">' + displayNum + '</div>' +
-          '<div class="np-loc">' + loc + '</div>' +
-          '<button class="np-select-btn" onclick="npSelectNumber(\'' + raw.replace(/'/g, '') + '\')">' + btnLabel + '</button>' +
-        '</div>';
-      }).join('') +
-    '</div>';
-  } catch(e) {
-    resultsEl.innerHTML = '<div class="np-empty">Search failed: ' + (e.message || 'unknown error') + '</div>';
-  }
-}
-
-async function npSelectNumber(phoneNumber) {
-  var isWildcard = phoneNumber.includes('-');
-  var msg = isWildcard
-    ? 'Order a local number in this area code? Your current number will be released.'
-    : 'Select <strong>' + phoneNumber + '</strong> as your SWFT number? Your current number will be released.';
-  if (!await swftConfirm(msg, 'SELECT NUMBER', '📱', 'Confirm')) return;
-  try {
-    var token = await getToken();
-    var res = await fetch('/api/me/select-number', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phoneNumber })
-    });
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed');
-    var smsEl = document.getElementById('sms-number-display');
-    if (smsEl) { smsEl.textContent = data.phoneNumber || phoneNumber; smsEl.style.color = 'var(--white)'; }
-    closeNumberPicker();
-    showToast('Number updated to ' + (data.phoneNumber || phoneNumber));
-  } catch(e) {
-    showToast('Error: ' + (e.message || 'could not select number'));
-  }
-}
-
-async function npAutoAssign(country, region, areaCode) {
-  if (!await swftConfirm('Assign you the next available local number in this area? Your current number will be released.', 'AUTO-ASSIGN NUMBER', '📱', 'Confirm')) return;
-  var resultsEl = document.getElementById('np-results');
-  if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px;">Provisioning your number...</div>';
-  try {
-    var token = await getToken();
-    var body = { autoAssign: true, countryCode: country };
-    if (region) body.region = region;
-    if (areaCode) body.areaCode = areaCode;
-    var res = await fetch('/api/me/select-number', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed');
-    var smsEl = document.getElementById('sms-number-display');
-    if (smsEl) { smsEl.textContent = data.phoneNumber; smsEl.style.color = 'var(--white)'; }
-    closeNumberPicker();
-    showToast('Number assigned: ' + data.phoneNumber);
-  } catch(e) {
-    showToast('Error: ' + (e.message || 'could not assign number'));
-    if (resultsEl) {
-      var errMsg = e.message || 'Could not provision number';
-      var isCanada = country === 'CA';
-      resultsEl.innerHTML =
-        '<div style="text-align:center;padding:12px 0;">' +
-          '<div style="font-size:12px;color:var(--red);margin-bottom:12px;">' + errMsg + '</div>' +
-          (isCanada
-            ? '<div style="font-size:11.5px;color:var(--gray);line-height:1.6;text-align:left;background:var(--surface2);border-radius:10px;padding:14px 16px;">' +
-                '<strong style="color:var(--white);">How to fix this:</strong><br/>' +
-                '1. Log in at <strong style="color:var(--white);">portal.telnyx.com</strong><br/>' +
-                '2. Go to <strong style="color:var(--white);">Numbers → Regulatory Compliance</strong><br/>' +
-                '3. Submit your Canadian business verification<br/>' +
-                '4. Once approved, come back here and try again' +
-              '</div>'
-            : '<div style="font-size:11.5px;color:var(--gray);line-height:1.5;">Check your Telnyx dashboard for regulatory requirements for this country.</div>'
-          ) +
-        '</div>';
-    }
-  }
-}
-
-function openNumberPicker() {
-  npCountryChange(); // populate region dropdown
-  document.getElementById('np-overlay').classList.add('open');
-}
-
-function closeNumberPicker() {
-  document.getElementById('np-overlay').classList.remove('open');
 }
 
 const PLAN_PRICES = { starter: { monthly: 89, annual: 71 }, pro: { monthly: 179, annual: 143 }, business: { monthly: 349, annual: 279 } };
@@ -1289,7 +1047,6 @@ async function loadBillingInfo(userData, token) {
     var usageRes = await fetch('/api/me/usage', { headers: { 'Authorization': 'Bearer ' + token } });
     var usage = await usageRes.json();
 
-    updateUsageBar('sms', usage.sms.used, usage.sms.limit);
     updateUsageBar('ai', usage.ai.used, usage.ai.limit);
 
     // Load billing details from Stripe
@@ -1417,7 +1174,7 @@ async function cancelSubscription() {
 var _packCheckout = null;
 async function buyPack(type) {
   try {
-    var labels = { sms: 'SMS Pack — 200 credits for $15', ai: 'AI Message Pack — 100 credits for $10' };
+    var labels = { ai: 'AI Message Pack — 100 credits for $10' };
     document.getElementById('billing-modal-title').textContent = labels[type] || 'Purchase Pack';
     var modal = document.getElementById('billing-modal');
     modal.classList.remove('portal-mode');
@@ -1461,7 +1218,7 @@ async function verifyPackPurchase(user) {
     });
     var data = await res.json();
     if (data.success) {
-      var labels = { sms: 'SMS', ai: 'AI message' };
+      var labels = { ai: 'AI message' };
       document.getElementById('billing-modal-title').textContent = 'Pack Purchased!';
       document.getElementById('billing-modal').classList.remove('portal-mode');
       document.getElementById('billing-modal-body').innerHTML =

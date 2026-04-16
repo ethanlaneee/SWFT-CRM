@@ -1,10 +1,9 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { getStripe } = require("../utils/stripe");
-const { createMessagingProfile, buyPhoneNumber, closeMessagingProfile } = require("../telnyx");
 
 const { PLANS, OVERAGE_PACKS } = require("../plans");
-const { addSmsCredits, addAiCredits } = require("../usage");
+const { addAiCredits } = require("../usage");
 
 const ADMIN_EMAIL = "ethan@goswft.com";
 const users = () => db.collection("users");
@@ -21,7 +20,7 @@ const PRICE_IDS = {
 
 /**
  * After checkout completes, pull the billing address from Stripe, store it on
- * the user profile, and (re-)provision a Telnyx phone number that matches the
+ * the user profile and save the
  * user's billing country so they get a local number.
  */
 async function syncBillingAddress(uid, stripeCustomerId) {
@@ -44,57 +43,6 @@ async function syncBillingAddress(uid, stripeCustomerId) {
     };
     await users().doc(uid).set(billingAddress, { merge: true });
     console.log(`[billing] Saved billing address for ${uid}: ${addr.city}, ${addr.state} ${addr.country}`);
-
-    // Provision or re-provision Telnyx with the billing country/region
-    const userDoc = await users().doc(uid).get();
-    const userData = userDoc.exists ? userDoc.data() : {};
-
-    const billingCountry = addr.country || "US";
-    const currentPhone = userData.telnyxPhoneNumber || "";
-
-    // Check if current phone already matches the billing country.
-    // Country calling codes: US/CA = +1, GB = +44, AU = +61, etc.
-    const COUNTRY_PREFIXES = {
-      US: "+1", CA: "+1", GB: "+44", AU: "+61", NZ: "+64", IE: "+353",
-      DE: "+49", FR: "+33", ES: "+34", IT: "+39", NL: "+31", MX: "+52",
-      BR: "+55", IN: "+91", ZA: "+27",
-    };
-    const expectedPrefix = COUNTRY_PREFIXES[billingCountry];
-    const alreadyMatches = expectedPrefix && currentPhone.startsWith(expectedPrefix);
-
-    if (!userData.telnyxMessagingProfileId || !alreadyMatches) {
-      // Close old messaging profile + number if country changed
-      if (userData.telnyxMessagingProfileId && !alreadyMatches) {
-        try {
-          await closeMessagingProfile(userData.telnyxMessagingProfileId, userData.telnyxPhoneSid);
-          console.log(`[billing] Released old Telnyx profile ${userData.telnyxMessagingProfileId} (country mismatch)`);
-        } catch (e) {
-          console.error("[billing] Failed to release old Telnyx profile:", e.message);
-        }
-      }
-
-      const friendlyName = `SWFT - ${userData.email || uid}`;
-      const webhookUrl = `${process.env.APP_URL || "https://goswft.com"}/api/webhooks/telnyx/sms`;
-
-      // For US/CA, use the billing state to get a regionally local number
-      const region = (billingCountry === "US" || billingCountry === "CA")
-        ? (addr.state || undefined)
-        : undefined;
-
-      const { messagingProfileId } = await createMessagingProfile(friendlyName, webhookUrl);
-      const { phoneNumber, phoneSid } = await buyPhoneNumber(
-        messagingProfileId, webhookUrl,
-        { countryCode: billingCountry, region }
-      );
-
-      await users().doc(uid).set({
-        telnyxMessagingProfileId: messagingProfileId,
-        telnyxPhoneNumber: phoneNumber,
-        telnyxPhoneSid: phoneSid,
-      }, { merge: true });
-
-      console.log(`[billing] Telnyx provisioned for ${uid} in ${billingCountry}: ${phoneNumber}`);
-    }
   } catch (err) {
     console.error("[billing] syncBillingAddress failed:", err.message);
   }
@@ -158,17 +106,17 @@ router.get("/plans", (req, res) => {
   res.json({
     starter: {
       name: "Starter", monthlyPrice: 89, annualPrice: 71,
-      smsLimit: 150, aiMessageLimit: 75,
+      aiMessageLimit: 75,
       priceId: PRICE_IDS.starter, annualPriceId: PRICE_IDS.starter_annual,
     },
     pro: {
       name: "Pro", monthlyPrice: 179, annualPrice: 143,
-      smsLimit: 2000, aiMessageLimit: 1000,
+      aiMessageLimit: 1000,
       priceId: PRICE_IDS.pro, annualPriceId: PRICE_IDS.pro_annual,
     },
     business: {
       name: "Business", monthlyPrice: 349, annualPrice: 279,
-      smsLimit: "Unlimited", aiMessageLimit: "Unlimited",
+      aiMessageLimit: "Unlimited",
       priceId: PRICE_IDS.business, annualPriceId: PRICE_IDS.business_annual,
     },
     overagePacks: OVERAGE_PACKS,
@@ -253,15 +201,15 @@ router.post("/portal", async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/billing/purchase-pack
 //
-// Purchases a one-time overage pack (SMS or AI credits).
+// Purchases a one-time overage pack (AI credits).
 // Creates a Stripe checkout session for a one-time payment.
-// Body: { pack: "sms"|"ai" }
+// Body: { pack: "ai" }
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/purchase-pack", async (req, res, next) => {
   try {
     const { pack } = req.body;
     if (!pack || !OVERAGE_PACKS[pack]) {
-      return res.status(400).json({ error: "Invalid pack type. Use 'sms' or 'ai'." });
+      return res.status(400).json({ error: "Invalid pack type. Use 'ai'." });
     }
 
     const packInfo = OVERAGE_PACKS[pack];
@@ -296,7 +244,7 @@ router.post("/purchase-pack", async (req, res, next) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET /api/billing/verify-pack?pack_session_id=cs_xxx&pack=sms|ai
+// GET /api/billing/verify-pack?pack_session_id=cs_xxx&pack=ai
 //
 // Verifies a pack purchase and credits the user's account.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -319,11 +267,7 @@ router.get("/verify-pack", async (req, res, next) => {
       return res.status(400).json({ error: "Invalid pack type." });
     }
 
-    if (pack === "sms") {
-      await addSmsCredits(req.uid, packInfo.units);
-    } else {
-      await addAiCredits(req.uid, packInfo.units);
-    }
+    await addAiCredits(req.uid, packInfo.units);
 
     res.json({ success: true, pack, units: packInfo.units });
   } catch (err) { next(err); }
@@ -369,7 +313,7 @@ router.get("/verify-session", async (req, res, next) => {
       stripeSubscriptionId: session.subscription,
     }, { merge: true });
 
-    // Sync billing address and provision a location-matched Telnyx number
+    // Sync billing address
     if (session.customer) {
       syncBillingAddress(req.uid, session.customer).catch(err =>
         console.error("[verify-session] syncBillingAddress error:", err.message)
@@ -419,7 +363,7 @@ async function webhookHandler(req, res) {
           stripeSubscriptionId: session.subscription,
         }, { merge: true });
 
-        // Sync billing address and provision a location-matched Telnyx number
+        // Sync billing address
         if (session.customer) {
           syncBillingAddress(uid, session.customer).catch(err =>
             console.error("[billing-webhook] syncBillingAddress error:", err.message)

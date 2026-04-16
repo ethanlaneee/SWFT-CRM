@@ -4,7 +4,6 @@
  */
 const router = require("express").Router();
 const { db } = require("../firebase");
-const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
 
@@ -145,23 +144,15 @@ router.post("/:token", async (req, res) => {
           review_link: reviewUrl || "",
         });
 
-        const followUpType = rule.followUpType || "sms";
-
         try {
-          if (followUpType === "sms") {
-            if (msg.phone) {
-              await sendSms(msg.phone, followUpMessage, getUserTelnyxConfig(orgUser));
-            }
-          } else {
-            if (msg.email) {
-              const companyName = orgUser.company || orgUser.name || "SWFT";
-              await sendFollowUpEmail(
-                orgUser,
-                msg.email,
-                `Thank you from ${companyName}`,
-                followUpMessage
-              );
-            }
+          if (msg.email) {
+            const companyName = orgUser.company || orgUser.name || "SWFT";
+            await sendFollowUpEmail(
+              orgUser,
+              msg.email,
+              `Thank you from ${companyName}`,
+              followUpMessage
+            );
           }
 
           await msgDoc.ref.update({ followUpSent: true });

@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const crypto = require("crypto");
 const { db } = require("../firebase");
-const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
 const { isQuoteAcceptedInConversation } = require("../utils/quoteConversationCheck");
@@ -137,7 +136,7 @@ async function scheduleQuoteFollowupFromSettings(orgId, customer, emailContext, 
     survey_link: "",
   };
 
-  const template = cfg.channel === "email" ? cfg.emailTemplate : cfg.smsTemplate;
+  const template = cfg.emailTemplate;
   const resolvedMessage = resolveTemplate(template || "", vars);
   const resolvedSubject = cfg.channel === "email"
     ? resolveTemplate(cfg.emailSubject || "Following up on your quote", vars)
@@ -231,7 +230,7 @@ async function scheduleInvoiceFollowupFromSettings(orgId, customer, emailContext
     invoiceNumber: customer.invoiceNumber || customer.invoiceId || "",
   });
 
-  const template = cfg.channel === "email" ? cfg.emailTemplate : cfg.smsTemplate;
+  const template = cfg.emailTemplate;
   const resolvedMessage = resolveTemplate(template || "", vars);
   const resolvedSubject = cfg.channel === "email"
     ? resolveTemplate(cfg.emailSubject || "Friendly reminder: open invoice", vars)
@@ -296,7 +295,7 @@ async function scheduleReviewRequestFromSettings(orgId, customer, emailContext, 
     review_link: cfg.reviewLink || "",
   });
 
-  const template = cfg.channel === "email" ? cfg.emailTemplate : cfg.smsTemplate;
+  const template = cfg.emailTemplate;
   const resolvedMessage = resolveTemplate(template || "", vars);
   const resolvedSubject = cfg.channel === "email"
     ? resolveTemplate(cfg.emailSubject || `Thanks from ${vars.companyName}`, vars)
@@ -487,7 +486,7 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
         email: customer.email || "",
         message: resolvedMessage,
         subject: resolvedSubject,
-        messageType: rule.messageType || "sms",
+        messageType: rule.messageType || "email",
         sendAt,
         status: "pending",
         sentAt: null,
@@ -528,7 +527,7 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
           targetId: autoDoc.id,
           customerId: customer.id || "",
           customerName: customer.name || "",
-          messageType: rule.messageType || "sms",
+          messageType: rule.messageType || "email",
           createdAt: Date.now(),
         });
       } catch (actErr) {
@@ -712,9 +711,6 @@ async function processScheduledMessages() {
           const merged = [...new Set([...existing, ...tags])];
           await db.collection("customers").doc(msg.customerId).update({ tags: merged });
         }
-      } else if (msg.messageType === "sms") {
-        if (!msg.phone) throw new Error("No phone number for SMS");
-        await sendSms(msg.phone, msg.message, getUserTelnyxConfig(orgUser));
       } else if (msg.messageType === "notification") {
         // Internal notification — create in notifications collection
         await db.collection("notifications").add({
@@ -760,18 +756,18 @@ async function processScheduledMessages() {
       console.log(`[automation worker] Sent ${msgDoc.id} (${msg.messageType}) to ${msg.phone || msg.email}`);
 
       // Create a record in the messages collection so it shows in the chat thread
-      // Only for sms/email — notifications and tags aren't messages
-      if (msg.messageType === "sms" || msg.messageType === "email") {
+      // Only for email — notifications and tags aren't messages
+      if (msg.messageType === "email") {
         const msgRecord = {
           userId: ownerUid,
           orgId: msg.orgId,
-          to: msg.messageType === "sms" ? msg.phone : msg.email,
+          to: msg.email,
           body: msg.message,
           customerId: msg.customerId || "",
           customerName: msg.customerName || "",
-          type: msg.messageType,
+          type: "email",
           status: "sent",
-          sentVia: msg.messageType === "sms" ? "telnyx" : "gmail",
+          sentVia: "gmail",
           sentAt: Date.now(),
           scheduledMessageId: msgDoc.id,
           isAutomation: !!msg.automationId,
@@ -913,7 +909,7 @@ router.post("/", async (req, res, next) => {
       delayDays: Number(delayDays) || 0,
       delayHours: Number(delayHours) || 0,
       sendAtTime: req.body.sendAtTime || "09:00",
-      messageType: messageType || "sms",
+      messageType: messageType || "email",
       emailSubject: req.body.emailSubject || "",
       messageTemplate: messageTemplate || "",
       enabled: enabled !== undefined ? Boolean(enabled) : true,
@@ -921,7 +917,7 @@ router.post("/", async (req, res, next) => {
       isSurvey: Boolean(isSurvey),
       surveyThreshold: Number(surveyThreshold) || 8,
       followUpTemplate: followUpTemplate || "",
-      followUpType: followUpType || "sms",
+      followUpType: followUpType || "email",
       createdAt: now,
       updatedAt: now,
     };
