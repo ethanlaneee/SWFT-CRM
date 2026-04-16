@@ -294,13 +294,28 @@ async function unsubscribeHandler(req, res) {
     letter-spacing: 2px;
     text-transform: uppercase;
   }
+  .resub {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #c8f135;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .resub:hover { border-color: #c8f135; }
 </style>
 </head>
 <body>
   <div class="container">
     <div class="check">&#10003;</div>
     <h2>You've been unsubscribed</h2>
-    <p>You won't receive any more broadcast emails from this sender. If this was a mistake, please contact them directly.</p>
+    <p>You won't receive any more broadcast emails from this sender.</p>
+    <a class="resub" href="/api/broadcasts/resubscribe?token=${encodeURIComponent(token)}&org=${encodeURIComponent(org)}">Unsubscribed by mistake? Resubscribe</a>
     <div class="brand">SWFT</div>
   </div>
 </body>
@@ -311,5 +326,116 @@ async function unsubscribeHandler(req, res) {
   }
 }
 
+/**
+ * Public resubscribe handler — pairs with the unsubscribe flow.
+ *
+ * GET /api/broadcasts/resubscribe?token=...&org=...
+ */
+async function resubscribeHandler(req, res) {
+  const { token, org } = req.query;
+
+  if (!token || !org) {
+    return res.status(400).send("Invalid link.");
+  }
+
+  const email = verifyUnsubToken(token);
+  if (!email) {
+    return res.status(400).send("Invalid or expired link.");
+  }
+
+  try {
+    const existing = await db.collection("unsubscribes")
+      .where("orgId", "==", org)
+      .where("email", "==", email)
+      .get();
+
+    for (const doc of existing.docs) await doc.ref.delete();
+
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resubscribed - SWFT</title>
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0a0a0a;
+    color: #f0f0f0;
+  }
+  .container {
+    text-align: center;
+    max-width: 440px;
+    padding: 48px 32px;
+  }
+  .check {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(200, 241, 53, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 26px;
+    color: #c8f135;
+  }
+  h2 {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #f0f0f0;
+  }
+  p {
+    color: #7a7a7a;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .brand {
+    margin-top: 32px;
+    font-size: 12px;
+    color: #444;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .resub {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #7a7a7a;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .resub:hover { border-color: #7a7a7a; color: #f0f0f0; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="check">&#10003;</div>
+    <h2>You're resubscribed</h2>
+    <p>Welcome back — you'll continue receiving broadcast emails from this sender.</p>
+    <a class="resub" href="/api/broadcasts/unsubscribe?token=${encodeURIComponent(token)}&org=${encodeURIComponent(org)}">Change your mind? Unsubscribe</a>
+    <div class="brand">SWFT</div>
+  </div>
+</body>
+</html>`);
+  } catch (err) {
+    console.error("[broadcast-resubscribe] Error:", err.message);
+    res.status(500).send("Something went wrong. Please try again or contact support.");
+  }
+}
+
 module.exports = router;
 module.exports.unsubscribeHandler = unsubscribeHandler;
+module.exports.resubscribeHandler = resubscribeHandler;

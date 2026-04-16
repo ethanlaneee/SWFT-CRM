@@ -451,6 +451,7 @@ app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusin
 app.use("/api/automations",       auth, checkAccess, requirePlan("pro"), automationsRouter);
 app.use("/api/ai-settings",       auth, checkAccess, requirePlan("pro"), aiSettingsRouter);
 app.get("/api/broadcasts/unsubscribe", require("./routes/broadcasts").unsubscribeHandler);
+app.get("/api/broadcasts/resubscribe", require("./routes/broadcasts").resubscribeHandler);
 // SNS posts with Content-Type: text/plain, so we need a permissive body parser here.
 app.post(
   "/api/ses/webhook",
