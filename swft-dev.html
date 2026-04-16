@@ -879,6 +879,7 @@ window._deleteUser = async function(uid, label) {
 /* ── TAB SWITCHING ── */
 let activeTab = 'platform';
 let outreachLoaded = false;
+let outreachPollTimer = null;
 
 window._switchTab = function(tab) {
   activeTab = tab;
@@ -886,6 +887,12 @@ window._switchTab = function(tab) {
   document.getElementById('pageBody').style.display = tab === 'platform' ? '' : 'none';
   document.getElementById('outreachBody').style.display = tab === 'outreach' ? '' : 'none';
   if (tab === 'outreach' && !outreachLoaded) loadOutreachData();
+  // Auto-refresh outreach data every 30s while tab is active
+  if (tab === 'outreach') {
+    if (!outreachPollTimer) outreachPollTimer = setInterval(() => { if (activeTab === 'outreach') loadOutreachData(); }, 30000);
+  } else {
+    if (outreachPollTimer) { clearInterval(outreachPollTimer); outreachPollTimer = null; }
+  }
 };
 
 /* ── OUTREACH STATE ── */

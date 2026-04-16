@@ -75,12 +75,12 @@
       font-family:'Bebas Neue',sans-serif; font-size:28px;
       letter-spacing:3px; color:#111; margin-bottom:4px;
     }
-    .swft-pdf-body .pdf-company em { color:#8ab800; font-style:normal; }
+    .swft-pdf-body .pdf-company em { color:#111111; font-style:normal; }
     .swft-pdf-body .pdf-tagline { font-size:10px; color:#999; letter-spacing:1.5px; margin-bottom:20px; }
     .swft-pdf-body .pdf-type {
       font-family:'Bebas Neue',sans-serif; font-size:18px;
       letter-spacing:2px; color:#111; margin-bottom:16px;
-      padding-bottom:8px; border-bottom:2px solid #8ab800;
+      padding-bottom:8px; border-bottom:2px solid #111111;
     }
     .swft-pdf-body .pdf-row {
       display:flex; justify-content:space-between; margin-bottom:6px;
@@ -116,8 +116,8 @@
       font-size:13px; cursor:pointer; text-align:center; font-weight:500;
     }
     .swft-pdf-btn:hover { background:#f5f5f5; }
-    .swft-pdf-btn.primary { background:#8ab800; color:#fff; border-color:#8ab800; font-weight:700; }
-    .swft-pdf-btn.primary:hover { background:#7aa300; }
+    .swft-pdf-btn.primary { background:#111111; color:#fff; border-color:#111111; font-weight:700; }
+    .swft-pdf-btn.primary:hover { background:#333333; }
   `;
   document.head.appendChild(style);
 
@@ -218,10 +218,10 @@
       <style>
         body{font-family:'DM Sans',sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}
         .pdf-company{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;}
-        .pdf-company em{color:#8ab800;font-style:normal;}
+        .pdf-company em{color:#111;font-style:normal;}
         img{max-height:90px;max-width:260px;width:auto;height:auto;object-fit:contain;display:block;}
         .pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}
-        .pdf-type{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #8ab800;margin-bottom:16px;}
+        .pdf-type{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #111;margin-bottom:16px;}
         .pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}
         .label{color:#666;} .value{font-weight:500;}
         .pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}
