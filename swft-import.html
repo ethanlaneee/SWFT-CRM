@@ -209,7 +209,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       user = auth.currentUser;
     }
     if (!user) { console.warn("[SWFT-REDIRECT] import onAuthStateChanged saw no user"); window.location.href = "swft-login"; return; }
-    document.body.style.visibility = "visible";
     window.__swftUser = user;
   });
 </script>

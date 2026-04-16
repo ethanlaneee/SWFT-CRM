@@ -103,10 +103,29 @@ async function deleteFromGoogleCalendar(uid, gcalEventId) {
 }
 
 // List schedule entries
+// If user only has jobs.view (not jobs.viewAll), only show:
+//   - entries they created (userId match)
+//   - entries linked to jobs assigned to them
 router.get("/", async (req, res, next) => {
   try {
     const snap = await col().where("orgId", "==", req.orgId).get();
-    const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const perms = req.userPermissions; // null = owner (unrestricted)
+    if (perms && !perms.has("jobs.viewAll")) {
+      // Get this user's assigned job IDs for cross-reference
+      const jobSnap = await db.collection("jobs")
+        .where("orgId", "==", req.orgId)
+        .where("assignedTo", "==", req.uid)
+        .get();
+      const myJobIds = new Set(jobSnap.docs.map(d => d.id));
+
+      results = results.filter(r =>
+        r.userId === req.uid ||
+        (r.jobId && myJobIds.has(r.jobId))
+      );
+    }
+
     results.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     res.json(results);
   } catch (err) { next(err); }

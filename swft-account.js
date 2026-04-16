@@ -196,35 +196,30 @@
       <div class="account-body">
         <div class="account-avatar-row">
           <div class="account-avatar-big" id="acct-avatar">?</div>
-          <div class="account-avatar-info">Click save to update your profile</div>
+          <div class="account-avatar-info">Your profile — managed in Settings</div>
         </div>
 
         <div class="account-field">
           <label class="account-label">First Name</label>
-          <input class="account-input" id="acct-first" placeholder="Your first name"/>
+          <input class="account-input" id="acct-first" readonly style="opacity:0.7;cursor:default;"/>
         </div>
         <div class="account-field">
           <label class="account-label">Last Name</label>
-          <input class="account-input" id="acct-last" placeholder="Your last name"/>
+          <input class="account-input" id="acct-last" readonly style="opacity:0.7;cursor:default;"/>
         </div>
         <div class="account-field">
           <label class="account-label">Company Name</label>
-          <input class="account-input" id="acct-company" placeholder="e.g. SWFT Concrete"/>
-        </div>
-        <div class="account-field">
-          <label class="account-label">Phone</label>
-          <input class="account-input" id="acct-phone" placeholder="(512) 555-1234"/>
+          <input class="account-input" id="acct-company" readonly style="opacity:0.7;cursor:default;"/>
         </div>
         <div class="account-field">
           <label class="account-label">Email</label>
-          <input class="account-input" id="acct-email" placeholder="you@example.com" readonly style="opacity:0.6;"/>
+          <input class="account-input" id="acct-email" readonly style="opacity:0.7;cursor:default;"/>
         </div>
 
       </div>
       <div class="account-footer">
         <button class="account-btn" onclick="logoutAccount()" style="color:#ff5252;border-color:rgba(255,82,82,0.3);">Log Out</button>
-        <button class="account-btn" onclick="closeAccountPanel()">Cancel</button>
-        <button class="account-btn primary" onclick="saveAccount()">Save Changes</button>
+        <button class="account-btn" onclick="closeAccountPanel()">Close</button>
       </div>
     </div>
   `;
@@ -289,7 +284,6 @@
         document.getElementById("acct-last").value = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
       }
       document.getElementById("acct-company").value = data.company || "";
-      document.getElementById("acct-phone").value = data.phone || "";
       if (data.email) document.getElementById("acct-email").value = data.email;
 
       const first = (data.firstName || data.name?.split(" ")[0] || "?")[0];
@@ -314,42 +308,8 @@
     }
   };
 
-  // Save
-  window.saveAccount = async function () {
-    const firstName = document.getElementById("acct-first").value.trim();
-    const lastName = document.getElementById("acct-last").value.trim();
-    const name = [firstName, lastName].filter(Boolean).join(" ");
-
-    try {
-      const token = await getToken();
-
-      // Save profile
-      await fetch(`${API_BASE}/api/me`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name,
-          firstName,
-          lastName,
-          company: document.getElementById("acct-company").value.trim(),
-          phone: document.getElementById("acct-phone").value.trim(),
-        }),
-      });
-
-      // Update sidebar user tile
-      document.querySelectorAll(".user-name").forEach((el) => {
-        el.textContent = name || "User";
-      });
-      document.querySelectorAll(".s-avatar, .avatar").forEach((el) => {
-        el.textContent = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "?";
-      });
-
-      closeAccountPanel();
-      if (typeof showToast === "function") showToast("Account updated");
-    } catch (e) {
-      if (typeof showToast === "function") showToast("Error saving: " + e.message);
-    }
-  };
+  // Save — no longer used (profile is read-only), kept for safety
+  window.saveAccount = function () { closeAccountPanel(); };
 
   // ── Role / permission guard ───────────────────────────────────────────────
 
@@ -473,12 +433,17 @@
       }
     });
 
-    if (perms === null) return; // owner — skip remaining restrictions
+    if (perms === null) {
+      // Owner — show page immediately, skip remaining restrictions
+      document.body.style.visibility = "visible";
+      return;
+    }
 
     // ── Page redirect ────────────────────────────────────────────────────
     var page = window.location.pathname.split("/").pop().replace(/\.html$/, "");
     var pageReq = PAGE_PERM[page];
-    if (pageReq && !window.SWFT_PERMS.includes(pageReq)) {
+    if (pageReq && !perms.includes(pageReq)) {
+      document.body.style.visibility = "visible";
       window.swftNoPermission("You don't have permission to access this area.");
       setTimeout(function () { window.location.href = "swft-dashboard"; }, 1800);
       return;
@@ -489,7 +454,7 @@
     document.querySelectorAll("[onclick]").forEach(function (el) {
       var oc = el.getAttribute("onclick") || "";
       for (var fn in ONCLICK_PERM) {
-        if (oc.indexOf(fn + "(") > -1 && !window.SWFT_PERMS.includes(ONCLICK_PERM[fn])) {
+        if (oc.indexOf(fn + "(") > -1 && !perms.includes(ONCLICK_PERM[fn])) {
           (function (perm, label) {
             el.setAttribute("onclick", "");
             el.onclick = function (e) {
@@ -501,13 +466,28 @@
         }
       }
     });
+
+    // ── Page is ready — reveal body after all permissions are applied ──
+    document.body.style.visibility = "visible";
   }
 
   async function initRoleGuard() {
+    // Safety fallback: if permissions take too long, show page anyway
+    // (backend still enforces access — this only prevents a blank screen)
+    var _permTimer = setTimeout(function () {
+      if (document.body.style.visibility !== "visible") {
+        document.body.style.visibility = "visible";
+      }
+    }, 3500);
+
     try {
       const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
       onAuthStateChanged(getAuth(), async function (user) {
-        if (!user) return;
+        if (!user) {
+          clearTimeout(_permTimer);
+          document.body.style.visibility = "visible";
+          return;
+        }
         try {
           const token = await user.getIdToken();
           const res = await fetch(`${API_BASE}/api/me`, {
@@ -517,9 +497,9 @@
           // Build permissions array from role + BUILT_IN defaults
           var BUILT_IN = {
             owner: null, // null = all
-            admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","billing.view","billing.manage","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","messages.delete","email.send","email.templates","photos.upload","photos.delete","ai.use","broadcasts.view","broadcasts.send","broadcasts.delete","automations.view","automations.manage","reviews.view","reviews.respond","intake.view","intake.manage","import.use","team.manage","integrations.manage","settings.manage"],
-            office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","email.send","email.templates","photos.upload","ai.use","broadcasts.view","broadcasts.send","automations.view","reviews.view","reviews.respond","intake.view"],
-            technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use"],
+            admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","billing.view","billing.manage","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","messages.delete","email.send","email.templates","photos.upload","photos.delete","ai.use","broadcasts.view","broadcasts.send","broadcasts.delete","automations.view","automations.manage","reviews.view","reviews.respond","intake.view","intake.manage","import.use","team.manage","integrations.manage","settings.manage","teamchat.view","teamchat.send"],
+            office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","email.send","email.templates","photos.upload","ai.use","broadcasts.view","broadcasts.send","automations.view","reviews.view","reviews.respond","intake.view","teamchat.view","teamchat.send"],
+            technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use","teamchat.view","teamchat.send"],
           };
           var role = data.role || "owner";
           var perms;
@@ -528,10 +508,17 @@
           } else {
             perms = data.permissions || BUILT_IN[role];
           }
+          clearTimeout(_permTimer);
           applyPermGuard(perms);
-        } catch (e) { /* fail silently — backend enforces anyway */ }
+        } catch (e) {
+          clearTimeout(_permTimer);
+          document.body.style.visibility = "visible";
+        }
       });
-    } catch (e) {}
+    } catch (e) {
+      clearTimeout(_permTimer);
+      document.body.style.visibility = "visible";
+    }
   }
 
   // Wire tiles after DOM loads

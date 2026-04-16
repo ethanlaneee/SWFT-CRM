@@ -3,7 +3,14 @@
 // ════════════════════════════════════════════════
 
 const router = require("express").Router();
-const { db } = require("../firebase");
+const multer = require("multer");
+const path = require("path");
+const { db, bucket } = require("../firebase");
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
+});
 
 const chatsCol = () => db.collection("teamChats");
 const msgsCol = (chatId) => db.collection("teamChats").doc(chatId).collection("messages");
@@ -80,8 +87,8 @@ router.get("/:chatId/messages", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// ── Send a message to a chat ──
-router.post("/:chatId/messages", async (req, res, next) => {
+// ── Send a message to a chat (text or file) ──
+router.post("/:chatId/messages", upload.array("files", 5), async (req, res, next) => {
   try {
     const chatDoc = await chatsCol().doc(req.params.chatId).get();
     if (!chatDoc.exists || chatDoc.data().orgId !== req.orgId) {
@@ -91,23 +98,52 @@ router.post("/:chatId/messages", async (req, res, next) => {
       return res.status(403).json({ error: "Not a member of this chat" });
     }
 
-    const { text } = req.body;
-    if (!text || !text.trim()) {
-      return res.status(400).json({ error: "Message text required" });
+    const text = (req.body.text || "").trim();
+    const files = req.files || [];
+
+    if (!text && files.length === 0) {
+      return res.status(400).json({ error: "Message text or file required" });
+    }
+
+    // Upload files to Firebase Storage
+    const attachments = [];
+    for (const file of files) {
+      const ext = path.extname(file.originalname) || "";
+      const filename = `team-chat/${req.params.chatId}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+      const fileRef = bucket.file(filename);
+      await fileRef.save(file.buffer, { metadata: { contentType: file.mimetype } });
+
+      let url;
+      try {
+        await fileRef.makePublic();
+        url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+      } catch (_) {
+        const [signedUrl] = await fileRef.getSignedUrl({ action: "read", expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000 });
+        url = signedUrl;
+      }
+
+      attachments.push({
+        url,
+        name: file.originalname,
+        type: file.mimetype,
+        size: file.size,
+      });
     }
 
     const msg = {
       senderId: req.uid,
       senderName: req.body.senderName || "",
-      text: text.trim(),
+      text,
+      attachments: attachments.length ? attachments : null,
       createdAt: Date.now(),
     };
 
     const ref = await msgsCol(req.params.chatId).add(msg);
 
     // Update chat's last message preview
+    const preview = text || (attachments.length === 1 ? attachments[0].name : `${attachments.length} files`);
     await chatsCol().doc(req.params.chatId).update({
-      lastMessage: { text: msg.text.slice(0, 100), senderName: msg.senderName, createdAt: msg.createdAt },
+      lastMessage: { text: preview.slice(0, 100), senderName: msg.senderName, createdAt: msg.createdAt },
       updatedAt: Date.now(),
     });
 

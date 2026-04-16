@@ -5,20 +5,18 @@ const { syncJobToCalendar, deleteJobFromCalendar } = require("../ai/integration-
 
 const col = () => db.collection("jobs");
 
-// List jobs — technicians only see their assigned jobs
+// List jobs — permission-based filtering
+// jobs.viewAll → see every job in the org
+// jobs.view only → see jobs assigned to this user
 router.get("/", async (req, res, next) => {
   try {
     const snap = await col().where("orgId", "==", req.orgId).get();
     let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Technicians only see jobs explicitly assigned to them
-    // If NO jobs have assignedTo set yet, they see all (graceful migration)
-    if (req.userRole === "technician") {
-      const anyAssigned = results.some(r => r.assignedTo);
-      if (anyAssigned) {
-        results = results.filter(r => r.assignedTo === req.uid);
-      }
-      // If no jobs have assignedTo set at all yet, show all (zero-config rollout)
+    // If user does NOT have jobs.viewAll, filter to assigned jobs only
+    const perms = req.userPermissions; // Set or null (owner)
+    if (perms && !perms.has("jobs.viewAll")) {
+      results = results.filter(r => r.assignedTo === req.uid);
     }
 
     if (req.query.status) results = results.filter(r => r.status === req.query.status);

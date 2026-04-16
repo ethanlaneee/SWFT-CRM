@@ -293,7 +293,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       console.warn("[SWFT-REDIRECT] broadcasts onAuthStateChanged saw no user");
       window.location.href = "swft-login";
     } else {
-      document.body.style.visibility = "visible";
       window.__swftUser = user;
       const n = user.displayName || user.email || "";
       document.getElementById("user-name").textContent = n;

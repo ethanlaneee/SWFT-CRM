@@ -103,6 +103,33 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .tc-send-btn:hover{background:#d5ff40;transform:translateY(-1px);}
 .tc-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 
+/* Compose actions */
+.tc-compose-actions{display:flex;align-items:center;gap:4px;padding:4px 8px;}
+.tc-icon-btn{width:30px;height:30px;border-radius:7px;border:none;background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.tc-icon-btn:hover{background:var(--surface);color:var(--white);}
+
+/* Attachment chips */
+.tc-attach-bar{display:flex;flex-wrap:wrap;gap:5px;padding:0 16px 6px;}
+.tc-attach-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.18);border-radius:7px;padding:4px 9px;font-size:10.5px;color:var(--green);font-family:'JetBrains Mono',monospace;}
+.tc-attach-chip .remove{cursor:pointer;opacity:0.6;font-size:13px;margin-left:2px;}
+.tc-attach-chip .remove:hover{opacity:1;color:var(--red);}
+
+/* Attachment in bubble */
+.tc-bubble-attach{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+.tc-bubble-attach a{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--amber);text-decoration:none;transition:color 0.12s;}
+.tc-bubble-attach a:hover{color:var(--green);text-decoration:underline;}
+.tc-bubble-attach img{max-width:240px;max-height:180px;border-radius:8px;margin-top:4px;cursor:pointer;}
+
+/* Chat list toggle (mobile / collapsed) */
+.tc-list-toggle{display:none;width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;align-items:center;justify-content:center;transition:all 0.14s;flex-shrink:0;}
+.tc-list-toggle:hover{background:var(--surface2);color:var(--white);}
+@media(max-width:768px){
+  .chat-list-panel{position:fixed;top:0;left:var(--sidebar-w);bottom:0;z-index:300;transform:translateX(-100%);transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+  .chat-list-panel.open{transform:translateX(0);}
+  .main.expanded .chat-list-panel{left:0;}
+  .tc-list-toggle{display:flex;}
+}
+
 /* New chat modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:none;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
@@ -218,6 +245,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <!-- Right: Chat view -->
   <div class="tc-panel" id="tc-panel">
     <div class="tc-header" id="tc-header" style="display:none;">
+      <button class="tc-list-toggle" onclick="toggleChatList()" title="Show chats">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
       <div class="tc-header-avatar" id="tc-avatar">?</div>
       <div class="tc-header-info">
         <div class="tc-header-name" id="tc-name">Select a chat</div>
@@ -232,9 +262,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         </div>
       </div>
     </div>
+    <div class="tc-attach-bar" id="tc-attach-bar" style="display:none;"></div>
     <div class="tc-compose" id="tc-compose" style="display:none;">
       <div class="tc-compose-wrap">
         <textarea id="tc-input" placeholder="Type a message..." rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+        <div class="tc-compose-actions">
+          <button class="tc-icon-btn" onclick="document.getElementById('tc-file-input').click()" title="Attach file">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <input type="file" id="tc-file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip" style="display:none;" onchange="handleFileSelect(this.files)"/>
       </div>
       <button class="tc-send-btn" onclick="sendMessage()" title="Send">
         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" stroke-width="2" stroke-linecap="round"/><polygon points="22,2 15,22 11,13 2,9" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -463,8 +500,21 @@ function renderMessages(msgs){
     div.className = 'tc-bubble ' + (isMe ? 'outbound' : 'inbound');
 
     var senderLabel = isMe ? '' : '<div class="tc-bubble-sender">' + (msg.senderName || 'Unknown') + '</div>';
-    div.innerHTML = senderLabel +
-      '<div class="tc-bubble-text">' + escapeHtml(msg.text) + '</div>' +
+    var textHtml = msg.text ? '<div class="tc-bubble-text">' + escapeHtml(msg.text) + '</div>' : '';
+    var attachHtml = '';
+    if(msg.attachments && msg.attachments.length){
+      attachHtml = '<div class="tc-bubble-attach">';
+      msg.attachments.forEach(function(att){
+        if(att.type && att.type.startsWith('image/')){
+          attachHtml += '<a href="' + att.url + '" target="_blank" rel="noopener"><img src="' + att.url + '" alt="' + escapeHtml(att.name) + '" loading="lazy"/></a>';
+        } else {
+          var sizeStr = att.size < 1024 ? att.size + ' B' : att.size < 1048576 ? (att.size/1024).toFixed(0) + ' KB' : (att.size/1048576).toFixed(1) + ' MB';
+          attachHtml += '<a href="' + att.url + '" target="_blank" rel="noopener" download="' + escapeHtml(att.name) + '"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ' + escapeHtml(att.name) + ' <span style="color:var(--gray2);font-size:9.5px;">(' + sizeStr + ')</span></a>';
+        }
+      });
+      attachHtml += '</div>';
+    }
+    div.innerHTML = senderLabel + textHtml + attachHtml +
       '<div class="tc-bubble-time">' + formatTime(msg.createdAt) + '</div>';
     container.appendChild(div);
   });
@@ -478,26 +528,89 @@ function escapeHtml(str){
   return d.innerHTML;
 }
 
+// ── File handling ──
+var _pendingFiles = [];
+
+function handleFileSelect(files){
+  for(var i = 0; i < files.length; i++){
+    if(files[i].size > 10 * 1024 * 1024){
+      alert(files[i].name + ' is too large (max 10 MB)');
+      continue;
+    }
+    _pendingFiles.push(files[i]);
+  }
+  renderAttachBar();
+  document.getElementById('tc-file-input').value = '';
+}
+
+function removeFile(idx){
+  _pendingFiles.splice(idx, 1);
+  renderAttachBar();
+}
+
+function renderAttachBar(){
+  var bar = document.getElementById('tc-attach-bar');
+  if(!_pendingFiles.length){
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+  bar.style.display = '';
+  bar.innerHTML = _pendingFiles.map(function(f, i){
+    var size = f.size < 1024 ? f.size + ' B' : (f.size / 1024).toFixed(0) + ' KB';
+    return '<span class="tc-attach-chip">' + escapeHtml(f.name) + ' <span style="color:var(--gray2);">(' + size + ')</span> <span class="remove" onclick="removeFile(' + i + ')">&times;</span></span>';
+  }).join('');
+}
+
+// ── Chat list toggle (mobile) ──
+function toggleChatList(){
+  document.querySelector('.chat-list-panel').classList.toggle('open');
+}
+
 // ── Send a message ──
 async function sendMessage(){
   var input = document.getElementById('tc-input');
   var text = input.value.trim();
-  if(!text || !_activeChatId) return;
+  if(!text && !_pendingFiles.length) return;
+  if(!_activeChatId) return;
 
   input.value = '';
   input.style.height = 'auto';
+  var files = _pendingFiles.slice();
+  _pendingFiles = [];
+  renderAttachBar();
 
   try {
-    var msg = await API.teamChat.send(_activeChatId, { text: text, senderName: _myName });
-    // Add to local list and re-render immediately
+    var msg;
+    if(files.length){
+      // Use FormData for file upload
+      msg = await sendWithFiles(_activeChatId, text, files);
+    } else {
+      msg = await API.teamChat.send(_activeChatId, { text: text, senderName: _myName });
+    }
     _messages.push(msg);
     renderMessages(_messages);
-    // Refresh chat list to update preview
     loadChats();
   } catch(e){
     alert('Failed to send message: ' + e.message);
     input.value = text;
   }
+}
+
+async function sendWithFiles(chatId, text, files){
+  var token = await getAuthToken();
+  var fd = new FormData();
+  fd.append('text', text);
+  fd.append('senderName', _myName);
+  files.forEach(function(f){ fd.append('files', f); });
+  var res = await fetch('/api/team-chat/' + chatId + '/messages', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token },
+    body: fd,
+  });
+  var data = await res.json();
+  if(!res.ok) throw new Error(data.error || 'Upload failed');
+  return data;
 }
 
 // ── New Chat Modal ──
@@ -592,8 +705,6 @@ async function deleteChat(chatId){
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  document.body.style.visibility = "hidden";
-
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
@@ -603,7 +714,6 @@ async function deleteChat(chatId){
       console.warn("[SWFT-REDIRECT] team-chat onAuthStateChanged saw no user");
       window.location.href = "swft-login";
     } else {
-      document.body.style.visibility = "visible";
       window.__swftUser = user;
       _myUid = user.uid;
 

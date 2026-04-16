@@ -823,8 +823,7 @@ async function createQuoteFromEstimate(){
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
   const firebaseConfig={apiKey:"AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",authDomain:"swft-ai26.firebaseapp.com",projectId:"swft-ai26",storageBucket:"swft-ai26.firebasestorage.app",messagingSenderId:"170879575187",appId:"1:170879575187:web:e329382b0adf9518ead966",measurementId:"G-B8BEW7E87V"};
   const app=initializeApp(firebaseConfig);const auth=getAuth(app);
-  document.body.style.visibility="hidden";
-  onAuthStateChanged(auth, async (user)=>{ if(!user){ try{ if(auth.authStateReady) await auth.authStateReady(); }catch(_){}; user=auth.currentUser; } if(!user){ console.warn("[SWFT-REDIRECT] quotes onAuthStateChanged saw no user"); window.location.href="swft-login"; } else { document.body.style.visibility="visible"; window.__swftUser=user; loadQuotes(); }});
+  onAuthStateChanged(auth, async (user)=>{ if(!user){ try{ if(auth.authStateReady) await auth.authStateReady(); }catch(_){}; user=auth.currentUser; } if(!user){ console.warn("[SWFT-REDIRECT] quotes onAuthStateChanged saw no user"); window.location.href="swft-login"; } else { window.__swftUser=user; loadQuotes(); }});
 </script>
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-settings-loader.js"></script>

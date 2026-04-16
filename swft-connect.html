@@ -466,7 +466,6 @@ window.subscribeAppleCalendar = async function() {
 async function init() {
   var user;
   try { user = await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
-  document.body.style.visibility = 'visible';
   await loadIntegrations(user);
 }
 init();

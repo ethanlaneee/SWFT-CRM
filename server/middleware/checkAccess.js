@@ -59,6 +59,7 @@ const METHOD_PERMISSION = {
   "/api/automations":       { GET: "automations.view", POST: "automations.manage",     PUT: "automations.manage", DELETE: "automations.manage" },
   "/api/import":            { GET: "import.use",       POST: "import.use" },
   "/api/google-business":   { GET: "reviews.view",     POST: "reviews.respond",        PUT: "reviews.respond" },
+  "/api/team-chat":         { GET: "teamchat.view",    POST: "teamchat.send",          DELETE: "teamchat.view" },
 };
 
 // Human-readable labels for 403 messages
@@ -107,6 +108,8 @@ const PERM_LABEL = {
   "team.manage":           "manage team members",
   "integrations.manage":   "manage SWFT Connect",
   "settings.manage":       "change settings",
+  "teamchat.view":         "view team chat",
+  "teamchat.send":         "send team messages",
 };
 
 // Permissions per built-in role
@@ -129,6 +132,7 @@ const ROLE_PERMISSIONS = {
     "reviews.view","reviews.respond",
     "intake.view","intake.manage",
     "import.use",
+    "teamchat.view","teamchat.send",
     "team.manage",
     "integrations.manage",
     "settings.manage",
@@ -148,6 +152,7 @@ const ROLE_PERMISSIONS = {
     "automations.view",
     "reviews.view","reviews.respond",
     "intake.view",
+    "teamchat.view","teamchat.send",
   ]),
   technician: new Set([
     "dashboard.view",
@@ -157,6 +162,7 @@ const ROLE_PERMISSIONS = {
     "messages.view","messages.send",
     // photos.upload intentionally omitted — owner grants it via team permissions
     "ai.use",
+    "teamchat.view","teamchat.send",
   ]),
 };
 
@@ -257,6 +263,9 @@ async function checkAccess(req, res, next) {
         }
       }
     }
+
+    // Expose resolved permissions to downstream route handlers
+    req.userPermissions = allowedPerms; // null = owner (unrestricted), Set otherwise
 
     return next();
   } catch (err) {

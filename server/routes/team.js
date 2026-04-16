@@ -313,8 +313,8 @@ const DEFAULT_PERMISSIONS = [
   { id: "customers.edit",       label: "Edit Customers",         group: "Customers" },
   { id: "customers.delete",     label: "Delete Customers",       group: "Customers" },
   // Jobs
-  { id: "jobs.view",            label: "View Jobs",              group: "Jobs" },
-  { id: "jobs.viewAll",         label: "View All Jobs (not just assigned)", group: "Jobs" },
+  { id: "jobs.view",            label: "View Assigned Jobs",     group: "Jobs" },
+  { id: "jobs.viewAll",         label: "View All Jobs",          group: "Jobs" },
   { id: "jobs.add",             label: "Add Jobs",               group: "Jobs" },
   { id: "jobs.edit",            label: "Edit Jobs",              group: "Jobs" },
   { id: "jobs.delete",          label: "Delete Jobs",            group: "Jobs" },
