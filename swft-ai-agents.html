@@ -1,97 +1,159 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-<title>SWFT — Automations</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+<title>Automations — SWFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg:#0a0a0a; --surface:#111111; --surface2:#181818;
-    --border:#1f1f1f; --border2:#2c2c2c;
-    --green:#c8f135; --white:#f0f0f0; --gray:#7a7a7a; --gray2:#444444;
-    --blue:#4d9fff; --amber:#f5a623; --red:#ff5252; --purple:#b388ff;
-    --sidebar-w:228px;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html{background:#0a0a0a;}
-  body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
-
-/* ── SIDEBAR ── */
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--surface3:#1e1e1e;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{background:#0a0a0a;}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
 .logo-mark em{color:var(--green);font-style:normal;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
-.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
-.collapse-btn:hover{background:var(--surface2);color:var(--white);}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
-.nav-label{font-size:9px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
 .nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
 .nav-item:hover{background:var(--surface2);color:var(--white);}
 .nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
 .nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
 .nav-item.active .nav-icon{opacity:1;}
-.nav-badge{margin-left:auto;background:var(--green);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
-.nav-divider{height:1px;background:var(--border);margin:8px 12px;}
 .sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
 .user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
 .user-tile:hover{background:var(--surface2);}
-.s-avatar,.avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .user-name{font-size:12px;font-weight:500;color:var(--white);}
 .user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
-.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
-.sidebar-toggle.visible{opacity:1;pointer-events:all;}
-.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 
-/* ── MAIN ── */
-.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main{margin-left:var(--sidebar-w);flex:1;padding:32px 36px 64px;max-width:960px;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
 .main.expanded{margin-left:0!important;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:16px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);margin-bottom:4px;}
+.subtitle{color:var(--gray);font-size:13px;max-width:560px;line-height:1.5;}
+.btn-save-primary{background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;padding:11px 22px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.15s;display:flex;align-items:center;gap:8px;}
+.btn-save-primary:hover:not(:disabled){background:#d5ff40;}
+.btn-save-primary:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-save-primary.dirty{box-shadow:0 0 0 3px rgba(200,241,53,0.2);animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(200,241,53,0.2);}50%{box-shadow:0 0 0 6px rgba(200,241,53,0.08);}}
 
-/* ── TOPBAR ── */
-.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;animation:fadeDown 0.3s ease 0.15s both;}
-@keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
-.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
-.topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.ai-pill{display:flex;align-items:center;gap:7px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;padding:5px 13px;font-size:11.5px;font-weight:500;color:var(--green);cursor:pointer;}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:glow 2.2s ease-in-out infinite;}
-@keyframes glow{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(200,241,53,0.5);}50%{opacity:0.6;box-shadow:0 0 0 4px rgba(200,241,53,0);}}
-
-/* ── PAGE BODY ── */
-.page-body{flex:1;padding:28px 28px 48px;display:flex;flex-direction:column;gap:20px;}
-
-/* ── HERO STRIP ── */
-.hero-strip{background:linear-gradient(135deg,rgba(200,241,53,0.06) 0%,rgba(200,241,53,0.02) 100%);border:1px solid rgba(200,241,53,0.14);border-radius:14px;padding:20px 26px;display:flex;align-items:center;gap:18px;}
-.hero-icon{font-size:36px;flex-shrink:0;}
-.hero-text h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);}
-.hero-text p{font-size:13px;color:var(--gray);margin-top:4px;line-height:1.5;}
-.hero-stats{margin-left:auto;display:flex;gap:28px;flex-shrink:0;}
-.hstat{text-align:right;}
-.hstat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:var(--green);}
-.hstat-label{font-size:10px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
-
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* ── TOAST ── */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.toast-dot.red{background:var(--red);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+/* Explainer / flow banner */
+.flow-banner{background:linear-gradient(135deg,rgba(77,159,255,0.06),rgba(200,241,53,0.04));border:1px solid var(--border2);border-radius:14px;padding:20px 24px;margin-bottom:28px;}
+.flow-banner-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:14px;}
+.flow-strip{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 0 2px;}
+.flow-step{display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:110px;text-align:center;}
+.flow-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid;margin-bottom:8px;}
+.flow-dot.c1{background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);}
+.flow-dot.c2{background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);}
+.flow-dot.c3{background:rgba(162,89,255,0.1);border-color:var(--purple);color:var(--purple);}
+.flow-dot.c4{background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);}
+.flow-step-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;margin-bottom:2px;}
+.flow-step-value{font-size:11.5px;color:var(--white);font-weight:500;line-height:1.3;max-width:120px;}
+.flow-arrow{align-self:center;color:var(--border2);margin:0 2px;margin-top:-22px;flex-shrink:0;}
 
-/* ── TOPBAR COLLAPSE OFFSET ── */
-.topbar { transition: padding-left 0.28s cubic-bezier(0.22,1,0.36,1); }
-.main.expanded .topbar { padding-left: 56px; }
+/* Behavior card */
+.behavior{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;transition:border-color 0.15s;}
+.behavior:hover{border-color:var(--border2);}
+.behavior.off{opacity:0.55;}
+.behavior-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);gap:16px;}
+.behavior-head-left{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
+.behavior-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid;flex-shrink:0;}
+.behavior-icon.qf{background:rgba(77,159,255,0.1);border-color:rgba(77,159,255,0.3);color:var(--blue);}
+.behavior-icon.ar{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.28);color:var(--green);}
+.behavior-icon.mem{background:rgba(162,89,255,0.1);border-color:rgba(162,89,255,0.3);color:var(--purple);}
+.behavior-title{font-size:15px;font-weight:600;color:var(--white);letter-spacing:0.2px;}
+.behavior-desc{font-size:12px;color:var(--gray);margin-top:2px;line-height:1.4;}
+.behavior-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;}
+.behavior-pill.on{background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.25);}
+.behavior-pill.off{background:rgba(122,122,122,0.1);color:var(--gray);border:1px solid var(--border2);}
+.behavior-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.behavior-body{padding:22px 22px 24px;}
+.behavior.off .behavior-body{pointer-events:none;filter:saturate(0.3);}
 
+/* Toggles */
+.toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(16px);}
 
+/* Field grid inside cards */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media (max-width:600px){.grid,.grid-3{grid-template-columns:1fr;}}
+.field{margin-bottom:16px;}
+.field-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;margin-bottom:6px;display:block;}
+.field-hint{font-size:11px;color:var(--gray);margin-top:4px;line-height:1.4;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.form-textarea{resize:vertical;min-height:90px;line-height:1.5;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green);}
+.form-select{appearance:none;cursor:pointer;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237a7a7a' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.form-select option{background:var(--surface2);}
+
+/* Inline toggle rows inside cards */
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--border);}
+.toggle-row:first-child{border-top:none;padding-top:4px;}
+.toggle-row-text{flex:1;min-width:0;}
+.toggle-row-title{font-size:13px;color:var(--white);font-weight:500;}
+.toggle-row-desc{font-size:11.5px;color:var(--gray);margin-top:3px;line-height:1.4;}
+
+/* Channel chips */
+.chan-group{display:flex;flex-wrap:wrap;gap:8px;}
+.chan-chip{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:20px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--gray);cursor:pointer;user-select:none;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
+.chan-chip:hover{border-color:var(--gray2);color:var(--white);}
+.chan-chip.on{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.4);color:var(--green);}
+.chan-chip-dot{width:7px;height:7px;border-radius:50%;background:var(--gray2);}
+.chan-chip.on .chan-chip-dot{background:var(--green);}
+
+/* Variable chips */
+.var-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;margin-bottom:6px;}
+.var-chip{display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;}
+.var-chip:hover{background:rgba(200,241,53,0.15);border-color:rgba(200,241,53,0.35);}
+
+/* Segmented control (SMS / Email) */
+.segment{display:inline-flex;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:3px;gap:2px;}
+.segment button{background:transparent;border:none;padding:7px 16px;font-size:12px;color:var(--gray);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all 0.14s;}
+.segment button.on{background:var(--surface3);color:var(--white);box-shadow:0 1px 2px rgba(0,0,0,0.2);}
+.segment button:hover:not(.on){color:var(--white);}
+
+/* Section divider inside card body */
+.sub-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
+.sub-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sub-label-icon{color:var(--amber);}
+
+/* Pending messages */
+.section-head{display:flex;align-items:center;gap:10px;margin:36px 0 14px;cursor:pointer;user-select:none;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white);}
+.section-count{background:var(--surface2);color:var(--gray);font-size:11px;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;}
+.chevron{transition:transform 0.2s;color:var(--gray);}
+.chevron.open{transform:rotate(180deg);}
+.pending-wrap{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+.pending-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.pending-table th{text-align:left;padding:8px 12px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);border-bottom:1px solid var(--border);font-weight:600;}
+.pending-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--white);}
+.pending-table tr:last-child td{border-bottom:none;}
+.status-badge{padding:2px 8px;border-radius:10px;font-size:10.5px;font-family:'JetBrains Mono',monospace;}
+.status-pending{background:rgba(245,166,35,0.1);color:var(--amber);}
+.status-sent{background:rgba(200,241,53,0.1);color:var(--green);}
+.status-failed{background:rgba(255,82,82,0.1);color:var(--red);}
+.btn-icon{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.btn-icon:hover{background:var(--surface2);color:var(--white);}
+.btn-icon.del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
 </style>
 
 <!-- Meta Pixel Code -->
@@ -110,18 +172,12 @@ fbq('track', 'PageView');
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
 
-<!-- SIDEBAR -->
-
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
-    <div>
-      <div class="logo-mark">SWFT<em>.</em></div>
-      <div class="logo-sub">simple. smart. swft.</div>
-    </div>
+    <div><div class="logo-mark">SWFT<em>.</em></div><div class="logo-sub">simple. smart. swft.</div></div>
     <div class="collapse-btn" onclick="toggleSidebar()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
@@ -148,520 +204,548 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
     <div class="nav-label">Tools</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
-    <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
     <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
     <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
   </nav>
-  <div class="sidebar-footer"><div class="nav-item" onclick="window.location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="location.href='swft-settings'" style="margin-bottom:4px;"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings</div>
     <div class="user-tile">
-      <div class="avatar" id="user-avatar"></div>
-      <div>
-        <div class="user-name" id="user-name"></div>
-        <div class="user-role">—</div>
-      </div>
+      <div class="s-avatar"></div>
+      <div><div class="user-name"></div><div class="user-role"></div></div>
     </div>
   </div>
 </aside>
-
-<!-- MAIN -->
-
-<div class="main" id="main">
-  <header class="topbar">
-    <div class="topbar-page">AUTOMATIONS</div>
-    <span class="topbar-slash">/</span>
-    <div class="topbar-sub">3 automations active</div>
-    <div class="topbar-right">
-      <div class="ai-pill"><div class="pulse"></div>3 / 3 Active</div>
-    </div>
-  </header>
-
-  <div class="page-body">
-
-<!-- Stat Strip -->
-<div class="stat-strip">
-  <div class="stat-card c-green"><div class="stat-label">Automations sent MTD</div><div class="stat-value" id="stat-sent">0</div><div class="stat-sub" id="stat-sent-sub">this month</div></div>
-  <div class="stat-card c-blue"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">0</div><div class="stat-sub">scheduled to send</div></div>
-  <div class="stat-card c-amber"><div class="stat-label">Quote follow-ups</div><div class="stat-value" id="stat-quotes">0</div><div class="stat-sub">this month</div></div>
-  <div class="stat-card c-green"><div class="stat-label">Invoice follow-ups</div><div class="stat-value" id="stat-invoices">0</div><div class="stat-sub">this month</div></div>
-</div>
-
-<!-- Toolbar -->
-<div class="toolbar">
-  <div class="search-wrap">
-    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="2"/></svg>
-    <input class="search-input" id="search" placeholder="Search automations..." oninput="renderAutomations()"/>
-  </div>
-  <div class="filter-group">
-    <div class="ftab active" data-filter="all" onclick="setFilter('all')">All</div>
-    <div class="ftab" data-filter="active" onclick="setFilter('active')">Active</div>
-    <div class="ftab" data-filter="paused" onclick="setFilter('paused')">Paused</div>
-  </div>
-  <button class="btn-primary" onclick="openCreateModal()">
-    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
-    New Automation
-  </button>
-</div>
-
-<!-- Automations Table -->
-<div class="table-wrap">
-  <div class="table-head">
-    <div class="th">Name</div>
-    <div class="th">Trigger</div>
-    <div class="th">Channel</div>
-    <div class="th">Delay</div>
-    <div class="th">Status</div>
-    <div class="th" style="text-align:right;">Actions</div>
-  </div>
-  <div id="automations-list">
-    <div style="padding:40px;text-align:center;color:var(--gray2);font-size:13px;">Loading automations...</div>
-  </div>
-</div>
-
-<!-- Recent Activity -->
-<div class="table-wrap" style="margin-top:8px;">
-  <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--white);">RECENT ACTIVITY</div>
-  </div>
-  <div id="activity-list" style="max-height:300px;overflow-y:auto;">
-    <div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No activity yet. Create an automation to get started.</div>
-  </div>
-</div>
-
-  </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
-
-<!-- Floating re-open btn -->
 
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
 </div>
 
-
-<script>
-  // ── Automations State ──
-  let _automations = [];
-  let _filter = 'all';
-
-  const TRIGGERS = {
-    quote_sent: 'Quote sent',
-    invoice_sent: 'Invoice sent',
-    invoice_overdue: 'Invoice overdue',
-    job_completed: 'Job completed',
-    new_customer: 'New customer',
-    custom: 'Custom / manual',
-  };
-  const CHANNELS = { sms: 'SMS', email: 'Email', both: 'Both' };
-
-  function setFilter(f) {
-    _filter = f;
-    document.querySelectorAll('.ftab').forEach(t => t.classList.toggle('active', t.dataset.filter === f));
-    renderAutomations();
-  }
-
-  function renderAutomations() {
-    const search = (document.getElementById('search').value || '').toLowerCase();
-    let list = _automations;
-    if (_filter === 'active') list = list.filter(a => a.enabled);
-    if (_filter === 'paused') list = list.filter(a => !a.enabled);
-    if (search) list = list.filter(a => (a.name || '').toLowerCase().includes(search) || (TRIGGERS[a.trigger] || '').toLowerCase().includes(search));
-
-    const container = document.getElementById('automations-list');
-    if (!list.length) {
-      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray2);font-size:13px;">No automations found. Click "New Automation" to create one.</div>';
-      return;
-    }
-    container.innerHTML = list.map(a => {
-      const triggerLabel = TRIGGERS[a.trigger] || a.trigger || '—';
-      const ch = a.messageType || a.channel || 'sms';
-      const channelLabel = CHANNELS[ch] || ch || 'SMS';
-      var delayLabel = 'Immediate';
-      if (a.delayDays) {
-        var timeStr = a.sendAtTime || '09:00';
-        var timeParts = timeStr.split(':');
-        var h = parseInt(timeParts[0]), m = timeParts[1];
-        var ampm = h >= 12 ? 'PM' : 'AM';
-        if (h > 12) h -= 12; if (h === 0) h = 12;
-        delayLabel = a.delayDays + ' day' + (a.delayDays > 1 ? 's' : '') + ' later at ' + h + ':' + m + ' ' + ampm + ' ET';
-      }
-      const statusColor = a.enabled ? 'var(--green)' : 'var(--gray2)';
-      const statusBg = a.enabled ? 'rgba(200,241,53,0.1)' : 'rgba(100,100,100,0.1)';
-      const statusText = a.enabled ? 'Active' : 'Paused';
-      return '<div class="table-row" onclick="openEditModal(\'' + a.id + '\')">' +
-        '<div class="td"><div style="font-weight:500;color:var(--white);">' + esc(a.name || 'Untitled') + '</div><div style="font-size:11px;color:var(--gray2);margin-top:2px;">' + esc(((a.messageTemplate || a.message || '').substring(0, 60))) + ((a.messageTemplate || a.message || '').length > 60 ? '...' : '') + '</div></div>' +
-        '<div class="td">' + esc(triggerLabel) + '</div>' +
-        '<div class="td">' + esc(channelLabel) + '</div>' +
-        '<div class="td">' + esc(delayLabel) + '</div>' +
-        '<div class="td"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;color:' + statusColor + ';background:' + statusBg + ';">' + statusText + '</span></div>' +
-        '<div class="td" style="text-align:right;display:flex;gap:6px;justify-content:flex-end;">' +
-          '<button class="icon-btn" onclick="event.stopPropagation();toggleAutomation(\'' + a.id + '\')" title="' + (a.enabled ? 'Pause' : 'Enable') + '"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + (a.enabled ? '<rect x="6" y="4" width="4" height="16" rx="1" stroke-width="2"/><rect x="14" y="4" width="4" height="16" rx="1" stroke-width="2"/>' : '<polygon points="5,3 19,12 5,21" stroke-width="2" stroke-linejoin="round"/>') + '</svg></button>' +
-          '<button class="icon-btn" onclick="event.stopPropagation();deleteAutomation(\'' + a.id + '\')" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2"/></svg></button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  }
-
-  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-
-  async function loadAutomations() {
-    try {
-      const data = await API.automations.list();
-      _automations = Array.isArray(data) ? data : (data.automations || []);
-      renderAutomations();
-    } catch (e) { console.error('Failed to load automations:', e); }
-  }
-
-  async function loadStats() {
-    try {
-      const stats = await API.agents.automationStats();
-      document.getElementById('stat-sent').textContent = stats.totalSentMTD || 0;
-      document.getElementById('stat-pending').textContent = stats.pendingCount || 0;
-      document.getElementById('stat-quotes').textContent = stats.quoteTriggers || 0;
-      document.getElementById('stat-invoices').textContent = stats.invoiceTriggers || 0;
-    } catch (e) { console.error('Failed to load stats:', e); }
-  }
-
-  async function loadActivity() {
-    try {
-      const activity = await API.agents.activity('automation');
-      const container = document.getElementById('activity-list');
-      if (!activity.length) return;
-      container.innerHTML = activity.slice(0, 15).map(a => {
-        const colors = { automation_send: 'var(--green)', quote_sent: 'var(--blue)', invoice_sent: 'var(--amber)' };
-        const labels = { automation_send: 'Automation sent', quote_sent: 'Quote follow-up', invoice_sent: 'Invoice follow-up' };
-        const color = colors[a.type] || 'var(--gray)';
-        const label = labels[a.type] || a.type;
-        const who = a.customerName ? ' to ' + a.customerName : '';
-        const time = a.createdAt ? timeAgo(a.createdAt) : '';
-        return '<div style="padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">' +
-          '<div style="width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0;"></div>' +
-          '<div style="flex:1;font-size:12.5px;color:var(--white);">' + esc(label) + esc(who) + '</div>' +
-          '<div style="font-size:10.5px;color:var(--gray2);font-family:\'JetBrains Mono\',monospace;">' + time + '</div>' +
-        '</div>';
-      }).join('');
-    } catch (e) {}
-  }
-
-  function timeAgo(ts) {
-    const diff = Date.now() - ts;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return mins + 'm ago';
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return hrs + 'h ago';
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return days + 'd ago';
-    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  // ── CRUD ──
-  function openCreateModal() {
-    document.getElementById('modal-title').textContent = 'NEW AUTOMATION';
-    document.getElementById('m-id').value = '';
-    document.getElementById('m-name').value = '';
-    document.getElementById('m-trigger').value = 'quote_sent';
-    document.getElementById('m-channel').value = 'sms';
-    document.getElementById('m-delay-days').value = '1';
-    document.getElementById('m-send-time').value = '09:00';
-    document.getElementById('m-message').value = '';
-    document.getElementById('m-subject').value = '';
-    document.getElementById('m-enabled').checked = true;
-    document.getElementById('m-subject-row').style.display = 'none';
-    document.getElementById('delete-btn').style.display = 'none';
-    onDelayChange();
-    var overlay = document.getElementById('modal-overlay');
-    overlay.style.display = 'flex';
-    requestAnimationFrame(function(){ overlay.classList.add('open'); });
-  }
-
-  function openEditModal(id) {
-    console.log('[automations] openEditModal called, id:', id);
-    const a = _automations.find(x => x.id === id);
-    if (!a) { console.warn('[automations] automation not found:', id); return; }
-    document.getElementById('modal-title').textContent = 'EDIT AUTOMATION';
-    document.getElementById('m-id').value = a.id;
-    document.getElementById('m-name').value = a.name || '';
-    document.getElementById('m-trigger').value = a.trigger || 'quote_sent';
-    var ch = a.messageType || a.channel || 'sms';
-    document.getElementById('m-channel').value = ch;
-    document.getElementById('m-delay-days').value = (a.delayDays != null) ? a.delayDays : '';
-    document.getElementById('m-send-time').value = a.sendAtTime || '09:00';
-    document.getElementById('m-message').value = a.messageTemplate || a.message || '';
-    document.getElementById('m-subject').value = a.emailSubject || a.subject || '';
-    document.getElementById('m-enabled').checked = !!a.enabled;
-    document.getElementById('m-subject-row').style.display = (ch === 'email' || ch === 'both') ? '' : 'none';
-    document.getElementById('delete-btn').style.display = '';
-    onDelayChange();
-    var overlay = document.getElementById('modal-overlay');
-    overlay.style.display = 'flex';
-    requestAnimationFrame(function(){ overlay.classList.add('open'); });
-  }
-
-  function closeModal() {
-    var overlay = document.getElementById('modal-overlay');
-    overlay.classList.remove('open');
-    setTimeout(function(){ overlay.style.display = 'none'; }, 260);
-  }
-
-  function onChannelChange() {
-    var ch = document.getElementById('m-channel').value;
-    document.getElementById('m-subject-row').style.display = (ch === 'email' || ch === 'both') ? '' : 'none';
-  }
-
-  function onDelayChange() {
-    var days = parseInt(document.getElementById('m-delay-days').value) || 0;
-    document.getElementById('m-time-row').style.display = days > 0 ? '' : 'none';
-  }
-
-  async function saveAutomation() {
-    const id = document.getElementById('m-id').value;
-    const data = {
-      name: document.getElementById('m-name').value.trim(),
-      trigger: document.getElementById('m-trigger').value,
-      messageType: document.getElementById('m-channel').value,
-      delayDays: parseInt(document.getElementById('m-delay-days').value) || 0,
-      delayHours: 0,
-      sendAtTime: document.getElementById('m-send-time').value || '09:00',
-      messageTemplate: document.getElementById('m-message').value.trim(),
-      emailSubject: document.getElementById('m-subject').value.trim(),
-      enabled: document.getElementById('m-enabled').checked,
-    };
-    if (!data.name) { showToast('Name is required'); return; }
-    if (!data.messageTemplate) { showToast('Message is required'); return; }
-
-    const btn = document.getElementById('save-btn');
-    btn.textContent = 'Saving...'; btn.disabled = true;
-    try {
-      if (id) {
-        await API.automations.update(id, data);
-        showToast('Automation updated');
-      } else {
-        await API.automations.create(data);
-        showToast('Automation created');
-      }
-      closeModal();
-      await loadAutomations();
-      await loadStats();
-    } catch (e) { showToast('Error: ' + (e.message || 'Failed')); }
-    finally { btn.textContent = 'Save Automation'; btn.disabled = false; }
-  }
-
-  async function toggleAutomation(id) {
-    try {
-      const a = _automations.find(x => x.id === id);
-      if (!a) return;
-      await API.automations.update(id, { enabled: !a.enabled });
-      a.enabled = !a.enabled;
-      renderAutomations();
-      updateTopbarCounts();
-      showToast(a.enabled ? 'Automation enabled' : 'Automation paused');
-    } catch (e) { showToast('Error toggling'); }
-  }
-
-  async function deleteAutomation(id) {
-    const ok = await swftConfirm('Delete this automation? Any pending messages will be canceled.', 'DELETE', '🗑️', 'Delete');
-    if (!ok) return;
-    try {
-      await API.automations.delete(id);
-      showToast('Automation deleted');
-      await loadAutomations();
-    } catch (e) { showToast('Error deleting'); }
-  }
-
-  function deleteFromModal() {
-    const id = document.getElementById('m-id').value;
-    if (id) { closeModal(); deleteAutomation(id); }
-  }
-
-  function updateTopbarCounts() {
-    const onCount = _automations.filter(a => a.enabled).length;
-    const total = _automations.length;
-    const topSub = document.querySelector('.topbar-sub');
-    const aiPill = document.querySelector('.ai-pill');
-    if (topSub) topSub.textContent = onCount + ' automation' + (onCount !== 1 ? 's' : '') + ' active';
-    if (aiPill) aiPill.innerHTML = '<div class="pulse"></div>' + onCount + ' / ' + total + ' Active';
-  }
-
-  // ── Init ──
-  const _initInterval = setInterval(() => {
-    if (window.__swftUser) {
-      clearInterval(_initInterval);
-      loadAutomations().then(updateTopbarCounts);
-      loadStats();
-      loadActivity();
-      // Refresh activity every 30 seconds
-      setInterval(loadActivity, 30000);
-    }
-  }, 200);
-
-  function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('collapsed');
-    document.getElementById('main').classList.toggle('expanded');
-    document.getElementById('sidebar-toggle').classList.toggle('visible');
-  }
-
-  let _toastTimer;
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    document.getElementById('toast-msg').textContent = msg;
-    t.classList.add('show');
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
-  }
-
-  // Debug: verify functions are global
-  console.log('[automations] Script loaded. openCreateModal:', typeof openCreateModal, 'openEditModal:', typeof openEditModal);
-  window.addEventListener('error', function(e) { console.error('[automations] Global error:', e.message, e.filename, e.lineno); });
-</script>
-
-<!-- Create/Edit Automation Modal -->
-<div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closeModal()">
-  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:520px;max-width:94vw;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
-    <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);" id="modal-title">NEW AUTOMATION</div>
-      <button onclick="closeModal()" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);">✕</button>
+<main class="main" id="main">
+  <div class="page-header">
+    <div>
+      <h1>AI AUTOMATIONS</h1>
+      <p class="subtitle">Every AI-driven action SWFT takes on your behalf — fully visible, fully editable. Flip anything on or off, tweak the templates, and the agent adapts immediately.</p>
     </div>
-    <input type="hidden" id="m-id"/>
-    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Name</label>
-        <input id="m-name" type="text" placeholder="e.g. Quote follow-up Day 1" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+    <button class="btn-save-primary" id="save-btn" onclick="saveAll()" disabled>
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke-width="2"/><polyline points="17 21 17 13 7 13 7 21" stroke-width="2"/><polyline points="7 3 7 8 15 8" stroke-width="2"/></svg>
+      <span id="save-label">Saved</span>
+    </button>
+  </div>
+
+  <div class="flow-banner">
+    <div class="flow-banner-title">How the quote follow-up works</div>
+    <div class="flow-strip">
+      <div class="flow-step">
+        <div class="flow-dot c1"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="2"/><polyline points="14,2 14,8 20,8" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--blue);">Quote Sent</div>
+        <div class="flow-step-value">Customer receives the quote by SMS or email</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="display:flex;flex-direction:column;gap:3px;">
-          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Trigger</label>
-          <select id="m-trigger" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-            <option value="quote_sent">Quote sent</option>
-            <option value="invoice_sent">Invoice sent</option>
-            <option value="invoice_overdue">Invoice overdue</option>
-            <option value="job_completed">Job completed</option>
-            <option value="new_customer">New customer</option>
-            <option value="custom">Custom / manual</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:3px;">
-          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Channel</label>
-          <select id="m-channel" onchange="onChannelChange()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-            <option value="sms">SMS</option>
-            <option value="email">Email</option>
-            <option value="both">Both</option>
-          </select>
-        </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c2"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--amber);">Wait</div>
+        <div class="flow-step-value" id="flow-wait-text">3 days at 9:00 AM ET</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="display:flex;flex-direction:column;gap:3px;">
-          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Delay (days)</label>
-          <input id="m-delay-days" type="number" min="0" placeholder="0 = immediate" oninput="onDelayChange()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-          <span style="font-size:9px;color:var(--gray2);">0 = sends immediately</span>
-        </div>
-        <div id="m-time-row" style="display:flex;flex-direction:column;gap:3px;">
-          <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Send at time</label>
-          <input id="m-send-time" type="time" value="09:00" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
-          <span style="font-size:9px;color:var(--gray2);">Eastern time</span>
-        </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c3"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1M4.22 4.22l.71.71M1 12h1M20 12h1M19.07 4.22l-.71.71" stroke-width="2" stroke-linecap="round"/><path d="M12 17a5 5 0 0 0 5-5 5 5 0 1 0-10 0 5 5 0 0 0 5 5z" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--purple);">AI Check</div>
+        <div class="flow-step-value">Claude scans the conversation to see if they already replied</div>
       </div>
-      <div id="m-subject-row" style="display:none;flex-direction:column;gap:3px;">
-        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Email Subject</label>
-        <input id="m-subject" type="text" placeholder="e.g. Following up on your quote" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c4"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--green);">Check In</div>
+        <div class="flow-step-value">Only if still pending — otherwise skip silently</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Message</label>
-        <textarea id="m-message" rows="4" placeholder="Hey {customerFirstName}, just following up on..." style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;line-height:1.6;"></textarea>
-        <span style="font-size:10px;color:var(--gray2);">Variables: {customerFirstName}, {customerFullName}, {yourName}, {yourFirstName}, {companyName}, {service}, {total}, {address}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <label style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;">Enabled</label>
-        <input id="m-enabled" type="checkbox" checked style="accent-color:var(--green);width:16px;height:16px;">
-      </div>
-    </div>
-    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
-      <button id="delete-btn" onclick="deleteFromModal()" style="display:none;padding:10px 16px;border-radius:9px;border:1px solid var(--red);background:transparent;color:var(--red);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Delete</button>
-      <div style="flex:1;"></div>
-      <button onclick="closeModal()" style="padding:10px 16px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
-      <button onclick="saveAutomation()" id="save-btn" style="padding:10px 20px;border-radius:9px;border:1px solid var(--green);background:var(--green);color:#0a0a0a;font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Save Automation</button>
     </div>
   </div>
-</div>
-<style>
-#modal-overlay.open{display:flex;opacity:1;pointer-events:all;}
-.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp 0.4s ease both;}
-.stat-card:nth-child(1){animation-delay:.04s;}.stat-card:nth-child(2){animation-delay:.09s;}.stat-card:nth-child(3){animation-delay:.14s;}.stat-card:nth-child(4){animation-delay:.19s;}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c);border-radius:12px 12px 0 0;}
-.stat-card.c-green{--c:var(--green);}.stat-card.c-blue{--c:var(--blue);}.stat-card.c-amber{--c:var(--amber);}.stat-card.c-red{--c:var(--red);}
-.stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);}
-.stat-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:5px;}
-.stat-sub{font-size:11px;color:var(--gray2);margin-top:4px;}
-.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.search-wrap{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:9px 14px;flex:1;max-width:320px;transition:border-color 0.15s;}
-.search-wrap:focus-within{border-color:var(--green);}
-.search-input{background:transparent;border:none;outline:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;flex:1;}
-.search-input::placeholder{color:var(--gray2);}
-.filter-group{display:flex;gap:4px;}
-.ftab{font-size:11.5px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);color:var(--gray);transition:all 0.14s;user-select:none;}
-.ftab:hover{color:var(--white);border-color:var(--gray2);}
-.ftab.active{background:rgba(200,241,53,0.1);color:var(--green);border-color:rgba(200,241,53,0.25);}
-.btn-primary{display:flex;align-items:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s;margin-left:auto;}
-.btn-primary:hover{background:#d5ff40;transform:translateY(-1px);box-shadow:0 4px 18px rgba(200,241,53,0.22);}
-.icon-btn{width:30px;height:30px;border-radius:7px;background:transparent;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
-.icon-btn:hover{background:var(--surface2);color:var(--white);}
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.table-head{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 1fr 0.8fr 100px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
-.th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:500;}
-.table-row{display:grid;grid-template-columns:2fr 1.2fr 0.8fr 1fr 0.8fr 100px;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s;align-items:center;}
-.table-row:hover{background:var(--surface2);}
-.table-row:last-child{border-bottom:none;}
-.td{font-size:12.5px;color:var(--gray);overflow:hidden;text-overflow:ellipsis;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 
-</style>
+  <div class="behavior" id="card-qf">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon qf"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="9" y1="13" x2="15" y2="13" stroke-width="1.6"/><line x1="9" y1="17" x2="13" y2="17" stroke-width="1.6"/></svg></div>
+        <div>
+          <div class="behavior-title">Quote Follow-Up</div>
+          <div class="behavior-desc">Automatically checks in on customers after a quote is sent — only if they haven't already responded or accepted.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="qf-pill">Active</span>
+        <button class="toggle on" id="qf-enabled" data-bind="quoteFollowup.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="qf-body">
+      <div class="grid-3">
+        <div class="field">
+          <label class="field-label">Wait time (days)</label>
+          <input class="form-input" type="number" min="0" max="365" id="qf-delay-days" data-bind="quoteFollowup.delayDays" value="3"/>
+          <div class="field-hint">How many days after the quote is sent.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Extra hours</label>
+          <input class="form-input" type="number" min="0" max="23" id="qf-delay-hours" data-bind="quoteFollowup.delayHours" value="0"/>
+          <div class="field-hint">Set to 0 unless you want sub-day delay.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Send at (ET)</label>
+          <input class="form-input" type="time" id="qf-send-time" data-bind="quoteFollowup.sendAtTime" value="09:00"/>
+          <div class="field-hint">Never sends outside this local time window.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Channel</label>
+        <div class="segment" id="qf-channel-seg">
+          <button type="button" data-channel="sms" class="on">SMS</button>
+          <button type="button" data-channel="email">Email</button>
+        </div>
+        <div class="field-hint">Email replies thread into the original quote email so the customer sees the conversation.</div>
+      </div>
+      <div id="qf-sms-fields">
+        <div class="field">
+          <label class="field-label">SMS template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="qf-sms-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{service}">{service}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{total}">{total}</span>
+          </div>
+          <textarea class="form-textarea" id="qf-sms-template" data-bind="quoteFollowup.smsTemplate" placeholder="Hi {customerFirstName}, this is {yourFirstName} from {companyName}..."></textarea>
+        </div>
+      </div>
+      <div id="qf-email-fields" style="display:none;">
+        <div class="field">
+          <label class="field-label">Email subject</label>
+          <input class="form-input" id="qf-email-subject" data-bind="quoteFollowup.emailSubject" placeholder="Following up on your quote"/>
+          <div class="field-hint">When this email threads onto an existing quote conversation, the subject becomes <code style="color:var(--gray);">Re: &lt;original&gt;</code> automatically.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Email template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="qf-email-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{service}">{service}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{total}">{total}</span>
+          </div>
+          <textarea class="form-textarea" id="qf-email-template" data-bind="quoteFollowup.emailTemplate" style="min-height:140px;" placeholder="Hi {customerFirstName},&#10;&#10;Just circling back..."></textarea>
+        </div>
+      </div>
+      <div class="sub-section">
+        <div class="sub-label">
+          <svg class="sub-label-icon" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--purple);"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-width="2" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-width="2" stroke-linejoin="round"/><path d="M2 12l10 5 10-5" stroke-width="2" stroke-linejoin="round"/></svg>
+          AI Safeguards (before sending)
+        </div>
 
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Skip if the customer already accepted in conversation</div>
+            <div class="toggle-row-desc">Right before the follow-up goes out, Claude reads the thread. If the customer already said yes, replied with a scheduling question, or otherwise signaled acceptance, no message is sent.</div>
+          </div>
+          <button class="toggle on" id="qf-ai-skip-accepted" data-bind="quoteFollowup.aiSkipIfAccepted"></button>
+        </div>
 
-<!-- ── FIREBASE AUTH GUARD ── -->
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Auto-approve the quote when AI detects acceptance</div>
+            <div class="toggle-row-desc">When Claude sees a clear "yes," the quote gets marked as <strong style="color:var(--green);">Approved</strong> in SWFT and jumps into your job pipeline. Turn off if you'd rather manually approve every quote.</div>
+          </div>
+          <button class="toggle on" id="qf-ai-autoapprove" data-bind="quoteFollowup.aiAutoApproveQuote"></button>
+        </div>
 
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Skip if the customer clearly declined</div>
+            <div class="toggle-row-desc">If Claude reads a "no thanks" or a hard rejection, drop the follow-up — no point nagging.</div>
+          </div>
+          <button class="toggle on" id="qf-ai-skip-rejected" data-bind="quoteFollowup.aiSkipIfRejected"></button>
+        </div>
+
+        <div class="field" style="margin-top:18px;margin-bottom:0;">
+          <label class="field-label">Model used for the conversation check</label>
+          <select class="form-select" id="qf-ai-model" data-bind="quoteFollowup.aiModel">
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast, cheap, recommended</option>
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — slower, better at subtle language</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — most accurate, highest cost</option>
+          </select>
+          <div class="field-hint">Haiku handles this job well — it just needs to classify ACCEPTED / REJECTED / PENDING.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="behavior" id="card-ar">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon ar"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="13" cy="11" r="1" fill="currentColor"/><circle cx="17" cy="11" r="1" fill="currentColor"/></svg></div>
+        <div>
+          <div class="behavior-title">Inbound Auto-Reply</div>
+          <div class="behavior-desc">Every inbound SMS, Instagram DM, or Facebook message — Claude reads the thread and replies on your behalf. Flip any conversation to manual mode from the Messages page to take over.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="ar-pill">Active</span>
+        <button class="toggle on" id="ar-enabled" data-bind="autoReply.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="ar-body">
+
+      <div class="field">
+        <label class="field-label">Active channels</label>
+        <div class="chan-group">
+          <button type="button" class="chan-chip on" id="ar-ch-sms" data-channel="sms"><span class="chan-chip-dot"></span> SMS</button>
+          <button type="button" class="chan-chip on" id="ar-ch-instagram" data-channel="instagram"><span class="chan-chip-dot"></span> Instagram DM</button>
+          <button type="button" class="chan-chip on" id="ar-ch-facebook" data-channel="facebook"><span class="chan-chip-dot"></span> Facebook Messenger</button>
+        </div>
+        <div class="field-hint">Turn off any channel where you'd rather reply yourself.</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label class="field-label">Model</label>
+          <select class="form-select" id="ar-model" data-bind="autoReply.model">
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — recommended</option>
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fastest, cheapest</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — most capable</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Max reply length</label>
+          <input class="form-input" type="number" min="50" max="1000" step="25" id="ar-max-tokens" data-bind="autoReply.maxTokens" value="200"/>
+          <div class="field-hint">In tokens (~0.75 words each). 200 ≈ 3 SMS-sized sentences.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Context window</label>
+          <input class="form-input" type="number" min="3" max="50" id="ar-context" data-bind="autoReply.contextMessageCount" value="15"/>
+          <div class="field-hint">Prior messages Claude sees for context.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Custom instructions to Claude</label>
+        <textarea class="form-textarea" id="ar-instructions" data-bind="autoReply.customInstructions" style="min-height:110px;" placeholder="Keep replies short and friendly — 1 to 3 sentences, SMS-style. Never quote prices beyond what's in business info..."></textarea>
+        <div class="field-hint">These sit on top of your business info (set in <a href="swft-settings" style="color:var(--green);">Settings → Business Profile</a>) and override the defaults. Use this to lock in your tone, boundaries, and anything you <em>never</em> want the AI to do.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="behavior" id="card-mem">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon mem"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z" stroke-width="1.8"/><path d="M8 14v3a4 4 0 0 0 8 0v-3" stroke-width="1.8"/><line x1="12" y1="22" x2="12" y2="18" stroke-width="1.8"/></svg></div>
+        <div>
+          <div class="behavior-title">Customer Memory</div>
+          <div class="behavior-desc">After each auto-reply, Claude writes down what it learned — preferences, scheduling quirks, pets, past complaints — and uses it on future conversations so the AI actually remembers customers.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="mem-pill">Active</span>
+        <button class="toggle on" id="mem-enabled" data-bind="customerMemory.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="mem-body">
+      <div class="grid">
+        <div class="field">
+          <label class="field-label">Extraction model</label>
+          <select class="form-select" id="mem-model" data-bind="customerMemory.model">
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — recommended (fastest)</option>
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+          </select>
+          <div class="field-hint">Runs asynchronously — never slows down the reply.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Max facts per customer</label>
+          <input class="form-input" type="number" min="5" max="100" id="mem-maxfacts" data-bind="customerMemory.maxFacts" value="20"/>
+          <div class="field-hint">Oldest facts drop off once this cap is hit.</div>
+        </div>
+      </div>
+      <div class="field-hint" style="margin-top:4px;">Stored per customer at <code style="color:var(--gray);">customerMemory/&lt;orgId&gt;_&lt;customerId&gt;</code>. Inject into every future AI reply automatically.</div>
+    </div>
+  </div>
+
+  <div class="section-head" onclick="togglePending()">
+    <div class="section-title">Upcoming AI Actions</div>
+    <div class="section-count" id="pending-count">0</div>
+    <svg class="chevron" id="pending-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
+  </div>
+  <div id="pending-section" style="display:none;">
+    <div class="pending-wrap">
+      <table class="pending-table" id="pending-table">
+        <thead><tr><th>Customer</th><th>Action</th><th>Fires At</th><th>Status</th><th></th></tr></thead>
+        <tbody id="pending-body"><tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups show up here as quotes go out.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('expanded');
+  document.getElementById('sidebar-toggle').classList.toggle('visible');
+}
+</script>
+<script src="swft-account.js"></script>
+<script src="swft-api.js"></script>
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
-    authDomain: "swft-ai26.firebaseapp.com",
-    projectId: "swft-ai26",
-    storageBucket: "swft-ai26.firebasestorage.app",
-    messagingSenderId: "170879575187",
-    appId: "1:170879575187:web:e329382b0adf9518ead966",
-    measurementId: "G-B8BEW7E87V"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+  authDomain: "swft-ai26.firebaseapp.com",
+  projectId: "swft-ai26",
+  storageBucket: "swft-ai26.firebasestorage.app",
+  messagingSenderId: "170879575187",
+  appId: "1:170879575187:web:e329382b0adf9518ead966",
+  measurementId: "G-B8BEW7E87V"
+};
+initializeApp(firebaseConfig);
 
-  const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+let _settings = null;
+let _dirty = false;
 
-  document.body.style.visibility = "hidden";
+function setDirty(on) {
+  _dirty = on;
+  const btn = document.getElementById('save-btn');
+  const lbl = document.getElementById('save-label');
+  btn.disabled = !on;
+  btn.classList.toggle('dirty', on);
+  lbl.textContent = on ? 'Save Changes' : 'Saved';
+}
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
-      user = auth.currentUser;
-    }
-    if (!user) {
-      console.warn("[SWFT-REDIRECT] ai-agents onAuthStateChanged saw no user");
-      window.location.href = "swft-login";
+/* Walk every [data-bind] element and wire it both ways. Supports nested
+   paths like "quoteFollowup.delayDays" — works for text/number/time inputs,
+   textareas, selects, and toggle buttons. */
+function bindInputs() {
+  document.querySelectorAll('[data-bind]').forEach(el => {
+    const path = el.getAttribute('data-bind');
+    if (el.classList.contains('toggle')) {
+      el.addEventListener('click', () => {
+        const next = !el.classList.contains('on');
+        el.classList.toggle('on', next);
+        setPath(_settings, path, next);
+        refreshPills();
+        setDirty(true);
+      });
     } else {
-      document.body.style.visibility = "visible";
-      window.__swftUser = user;
+      const handler = () => {
+        let v = el.value;
+        if (el.type === 'number') v = Number(v);
+        setPath(_settings, path, v);
+        refreshPills();
+        setDirty(true);
+      };
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
     }
   });
-</script>
 
-<script src="swft-api.js"></script>
-<script src="swft-confirm.js"></script>
-<script src="swft-account.js"></script>
+  /* Channel segment (SMS/Email) for Quote Follow-up */
+  document.querySelectorAll('#qf-channel-seg button').forEach(b => {
+    b.addEventListener('click', () => {
+      const ch = b.getAttribute('data-channel');
+      document.querySelectorAll('#qf-channel-seg button').forEach(x => x.classList.toggle('on', x === b));
+      _settings.quoteFollowup.channel = ch;
+      document.getElementById('qf-sms-fields').style.display = ch === 'sms' ? '' : 'none';
+      document.getElementById('qf-email-fields').style.display = ch === 'email' ? '' : 'none';
+      setDirty(true);
+    });
+  });
+
+  /* Auto-reply channel chips */
+  ['sms','instagram','facebook'].forEach(ch => {
+    document.getElementById('ar-ch-' + ch).addEventListener('click', function() {
+      const next = !this.classList.contains('on');
+      this.classList.toggle('on', next);
+      _settings.autoReply.channels[ch] = next;
+      setDirty(true);
+    });
+  });
+
+  /* Variable chips — insert token at caret */
+  document.querySelectorAll('.var-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const t = document.getElementById(chip.getAttribute('data-target'));
+      const v = chip.getAttribute('data-val');
+      const s = t.selectionStart, e = t.selectionEnd;
+      t.value = t.value.slice(0, s) + v + t.value.slice(e);
+      t.selectionStart = t.selectionEnd = s + v.length;
+      t.focus();
+      t.dispatchEvent(new Event('input'));
+    });
+  });
+}
+
+function setPath(obj, path, val) {
+  const parts = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!cur[parts[i]]) cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = val;
+}
+function getPath(obj, path) {
+  return path.split('.').reduce((c, k) => (c == null ? c : c[k]), obj);
+}
+
+function populate(settings) {
+  _settings = settings;
+  document.querySelectorAll('[data-bind]').forEach(el => {
+    const path = el.getAttribute('data-bind');
+    const val = getPath(settings, path);
+    if (el.classList.contains('toggle')) {
+      el.classList.toggle('on', !!val);
+    } else if (val != null) {
+      el.value = val;
+    }
+  });
+  /* Channel segment + SMS/email visibility */
+  const ch = settings.quoteFollowup.channel || 'sms';
+  document.querySelectorAll('#qf-channel-seg button').forEach(b => b.classList.toggle('on', b.getAttribute('data-channel') === ch));
+  document.getElementById('qf-sms-fields').style.display = ch === 'sms' ? '' : 'none';
+  document.getElementById('qf-email-fields').style.display = ch === 'email' ? '' : 'none';
+  /* Auto-reply channels */
+  ['sms','instagram','facebook'].forEach(c => {
+    document.getElementById('ar-ch-' + c).classList.toggle('on', !!settings.autoReply.channels[c]);
+  });
+  refreshPills();
+}
+
+function refreshPills() {
+  const map = [
+    ['qf-pill', _settings?.quoteFollowup?.enabled, 'card-qf'],
+    ['ar-pill', _settings?.autoReply?.enabled, 'card-ar'],
+    ['mem-pill', _settings?.customerMemory?.enabled, 'card-mem'],
+  ];
+  map.forEach(([pillId, on, cardId]) => {
+    const pill = document.getElementById(pillId);
+    const card = document.getElementById(cardId);
+    if (pill) {
+      pill.className = 'behavior-pill ' + (on ? 'on' : 'off');
+      pill.textContent = on ? 'Active' : 'Paused';
+    }
+    if (card) card.classList.toggle('off', !on);
+  });
+  /* Update flow banner wait text */
+  if (_settings?.quoteFollowup) {
+    const d = _settings.quoteFollowup.delayDays || 0;
+    const h = _settings.quoteFollowup.delayHours || 0;
+    const t = _settings.quoteFollowup.sendAtTime || '09:00';
+    const parts = [];
+    if (d) parts.push(d + ' day' + (d === 1 ? '' : 's'));
+    if (h) parts.push(h + ' hr' + (h === 1 ? '' : 's'));
+    const delayText = parts.join(' ') || 'immediately';
+    const [hh, mm] = t.split(':').map(Number);
+    const ap = hh >= 12 ? 'PM' : 'AM';
+    const h12 = hh % 12 || 12;
+    const timeText = mm === 0 ? `${h12}:00 ${ap}` : `${h12}:${String(mm).padStart(2,'0')} ${ap}`;
+    const el = document.getElementById('flow-wait-text');
+    if (el) el.textContent = `${delayText} at ${timeText} ET`;
+  }
+}
+
+window.saveAll = async function() {
+  if (!_settings) return;
+  try {
+    document.getElementById('save-label').textContent = 'Saving…';
+    const fresh = await API.aiSettings.save(_settings);
+    _settings = fresh;
+    setDirty(false);
+    toast('AI settings saved');
+  } catch (e) {
+    toast(e.message || 'Save failed', true);
+    setDirty(true);
+  }
+};
+let _toastTimer;
+window.toast = function(msg, err) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-dot').className = 'toast-dot' + (err ? ' red' : '');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+};
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+window.togglePending = function() {
+  const sec = document.getElementById('pending-section');
+  const ch = document.getElementById('pending-chevron');
+  const open = sec.style.display !== 'none';
+  sec.style.display = open ? 'none' : 'block';
+  ch.classList.toggle('open', !open);
+};
+
+async function loadPending() {
+  try {
+    const data = await API.automations.pending();
+    const msgs = (data.messages || []).filter(m => m.status === 'pending' || m.status === 'retrying' || m.status === 'failed').slice(0, 50);
+    document.getElementById('pending-count').textContent = msgs.length;
+    const body = document.getElementById('pending-body');
+    if (!msgs.length) {
+      body.innerHTML = '<tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups show up here as quotes go out.</td></tr>';
+      return;
+    }
+    const statusMap = { pending: 'status-pending', sent: 'status-sent', failed: 'status-failed', retrying: 'status-pending' };
+    body.innerHTML = msgs.map(m => {
+      const d = m.sendAt ? new Date(m.sendAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+      const cls = statusMap[m.status] || 'status-pending';
+      const lbl = m.status === 'retrying' ? `retry ${m.retryCount || 1}/3` : m.status;
+      const actionLabel = (m.automationName || 'Follow-up') + (m.messageType ? ` · ${m.messageType.toUpperCase()}` : '');
+      const canDel = m.status === 'pending' || m.status === 'retrying';
+      const actions = canDel
+        ? `<button class="btn-icon del" onclick="cancelPending('${m.id}')" title="Cancel"><svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg></button>`
+        : '';
+      return `<tr><td>${esc(m.customerName || '—')}</td><td style="color:var(--gray);font-size:11.5px;">${esc(actionLabel)}</td><td style="color:var(--gray);">${d}</td><td><span class="status-badge ${cls}">${lbl}</span></td><td style="text-align:right;">${actions}</td></tr>`;
+    }).join('');
+  } catch (e) {
+    console.error('[pending] load error:', e);
+  }
+}
+
+window.cancelPending = async function(id) {
+  try {
+    await API.automations.deletePending(id);
+    toast('Cancelled');
+    loadPending();
+  } catch (e) { toast(e.message, true); }
+};
+
+/* Warn before navigating away with unsaved changes */
+window.addEventListener('beforeunload', e => {
+  if (_dirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+async function init() {
+  try { await requireAuth(); } catch (_) { return; }
+  try { loadUser && loadUser(); } catch (_) {}
+  try {
+    const s = await API.aiSettings.get();
+    populate(s);
+    bindInputs();
+    setDirty(false);
+  } catch (e) {
+    toast('Failed to load AI settings: ' + (e.message || 'error'), true);
+  }
+  loadPending();
+}
+
+init();
+</script>
 <script type="module" src="swft-user-sync.js"></script>
-<script src="swft-notifications.js"></script>
-<script src="swft-chat.js"></script>
 </body>
 </html>
