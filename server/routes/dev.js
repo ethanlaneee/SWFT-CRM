@@ -447,4 +447,36 @@ router.patch("/user/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── POST /api/dev/resubscribe — remove an email from unsubscribes + ses_suppressions ──
+// Body: { email, orgId? }  — if orgId omitted, removes across all orgs
+router.post("/resubscribe", async (req, res, next) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const orgId = req.body.orgId ? String(req.body.orgId) : null;
+    if (!email) return res.status(400).json({ error: "email required" });
+
+    let unsubQuery = db.collection("unsubscribes").where("email", "==", email);
+    if (orgId) unsubQuery = unsubQuery.where("orgId", "==", orgId);
+    const unsubSnap = await unsubQuery.get();
+    for (const doc of unsubSnap.docs) await doc.ref.delete();
+
+    const suppressionId = Buffer.from(email).toString("hex").slice(0, 80);
+    const suppressionRef = db.collection("ses_suppressions").doc(suppressionId);
+    const suppressionDoc = await suppressionRef.get();
+    let removedSuppression = false;
+    if (suppressionDoc.exists) {
+      await suppressionRef.delete();
+      removedSuppression = true;
+    }
+
+    res.json({
+      success: true,
+      email,
+      orgId,
+      removedUnsubscribes: unsubSnap.size,
+      removedSuppression,
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
