@@ -11,8 +11,9 @@ const msgsCol = (chatId) => db.collection("teamChats").doc(chatId).collection("m
 // ── List all chats for this org ──
 router.get("/", async (req, res, next) => {
   try {
-    const snap = await chatsCol().where("orgId", "==", req.orgId).orderBy("updatedAt", "desc").get();
+    const snap = await chatsCol().where("orgId", "==", req.orgId).get();
     const chats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    chats.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     res.json({ chats });
   } catch (err) { next(err); }
 });
@@ -33,10 +34,11 @@ router.post("/", async (req, res, next) => {
     if (isDirect) {
       const existing = await chatsCol()
         .where("orgId", "==", req.orgId)
-        .where("isDirect", "==", true)
         .get();
       const found = existing.docs.find(d => {
-        const m = d.data().memberIds || [];
+        const data = d.data();
+        if (!data.isDirect) return false;
+        const m = data.memberIds || [];
         return m.length === 2 && allMembers.every(id => m.includes(id));
       });
       if (found) {
