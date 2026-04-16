@@ -101,7 +101,7 @@ const DEFAULTS = Object.freeze({
   autoReply: {
     enabled: true,
     channels: { sms: true, instagram: true, facebook: true },
-    model: "claude-sonnet-4-20250514",
+    model: "claude-haiku-4-5-20251001",
     maxTokens: 200,
     customInstructions: DEFAULT_AUTO_REPLY_INSTRUCTIONS,
     contextMessageCount: 15,                  // how many prior messages to include
@@ -150,6 +150,11 @@ async function getAiSettings(orgId) {
   }
 }
 
+// ── Locked model (override for now) ─────────────────────────────────────────
+// Every AI feature is pinned to this single model. Drop the override and
+// restore field-level validation when we're ready to expose model choice.
+const LOCKED_MODEL = "claude-haiku-4-5-20251001";
+
 // ── HTTP routes ──────────────────────────────────────────────────────────────
 
 // GET /api/ai-settings — return the current config (with defaults applied)
@@ -182,7 +187,7 @@ router.put("/", async (req, res, next) => {
         aiSkipIfAccepted: Boolean(q.aiSkipIfAccepted),
         aiAutoApproveQuote: Boolean(q.aiAutoApproveQuote),
         aiSkipIfRejected: Boolean(q.aiSkipIfRejected),
-        aiModel: String(q.aiModel || DEFAULTS.quoteFollowup.aiModel),
+        aiModel: LOCKED_MODEL,
       };
     }
 
@@ -199,7 +204,7 @@ router.put("/", async (req, res, next) => {
         emailTemplate: String(q.emailTemplate || ""),
         aiSkipIfPaid: Boolean(q.aiSkipIfPaid),
         aiSkipIfPromised: Boolean(q.aiSkipIfPromised),
-        aiModel: String(q.aiModel || DEFAULTS.invoiceFollowup.aiModel),
+        aiModel: LOCKED_MODEL,
       };
     }
 
@@ -216,7 +221,7 @@ router.put("/", async (req, res, next) => {
         emailSubject: String(q.emailSubject || ""),
         emailTemplate: String(q.emailTemplate || ""),
         aiSkipIfUnhappy: Boolean(q.aiSkipIfUnhappy),
-        aiModel: String(q.aiModel || DEFAULTS.reviewRequest.aiModel),
+        aiModel: LOCKED_MODEL,
       };
     }
 
@@ -229,7 +234,7 @@ router.put("/", async (req, res, next) => {
           instagram: Boolean(a.channels?.instagram),
           facebook: Boolean(a.channels?.facebook),
         },
-        model: String(a.model || DEFAULTS.autoReply.model),
+        model: LOCKED_MODEL,
         maxTokens: Math.max(50, Math.min(1000, Number(a.maxTokens) || 200)),
         customInstructions: String(a.customInstructions || ""),
         contextMessageCount: Math.max(3, Math.min(50, Number(a.contextMessageCount) || 15)),
@@ -240,7 +245,7 @@ router.put("/", async (req, res, next) => {
       const m = body.customerMemory;
       updates.customerMemory = {
         enabled: Boolean(m.enabled),
-        model: String(m.model || DEFAULTS.customerMemory.model),
+        model: LOCKED_MODEL,
         maxFacts: Math.max(5, Math.min(100, Number(m.maxFacts) || 20)),
       };
     }

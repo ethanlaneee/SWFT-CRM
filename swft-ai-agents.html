@@ -296,7 +296,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="flow-step">
         <div class="flow-dot c3"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1M4.22 4.22l.71.71M1 12h1M20 12h1M19.07 4.22l-.71.71" stroke-width="2" stroke-linecap="round"/><path d="M12 17a5 5 0 0 0 5-5 5 5 0 1 0-10 0 5 5 0 0 0 5 5z" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke-width="2"/></svg></div>
         <div class="flow-step-label" style="color:var(--purple);">AI Check</div>
-        <div class="flow-step-value">Claude scans the conversation to see if they already replied</div>
+        <div class="flow-step-value">SWFT scans the conversation to see if they already replied</div>
       </div>
       <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
       <div class="flow-step">
@@ -391,7 +391,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="toggle-row">
           <div class="toggle-row-text">
             <div class="toggle-row-title">Skip if the customer already accepted in conversation</div>
-            <div class="toggle-row-desc">Right before the follow-up goes out, Claude reads the thread. If the customer already said yes, replied with a scheduling question, or otherwise signaled acceptance, no message is sent.</div>
+            <div class="toggle-row-desc">Right before the follow-up goes out, SWFT reads the thread. If the customer already said yes, replied with a scheduling question, or otherwise signaled acceptance, no message is sent.</div>
           </div>
           <button class="toggle on" id="qf-ai-skip-accepted" data-bind="quoteFollowup.aiSkipIfAccepted"></button>
         </div>
@@ -399,7 +399,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="toggle-row">
           <div class="toggle-row-text">
             <div class="toggle-row-title">Auto-approve the quote when AI detects acceptance</div>
-            <div class="toggle-row-desc">When Claude sees a clear "yes," the quote gets marked as <strong style="color:var(--green);">Approved</strong> in SWFT and jumps into your job pipeline. Turn off if you'd rather manually approve every quote.</div>
+            <div class="toggle-row-desc">When SWFT detects a clear "yes," the quote gets marked as <strong style="color:var(--green);">Approved</strong> and jumps into your job pipeline. Turn off if you'd rather manually approve every quote.</div>
           </div>
           <button class="toggle on" id="qf-ai-autoapprove" data-bind="quoteFollowup.aiAutoApproveQuote"></button>
         </div>
@@ -407,19 +407,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="toggle-row">
           <div class="toggle-row-text">
             <div class="toggle-row-title">Skip if the customer clearly declined</div>
-            <div class="toggle-row-desc">If Claude reads a "no thanks" or a hard rejection, drop the follow-up — no point nagging.</div>
+            <div class="toggle-row-desc">If SWFT reads a "no thanks" or a hard rejection, drop the follow-up — no point nagging.</div>
           </div>
           <button class="toggle on" id="qf-ai-skip-rejected" data-bind="quoteFollowup.aiSkipIfRejected"></button>
         </div>
 
         <div class="field" style="margin-top:18px;margin-bottom:0;">
           <label class="field-label">Model used for the conversation check</label>
-          <select class="form-select" id="qf-ai-model" data-bind="quoteFollowup.aiModel">
-            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast, cheap, recommended</option>
-            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — slower, better at subtle language</option>
-            <option value="claude-opus-4-6">Claude Opus 4.6 — most accurate, highest cost</option>
+          <select class="form-select" id="qf-ai-model" data-bind="quoteFollowup.aiModel" disabled>
+            <option value="claude-haiku-4-5-20251001">SWFT Standard</option>
           </select>
-          <div class="field-hint">Haiku handles this job well — it just needs to classify ACCEPTED / REJECTED / PENDING.</div>
+          <div class="field-hint">Model selection is locked for now.</div>
         </div>
       </div>
     </div>
@@ -549,18 +547,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="toggle-row">
           <div class="toggle-row-text">
             <div class="toggle-row-title">Skip if the customer promised a payment time</div>
-            <div class="toggle-row-desc">Claude reads the thread. If the customer said "I'll send it Friday" or "paid via Zelle this morning," no reminder goes out.</div>
+            <div class="toggle-row-desc">SWFT reads the thread. If the customer said "I'll send it Friday" or "paid via Zelle this morning," no reminder goes out.</div>
           </div>
           <button class="toggle on" id="inv-ai-skip-promised" data-bind="invoiceFollowup.aiSkipIfPromised"></button>
         </div>
         <div class="field" style="margin-top:18px;margin-bottom:0;">
           <label class="field-label">Model used for the conversation check</label>
-          <select class="form-select" id="inv-ai-model" data-bind="invoiceFollowup.aiModel">
-            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast, cheap, recommended</option>
-            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — slower, better at subtle language</option>
-            <option value="claude-opus-4-6">Claude Opus 4.6 — most accurate, highest cost</option>
+          <select class="form-select" id="inv-ai-model" data-bind="invoiceFollowup.aiModel" disabled>
+            <option value="claude-haiku-4-5-20251001">SWFT Standard</option>
           </select>
-          <div class="field-hint">Haiku handles this job well — it just needs to classify PAID / PROMISED / PENDING.</div>
+          <div class="field-hint">Model selection is locked for now.</div>
         </div>
       </div>
     </div>
@@ -589,7 +585,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="flow-step">
         <div class="flow-dot c3"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1M4.22 4.22l.71.71M1 12h1M20 12h1M19.07 4.22l-.71.71" stroke-width="2" stroke-linecap="round"/><path d="M12 17a5 5 0 0 0 5-5 5 5 0 1 0-10 0 5 5 0 0 0 5 5z" stroke-width="2"/></svg></div>
         <div class="flow-step-label" style="color:var(--purple);">AI Sentiment Check</div>
-        <div class="flow-step-value">Skip if Claude detects a frustrated or unhappy customer</div>
+        <div class="flow-step-value">Skip if SWFT detects a frustrated or unhappy customer</div>
       </div>
       <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
       <div class="flow-step">
@@ -606,7 +602,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="behavior-icon qf"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
         <div>
           <div class="behavior-title">Review Request</div>
-          <div class="behavior-desc">Automatically asks happy customers for a review after the job wraps. Claude reads the thread first to avoid asking anyone who sounds unhappy.</div>
+          <div class="behavior-desc">Automatically asks happy customers for a review after the job wraps. SWFT reads the thread first to avoid asking anyone who sounds unhappy.</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
@@ -685,18 +681,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="toggle-row">
           <div class="toggle-row-text">
             <div class="toggle-row-title">Skip if the customer sounds unhappy</div>
-            <div class="toggle-row-desc">Claude reads the recent conversation. If there's a complaint, frustration, or unresolved issue, no review ask is sent — this protects your star rating.</div>
+            <div class="toggle-row-desc">SWFT reads the recent conversation. If there's a complaint, frustration, or unresolved issue, no review ask is sent — this protects your star rating.</div>
           </div>
           <button class="toggle on" id="rev-ai-skip-unhappy" data-bind="reviewRequest.aiSkipIfUnhappy"></button>
         </div>
         <div class="field" style="margin-top:18px;margin-bottom:0;">
           <label class="field-label">Model used for the sentiment check</label>
-          <select class="form-select" id="rev-ai-model" data-bind="reviewRequest.aiModel">
-            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast, cheap, recommended</option>
-            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — slower, better at subtle language</option>
-            <option value="claude-opus-4-6">Claude Opus 4.6 — most accurate, highest cost</option>
+          <select class="form-select" id="rev-ai-model" data-bind="reviewRequest.aiModel" disabled>
+            <option value="claude-haiku-4-5-20251001">SWFT Standard</option>
           </select>
-          <div class="field-hint">Haiku handles this well — it just needs to classify HAPPY / UNHAPPY / NEUTRAL.</div>
+          <div class="field-hint">Model selection is locked for now.</div>
         </div>
       </div>
     </div>
@@ -713,7 +707,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="behavior-icon ar"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="13" cy="11" r="1" fill="currentColor"/><circle cx="17" cy="11" r="1" fill="currentColor"/></svg></div>
         <div>
           <div class="behavior-title">Inbound Auto-Reply</div>
-          <div class="behavior-desc">Every inbound SMS, Instagram DM, or Facebook message — Claude reads the thread and replies on your behalf. Flip any conversation to manual mode from the Messages page to take over.</div>
+          <div class="behavior-desc">Every inbound SMS, Instagram DM, or Facebook message — SWFT reads the thread and replies on your behalf. Flip any conversation to manual mode from the Messages page to take over.</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
@@ -736,10 +730,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="grid-3">
         <div class="field">
           <label class="field-label">Model</label>
-          <select class="form-select" id="ar-model" data-bind="autoReply.model">
-            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — recommended</option>
-            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fastest, cheapest</option>
-            <option value="claude-opus-4-6">Claude Opus 4.6 — most capable</option>
+          <select class="form-select" id="ar-model" data-bind="autoReply.model" disabled>
+            <option value="claude-haiku-4-5-20251001">SWFT Standard</option>
           </select>
         </div>
         <div class="field">
@@ -750,12 +742,12 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="field">
           <label class="field-label">Context window</label>
           <input class="form-input" type="number" min="3" max="50" id="ar-context" data-bind="autoReply.contextMessageCount" value="15"/>
-          <div class="field-hint">Prior messages Claude sees for context.</div>
+          <div class="field-hint">Prior messages SWFT sees for context.</div>
         </div>
       </div>
 
       <div class="field">
-        <label class="field-label">Custom instructions to Claude</label>
+        <label class="field-label">Custom instructions to SWFT</label>
         <textarea class="form-textarea" id="ar-instructions" data-bind="autoReply.customInstructions" style="min-height:110px;" placeholder="Keep replies short and friendly — 1 to 3 sentences, SMS-style. Never quote prices beyond what's in business info..."></textarea>
         <div class="field-hint">These sit on top of your business info (set in <a href="swft-settings" style="color:var(--green);">Settings → Business Profile</a>) and override the defaults. Use this to lock in your tone, boundaries, and anything you <em>never</em> want the AI to do.</div>
       </div>
@@ -773,7 +765,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="behavior-icon mem"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z" stroke-width="1.8"/><path d="M8 14v3a4 4 0 0 0 8 0v-3" stroke-width="1.8"/><line x1="12" y1="22" x2="12" y2="18" stroke-width="1.8"/></svg></div>
         <div>
           <div class="behavior-title">Customer Memory</div>
-          <div class="behavior-desc">After each auto-reply, Claude writes down what it learned — preferences, scheduling quirks, pets, past complaints — and uses it on future conversations so the AI actually remembers customers.</div>
+          <div class="behavior-desc">After each auto-reply, SWFT writes down what it learned — preferences, scheduling quirks, pets, past complaints — and uses it on future conversations so SWFT actually remembers customers.</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
@@ -785,9 +777,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="grid">
         <div class="field">
           <label class="field-label">Extraction model</label>
-          <select class="form-select" id="mem-model" data-bind="customerMemory.model">
-            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — recommended (fastest)</option>
-            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+          <select class="form-select" id="mem-model" data-bind="customerMemory.model" disabled>
+            <option value="claude-haiku-4-5-20251001">SWFT Standard</option>
           </select>
           <div class="field-hint">Runs asynchronously — never slows down the reply.</div>
         </div>
