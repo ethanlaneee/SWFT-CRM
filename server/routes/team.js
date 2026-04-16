@@ -10,23 +10,37 @@ const { sendSimpleGmail } = require("../utils/email");
 // Accounts whose role can never be changed by any team operation
 const PROTECTED_EMAILS = ["ethan@goswft.com"];
 
-// Plan-based team gating helper (Pro+ only)
-async function requireTeamPlan(req, res) {
-  // Protected accounts bypass the plan gate entirely
+// Team member limits per plan: Starter = 10, Pro = 20, Business = unlimited
+const TEAM_LIMITS = { starter: 10, pro: 20, business: Infinity };
+
+// Check team member limit before inviting new members
+async function checkTeamLimit(req, res) {
+  // Protected accounts bypass limits entirely
   if (req.user?.email && PROTECTED_EMAILS.includes(req.user.email.toLowerCase())) {
     return true;
   }
-  // Check the org owner's plan (team members inherit the owner's plan)
+  // Get the org owner's plan
   const planUid = req.orgId || req.uid;
   const userDoc = await db.collection("users").doc(planUid).get();
   const plan = userDoc.exists ? (userDoc.data().plan || "starter") : "starter";
-  if (plan === "starter") {
+  const limit = TEAM_LIMITS[plan] ?? 10;
+
+  // Count current team members (active + invited)
+  const snap = await db.collection("team")
+    .where("orgId", "==", req.orgId)
+    .get();
+  const currentCount = snap.size;
+
+  if (currentCount >= limit) {
+    const upgradeTo = plan === "starter" ? "pro" : plan === "pro" ? "business" : null;
     res.status(403).json({
-      error: "Team management requires the Pro plan or higher.",
+      error: `Your ${plan} plan supports up to ${limit} team members. ${upgradeTo ? `Upgrade to ${upgradeTo} for more.` : ""}`.trim(),
       limitReached: true,
       type: "team",
-      currentPlan: "starter",
-      upgradeTo: "pro",
+      currentPlan: plan,
+      currentCount,
+      limit,
+      ...(upgradeTo && { upgradeTo }),
     });
     return false;
   }
@@ -143,7 +157,7 @@ router.get("/", async (req, res, next) => {
 // POST /api/team/invite — invite a new team member
 router.post("/invite", async (req, res, next) => {
   try {
-    if (!(await requireTeamPlan(req, res))) return;
+    if (!(await checkTeamLimit(req, res))) return;
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can invite members" });
     }
@@ -226,7 +240,6 @@ router.post("/invite", async (req, res, next) => {
 // PUT /api/team/:memberId — update a team member's role
 router.put("/:memberId", async (req, res, next) => {
   try {
-    if (!(await requireTeamPlan(req, res))) return;
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can update roles" });
     }
@@ -272,7 +285,6 @@ router.put("/:memberId", async (req, res, next) => {
 // DELETE /api/team/:memberId — remove a team member
 router.delete("/:memberId", async (req, res, next) => {
   try {
-    if (!(await requireTeamPlan(req, res))) return;
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can remove members" });
     }
