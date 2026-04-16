@@ -21,6 +21,85 @@ const claude = new Anthropic();
 const BASE_URL = process.env.BASE_URL || "https://goswft.com";
 const COMPANY_NAME = "SWFT";
 
+// ── Default email templates (used when no custom template is saved in Firestore) ──
+const DEFAULT_TEMPLATES = {
+  initial: `Subject: [Casual subject line like "Saw your [trade] work in [city]" — just reference their trade and location. Examples: "Saw your HVAC work in Calgary", "Saw your plumbing work in Austin", "Saw your landscaping in Denver". Keep it simple and personal, NOT salesy or clever.]
+
+Hey [First name],
+
+I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — keep it simple, general, and ONE sentence max. Base it on their trade and company name, NOT on reviews or ratings. Examples: "you guys do really solid work", "looks like you're killing it", "you guys are doing great things". Keep it casual like you'd say it out loud. Do NOT mention Google reviews, star ratings, or review counts.] in the [AREA — pull the city or region from their address/notes, like "Calgary area", "Austin area", "Denver area". If no location info is available, just skip this part].
+
+I work with home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual hands on work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
+
+So we built this thing called SWFT that basically handles all of that — scheduling, invoicing, quoting, follow-ups, customer management, job tracking. The whole back office. And it's super easy to use, like if you can send a text and talk you can run SWFT. It's AI-powered so you literally just tell it what to do and it does it.
+
+I love seeing the work you've done, and we'd love to partner with you on this and see what you think about the software? We're happy to give a 14-day free trial if you want to mess around with it and see for yourself.
+
+Check it out here if you're curious — goswft.com
+
+Could you let me know what you think?
+
+Thanks!
+Ethan
+ethan@goswft.com`,
+
+  followup1: `Subject: [Simple, helpful subject — like "Thought this might be helpful" or "Quick question about [trade]". NOT salesy. NOT "following up on my last email".]
+
+Hey [First name],
+
+I'm just touching base again because I know things can get pretty hectic running a service business — I wanted to make sure my last email didn't get buried. Not sure if you got a chance to see it yet or not!
+
+But I work with home service businesses, and [REWORD THE CORE PITCH — same message as below but with different casual wording. The key points to hit: the biggest time sink is admin work (not the actual jobs), and SWFT handles scheduling, invoicing, quoting, follow-ups, customer management, job tracking. It's AI-powered so you just tell it what to do. Mention the 14-day free trial. But say it all differently than the original — rephrase, restructure, use different examples. Keep it casual and natural.]
+
+[TRADE-SPECIFIC HOOK — one sentence connecting to their specific trade. Like "I know [trade] guys especially deal with [specific pain point]" or "A lot of [trade] businesses I talk to say [relatable thing]".]
+
+Check it out here if you're curious — goswft.com
+
+Would love to hear what you think!
+
+Thanks!
+Ethan
+ethan@goswft.com`,
+
+  followup2: `Subject: [Casual closing subject — like "No worries either way" or "Last thing from me". Keep it simple and NOT salesy.]
+
+Hey [First name],
+
+Since I haven't heard back, I'm guessing the timing just isn't right for us to partner just yet.
+
+I'll stop checking in for now, but if you're ever looking to save some time and automate the back office to help scale your business faster, don't hesitate to reach out!
+
+Thanks!
+Ethan
+ethan@goswft.com`,
+
+  rules: `- Customize ONLY the [BRACKETED] sections. Keep everything else nearly identical.
+- The compliment must feel simple and genuine — do NOT reference Google reviews, star ratings, or review counts
+- NEVER say things like "your reviews are impressive" or "I saw your 4.8 rating"
+- The admin tasks should be realistic for their specific trade
+- Do NOT use exclamation marks more than once
+- Do NOT sound corporate, salesy, or templated
+- Do NOT include unsubscribe links (we add those separately)
+- Do NOT mention specific pricing numbers
+- Do NOT rewrite or restructure the email — follow the template exactly`,
+};
+
+const TEMPLATES_DOC = "outreach_config/email_templates";
+
+async function getTemplates() {
+  const doc = await db.collection("outreach_config").doc("email_templates").get();
+  if (doc.exists) {
+    const data = doc.data();
+    return {
+      initial: data.initial || DEFAULT_TEMPLATES.initial,
+      followup1: data.followup1 || DEFAULT_TEMPLATES.followup1,
+      followup2: data.followup2 || DEFAULT_TEMPLATES.followup2,
+      rules: data.rules || DEFAULT_TEMPLATES.rules,
+    };
+  }
+  return { ...DEFAULT_TEMPLATES };
+}
+
 // ── Helper: get the outreach Gmail user (info@goswft.com) ──
 async function getOutreachSender() {
   // Find the user with info@goswft.com connected
@@ -244,6 +323,7 @@ router.post("/generate", async (req, res) => {
 
     if (leads.length === 0) return res.json({ generated: 0, message: "No eligible leads" });
 
+    const templates = await getTemplates();
     const generated = [];
 
     for (const lead of leads) {
@@ -263,36 +343,10 @@ Recipient:
 
 STANDARD EMAIL TEMPLATE:
 
-Subject: [Casual subject line like "Saw your [trade] work in [city]" — just reference their trade and location. Examples: "Saw your HVAC work in Calgary", "Saw your plumbing work in Austin", "Saw your landscaping in Denver". Keep it simple and personal, NOT salesy or clever.]
-
-Hey [First name],
-
-I came across [Company name] and saw that [GENUINE SPECIFIC COMPLIMENT — keep it simple, general, and ONE sentence max. Base it on their trade and company name, NOT on reviews or ratings. Examples: "you guys do really solid work", "looks like you're killing it", "you guys are doing great things". Keep it casual like you'd say it out loud. Do NOT mention Google reviews, star ratings, or review counts.] in the [AREA — pull the city or region from their address/notes, like "Calgary area", "Austin area", "Denver area". If no location info is available, just skip this part].
-
-I work with home service businesses and honestly the biggest thing I hear is how much time gets eaten up by the stuff that isn't the actual hands on work — [MENTION 3-4 TRADE-SPECIFIC ADMIN TASKS in casual language, like: keeping track of jobs, chasing people down for payments, getting quotes out, trying to follow up with leads]. The more time you're on the tools the better, right? That's where the money is.
-
-So we built this thing called SWFT that basically handles all of that — scheduling, invoicing, quoting, follow-ups, customer management, job tracking. The whole back office. And it's super easy to use, like if you can send a text and talk you can run SWFT. It's AI-powered so you literally just tell it what to do and it does it.
-
-I love seeing the work you've done, and we'd love to partner with you on this and see what you think about the software? We're happy to give a 14-day free trial if you want to mess around with it and see for yourself.
-
-Check it out here if you're curious — goswft.com
-
-Could you let me know what you think?
-
-Thanks!
-Ethan
-ethan@goswft.com
+${templates.initial}
 
 RULES:
-- Customize ONLY the [BRACKETED] sections. Keep everything else nearly identical.
-- The compliment must feel simple and genuine — do NOT reference Google reviews, star ratings, or review counts
-- NEVER say things like "your reviews are impressive" or "I saw your 4.8 rating"
-- The admin tasks should be realistic for their specific trade
-- Do NOT use exclamation marks more than once
-- Do NOT sound corporate, salesy, or templated
-- Do NOT include unsubscribe links (we add those separately)
-- Do NOT mention specific pricing numbers
-- Do NOT rewrite or restructure the email — follow the template exactly
+${templates.rules}
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
@@ -665,6 +719,7 @@ router.post("/followup", async (req, res) => {
 
     if (eligible.length === 0) return res.json({ generated: 0, message: "No leads ready for follow-up. Leads must be in 'emailed' status and at least 3 days since last contact." });
 
+    const templates = await getTemplates();
     const generated = [];
 
     for (const lead of eligible.slice(0, 15)) {
@@ -679,39 +734,8 @@ router.post("/followup", async (req, res) => {
       const prevEmail = prevSnap.empty ? null : prevSnap.docs[0].data();
       const sequenceNum = (lead.emailCount || 1) + 1;
 
-      const followUpTemplate = sequenceNum === 2
-        ? `FOLLOW-UP EMAIL TEMPLATE (1st follow-up):
-
-Subject: [Simple, helpful subject — like "Thought this might be helpful" or "Quick question about [trade]". NOT salesy. NOT "following up on my last email".]
-
-Hey [First name],
-
-I'm just touching base again because I know things can get pretty hectic running a service business — I wanted to make sure my last email didn't get buried. Not sure if you got a chance to see it yet or not!
-
-But I work with home service businesses, and [REWORD THE CORE PITCH — same message as below but with different casual wording. The key points to hit: the biggest time sink is admin work (not the actual jobs), and SWFT handles scheduling, invoicing, quoting, follow-ups, customer management, job tracking. It's AI-powered so you just tell it what to do. Mention the 14-day free trial. But say it all differently than the original — rephrase, restructure, use different examples. Keep it casual and natural.]
-
-[TRADE-SPECIFIC HOOK — one sentence connecting to their specific trade. Like "I know [trade] guys especially deal with [specific pain point]" or "A lot of [trade] businesses I talk to say [relatable thing]".]
-
-Check it out here if you're curious — goswft.com
-
-Would love to hear what you think!
-
-Thanks!
-Ethan
-ethan@goswft.com`
-        : `FOLLOW-UP EMAIL TEMPLATE (final follow-up):
-
-Subject: [Casual closing subject — like "No worries either way" or "Last thing from me". Keep it simple and NOT salesy.]
-
-Hey [First name],
-
-Since I haven't heard back, I'm guessing the timing just isn't right for us to partner just yet.
-
-I'll stop checking in for now, but if you're ever looking to save some time and automate the back office to help scale your business faster, don't hesitate to reach out!
-
-Thanks!
-Ethan
-ethan@goswft.com`;
+      const followUpBody = sequenceNum === 2 ? templates.followup1 : templates.followup2;
+      const followUpLabel = sequenceNum === 2 ? "FOLLOW-UP EMAIL TEMPLATE (1st follow-up)" : "FOLLOW-UP EMAIL TEMPLATE (final follow-up)";
 
       const response = await claude.messages.create({
         model: "claude-sonnet-4-20250514",
@@ -729,16 +753,12 @@ Recipient:
 
 Previous email subject: "${prevEmail?.subject || "N/A"}"
 
-${followUpTemplate}
+${followUpLabel}:
+
+${followUpBody}
 
 RULES:
-- Customize ONLY the [BRACKETED] sections. Keep everything else nearly identical.
-- The tone should feel like a real person — casual, friendly, not pushy
-- Do NOT mention Google reviews, star ratings, or review counts
-- Do NOT use exclamation marks more than twice
-- Do NOT sound corporate, salesy, or templated
-- Do NOT include unsubscribe links (we add those separately)
-- Do NOT rewrite or restructure the email — follow the template exactly
+${templates.rules}
 
 Respond with ONLY JSON: {"subject": "...", "body": "..."}`
         }],
@@ -775,6 +795,33 @@ Respond with ONLY JSON: {"subject": "...", "body": "..."}`
     res.json({ generated: generated.length, emails: generated });
   } catch (e) {
     console.error("[outreach] Follow-up error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── GET /api/outreach/templates — Read current email templates ──
+router.get("/templates", async (req, res) => {
+  try {
+    const templates = await getTemplates();
+    res.json(templates);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── PUT /api/outreach/templates — Update email templates ──
+router.put("/templates", async (req, res) => {
+  try {
+    const { initial, followup1, followup2, rules } = req.body;
+    const updates = { updatedAt: Date.now() };
+    if (initial !== undefined) updates.initial = initial;
+    if (followup1 !== undefined) updates.followup1 = followup1;
+    if (followup2 !== undefined) updates.followup2 = followup2;
+    if (rules !== undefined) updates.rules = rules;
+
+    await db.collection("outreach_config").doc("email_templates").set(updates, { merge: true });
+    res.json({ success: true });
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });

@@ -995,6 +995,64 @@ function renderOutreach(data) {
       </div>
     </div>
 
+    <!-- EMAIL TEMPLATES -->
+    <div class="section-label">Email Templates</div>
+    <div class="plan-section" style="animation-delay:0.28s">
+      <div style="margin-bottom:4px;font-size:11px;color:var(--gray2);">These templates are sent to Claude when generating outreach emails. Use [BRACKETS] for parts the AI should personalise per lead. Changes are saved to Firestore and used immediately on the next Generate run.</div>
+
+      <div style="margin-top:16px;">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" onclick="window._toggleTpl('initial')">
+          <svg id="tplChevronInitial" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2.5" style="transition:transform 0.15s;"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style="font-size:12px;font-weight:600;color:var(--white);letter-spacing:0.5px;">Initial Outreach</span>
+        </div>
+        <div id="tplInitial" style="display:none;margin-top:8px;">
+          <textarea id="tplInitialText" style="width:100%;max-width:760px;min-height:320px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--white);font-family:'JetBrains Mono','DM Sans',monospace;outline:none;resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" onclick="window._toggleTpl('followup1')">
+          <svg id="tplChevronFollowup1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2.5" style="transition:transform 0.15s;"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style="font-size:12px;font-weight:600;color:var(--white);letter-spacing:0.5px;">1st Follow-up</span>
+        </div>
+        <div id="tplFollowup1" style="display:none;margin-top:8px;">
+          <textarea id="tplFollowup1Text" style="width:100%;max-width:760px;min-height:240px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--white);font-family:'JetBrains Mono','DM Sans',monospace;outline:none;resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" onclick="window._toggleTpl('followup2')">
+          <svg id="tplChevronFollowup2" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2.5" style="transition:transform 0.15s;"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style="font-size:12px;font-weight:600;color:var(--white);letter-spacing:0.5px;">Final Follow-up</span>
+        </div>
+        <div id="tplFollowup2" style="display:none;margin-top:8px;">
+          <textarea id="tplFollowup2Text" style="width:100%;max-width:760px;min-height:180px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--white);font-family:'JetBrains Mono','DM Sans',monospace;outline:none;resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" onclick="window._toggleTpl('rules')">
+          <svg id="tplChevronRules" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2.5" style="transition:transform 0.15s;"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style="font-size:12px;font-weight:600;color:var(--white);letter-spacing:0.5px;">AI Rules</span>
+          <span style="font-size:10px;color:var(--gray2);font-weight:400;">(appended to every generation prompt)</span>
+        </div>
+        <div id="tplRules" style="display:none;margin-top:8px;">
+          <textarea id="tplRulesText" style="width:100%;max-width:760px;min-height:160px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--white);font-family:'JetBrains Mono','DM Sans',monospace;outline:none;resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+        <button class="action-btn primary" id="btnSaveTpl" onclick="window._saveTemplates()">
+          <div class="btn-spinner"></div>
+          <span class="btn-label">Save Templates</span>
+        </button>
+        <button class="action-btn" onclick="window._resetTemplates()" style="border-color:var(--border2);color:var(--gray);">
+          <span class="btn-label">Reset to Defaults</span>
+        </button>
+        <span id="tplSaveStatus" style="font-size:11px;color:var(--gray2);"></span>
+      </div>
+    </div>
+
     <!-- DRAFTS TABLE -->
     <div class="table-wrap" style="animation-delay:0.3s">
       <div class="table-header">
@@ -1478,10 +1536,92 @@ window.loadOutreachData = async function() {
     outreachData = data;
     outreachLoaded = true;
     renderOutreach(data);
+    loadTemplates();
   } catch (e) {
     console.error('Outreach load error:', e);
     const body = document.getElementById('outreachBody');
     body.innerHTML = `<div style="text-align:center;padding:80px 0;color:var(--red);font-size:14px;">Failed to load outreach data. <button onclick="loadOutreachData()" style="color:var(--green);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;">Retry</button></div>`;
+  }
+};
+
+/* ── EMAIL TEMPLATES ── */
+let currentTemplates = null;
+
+async function loadTemplates() {
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const user = getAuth().currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+    const res = await fetch('/api/outreach/templates', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    if (!res.ok) return;
+    currentTemplates = await res.json();
+    const el = (id) => document.getElementById(id);
+    if (el('tplInitialText')) el('tplInitialText').value = currentTemplates.initial || '';
+    if (el('tplFollowup1Text')) el('tplFollowup1Text').value = currentTemplates.followup1 || '';
+    if (el('tplFollowup2Text')) el('tplFollowup2Text').value = currentTemplates.followup2 || '';
+    if (el('tplRulesText')) el('tplRulesText').value = currentTemplates.rules || '';
+  } catch (e) {
+    console.error('Template load error:', e);
+  }
+}
+
+window._toggleTpl = function(key) {
+  const panel = document.getElementById('tpl' + key.charAt(0).toUpperCase() + key.slice(1));
+  const chevron = document.getElementById('tplChevron' + key.charAt(0).toUpperCase() + key.slice(1));
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (chevron) chevron.style.transform = open ? '' : 'rotate(90deg)';
+};
+
+window._saveTemplates = async function() {
+  const btn = document.getElementById('btnSaveTpl');
+  const status = document.getElementById('tplSaveStatus');
+  if (btn) { btn.querySelector('.btn-spinner').style.display = 'block'; btn.querySelector('.btn-label').style.opacity = '0.4'; }
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const user = getAuth().currentUser;
+    const token = await user.getIdToken();
+    const res = await fetch('/api/outreach/templates', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initial: document.getElementById('tplInitialText')?.value || '',
+        followup1: document.getElementById('tplFollowup1Text')?.value || '',
+        followup2: document.getElementById('tplFollowup2Text')?.value || '',
+        rules: document.getElementById('tplRulesText')?.value || '',
+      }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+    showToast('Templates saved');
+    if (status) { status.textContent = 'Saved'; setTimeout(() => status.textContent = '', 3000); }
+  } catch (e) {
+    showToast('Save failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.querySelector('.btn-spinner').style.display = 'none'; btn.querySelector('.btn-label').style.opacity = '1'; }
+  }
+};
+
+window._resetTemplates = async function() {
+  if (!await swftConfirm('Reset Templates', 'Reset all email templates back to the built-in defaults? Any custom changes will be lost.', { danger: true, confirmLabel: 'Reset' })) return;
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const user = getAuth().currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+    // Delete the Firestore doc so server falls back to defaults
+    await fetch('/api/outreach/templates', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initial: '', followup1: '', followup2: '', rules: '' }),
+    });
+    await loadTemplates();
+    showToast('Templates reset to defaults', 'info');
+  } catch (e) {
+    showToast('Reset failed: ' + e.message, 'error');
   }
 };
 
