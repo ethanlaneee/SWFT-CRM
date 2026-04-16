@@ -14,9 +14,9 @@
 
 const Anthropic = require("@anthropic-ai/sdk");
 const { db } = require("../firebase");
+const { getAiSettings } = require("../routes/aiSettings");
 
 const anthropic = new Anthropic();
-const MAX_FACTS = 20; // cap stored per customer
 
 /**
  * Retrieve stored memory facts for a customer.
@@ -44,12 +44,16 @@ async function getCustomerMemory(orgId, customerId) {
 async function extractAndSaveMemory(orgId, customerId, history) {
   if (!orgId || !customerId || !history.length) return;
   try {
+    const settings = await getAiSettings(orgId);
+    const cfg = settings.customerMemory;
+    if (!cfg.enabled) return;
+
     const transcript = history
       .map(m => `[${m.role === "user" ? "Customer" : "AI"}]: ${m.content}`)
       .join("\n");
 
     const aiResp = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: cfg.model,
       max_tokens: 300,
       system:
         "You extract concise facts about a customer from a business conversation. " +
@@ -78,7 +82,7 @@ async function extractAndSaveMemory(orgId, customerId, history) {
         merged.push(fact.trim());
       }
     }
-    const trimmed = merged.slice(-MAX_FACTS); // keep most recent
+    const trimmed = merged.slice(-cfg.maxFacts); // keep most recent
 
     await db.collection("customerMemory").doc(`${orgId}_${customerId}`).set({
       orgId,

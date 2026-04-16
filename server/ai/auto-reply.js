@@ -17,6 +17,7 @@ const Anthropic = require("@anthropic-ai/sdk");
 const { db } = require("../firebase");
 const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { getCustomerMemory, extractAndSaveMemory } = require("./customer-memory");
+const { getAiSettings } = require("../routes/aiSettings");
 
 const anthropic = new Anthropic();
 
@@ -125,8 +126,10 @@ async function getCustomerContext(orgId, customerId) {
 
 /**
  * Build the Claude system prompt from org owner profile.
+ * `customInstructions` (from aiSettings.autoReply) takes priority over the
+ * legacy user-doc field.
  */
-function buildSystemPrompt(orgUser, customerContext, customerMemory = []) {
+function buildSystemPrompt(orgUser, customerContext, customerMemory = [], customInstructions = "") {
   const bizName = orgUser.company || orgUser.name || "this business";
   const ownerFN = (orgUser.name || "").split(" ")[0] || "the owner";
 
@@ -149,9 +152,11 @@ function buildSystemPrompt(orgUser, customerContext, customerMemory = []) {
     prompt += "\n\n";
   }
 
-  // Custom owner instructions go last — they override everything above
-  if (orgUser.aiCustomInstructions) {
-    prompt += `OWNER'S CUSTOM INSTRUCTIONS (follow these exactly):\n${orgUser.aiCustomInstructions}\n\n`;
+  // Custom owner instructions go last — they override everything above.
+  // Prefer aiSettings.autoReply.customInstructions, fall back to legacy user field.
+  const ownerInstr = customInstructions || orgUser.aiCustomInstructions;
+  if (ownerInstr) {
+    prompt += `OWNER'S CUSTOM INSTRUCTIONS (follow these exactly):\n${ownerInstr}\n\n`;
   }
 
   prompt +=
@@ -180,7 +185,20 @@ function buildSystemPrompt(orgUser, customerContext, customerMemory = []) {
  * @param {{ customerName }|null} matched
  * @returns {Promise<string|null>}
  */
-async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, body, matched) {
+async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, body, matched, channel) {
+  // Settings-gated. If the org has disabled auto-reply globally or for this
+  // channel, skip without contacting Claude.
+  const settings = await getAiSettings(orgId);
+  const ar = settings.autoReply;
+  if (!ar.enabled) {
+    console.log(`[auto-reply] Global auto-reply disabled for org ${orgId}`);
+    return null;
+  }
+  if (channel && ar.channels && ar.channels[channel] === false) {
+    console.log(`[auto-reply] Channel "${channel}" disabled in aiSettings for org ${orgId}`);
+    return null;
+  }
+
   const mode = await getConversationMode(orgId, customerId, fromIdentifier);
   if (mode === "manual") {
     console.log(`[auto-reply] Thread ${customerId || fromIdentifier} is manual — skipping`);
@@ -188,7 +206,7 @@ async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, b
   }
 
   const [recentMessages, customerContext, customerMemory] = await Promise.all([
-    getRecentMessages(orgId, customerId, fromIdentifier),
+    getRecentMessages(orgId, customerId, fromIdentifier, ar.contextMessageCount),
     getCustomerContext(orgId, customerId),
     getCustomerMemory(orgId, customerId),
   ]);
@@ -206,9 +224,9 @@ async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, b
   }
 
   const aiResp = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 200,
-    system: buildSystemPrompt(ownerData, customerContext, customerMemory),
+    model: ar.model,
+    max_tokens: ar.maxTokens,
+    system: buildSystemPrompt(ownerData, customerContext, customerMemory, ar.customInstructions),
     messages: history,
   });
 
@@ -231,7 +249,7 @@ async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, b
 async function handleInbound(orgId, ownerUid, ownerData, from, body, matched) {
   try {
     const customerId = matched?.customerId || null;
-    const replyText = await generateAutoReply(orgId, ownerData, customerId, from, body, matched);
+    const replyText = await generateAutoReply(orgId, ownerData, customerId, from, body, matched, "sms");
     if (!replyText) return;
 
     await sendSms(from, replyText, getUserTelnyxConfig(ownerData));
@@ -274,7 +292,7 @@ async function handleInbound(orgId, ownerUid, ownerData, from, body, matched) {
 async function handleInboundMeta(orgId, ownerUid, ownerData, senderId, body, channel, matched, metaSendFn) {
   try {
     const customerId = matched?.customerId || null;
-    const replyText = await generateAutoReply(orgId, ownerData, customerId, senderId, body, matched);
+    const replyText = await generateAutoReply(orgId, ownerData, customerId, senderId, body, matched, channel);
     if (!replyText) return;
 
     await metaSendFn(replyText);

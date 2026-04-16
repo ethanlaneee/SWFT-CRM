@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--surface3:#1e1e1e;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html{background:#0a0a0a;}
 body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
@@ -37,94 +37,112 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .user-name{font-size:12px;font-weight:500;color:var(--white);}
 .user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
 
-.main{margin-left:var(--sidebar-w);flex:1;padding:32px 36px;max-width:900px;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main{margin-left:var(--sidebar-w);flex:1;padding:32px 36px 64px;max-width:960px;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
 .main.expanded{margin-left:0!important;}
-.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;}
-h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white);margin-bottom:4px;}
-.subtitle{color:var(--gray);font-size:13px;}
-.btn-new{background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 20px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.15s;}
-.btn-new:hover{background:#d5ff40;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:16px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);margin-bottom:4px;}
+.subtitle{color:var(--gray);font-size:13px;max-width:560px;line-height:1.5;}
+.btn-save-primary{background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;padding:11px 22px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.15s;display:flex;align-items:center;gap:8px;}
+.btn-save-primary:hover:not(:disabled){background:#d5ff40;}
+.btn-save-primary:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-save-primary.dirty{box-shadow:0 0 0 3px rgba(200,241,53,0.2);animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(200,241,53,0.2);}50%{box-shadow:0 0 0 6px rgba(200,241,53,0.08);}}
 
-/* Stats */
-.stats-strip{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;min-width:130px;}
-.stat-n{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);}
-.stat-l{font-size:11px;color:var(--gray);margin-top:2px;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.toast-dot.red{background:var(--red);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+/* Explainer / flow banner */
+.flow-banner{background:linear-gradient(135deg,rgba(77,159,255,0.06),rgba(200,241,53,0.04));border:1px solid var(--border2);border-radius:14px;padding:20px 24px;margin-bottom:28px;}
+.flow-banner-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:14px;}
+.flow-strip{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 0 2px;}
+.flow-step{display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:110px;text-align:center;}
+.flow-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid;margin-bottom:8px;}
+.flow-dot.c1{background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);}
+.flow-dot.c2{background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);}
+.flow-dot.c3{background:rgba(162,89,255,0.1);border-color:var(--purple);color:var(--purple);}
+.flow-dot.c4{background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);}
+.flow-step-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;margin-bottom:2px;}
+.flow-step-value{font-size:11.5px;color:var(--white);font-weight:500;line-height:1.3;max-width:120px;}
+.flow-arrow{align-self:center;color:var(--border2);margin:0 2px;margin-top:-22px;flex-shrink:0;}
 
-/* Scenario cards — Make.com style */
-.rules-list{display:flex;flex-direction:column;gap:16px;margin-bottom:32px;}
-.scenario{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color 0.15s;}
-.scenario:hover{border-color:var(--border2);}
-.scenario.disabled{opacity:0.45;}
-.scenario-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
-.scenario-name{font-size:14px;font-weight:600;color:var(--white);}
-.scenario-actions{display:flex;align-items:center;gap:8px;}
-.scenario-flow{display:flex;align-items:center;gap:0;padding:24px 24px 20px;overflow-x:auto;}
-/* Circular nodes */
-.flow-node{position:relative;display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:90px;}
-.flow-node-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid;transition:box-shadow 0.2s;}
-.flow-node-circle.trigger{background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);}
-.flow-node-circle.trigger svg{stroke:var(--blue);}
-.flow-node-circle.wait{background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);}
-.flow-node-circle.wait svg{stroke:var(--amber);}
-.flow-node-circle.action{background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);}
-.flow-node-circle.action svg{stroke:var(--green);}
-.scenario:hover .flow-node-circle.trigger{box-shadow:0 0 12px rgba(77,159,255,0.25);}
-.scenario:hover .flow-node-circle.wait{box-shadow:0 0 12px rgba(245,166,35,0.2);}
-.scenario:hover .flow-node-circle.action{box-shadow:0 0 12px rgba(200,241,53,0.2);}
-.flow-node-text{text-align:center;margin-top:8px;}
-.flow-node-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;margin-bottom:2px;}
-.flow-node-label.trigger{color:var(--blue);}
-.flow-node-label.wait{color:var(--amber);}
-.flow-node-label.action{color:var(--green);}
-.flow-node-value{font-size:11.5px;color:var(--white);font-weight:500;}
-.flow-node-sub{font-size:10px;color:var(--gray);margin-top:1px;}
-/* Connector line between nodes */
-.flow-connector{width:40px;height:2px;background:var(--border2);flex-shrink:0;position:relative;margin:0 2px;margin-bottom:28px;}
-.flow-connector::after{content:'';position:absolute;right:-3px;top:-3px;width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid var(--border2);}
-.scenario-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,0.15);}
-.scenario-meta{display:flex;gap:12px;font-size:11px;color:var(--gray);}
-.scenario-meta span{display:flex;align-items:center;gap:4px;}
+/* Behavior card */
+.behavior{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;transition:border-color 0.15s;}
+.behavior:hover{border-color:var(--border2);}
+.behavior.off{opacity:0.55;}
+.behavior-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);gap:16px;}
+.behavior-head-left{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
+.behavior-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid;flex-shrink:0;}
+.behavior-icon.qf{background:rgba(77,159,255,0.1);border-color:rgba(77,159,255,0.3);color:var(--blue);}
+.behavior-icon.ar{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.28);color:var(--green);}
+.behavior-icon.mem{background:rgba(162,89,255,0.1);border-color:rgba(162,89,255,0.3);color:var(--purple);}
+.behavior-title{font-size:15px;font-weight:600;color:var(--white);letter-spacing:0.2px;}
+.behavior-desc{font-size:12px;color:var(--gray);margin-top:2px;line-height:1.4;}
+.behavior-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;}
+.behavior-pill.on{background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.25);}
+.behavior-pill.off{background:rgba(122,122,122,0.1);color:var(--gray);border:1px solid var(--border2);}
+.behavior-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.behavior-body{padding:22px 22px 24px;}
+.behavior.off .behavior-body{pointer-events:none;filter:saturate(0.3);}
+
+/* Toggles */
 .toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0;}
 .toggle.on{background:var(--green);}
 .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
 .toggle.on::after{transform:translateX(16px);}
-.btn-icon{width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
-.btn-icon:hover{background:var(--surface2);color:var(--white);}
-.btn-icon.del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
-.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;}
-.badge-sms{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
-.badge-email{background:rgba(77,159,255,0.1);color:var(--blue);border:1px solid rgba(77,159,255,0.2);}
-.badge-notif{background:rgba(162,89,255,0.1);color:#a259ff;border:1px solid rgba(162,89,255,0.2);}
-.badge-tag{background:rgba(255,159,67,0.1);color:#ff9f43;border:1px solid rgba(255,159,67,0.2);}
 
-/* Templates bar */
-.templates-bar{margin-bottom:24px;}
-.templates-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:10px;}
-.templates-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
-.tpl-btn{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
-.tpl-btn:hover{border-color:var(--border2);background:var(--surface2);}
-.tpl-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid;flex-shrink:0;}
-.tpl-text{font-size:12px;color:var(--white);font-weight:500;}
+/* Field grid inside cards */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media (max-width:600px){.grid,.grid-3{grid-template-columns:1fr;}}
+.field{margin-bottom:16px;}
+.field-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;margin-bottom:6px;display:block;}
+.field-hint{font-size:11px;color:var(--gray);margin-top:4px;line-height:1.4;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.form-textarea{resize:vertical;min-height:90px;line-height:1.5;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green);}
+.form-select{appearance:none;cursor:pointer;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237a7a7a' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.form-select option{background:var(--surface2);}
 
-/* Condition rows */
-.cond-row{display:grid;grid-template-columns:1fr 1fr 1fr 28px;gap:8px;align-items:center;margin-bottom:8px;}
-.cond-row select,.cond-row input{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
-.cond-row select{appearance:none;cursor:pointer;}
-.cond-del{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
-.cond-del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
+/* Inline toggle rows inside cards */
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--border);}
+.toggle-row:first-child{border-top:none;padding-top:4px;}
+.toggle-row-text{flex:1;min-width:0;}
+.toggle-row-title{font-size:13px;color:var(--white);font-weight:500;}
+.toggle-row-desc{font-size:11.5px;color:var(--gray);margin-top:3px;line-height:1.4;}
 
-/* Empty state */
-.empty{text-align:center;padding:50px 20px;color:var(--gray);}
-.empty-icon{font-size:36px;margin-bottom:12px;}
-.empty-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:6px;}
+/* Channel chips */
+.chan-group{display:flex;flex-wrap:wrap;gap:8px;}
+.chan-chip{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:20px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--gray);cursor:pointer;user-select:none;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
+.chan-chip:hover{border-color:var(--gray2);color:var(--white);}
+.chan-chip.on{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.4);color:var(--green);}
+.chan-chip-dot{width:7px;height:7px;border-radius:50%;background:var(--gray2);}
+.chan-chip.on .chan-chip-dot{background:var(--green);}
 
-/* Pending section */
-.section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer;user-select:none;}
+/* Variable chips */
+.var-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;margin-bottom:6px;}
+.var-chip{display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;}
+.var-chip:hover{background:rgba(200,241,53,0.15);border-color:rgba(200,241,53,0.35);}
+
+/* Segmented control (SMS / Email) */
+.segment{display:inline-flex;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:3px;gap:2px;}
+.segment button{background:transparent;border:none;padding:7px 16px;font-size:12px;color:var(--gray);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all 0.14s;}
+.segment button.on{background:var(--surface3);color:var(--white);box-shadow:0 1px 2px rgba(0,0,0,0.2);}
+.segment button:hover:not(.on){color:var(--white);}
+
+/* Section divider inside card body */
+.sub-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
+.sub-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sub-label-icon{color:var(--amber);}
+
+/* Pending messages */
+.section-head{display:flex;align-items:center;gap:10px;margin:36px 0 14px;cursor:pointer;user-select:none;}
 .section-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white);}
 .section-count{background:var(--surface2);color:var(--gray);font-size:11px;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;}
 .chevron{transition:transform 0.2s;color:var(--gray);}
 .chevron.open{transform:rotate(180deg);}
+.pending-wrap{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
 .pending-table{width:100%;border-collapse:collapse;font-size:12.5px;}
 .pending-table th{text-align:left;padding:8px 12px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);border-bottom:1px solid var(--border);font-weight:600;}
 .pending-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--white);}
@@ -133,53 +151,9 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:v
 .status-pending{background:rgba(245,166,35,0.1);color:var(--amber);}
 .status-sent{background:rgba(200,241,53,0.1);color:var(--green);}
 .status-failed{background:rgba(255,82,82,0.1);color:var(--red);}
-
-/* Modal */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
-.overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px;}
-.modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:24px;}
-.form-field{margin-bottom:18px;}
-.form-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;margin-bottom:6px;display:block;}
-.form-sub{font-size:11px;color:var(--gray);margin-bottom:6px;}
-.var-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;margin-bottom:2px;}
-.var-chip{display:inline-flex;align-items:center;padding:2px 9px;background:rgba(200,241,53,0.07);border:1px solid rgba(200,241,53,0.18);border-radius:20px;font-size:10.5px;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:0.3px;transition:all 0.12s;user-select:none;}
-.var-chip:hover{background:rgba(200,241,53,0.15);border-color:rgba(200,241,53,0.35);}
-.form-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
-.form-input:focus{border-color:var(--green);}
-.form-input::placeholder{color:var(--gray2);}
-.form-select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;appearance:none;cursor:pointer;}
-.form-select option{background:var(--surface2);}
-.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:90px;transition:border-color 0.15s;}
-.form-textarea:focus{border-color:var(--green);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.survey-section{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:4px;display:none;}
-.survey-section.open{display:block;}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
-.btn-save{background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 24px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.btn-save:hover{background:#d5ff40;}
-.btn-cancel{padding:10px 18px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
-.toast-dot.red{background:var(--red);}
-::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
-.swft-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;}
-.swft-modal-overlay.open{display:flex;}
-.swft-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
-.swft-modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:12px;}
-.swft-modal-body{font-size:13px;line-height:1.6;color:var(--gray);margin-bottom:24px;white-space:pre-line;}
-.swft-modal-actions{display:flex;justify-content:flex-end;gap:10px;}
-.swft-modal-btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid;transition:all 0.14s;}
-.swft-modal-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray);}
-.swft-modal-btn.cancel:hover{background:var(--surface2);color:var(--white);}
-.swft-modal-btn.confirm{background:var(--green);border-color:var(--green);color:#0a0a0a;}
-.swft-modal-btn.confirm:hover{box-shadow:0 0 20px rgba(200,241,53,0.2);}
-.swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
-.swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
+.btn-icon{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
+.btn-icon:hover{background:var(--surface2);color:var(--white);}
+.btn-icon.del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
 </style>
 
 <!-- Meta Pixel Code -->
@@ -198,7 +172,6 @@ fbq('track', 'PageView');
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -231,7 +204,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
     <div class="nav-label">Tools</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
     <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
@@ -252,220 +225,269 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <main class="main" id="main">
   <div class="page-header">
     <div>
-      <h1>Automations</h1>
-      <p class="subtitle">Create scenarios that automatically send messages when events happen</p>
+      <h1>AI AUTOMATIONS</h1>
+      <p class="subtitle">Every AI-driven action SWFT takes on your behalf — fully visible, fully editable. Flip anything on or off, tweak the templates, and the agent adapts immediately.</p>
     </div>
-    <button class="btn-new" onclick="openModal()">+ New Scenario</button>
+    <button class="btn-save-primary" id="save-btn" onclick="saveAll()" disabled>
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke-width="2"/><polyline points="17 21 17 13 7 13 7 21" stroke-width="2"/><polyline points="7 3 7 8 15 8" stroke-width="2"/></svg>
+      <span id="save-label">Saved</span>
+    </button>
   </div>
 
-  <div class="stats-strip" id="stats-strip">
-    <div class="stat"><div class="stat-n" id="st-active">—</div><div class="stat-l">Active Scenarios</div></div>
-    <div class="stat"><div class="stat-n" id="st-pending">—</div><div class="stat-l">Queued</div></div>
-    <div class="stat"><div class="stat-n" id="st-sent">—</div><div class="stat-l">Delivered</div></div>
-    <div class="stat"><div class="stat-n" id="st-failed" style="color:var(--red);">—</div><div class="stat-l">Failed</div></div>
-  </div>
-
-  <!-- Quick-start templates -->
-  <div class="templates-bar" id="templates-bar">
-    <div class="templates-label">Quick Start</div>
-    <div class="templates-scroll">
-      <button class="tpl-btn" onclick="quickCreate('quote_sent')">
-        <span class="tpl-icon" style="background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg></span>
-        <span class="tpl-text">Quote Follow-up</span>
-      </button>
-      <button class="tpl-btn" onclick="quickCreate('invoice_sent')">
-        <span class="tpl-icon" style="background:rgba(77,159,255,0.1);border-color:var(--blue);color:var(--blue);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg></span>
-        <span class="tpl-text">Invoice Reminder</span>
-      </button>
-      <button class="tpl-btn" onclick="quickCreate('invoice_paid')">
-        <span class="tpl-icon" style="background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg></span>
-        <span class="tpl-text">Payment Thank You</span>
-      </button>
-      <button class="tpl-btn" onclick="quickCreate('job_completed')">
-        <span class="tpl-icon" style="background:rgba(245,166,35,0.1);border-color:var(--amber);color:var(--amber);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg></span>
-        <span class="tpl-text">Job Follow-up</span>
-      </button>
-      <button class="tpl-btn" onclick="quickCreate('customer_created')">
-        <span class="tpl-icon" style="background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg></span>
-        <span class="tpl-text">Welcome Message</span>
-      </button>
+  <div class="flow-banner">
+    <div class="flow-banner-title">How the quote follow-up works</div>
+    <div class="flow-strip">
+      <div class="flow-step">
+        <div class="flow-dot c1"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="2"/><polyline points="14,2 14,8 20,8" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--blue);">Quote Sent</div>
+        <div class="flow-step-value">Customer receives the quote by SMS or email</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c2"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--amber);">Wait</div>
+        <div class="flow-step-value" id="flow-wait-text">3 days at 9:00 AM ET</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c3"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1M4.22 4.22l.71.71M1 12h1M20 12h1M19.07 4.22l-.71.71" stroke-width="2" stroke-linecap="round"/><path d="M12 17a5 5 0 0 0 5-5 5 5 0 1 0-10 0 5 5 0 0 0 5 5z" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--purple);">AI Check</div>
+        <div class="flow-step-value">Claude scans the conversation to see if they already replied</div>
+      </div>
+      <div class="flow-arrow"><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="0" y1="5" x2="18" y2="5"/><polyline points="15,1 19,5 15,9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-dot c4"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2"/></svg></div>
+        <div class="flow-step-label" style="color:var(--green);">Check In</div>
+        <div class="flow-step-value">Only if still pending — otherwise skip silently</div>
+      </div>
     </div>
   </div>
 
-  <div class="rules-list" id="rules-list">
-    <div style="padding:20px;color:var(--gray);font-size:13px;">Loading...</div>
+  <div class="behavior" id="card-qf">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon qf"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="9" y1="13" x2="15" y2="13" stroke-width="1.6"/><line x1="9" y1="17" x2="13" y2="17" stroke-width="1.6"/></svg></div>
+        <div>
+          <div class="behavior-title">Quote Follow-Up</div>
+          <div class="behavior-desc">Automatically checks in on customers after a quote is sent — only if they haven't already responded or accepted.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="qf-pill">Active</span>
+        <button class="toggle on" id="qf-enabled" data-bind="quoteFollowup.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="qf-body">
+      <div class="grid-3">
+        <div class="field">
+          <label class="field-label">Wait time (days)</label>
+          <input class="form-input" type="number" min="0" max="365" id="qf-delay-days" data-bind="quoteFollowup.delayDays" value="3"/>
+          <div class="field-hint">How many days after the quote is sent.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Extra hours</label>
+          <input class="form-input" type="number" min="0" max="23" id="qf-delay-hours" data-bind="quoteFollowup.delayHours" value="0"/>
+          <div class="field-hint">Set to 0 unless you want sub-day delay.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Send at (ET)</label>
+          <input class="form-input" type="time" id="qf-send-time" data-bind="quoteFollowup.sendAtTime" value="09:00"/>
+          <div class="field-hint">Never sends outside this local time window.</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Channel</label>
+        <div class="segment" id="qf-channel-seg">
+          <button type="button" data-channel="sms" class="on">SMS</button>
+          <button type="button" data-channel="email">Email</button>
+        </div>
+        <div class="field-hint">Email replies thread into the original quote email so the customer sees the conversation.</div>
+      </div>
+      <div id="qf-sms-fields">
+        <div class="field">
+          <label class="field-label">SMS template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="qf-sms-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{service}">{service}</span>
+            <span class="var-chip" data-target="qf-sms-template" data-val="{total}">{total}</span>
+          </div>
+          <textarea class="form-textarea" id="qf-sms-template" data-bind="quoteFollowup.smsTemplate" placeholder="Hi {customerFirstName}, this is {yourFirstName} from {companyName}..."></textarea>
+        </div>
+      </div>
+      <div id="qf-email-fields" style="display:none;">
+        <div class="field">
+          <label class="field-label">Email subject</label>
+          <input class="form-input" id="qf-email-subject" data-bind="quoteFollowup.emailSubject" placeholder="Following up on your quote"/>
+          <div class="field-hint">When this email threads onto an existing quote conversation, the subject becomes <code style="color:var(--gray);">Re: &lt;original&gt;</code> automatically.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Email template</label>
+          <div class="var-chips">
+            <span class="var-chip" data-target="qf-email-template" data-val="{customerFirstName}">{customerFirstName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{customerFullName}">{customerFullName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{yourFirstName}">{yourFirstName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{yourName}">{yourName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{companyName}">{companyName}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{service}">{service}</span>
+            <span class="var-chip" data-target="qf-email-template" data-val="{total}">{total}</span>
+          </div>
+          <textarea class="form-textarea" id="qf-email-template" data-bind="quoteFollowup.emailTemplate" style="min-height:140px;" placeholder="Hi {customerFirstName},&#10;&#10;Just circling back..."></textarea>
+        </div>
+      </div>
+      <div class="sub-section">
+        <div class="sub-label">
+          <svg class="sub-label-icon" width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--purple);"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-width="2" stroke-linejoin="round"/><path d="M2 17l10 5 10-5" stroke-width="2" stroke-linejoin="round"/><path d="M2 12l10 5 10-5" stroke-width="2" stroke-linejoin="round"/></svg>
+          AI Safeguards (before sending)
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Skip if the customer already accepted in conversation</div>
+            <div class="toggle-row-desc">Right before the follow-up goes out, Claude reads the thread. If the customer already said yes, replied with a scheduling question, or otherwise signaled acceptance, no message is sent.</div>
+          </div>
+          <button class="toggle on" id="qf-ai-skip-accepted" data-bind="quoteFollowup.aiSkipIfAccepted"></button>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Auto-approve the quote when AI detects acceptance</div>
+            <div class="toggle-row-desc">When Claude sees a clear "yes," the quote gets marked as <strong style="color:var(--green);">Approved</strong> in SWFT and jumps into your job pipeline. Turn off if you'd rather manually approve every quote.</div>
+          </div>
+          <button class="toggle on" id="qf-ai-autoapprove" data-bind="quoteFollowup.aiAutoApproveQuote"></button>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-row-text">
+            <div class="toggle-row-title">Skip if the customer clearly declined</div>
+            <div class="toggle-row-desc">If Claude reads a "no thanks" or a hard rejection, drop the follow-up — no point nagging.</div>
+          </div>
+          <button class="toggle on" id="qf-ai-skip-rejected" data-bind="quoteFollowup.aiSkipIfRejected"></button>
+        </div>
+
+        <div class="field" style="margin-top:18px;margin-bottom:0;">
+          <label class="field-label">Model used for the conversation check</label>
+          <select class="form-select" id="qf-ai-model" data-bind="quoteFollowup.aiModel">
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fast, cheap, recommended</option>
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — slower, better at subtle language</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — most accurate, highest cost</option>
+          </select>
+          <div class="field-hint">Haiku handles this job well — it just needs to classify ACCEPTED / REJECTED / PENDING.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Pending messages -->
+  <div class="behavior" id="card-ar">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon ar"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="13" cy="11" r="1" fill="currentColor"/><circle cx="17" cy="11" r="1" fill="currentColor"/></svg></div>
+        <div>
+          <div class="behavior-title">Inbound Auto-Reply</div>
+          <div class="behavior-desc">Every inbound SMS, Instagram DM, or Facebook message — Claude reads the thread and replies on your behalf. Flip any conversation to manual mode from the Messages page to take over.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="ar-pill">Active</span>
+        <button class="toggle on" id="ar-enabled" data-bind="autoReply.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="ar-body">
+
+      <div class="field">
+        <label class="field-label">Active channels</label>
+        <div class="chan-group">
+          <button type="button" class="chan-chip on" id="ar-ch-sms" data-channel="sms"><span class="chan-chip-dot"></span> SMS</button>
+          <button type="button" class="chan-chip on" id="ar-ch-instagram" data-channel="instagram"><span class="chan-chip-dot"></span> Instagram DM</button>
+          <button type="button" class="chan-chip on" id="ar-ch-facebook" data-channel="facebook"><span class="chan-chip-dot"></span> Facebook Messenger</button>
+        </div>
+        <div class="field-hint">Turn off any channel where you'd rather reply yourself.</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label class="field-label">Model</label>
+          <select class="form-select" id="ar-model" data-bind="autoReply.model">
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — recommended</option>
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — fastest, cheapest</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — most capable</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Max reply length</label>
+          <input class="form-input" type="number" min="50" max="1000" step="25" id="ar-max-tokens" data-bind="autoReply.maxTokens" value="200"/>
+          <div class="field-hint">In tokens (~0.75 words each). 200 ≈ 3 SMS-sized sentences.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Context window</label>
+          <input class="form-input" type="number" min="3" max="50" id="ar-context" data-bind="autoReply.contextMessageCount" value="15"/>
+          <div class="field-hint">Prior messages Claude sees for context.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Custom instructions to Claude</label>
+        <textarea class="form-textarea" id="ar-instructions" data-bind="autoReply.customInstructions" style="min-height:110px;" placeholder="Keep replies short and friendly — 1 to 3 sentences, SMS-style. Never quote prices beyond what's in business info..."></textarea>
+        <div class="field-hint">These sit on top of your business info (set in <a href="swft-ai-agents" style="color:var(--green);">AI Agents</a>) and override the defaults. Use this to lock in your tone, boundaries, and anything you <em>never</em> want the AI to do.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="behavior" id="card-mem">
+    <div class="behavior-head">
+      <div class="behavior-head-left">
+        <div class="behavior-icon mem"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z" stroke-width="1.8"/><path d="M8 14v3a4 4 0 0 0 8 0v-3" stroke-width="1.8"/><line x1="12" y1="22" x2="12" y2="18" stroke-width="1.8"/></svg></div>
+        <div>
+          <div class="behavior-title">Customer Memory</div>
+          <div class="behavior-desc">After each auto-reply, Claude writes down what it learned — preferences, scheduling quirks, pets, past complaints — and uses it on future conversations so the AI actually remembers customers.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="behavior-pill on" id="mem-pill">Active</span>
+        <button class="toggle on" id="mem-enabled" data-bind="customerMemory.enabled"></button>
+      </div>
+    </div>
+    <div class="behavior-body" id="mem-body">
+      <div class="grid">
+        <div class="field">
+          <label class="field-label">Extraction model</label>
+          <select class="form-select" id="mem-model" data-bind="customerMemory.model">
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — recommended (fastest)</option>
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+          </select>
+          <div class="field-hint">Runs asynchronously — never slows down the reply.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Max facts per customer</label>
+          <input class="form-input" type="number" min="5" max="100" id="mem-maxfacts" data-bind="customerMemory.maxFacts" value="20"/>
+          <div class="field-hint">Oldest facts drop off once this cap is hit.</div>
+        </div>
+      </div>
+      <div class="field-hint" style="margin-top:4px;">Stored per customer at <code style="color:var(--gray);">customerMemory/&lt;orgId&gt;_&lt;customerId&gt;</code>. Inject into every future AI reply automatically.</div>
+    </div>
+  </div>
+
   <div class="section-head" onclick="togglePending()">
-    <div class="section-title">Upcoming Messages</div>
+    <div class="section-title">Upcoming AI Actions</div>
     <div class="section-count" id="pending-count">0</div>
     <svg class="chevron" id="pending-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9" stroke-width="2"/></svg>
   </div>
   <div id="pending-section" style="display:none;">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;">
+    <div class="pending-wrap">
       <table class="pending-table" id="pending-table">
-        <thead><tr><th>Customer</th><th>Type</th><th>Sends At</th><th>Status</th><th></th></tr></thead>
-        <tbody id="pending-body"><tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">No pending messages</td></tr></tbody>
+        <thead><tr><th>Customer</th><th>Action</th><th>Fires At</th><th>Status</th><th></th></tr></thead>
+        <tbody id="pending-body"><tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups show up here as quotes go out.</td></tr></tbody>
       </table>
     </div>
   </div>
 </main>
 
-<!-- Modal -->
-<div class="overlay" id="modal-overlay">
-  <div class="modal">
-    <div class="modal-title" id="modal-title">NEW AUTOMATION</div>
-
-    <div class="form-field">
-      <label class="form-label">Name</label>
-      <input class="form-input" id="f-name" placeholder="e.g. Quote Follow-up Reminder"/>
-    </div>
-
-    <div class="form-row">
-      <div class="form-field">
-        <label class="form-label">Trigger</label>
-        <select class="form-select" id="f-trigger">
-          <option value="quote_sent">Quote Sent</option>
-          <option value="invoice_sent">Invoice Sent</option>
-          <option value="invoice_paid">Invoice Paid</option>
-          <option value="job_completed">Job Completed</option>
-          <option value="customer_created">Customer Created</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label class="form-label">Delay (days after trigger)</label>
-        <input class="form-input" id="f-delay" type="number" min="0" max="365" value="3" placeholder="3"/>
-      </div>
-      <div class="form-field">
-        <label class="form-label">Send at time</label>
-        <input class="form-input" id="f-time" type="time" value="09:00"/>
-      </div>
-    </div>
-
-    <div class="form-field">
-      <label class="form-label">Message Type</label>
-      <select class="form-select" id="f-type">
-        <option value="sms">SMS</option>
-        <option value="email">Email</option>
-        <option value="notification">Internal Notification</option>
-        <option value="tag_customer">Tag Customer</option>
-      </select>
-    </div>
-
-    <div class="form-field" id="f-subject-field" style="display:none;">
-      <label class="form-label">Email Subject</label>
-      <input class="form-input" id="f-subject" placeholder="e.g. Follow-up from {{company_name}}"/>
-    </div>
-
-    <!-- Conditions / Filters -->
-    <div class="form-field">
-      <div class="toggle-row">
-        <label class="form-label" style="margin-bottom:0;">Conditions (filters)</label>
-        <button class="toggle" id="f-conditions-toggle" onclick="toggleConditions()" type="button"></button>
-      </div>
-      <div class="form-sub">Only trigger when all conditions are met (e.g. total &gt; $500)</div>
-    </div>
-    <div id="conditions-section" style="display:none;">
-      <div id="conditions-list"></div>
-      <button class="btn-cancel" onclick="addCondition()" type="button" style="font-size:11px;padding:6px 12px;margin-top:6px;">+ Add Condition</button>
-    </div>
-
-    <div class="form-field">
-      <label class="form-label" id="template-label">Message Template</label>
-      <div class="var-chips">
-        <span class="var-chip" onclick="insertVar('f-template','{customerFirstName}')">{customerFirstName}</span>
-        <span class="var-chip" onclick="insertVar('f-template','{customerFullName}')">{customerFullName}</span>
-        <span class="var-chip" onclick="insertVar('f-template','{yourName}')">{yourName}</span>
-        <span class="var-chip" onclick="insertVar('f-template','{yourFirstName}')">{yourFirstName}</span>
-        <span class="var-chip" onclick="insertVar('f-template','{companyName}')">{companyName}</span>
-      </div>
-      <div class="form-sub" id="template-sub" style="margin-top:4px;">For surveys, also use: {survey_link}</div>
-      <textarea class="form-textarea" id="f-template" placeholder="Hi {customerFirstName}, just a reminder that your quote is waiting for your review. Reply to confirm or ask any questions!"></textarea>
-    </div>
-
-    <div class="form-field">
-      <div class="toggle-row">
-        <label class="form-label" style="margin-bottom:0;">This is a satisfaction survey</label>
-        <button class="toggle" id="f-survey-toggle" onclick="toggleSurvey()" type="button"></button>
-      </div>
-      <div class="form-sub">After sending, customer rates 1-10. High ratings trigger a Google review request.</div>
-    </div>
-
-    <div class="survey-section" id="survey-section">
-      <div class="form-row" style="margin-bottom:14px;">
-        <div class="form-field" style="margin-bottom:0;">
-          <label class="form-label">Send follow-up if rating ≥</label>
-          <select class="form-select" id="f-threshold">
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </div>
-        <div class="form-field" style="margin-bottom:0;">
-          <label class="form-label">Follow-up Type</label>
-          <select class="form-select" id="f-followup-type">
-            <option value="sms">SMS</option>
-            <option value="email">Email</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-field" style="margin-bottom:0;">
-        <label class="form-label">Follow-up Template (Review Request)</label>
-        <div class="var-chips">
-          <span class="var-chip" onclick="insertVar('f-followup-template','{customerFirstName}')">{customerFirstName}</span>
-          <span class="var-chip" onclick="insertVar('f-followup-template','{customerFullName}')">{customerFullName}</span>
-          <span class="var-chip" onclick="insertVar('f-followup-template','{yourName}')">{yourName}</span>
-          <span class="var-chip" onclick="insertVar('f-followup-template','{yourFirstName}')">{yourFirstName}</span>
-          <span class="var-chip" onclick="insertVar('f-followup-template','{companyName}')">{companyName}</span>
-          <span class="var-chip" onclick="insertVar('f-followup-template','{review_link}')">{review_link}</span>
-        </div>
-        <div class="form-sub" style="margin-top:4px;">{review_link} requires Google Business Profile connected in Settings → Integrations.</div>
-        <textarea class="form-textarea" id="f-followup-template" placeholder="Hi {customerFirstName}, thanks for the great rating! Would you mind leaving us a quick Google review? It really helps: {review_link}"></textarea>
-        <div style="margin-top:6px;font-size:11px;color:var(--gray2);">Connect Google Business Profile in Settings → Integrations to enable review link.</div>
-      </div>
-    </div>
-
-    <div class="form-field" style="margin-top:18px;">
-      <div class="toggle-row">
-        <label class="form-label" style="margin-bottom:0;">Enabled</label>
-        <button class="toggle on" id="f-enabled-toggle" onclick="toggleEnabled()" type="button"></button>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveAutomation()">Save Automation</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
 
-<!-- SWFT CONFIRM MODAL -->
-<div class="swft-modal-overlay" id="swftModalOverlay">
-  <div class="swft-modal">
-    <div class="swft-modal-title" id="swftModalTitle"></div>
-    <div class="swft-modal-body" id="swftModalBody"></div>
-    <div class="swft-modal-actions">
-      <button class="swft-modal-btn cancel" id="swftModalCancel">Cancel</button>
-      <button class="swft-modal-btn confirm" id="swftModalConfirm">Confirm</button>
-    </div>
-  </div>
-</div>
-
 <script>
-function insertVar(id, v) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var s = el.selectionStart, e = el.selectionEnd;
-  el.value = el.value.slice(0, s) + v + el.value.slice(e);
-  el.selectionStart = el.selectionEnd = s + v.length;
-  el.focus();
-}
-
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('collapsed');
   document.getElementById('main').classList.toggle('expanded');
@@ -474,7 +496,6 @@ function toggleSidebar(){
 </script>
 <script src="swft-account.js"></script>
 <script src="swft-api.js"></script>
-<script src="swft-confirm.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
@@ -490,216 +511,176 @@ const firebaseConfig = {
 };
 initializeApp(firebaseConfig);
 
-let _rules = [];
-let _editId = null;
-let _surveyOn = false;
-let _enabledOn = true;
-let _conditionsOn = false;
-let _conditions = [];
+let _settings = null;
+let _dirty = false;
 
-/* ── SWFT CONFIRM MODAL ── */
-window.swftConfirm = function(title, message, opts = {}) {
-  return new Promise(resolve => {
-    const overlay = document.getElementById('swftModalOverlay');
-    const titleEl = document.getElementById('swftModalTitle');
-    const bodyEl = document.getElementById('swftModalBody');
-    const cancelBtn = document.getElementById('swftModalCancel');
-    const confirmBtn = document.getElementById('swftModalConfirm');
-    titleEl.textContent = title;
-    bodyEl.textContent = message;
-    confirmBtn.className = 'swft-modal-btn ' + (opts.danger ? 'danger' : 'confirm');
-    confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Delete' : 'Confirm');
-    cancelBtn.textContent = opts.cancelLabel || 'Cancel';
-    function cleanup(result) {
-      overlay.classList.remove('open');
-      cancelBtn.removeEventListener('click', onCancel);
-      confirmBtn.removeEventListener('click', onConfirm);
-      overlay.removeEventListener('click', onOverlay);
-      resolve(result);
+function setDirty(on) {
+  _dirty = on;
+  const btn = document.getElementById('save-btn');
+  const lbl = document.getElementById('save-label');
+  btn.disabled = !on;
+  btn.classList.toggle('dirty', on);
+  lbl.textContent = on ? 'Save Changes' : 'Saved';
+}
+
+/* Walk every [data-bind] element and wire it both ways. Supports nested
+   paths like "quoteFollowup.delayDays" — works for text/number/time inputs,
+   textareas, selects, and toggle buttons. */
+function bindInputs() {
+  document.querySelectorAll('[data-bind]').forEach(el => {
+    const path = el.getAttribute('data-bind');
+    if (el.classList.contains('toggle')) {
+      el.addEventListener('click', () => {
+        const next = !el.classList.contains('on');
+        el.classList.toggle('on', next);
+        setPath(_settings, path, next);
+        refreshPills();
+        setDirty(true);
+      });
+    } else {
+      const handler = () => {
+        let v = el.value;
+        if (el.type === 'number') v = Number(v);
+        setPath(_settings, path, v);
+        refreshPills();
+        setDirty(true);
+      };
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
     }
-    function onCancel() { cleanup(false); }
-    function onConfirm() { cleanup(true); }
-    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
-    cancelBtn.addEventListener('click', onCancel);
-    confirmBtn.addEventListener('click', onConfirm);
-    overlay.addEventListener('click', onOverlay);
-    overlay.classList.add('open');
   });
-};
 
-async function init() {
-  try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
-  try { loadUser && loadUser(); } catch(e) { console.error('loadUser error:', e); }
-  await loadAll();
+  /* Channel segment (SMS/Email) for Quote Follow-up */
+  document.querySelectorAll('#qf-channel-seg button').forEach(b => {
+    b.addEventListener('click', () => {
+      const ch = b.getAttribute('data-channel');
+      document.querySelectorAll('#qf-channel-seg button').forEach(x => x.classList.toggle('on', x === b));
+      _settings.quoteFollowup.channel = ch;
+      document.getElementById('qf-sms-fields').style.display = ch === 'sms' ? '' : 'none';
+      document.getElementById('qf-email-fields').style.display = ch === 'email' ? '' : 'none';
+      setDirty(true);
+    });
+  });
+
+  /* Auto-reply channel chips */
+  ['sms','instagram','facebook'].forEach(ch => {
+    document.getElementById('ar-ch-' + ch).addEventListener('click', function() {
+      const next = !this.classList.contains('on');
+      this.classList.toggle('on', next);
+      _settings.autoReply.channels[ch] = next;
+      setDirty(true);
+    });
+  });
+
+  /* Variable chips — insert token at caret */
+  document.querySelectorAll('.var-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const t = document.getElementById(chip.getAttribute('data-target'));
+      const v = chip.getAttribute('data-val');
+      const s = t.selectionStart, e = t.selectionEnd;
+      t.value = t.value.slice(0, s) + v + t.value.slice(e);
+      t.selectionStart = t.selectionEnd = s + v.length;
+      t.focus();
+      t.dispatchEvent(new Event('input'));
+    });
+  });
 }
 
-async function loadAll() {
-  try {
-    // Load rules and pending separately so one failing doesn't block the other
-    let rulesData = { automations: [] };
-    let pendingData = { messages: [] };
-    try {
-      rulesData = await API.automations.list();
-    } catch(e) {
-      console.error('Failed to load automations:', e);
+function setPath(obj, path, val) {
+  const parts = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!cur[parts[i]]) cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = val;
+}
+function getPath(obj, path) {
+  return path.split('.').reduce((c, k) => (c == null ? c : c[k]), obj);
+}
+
+function populate(settings) {
+  _settings = settings;
+  document.querySelectorAll('[data-bind]').forEach(el => {
+    const path = el.getAttribute('data-bind');
+    const val = getPath(settings, path);
+    if (el.classList.contains('toggle')) {
+      el.classList.toggle('on', !!val);
+    } else if (val != null) {
+      el.value = val;
     }
-    try {
-      pendingData = await API.automations.pending();
-    } catch(e) {
-      console.error('Failed to load pending:', e);
+  });
+  /* Channel segment + SMS/email visibility */
+  const ch = settings.quoteFollowup.channel || 'sms';
+  document.querySelectorAll('#qf-channel-seg button').forEach(b => b.classList.toggle('on', b.getAttribute('data-channel') === ch));
+  document.getElementById('qf-sms-fields').style.display = ch === 'sms' ? '' : 'none';
+  document.getElementById('qf-email-fields').style.display = ch === 'email' ? '' : 'none';
+  /* Auto-reply channels */
+  ['sms','instagram','facebook'].forEach(c => {
+    document.getElementById('ar-ch-' + c).classList.toggle('on', !!settings.autoReply.channels[c]);
+  });
+  refreshPills();
+}
+
+function refreshPills() {
+  const map = [
+    ['qf-pill', _settings?.quoteFollowup?.enabled, 'card-qf'],
+    ['ar-pill', _settings?.autoReply?.enabled, 'card-ar'],
+    ['mem-pill', _settings?.customerMemory?.enabled, 'card-mem'],
+  ];
+  map.forEach(([pillId, on, cardId]) => {
+    const pill = document.getElementById(pillId);
+    const card = document.getElementById(cardId);
+    if (pill) {
+      pill.className = 'behavior-pill ' + (on ? 'on' : 'off');
+      pill.textContent = on ? 'Active' : 'Paused';
     }
-    _rules = rulesData.automations || [];
-    renderRules(_rules);
-    renderPending(pendingData.messages || []);
-    updateStats(_rules, pendingData.messages || []);
-  } catch(e) {
-    document.getElementById('rules-list').innerHTML = `<div style="padding:20px;color:var(--red);">${e.message}</div>`;
+    if (card) card.classList.toggle('off', !on);
+  });
+  /* Update flow banner wait text */
+  if (_settings?.quoteFollowup) {
+    const d = _settings.quoteFollowup.delayDays || 0;
+    const h = _settings.quoteFollowup.delayHours || 0;
+    const t = _settings.quoteFollowup.sendAtTime || '09:00';
+    const parts = [];
+    if (d) parts.push(d + ' day' + (d === 1 ? '' : 's'));
+    if (h) parts.push(h + ' hr' + (h === 1 ? '' : 's'));
+    const delayText = parts.join(' ') || 'immediately';
+    const [hh, mm] = t.split(':').map(Number);
+    const ap = hh >= 12 ? 'PM' : 'AM';
+    const h12 = hh % 12 || 12;
+    const timeText = mm === 0 ? `${h12}:00 ${ap}` : `${h12}:${String(mm).padStart(2,'0')} ${ap}`;
+    const el = document.getElementById('flow-wait-text');
+    if (el) el.textContent = `${delayText} at ${timeText} ET`;
   }
 }
 
-function formatTime12(t) {
-  const [h, m] = (t || '09:00').split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const h12 = h % 12 || 12;
-  return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2,'0')}${ampm}`;
-}
-
-function updateStats(rules, pending) {
-  document.getElementById('st-active').textContent = rules.filter(r=>r.enabled).length;
-  document.getElementById('st-pending').textContent = pending.filter(m=>m.status==='pending'||m.status==='retrying').length;
-  document.getElementById('st-sent').textContent = pending.filter(m=>m.status==='sent').length;
-  document.getElementById('st-failed').textContent = pending.filter(m=>m.status==='failed').length;
-}
-
-const TRIG_LABELS = {quote_sent:'Quote Sent', invoice_sent:'Invoice Sent', invoice_paid:'Invoice Paid', job_completed:'Job Completed', customer_created:'Customer Created'};
-const TRIG_ICONS = {
-  quote_sent:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>',
-  invoice_sent:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="1.5"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="1.5"/></svg>',
-  invoice_paid:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" stroke-width="1.8"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8"/></svg>',
-  job_completed:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8"/></svg>',
-  customer_created:'<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="8.5" cy="7" r="4" stroke-width="1.8"/><line x1="20" y1="8" x2="20" y2="14" stroke-width="1.8"/><line x1="23" y1="11" x2="17" y2="11" stroke-width="1.8"/></svg>',
-};
-
-function renderRules(rules) {
-  const list = document.getElementById('rules-list');
-  if (!rules.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-icon">⚡</div><div class="empty-title">No scenarios yet</div><div style="font-size:13px;color:var(--gray);">Create your first automation to start sending messages automatically.</div></div>`;
-    return;
-  }
-  list.innerHTML = rules.map(r => {
-    const trigLabel = TRIG_LABELS[r.trigger] || r.trigger;
-    const trigIcon = TRIG_ICONS[r.trigger] || TRIG_ICONS.quote_sent;
-    const delay = r.delayDays ?? 3;
-    const time = formatTime12(r.sendAtTime || '09:00');
-    const actionType = (r.messageType || 'sms').toUpperCase();
-    const actionIcon = r.messageType === 'email'
-      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>'
-      : r.messageType === 'notification'
-      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg>'
-      : r.messageType === 'tag_customer'
-      ? '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke-width="1.8"/><line x1="7" y1="7" x2="7.01" y2="7" stroke-width="2" stroke-linecap="round"/></svg>'
-      : '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>';
-    const preview = (r.messageTemplate || '').substring(0, 50) + ((r.messageTemplate||'').length > 50 ? '...' : '');
-    const surveyBadge = r.isSurvey ? ' + Survey' : '';
-
-    const waitIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><polyline points="12,6 12,12 16,14" stroke-width="1.8"/></svg>';
-    const filterIcon = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" stroke-width="1.8" stroke-linejoin="round"/></svg>';
-    const hasConditions = r.conditions && r.conditions.length > 0;
-    const condCount = hasConditions ? r.conditions.length : 0;
-    const condNode = hasConditions ? `<div class="flow-connector"></div>
-        <div class="flow-node">
-          <div class="flow-node-circle" style="background:rgba(162,89,255,0.1);border-color:#a259ff;"><span style="color:#a259ff;">${filterIcon}</span></div>
-          <div class="flow-node-text">
-            <div class="flow-node-label" style="color:#a259ff;">FILTER</div>
-            <div class="flow-node-value">${condCount} condition${condCount>1?'s':''}</div>
-          </div>
-        </div>` : '';
-
-    return `<div class="scenario${r.enabled?'':' disabled'}" id="rule-${r.id}">
-      <div class="scenario-header">
-        <div class="scenario-name">${esc(r.name)}</div>
-        <div class="scenario-actions">
-          <button class="toggle${r.enabled?' on':''}" onclick="toggleRule('${r.id}',${r.enabled})" title="${r.enabled?'Disable':'Enable'}"></button>
-          <button class="btn-icon" onclick="editRule('${r.id}')" title="Edit"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.8"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.8"/></svg></button>
-          <button class="btn-icon del" onclick="deleteRule('${r.id}')" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6" stroke-width="1.8"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6" stroke-width="1.8"/></svg></button>
-        </div>
-      </div>
-      <div class="scenario-flow">
-        <div class="flow-node">
-          <div class="flow-node-circle trigger">${trigIcon}</div>
-          <div class="flow-node-text">
-            <div class="flow-node-label trigger">TRIGGER</div>
-            <div class="flow-node-value">${trigLabel}</div>
-          </div>
-        </div>${condNode}
-        <div class="flow-connector"></div>
-        <div class="flow-node">
-          <div class="flow-node-circle wait">${waitIcon}</div>
-          <div class="flow-node-text">
-            <div class="flow-node-label wait">WAIT</div>
-            <div class="flow-node-value">${delay} day${delay===1?'':'s'}</div>
-            <div class="flow-node-sub">at ${time}</div>
-          </div>
-        </div>
-        <div class="flow-connector"></div>
-        <div class="flow-node">
-          <div class="flow-node-circle action">${actionIcon}</div>
-          <div class="flow-node-text">
-            <div class="flow-node-label action">ACTION</div>
-            <div class="flow-node-value">${r.messageType==='tag_customer'?'Add Tags':r.messageType==='notification'?'Notify Team':'Send '+actionType}${surveyBadge}</div>
-            <div class="flow-node-sub">${esc(preview)}</div>
-          </div>
-        </div>
-      </div>
-      <div class="scenario-footer">
-        <div class="scenario-meta">
-          <span><span class="badge ${r.messageType==='sms'?'badge-sms':r.messageType==='notification'?'badge-notif':r.messageType==='tag_customer'?'badge-tag':'badge-email'}">${actionType==='TAG_CUSTOMER'?'TAG':actionType}</span></span>
-          <span style="color:${r.enabled?'var(--green)':'var(--gray)'};">${r.enabled?'Active':'Paused'}</span>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderPending(msgs) {
-  const count = msgs.length;
-  document.getElementById('pending-count').textContent = count;
-  if (!count) {
-    document.getElementById('pending-body').innerHTML = `<tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">No messages</td></tr>`;
-    return;
-  }
-  const tbody = document.getElementById('pending-body');
-  tbody.innerHTML = msgs.slice(0, 50).map(m => {
-    const d = m.sendAt ? new Date(m.sendAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
-    const statusMap = {pending:'status-pending',sent:'status-sent',failed:'status-failed',retrying:'status-pending'};
-    const cls = statusMap[m.status] || 'status-pending';
-    const statusLabel = m.status === 'retrying' ? `retry ${m.retryCount||1}/3` : m.status;
-    const errorTip = m.error ? ` title="${esc(m.error)}"` : '';
-    const canDelete = m.status === 'pending' || m.status === 'retrying';
-    const canRetry = m.status === 'failed';
-    let actions = '';
-    if (canRetry) actions += `<button class="btn-icon" onclick="retryPending('${m.id}')" title="Retry now" style="color:var(--amber);border-color:rgba(245,166,35,0.3);"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="23,4 23,10 17,10" stroke-width="2"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke-width="2"/></svg></button>`;
-    if (canDelete) actions += `<button class="btn-icon del" onclick="deletePending('${m.id}')" title="Cancel"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="1.8"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="1.8"/></svg></button>`;
-    const nameCol = m.automationName ? `${esc(m.customerName||'—')}<div style="font-size:10px;color:var(--gray);margin-top:1px;">${esc(m.automationName)}</div>` : esc(m.customerName||'—');
-    return `<tr><td>${nameCol}</td><td style="text-transform:uppercase;font-size:11px;color:var(--gray);">${m.messageType||'sms'}</td><td style="font-size:12px;color:var(--gray);">${d}</td><td${errorTip}><span class="status-badge ${cls}">${statusLabel}</span>${m.error?'<div style="font-size:10px;color:var(--red);margin-top:2px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(m.error)+'</div>':''}</td><td style="white-space:nowrap;">${actions}</td></tr>`;
-  }).join('');
-}
-
-window.deletePending = async function(id) {
+window.saveAll = async function() {
+  if (!_settings) return;
   try {
-    await API.automations.deletePending(id);
-    toast('Scheduled message cancelled');
-    loadAll();
-  } catch(e) { toast(e.message, true); }
+    document.getElementById('save-label').textContent = 'Saving…';
+    const fresh = await API.aiSettings.save(_settings);
+    _settings = fresh;
+    setDirty(false);
+    toast('AI settings saved');
+  } catch (e) {
+    toast(e.message || 'Save failed', true);
+    setDirty(true);
+  }
+};
+let _toastTimer;
+window.toast = function(msg, err) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-dot').className = 'toast-dot' + (err ? ' red' : '');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 };
 
-window.retryPending = async function(id) {
-  try {
-    await API.automations.retryPending(id);
-    toast('Retrying message...');
-    loadAll();
-  } catch(e) { toast(e.message, true); }
-};
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 window.togglePending = function() {
   const sec = document.getElementById('pending-section');
@@ -709,278 +690,59 @@ window.togglePending = function() {
   ch.classList.toggle('open', !open);
 };
 
-window.toggleRule = async function(id, currentEnabled) {
+async function loadPending() {
   try {
-    await API.automations.update(id, { enabled: !currentEnabled });
-    const r = _rules.find(x => x.id === id);
-    if (r) r.enabled = !currentEnabled;
-    renderRules(_rules);
-    updateStats(_rules, []);
-    toast(!currentEnabled ? 'Automation enabled' : 'Automation disabled');
-  } catch(e) { toast(e.message, true); }
-};
-
-window.editRule = function(id) {
-  const r = _rules.find(x => x.id === id);
-  if (!r) return;
-  _editId = id;
-  document.getElementById('modal-title').textContent = 'EDIT AUTOMATION';
-  document.getElementById('f-name').value = r.name || '';
-  document.getElementById('f-trigger').value = r.trigger || 'quote_sent';
-  document.getElementById('f-delay').value = r.delayDays ?? 3;
-  document.getElementById('f-time').value = r.sendAtTime || '09:00';
-  document.getElementById('f-type').value = r.messageType || 'sms';
-  document.getElementById('f-subject').value = r.emailSubject || '';
-  document.getElementById('f-subject-field').style.display = (r.messageType || 'sms') === 'email' ? '' : 'none';
-  const lbl2 = document.getElementById('template-label');
-  const sub2 = document.getElementById('template-sub');
-  if ((r.messageType || 'sms') === 'tag_customer') {
-    if (lbl2) lbl2.textContent = 'Tags to Add';
-    if (sub2) sub2.textContent = 'Comma-separated tags, e.g. "VIP, Repeat Customer, Priority"';
-  } else {
-    if (lbl2) lbl2.textContent = 'Message Template';
-    if (sub2) sub2.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
-  }
-  document.getElementById('f-template').value = r.messageTemplate || '';
-  _surveyOn = !!r.isSurvey;
-  document.getElementById('f-survey-toggle').className = 'toggle' + (_surveyOn ? ' on' : '');
-  document.getElementById('survey-section').className = 'survey-section' + (_surveyOn ? ' open' : '');
-  document.getElementById('f-threshold').value = r.surveyThreshold || 7;
-  document.getElementById('f-followup-type').value = r.followUpType || 'sms';
-  document.getElementById('f-followup-template').value = r.followUpTemplate || '';
-  _conditions = Array.isArray(r.conditions) ? JSON.parse(JSON.stringify(r.conditions)) : [];
-  _conditionsOn = _conditions.length > 0;
-  document.getElementById('f-conditions-toggle').className = 'toggle' + (_conditionsOn ? ' on' : '');
-  document.getElementById('conditions-section').style.display = _conditionsOn ? 'block' : 'none';
-  renderConditions();
-  _enabledOn = r.enabled !== false;
-  document.getElementById('f-enabled-toggle').className = 'toggle' + (_enabledOn ? ' on' : '');
-  document.getElementById('modal-overlay').classList.add('open');
-};
-
-window.deleteRule = async function(id) {
-  const r = _rules.find(x => x.id === id);
-  const ok = await swftConfirm('Delete Automation', 'Delete this automation? This cannot be undone.', { danger: true });
-  if (!ok) return;
-  try {
-    await API.automations.delete(id);
-    _rules = _rules.filter(x => x.id !== id);
-    renderRules(_rules);
-    updateStats(_rules, []);
-    toast('Automation deleted');
-  } catch(e) { toast(e.message, true); }
-};
-
-const _defaultTemplates = {
-  quote_sent: {
-    name: 'Quote Follow-up Reminder',
-    template: 'Hi {{customer_name}}, this is {{company_name}}. Just following up on the quote we sent over — let us know if you have any questions or would like to move forward. We\'re happy to help!',
-    followup: 'Hi {{customer_name}}, thank you so much for the kind words! If you have a moment, we\'d really appreciate a quick Google review — it helps us a ton: {{review_link}}'
-  },
-  invoice_sent: {
-    name: 'Invoice Follow-up Reminder',
-    template: 'Hi {{customer_name}}, just a reminder that your invoice from {{company_name}} is ready for payment. Let us know if you have any questions!',
-    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
-  },
-  invoice_paid: {
-    name: 'Post-Payment Thank You',
-    template: 'Hi {{customer_name}}, thank you for your payment to {{company_name}}! We appreciate your business. If you ever need anything, don\'t hesitate to reach out.',
-    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
-  },
-  job_completed: {
-    name: 'Job Completion Follow-up',
-    template: 'Hi {{customer_name}}, we\'ve completed your job! Thank you for choosing {{company_name}}. We hope everything looks great — let us know if you have any questions.',
-    followup: 'Hi {{customer_name}}, thanks for the great feedback! Would you mind leaving us a quick Google review? It really helps our small business grow: {{review_link}}'
-  },
-  customer_created: {
-    name: 'Welcome Message',
-    template: 'Hi {{customer_name}}, welcome to {{company_name}}! We\'re excited to work with you. If you have any questions, feel free to reach out anytime.',
-    followup: ''
-  }
-};
-
-window.toggleConditions = function() {
-  _conditionsOn = !_conditionsOn;
-  document.getElementById('f-conditions-toggle').className = 'toggle' + (_conditionsOn ? ' on' : '');
-  document.getElementById('conditions-section').style.display = _conditionsOn ? 'block' : 'none';
-  if (_conditionsOn && _conditions.length === 0) addCondition();
-};
-
-window.addCondition = function() {
-  _conditions.push({ field: 'total', operator: 'gt', value: '' });
-  renderConditions();
-};
-
-window.removeCondition = function(idx) {
-  _conditions.splice(idx, 1);
-  renderConditions();
-  if (_conditions.length === 0) {
-    _conditionsOn = false;
-    document.getElementById('f-conditions-toggle').className = 'toggle';
-    document.getElementById('conditions-section').style.display = 'none';
-  }
-};
-
-function renderConditions() {
-  const wrap = document.getElementById('conditions-list');
-  wrap.innerHTML = _conditions.map((c, i) => `<div class="cond-row">
-    <select onchange="_conditions[${i}].field=this.value">
-      <option value="total"${c.field==='total'?' selected':''}>Total ($)</option>
-      <option value="service"${c.field==='service'?' selected':''}>Service</option>
-      <option value="name"${c.field==='name'?' selected':''}>Customer Name</option>
-      <option value="tags"${c.field==='tags'?' selected':''}>Tags</option>
-    </select>
-    <select onchange="_conditions[${i}].operator=this.value">
-      <option value="gt"${c.operator==='gt'?' selected':''}>Greater than</option>
-      <option value="gte"${c.operator==='gte'?' selected':''}>Greater or equal</option>
-      <option value="lt"${c.operator==='lt'?' selected':''}>Less than</option>
-      <option value="lte"${c.operator==='lte'?' selected':''}>Less or equal</option>
-      <option value="eq"${c.operator==='eq'?' selected':''}>Equals</option>
-      <option value="neq"${c.operator==='neq'?' selected':''}>Not equals</option>
-      <option value="contains"${c.operator==='contains'?' selected':''}>Contains</option>
-    </select>
-    <input value="${esc(c.value)}" placeholder="Value" oninput="_conditions[${i}].value=this.value"/>
-    <button class="cond-del" onclick="removeCondition(${i})" type="button">&times;</button>
-  </div>`).join('');
-}
-
-window.quickCreate = function(trigger) {
-  openModal();
-  document.getElementById('f-trigger').value = trigger;
-  const t = _defaultTemplates[trigger];
-  if (t) {
-    document.getElementById('f-name').value = t.name;
-    document.getElementById('f-template').value = t.template;
-    document.getElementById('f-followup-template').value = t.followup;
-  }
-};
-
-window.openModal = function() {
-  _editId = null;
-  document.getElementById('modal-title').textContent = 'NEW AUTOMATION';
-  const trigger = 'quote_sent';
-  document.getElementById('f-trigger').value = trigger;
-  document.getElementById('f-name').value = _defaultTemplates[trigger].name;
-  document.getElementById('f-delay').value = '3';
-  document.getElementById('f-time').value = '09:00';
-  document.getElementById('f-type').value = 'sms';
-  document.getElementById('f-subject').value = '';
-  document.getElementById('f-subject-field').style.display = 'none';
-  const lbl = document.getElementById('template-label');
-  const sub = document.getElementById('template-sub');
-  if (lbl) lbl.textContent = 'Message Template';
-  if (sub) sub.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
-  document.getElementById('f-template').value = _defaultTemplates[trigger].template;
-  _surveyOn = false;
-  document.getElementById('f-survey-toggle').className = 'toggle';
-  document.getElementById('survey-section').className = 'survey-section';
-  document.getElementById('f-threshold').value = '7';
-  document.getElementById('f-followup-type').value = 'sms';
-  document.getElementById('f-followup-template').value = _defaultTemplates[trigger].followup;
-  _conditionsOn = false;
-  _conditions = [];
-  document.getElementById('f-conditions-toggle').className = 'toggle';
-  document.getElementById('conditions-section').style.display = 'none';
-  document.getElementById('conditions-list').innerHTML = '';
-  _enabledOn = true;
-  document.getElementById('f-enabled-toggle').className = 'toggle on';
-  document.getElementById('modal-overlay').classList.add('open');
-};
-
-window.closeModal = function() {
-  document.getElementById('modal-overlay').classList.remove('open');
-};
-
-window.toggleSurvey = function() {
-  _surveyOn = !_surveyOn;
-  document.getElementById('f-survey-toggle').className = 'toggle' + (_surveyOn ? ' on' : '');
-  document.getElementById('survey-section').className = 'survey-section' + (_surveyOn ? ' open' : '');
-};
-
-window.toggleEnabled = function() {
-  _enabledOn = !_enabledOn;
-  document.getElementById('f-enabled-toggle').className = 'toggle' + (_enabledOn ? ' on' : '');
-};
-
-window.saveAutomation = async function() {
-  const name = document.getElementById('f-name').value.trim();
-  const template = document.getElementById('f-template').value.trim();
-  if (!name) { toast('Name is required', true); return; }
-  if (!template) { toast('Message template is required', true); return; }
-
-  const data = {
-    name,
-    trigger: document.getElementById('f-trigger').value,
-    delayDays: parseInt(document.getElementById('f-delay').value) || 3,
-    sendAtTime: document.getElementById('f-time').value || '09:00',
-    messageType: document.getElementById('f-type').value,
-    emailSubject: document.getElementById('f-subject').value.trim() || '',
-    messageTemplate: template,
-    conditions: _conditionsOn ? _conditions.filter(c => c.value !== '') : [],
-    isSurvey: _surveyOn,
-    surveyThreshold: _surveyOn ? parseInt(document.getElementById('f-threshold').value) : null,
-    followUpType: _surveyOn ? document.getElementById('f-followup-type').value : null,
-    followUpTemplate: _surveyOn ? document.getElementById('f-followup-template').value.trim() : null,
-    enabled: _enabledOn,
-  };
-
-  try {
-    if (_editId) {
-      const res = await API.automations.update(_editId, data);
-      const idx = _rules.findIndex(r => r.id === _editId);
-      if (idx >= 0) _rules[idx] = { ..._rules[idx], ...data };
-      toast('Automation updated');
-    } else {
-      const res = await API.automations.create(data);
-      _rules.push({ id: res.id, ...data });
-      toast('Automation created');
+    const data = await API.automations.pending();
+    const msgs = (data.messages || []).filter(m => m.status === 'pending' || m.status === 'retrying' || m.status === 'failed').slice(0, 50);
+    document.getElementById('pending-count').textContent = msgs.length;
+    const body = document.getElementById('pending-body');
+    if (!msgs.length) {
+      body.innerHTML = '<tr><td colspan="5" style="color:var(--gray);padding:20px;text-align:center;">Nothing queued yet — follow-ups show up here as quotes go out.</td></tr>';
+      return;
     }
-    renderRules(_rules);
-    updateStats(_rules, []);
-    closeModal();
-  } catch(e) { toast(e.message || 'Failed to save', true); }
-};
-
-document.getElementById('f-trigger').addEventListener('change', function() {
-  if (_editId) return;
-  const t = _defaultTemplates[this.value];
-  if (!t) return;
-  document.getElementById('f-name').value = t.name;
-  document.getElementById('f-template').value = t.template;
-  document.getElementById('f-followup-template').value = t.followup;
-});
-
-document.getElementById('modal-overlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal-overlay')) closeModal();
-});
-
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const statusMap = { pending: 'status-pending', sent: 'status-sent', failed: 'status-failed', retrying: 'status-pending' };
+    body.innerHTML = msgs.map(m => {
+      const d = m.sendAt ? new Date(m.sendAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+      const cls = statusMap[m.status] || 'status-pending';
+      const lbl = m.status === 'retrying' ? `retry ${m.retryCount || 1}/3` : m.status;
+      const actionLabel = (m.automationName || 'Follow-up') + (m.messageType ? ` · ${m.messageType.toUpperCase()}` : '');
+      const canDel = m.status === 'pending' || m.status === 'retrying';
+      const actions = canDel
+        ? `<button class="btn-icon del" onclick="cancelPending('${m.id}')" title="Cancel"><svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg></button>`
+        : '';
+      return `<tr><td>${esc(m.customerName || '—')}</td><td style="color:var(--gray);font-size:11.5px;">${esc(actionLabel)}</td><td style="color:var(--gray);">${d}</td><td><span class="status-badge ${cls}">${lbl}</span></td><td style="text-align:right;">${actions}</td></tr>`;
+    }).join('');
+  } catch (e) {
+    console.error('[pending] load error:', e);
+  }
 }
 
-// Show/hide fields when message type changes
-document.getElementById('f-type').addEventListener('change', function() {
-  document.getElementById('f-subject-field').style.display = this.value === 'email' ? '' : 'none';
-  const lbl = document.getElementById('template-label');
-  const sub = document.getElementById('template-sub');
-  if (this.value === 'tag_customer') {
-    if (lbl) lbl.textContent = 'Tags to Add';
-    if (sub) sub.textContent = 'Comma-separated tags, e.g. "VIP, Repeat Customer, Priority"';
-  } else {
-    if (lbl) lbl.textContent = 'Message Template';
-    if (sub) sub.textContent = 'Variables: {{customer_name}}, {{company_name}}. For surveys: also {{survey_link}}';
-  }
+window.cancelPending = async function(id) {
+  try {
+    await API.automations.deletePending(id);
+    toast('Cancelled');
+    loadPending();
+  } catch (e) { toast(e.message, true); }
+};
+
+/* Warn before navigating away with unsaved changes */
+window.addEventListener('beforeunload', e => {
+  if (_dirty) { e.preventDefault(); e.returnValue = ''; }
 });
 
-let _toastTimer;
-window.toast = function(msg, err) {
-  const el = document.getElementById('toast');
-  document.getElementById('toast-dot').className = 'toast-dot' + (err?' red':'');
-  document.getElementById('toast-msg').textContent = msg;
-  el.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
-};
+async function init() {
+  try { await requireAuth(); } catch (_) { return; }
+  try { loadUser && loadUser(); } catch (_) {}
+  try {
+    const s = await API.aiSettings.get();
+    populate(s);
+    bindInputs();
+    setDirty(false);
+  } catch (e) {
+    toast('Failed to load AI settings: ' + (e.message || 'error'), true);
+  }
+  loadPending();
+}
 
 init();
 </script>

@@ -315,6 +315,12 @@ const API = {
     retryPending:  (id) => apiFetch(`/api/automations/pending/${id}/retry`, { method: "POST" }),
   },
 
+  // ── AI Settings (Automations page — single source of truth for AI behaviors) ──
+  aiSettings: {
+    get:  ()     => apiFetch("/api/ai-settings"),
+    save: (data) => apiFetch("/api/ai-settings", { method: "PUT", body: JSON.stringify(data) }),
+  },
+
   // ── Survey (public — no auth) ──
   survey: {
     get:    (token) => fetch(`/api/survey/${token}`).then(r => r.json()),

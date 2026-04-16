@@ -34,6 +34,7 @@ const { router: metaRouter, webhookVerify: metaWebhookVerify, webhookReceive: me
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
 const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
+const { router: aiSettingsRouter } = require("./routes/aiSettings");
 const surveyRouter = require("./routes/survey");
 const publicChatRouter = require("./routes/publicChat");
 const { router: serviceRequestsRouter, publicRouter: intakePublicRouter } = require("./routes/serviceRequests");
@@ -599,6 +600,7 @@ app.post("/api/calendar/token", auth, checkAccess, require("./routes/calendar").
 app.use("/api/calendar",      require("./routes/calendar"));
 app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
 app.use("/api/automations",       auth, checkAccess,  automationsRouter);
+app.use("/api/ai-settings",       auth, checkAccess,  aiSettingsRouter);
 app.use("/api/broadcasts",        auth, checkAccess,  require("./routes/broadcasts"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
 app.use("/api/dev",               auth,               require("./routes/dev"));

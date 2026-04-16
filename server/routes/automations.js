@@ -5,6 +5,7 @@ const { sendSms, getUserTelnyxConfig } = require("../telnyx");
 const { sendSimpleGmail } = require("../utils/email");
 const { resolveTemplate } = require("../utils/templates");
 const { isQuoteAcceptedInConversation } = require("../utils/quoteConversationCheck");
+const { getAiSettings } = require("./aiSettings");
 
 const APP_URL = process.env.APP_URL || "https://goswft.com";
 
@@ -63,8 +64,133 @@ function evaluateConditions(conditions, context) {
  * @param {{ id: string, name: string, phone: string, email: string, total?: number, service?: string, tags?: string[] }} customer
  * @param {{ gmailThreadId?: string, gmailMessageId?: string, rfcMessageId?: string }} [emailContext]
  */
+/**
+ * Compute the UTC sendAt for a delay + wall-clock send-time in America/New_York.
+ * Honors DST. If the computed time is already in the past, bumps to next day.
+ */
+function computeSendAt(now, delayDays, delayHours, sendAtTime) {
+  if ((delayDays | 0) === 0 && (delayHours | 0) === 0) return now;
+  const totalDelayMs = (delayDays * 86400000) + (delayHours * 3600000);
+  const [hours, minutes] = (sendAtTime || "09:00").split(":").map(Number);
+  const futureDate = new Date(now + totalDelayMs);
+  const etParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(futureDate);
+  const ep = {}; etParts.forEach(p => { ep[p.type] = parseInt(p.value, 10); });
+  const testDate = new Date(Date.UTC(ep.year, ep.month - 1, ep.day, 12, 0, 0));
+  const tzName = testDate.toLocaleString("en-US", { timeZone: "America/New_York", timeZoneName: "short" });
+  const isDST = tzName.includes("EDT");
+  const offsetHours = isDST ? 4 : 5;
+  let sendAt = Date.UTC(ep.year, ep.month - 1, ep.day, hours + offsetHours, minutes, 0);
+  if (sendAt <= now) sendAt += 86400000;
+  return sendAt;
+}
+
+/**
+ * Schedule a quote follow-up from the org's aiSettings.quoteFollowup config.
+ * This is the primary path — the legacy `automations` collection is kept for
+ * backward compat but new setups are driven entirely from aiSettings.
+ */
+async function scheduleQuoteFollowupFromSettings(orgId, customer, emailContext, orgUser) {
+  const settings = await getAiSettings(orgId);
+  const cfg = settings.quoteFollowup;
+  if (!cfg.enabled) return;
+
+  const now = Date.now();
+
+  // Deduplicate — don't queue two follow-ups for the same customer + quote
+  const existingSnap = await db.collection("scheduledMessages")
+    .where("orgId", "==", orgId)
+    .where("customerId", "==", customer.id || "")
+    .where("source", "==", "aiSettings:quoteFollowup")
+    .where("status", "==", "pending")
+    .limit(1)
+    .get();
+  if (!existingSnap.empty) {
+    console.log(`[aiSettings] Quote follow-up already pending for customer ${customer.id}`);
+    return;
+  }
+
+  const companyName = orgUser.company || orgUser.name || "";
+  const senderFullName = orgUser.name || "";
+  const senderFirstName = senderFullName.split(" ")[0] || "";
+
+  const vars = {
+    customer_name: customer.name || "",
+    customerName: customer.name || "",
+    customerFullName: customer.name || "",
+    firstName: (customer.name || "").split(" ")[0] || "",
+    customerFirstName: (customer.name || "").split(" ")[0] || "",
+    company_name: companyName,
+    companyName: companyName,
+    your_name: senderFullName,
+    yourName: senderFullName,
+    your_first_name: senderFirstName,
+    yourFirstName: senderFirstName,
+    senderName: senderFullName,
+    service: customer.service || "",
+    total: customer.total != null ? String(customer.total) : "",
+    address: customer.address || "",
+    link: "",
+    survey_link: "",
+  };
+
+  const template = cfg.channel === "email" ? cfg.emailTemplate : cfg.smsTemplate;
+  const resolvedMessage = resolveTemplate(template || "", vars);
+  const resolvedSubject = cfg.channel === "email"
+    ? resolveTemplate(cfg.emailSubject || "Following up on your quote", vars)
+    : "";
+  const sendAt = computeSendAt(now, cfg.delayDays, cfg.delayHours, cfg.sendAtTime);
+
+  await db.collection("scheduledMessages").add({
+    orgId,
+    source: "aiSettings:quoteFollowup",
+    automationId: null,
+    automationName: "Quote Follow-up (AI)",
+    trigger: "quote_sent",
+    customerId: customer.id || "",
+    customerName: customer.name || "",
+    targetId: customer.quoteId || null,
+    targetType: customer.quoteId ? "quote" : null,
+    phone: customer.phone || "",
+    email: customer.email || "",
+    message: resolvedMessage,
+    subject: resolvedSubject,
+    messageType: cfg.channel,
+    sendAt,
+    status: "pending",
+    sentAt: null,
+    error: null,
+    createdAt: now,
+    gmailThreadId: emailContext?.gmailThreadId || null,
+    gmailMessageId: emailContext?.gmailMessageId || null,
+    rfcMessageId: emailContext?.rfcMessageId || null,
+    originalSubject: emailContext?.originalSubject || null,
+  });
+
+  console.log(`[aiSettings] Scheduled quote follow-up for customer ${customer.id} at ${new Date(sendAt).toISOString()}`);
+}
+
 async function triggerAutomation(orgId, trigger, customer, emailContext) {
   try {
+    // Fetch org owner user doc once — needed by both paths
+    let orgUser = {};
+    const ownerDoc = await db.collection("users").doc(orgId).get();
+    if (ownerDoc.exists) {
+      orgUser = ownerDoc.data();
+    } else {
+      const usersSnap = await db.collection("users").where("orgId", "==", orgId).limit(1).get();
+      if (!usersSnap.empty) orgUser = usersSnap.docs[0].data();
+    }
+
+    // Primary path: settings-driven quote follow-up
+    if (trigger === "quote_sent") {
+      await scheduleQuoteFollowupFromSettings(orgId, customer, emailContext, orgUser).catch(e =>
+        console.error("[aiSettings] schedule error:", e.message)
+      );
+    }
+
+    // Legacy path: explicit rules in the `automations` collection
     const snap = await db
       .collection("automations")
       .where("orgId", "==", orgId)
@@ -73,17 +199,6 @@ async function triggerAutomation(orgId, trigger, customer, emailContext) {
       .get();
 
     if (snap.empty) return;
-
-    // Fetch org owner user doc for company name
-    let orgUser = {};
-    const ownerDoc = await db.collection("users").doc(orgId).get();
-    if (ownerDoc.exists) {
-      orgUser = ownerDoc.data();
-    } else {
-      // Fallback: query by orgId field
-      const usersSnap = await db.collection("users").where("orgId", "==", orgId).limit(1).get();
-      if (!usersSnap.empty) orgUser = usersSnap.docs[0].data();
-    }
 
     const companyName = orgUser.company || orgUser.name || "";
     const now = Date.now();
@@ -272,15 +387,21 @@ async function scheduledMsgResolved(msg) {
 
     // 1. Formal approval via the CRM
     if (quote.status === "approved") return true;
+    if (quote.status === "declined" || quote.status === "rejected") return true;
 
     // 2. AI check — customer may have accepted in a reply without the quote
-    //    status ever being updated in the system.  Only run if we have enough
-    //    context (orgId + customerId) to look up the conversation.
+    //    status ever being updated in the system. Respects the per-org
+    //    toggles in aiSettings.quoteFollowup.
     if (msg.orgId && msg.customerId) {
-      const acceptedInConversation = await isQuoteAcceptedInConversation(
-        msg.orgId, msg.customerId, msg.targetId, quote
-      );
-      if (acceptedInConversation) return true;
+      const settings = await getAiSettings(msg.orgId);
+      const cfg = settings.quoteFollowup;
+      if (cfg.aiSkipIfAccepted) {
+        const verdict = await isQuoteAcceptedInConversation(
+          msg.orgId, msg.customerId, msg.targetId, quote,
+          { autoApprove: cfg.aiAutoApproveQuote, model: cfg.aiModel, skipIfRejected: cfg.aiSkipIfRejected }
+        );
+        if (verdict === "ACCEPTED" || (cfg.aiSkipIfRejected && verdict === "REJECTED")) return true;
+      }
     }
 
     return false;

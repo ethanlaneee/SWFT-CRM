@@ -8,6 +8,9 @@
  *
  * Used by:
  *   - automations.js → scheduledMsgResolved()
+ *
+ * Behavior is controlled from aiSettings.quoteFollowup (model, auto-approve,
+ * skipIfRejected) — see routes/aiSettings.js.
  */
 
 const Anthropic = require("@anthropic-ai/sdk");
@@ -15,45 +18,52 @@ const { db } = require("../firebase");
 
 const anthropic = new Anthropic();
 
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+
 /**
- * Determine whether a customer has already accepted a quote by analyzing
- * the conversation messages that occurred after the quote was sent.
+ * Analyze the conversation following a quote send and classify the outcome.
  *
- * Returns true  → customer accepted; caller should skip the follow-up
- * Returns false → no acceptance detected; follow-up should proceed
+ * Returns one of: "ACCEPTED" | "REJECTED" | "PENDING" | "UNKNOWN"
+ * (UNKNOWN = no conversation yet or the AI call failed — caller should treat
+ *  as not-yet-resolved so the follow-up still goes out.)
  *
- * Fails safe: if AI call errors, returns false so follow-ups still go out.
+ * Side effect: when the verdict is ACCEPTED and opts.autoApprove is true, the
+ * quote doc is updated with status="approved".
+ *
+ * Callers that just want the legacy boolean answer ("should I skip the
+ * follow-up?") can use the default opts — when autoApprove is true and
+ * skipIfRejected is true, both ACCEPTED and REJECTED return early.
  *
  * @param {string} orgId
  * @param {string} customerId
  * @param {string} quoteId
- * @param {object} quote   Firestore quote doc data ({ sentAt, total, service, … })
- * @returns {Promise<boolean>}
+ * @param {object} quote   Firestore quote doc data
+ * @param {{ autoApprove?: boolean, model?: string, skipIfRejected?: boolean }} [opts]
+ * @returns {Promise<"ACCEPTED"|"REJECTED"|"PENDING"|"UNKNOWN">}
  */
-async function isQuoteAcceptedInConversation(orgId, customerId, quoteId, quote) {
+async function detectQuoteOutcome(orgId, customerId, quoteId, quote, opts = {}) {
+  const autoApprove = opts.autoApprove !== false; // default true
+  const model = opts.model || DEFAULT_MODEL;
+
   try {
     const sentAt = quote.sentAt || 0;
 
-    // Pull all messages for this customer in this org
     const msgsSnap = await db
       .collection("messages")
       .where("orgId", "==", orgId)
       .where("customerId", "==", customerId)
       .get();
 
-    if (msgsSnap.empty) return false;
+    if (msgsSnap.empty) return "UNKNOWN";
 
-    // Only consider messages AFTER the quote was sent.
-    // Exclude broadcast blasts — those aren't conversations about this quote.
     const relevant = msgsSnap.docs
       .map(d => d.data())
       .filter(m => (m.sentAt || m.createdAt || 0) > sentAt && !m.broadcastId)
       .sort((a, b) => (a.sentAt || a.createdAt || 0) - (b.sentAt || b.createdAt || 0))
-      .slice(-20); // cap at last 20 exchanges
+      .slice(-20);
 
-    if (relevant.length === 0) return false;
+    if (relevant.length === 0) return "UNKNOWN";
 
-    // Build a readable conversation transcript
     const transcript = relevant
       .map(m => {
         const speaker = m.status === "received" ? "Customer" : "Business";
@@ -66,7 +76,7 @@ async function isQuoteAcceptedInConversation(orgId, customerId, quoteId, quote) 
     const desc    = [service, total].filter(Boolean).join(" for ");
 
     const aiResp = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model,
       max_tokens: 10,
       system:
         "You analyze customer service conversations. " +
@@ -83,30 +93,35 @@ async function isQuoteAcceptedInConversation(orgId, customerId, quoteId, quote) 
       ],
     });
 
-    const verdict = (aiResp.content[0]?.text || "").trim().toUpperCase();
-    console.log(
-      `[quoteConversationCheck] quote=${quoteId} customer=${customerId} verdict=${verdict}`
-    );
+    const raw = (aiResp.content[0]?.text || "").trim().toUpperCase();
+    const verdict = raw === "ACCEPTED" || raw === "REJECTED" || raw === "PENDING" ? raw : "PENDING";
+    console.log(`[quoteConversationCheck] quote=${quoteId} customer=${customerId} verdict=${verdict}`);
 
-    if (verdict === "ACCEPTED") {
-      // Auto-approve in Firestore so the quote shows as accepted in the UI
-      // and future scans don't re-check the same quote.
+    if (verdict === "ACCEPTED" && autoApprove) {
       await db.collection("quotes").doc(quoteId).update({
         status: "approved",
         approvedAt: Date.now(),
         approvedVia: "ai_conversation_detection",
-      });
-      console.log(
-        `[quoteConversationCheck] Auto-approved quote ${quoteId} — accepted in conversation`
-      );
-      return true;
+      }).catch(() => {});
+      console.log(`[quoteConversationCheck] Auto-approved quote ${quoteId}`);
     }
 
-    return false;
+    return verdict;
   } catch (err) {
     console.error("[quoteConversationCheck] Error:", err.message);
-    return false; // fail safe — let the follow-up proceed if AI is unavailable
+    return "UNKNOWN";
   }
 }
 
-module.exports = { isQuoteAcceptedInConversation };
+/**
+ * Legacy boolean wrapper — returns true if the follow-up should be skipped.
+ * Kept so existing callers don't need to change.
+ */
+async function isQuoteAcceptedInConversation(orgId, customerId, quoteId, quote, opts = {}) {
+  const verdict = await detectQuoteOutcome(orgId, customerId, quoteId, quote, opts);
+  if (verdict === "ACCEPTED") return "ACCEPTED";
+  if (verdict === "REJECTED" && opts.skipIfRejected) return "REJECTED";
+  return verdict; // caller can inspect; falsy for PENDING/UNKNOWN handling
+}
+
+module.exports = { detectQuoteOutcome, isQuoteAcceptedInConversation };
