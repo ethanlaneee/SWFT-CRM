@@ -575,86 +575,56 @@ router.post("/approve", async (req, res) => {
       const unsubUrl = `${BASE_URL}/unsubscribe?id=${email.leadId}`;
 
       const htmlBody = `
-        <div style="font-family: 'DM Sans', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
-          ${email.body.split("\n").map(p => `<p>${p}</p>`).join("")}
+        <div style="font-family: 'DM Sans', Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6; color: #333333;">
+          ${email.body.split("\n").map(p => `<p style="margin: 0 0 12px 0;">${p}</p>`).join("")}
         </div>
 
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-          style="background: #0a0a0a; border-top: 2px solid #c8f135; margin-top: 32px;">
+        <!-- SWFT CASL Footer -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 40px;">
           <tr>
-            <td style="padding: 28px 32px 0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <td style="padding: 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top: 1px solid #e0e0e0;">
                 <tr>
-                  <td style="vertical-align: middle;">
-                    <img src="https://goswft.com/assets/SWFT_MAIN_LOGO.png"
-                         alt="SWFT"
-                         width="80"
-                         style="display: block; height: auto; max-height: 36px; width: auto;">
-                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #555555;
-                               letter-spacing: 3px; font-family: Arial, sans-serif;">
-                      simple. smart. swft.
-                    </p>
-                  </td>
-                  <td style="vertical-align: middle; text-align: right;">
-                    <a href="https://goswft.com"
-                       style="font-size: 12px; color: #888888; text-decoration: none;
-                              font-family: Arial, sans-serif; margin-left: 20px;">
-                      Website
-                    </a>
-                    &nbsp;&nbsp;
-                    <a href="mailto:ethan@goswft.com"
-                       style="font-size: 12px; color: #888888; text-decoration: none;
-                              font-family: Arial, sans-serif; margin-left: 20px;">
-                      Contact
+                  <td style="padding: 28px 0 0 0; text-align: center;">
+                    <!-- Logo -->
+                    <a href="https://goswft.com" style="text-decoration: none;">
+                      <img src="https://goswft.com/assets/SWFT_MAIN_LOGO.png"
+                           alt="SWFT"
+                           width="90"
+                           height="36"
+                           style="display: inline-block; height: 36px; width: auto; max-width: 90px;">
                     </a>
                   </td>
                 </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 18px 32px 0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="border-top: 1px solid #222222; font-size: 0; line-height: 0;">&nbsp;</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 18px 32px 28px 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td style="vertical-align: bottom;">
-                    <p style="margin: 0 0 4px 0; font-size: 11px; color: #888888;
-                               letter-spacing: 1px; text-transform: uppercase;
-                               font-family: Arial, sans-serif; font-weight: bold;">
-                      Sent by
-                    </p>
-                    <p style="margin: 0; font-size: 12px; color: #555555;
-                               line-height: 1.8; font-family: Arial, sans-serif;">
-                      Ethan Lane, CEO &amp; Founder<br>
-                      <a href="https://goswft.com"
-                         style="color: #555555; text-decoration: none;">goswft.com</a>
-                      &nbsp;&middot;&nbsp;
-                      <a href="mailto:ethan@goswft.com"
-                         style="color: #555555; text-decoration: none;">ethan@goswft.com</a><br>
-                      1215 9th Avenue SW Suite 1005<br>
-                      Calgary, AB &nbsp;T3C 0H9 &nbsp;Canada
-                    </p>
+                  <td style="padding: 16px 0 0 0; text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.7; color: #666666;">
+                    <strong style="color: #333333;">Ethan Lane</strong> &middot; CEO &amp; Founder<br>
+                    <a href="https://goswft.com" style="color: #666666; text-decoration: none;">goswft.com</a>
+                    &nbsp;&middot;&nbsp;
+                    <a href="mailto:ethan@goswft.com" style="color: #666666; text-decoration: none;">ethan@goswft.com</a>
                   </td>
-                  <td style="vertical-align: bottom; text-align: right; width: 160px;">
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0 0 0; text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #999999; line-height: 1.5;">
+                    1215 9th Avenue SW, Suite 1005<br>
+                    Calgary, AB &nbsp;T3C 0H9 &nbsp;Canada
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px 0 0 0; text-align: center;">
                     <a href="${unsubUrl}"
-                       style="display: inline-block; font-size: 10px; color: #555555;
-                              letter-spacing: 1.5px; text-transform: uppercase;
-                              text-decoration: none; border: 1px solid #444444;
-                              padding: 5px 14px; font-family: Arial, sans-serif;">
+                       style="display: inline-block; font-family: Arial, Helvetica, sans-serif;
+                              font-size: 11px; font-weight: 600; color: #999999;
+                              text-decoration: none; letter-spacing: 0.5px;
+                              border: 1px solid #cccccc; border-radius: 4px;
+                              padding: 8px 20px;">
                       Unsubscribe
                     </a>
-                    <p style="margin: 6px 0 0 0; font-size: 10px; color: #444444;
-                               font-family: Arial, sans-serif; letter-spacing: 0.3px;">
-                      You can opt out at any time.
-                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0 28px 0; text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #bbbbbb;">
+                    You can opt out at any time.
                   </td>
                 </tr>
               </table>
@@ -663,7 +633,7 @@ router.post("/approve", async (req, res) => {
         </table>
       `;
 
-      const textFooter = `\n\n---\nSent by Ethan Lane, CEO & Founder — ${COMPANY_NAME}\ngoswft.com · ethan@goswft.com\n1215 9th Avenue SW Suite 1005, Calgary, AB  T3C 0H9  Canada\n\nUnsubscribe (you can opt out at any time): ${unsubUrl}`;
+      const textFooter = `\n\n---\nSent by Ethan Lane, CEO & Founder — ${COMPANY_NAME}\ngoswft.com · ethan@goswft.com\n1215 9th Avenue SW, Suite 1005, Calgary, AB  T3C 0H9  Canada\n\nUnsubscribe (you can opt out at any time): ${unsubUrl}`;
 
       // ── List-Unsubscribe headers (required by Gmail/Yahoo for bulk senders) ──
       const extraHeaders = {
