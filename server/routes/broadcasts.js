@@ -58,6 +58,11 @@ router.post("/", async (req, res, next) => {
     const senderFirstName = senderName.split(" ")[0] || "";
     const companyName = orgUser.company || orgUser.name || "SWFT";
 
+    // Use the org's verified custom domain if set up, otherwise fall back to shared sender
+    const customFromEmail = (orgUser.sendingDomain && orgUser.sendingDomainVerified)
+      ? `${orgUser.sendingDomainLocalPart || "broadcasts"}@${orgUser.sendingDomain}`
+      : null;
+
     // Create the broadcast record
     const broadcastData = {
       orgId: req.orgId,
@@ -125,6 +130,8 @@ router.post("/", async (req, res, next) => {
 
         await sendBroadcastEmail(cust.email, resolvedSubject, resolvedMessage, {
           companyName,
+          fromName: companyName,
+          fromEmail: customFromEmail,
           replyTo: orgUser.gmailAddress || orgUser.email,
           unsubscribeUrl,
         });

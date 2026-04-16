@@ -1,4 +1,10 @@
-const { SESv2Client, SendEmailCommand } = require("@aws-sdk/client-sesv2");
+const {
+  SESv2Client,
+  SendEmailCommand,
+  CreateEmailIdentityCommand,
+  GetEmailIdentityCommand,
+  DeleteEmailIdentityCommand,
+} = require("@aws-sdk/client-sesv2");
 const crypto = require("crypto");
 
 let _sesClient = null;
@@ -90,11 +96,71 @@ function buildHtml(textBody, opts = {}) {
 </html>`;
 }
 
+// ── Domain identity management ─────────────────────────────────────────────
+
+/**
+ * Create an SES domain identity with Easy DKIM enabled.
+ * Returns the 3 DKIM tokens — caller must show these as CNAMEs:
+ *   <token>._domainkey.<domain> → <token>.dkim.amazonses.com
+ */
+async function createDomainIdentity(domain) {
+  const client = getSESClient();
+  const res = await client.send(new CreateEmailIdentityCommand({
+    EmailIdentity: domain,
+    DkimSigningAttributes: {
+      NextSigningKeyLength: "RSA_2048_BIT",
+    },
+  }));
+  return {
+    domain,
+    dkimTokens: res.DkimAttributes?.Tokens || [],
+    verifiedForSendingStatus: res.VerifiedForSendingStatus || false,
+  };
+}
+
+async function getDomainIdentity(domain) {
+  const client = getSESClient();
+  try {
+    const res = await client.send(new GetEmailIdentityCommand({
+      EmailIdentity: domain,
+    }));
+    return {
+      domain,
+      verifiedForSendingStatus: res.VerifiedForSendingStatus || false,
+      dkimTokens: res.DkimAttributes?.Tokens || [],
+      dkimStatus: res.DkimAttributes?.Status || "NOT_STARTED",
+    };
+  } catch (err) {
+    if (err.name === "NotFoundException") return null;
+    throw err;
+  }
+}
+
+async function deleteDomainIdentity(domain) {
+  const client = getSESClient();
+  try {
+    await client.send(new DeleteEmailIdentityCommand({ EmailIdentity: domain }));
+    return true;
+  } catch (err) {
+    if (err.name === "NotFoundException") return true;
+    throw err;
+  }
+}
+
+function buildDkimRecords(domain, tokens) {
+  return (tokens || []).map(token => ({
+    type: "CNAME",
+    name: `${token}._domainkey.${domain}`,
+    value: `${token}.dkim.amazonses.com`,
+  }));
+}
+
 // ── Send broadcast email via Amazon SES ────────────────────────────────────
 
 async function sendBroadcastEmail(to, subject, textBody, opts = {}) {
-  const fromEmail = process.env.BROADCAST_FROM_EMAIL || "broadcasts@mail.goswft.com";
-  const fromName = process.env.BROADCAST_FROM_NAME || "SWFT";
+  const defaultFromEmail = process.env.BROADCAST_FROM_EMAIL || "broadcasts@mail.goswft.com";
+  const fromEmail = opts.fromEmail || defaultFromEmail;
+  const fromName = opts.fromName || opts.companyName || process.env.BROADCAST_FROM_NAME || "SWFT";
   const html = buildHtml(textBody, opts);
 
   const params = {
@@ -132,4 +198,8 @@ module.exports = {
   isConfigured,
   generateUnsubToken,
   verifyUnsubToken,
+  createDomainIdentity,
+  getDomainIdentity,
+  deleteDomainIdentity,
+  buildDkimRecords,
 };

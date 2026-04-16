@@ -548,6 +548,61 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Intake Form & QR Code -->
+<!-- Sending Domain (Broadcasts) -->
+<div class="settings-section" data-group="operations" id="sec-sending-domain">
+  <div class="settings-header"><span class="settings-header-icon">📨</span><h3>BROADCAST SENDING DOMAIN</h3></div>
+  <div class="settings-body">
+    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:12px;">
+      <div class="settings-row-info" style="flex:1;">
+        <div class="settings-row-label">Send broadcasts from your own domain</div>
+        <div class="settings-row-desc">By default, broadcasts send from <code>broadcasts@mail.goswft.com</code>. For a more professional look, connect your own domain so emails come from your brand (e.g. <code>broadcasts@acme.com</code>).</div>
+      </div>
+
+      <div id="sd-empty" style="display:none;">
+        <div class="settings-2col" style="gap:10px;">
+          <div class="settings-field">
+            <label>Your Domain</label>
+            <input class="settings-input" id="sd-domain-input" style="width:100%;" placeholder="acme.com or mail.acme.com"/>
+          </div>
+          <div class="settings-field">
+            <label>Local Part (before @)</label>
+            <input class="settings-input" id="sd-local-input" style="width:100%;" value="broadcasts" placeholder="broadcasts"/>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="settings-btn primary" onclick="setupSendingDomain()">Set Up Domain</button>
+        </div>
+      </div>
+
+      <div id="sd-pending" style="display:none;padding:16px;background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.25);border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#f5a623;display:inline-block;"></span>
+          <strong id="sd-pending-domain" style="font-size:13px;"></strong>
+          <span style="font-size:11px;color:#f5a623;">PENDING VERIFICATION</span>
+        </div>
+        <p style="font-size:12px;color:#888;margin-bottom:12px;">Add these 3 CNAME records to your DNS provider (Cloudflare, Namecheap, GoDaddy, etc.). Verification usually completes within 15 minutes.</p>
+        <div id="sd-records" style="font-family:'JetBrains Mono',monospace;font-size:11px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="settings-btn primary" onclick="checkSendingDomain()">Check Status</button>
+          <button class="settings-btn danger" onclick="removeSendingDomain()">Remove</button>
+        </div>
+      </div>
+
+      <div id="sd-verified" style="display:none;padding:16px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.25);border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#c8f135;display:inline-block;"></span>
+          <strong id="sd-verified-from" style="font-size:13px;"></strong>
+          <span style="font-size:11px;color:#c8f135;">VERIFIED</span>
+        </div>
+        <p style="font-size:12px;color:#888;">Your broadcasts will send from this address. Recipients see your brand, not SWFT.</p>
+        <div style="margin-top:12px;">
+          <button class="settings-btn danger" onclick="removeSendingDomain()">Remove Domain</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="settings-section" data-group="operations" id="sec-intake">
   <div class="settings-header"><span class="settings-header-icon">📋</span><h3>CUSTOMER INTAKE FORM</h3></div>
   <div class="settings-body">
@@ -1259,6 +1314,99 @@ async function verifyPackPurchase(user) {
   } catch (e) { console.warn('Pack verify error:', e); }
 }
 
+// ── Sending Domain (Broadcasts) ──────────────────────────────────────────
+function _sdEscape(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function renderSendingDomainState(state) {
+  var empty = document.getElementById('sd-empty');
+  var pending = document.getElementById('sd-pending');
+  var verified = document.getElementById('sd-verified');
+  empty.style.display = 'none';
+  pending.style.display = 'none';
+  verified.style.display = 'none';
+
+  if (!state || !state.domain) {
+    empty.style.display = '';
+    return;
+  }
+
+  if (state.verified) {
+    document.getElementById('sd-verified-from').textContent = state.fromEmail;
+    verified.style.display = '';
+    return;
+  }
+
+  document.getElementById('sd-pending-domain').textContent = state.domain;
+  var recEl = document.getElementById('sd-records');
+  if (state.records && state.records.length) {
+    recEl.innerHTML = state.records.map(function(r) {
+      return '<div style="padding:10px 12px;background:#0a0a0a;border:1px solid #2c2c2c;border-radius:6px;margin-bottom:6px;">'
+        + '<div style="color:#7a7a7a;font-size:10px;margin-bottom:4px;letter-spacing:1px;">TYPE: ' + r.type + '</div>'
+        + '<div style="color:#f0f0f0;word-break:break-all;"><span style="color:#7a7a7a;">Name:</span> ' + _sdEscape(r.name) + '</div>'
+        + '<div style="color:#f0f0f0;word-break:break-all;margin-top:2px;"><span style="color:#7a7a7a;">Value:</span> ' + _sdEscape(r.value) + '</div>'
+        + '</div>';
+    }).join('');
+  } else {
+    recEl.innerHTML = '<div style="color:#7a7a7a;font-size:12px;">No DNS records yet — try clicking "Check Status" or re-adding the domain.</div>';
+  }
+  pending.style.display = '';
+}
+
+async function loadSendingDomain() {
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/sending-domain', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) { renderSendingDomainState(null); return; }
+    var data = await res.json();
+    renderSendingDomainState(data);
+  } catch (e) {
+    console.warn('loadSendingDomain:', e);
+    renderSendingDomainState(null);
+  }
+}
+
+async function setupSendingDomain() {
+  var domain = document.getElementById('sd-domain-input').value.trim();
+  var localPart = document.getElementById('sd-local-input').value.trim() || 'broadcasts';
+  if (!domain) { showToast('Enter a domain'); return; }
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/sending-domain', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: domain, localPart: localPart })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Setup failed');
+    renderSendingDomainState(data);
+    showToast('Domain created — add the DNS records to verify');
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
+async function checkSendingDomain() {
+  await loadSendingDomain();
+  showToast('Status refreshed');
+}
+
+async function removeSendingDomain() {
+  var ok = await swftConfirm('Remove your custom sending domain? Broadcasts will fall back to the default SWFT address.', 'REMOVE DOMAIN', '⚠️');
+  if (!ok) return;
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/sending-domain', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Remove failed');
+    renderSendingDomainState(null);
+    showToast('Domain removed');
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
 async function exportToSheets() {
   var btn = document.getElementById('export-sheets-btn');
   var status = document.getElementById('export-status');
@@ -1869,6 +2017,7 @@ function downloadQR() {
       loadSettings();
       loadTemplates();
       loadIntakeForm();
+      loadSendingDomain();
       verifyPackPurchase(user);
       loadIntegrations().then(function(){
         if(window.location.hash){

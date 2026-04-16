@@ -447,6 +447,7 @@ app.use("/api/automations",       auth, checkAccess, requirePlan("pro"), automat
 app.use("/api/ai-settings",       auth, checkAccess, requirePlan("pro"), aiSettingsRouter);
 app.get("/api/broadcasts/unsubscribe", require("./routes/broadcasts").unsubscribeHandler);
 app.use("/api/broadcasts",        auth, checkAccess, requirePlan("pro"), require("./routes/broadcasts"));
+app.use("/api/sending-domain",    auth, checkAccess, requirePlan("pro"), require("./routes/sendingDomain"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
 app.use("/api/dev",               auth,               require("./routes/dev"));
 app.use("/api/outreach",          auth,               require("./routes/outreach"));
