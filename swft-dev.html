@@ -1156,6 +1156,44 @@ window._toggleDraftDetail = function(draftId, rowEl) {
       <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Body</label>
       <textarea id="draft-body-${draftId}" style="width:100%;max-width:700px;min-height:200px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.7;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;resize:vertical;">${escHtml(draft.body)}</textarea>
     </div>
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Footer Preview <span style="text-transform:none;letter-spacing:0;font-weight:400;">(appended automatically on send)</span></label>
+      <div style="max-width:700px;border-radius:6px;overflow:hidden;border:1px solid var(--border2);pointer-events:none;opacity:0.85;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0a0a0a;border-top:2px solid #c8f135;">
+          <tr><td style="padding:20px 24px 0 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td style="vertical-align:middle;">
+                <img src="https://goswft.com/assets/SWFT_MAIN_LOGO.png" alt="SWFT" width="72" style="display:block;height:auto;max-height:32px;width:auto;">
+                <p style="margin:3px 0 0 0;font-size:10px;color:#555;letter-spacing:3px;font-family:Arial,sans-serif;">simple. smart. swft.</p>
+              </td>
+              <td style="vertical-align:middle;text-align:right;">
+                <span style="font-size:11px;color:#888;font-family:Arial,sans-serif;">Website</span>
+                &nbsp;&nbsp;
+                <span style="font-size:11px;color:#888;font-family:Arial,sans-serif;">Contact</span>
+              </td>
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:14px 24px 0 24px;"><div style="border-top:1px solid #222;">&nbsp;</div></td></tr>
+          <tr><td style="padding:14px 24px 20px 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td style="vertical-align:bottom;">
+                <p style="margin:0 0 3px 0;font-size:10px;color:#888;letter-spacing:1px;text-transform:uppercase;font-family:Arial,sans-serif;font-weight:bold;">Sent by</p>
+                <p style="margin:0;font-size:11px;color:#555;line-height:1.8;font-family:Arial,sans-serif;">
+                  Ethan Lane, CEO &amp; Founder<br>
+                  goswft.com &middot; ethan@goswft.com<br>
+                  1215 9th Avenue SW Suite 1005<br>
+                  Calgary, AB &nbsp;T3C 0H9 &nbsp;Canada
+                </p>
+              </td>
+              <td style="vertical-align:bottom;text-align:right;width:140px;">
+                <span style="display:inline-block;font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;border:1px solid #444;padding:4px 12px;font-family:Arial,sans-serif;">Unsubscribe</span>
+                <p style="margin:5px 0 0 0;font-size:9px;color:#444;font-family:Arial,sans-serif;">You can opt out at any time.</p>
+              </td>
+            </tr></table>
+          </td></tr>
+        </table>
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <button class="approve-btn" onclick="window._saveDraft('${draftId}')" id="save-draft-${draftId}">Save Changes</button>
       <span class="draft-meta">To: ${escHtml(draft.leadEmail)} &nbsp;|&nbsp; Sequence: ${draft.sequence || 1}${draft.isFollowUp ? ' &nbsp;|&nbsp; <span style="color:var(--amber);">Follow-up</span>' : ''}</span>
