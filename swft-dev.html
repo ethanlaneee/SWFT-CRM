@@ -960,6 +960,44 @@ function renderOutreach(data) {
       <div id="findResult" style="margin-top:10px;font-size:12px;display:none;"></div>
     </div>
 
+    <!-- QUICK TEST: Create lead + generate email -->
+    <div class="section-label">Quick Test</div>
+    <div class="plan-section" style="animation-delay:0.26s">
+      <div style="margin-bottom:8px;font-size:11px;color:var(--gray2);">Create a lead and generate an email in one step. Use your own email to send yourself a test.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:600px;">
+        <div>
+          <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Name</label>
+          <input class="search-input" type="text" id="testName" placeholder="e.g. Mike Johnson" style="width:100%;background-image:none;padding-left:12px;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Email</label>
+          <input class="search-input" type="email" id="testEmail" placeholder="e.g. ethan@goswft.com" style="width:100%;background-image:none;padding-left:12px;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Company</label>
+          <input class="search-input" type="text" id="testCompany" placeholder="e.g. Johnson HVAC" style="width:100%;background-image:none;padding-left:12px;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Trade</label>
+          <input class="search-input" type="text" id="testTrade" placeholder="e.g. HVAC" style="width:100%;background-image:none;padding-left:12px;"/>
+        </div>
+        <div style="grid-column:span 2;">
+          <label style="display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:4px;">Website <span style="text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label>
+          <input class="search-input" type="text" id="testWebsite" placeholder="e.g. johnsonhvac.com" style="width:100%;background-image:none;padding-left:12px;"/>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:14px;">
+        <button class="action-btn blue" id="btnTestLead" onclick="window._createTestLead()">
+          <div class="btn-spinner"></div>
+          <span class="btn-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Create Lead &amp; Generate Email
+          </span>
+        </button>
+        <span id="testLeadStatus" style="font-size:11px;color:var(--gray2);"></span>
+      </div>
+    </div>
+
     <!-- ACTIONS -->
     <div class="section-label">Actions</div>
     <div class="action-bar">
@@ -1311,6 +1349,37 @@ window._findLeads = async function() {
   } catch (e) {
     resultDiv.innerHTML = `<span style="color:var(--red);">Error: ${escHtml(e.message)}</span>`;
     showToast('Find leads failed: ' + e.message, 'error');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+};
+
+/* ── QUICK TEST: CREATE LEAD + GENERATE ── */
+window._createTestLead = async function() {
+  const btn = document.getElementById('btnTestLead');
+  const status = document.getElementById('testLeadStatus');
+  const email = document.getElementById('testEmail')?.value?.trim();
+  if (!email) { showToast('Email is required', 'error'); return; }
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  if (status) status.textContent = 'Creating lead and generating email...';
+
+  try {
+    const result = await outreachPost('/api/outreach/test-lead', {
+      name: document.getElementById('testName')?.value?.trim() || '',
+      email,
+      company: document.getElementById('testCompany')?.value?.trim() || '',
+      trade: document.getElementById('testTrade')?.value?.trim() || '',
+      website: document.getElementById('testWebsite')?.value?.trim() || '',
+    });
+    showToast('Draft created for ' + result.lead.email);
+    if (status) status.textContent = 'Draft ready — scroll down to review and approve it.';
+    await loadOutreachData();
+  } catch (e) {
+    showToast('Test lead failed: ' + e.message, 'error');
+    if (status) status.textContent = 'Error: ' + e.message;
   } finally {
     btn.classList.remove('loading');
     btn.disabled = false;

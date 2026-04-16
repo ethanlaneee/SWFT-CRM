@@ -397,6 +397,118 @@ Respond with ONLY JSON: {"subject": "...", "body": "..."}`
   }
 });
 
+// ── POST /api/outreach/test-lead — Create a single lead + generate its draft in one step ──
+// Designed for testing: create a lead (e.g. yourself), generate the email, preview/approve/send.
+router.post("/test-lead", async (req, res) => {
+  try {
+    const { name, email, company, trade, website, notes } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    // Create or reuse the lead
+    let leadId;
+    const existing = await db.collection("outreach_leads")
+      .where("email", "==", email.toLowerCase().trim())
+      .limit(1)
+      .get();
+
+    if (!existing.empty) {
+      leadId = existing.docs[0].id;
+      // Update fields in case they changed
+      await db.collection("outreach_leads").doc(leadId).update({
+        name: name || existing.docs[0].data().name || "",
+        company: company || existing.docs[0].data().company || "",
+        trade: trade || existing.docs[0].data().trade || "",
+        website: website || existing.docs[0].data().website || "",
+        notes: notes || existing.docs[0].data().notes || "",
+      });
+    } else {
+      const ref = db.collection("outreach_leads").doc();
+      leadId = ref.id;
+      await ref.set({
+        name: name || "",
+        email: email.toLowerCase().trim(),
+        company: company || "",
+        trade: trade || "",
+        website: website || "",
+        phone: "",
+        notes: notes || "",
+        score: null,
+        status: "new",
+        createdAt: Date.now(),
+        lastContactedAt: null,
+        emailCount: 0,
+        source: "manual-test",
+      });
+    }
+
+    const lead = { id: leadId, name: name || "", email: email.toLowerCase().trim(), company: company || "", trade: trade || "", website: website || "", notes: notes || "" };
+
+    // Generate the email using the saved template
+    const templates = await getTemplates();
+    const response = await claude.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{
+        role: "user",
+        content: `You are writing an outreach email for Ethan, founder of SWFT. Below is the STANDARD EMAIL TEMPLATE. Your job is to customize ONLY the parts in [BRACKETS] for this specific recipient. Everything else stays essentially the same — same structure, same tone, same flow, same wording. Do NOT rewrite the email from scratch. Just fill in the personalized parts.
+
+Recipient:
+- Name: ${lead.name}
+- Company: ${lead.company}
+- Trade: ${lead.trade}
+- Website: ${lead.website || "none"}
+- Notes: ${lead.notes || "none"}
+
+STANDARD EMAIL TEMPLATE:
+
+${templates.initial}
+
+RULES:
+${templates.rules}
+
+Respond with ONLY JSON: {"subject": "...", "body": "..."}`
+      }],
+    });
+
+    const text = response.content[0].text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("AI did not return valid JSON");
+
+    const generatedEmail = JSON.parse(jsonMatch[0]);
+
+    // Save as draft
+    const ref = db.collection("outreach_emails").doc();
+    await ref.set({
+      leadId: lead.id,
+      leadEmail: lead.email,
+      leadName: lead.name,
+      leadCompany: lead.company,
+      leadTrade: lead.trade,
+      subject: generatedEmail.subject,
+      body: generatedEmail.body,
+      status: "draft",
+      sequence: 1,
+      createdAt: Date.now(),
+      approvedAt: null,
+      sentAt: null,
+      gmailMessageId: null,
+      gmailThreadId: null,
+      rfcMessageId: null,
+      source: "manual-test",
+    });
+
+    await db.collection("outreach_leads").doc(leadId).update({ status: "drafted" });
+
+    res.json({
+      lead: { id: leadId, ...lead },
+      draft: { id: ref.id, subject: generatedEmail.subject, body: generatedEmail.body },
+    });
+  } catch (e) {
+    console.error("[outreach] Test-lead error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── GET /api/outreach/drafts — List emails pending approval ──
 router.get("/drafts", async (req, res) => {
   try {
