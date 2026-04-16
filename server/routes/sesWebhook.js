@@ -93,21 +93,38 @@ async function handleNotification(body) {
 
 async function sesWebhookHandler(req, res) {
   const msg = req.body;
-  if (!msg || typeof msg !== "object") return res.status(400).send("bad");
+  console.log("[ses-webhook] received:", {
+    type: msg?.Type,
+    topicArn: msg?.TopicArn,
+    messageId: msg?.MessageId,
+    hasSignature: !!msg?.Signature,
+    bodyIsObject: typeof msg === "object",
+    bodyKeys: msg && typeof msg === "object" ? Object.keys(msg) : null,
+  });
+
+  if (!msg || typeof msg !== "object") {
+    console.error("[ses-webhook] rejected: body not an object");
+    return res.status(400).send("bad");
+  }
 
   if (EXPECTED_TOPIC_ARN && msg.TopicArn !== EXPECTED_TOPIC_ARN) {
+    console.error("[ses-webhook] rejected: topic ARN mismatch", { got: msg.TopicArn, expected: EXPECTED_TOPIC_ARN });
     return res.status(403).send("forbidden");
   }
 
   try {
     const ok = await verifySignature(msg);
-    if (!ok) return res.status(403).send("bad signature");
+    if (!ok) {
+      console.error("[ses-webhook] rejected: signature verification returned false");
+      return res.status(403).send("bad signature");
+    }
   } catch (err) {
     console.error("[ses-webhook] signature error:", err.message);
     return res.status(403).send("bad signature");
   }
 
   if (msg.Type === "SubscriptionConfirmation") {
+    console.log("[ses-webhook] confirming subscription, calling SubscribeURL...");
     try {
       await autoConfirm(msg.SubscribeURL);
       console.log("[ses-webhook] subscription confirmed:", msg.TopicArn);
