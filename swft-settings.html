@@ -664,6 +664,29 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
+<!-- Export Data -->
+<div class="settings-section" data-group="account" id="sec-export">
+  <div class="settings-header"><span class="settings-header-icon">📤</span><h3>EXPORT DATA</h3></div>
+  <div class="settings-body">
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Export to Google Sheets</div>
+        <div class="settings-row-desc">Export your customers, jobs, quotes, or invoices to a Google Sheets spreadsheet. Requires Google Sheets integration.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="export-data-type" class="settings-input" style="width:160px;padding:8px 12px;">
+          <option value="customers">Customers</option>
+          <option value="jobs">Jobs</option>
+          <option value="quotes">Quotes</option>
+          <option value="invoices">Invoices</option>
+        </select>
+        <button class="settings-btn primary" id="export-sheets-btn" onclick="exportToSheets()">Export</button>
+      </div>
+    </div>
+    <div id="export-status" style="display:none;padding:8px 16px 16px;font-size:13px;"></div>
+  </div>
+</div>
+
 <!-- Privacy & Data -->
 <div class="settings-section" data-group="account" id="sec-privacy">
   <div class="settings-header"><span class="settings-header-icon">🔒</span><h3>PRIVACY & DATA</h3></div>
@@ -1234,6 +1257,35 @@ async function verifyPackPurchase(user) {
     // Clean URL
     window.history.replaceState({}, '', '/swft-settings');
   } catch (e) { console.warn('Pack verify error:', e); }
+}
+
+async function exportToSheets() {
+  var btn = document.getElementById('export-sheets-btn');
+  var status = document.getElementById('export-status');
+  var dataType = document.getElementById('export-data-type').value;
+  btn.disabled = true;
+  btn.textContent = 'Exporting…';
+  status.style.display = 'block';
+  status.style.color = '#888';
+  status.textContent = 'Preparing your ' + dataType + ' export…';
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/export/sheets', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data_type: dataType })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Export failed');
+    status.style.color = '#22c55e';
+    status.innerHTML = '✓ Exported ' + data.rows_exported + ' ' + dataType + ' — <a href="' + data.url + '" target="_blank" style="color:#22c55e;text-decoration:underline;">Open in Google Sheets</a>';
+  } catch(e) {
+    status.style.color = '#ef4444';
+    status.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Export';
+  }
 }
 
 async function deleteAccount() {

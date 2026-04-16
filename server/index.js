@@ -438,12 +438,14 @@ app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
 app.use("/api/square",        auth, checkAccess,  squareRouter);
 app.use("/api/import",        auth, checkAccess,  require("./routes/import"));
+app.use("/api/export",        auth, checkAccess, requirePlan("pro"), require("./routes/export"));
 // Calendar: token generation needs auth, ICS feed is public (uses calendar token)
 app.post("/api/calendar/token", auth, checkAccess, require("./routes/calendar").tokenHandler);
 app.use("/api/calendar",      require("./routes/calendar"));
 app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
 app.use("/api/automations",       auth, checkAccess, requirePlan("pro"), automationsRouter);
 app.use("/api/ai-settings",       auth, checkAccess, requirePlan("pro"), aiSettingsRouter);
+app.get("/api/broadcasts/unsubscribe", require("./routes/broadcasts").unsubscribeHandler);
 app.use("/api/broadcasts",        auth, checkAccess, requirePlan("pro"), require("./routes/broadcasts"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
 app.use("/api/dev",               auth,               require("./routes/dev"));
