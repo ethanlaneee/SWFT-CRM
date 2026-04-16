@@ -363,6 +363,7 @@
     "swft-schedule":    "schedule.view",
     "swft-messages":    "messages.view",
     "swft-team":        "team.manage",
+    "swft-team-chat":   "teamchat.view",
     "swft-settings":    "settings.manage",
     "swft-ai-agents":   "automations.view",
     "swft-automations": "automations.view",
@@ -417,6 +418,7 @@
     "swft-schedule":    "schedule.view",
     "swft-messages":    "messages.view",
     "swft-team":        "team.manage",
+    "swft-team-chat":   "teamchat.view",
     "swft-settings":    "settings.manage",
     "swft-ai-agents":   "automations.view",
     "swft-automations": "automations.view",
@@ -427,9 +429,51 @@
     "swft-intake":      "intake.manage",
   };
 
+  // ── Immediately hide permission-gated nav items to prevent flash ──
+  // This runs synchronously before auth resolves, so restricted items
+  // are never visible. applyPermGuard() will reveal the allowed ones.
+  (function hideGatedNavItems() {
+    function doHide() {
+      document.querySelectorAll(".nav-item[onclick]").forEach(function (el) {
+        var oc = el.getAttribute("onclick") || "";
+        for (var key in NAV_PERM) {
+          if (oc.indexOf(key) > -1) {
+            el.style.display = "none";
+            el.setAttribute("data-perm-gated", "1");
+            break;
+          }
+        }
+      });
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", doHide);
+    } else {
+      doHide();
+    }
+  })();
+
   function applyPermGuard(perms) {
     window.SWFT_PERMS = perms; // null = owner (unrestricted)
-    if (perms === null) return; // owner — skip all restrictions
+
+    // ── Show allowed nav items (all were hidden on load) ─────────────────
+    document.querySelectorAll('.nav-item[data-perm-gated="1"]').forEach(function (el) {
+      var oc = el.getAttribute("onclick") || "";
+      var blocked = false;
+      if (perms !== null) {
+        for (var key in NAV_PERM) {
+          if (oc.indexOf(key) > -1 && !perms.includes(NAV_PERM[key])) {
+            blocked = true;
+            break;
+          }
+        }
+      }
+      if (!blocked) {
+        el.style.display = "";
+        el.removeAttribute("data-perm-gated");
+      }
+    });
+
+    if (perms === null) return; // owner — skip remaining restrictions
 
     // ── Page redirect ────────────────────────────────────────────────────
     var page = window.location.pathname.split("/").pop().replace(/\.html$/, "");
@@ -439,17 +483,6 @@
       setTimeout(function () { window.location.href = "swft-dashboard"; }, 1800);
       return;
     }
-
-    // ── Hide restricted nav items ────────────────────────────────────────
-    document.querySelectorAll(".nav-item[onclick]").forEach(function (el) {
-      var oc = el.getAttribute("onclick") || "";
-      for (var key in NAV_PERM) {
-        if (oc.indexOf(key) > -1 && !window.SWFT_PERMS.includes(NAV_PERM[key])) {
-          el.style.display = "none";
-          break;
-        }
-      }
-    });
 
     // ── Intercept restricted action buttons ─────────────────────────────
     // Instead of hiding, replace onclick so they show the permission popup
