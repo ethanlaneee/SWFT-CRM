@@ -9,48 +9,104 @@
   if (window.location.pathname.endsWith('swft-dashboard') || window.location.pathname.endsWith('swft-dashboard.html') || window.location.pathname === '/' || window.location.pathname === '') return;
 
   const isMessagesPage = window.location.pathname.endsWith('swft-messages') || window.location.pathname.endsWith('swft-messages.html');
+  const isTeamChatPage = window.location.pathname.endsWith('swft-team-chat') || window.location.pathname.endsWith('swft-team-chat.html');
+  const hasBottomComposer = isMessagesPage || isTeamChatPage;
 
   const API_BASE = ""; // Uses same origin
 
   // ── Inject styles ──
   const style = document.createElement("style");
   style.textContent = `
-    /* ── Chat FAB ── */
+    /* ── Chat Pill (bottom-center, shimmering) ── */
     .swft-chat-fab {
       position: fixed;
       bottom: 20px;
-      right: 20px;
-      width: 44px;
+      left: 50%;
+      transform: translateX(-50%);
       height: 44px;
-      border-radius: 50%;
-      background: #c8f135;
+      min-width: 168px;
+      padding: 0 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #c8f135 0%, #a8d12a 100%);
       border: none;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 24px rgba(200, 241, 53, 0.3);
-      transition: transform 0.2s, box-shadow 0.2s;
+      gap: 10px;
+      box-shadow: 0 4px 24px rgba(200, 241, 53, 0.35), 0 0 0 1px rgba(200, 241, 53, 0.4) inset;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.25s;
       z-index: 9999;
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
     }
     .swft-chat-fab:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 32px rgba(200, 241, 53, 0.45);
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 8px 32px rgba(200, 241, 53, 0.5), 0 0 0 1px rgba(200, 241, 53, 0.5) inset;
     }
-    .swft-chat-fab svg {
-      width: 22px;
-      height: 22px;
-      fill: #0a0a0a;
+    .swft-chat-fab .pill-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #0a0a0a;
+      position: relative;
+      z-index: 2;
     }
-    .swft-chat-fab.open svg.icon-chat { display: none; }
-    .swft-chat-fab:not(.open) svg.icon-close { display: none; }
+    .swft-chat-fab .pill-icon {
+      width: 16px;
+      height: 16px;
+      stroke: #0a0a0a;
+      fill: none;
+      stroke-width: 2;
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+    /* Moving highlight sweep across the pill */
+    .swft-chat-fab::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.55) 48%, rgba(255,255,255,0.55) 52%, transparent 75%);
+      transform: translateX(-120%);
+      animation: swft-pill-shimmer 3.2s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes swft-pill-shimmer {
+      0%   { transform: translateX(-120%); }
+      55%  { transform: translateX(120%); }
+      100% { transform: translateX(120%); }
+    }
+    /* Recording state — red, pulsing, "Listening…" */
+    .swft-chat-fab.recording {
+      background: linear-gradient(135deg, #ff5252 0%, #c43838 100%);
+      box-shadow: 0 4px 24px rgba(255, 82, 82, 0.5), 0 0 0 1px rgba(255, 82, 82, 0.5) inset;
+      animation: swft-pill-listen 1.4s ease-in-out infinite;
+    }
+    .swft-chat-fab.recording .pill-label,
+    .swft-chat-fab.recording .pill-icon { color: #fff; stroke: #fff; }
+    .swft-chat-fab.recording::before { animation: none; opacity: 0; }
+    @keyframes swft-pill-listen {
+      0%, 100% { box-shadow: 0 4px 24px rgba(255, 82, 82, 0.5), 0 0 0 1px rgba(255, 82, 82, 0.5) inset; }
+      50%      { box-shadow: 0 6px 36px rgba(255, 82, 82, 0.75), 0 0 0 2px rgba(255, 82, 82, 0.65) inset; }
+    }
+    /* Transcribing state — amber spinner */
+    .swft-chat-fab.transcribing {
+      background: linear-gradient(135deg, #f5a623 0%, #c17a0b 100%);
+      box-shadow: 0 4px 24px rgba(245, 166, 35, 0.45);
+    }
+    .swft-chat-fab.transcribing .pill-label { color: #0a0a0a; }
+    .swft-chat-fab.transcribing::before { animation: swft-pill-shimmer 1.2s linear infinite; }
 
     /* ── Chat Panel ── */
     .swft-chat-panel {
       position: fixed;
-      bottom: 74px;
-      right: 20px;
-      width: 360px;
+      bottom: 80px;
+      left: 50%;
+      width: 400px;
+      max-width: calc(100vw - 32px);
       max-height: 480px;
       background: #111111;
       border: 1px solid #222;
@@ -59,14 +115,14 @@
       flex-direction: column;
       z-index: 9998;
       opacity: 0;
-      transform: translateY(20px) scale(0.95);
+      transform: translateX(-50%) translateY(20px) scale(0.95);
       pointer-events: none;
       transition: opacity 0.25s, transform 0.25s;
-      box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.6);
     }
     .swft-chat-panel.visible {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateX(-50%) translateY(0) scale(1);
       pointer-events: all;
     }
 
@@ -293,9 +349,9 @@
     .swft-chat-mic.recording svg { stroke: #fff; }
 
 
-    /* When panel is open, shift FAB left so it doesn't block send */
+    /* Subtle darken of the pill while the panel is open so it reads as "active" */
     .swft-chat-fab.open {
-      right: 340px;
+      filter: brightness(0.92);
     }
 
     /* ── Acknowledgment message ── */
@@ -416,24 +472,30 @@
     /* ── Mobile ── */
     @media (max-width: 480px) {
       .swft-chat-panel {
-        right: 8px;
         left: 8px;
-        bottom: 74px;
+        right: 8px;
         width: auto;
+        max-width: none;
         max-height: calc(100vh - 120px);
+        transform: translateY(20px) scale(0.95);
       }
-      .swft-chat-fab.open {
-        right: 20px;
-        bottom: 20px;
+      .swft-chat-panel.visible {
+        transform: translateY(0) scale(1);
+      }
+      .swft-chat-fab {
+        min-width: 144px;
+        padding: 0 16px;
       }
     }
   `;
 
-  // Raise the bubble on the messages page so it doesn't cover the compose bar
-  if (isMessagesPage) {
+  // Lift the pill above the compose bar on pages where a message input lives
+  // at the bottom of the viewport, so it doesn't block Send.
+  if (hasBottomComposer) {
+    const pillBump = isMessagesPage ? 180 : 96; // team-chat composer is shorter
     style.textContent += `
-      .swft-chat-fab { bottom: 180px !important; }
-      .swft-chat-panel { bottom: 234px !important; }
+      .swft-chat-fab { bottom: ${pillBump}px !important; }
+      .swft-chat-panel { bottom: ${pillBump + 60}px !important; }
     `;
   }
 
@@ -478,9 +540,11 @@
 
   const fab = document.createElement("button");
   fab.className = "swft-chat-fab";
+  fab.setAttribute("aria-label", "Open SWFT AI");
+  fab.setAttribute("title", "Click to chat · Hold Ctrl+Win to talk · Ctrl+Win+Space to toggle");
   fab.innerHTML = `
-    <svg class="icon-chat" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
-    <svg class="icon-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    <svg class="pill-icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    <span class="pill-label">SWFT AI</span>
   `;
 
   document.body.appendChild(panel);
@@ -500,7 +564,13 @@
   const suggestions = panel.querySelectorAll(".swft-chat-suggestion");
 
   // ── Toggle panel ──
+  // If a voice session is active (push-to-talk or toggle), a click cancels it
+  // instead of opening the panel.
   fab.addEventListener("click", () => {
+    if (typeof _isRecording !== 'undefined' && _isRecording) {
+      if (typeof stopRecording === 'function') stopRecording();
+      return;
+    }
     isOpen = !isOpen;
     panel.classList.toggle("visible", isOpen);
     fab.classList.toggle("open", isOpen);
@@ -727,106 +797,213 @@
     window.speechSynthesis.speak(utt);
   }
 
-  // ── Voice Input — MediaRecorder → Whisper ──
+  // ── Voice Input — MediaRecorder → Whisper ──────────────────────────────
+  // One shared pipeline for three entry points:
+  //   • in-panel mic button (fills the input, doesn't auto-send)
+  //   • Ctrl+Win push-to-talk (auto-sends on release)
+  //   • Ctrl+Win+Space toggle  (auto-sends when toggled off)
   const micBtn = document.getElementById('swft-chat-mic');
+  const micIconSvg = '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
 
-  if (micBtn) {
-    let _mediaRecorder = null;
-    let _audioChunks = [];
-    let _isRecording = false;
+  let _mediaRecorder = null;
+  let _audioChunks = [];
+  let _isRecording = false;
+  let _recordingAutoSend = false;  // set by whichever trigger started recording
+  let _recordingStream = null;
 
-    function setMicState(recording) {
-      _isRecording = recording;
-      micBtn.classList.toggle('recording', recording);
+  const PILL_DEFAULT_LABEL = 'SWFT AI';
+
+  // Single source of truth for the pill's visual state. Precedence:
+  // transcribing > recording > default. This way the label never gets stuck.
+  function refreshPillLabel() {
+    const label = fab.querySelector('.pill-label');
+    if (!label) return;
+    if (fab.classList.contains('transcribing')) label.textContent = 'Transcribing…';
+    else if (fab.classList.contains('recording'))  label.textContent = 'Listening…';
+    else                                            label.textContent = PILL_DEFAULT_LABEL;
+  }
+
+  function setRecordingState(recording) {
+    _isRecording = recording;
+    fab.classList.toggle('recording', recording);
+    if (micBtn) micBtn.classList.toggle('recording', recording);
+    refreshPillLabel();
+  }
+
+  function setTranscribingState(on) {
+    fab.classList.toggle('transcribing', on);
+    refreshPillLabel();
+  }
+
+  async function startRecording(autoSend) {
+    if (_isRecording) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (typeof showToast === 'function') showToast('Microphone not supported in this browser');
+      return;
     }
 
-    async function startRecording() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        if (typeof showToast === 'function') showToast('Microphone not supported in this browser');
-        return;
+    _recordingAutoSend = !!autoSend;
+
+    // Stop any ongoing TTS so we don't record the AI's own voice
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    try {
+      _recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      if (typeof showToast === 'function') showToast('Microphone blocked — check browser settings');
+      return;
+    }
+
+    // Brief pause to let speakers clear before recording starts
+    await new Promise(r => setTimeout(r, 300));
+
+    _audioChunks = [];
+    _mediaRecorder = new MediaRecorder(_recordingStream);
+
+    _mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) _audioChunks.push(e.data);
+    };
+
+    _mediaRecorder.onstop = async () => {
+      if (_recordingStream) {
+        _recordingStream.getTracks().forEach((t) => t.stop());
+        _recordingStream = null;
       }
 
-      // Stop any ongoing TTS so we don't record the AI's own voice
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (err) {
-        if (typeof showToast === 'function') showToast('Microphone blocked — check browser settings');
-        return;
-      }
-
-      // Brief pause to let speakers clear before recording starts
-      await new Promise(r => setTimeout(r, 300));
-
+      const mimeType = _mediaRecorder.mimeType || 'audio/webm';
+      const blob = new Blob(_audioChunks, { type: mimeType });
       _audioChunks = [];
-      _mediaRecorder = new MediaRecorder(stream);
 
-      _mediaRecorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) _audioChunks.push(e.data);
-      };
+      if (blob.size < 1000) {
+        // too short — revert label and bail
+        setTranscribingState(false);
+        return;
+      }
 
-      _mediaRecorder.onstop = async () => {
-        // Stop all mic tracks so the browser indicator clears
-        stream.getTracks().forEach((t) => t.stop());
-
-        const mimeType = _mediaRecorder.mimeType || 'audio/webm';
-        const blob = new Blob(_audioChunks, { type: mimeType });
-        _audioChunks = [];
-
-        if (blob.size < 1000) return; // too short — nothing to transcribe
-
-        // Show a spinner in the mic button while waiting
+      setTranscribingState(true);
+      if (micBtn) {
         micBtn.innerHTML = '<svg viewBox="0 0 24 24" stroke-width="1.8" style="animation:swft-typing 0.8s infinite"><circle cx="12" cy="12" r="9" stroke="#c8f135" fill="none"/></svg>';
         micBtn.disabled = true;
+      }
 
-        try {
-          const token = await getToken();
-          const formData = new FormData();
-          formData.append('audio', blob, 'recording.' + (mimeType.includes('mp4') ? 'm4a' : 'webm'));
+      try {
+        const token = await getToken();
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording.' + (mimeType.includes('mp4') ? 'm4a' : 'webm'));
 
-          const res = await fetch(`${API_BASE}/api/transcribe`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-          });
+        const res = await fetch(`${API_BASE}/api/transcribe`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
 
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Transcription failed');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Transcription failed');
 
-          if (data.text) {
+        if (data.text) {
+          if (_recordingAutoSend) {
+            // Hotkey path — send straight to the AI, open the panel to show the reply
+            if (!isOpen) {
+              isOpen = true;
+              panel.classList.add('visible');
+              fab.classList.add('open');
+            }
+            sendMessage(data.text);
+          } else {
             input.value = data.text;
             sendBtn.disabled = false;
             input.focus();
           }
-        } catch (err) {
-          if (typeof showToast === 'function') showToast('Voice transcription failed — try again');
-          console.error('[voice]', err);
-        } finally {
-          // Restore mic icon
-          micBtn.innerHTML = '<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+        }
+      } catch (err) {
+        if (typeof showToast === 'function') showToast('Voice transcription failed — try again');
+        console.error('[voice]', err);
+      } finally {
+        setTranscribingState(false);
+        if (micBtn) {
+          micBtn.innerHTML = micIconSvg;
           micBtn.disabled = false;
         }
-      };
-
-      _mediaRecorder.start();
-      setMicState(true);
-    }
-
-    function stopRecording() {
-      if (_mediaRecorder && _mediaRecorder.state !== 'inactive') {
-        _mediaRecorder.stop();
       }
-      setMicState(false);
-    }
+    };
 
+    _mediaRecorder.start();
+    setRecordingState(true);
+  }
+
+  function stopRecording() {
+    if (_mediaRecorder && _mediaRecorder.state !== 'inactive') {
+      _mediaRecorder.stop();
+    }
+    setRecordingState(false);
+  }
+
+  // In-panel mic button — fills the input, doesn't auto-send (user reviews + hits Send)
+  if (micBtn) {
     micBtn.addEventListener('click', function () {
-      if (_isRecording) {
-        stopRecording();
-      } else {
-        startRecording();
-      }
+      if (_isRecording) stopRecording();
+      else startRecording(false);
     });
   }
+
+  // ── Global hotkeys ───────────────────────────────────────────────────────
+  // Ctrl + Win (Meta) held       → push-to-talk; release to send
+  // Ctrl + Win (Meta) + Space    → toggle recording on/off; auto-sends on stop
+  //
+  // Caveat: these only fire while a SWFT tab is focused. Browser pages can't
+  // intercept keys while another app is on top — that requires a desktop
+  // wrapper. On macOS, Ctrl+Cmd+Space also opens the character viewer; we
+  // still try to preventDefault but OS-level shortcuts may win.
+  let _hotkeyHoldActive = false;
+
+  // Skip the hotkey if the user is typing into a regular text input/textarea
+  // that isn't part of the SWFT AI panel itself. The chat panel's own input
+  // is fine — we want voice to work while it's focused.
+  function hotkeyShouldFire(e) {
+    const t = e.target;
+    if (!t) return true;
+    if (t === input) return true; // chat panel input — OK
+    if (panel.contains(t)) return true;
+    const tag = t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || t.isContentEditable) return false;
+    return true;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    if (!e.ctrlKey || !e.metaKey) return;
+    if (!hotkeyShouldFire(e)) return;
+
+    // Toggle: Ctrl+Win+Space
+    if (e.code === 'Space' || e.key === ' ') {
+      e.preventDefault();
+      if (_isRecording) stopRecording();
+      else startRecording(true);
+      return;
+    }
+
+    // Push-to-talk: pressing the SECOND of Ctrl/Win completes the combo.
+    // Start recording at that moment unless Space is also in the mix.
+    if ((e.key === 'Control' || e.key === 'Meta') && !_hotkeyHoldActive && !_isRecording) {
+      _hotkeyHoldActive = true;
+      startRecording(true);
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    // Releasing either Ctrl or Win ends push-to-talk
+    if (_hotkeyHoldActive && (e.key === 'Control' || e.key === 'Meta')) {
+      _hotkeyHoldActive = false;
+      if (_isRecording) stopRecording();
+    }
+  });
+
+  // Safety: if the tab loses focus mid-hold, the matching keyup never fires,
+  // so cancel the recording cleanly.
+  window.addEventListener('blur', () => {
+    if (_hotkeyHoldActive) {
+      _hotkeyHoldActive = false;
+      if (_isRecording) stopRecording();
+    }
+  });
 })();
