@@ -955,9 +955,10 @@
       const blob = new Blob(_audioChunks, { type: mimeType });
       _audioChunks = [];
 
-      // Minimum ~5KB — below that it's almost certainly a reflex keypress
-      // with no speech and Whisper will hallucinate or return silence.
-      if (blob.size < 5000) {
+      // ~1.5KB ≈ half a second of webm/opus. Below that it's a reflex tap.
+      // Short phone-number utterances ("five five five, zero one nine nine")
+      // still land comfortably above this threshold.
+      if (blob.size < 1500) {
         setTranscribingState(false);
         return;
       }
