@@ -241,10 +241,10 @@ router.post("/analyze-website", async (req, res, next) => {
     const anthropic = new Anthropic();
     const message = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 600,
+      max_tokens: 1200,
       messages: [{
         role: "user",
-        content: `You are extracting business profile information from a company website.
+        content: `You are extracting business profile information from a company website so a CRM can auto-fill its settings.
 
 Website text:
 ${text}
@@ -252,12 +252,17 @@ ${text}
 Extract the following and return ONLY valid JSON (no markdown, no explanation):
 {
   "about": "2-3 sentence description of the business (what they do, where they're based, how long they've been operating)",
-  "services": "comma-separated list of services offered",
+  "services": "comma-separated list of services offered (short phrases — e.g. 'Driveway Pouring, Stamped Concrete, Patios')",
   "serviceArea": "city/region they serve",
   "hours": "business hours if mentioned",
   "company": "business name",
   "phone": "phone number if found",
-  "address": "physical address if found"
+  "address": "physical address if found",
+  "email": "general contact email if found",
+  "pricing": "pricing notes if found — any prices, rate cards, minimums, or 'Free estimates' language. Keep it under 400 chars.",
+  "paymentMethods": "comma-separated list of payment methods accepted (e.g. 'Cash, Check, Credit Card, Financing') if found",
+  "bookingLink": "a booking or scheduling URL if one is linked on the site",
+  "faqs": "up to 5 concise Q: ... A: ... pairs from any FAQ section, separated by blank lines. Empty string if none."
 }
 
 If a field cannot be determined from the text, use an empty string "".`
