@@ -14,6 +14,70 @@ function getOAuthClient(tokens) {
 
 const VALID_TYPES = ["customers", "jobs", "quotes", "invoices"];
 
+// Explicit column lists per data type. Only these fields get exported, in
+// this order, with these friendly headers. Internal-only fields (id, orgId,
+// userId, createdAt, updatedAt, stripe*, etc.) are omitted by design.
+// `format` controls how a value is rendered into a cell.
+const dateCell = (v) => {
+  if (v === null || v === undefined || v === "") return "";
+  const d = typeof v === "number" ? new Date(v)
+          : /^\d+$/.test(String(v)) ? new Date(Number(v))
+          : new Date(v);
+  if (isNaN(d.getTime())) return String(v);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+const joinCell = (v) => Array.isArray(v) ? v.join(", ") : (v == null ? "" : String(v));
+const moneyCell = (v) => (typeof v === "number" ? "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (v == null ? "" : String(v)));
+
+const COLUMN_MAP = {
+  customers: [
+    { key: "name",    label: "Name" },
+    { key: "email",   label: "Email" },
+    { key: "phone",   label: "Phone" },
+    { key: "address", label: "Address" },
+    { key: "tags",    label: "Tags", format: joinCell },
+    { key: "notes",   label: "Notes" },
+  ],
+  jobs: [
+    { key: "title",         label: "Title" },
+    { key: "customerName",  label: "Customer" },
+    { key: "service",       label: "Service" },
+    { key: "status",        label: "Status" },
+    { key: "scheduledDate", label: "Scheduled Date", format: dateCell },
+    { key: "address",       label: "Address" },
+    { key: "crew",          label: "Crew" },
+    { key: "cost",          label: "Cost", format: moneyCell },
+    { key: "notes",         label: "Notes" },
+  ],
+  quotes: [
+    { key: "customerName",  label: "Customer" },
+    { key: "service",       label: "Service" },
+    { key: "status",        label: "Status" },
+    { key: "total",         label: "Total", format: moneyCell },
+    { key: "scheduledDate", label: "Scheduled Date", format: dateCell },
+    { key: "address",       label: "Address" },
+    { key: "notes",         label: "Notes" },
+  ],
+  invoices: [
+    { key: "customerName", label: "Customer" },
+    { key: "service",      label: "Service" },
+    { key: "status",       label: "Status" },
+    { key: "total",        label: "Total", format: moneyCell },
+    { key: "dueDate",      label: "Due Date", format: dateCell },
+    { key: "paidAt",       label: "Paid At", format: dateCell },
+    { key: "address",      label: "Address" },
+    { key: "notes",        label: "Notes" },
+  ],
+};
+
+function renderCell(value, format) {
+  if (format) return format(value);
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
 router.post("/sheets", async (req, res) => {
   try {
     const uid = req.orgId || req.uid;
@@ -46,15 +110,9 @@ router.post("/sheets", async (req, res) => {
       return res.status(404).json({ error: `No ${data_type} found to export` });
     }
 
-    const exclude = ["userId"];
-    const keys = Object.keys(rows[0]).filter(k => !exclude.includes(k));
-    const headerRow = keys;
-    const dataRows = rows.map(r => keys.map(k => {
-      const val = r[k];
-      if (val === null || val === undefined) return "";
-      if (typeof val === "object") return JSON.stringify(val);
-      return String(val);
-    }));
+    const columns = COLUMN_MAP[data_type];
+    const headerRow = columns.map(c => c.label);
+    const dataRows = rows.map(r => columns.map(c => renderCell(r[c.key], c.format)));
 
     const now = new Date();
     const title = `SWFT ${data_type.charAt(0).toUpperCase() + data_type.slice(1)} Export — ${now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
