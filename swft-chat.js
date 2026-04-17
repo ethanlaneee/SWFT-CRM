@@ -520,16 +520,18 @@
       <div style="display:flex;align-items:center;gap:6px;">
         <select class="swft-chat-voice" title="Voice">
           <optgroup label="Conversational">
-            <option value="jessica">Jessica</option>
-            <option value="aria">Aria</option>
-            <option value="lily">Lily</option>
+            <option value="matilda">Matilda</option>
+            <option value="freya">Freya</option>
+            <option value="charlotte">Charlotte</option>
           </optgroup>
           <optgroup label="Warm">
             <option value="rachel">Rachel</option>
             <option value="sarah">Sarah</option>
+            <option value="lily">Lily</option>
           </optgroup>
           <optgroup label="Male">
             <option value="brian">Brian</option>
+            <option value="daniel">Daniel</option>
             <option value="antoni">Antoni</option>
             <option value="adam">Adam</option>
           </optgroup>
@@ -592,7 +594,7 @@
   // Voice preference — persists across sessions per browser
   const VOICE_KEY = "swft_tts_voice";
   function getVoice() {
-    try { return localStorage.getItem(VOICE_KEY) || "jessica"; } catch (_) { return "jessica"; }
+    try { return localStorage.getItem(VOICE_KEY) || "matilda"; } catch (_) { return "matilda"; }
   }
   if (voiceSelect) {
     voiceSelect.value = getVoice();
@@ -737,15 +739,10 @@
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
-  // ── Show acknowledgment while AI is working ──
-  function showAck() {
-    const el = document.createElement("div");
-    el.className = "swft-chat-ack";
-    el.textContent = "Got it, working on it...";
-    messagesContainer.insertBefore(el, typingEl);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    return el;
-  }
+  // Acknowledgment removed — the typing indicator (three dots) is enough
+  // visual feedback that the AI is working. Keep a stub so callers don't
+  // crash; it returns a detached placeholder that remove() no-ops on.
+  function showAck() { return { parentNode: null, remove() {} }; }
 
   // ── Send message ──
   async function sendMessage(text) {

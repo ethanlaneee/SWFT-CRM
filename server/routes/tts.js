@@ -14,22 +14,25 @@ const OpenAI = require("openai");
 const router = express.Router();
 
 // ── ElevenLabs voice allowlist ──
-// Default is "jessica" — labeled as Conversational in the ElevenLabs
-// library. Owners can override by passing `voice` in the request body.
+// Only IDs from the default voice library that ship with every ElevenLabs
+// account — custom/premium library voices may not be available and would
+// silently fall back to OpenAI.
 const ELEVEN_VOICES = {
-  // Conversational voices (easy, casual tone)
-  jessica:      "cgSgspJ2msm6clMCkdW9", // Conversational — default
-  aria:         "9BWtsMINqrJLrRacOk9x", // Middle-aged female, expressive
-  lily:         "pFZP5JQG7iQjIQuC4Bku", // Warm, clear
-  // Classic / warm
-  rachel:       "21m00Tcm4TlvDq8ikWAM", // Warm American female
-  sarah:        "EXAVITQu4vr4xnSDxMaL", // Soft female
-  // Male options
-  antoni:       "ErXwobaYiN019PkySvjV", // Warm male
-  adam:         "pNInz6obpgDQGcFmaJgB", // Deep male
-  brian:        "nPczCjzI2devNBz1zQrb", // American male, friendly
+  // Conversational tone
+  matilda:      "XrExE9yKIg1WjnnlVkGX", // friendly, warm — default
+  freya:        "jsCqWAovK2LkecY7zXl4", // casual, expressive female
+  charlotte:    "XB0fDUnXU5powFXDhCwa", // warm female
+  // Warm / classic
+  rachel:       "21m00Tcm4TlvDq8ikWAM", // warm American female
+  sarah:        "EXAVITQu4vr4xnSDxMaL", // soft female
+  lily:         "pFZP5JQG7iQjIQuC4Bku", // bright, clear
+  // Male
+  brian:        "nPczCjzI2devNBz1zQrb", // friendly American male
+  daniel:       "onwK4e9ZLuTAKqWW03F9", // clear male narrator
+  antoni:       "ErXwobaYiN019PkySvjV", // warm male
+  adam:         "pNInz6obpgDQGcFmaJgB", // deeper male
 };
-const DEFAULT_ELEVEN_VOICE = "jessica";
+const DEFAULT_ELEVEN_VOICE = "matilda";
 
 const OPENAI_VOICES = new Set(["alloy", "echo", "fable", "onyx", "nova", "shimmer"]);
 const DEFAULT_OPENAI_VOICE = "nova";
@@ -112,7 +115,9 @@ router.post("/", async (req, res) => {
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Content-Length", buffer.length);
     res.setHeader("X-TTS-Provider", provider);
-    res.setHeader("Cache-Control", "private, max-age=60");
+    // No caching — every request must hit the provider so voice changes
+    // take effect immediately.
+    res.setHeader("Cache-Control", "no-store");
     return res.send(buffer);
   } catch (err) {
     console.error("[tts] error:", err.message);
