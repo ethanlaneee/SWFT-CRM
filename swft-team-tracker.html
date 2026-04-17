@@ -265,7 +265,7 @@ async function loadMapsSdk(){
 function initMap(){
   _map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12,
-    center: { lat: 30.2672, lng: -97.7431 },   // Austin default — re-centers once we have pins
+    center: { lat: 39.5, lng: -98.35 },        // continental US fallback — re-centers on viewer/pins immediately
     disableDefaultUI: false,
     mapTypeControl: false,
     streetViewControl: false,
@@ -287,6 +287,39 @@ function roleColor(role){
        : role === 'office'     ? '#b388ff'
        : role === 'technician' ? '#f5a623'
        : '#7a7a7a';
+}
+
+// Center on the viewer's current position (one-shot, silent fallback).
+// Skipped if renderMarkers has already centered on a pin bounds.
+function centerOnViewer(){
+  if(!_mapReady || !_map) return;
+  if(renderMarkers._centeredOnce) return;
+  if(!('geolocation' in navigator)) return;
+  navigator.geolocation.getCurrentPosition(function(pos){
+    if(renderMarkers._centeredOnce) return;
+    _map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    _map.setZoom(13);
+  }, function(){ /* user declined or error — keep fallback center */ }, {
+    enableHighAccuracy: false, maximumAge: 60000, timeout: 8000
+  });
+}
+
+function infoHtml(m){
+  var parts = [
+    '<div style="font-family:DM Sans,sans-serif;color:#111;padding:2px 4px;min-width:180px;">',
+      '<div style="font-weight:700;font-size:13px;">' + (m.name || '(unnamed)') + '</div>',
+      '<div style="font-size:11px;color:#666;text-transform:capitalize;margin-top:1px;">' + m.role + '</div>',
+  ];
+  if(m.clockedIn && m.clockedInAt){
+    parts.push('<div style="font-size:11px;color:#2a7a00;margin-top:6px;">● Clocked in ' + fmtAgo(m.clockedInAt) + '</div>');
+  } else {
+    parts.push('<div style="font-size:11px;color:#999;margin-top:6px;">○ Off the clock</div>');
+  }
+  if(m.location && m.location.updatedAt){
+    parts.push('<div style="font-size:11px;color:#666;margin-top:2px;">Location updated ' + fmtAgo(m.location.updatedAt) + '</div>');
+  }
+  parts.push('</div>');
+  return parts.join('');
 }
 
 function pinSvg(color, initials){
@@ -353,17 +386,17 @@ function renderMarkers(){
     if(_markers[uid]){
       _markers[uid].setPosition(pos);
       _markers[uid].setTitle(m.name || '');
+      _markers[uid]._info.setContent(infoHtml(m));
     } else {
-      _markers[uid] = new google.maps.Marker({
+      var marker = new google.maps.Marker({
         position: pos,
         map: _map,
         title: m.name || '',
         icon: { url: pinSvg(color, inits), scaledSize: new google.maps.Size(36, 44), anchor: new google.maps.Point(18, 44) },
       });
-      var info = new google.maps.InfoWindow({
-        content: '<div style="font-family:DM Sans,sans-serif;color:#111;padding:2px 4px;"><b>' + (m.name || '(unnamed)') + '</b><br/><span style="font-size:11px;color:#666;text-transform:capitalize;">' + m.role + '</span><br/><span style="font-size:11px;color:#666;">updated ' + fmtAgo(m.location.updatedAt) + '</span></div>',
-      });
-      _markers[uid].addListener('click', function(){ info.open(_map, _markers[uid]); });
+      marker._info = new google.maps.InfoWindow({ content: infoHtml(m) });
+      marker.addListener('click', function(){ marker._info.open(_map, marker); });
+      _markers[uid] = marker;
     }
     bounds.extend(pos);
     hasPin = true;
@@ -509,6 +542,7 @@ function stopWatch(){
     } catch (_) {}
 
     await loadMapsSdk();
+    centerOnViewer();
     await loadLocations();
 
     // Hydrate clock-in state from my own row if present
