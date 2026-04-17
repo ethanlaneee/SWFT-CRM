@@ -412,6 +412,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
+<div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
+  <div class="panel-header">
+    <div class="panel-title">THIS WEEK</div>
+    <a class="panel-link" onclick="window.location.href='swft-schedule'">Full calendar &#8594;</a>
+  </div>
+  <div id="week-list" style="flex:1;overflow-y:auto;max-height:420px;"></div>
+</div>
+
 </div>
 
 </div>
@@ -716,31 +724,144 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     } catch(e) { /* ignore */ }
   };
 
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function addDays(yyyymmdd, n) {
+    var p = yyyymmdd.split('-');
+    var d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+    d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function fmtDayHeader(yyyymmdd) {
+    var p = yyyymmdd.split('-');
+    var d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+    var today = todayStr();
+    var tomorrow = addDays(today, 1);
+    if (yyyymmdd === today) return 'Today';
+    if (yyyymmdd === tomorrow) return 'Tomorrow';
+    return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+
+  // Normalize a job or schedule entry into a common shape
+  function normalizeToEvent(raw, kind) {
+    if (kind === 'job') {
+      if (!raw.scheduledDate) return null;
+      return {
+        kind: 'job',
+        date: raw.scheduledDate,
+        startTime: raw.startTime || '',
+        title: raw.title || ((raw.customerName || '') + (raw.service ? ' — ' + raw.service : '')).trim() || 'Untitled job',
+        meta: raw.crew && raw.crew !== 'Unassigned' ? raw.crew : '',
+        address: raw.address || '',
+        status: raw.status || '',
+      };
+    }
+    if (!raw.date) return null;
+    return {
+      kind: 'schedule',
+      date: raw.date,
+      startTime: raw.startTime || '',
+      endTime: raw.endTime || '',
+      title: raw.title || (raw.type ? (raw.type.charAt(0).toUpperCase() + raw.type.slice(1) + ' block') : 'Time block'),
+      meta: raw.type || '',
+      address: raw.location || '',
+      status: '',
+    };
+  }
+
+  function eventColor(ev) {
+    if (ev.kind === 'schedule') return 'var(--blue)';
+    return ev.status === 'active' ? 'var(--green)'
+         : ev.status === 'scheduled' ? '#4d9fff'
+         : ev.status === 'pending' ? '#f5a623'
+         : 'var(--gray2)';
+  }
+
+  function renderEventRow(ev) {
+    var pip = eventColor(ev);
+    var timeLabel = ev.startTime || (ev.kind === 'job' ? (ev.status || '—') : '—');
+    var chip = ev.meta ? '<span class="sched-chip">' + escHtml(ev.meta) + '</span>' : '';
+    var addr = ev.address ? '<span class="sched-addr">' + escHtml(ev.address) + '</span>' : '';
+    return '<div class="schedule-row">' +
+      '<div class="sched-time">' + escHtml(timeLabel) + '</div>' +
+      '<div class="sched-timeline"><div class="sched-dot" style="color:' + pip + ';"></div><div class="sched-connector"></div></div>' +
+      '<div class="sched-body"><div class="sched-title">' + escHtml(ev.title) + '</div>' +
+      '<div class="sched-meta">' + chip + addr + '</div></div>' +
+      '<div class="sched-dur">' + escHtml(ev.status || (ev.kind === 'schedule' ? 'block' : '')) + '</div>' +
+    '</div>';
+  }
+
+  // Fetch jobs + schedule entries in parallel, cache for both today & week renders
+  var _scheduleCache = null;
+  async function fetchAllScheduleData() {
+    if (_scheduleCache) return _scheduleCache;
+    var results = await Promise.all([
+      API.jobs.list().catch(function() { return []; }),
+      API.schedule.list().catch(function() { return []; }),
+    ]);
+    _scheduleCache = { jobs: results[0] || [], schedule: results[1] || [] };
+    return _scheduleCache;
+  }
+
   async function loadSchedule() {
     try {
-      const jobs = await API.jobs.list();
-      const list = document.getElementById('schedule-list');
+      _scheduleCache = null;  // invalidate so new jobs show up
+      var data = await fetchAllScheduleData();
+      var list = document.getElementById('schedule-list');
       if (!list) return;
-      var today = new Date().toISOString().split('T')[0];
-      var todayJobs = (jobs || []).filter(function(j) { return j.scheduledDate === today; });
-      if (todayJobs.length === 0) {
-        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">No jobs scheduled for today.</div>';
+      var today = todayStr();
+      var events = []
+        .concat(data.jobs.map(function(j) { return normalizeToEvent(j, 'job'); }).filter(Boolean))
+        .concat(data.schedule.map(function(s) { return normalizeToEvent(s, 'schedule'); }).filter(Boolean))
+        .filter(function(ev) { return ev.date === today; })
+        .sort(function(a, b) { return (a.startTime || '99:99').localeCompare(b.startTime || '99:99'); });
+
+      if (events.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">Nothing scheduled for today.</div>';
       } else {
-        list.innerHTML = '';
-        todayJobs.forEach(function(j) {
-          var pipColor = j.status === 'active' ? 'var(--green)' : j.status === 'scheduled' ? '#4d9fff' : j.status === 'pending' ? '#f5a623' : 'var(--gray2)';
-          var row = document.createElement('div');
-          row.className = 'schedule-row now';
-          var crew = j.crew && j.crew !== 'Unassigned' ? '<span class="sched-chip">' + j.crew + '</span>' : '';
-          row.innerHTML = '<div class="sched-time">' + (j.duration || '—') + '</div>' +
-            '<div class="sched-timeline"><div class="sched-dot" style="color:' + pipColor + ';"></div><div class="sched-connector"></div></div>' +
-            '<div class="sched-body"><div class="sched-title">' + (j.title || j.customerName + ' - ' + j.service) + '</div>' +
-            '<div class="sched-meta">' + crew + (j.address ? '<span class="sched-addr">' + j.address + '</span>' : '') + '</div></div>' +
-            '<div class="sched-dur">' + (j.status||'') + '</div>';
-          list.appendChild(row);
-        });
+        list.innerHTML = events.map(renderEventRow).join('');
       }
-    } catch(e) { console.error('loadSchedule error:', e); }
+
+      loadWeek();
+    } catch (e) { console.error('loadSchedule error:', e); }
+  }
+
+  function loadWeek() {
+    try {
+      var list = document.getElementById('week-list');
+      if (!list || !_scheduleCache) return;
+      var today = todayStr();
+      // Next 7 days excluding today — tomorrow through +7
+      var events = []
+        .concat(_scheduleCache.jobs.map(function(j) { return normalizeToEvent(j, 'job'); }).filter(Boolean))
+        .concat(_scheduleCache.schedule.map(function(s) { return normalizeToEvent(s, 'schedule'); }).filter(Boolean))
+        .filter(function(ev) { return ev.date > today && ev.date <= addDays(today, 7); })
+        .sort(function(a, b) {
+          if (a.date !== b.date) return a.date.localeCompare(b.date);
+          return (a.startTime || '99:99').localeCompare(b.startTime || '99:99');
+        });
+
+      if (events.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray2);font-size:13px;">Nothing scheduled for the next 7 days.</div>';
+        return;
+      }
+
+      // Group by date
+      var html = '';
+      var currentDate = null;
+      events.forEach(function(ev) {
+        if (ev.date !== currentDate) {
+          currentDate = ev.date;
+          html += '<div style="padding:10px 20px 5px;border-top:1px solid var(--border);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;font-family:\'JetBrains Mono\',monospace;">' + escHtml(fmtDayHeader(ev.date)) + '</div>';
+        }
+        html += renderEventRow(ev);
+      });
+      list.innerHTML = html;
+    } catch (e) { console.error('loadWeek error:', e); }
   }
 
   function escHtml(str) {
