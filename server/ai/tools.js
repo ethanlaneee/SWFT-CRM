@@ -230,6 +230,20 @@ const tools = [
     },
   },
   {
+    name: "resolve_address",
+    description: "Autocomplete / validate a partial street address via Google Geocoding. Use this when collecting an address for a new customer — if the user only gives a street (e.g. '123 Main Street'), call this to get the full address with city, state/province, and postal code. If the result is unambiguous, use its formatted_address directly. If multiple candidates come back, ask the user to confirm the city or state.",
+    input_schema: {
+      type: "object",
+      properties: {
+        address: { type: "string", description: "Whatever the user gave — can be just a street number and name, or a full address." },
+        city: { type: "string", description: "Optional city/locality hint to narrow the search." },
+        region: { type: "string", description: "Optional state/province hint (e.g. 'TX', 'Alberta')." },
+        country: { type: "string", description: "Optional country code (e.g. 'US', 'CA'). If omitted, biased to the org's own country." },
+      },
+      required: ["address"],
+    },
+  },
+  {
     name: "get_directions",
     description: "Get driving directions and travel time between two addresses. Use when the user asks about drive time, how to get to a job site, or route between locations.",
     input_schema: {

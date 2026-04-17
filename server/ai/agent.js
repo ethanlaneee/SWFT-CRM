@@ -427,6 +427,72 @@ async function executeTool(toolName, input, uid, orgId) {
       }
     }
 
+    case "resolve_address": {
+      try {
+        const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
+        if (!MAPS_KEY) return { error: "Google Maps not configured — ask your admin to add GOOGLE_MAPS_API_KEY" };
+
+        // Pull the org's own address to bias the search — most customers
+        // are near the business, so hints improve accuracy dramatically.
+        const ownerDoc = await db.collection("users").doc(oid).get();
+        const owner = ownerDoc.exists ? ownerDoc.data() : {};
+        const ownerCountry = (input.country || owner.country || "").slice(0, 2).toUpperCase();
+        const ownerRegion  = input.region || "";
+        const ownerCity    = input.city   || "";
+
+        // Build the query string with any provided hints
+        const parts = [String(input.address || "").trim()];
+        if (ownerCity)   parts.push(ownerCity);
+        if (ownerRegion) parts.push(ownerRegion);
+        const query = parts.filter(Boolean).join(", ");
+
+        const params = new URLSearchParams({ address: query, key: MAPS_KEY });
+        if (ownerCountry) params.set("components", `country:${ownerCountry}`);
+
+        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?${params}`);
+        const data = await res.json();
+
+        if (data.status === "ZERO_RESULTS") {
+          return { error: "No match — ask the user for the city and state/province." };
+        }
+        if (data.status !== "OK" || !data.results?.length) {
+          return { error: `Geocode failed: ${data.status}` };
+        }
+
+        // Filter out results that Google marked as APPROXIMATE — those are
+        // region-level and useless for a customer record.
+        const good = data.results.filter(r =>
+          r.geometry?.location_type === "ROOFTOP" ||
+          r.geometry?.location_type === "RANGE_INTERPOLATED" ||
+          r.geometry?.location_type === "GEOMETRIC_CENTER"
+        );
+        const chosen = good.length ? good : data.results;
+
+        const mapped = chosen.slice(0, 3).map(r => {
+          const comp = (type) => r.address_components.find(c => c.types.includes(type));
+          return {
+            formatted_address: r.formatted_address,
+            street_number: comp("street_number")?.long_name || "",
+            street:        comp("route")?.long_name || "",
+            city:          comp("locality")?.long_name || comp("sublocality")?.long_name || "",
+            region:        comp("administrative_area_level_1")?.short_name || "",
+            postal_code:   comp("postal_code")?.long_name || "",
+            country:       comp("country")?.short_name || "",
+            partial_match: !!r.partial_match,
+            location_type: r.geometry?.location_type || "",
+          };
+        });
+
+        return {
+          confidence: chosen.length === 1 ? "high" : "low",
+          match: mapped[0],
+          candidates: mapped,
+        };
+      } catch (err) {
+        return { error: `Address resolution failed: ${err.message}` };
+      }
+    }
+
     case "get_directions": {
       try {
         const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
