@@ -172,6 +172,20 @@
       color: #fff;
       border-color: #555;
     }
+    .swft-chat-voice {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #aaa;
+      font-size: 11px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      cursor: pointer;
+      max-width: 110px;
+    }
+    .swft-chat-voice:hover { color: #c8f135; border-color: #555; }
+    .swft-chat-voice:focus { border-color: #c8f135; }
 
     /* ── Messages ── */
     .swft-chat-messages {
@@ -503,7 +517,25 @@
         <div class="swft-chat-header-dot"></div>
         <h3>SWFT AI</h3>
       </div>
-      <button class="swft-chat-clear">Clear</button>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <select class="swft-chat-voice" title="Voice">
+          <optgroup label="Conversational">
+            <option value="jessica">Jessica</option>
+            <option value="aria">Aria</option>
+            <option value="lily">Lily</option>
+          </optgroup>
+          <optgroup label="Warm">
+            <option value="rachel">Rachel</option>
+            <option value="sarah">Sarah</option>
+          </optgroup>
+          <optgroup label="Male">
+            <option value="brian">Brian</option>
+            <option value="antoni">Antoni</option>
+            <option value="adam">Adam</option>
+          </optgroup>
+        </select>
+        <button class="swft-chat-clear">Clear</button>
+      </div>
     </div>
     <div class="swft-chat-messages">
       <div class="swft-chat-welcome">
@@ -555,6 +587,19 @@
   const sendBtn = panel.querySelector(".swft-chat-send");
   const clearBtn = panel.querySelector(".swft-chat-clear");
   const suggestions = panel.querySelectorAll(".swft-chat-suggestion");
+  const voiceSelect = panel.querySelector(".swft-chat-voice");
+
+  // Voice preference — persists across sessions per browser
+  const VOICE_KEY = "swft_tts_voice";
+  function getVoice() {
+    try { return localStorage.getItem(VOICE_KEY) || "jessica"; } catch (_) { return "jessica"; }
+  }
+  if (voiceSelect) {
+    voiceSelect.value = getVoice();
+    voiceSelect.addEventListener("change", () => {
+      try { localStorage.setItem(VOICE_KEY, voiceSelect.value); } catch (_) {}
+    });
+  }
 
   // ── Toggle panel ──
   // If a voice session is active (push-to-talk or toggle), a click cancels it
@@ -810,7 +855,7 @@
       const res = await fetch(`${API_BASE}/api/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ text: clean, voice: 'nova' }),
+        body: JSON.stringify({ text: clean, voice: getVoice() }),
         signal: _ttsAbort.signal,
       });
       if (!res.ok) throw new Error('TTS ' + res.status);
