@@ -40,29 +40,51 @@ router.post("/", upload.single("audio"), async (req, res) => {
     });
 
     const rawText = (transcription.text || "").trim();
-    if (!rawText) {
+    // Whisper often returns "you" / "." / "thanks" on silence or mic noise.
+    // Treat anything shorter than ~3 real chars or without a letter as empty.
+    if (rawText.length < 3 || !/[a-z]/i.test(rawText)) {
       return res.json({ ok: true, text: "" });
     }
 
-    // Clean with Claude — fix punctuation, capitalisation, strip filler words
+    // Clean with Claude — fix punctuation, capitalisation, strip filler words.
+    // Hard-constrain the prompt so it can't wander when the input is noisy —
+    // if the cleaner can't produce meaningful text, it must return the raw
+    // string unchanged (never a meta-message about needing more input).
     const anthropic = new Anthropic();
     const cleaned = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
+      max_tokens: 512,
       messages: [
         {
           role: "user",
           content:
-            "Clean up this voice transcription for use in a business chat input. " +
-            "Fix punctuation and capitalisation, remove filler words (um, uh, like, you know), " +
-            "and make it read naturally as typed text. " +
-            "Return ONLY the cleaned text with no explanation or quotes:\n\n" +
-            rawText,
+            "You are a transcript cleaner. Your ONLY job is to fix punctuation, " +
+            "capitalisation, and remove filler words (um, uh, like, you know) " +
+            "from voice transcriptions.\n\n" +
+            "Rules (absolute):\n" +
+            "- Return ONLY the cleaned text. No quotes, no explanations, no meta-commentary.\n" +
+            "- Never ask questions or describe the input.\n" +
+            "- If the input is incomplete, unclear, or just a word or two, return it unchanged. Never invent content.\n" +
+            "- Never output more than the original length plus a few characters.\n\n" +
+            "Input:\n" + rawText,
         },
       ],
     });
 
-    const text = (cleaned.content[0]?.text || rawText).trim();
+    let text = (cleaned.content[0]?.text || rawText).trim();
+
+    // Strip surrounding quotes if Claude added them
+    text = text.replace(/^["'“”‘’]+|["'“”‘’]+$/g, "").trim();
+
+    // Safety net: if Claude went off-script (responded with something much
+    // longer than the source, or contains self-reference), fall back to raw.
+    const wentOffScript = text.length > rawText.length * 3 + 20
+      || /\bvoice transcription\b|\bprovide\b|\binput\b|\b(you (only|just)) provided\b/i.test(text);
+    if (wentOffScript) {
+      console.warn("[transcribe] cleaner went off-script, falling back to raw:", rawText);
+      text = rawText;
+    }
+
     return res.json({ ok: true, text });
   } catch (err) {
     console.error("[transcribe] error:", err.message);

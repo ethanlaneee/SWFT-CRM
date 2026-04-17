@@ -489,15 +489,8 @@
     }
   `;
 
-  // Lift the pill above the compose bar on pages where a message input lives
-  // at the bottom of the viewport, so it doesn't block Send.
-  if (hasBottomComposer) {
-    const pillBump = isMessagesPage ? 180 : 96; // team-chat composer is shorter
-    style.textContent += `
-      .swft-chat-fab { bottom: ${pillBump}px !important; }
-      .swft-chat-panel { bottom: ${pillBump + 60}px !important; }
-    `;
-  }
+  // The pill sits in the same spot on every page — bottom-center, fixed.
+  // No per-page offsets; consistency wins.
 
   document.head.appendChild(style);
 
@@ -874,8 +867,9 @@
       const blob = new Blob(_audioChunks, { type: mimeType });
       _audioChunks = [];
 
-      if (blob.size < 1000) {
-        // too short — revert label and bail
+      // Minimum ~5KB — below that it's almost certainly a reflex keypress
+      // with no speech and Whisper will hallucinate or return silence.
+      if (blob.size < 5000) {
         setTranscribingState(false);
         return;
       }
@@ -900,7 +894,11 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Transcription failed');
 
-        if (data.text) {
+        // Require at least a few characters with a real word, otherwise
+        // ignore — prevents "you" / "." / empty strings from being sent.
+        const transcribed = (data.text || '').trim();
+        const isMeaningful = transcribed.length >= 3 && /\b[a-z]{2,}\b/i.test(transcribed);
+        if (isMeaningful) {
           if (_recordingAutoSend) {
             // Hotkey path — send straight to the AI, open the panel to show the reply
             if (!isOpen) {
@@ -908,9 +906,9 @@
               panel.classList.add('visible');
               fab.classList.add('open');
             }
-            sendMessage(data.text);
+            sendMessage(transcribed);
           } else {
-            input.value = data.text;
+            input.value = transcribed;
             sendBtn.disabled = false;
             input.focus();
           }
