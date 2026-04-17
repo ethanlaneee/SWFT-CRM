@@ -303,10 +303,10 @@ const API = {
     getRoles:     ()           => apiFetch("/api/team/roles"),
     saveRole:     (data)       => apiFetch("/api/team/roles", { method: "POST", body: JSON.stringify(data) }),
     deleteRole:   (roleId)     => apiFetch(`/api/team/roles/${roleId}`, { method: "DELETE" }),
-    locations:      ()         => apiFetch("/api/team/locations"),
-    clockIn:        ()         => apiFetch("/api/team/clock-in",  { method: "POST", body: JSON.stringify({}) }),
-    clockOut:       ()         => apiFetch("/api/team/clock-out", { method: "POST", body: JSON.stringify({}) }),
-    updateLocation: (data)     => apiFetch("/api/team/location",  { method: "POST", body: JSON.stringify(data) }),
+    locations:      ()         => apiFetch("/api/tracker/locations"),
+    clockIn:        ()         => apiFetch("/api/tracker/clock-in",  { method: "POST", body: JSON.stringify({}) }),
+    clockOut:       ()         => apiFetch("/api/tracker/clock-out", { method: "POST", body: JSON.stringify({}) }),
+    updateLocation: (data)     => apiFetch("/api/tracker/location",  { method: "POST", body: JSON.stringify(data) }),
   },
 
   // ── Automations ──

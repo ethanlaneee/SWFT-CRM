@@ -432,6 +432,7 @@ app.use("/api/agents",    auth, checkAccess, requirePlan("pro"), require("./rout
 const { router: teamRouter, publicRouter: teamPublicRouter } = require("./routes/team");
 app.use("/api/team",        teamPublicRouter);                        // validate invite (no auth), join (has own auth)
 app.use("/api/team",        auth, checkAccess, teamRouter);           // full auth — manage team
+app.use("/api/tracker",     auth, checkAccess, require("./routes/tracker")); // team tracker — gated on tracker.view
 app.use("/api/integrations", auth, checkAccess, integrationsRouter);
 app.use("/api/team-chat",    auth, checkAccess, require("./routes/teamChat"));
 app.use("/api/email",           auth, checkAccess,  require("./routes/email"));

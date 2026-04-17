@@ -59,9 +59,9 @@ router.get("/", async (req, res, next) => {
     if (role !== "owner") {
       const orgId = data.orgId || req.uid;
       const BUILT_IN_PERMS = {
-        admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view","automations.manage","team.manage","integrations.manage","settings.manage"],
-        office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view"],
-        technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use"],
+        admin: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view","automations.manage","tracker.view","tracker.viewAll","team.manage","integrations.manage","settings.manage"],
+        office: ["dashboard.view","customers.view","customers.add","customers.edit","customers.delete","jobs.view","jobs.viewAll","jobs.add","jobs.edit","jobs.delete","quotes.view","quotes.add","quotes.edit","quotes.delete","invoices.view","invoices.add","invoices.edit","invoices.delete","schedule.view","schedule.add","schedule.edit","schedule.delete","messages.view","messages.send","ai.use","broadcasts.view","broadcasts.send","automations.view","tracker.view"],
+        technician: ["dashboard.view","jobs.view","jobs.edit","schedule.view","messages.view","messages.send","ai.use","tracker.view"],
       };
       try {
         const orgRolesDoc = await db.collection("orgRoles").doc(orgId).get();

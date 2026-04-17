@@ -60,6 +60,7 @@ const METHOD_PERMISSION = {
   "/api/import":            { GET: "import.use",       POST: "import.use" },
   "/api/google-business":   { GET: "reviews.view",     POST: "reviews.respond",        PUT: "reviews.respond" },
   "/api/team-chat":         { GET: "teamchat.view",    POST: "teamchat.send",          DELETE: "teamchat.view" },
+  "/api/tracker":           { GET: "tracker.view",     POST: "tracker.view" },
 };
 
 // Human-readable labels for 403 messages
@@ -110,6 +111,8 @@ const PERM_LABEL = {
   "settings.manage":       "change settings",
   "teamchat.view":         "view team chat",
   "teamchat.send":         "send team messages",
+  "tracker.view":          "view the team tracker",
+  "tracker.viewAll":       "see all teammates on the map",
 };
 
 // Permissions per built-in role
@@ -133,6 +136,7 @@ const ROLE_PERMISSIONS = {
     "intake.view","intake.manage",
     "import.use",
     "teamchat.view","teamchat.send",
+    "tracker.view","tracker.viewAll",
     "team.manage",
     "integrations.manage",
     "settings.manage",
@@ -153,6 +157,7 @@ const ROLE_PERMISSIONS = {
     "reviews.view","reviews.respond",
     "intake.view",
     "teamchat.view","teamchat.send",
+    "tracker.view",
   ]),
   technician: new Set([
     "dashboard.view",
@@ -163,6 +168,7 @@ const ROLE_PERMISSIONS = {
     // photos.upload intentionally omitted — owner grants it via team permissions
     "ai.use",
     "teamchat.view","teamchat.send",
+    "tracker.view",
   ]),
 };
 
