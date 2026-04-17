@@ -158,8 +158,9 @@ const API = {
 
   // ── User ──
   user: {
-    me:     ()       => apiFetch("/api/me"),
-    update: (data)   => apiFetch("/api/me", { method: "PUT", body: JSON.stringify(data) }),
+    me:       ()     => apiFetch("/api/me"),
+    update:   (data) => apiFetch("/api/me", { method: "PUT", body: JSON.stringify(data) }),
+    mapsKey:  ()     => apiFetch("/api/me/maps-key"),
   },
 
   // ── Customers ──
@@ -302,6 +303,10 @@ const API = {
     getRoles:     ()           => apiFetch("/api/team/roles"),
     saveRole:     (data)       => apiFetch("/api/team/roles", { method: "POST", body: JSON.stringify(data) }),
     deleteRole:   (roleId)     => apiFetch(`/api/team/roles/${roleId}`, { method: "DELETE" }),
+    locations:      ()         => apiFetch("/api/team/locations"),
+    clockIn:        ()         => apiFetch("/api/team/clock-in",  { method: "POST", body: JSON.stringify({}) }),
+    clockOut:       ()         => apiFetch("/api/team/clock-out", { method: "POST", body: JSON.stringify({}) }),
+    updateLocation: (data)     => apiFetch("/api/team/location",  { method: "POST", body: JSON.stringify(data) }),
   },
 
   // ── Automations ──

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>SWFT — Team Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{background:#0a0a0a;}
+body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
+.logo-mark em{color:var(--green);font-style:normal;}
+.logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(--surface2);}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--white);}
+.user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0 !important;}
+.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);z-index:100;animation:fadeDown 0.3s ease 0.15s both;transition:padding-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded .topbar{padding-left:56px;}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;}
+.topbar-sub{font-size:12px;color:var(--gray);font-style:italic;font-weight:300;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.page-body{flex:1;padding:20px 28px 28px;display:flex;flex-direction:column;gap:14px;min-height:0;}
+/* Clock In / Out button */
+.clock-btn{display:flex;align-items:center;gap:8px;background:var(--surface);color:var(--gray);border:1px solid var(--border2);font-family:'DM Sans',sans-serif;font-weight:600;font-size:12.5px;padding:8px 16px;border-radius:9px;cursor:pointer;transition:all 0.16s;}
+.clock-btn:hover{color:var(--white);border-color:var(--gray);}
+.clock-btn.on{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.clock-btn.on:hover{background:#d5ff40;box-shadow:0 4px 18px rgba(200,241,53,0.22);}
+.clock-btn .dot{width:8px;height:8px;border-radius:50%;background:var(--gray2);transition:all 0.16s;}
+.clock-btn.on .dot{background:#0a0a0a;box-shadow:0 0 0 2px rgba(0,0,0,0.15);}
+
+/* 2-column split: member list + map */
+.tracker-split{flex:1;display:grid;grid-template-columns:300px 1fr;gap:14px;min-height:0;}
+@media (max-width:860px){.tracker-split{grid-template-columns:1fr;grid-template-rows:auto 1fr;}}
+
+/* Member list panel */
+.member-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden;animation:fadeUp 0.4s ease both;}
+.member-panel-header{padding:14px 16px;border-bottom:1px solid var(--border);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.member-count{color:var(--green);font-family:'JetBrains Mono',monospace;letter-spacing:0;font-size:11px;}
+.member-list{flex:1;overflow-y:auto;padding:6px 6px 10px;}
+.member-row{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.member-row:hover{background:var(--surface2);}
+.member-row.selected{background:rgba(200,241,53,0.06);}
+.member-avatar{width:34px;height:34px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.member-avatar.owner{background:var(--green);color:#0a0a0a;}
+.member-avatar.admin{background:var(--blue);color:#fff;}
+.member-avatar.office{background:var(--purple);color:#fff;}
+.member-avatar.technician{background:var(--amber);color:#0a0a0a;}
+.member-info{flex:1;min-width:0;}
+.member-name{font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.member-meta{font-size:11px;color:var(--gray);margin-top:2px;display:flex;align-items:center;gap:6px;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--gray2);flex-shrink:0;}
+.status-dot.on{background:var(--green);box-shadow:0 0 6px rgba(200,241,53,0.5);}
+
+/* Map container */
+.map-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-height:0;animation:fadeUp 0.4s ease both;}
+#map{width:100%;height:100%;min-height:420px;}
+.map-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,10,0.6);backdrop-filter:blur(2px);color:var(--gray);font-size:13px;text-align:center;padding:24px;z-index:2;}
+.map-overlay.hidden{display:none;}
+.map-overlay a{color:var(--green);text-decoration:none;border-bottom:1px dashed rgba(200,241,53,0.4);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:calc(100vw - 32px);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div>
+      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-sub">simple. smart. swft.</div>
+    </div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item" onclick="window.location.href='swft-dashboard'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-label">CRM</div>
+    <div class="nav-item" onclick="window.location.href='swft-customers'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
+      Customers
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-jobs'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Jobs
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing</div>
+    <div class="nav-item" onclick="window.location.href='swft-schedule'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
+      Schedule
+    </div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
+    <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker</div>
+    <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
+    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
+    <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
+    <div class="nav-label">Admin</div>
+    <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
+    <div class="nav-item" onclick="window.location.href='swft-team-chat'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke-width="1.8"/></svg>Team Chat</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="window.location.href='swft-settings'" style="margin-bottom:4px;">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>
+      Settings
+    </div>
+    <div class="user-tile">
+      <div class="avatar"></div>
+      <div><div class="user-name"></div><div class="user-role">--</div></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-page">TEAM TRACKER</div>
+    <span class="topbar-slash">/</span>
+    <div class="topbar-sub" id="topbar-sub">where your crew is right now</div>
+    <div class="topbar-right">
+      <button class="clock-btn" id="clock-btn" onclick="toggleClock()" disabled>
+        <span class="dot"></span>
+        <span id="clock-btn-label">Clock In</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="tracker-split">
+      <div class="member-panel">
+        <div class="member-panel-header">
+          <span>Team</span>
+          <span class="member-count" id="member-count">0</span>
+        </div>
+        <div class="member-list" id="member-list"></div>
+      </div>
+      <div class="map-wrap">
+        <div id="map"></div>
+        <div class="map-overlay" id="map-overlay">Loading map…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<script src="swft-settings-loader.js"></script>
+
+<script>
+/* ── State ── */
+var _map = null;
+var _markers = {};            // uid -> google.maps.Marker
+var _members = [];
+var _myUid = null;
+var _myClockedIn = false;
+var _locationEnabled = false;
+var _watchId = null;
+var _pollTimer = null;
+var _mapReady = false;
+var _mapLoading = false;
+
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('expanded');
+  document.getElementById('sidebar-toggle').classList.toggle('visible');
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  var m = document.getElementById('toast-msg');
+  if(!t||!m) return;
+  m.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
+function fmtAgo(ms){
+  if(!ms) return 'never';
+  var s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+  if(s < 10) return 'just now';
+  if(s < 60) return s + 's ago';
+  var m = Math.floor(s / 60);
+  if(m < 60) return m + 'm ago';
+  var h = Math.floor(m / 60);
+  if(h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function initialsOf(name){
+  if(!name) return '?';
+  var parts = String(name).trim().split(/\s+/);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+async function loadMapsSdk(){
+  if(_mapReady || _mapLoading) return;
+  _mapLoading = true;
+  try {
+    var res = await API.user.mapsKey();
+    if(!res || !res.key) throw new Error('Maps key unavailable');
+    await new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.async = true;
+      s.defer = true;
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(res.key) + '&libraries=marker&v=weekly';
+      s.onload = resolve;
+      s.onerror = function(){ reject(new Error('Failed to load Google Maps')); };
+      document.head.appendChild(s);
+    });
+    initMap();
+    _mapReady = true;
+    var overlay = document.getElementById('map-overlay');
+    if(overlay) overlay.classList.add('hidden');
+  } catch (e) {
+    var overlay = document.getElementById('map-overlay');
+    if(overlay) overlay.textContent = 'Map unavailable: ' + (e.message || 'error');
+  } finally {
+    _mapLoading = false;
+  }
+}
+
+function initMap(){
+  _map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 12,
+    center: { lat: 30.2672, lng: -97.7431 },   // Austin default — re-centers once we have pins
+    disableDefaultUI: false,
+    mapTypeControl: false,
+    streetViewControl: false,
+    styles: [
+      { elementType: 'geometry',                stylers: [{ color: '#1a1a1a' }] },
+      { elementType: 'labels.text.stroke',      stylers: [{ color: '#0a0a0a' }] },
+      { elementType: 'labels.text.fill',        stylers: [{ color: '#7a7a7a' }] },
+      { featureType: 'road',     elementType: 'geometry', stylers: [{ color: '#2c2c2c' }] },
+      { featureType: 'water',    elementType: 'geometry', stylers: [{ color: '#111111' }] },
+      { featureType: 'poi',      stylers: [{ visibility: 'off' }] },
+      { featureType: 'transit',  stylers: [{ visibility: 'off' }] },
+    ],
+  });
+}
+
+function roleColor(role){
+  return role === 'owner'      ? '#c8f135'
+       : role === 'admin'      ? '#4d9fff'
+       : role === 'office'     ? '#b388ff'
+       : role === 'technician' ? '#f5a623'
+       : '#7a7a7a';
+}
+
+function pinSvg(color, initials){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54">' +
+    '<path d="M22 0C9.85 0 0 9.85 0 22c0 16 22 32 22 32s22-16 22-32C44 9.85 34.15 0 22 0z" fill="' + color + '"/>' +
+    '<circle cx="22" cy="22" r="13" fill="#0a0a0a"/>' +
+    '<text x="22" y="27" text-anchor="middle" font-family="DM Sans,Arial,sans-serif" font-size="12" font-weight="700" fill="' + color + '">' + initials + '</text>' +
+    '</svg>';
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+async function loadLocations(){
+  try {
+    var res = await API.team.locations();
+    _members = res.members || [];
+    renderMembers();
+    renderMarkers();
+  } catch (e) {
+    console.warn('[team-tracker] loadLocations failed:', e.message);
+  }
+}
+
+function renderMembers(){
+  var list = document.getElementById('member-list');
+  var count = document.getElementById('member-count');
+  if(!list) return;
+
+  var clockedInCount = _members.filter(function(m){ return m.clockedIn; }).length;
+  count.textContent = clockedInCount + '/' + _members.length;
+
+  if(!_members.length){
+    list.innerHTML = '<div style="padding:24px 14px;color:var(--gray);font-size:12.5px;text-align:center;">No teammates yet. Invite members from the Team page.</div>';
+    return;
+  }
+
+  list.innerHTML = _members.map(function(m){
+    var status = m.clockedIn ? 'Clocked in' : 'Off the clock';
+    var updated = m.location ? ' · ' + fmtAgo(m.location.updatedAt) : '';
+    var role = (m.role || 'technician').toLowerCase();
+    return '<div class="member-row" data-uid="' + (m.uid || '') + '" onclick="focusMember(\'' + (m.uid || '') + '\')">'
+      + '<div class="member-avatar ' + role + '">' + initialsOf(m.name || m.email) + '</div>'
+      + '<div class="member-info">'
+        + '<div class="member-name">' + (m.name || '(unnamed)') + '</div>'
+        + '<div class="member-meta"><span class="status-dot ' + (m.clockedIn ? 'on' : '') + '"></span>' + status + updated + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function renderMarkers(){
+  if(!_mapReady || !_map) return;
+  var seen = {};
+  var bounds = new google.maps.LatLngBounds();
+  var hasPin = false;
+
+  _members.forEach(function(m){
+    var uid = m.uid;
+    if(!uid || !m.location || typeof m.location.lat !== 'number' || typeof m.location.lng !== 'number'){
+      return;
+    }
+    seen[uid] = true;
+    var pos = { lat: m.location.lat, lng: m.location.lng };
+    var color = roleColor(m.role);
+    var inits = initialsOf(m.name || m.email);
+    if(_markers[uid]){
+      _markers[uid].setPosition(pos);
+      _markers[uid].setTitle(m.name || '');
+    } else {
+      _markers[uid] = new google.maps.Marker({
+        position: pos,
+        map: _map,
+        title: m.name || '',
+        icon: { url: pinSvg(color, inits), scaledSize: new google.maps.Size(36, 44), anchor: new google.maps.Point(18, 44) },
+      });
+      var info = new google.maps.InfoWindow({
+        content: '<div style="font-family:DM Sans,sans-serif;color:#111;padding:2px 4px;"><b>' + (m.name || '(unnamed)') + '</b><br/><span style="font-size:11px;color:#666;text-transform:capitalize;">' + m.role + '</span><br/><span style="font-size:11px;color:#666;">updated ' + fmtAgo(m.location.updatedAt) + '</span></div>',
+      });
+      _markers[uid].addListener('click', function(){ info.open(_map, _markers[uid]); });
+    }
+    bounds.extend(pos);
+    hasPin = true;
+  });
+
+  // Remove stale markers (clocked out / no location)
+  Object.keys(_markers).forEach(function(uid){
+    if(!seen[uid]){ _markers[uid].setMap(null); delete _markers[uid]; }
+  });
+
+  if(hasPin && !renderMarkers._centeredOnce){
+    _map.fitBounds(bounds, 80);
+    if(_map.getZoom() > 15) _map.setZoom(15);
+    renderMarkers._centeredOnce = true;
+  }
+}
+
+function focusMember(uid){
+  if(!uid || !_mapReady) return;
+  var m = _members.find(function(x){ return x.uid === uid; });
+  if(!m || !m.location) {
+    showToast((m && m.name ? m.name : 'This member') + ' has no live location yet');
+    return;
+  }
+  _map.panTo({ lat: m.location.lat, lng: m.location.lng });
+  _map.setZoom(15);
+  if(_markers[uid]) google.maps.event.trigger(_markers[uid], 'click');
+  document.querySelectorAll('.member-row').forEach(function(el){ el.classList.remove('selected'); });
+  var row = document.querySelector('.member-row[data-uid="' + uid + '"]');
+  if(row) row.classList.add('selected');
+}
+function setClockButton(on){
+  _myClockedIn = !!on;
+  var btn = document.getElementById('clock-btn');
+  var label = document.getElementById('clock-btn-label');
+  if(!btn) return;
+  btn.classList.toggle('on', _myClockedIn);
+  label.textContent = _myClockedIn ? 'Clock Out' : 'Clock In';
+  btn.disabled = false;
+}
+
+async function toggleClock(){
+  var btn = document.getElementById('clock-btn');
+  if(btn) btn.disabled = true;
+  try {
+    if(_myClockedIn){
+      await API.team.clockOut();
+      stopWatch();
+      setClockButton(false);
+      showToast("You're clocked out");
+    } else {
+      await API.team.clockIn();
+      setClockButton(true);
+      if(_locationEnabled){
+        startWatch();
+        showToast("You're clocked in — sharing location");
+      } else {
+        showToast("Clocked in. Enable location sharing in Settings to appear on the map.");
+      }
+    }
+    await loadLocations();
+  } catch (e) {
+    showToast('Could not update: ' + (e.message || 'error'));
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+}
+
+function startWatch(){
+  if(!('geolocation' in navigator)){
+    showToast('Your browser does not support location');
+    return;
+  }
+  if(_watchId != null) return;
+  _watchId = navigator.geolocation.watchPosition(async function(pos){
+    try {
+      await API.team.updateLocation({
+        latitude:  pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy:  pos.coords.accuracy,
+      });
+    } catch (e) {
+      // Most likely the user flipped the settings toggle off mid-shift.
+      if(/disabled|403/i.test(e.message || '')){
+        stopWatch();
+        showToast('Location sharing is off — check Settings');
+      }
+    }
+  }, function(err){
+    if(err.code === err.PERMISSION_DENIED){
+      showToast('Location permission blocked — allow it in your browser to share');
+    }
+  }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+}
+
+function stopWatch(){
+  if(_watchId != null){
+    try { navigator.geolocation.clearWatch(_watchId); } catch (_) {}
+    _watchId = null;
+  }
+}
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+    authDomain: "swft-ai26.firebaseapp.com",
+    projectId: "swft-ai26",
+    storageBucket: "swft-ai26.firebasestorage.app",
+    messagingSenderId: "170879575187",
+    appId: "1:170879575187:web:e329382b0adf9518ead966",
+    measurementId: "G-B8BEW7E87V"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+      user = auth.currentUser;
+    }
+    if (!user) {
+      console.warn("[SWFT-REDIRECT] team-tracker onAuthStateChanged saw no user");
+      window.location.href = "swft-login";
+      return;
+    }
+    window.__swftUser = user;
+    window._myUid = user.uid;
+
+    try {
+      const me = await API.user.me();
+      window._locationEnabled = !!me.locationSharingEnabled;
+      const sub = document.getElementById('topbar-sub');
+      if(sub){
+        sub.textContent = (me.role === 'owner' || me.role === 'admin')
+          ? 'where your crew is right now'
+          : 'your live location on the map';
+      }
+    } catch (_) {}
+
+    await loadMapsSdk();
+    await loadLocations();
+
+    // Hydrate clock-in state from my own row if present
+    const mine = (_members || []).find(m => m.uid === user.uid);
+    if (mine) setClockButton(!!mine.clockedIn);
+    else      setClockButton(false);
+    if (_myClockedIn && _locationEnabled) startWatch();
+
+    // Refresh the map + list every 15s so admins see crew movement
+    if(_pollTimer) clearInterval(_pollTimer);
+    _pollTimer = setInterval(loadLocations, 15000);
+
+    // Pause polling when the tab is hidden to save battery/requests
+    document.addEventListener('visibilitychange', () => {
+      if(document.hidden){
+        if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+      } else if(!_pollTimer){
+        loadLocations();
+        _pollTimer = setInterval(loadLocations, 15000);
+      }
+    });
+  });
+</script>
+
+<script type="module" src="swft-user-sync.js"></script>
+<script src="swft-account.js"></script>
+<script src="swft-chat.js"></script>
+</body>
+</html>
