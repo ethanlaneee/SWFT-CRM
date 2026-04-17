@@ -188,10 +188,58 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     const custNameClean = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
     const pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Invoice-${custNameClean}.pdf` };
 
+    // If the owner has Stripe Connect set up, make sure this invoice has a
+    // pay link on their connected account — create one on the fly if not.
+    // Then embed a big "Pay Now" button in the email so the customer can
+    // pay with one click.
+    let payLinkUrl = invData.paymentLinkUrl || null;
+    const ownerStripe = user.integrations?.stripe;
+    const connectedAccountId = ownerStripe?.accountId;
+    try {
+      if (connectedAccountId && (!payLinkUrl || invData.stripeConnectAccountId !== connectedAccountId)) {
+        const { getStripe } = require("../utils/stripe");
+        const stripe = getStripe();
+        const amountCents = Math.round((invData.total || 0) * 100);
+        if (amountCents >= 50) {
+          const stripeOpts = { stripeAccount: connectedAccountId };
+          const price = await stripe.prices.create({
+            currency: "usd",
+            unit_amount: amountCents,
+            product_data: {
+              name: `Invoice — ${invData.customerName || "Customer"}${invData.service ? ` (${invData.service})` : ""}`,
+            },
+          }, stripeOpts);
+          const paymentLink = await stripe.paymentLinks.create({
+            line_items: [{ price: price.id, quantity: 1 }],
+            metadata: { invoiceId: req.params.id, orgId: req.orgId },
+            after_completion: {
+              type: "hosted_confirmation",
+              hosted_confirmation: { custom_message: "Payment received. Thank you!" },
+            },
+          }, stripeOpts);
+          payLinkUrl = paymentLink.url;
+          await col().doc(req.params.id).update({
+            paymentLinkUrl: payLinkUrl,
+            stripePaymentLinkId: paymentLink.id,
+            stripeConnectAccountId: connectedAccountId,
+            updatedAt: Date.now(),
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("[invoices] Could not auto-create Stripe pay link:", e.message);
+      // Fall through — still send the email, just without the button
+    }
+
     const fromName = user.company || user.name || "SWFT";
     const subject = `Invoice from ${fromName}`;
-    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nPlease find your invoice attached.\n\nBest,\n${fromName}`;
-    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
+    const bodyText = req.body.message
+      || `Hi ${cust.name || ""},\n\nPlease find your invoice attached.${payLinkUrl ? `\n\nPay online: ${payLinkUrl}` : ""}\n\nBest,\n${fromName}`;
+
+    const payButtonHtml = payLinkUrl
+      ? `<div style="margin:20px 0;"><a href="${payLinkUrl}" style="display:inline-block;background:#635bff;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 32px;border-radius:8px;letter-spacing:0.3px;">Pay $${(invData.total || 0).toFixed(2)}</a><div style="font-size:11px;color:#888;margin-top:6px;">Secure checkout powered by Stripe</div></div>`
+      : "";
+    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>${payButtonHtml}`;
 
     user._uid = req.uid;
     const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, [pdfFile]);

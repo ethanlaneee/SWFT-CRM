@@ -5,7 +5,10 @@ const { getStripe } = require("../utils/stripe");
 const { triggerAutomation } = require("./automations");
 
 // POST /api/payments/invoice/:id/link
-// Creates (or retrieves) a Stripe Payment Link for an invoice
+// Creates (or retrieves) a Stripe Payment Link for an invoice on the
+// owner's connected Stripe account. Returns 400 with a "notConnected"
+// flag if the owner hasn't linked Stripe yet — the UI uses that to prompt
+// them to go connect.
 router.post("/invoice/:id/link", async (req, res, next) => {
   try {
     const stripe = getStripe();
@@ -15,8 +18,19 @@ router.post("/invoice/:id/link", async (req, res, next) => {
     }
     const inv = invDoc.data();
 
-    // Return existing link if already created
-    if (inv.paymentLinkUrl) {
+    // Look up the org owner's Stripe Connect account
+    const ownerDoc = await db.collection("users").doc(req.orgId).get();
+    const ownerStripe = ownerDoc.exists ? ownerDoc.data()?.integrations?.stripe : null;
+    const connectedAccountId = ownerStripe?.accountId;
+    if (!connectedAccountId) {
+      return res.status(400).json({
+        error: "Connect your Stripe account first to accept payments on invoices.",
+        notConnected: true,
+      });
+    }
+
+    // Return existing link if it was already created on this same account
+    if (inv.paymentLinkUrl && inv.stripeConnectAccountId === connectedAccountId) {
       return res.json({ url: inv.paymentLinkUrl, existing: true });
     }
 
@@ -25,16 +39,18 @@ router.post("/invoice/:id/link", async (req, res, next) => {
       return res.status(400).json({ error: "Invoice total must be at least $0.50 to create a payment link" });
     }
 
-    // Create a one-time price
+    // Everything below runs on the connected account, so the money lands
+    // in the owner's Stripe balance — not ours.
+    const stripeOpts = { stripeAccount: connectedAccountId };
+
     const price = await stripe.prices.create({
       currency: "usd",
       unit_amount: amountCents,
       product_data: {
         name: `Invoice — ${inv.customerName || "Customer"}${inv.service ? ` (${inv.service})` : ""}`,
       },
-    });
+    }, stripeOpts);
 
-    // Create Payment Link with invoice metadata so webhook can match it
     const paymentLink = await stripe.paymentLinks.create({
       line_items: [{ price: price.id, quantity: 1 }],
       metadata: {
@@ -45,12 +61,12 @@ router.post("/invoice/:id/link", async (req, res, next) => {
         type: "hosted_confirmation",
         hosted_confirmation: { custom_message: "Payment received. Thank you!" },
       },
-    });
+    }, stripeOpts);
 
-    // Store on invoice
     await db.collection("invoices").doc(req.params.id).update({
       paymentLinkUrl: paymentLink.url,
       stripePaymentLinkId: paymentLink.id,
+      stripeConnectAccountId: connectedAccountId,
       updatedAt: Date.now(),
     });
 
@@ -80,6 +96,16 @@ async function webhookHandler(req, res) {
       try {
         const invDoc = await db.collection("invoices").doc(invoiceId).get();
         const inv = invDoc.exists ? invDoc.data() : {};
+
+        // Connect safety check: if the event came from a connected account
+        // (event.account is set), it must match the account this invoice's
+        // pay link was created on. Prevents any other Stripe account from
+        // spoofing a paid event for someone else's invoice.
+        if (event.account && inv.stripeConnectAccountId && event.account !== inv.stripeConnectAccountId) {
+          console.warn(`[stripe-webhook] account mismatch for invoice ${invoiceId}: event.account=${event.account} inv=${inv.stripeConnectAccountId}`);
+          return res.json({ received: true, ignored: "account_mismatch" });
+        }
+
         await db.collection("invoices").doc(invoiceId).update({
           status: "paid",
           paidAt: Date.now(),

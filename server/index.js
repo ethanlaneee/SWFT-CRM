@@ -33,7 +33,7 @@ const {
 } = require("./routes/socialMessages");
 const { router: metaRouter, webhookVerify: metaWebhookVerify, webhookReceive: metaWebhookReceive, oauthCallback: metaOAuthCallback } = require("./routes/meta");
 const { router: googleAuthRouter, googleCallback } = require("./routes/googleAuth");
-const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback } = require("./routes/integrations");
+const { router: integrationsRouter, googleIntegrationCallback, quickbooksCallback, stripeOAuthCallback } = require("./routes/integrations");
 const { router: automationsRouter, processScheduledMessages } = require("./routes/automations");
 const { router: aiSettingsRouter } = require("./routes/aiSettings");
 const surveyRouter = require("./routes/survey");
@@ -43,7 +43,7 @@ const intakeFormsRouter = require("./routes/intakeForms");
 
 // ── Validate required environment variables on startup ──
 const REQUIRED_ENV = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "ANTHROPIC_API_KEY"];
-const RECOMMENDED_ENV = ["APP_URL", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ENCRYPT_KEY"];
+const RECOMMENDED_ENV = ["APP_URL", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "ENCRYPT_KEY", "STRIPE_CLIENT_ID"];
 
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) {
@@ -126,6 +126,7 @@ app.get("/api/meta/callback", metaOAuthCallback);
 app.get("/api/auth/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/google/callback", googleIntegrationCallback);
 app.get("/api/integrations/quickbooks/callback", quickbooksCallback);
+app.get("/api/integrations/stripe/callback", stripeOAuthCallback);
 
 
 // ── Diagnostic: test calendar event creation ──

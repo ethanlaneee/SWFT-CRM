@@ -136,9 +136,16 @@ router.get("/", async (req, res, next) => {
     const connections = userData.integrations || {};
 
     const result = INTEGRATIONS.map(integration => {
-      // Stripe is platform-level: connected if the server has the key configured
+      // Stripe Connect is per-owner: connected only when we have their linked account id
       if (integration.id === "stripe") {
-        return { ...integration, connected: !!process.env.STRIPE_SECRET_KEY, account: null };
+        const accountId = connections.stripe?.accountId || null;
+        const configured = !!process.env.STRIPE_CLIENT_ID;
+        return {
+          ...integration,
+          connected: !!accountId,
+          account: connections.stripe?.accountEmail || accountId || null,
+          configured,
+        };
       }
       // Check both new integrations map and legacy fields
       let connected = !!connections[integration.id]?.connected;
@@ -236,6 +243,33 @@ router.post("/:id/connect", (req, res, next) => {
       return res.json({ url });
     }
 
+    // Stripe Connect (Standard) — OAuth into the owner's Stripe account so
+    // invoice pay links get created on their account and money lands in
+    // their Stripe balance, not ours.
+    if (integration.provider === "stripe") {
+      const SC_CLIENT_ID = process.env.STRIPE_CLIENT_ID;
+      const APP_URL = process.env.APP_URL || "https://goswft.com";
+      const SC_REDIRECT_URI = `${APP_URL}/api/integrations/stripe/callback`;
+
+      if (!SC_CLIENT_ID) {
+        return res.status(501).json({ error: "Stripe Connect is not configured on this server. Please add STRIPE_CLIENT_ID." });
+      }
+
+      const state = Buffer.from(JSON.stringify({
+        uid: req.uid,
+        integration: "stripe",
+      })).toString("base64url");
+
+      const url = `https://connect.stripe.com/oauth/authorize?` +
+        `response_type=code` +
+        `&client_id=${encodeURIComponent(SC_CLIENT_ID)}` +
+        `&scope=read_write` +
+        `&redirect_uri=${encodeURIComponent(SC_REDIRECT_URI)}` +
+        `&state=${encodeURIComponent(state)}`;
+
+      return res.json({ url });
+    }
+
     // Meta Lead Ads — use same Meta OAuth flow
     if (integration.provider === "meta_lead_ads") {
       const meta = require("../meta");
@@ -310,6 +344,27 @@ router.post("/:id/disconnect", async (req, res, next) => {
     if (["facebook", "instagram", "whatsapp"].includes(integrationId)) {
       await userRef.update({
         [`integrations.${integrationId}`]: FieldValue.delete(),
+      }).catch(() => {});
+    }
+
+    // Stripe Connect — revoke on Stripe's side too, then clear the whole entry
+    if (integrationId === "stripe") {
+      try {
+        const userSnap = await userRef.get();
+        const accountId = userSnap.exists ? userSnap.data()?.integrations?.stripe?.accountId : null;
+        if (accountId && process.env.STRIPE_CLIENT_ID) {
+          const { getStripe } = require("../utils/stripe");
+          await getStripe().oauth.deauthorize({
+            client_id: process.env.STRIPE_CLIENT_ID,
+            stripe_user_id: accountId,
+          });
+        }
+      } catch (e) {
+        // If Stripe already revoked, that's fine — just clear our side
+        console.warn("[stripe-connect] deauthorize failed (non-fatal):", e.message);
+      }
+      await userRef.update({
+        "integrations.stripe": FieldValue.delete(),
       }).catch(() => {});
     }
 
@@ -447,4 +502,65 @@ async function quickbooksCallback(req, res) {
   }
 }
 
-module.exports = { router, googleIntegrationCallback, quickbooksCallback };
+// ── Stripe Connect OAuth callback ──
+// Stripe redirects here after the owner authorizes on connect.stripe.com.
+// We exchange the authorization code for their account id and stash it on
+// the user doc. No auth middleware on this route — Stripe doesn't send our
+// bearer token, we rely on the base64 `state` param (set in /connect) to
+// identify which SWFT user is connecting.
+async function stripeOAuthCallback(req, res) {
+  try {
+    const { code, state, error } = req.query;
+    if (error) {
+      console.warn("[stripe-connect] User denied or error:", error);
+      return res.redirect(`/swft-connect?error=stripe_denied`);
+    }
+    if (!code || !state) return res.status(400).send("Missing code or state");
+
+    let uid;
+    try {
+      const decoded = JSON.parse(Buffer.from(state, "base64url").toString());
+      uid = decoded.uid;
+      if (decoded.integration !== "stripe") throw new Error("integration mismatch");
+    } catch (e) {
+      return res.status(400).send("Invalid state parameter");
+    }
+    if (!uid) return res.status(400).send("Missing uid in state");
+
+    const { getStripe } = require("../utils/stripe");
+    const stripe = getStripe();
+
+    // Exchange the auth code for the connected account id
+    const tokenResp = await stripe.oauth.token({
+      grant_type: "authorization_code",
+      code,
+    });
+
+    const accountId = tokenResp.stripe_user_id;
+    if (!accountId) throw new Error("No stripe_user_id in token response");
+
+    // Fetch the connected account's display email for nicer UI
+    let accountEmail = null;
+    try {
+      const account = await stripe.accounts.retrieve(accountId);
+      accountEmail = account.email || account.business_profile?.name || null;
+    } catch (_) { /* non-fatal */ }
+
+    await db.collection("users").doc(uid).set({
+      "integrations.stripe": {
+        connected: true,
+        accountId,
+        accountEmail,
+        connectedAt: Date.now(),
+      },
+    }, { merge: true });
+
+    console.log(`[stripe-connect] Linked ${accountId} to user ${uid}`);
+    res.redirect(`/swft-connect?connected=stripe`);
+  } catch (err) {
+    console.error("[stripe-connect] callback error:", err.message);
+    res.redirect(`/swft-connect?error=stripe_oauth_failed`);
+  }
+}
+
+module.exports = { router, googleIntegrationCallback, quickbooksCallback, stripeOAuthCallback };
