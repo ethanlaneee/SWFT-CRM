@@ -6,6 +6,7 @@ const router = require("express").Router();
 const multer = require("multer");
 const path = require("path");
 const { db, bucket } = require("../firebase");
+const { pushNotification } = require("./notifications");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -146,6 +147,23 @@ router.post("/:chatId/messages", upload.array("files", 5), async (req, res, next
       lastMessage: { text: preview.slice(0, 100), senderName: msg.senderName, createdAt: msg.createdAt },
       updatedAt: Date.now(),
     });
+
+    // Push a notification to every other chat member
+    const chatData = chatDoc.data();
+    const recipients = (chatData.memberIds || []).filter(id => id && id !== req.uid);
+    const senderLabel = (msg.senderName || "").trim() || "A teammate";
+    const chatLabel = chatData.isDirect ? senderLabel : (chatData.name || "Team chat");
+    const notifTitle = chatData.isDirect
+      ? `New message from ${senderLabel}`
+      : `${senderLabel} in ${chatLabel}`;
+    await Promise.all(recipients.map(recipientId =>
+      pushNotification(recipientId, {
+        type: "message",
+        title: notifTitle,
+        body: preview.slice(0, 120),
+        link: `/swft-team-chat.html?chat=${req.params.chatId}`,
+      })
+    ));
 
     res.status(201).json({ id: ref.id, ...msg });
   } catch (err) { next(err); }

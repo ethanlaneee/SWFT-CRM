@@ -77,6 +77,50 @@
       transform-origin: 50% 12%;
       display: block;
     }
+    .notif-toast-stack {
+      position: fixed;
+      top: 76px; right: 24px;
+      width: 340px;
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 9000;
+      pointer-events: none;
+    }
+    .notif-toast {
+      background: #111111;
+      border: 1px solid #2c2c2c;
+      border-left: 3px solid #c8f135;
+      border-radius: 12px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+      padding: 12px 14px;
+      display: flex; align-items: flex-start; gap: 10px;
+      font-family: 'DM Sans', sans-serif;
+      color: #f0f0f0;
+      pointer-events: all;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateX(24px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .notif-toast.show { opacity: 1; transform: translateX(0); }
+    .notif-toast.hide { opacity: 0; transform: translateX(24px); }
+    .notif-toast .notif-icon { margin-top: 1px; }
+    .notif-toast-body { flex: 1; min-width: 0; }
+    .notif-toast-title {
+      font-size: 13px; font-weight: 600; color: #f0f0f0;
+      margin-bottom: 2px; line-height: 1.3;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .notif-toast-text {
+      font-size: 12px; color: #a8a8a8; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .notif-toast-close {
+      background: none; border: none; color: #555;
+      font-size: 14px; line-height: 1; cursor: pointer;
+      padding: 2px 4px; margin: -2px -4px 0 0;
+    }
+    .notif-toast-close:hover { color: #aaa; }
   `;
   document.head.appendChild(style);
 
@@ -114,6 +158,57 @@
     '</div>' +
     '<div class="notif-list" id="notif-list"></div>';
   document.body.appendChild(dropdown);
+
+  // Toast stack (top-right) for freshly arrived notifications
+  var toastStack = document.createElement('div');
+  toastStack.className = 'notif-toast-stack';
+  toastStack.id = 'notif-toast-stack';
+  document.body.appendChild(toastStack);
+
+  // Track which notification ids have already been shown so we only toast new ones.
+  var _seenIds = new Set();
+  var _seededInitial = false;
+
+  function showToast(n) {
+    var meta = TYPE_ICONS[n.type] || TYPE_ICONS.info;
+    var toast = document.createElement('div');
+    toast.className = 'notif-toast';
+    toast.innerHTML =
+      '<div class="notif-icon" style="background:' + meta.bg + '">' + meta.icon + '</div>' +
+      '<div class="notif-toast-body">' +
+        '<div class="notif-toast-title"></div>' +
+        '<div class="notif-toast-text"></div>' +
+      '</div>' +
+      '<button class="notif-toast-close" aria-label="Dismiss">&times;</button>';
+    toast.querySelector('.notif-toast-title').textContent = n.title || '';
+    toast.querySelector('.notif-toast-text').textContent = n.body || '';
+
+    function dismiss() {
+      toast.classList.remove('show');
+      toast.classList.add('hide');
+      setTimeout(function(){ if (toast.parentNode) toast.parentNode.removeChild(toast); }, 260);
+    }
+    toast.querySelector('.notif-toast-close').addEventListener('click', function(e){
+      e.stopPropagation();
+      dismiss();
+    });
+    toast.addEventListener('click', function(){
+      if (n.id && String(n.id).indexOf('_local_') !== 0) markRead(n.id);
+      if (n.link && n.link !== 'null' && n.link !== 'undefined') {
+        window.location.href = n.link;
+      } else {
+        dismiss();
+      }
+    });
+
+    toastStack.appendChild(toast);
+    // Limit stack to 4 visible toasts
+    while (toastStack.children.length > 4) {
+      toastStack.removeChild(toastStack.firstChild);
+    }
+    requestAnimationFrame(function(){ toast.classList.add('show'); });
+    setTimeout(dismiss, 6000);
+  }
 
   document.getElementById('notif-mark-all-btn').addEventListener('click', markAllRead);
 
@@ -160,6 +255,25 @@
       if (typeof API === 'undefined' || !API.notifications) return;
       var notifs = await API.notifications.list();
       _notifications = notifs;
+
+      if (!_seededInitial) {
+        // On first successful load, seed the "seen" set so we don't toast
+        // existing unread items the user already knows about.
+        notifs.forEach(function(n){ if (n.id) _seenIds.add(n.id); });
+        _seededInitial = true;
+      } else {
+        // Toast any unread notifications we haven't seen before, oldest first
+        var fresh = [];
+        for (var i = 0; i < notifs.length; i++) {
+          var n = notifs[i];
+          if (n.id && !_seenIds.has(n.id)) {
+            _seenIds.add(n.id);
+            if (!n.read) fresh.push(n);
+          }
+        }
+        fresh.reverse().forEach(showToast);
+      }
+
       render();
     } catch(e) {
       // silently fail if not authed yet
@@ -210,8 +324,10 @@
 
   // Public: push a local notification (used by other scripts)
   window.swftNotify = function(title, body, type, link) {
-    _notifications.unshift({ id: '_local_' + Date.now(), title: title, body: body, type: type || 'info', link: link || null, read: false, createdAt: Date.now() });
+    var n = { id: '_local_' + Date.now(), title: title, body: body, type: type || 'info', link: link || null, read: false, createdAt: Date.now() };
+    _notifications.unshift(n);
     render();
+    showToast(n);
   };
 
   function init() {
