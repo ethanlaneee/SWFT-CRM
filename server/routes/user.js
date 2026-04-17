@@ -114,8 +114,6 @@ router.put("/", async (req, res, next) => {
       "aiCustomInstructions",
       // Subscription
       "plan", "isSubscribed", "stripeCustomerId", "accountStatus",
-      // Privacy / Team Tracker
-      "locationSharingEnabled",
     ];
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];

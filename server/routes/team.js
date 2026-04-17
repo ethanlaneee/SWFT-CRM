@@ -621,11 +621,6 @@ router.post("/location", async (req, res, next) => {
       return res.status(400).json({ error: "Location accuracy too low" });
     }
 
-    const userDoc = await db.collection("users").doc(req.uid).get();
-    if (!userDoc.exists || !userDoc.data().locationSharingEnabled) {
-      return res.status(403).json({ error: "Location sharing is disabled" });
-    }
-
     const teamDoc = await getMyTeamDoc(req);
     if (!teamDoc) return res.status(404).json({ error: "You are not a member of this team" });
     if (!teamDoc.data().clockedIn) {
