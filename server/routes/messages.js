@@ -6,7 +6,7 @@ const { getPlan } = require("../plans");
 const { getUsage } = require("../usage");
 const { handleInbound } = require("../ai/auto-reply");
 const { notifyInboundMessage } = require("../utils/notifications");
-const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email");
+const { getGmailClient, getOAuthClient, encodeMime, withSignature } = require("../utils/email");
 
 /**
  * Send email via user's connected Gmail account.
@@ -14,6 +14,9 @@ const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email")
  */
 async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyHeaders = {}) {
   const { gmail, fromAddr, fromName } = await getGmailClient(user);
+
+  // Auto-append the owner's signature unless they already signed off.
+  ({ textBody, htmlBody } = withSignature(user, textBody, htmlBody));
 
   // Build MIME message
   const boundary = "swft_boundary_" + Date.now();

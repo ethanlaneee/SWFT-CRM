@@ -39,6 +39,69 @@ async function getGmailClient(user) {
 }
 
 /**
+ * Build the owner's email signature in text + HTML.
+ *
+ *   Best,
+ *   {First Last}
+ *   {Company}
+ *
+ * Returns { text, html }. Empty strings if no sensible name exists.
+ */
+function buildSignature(user = {}) {
+  const first = (user.firstName || "").trim();
+  const last  = (user.lastName  || "").trim();
+  const fullName = [first, last].filter(Boolean).join(" ")
+                || (user.name || "").trim();
+  const company = (user.company || "").trim();
+
+  if (!fullName && !company) return { text: "", html: "" };
+
+  const lines = ["Best,"];
+  if (fullName) lines.push(fullName);
+  if (company)  lines.push(company);
+  const text = "\n\n" + lines.join("\n");
+
+  let html = `<p style="margin:24px 0 0;font-size:14px;line-height:1.5;color:#333;">Best,<br/>`;
+  if (fullName) html += `<strong>${escapeHtml(fullName)}</strong><br/>`;
+  if (company)  html += `<span style="color:#666;">${escapeHtml(company)}</span>`;
+  html += `</p>`;
+
+  return { text, html };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Heuristic: skip auto-append if the author already signed off.
+const SIGNOFF_RE = /\b(best|thanks|thank you|regards|cheers|sincerely|talk soon)\b[\s,]*(\n|<br)/i;
+
+function alreadySigned(textBody, htmlBody) {
+  const text = (textBody || "").slice(-400);
+  const html = (htmlBody || "").slice(-600);
+  return SIGNOFF_RE.test(text) || SIGNOFF_RE.test(html);
+}
+
+/**
+ * Append the owner's signature to an outgoing email body pair, unless the
+ * author already signed off themselves.
+ *
+ * @param {object} user   - user doc (firstName, lastName, name, company)
+ * @param {string} textBody
+ * @param {string} htmlBody
+ * @returns {{ textBody, htmlBody }}
+ */
+function withSignature(user, textBody, htmlBody) {
+  if (alreadySigned(textBody, htmlBody)) return { textBody, htmlBody };
+  const sig = buildSignature(user);
+  if (!sig.text && !sig.html) return { textBody, htmlBody };
+  return {
+    textBody: (textBody || "") + sig.text,
+    htmlBody: (htmlBody || "") + sig.html,
+  };
+}
+
+/**
  * Encode a MIME message to base64url for Gmail API.
  */
 function encodeMime(mime) {
@@ -84,7 +147,10 @@ function buildSimpleMime({ from, fromName, to, subject, textBody, htmlBody, inRe
  */
 async function sendSimpleGmail(user, to, subject, textBody, htmlBody, opts = {}) {
   const { gmail, fromAddr, fromName } = await getGmailClient(user);
-  const mime = buildSimpleMime({ from: fromAddr, fromName, to, subject, textBody, htmlBody, inReplyTo: opts.inReplyTo, references: opts.references, extraHeaders: opts.extraHeaders });
+  const signed = opts.skipSignature
+    ? { textBody, htmlBody }
+    : withSignature(user, textBody, htmlBody);
+  const mime = buildSimpleMime({ from: fromAddr, fromName, to, subject, textBody: signed.textBody, htmlBody: signed.htmlBody, inReplyTo: opts.inReplyTo, references: opts.references, extraHeaders: opts.extraHeaders });
   const encoded = encodeMime(mime);
   const requestBody = { raw: encoded };
   if (opts.threadId) requestBody.threadId = opts.threadId;
@@ -102,4 +168,4 @@ async function sendSimpleGmail(user, to, subject, textBody, htmlBody, opts = {})
   return { messageId: result.data.id, threadId: result.data.threadId, rfcMessageId };
 }
 
-module.exports = { getOAuthClient, getGmailClient, encodeMime, buildSimpleMime, sendSimpleGmail };
+module.exports = { getOAuthClient, getGmailClient, encodeMime, buildSimpleMime, sendSimpleGmail, withSignature, buildSignature };

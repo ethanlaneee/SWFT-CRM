@@ -55,11 +55,14 @@ router.post("/send", async (req, res, next) => {
       },
     });
 
+    const { withSignature } = require("../utils/email");
+    const signed = withSignature(userData, "", html || `<p>Please find your ${type || "document"} attached.</p>`);
+
     const mailOptions = {
       from: `"${userData.company || userData.name || "SWFT"}" <${gmailUser}>`,
       to,
       subject,
-      html: html || `<p>Please find your ${type || "document"} attached.</p>`,
+      html: signed.htmlBody,
     };
 
     await transporter.sendMail(mailOptions);
