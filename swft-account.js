@@ -379,7 +379,9 @@
         document.getElementById("acct-last").value = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
       }
       document.getElementById("acct-company").value = data.company || "";
-      if (data.email) document.getElementById("acct-email").value = data.email;
+      // Do NOT overwrite acct-email from data.email — that field is the
+      // company email, not the user's login identity. The email shown in
+      // this panel is already set from Firebase Auth on line 363.
 
       const first = (data.firstName || data.name?.split(" ")[0] || "?")[0];
       const last = (data.lastName || data.name?.split(" ")[1] || "")[0] || "";
