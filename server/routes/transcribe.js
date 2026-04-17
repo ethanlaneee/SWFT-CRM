@@ -56,7 +56,7 @@ router.post("/", upload.single("audio"), async (req, res) => {
     // and enforce digit-form for phone numbers and street numbers.
     const anthropic = new Anthropic();
     const cleaned = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 512,
       messages: [
         {
@@ -75,7 +75,9 @@ router.post("/", upload.single("audio"), async (req, res) => {
             "    'five five five zero one nine nine'      → '555-0199'\n" +
             "    'one two three Main Street'              → '123 Main Street'\n" +
             "    'two thousand four hundred dollars'      → '\$2,400'\n" +
-            "- Standardise phone numbers to ###-#### or ###-###-#### format.\n" +
+            "- Standardise phone numbers to '### ### ####' (three-space-three-space-four)\n" +
+            "  when there are 10 digits, or '### ####' when there are 7. Use spaces, not dashes.\n" +
+            "  Examples: '5550199' → '555 0199';  '5551234567' → '555 123 4567'.\n" +
             "- Reconstruct email addresses that were dictated with spoken punctuation:\n" +
             "    'john doe at gmail dot com'         → 'johndoe@gmail.com'\n" +
             "    'john dot doe at company dot com'   → 'john.doe@company.com'\n" +
@@ -95,6 +97,11 @@ router.post("/", upload.single("audio"), async (req, res) => {
 
     // Strip surrounding quotes if Claude added them
     text = text.replace(/^["'“”‘’]+|["'“”‘’]+$/g, "").trim();
+
+    // Deterministic phone-number reformatter. Catches anything the cleaner
+    // left as 5550199, 555-0199, (555) 123-4567, etc. and rewrites it to
+    // the preferred "xxx xxx xxxx" / "xxx xxxx" space-separated form.
+    text = formatPhonesInText(text);
 
     // Safety net: if Claude went off-script (responded with something much
     // longer than the source, or the source-sabotage phrases appeared),
@@ -146,6 +153,29 @@ function spellOutDigitsToNumerals(text) {
   out = out.replace(/(?:\b\d\b[\s-]*){3,20}/g, (m) => m.replace(/\s+/g, ""));
 
   return out;
+}
+
+// Rewrite any phone-number-shaped run of digits in `text` to the user's
+// preferred space-separated form. Handles ungrouped (5551234567), dashed
+// (555-123-4567), and parenthesised ((555) 123-4567) inputs.
+function formatPhonesInText(text) {
+  if (!text) return text;
+  // 10-digit (with optional +1 or "1" country prefix): "xxx xxx xxxx"
+  text = text.replace(
+    /(?<![\d])(?:\+?1[\s.\-()]?)?\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})(?![\d])/g,
+    "$1 $2 $3"
+  );
+  // 7-digit ungrouped: "xxx xxxx". Only rewrite if it's clearly standalone.
+  text = text.replace(
+    /(?<![\d])(\d{3})[\s.\-]?(\d{4})(?![\d])/g,
+    (match, a, b, offset, whole) => {
+      // Avoid eating part of a longer number we already formatted
+      const before = whole.slice(Math.max(0, offset - 2), offset);
+      if (/\d\s$/.test(before)) return match;
+      return a + " " + b;
+    }
+  );
+  return text;
 }
 
 module.exports = router;
