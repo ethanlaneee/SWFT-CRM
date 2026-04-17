@@ -273,7 +273,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
     <div class="settings-field"><label>Address</label><input class="settings-input" id="s-address" style="width:100%;" placeholder="123 Main St, Austin TX 78745"/></div>
     <div class="settings-2col">
-      <div class="settings-field"><label>Email</label><input class="settings-input" id="s-email" style="width:100%;" placeholder="hello@swftconcrete.com"/></div>
+      <div class="settings-field"><label>Email</label><input class="settings-input" id="s-company-email" style="width:100%;" placeholder="hello@swftconcrete.com"/><div style="font-size:11px;color:var(--gray);margin-top:4px;">Shown on invoices, quotes, and outgoing emails. Separate from your login email.</div></div>
       <div class="settings-field"><label>Website</label><input class="settings-input" id="s-website" style="width:100%;" placeholder="www.swftconcrete.com"/></div>
     </div>
     <div style="margin-top:8px;">
@@ -1007,7 +1007,7 @@ async function saveSettings(section) {
       data.company = document.getElementById('s-company').value.trim();
       data.phone = document.getElementById('s-phone').value.trim();
       data.address = document.getElementById('s-address').value.trim();
-      data.email = document.getElementById('s-email').value.trim();
+      data.companyEmail = document.getElementById('s-company-email').value.trim();
       data.website = document.getElementById('s-website').value.trim();
       if (_companyLogo !== null) data.companyLogo = _companyLogo || '';
     } else if (section === 'bizprofile') {
@@ -1051,7 +1051,8 @@ async function loadSettings() {
     if (data.company) document.getElementById('s-company').value = data.company;
     if (data.phone) document.getElementById('s-phone').value = data.phone;
     if (data.address) document.getElementById('s-address').value = data.address;
-    if (data.email) document.getElementById('s-email').value = data.email;
+    var companyEmailField = document.getElementById('s-company-email');
+    if (companyEmailField) companyEmailField.value = data.companyEmail || data.email || '';
     if (data.website) document.getElementById('s-website').value = data.website || '';
     if (data.taxRate) document.getElementById('s-tax').value = data.taxRate;
     if (data.paymentTerms) document.getElementById('s-terms').value = data.paymentTerms;

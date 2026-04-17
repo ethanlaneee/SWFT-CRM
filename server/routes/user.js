@@ -96,9 +96,9 @@ router.put("/", async (req, res, next) => {
     const updates = {};
     const allowedFields = [
       // Profile
-      "name", "firstName", "lastName", "email", "company", "phone",
+      "name", "firstName", "lastName", "company", "phone",
       // Company
-      "address", "country", "website",
+      "address", "country", "website", "companyEmail",
       // Defaults
       "taxRate", "paymentTerms", "serviceTypes", "lineItemTypes", "crewNames",
       // Preferences

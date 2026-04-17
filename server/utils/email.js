@@ -32,7 +32,7 @@ async function getGmailClient(user) {
   }
 
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-  const fromAddr = user.gmailAddress || user.email;
+  const fromAddr = user.gmailAddress || user.companyEmail || user.email;
   const fromName = user.company || user.name || "SWFT";
 
   return { gmail, fromAddr, fromName };

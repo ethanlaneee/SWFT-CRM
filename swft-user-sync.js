@@ -36,7 +36,6 @@ onAuthStateChanged(auth, async (user) => {
 
   let firstName = "";
   let lastName = "";
-  let companyEmail = "";
 
   // Try Firebase Auth displayName first
   if (user.displayName) {
@@ -45,7 +44,12 @@ onAuthStateChanged(auth, async (user) => {
     lastName = parts.slice(1).join(" ") || "";
   }
 
-  // Then try Firestore profile (also grab company email)
+  // Then try Firestore profile for first/last name.
+  // NOTE: never read `data.email` here — the sidebar shows the user's
+  // login identity, which is Firebase Auth `user.email`. The Firestore
+  // `email` field has historically doubled as the company email and will
+  // diverge from the login email as soon as the owner sets a separate
+  // Company Profile → Email in Settings.
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
@@ -54,7 +58,6 @@ onAuthStateChanged(auth, async (user) => {
         firstName = data.firstName || data.name?.split(" ")[0] || "";
         lastName = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
       }
-      companyEmail = data.email || "";
     }
   } catch (e) { /* ignore */ }
 
@@ -67,7 +70,7 @@ onAuthStateChanged(auth, async (user) => {
 
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
   const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "?";
-  const displayEmail = companyEmail || user.email || "";
+  const displayEmail = user.email || "";
 
   // Update cache under a simple key (no uid needed for lookup)
   sessionStorage.setItem("swft_profile", JSON.stringify({ fullName, initials, email: displayEmail }));

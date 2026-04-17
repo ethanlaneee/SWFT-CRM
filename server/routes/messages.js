@@ -132,7 +132,7 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       return res.status(400).json({ error: "Recipient email and subject are required" });
     }
 
-    const fromEmail = user.email || "noreply@swft-crm.com";
+    const fromEmail = user.companyEmail || user.email || "noreply@swft-crm.com";
     const fromName = user.company || user.name || "SWFT";
 
     // Build email body

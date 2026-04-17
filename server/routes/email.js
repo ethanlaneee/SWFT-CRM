@@ -37,7 +37,7 @@ router.post("/send", async (req, res, next) => {
     const userDoc = await db.collection("users").doc(req.uid).get();
     const userData = userDoc.exists ? userDoc.data() : {};
 
-    const gmailUser = userData.gmailAddress || userData.email;
+    const gmailUser = userData.gmailAddress || userData.companyEmail || userData.email;
     const gmailAppPassword = userData.gmailAppPassword;
 
     if (!gmailAppPassword) {

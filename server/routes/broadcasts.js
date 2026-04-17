@@ -140,10 +140,10 @@ router.post("/", async (req, res, next) => {
           companyName,
           companyAddress: orgUser.address || "",
           companyPhone: orgUser.phone || "",
-          companyEmail: orgUser.email || "",
+          companyEmail: orgUser.companyEmail || orgUser.email || "",
           fromName: companyName,
           fromEmail: customFromEmail,
-          replyTo: orgUser.gmailAddress || orgUser.email,
+          replyTo: orgUser.gmailAddress || orgUser.companyEmail || orgUser.email,
           unsubscribeUrl,
         });
 
