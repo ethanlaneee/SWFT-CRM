@@ -78,7 +78,10 @@ router.post("/invoice/:id/link", async (req, res, next) => {
 // Auto-marks invoice paid when checkout completes via payment link
 async function webhookHandler(req, res) {
   const sig = req.headers["stripe-signature"];
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  // Connect events from connected accounts are signed with their own webhook
+  // secret (separate destination in Stripe dashboard). Fall back to the
+  // platform secret so local dev / single-webhook setups still work.
+  const secret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
   try {
