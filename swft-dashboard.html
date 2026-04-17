@@ -746,13 +746,33 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
   }
 
+  // Coerce any common date/timestamp shape into a YYYY-MM-DD string for
+  // comparison. Jobs saved from different pages have used date strings,
+  // datetime-local strings ("2026-04-17T14:30"), ISO timestamps, and
+  // numeric epoch values over the project's life — normalize them all.
+  function toDateStr(raw) {
+    if (!raw) return '';
+    if (typeof raw === 'number') {
+      var d = new Date(raw);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    var s = String(raw).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    var parsed = new Date(s);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
+    }
+    return '';
+  }
+
   // Normalize a job or schedule entry into a common shape
   function normalizeToEvent(raw, kind) {
     if (kind === 'job') {
-      if (!raw.scheduledDate) return null;
+      var date = toDateStr(raw.scheduledDate);
+      if (!date) return null;
       return {
         kind: 'job',
-        date: raw.scheduledDate,
+        date: date,
         startTime: raw.startTime || '',
         title: raw.title || ((raw.customerName || '') + (raw.service ? ' — ' + raw.service : '')).trim() || 'Untitled job',
         meta: raw.crew && raw.crew !== 'Unassigned' ? raw.crew : '',
@@ -760,10 +780,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         status: raw.status || '',
       };
     }
-    if (!raw.date) return null;
+    var date = toDateStr(raw.date);
+    if (!date) return null;
     return {
       kind: 'schedule',
-      date: raw.date,
+      date: date,
       startTime: raw.startTime || '',
       endTime: raw.endTime || '',
       title: raw.title || (raw.type ? (raw.type.charAt(0).toUpperCase() + raw.type.slice(1) + ' block') : 'Time block'),
@@ -1070,6 +1091,12 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     } catch(e) {
       if (subEl) subEl.textContent = dayStr;
     }
+
+    // Load Today's Schedule + This Week — reads jobs AND schedule entries
+    // (the latter is the Google-Calendar-synced collection), merges them,
+    // and renders. Runs on every dashboard load so the panels aren't empty
+    // after a refresh.
+    loadSchedule();
 
     // ── Load Automations stats strip ──
     try {
