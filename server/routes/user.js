@@ -113,7 +113,9 @@ router.put("/", async (req, res, next) => {
       // AI custom instructions
       "aiCustomInstructions",
       // Subscription
-      "plan", "isSubscribed", "stripeCustomerId", "accountStatus"
+      "plan", "isSubscribed", "stripeCustomerId", "accountStatus",
+      // Privacy / Team Tracker
+      "locationSharingEnabled",
     ];
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
@@ -127,6 +129,13 @@ router.put("/", async (req, res, next) => {
     const data = await checkTrialExpired(doc.id, doc.data());
     res.json({ id: doc.id, ...data });
   } catch (err) { next(err); }
+});
+
+// GET /api/me/maps-key — returns the shared Google Maps browser key for authenticated pages
+router.get("/maps-key", (req, res) => {
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) return res.status(503).json({ error: "Maps not configured" });
+  res.json({ key });
 });
 
 // GET /api/me/usage — returns current month's usage and plan limits
