@@ -46,6 +46,9 @@ router.post("/", async (req, res, next) => {
       customerId: req.body.customerId || "",
       customerName: req.body.customerName || "",
       items: normalizeItems(req.body.items),
+      subtotal: req.body.subtotal ?? null,
+      taxRate: req.body.taxRate ?? null,
+      tax: req.body.tax ?? null,
       total: req.body.total || 0,
       notes: req.body.notes || "",
       status: req.body.status || "draft",
@@ -69,7 +72,7 @@ router.put("/:id", async (req, res, next) => {
     const doc = await col().doc(req.params.id).get();
     if (!doc.exists || doc.data().orgId !== req.orgId) return res.status(404).json({ error: "Quote not found" });
     const updates = {};
-    for (const key of ["customerId", "customerName", "items", "total", "notes", "status", "address", "service", "sqft", "finish", "scheduledDate", "sentAt", "expiresAt"]) {
+    for (const key of ["customerId", "customerName", "items", "subtotal", "taxRate", "tax", "total", "notes", "status", "address", "service", "sqft", "finish", "scheduledDate", "sentAt", "expiresAt"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     if (updates.items) updates.items = normalizeItems(updates.items);

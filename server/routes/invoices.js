@@ -51,6 +51,9 @@ router.post("/", async (req, res, next) => {
       customerName: req.body.customerName || "",
       quoteId: req.body.quoteId || null,
       items: normalizeItems(req.body.items),
+      subtotal: req.body.subtotal ?? null,
+      taxRate: req.body.taxRate ?? null,
+      tax: req.body.tax ?? null,
       total: req.body.total || 0,
       notes: req.body.notes || "",
       status: req.body.status || "open",
@@ -75,7 +78,7 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Invoice not found" });
     }
     const updates = {};
-    for (const key of ["customerId", "customerName", "quoteId", "items", "total", "notes", "status", "dueDate", "address", "service", "sqft", "finish", "scheduledDate"]) {
+    for (const key of ["customerId", "customerName", "quoteId", "items", "subtotal", "taxRate", "tax", "total", "notes", "status", "dueDate", "address", "service", "sqft", "finish", "scheduledDate"]) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     if (updates.items) updates.items = normalizeItems(updates.items);

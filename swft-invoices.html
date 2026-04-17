@@ -524,11 +524,38 @@ function addLineItem(){
 
 ['add-qty','add-rate'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){var q=parseFloat(document.getElementById('add-qty').value)||0;var r=parseFloat(document.getElementById('add-rate').value)||0;document.getElementById('add-total').value=q&&r?'$'+(q*r).toFixed(2):'';});});
 
-function renderTotals(){
+// Parse the org's default tax rate (from Settings) into a numeric percent.
+// Stored as "8.25%" or "8.25" — we tolerate either. Invoices may also carry
+// a per-invoice override saved from a prior edit; that wins if present.
+function getTaxRate(){
+  var s=window._swftSettings||{};
+  if(_currentInv&&_currentInv.taxRate!=null&&_currentInv.taxRate!==''){
+    var v=parseFloat(String(_currentInv.taxRate).replace('%',''));
+    if(isFinite(v)) return v;
+  }
+  var raw=String(s.taxRate||'').replace('%','').trim();
+  var n=parseFloat(raw);
+  return isFinite(n)&&n>=0?n:0;
+}
+
+function computeTotals(){
   var subtotal=_items.reduce(function(s,i){return s+i.total;},0);
-  document.getElementById('totals-area').innerHTML=
-    '<div class="pdf-total-line"><span>Subtotal</span><span>$'+subtotal.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>'+
-    '<div class="pdf-total-line grand"><span>Total</span><span>$'+subtotal.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>';
+  var rate=getTaxRate();
+  var tax=Math.round(subtotal*(rate/100)*100)/100;
+  var total=Math.round((subtotal+tax)*100)/100;
+  return { subtotal:subtotal, taxRate:rate, tax:tax, total:total };
+}
+
+function money(n){return '$'+(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function renderTotals(){
+  var t=computeTotals();
+  var html='<div class="pdf-total-line"><span>Subtotal</span><span>'+money(t.subtotal)+'</span></div>';
+  if(t.taxRate>0){
+    html+='<div class="pdf-total-line"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>'+money(t.tax)+'</span></div>';
+  }
+  html+='<div class="pdf-total-line grand"><span>Total</span><span>'+money(t.total)+'</span></div>';
+  document.getElementById('totals-area').innerHTML=html;
 }
 
 function buildInvoiceHtml(){
@@ -537,11 +564,12 @@ function buildInvoiceHtml(){
   var tagline=s.company?(s.phone||'')+' &nbsp; '+(s.address||''):'simple. smart. swft.';
   var custSel=document.getElementById('f-customer');var custName=custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'—';
   var lines=_items.map(function(l){return'<div class="pdf-line"><div>'+esc(l.desc)+'</div><div>'+(l.qty||1)+'</div><div>$'+l.rate.toFixed(2)+'</div><div class="amt">$'+l.total.toFixed(2)+'</div></div>';}).join('');
-  var total=_items.reduce(function(s,i){return s+i.total;},0);
-  if(total===0&&_currentInv&&_currentInv.total>0)total=_currentInv.total;
+  var t=computeTotals();
+  if(t.subtotal===0&&_currentInv&&_currentInv.total>0){t.subtotal=Number(_currentInv.subtotal||_currentInv.total||0);t.tax=Number(_currentInv.tax||0);t.total=Number(_currentInv.total||t.subtotal);}
+  var taxRow=t.taxRate>0?'<div class="pdf-total-row"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>$'+t.tax.toFixed(2)+'</span></div>':'';
   var due=document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
 
-  return '<html><head><title>Invoice</title><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet"><style>body{font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}.pdf-company{font-family:"Bebas Neue",sans-serif;font-size:28px;letter-spacing:3px;}.pdf-company em{color:#111;font-style:normal;}img{max-height:50px;max-width:180px;object-fit:contain;}.pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}.pdf-type{font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #111;margin-bottom:16px;}.pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}.label{color:#666;}.value{font-weight:500;}.pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}.pdf-line-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}.pdf-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 0;font-size:13px;border-bottom:1px solid #f0f0f0;}.amt{font-weight:500;}.pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;}.pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;}</style></head><body>'+brandHtml+'<div class="pdf-tagline">'+tagline+'</div><div class="pdf-type">INVOICE</div><div class="pdf-row"><span class="label">Customer</span><span class="value">'+esc(custName)+'</span></div><div class="pdf-row"><span class="label">Service</span><span class="value">'+esc(document.getElementById('f-service').value||'—')+'</span></div><div class="pdf-row"><span class="label">Address</span><span class="value">'+esc(document.getElementById('f-address').value||'—')+'</span></div><div class="pdf-row"><span class="label">Due Date</span><span class="value">'+due+'</span></div><div class="pdf-section">Line Items</div><div class="pdf-line-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div></div>'+lines+'<div style="margin-top:12px;"><div class="pdf-total-row"><span>Subtotal</span><span>$'+total.toFixed(2)+'</span></div><div class="pdf-total-row grand"><span>Total</span><span>$'+total.toFixed(2)+'</span></div></div><script src="swft-magnetic.js"></script>
+  return '<html><head><title>Invoice</title><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet"><style>body{font-family:"DM Sans",sans-serif;padding:40px;color:#111;max-width:700px;margin:0 auto;}.pdf-company{font-family:"Bebas Neue",sans-serif;font-size:28px;letter-spacing:3px;}.pdf-company em{color:#111;font-style:normal;}img{max-height:50px;max-width:180px;object-fit:contain;}.pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-bottom:20px;}.pdf-type{font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid #111;margin-bottom:16px;}.pdf-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}.label{color:#666;}.value{font-weight:500;}.pdf-section{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}.pdf-line-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}.pdf-line{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 0;font-size:13px;border-bottom:1px solid #f0f0f0;}.amt{font-weight:500;}.pdf-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;}.pdf-total-row.grand{font-size:18px;font-weight:700;border-top:2px solid #111;margin-top:4px;padding-top:12px;}</style></head><body>'+brandHtml+'<div class="pdf-tagline">'+tagline+'</div><div class="pdf-type">INVOICE</div><div class="pdf-row"><span class="label">Customer</span><span class="value">'+esc(custName)+'</span></div><div class="pdf-row"><span class="label">Service</span><span class="value">'+esc(document.getElementById('f-service').value||'—')+'</span></div><div class="pdf-row"><span class="label">Address</span><span class="value">'+esc(document.getElementById('f-address').value||'—')+'</span></div><div class="pdf-row"><span class="label">Due Date</span><span class="value">'+due+'</span></div><div class="pdf-section">Line Items</div><div class="pdf-line-header"><div>Description</div><div>Qty</div><div>Rate</div><div>Total</div></div>'+lines+'<div style="margin-top:12px;"><div class="pdf-total-row"><span>Subtotal</span><span>$'+t.subtotal.toFixed(2)+'</span></div>'+taxRow+'<div class="pdf-total-row grand"><span>Total</span><span>$'+t.total.toFixed(2)+'</span></div></div><script src="swft-magnetic.js"></script>
 </body></html>';
 }
 
@@ -554,8 +582,8 @@ function printInvoicePdf(){
 async function saveInvoice(){
   var custSel=document.getElementById('f-customer');var custOpt=custSel.options[custSel.selectedIndex];
   if(!custSel.value){showToast('Select a customer');return;}
-  var total=_items.reduce(function(s,i){return s+i.total;},0);
-  var data={customerId:custSel.value,customerName:custOpt.textContent,items:_items,total:total,status:document.getElementById('f-status').value,service:document.getElementById('f-service').value,sqft:document.getElementById('f-sqft').value,address:document.getElementById('f-address').value,finish:document.getElementById('f-finish').value,notes:document.getElementById('f-notes').value,dueDate:document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).getTime():null};
+  var t=computeTotals();
+  var data={customerId:custSel.value,customerName:custOpt.textContent,items:_items,subtotal:t.subtotal,taxRate:t.taxRate,tax:t.tax,total:t.total,status:document.getElementById('f-status').value,service:document.getElementById('f-service').value,sqft:document.getElementById('f-sqft').value,address:document.getElementById('f-address').value,finish:document.getElementById('f-finish').value,notes:document.getElementById('f-notes').value,dueDate:document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).getTime():null};
   try{
     if(_currentInv&&_currentInv.id){await API.invoices.update(_currentInv.id,data);showToast('Invoice saved');}
     else{await API.invoices.create(data);showToast('Invoice created');}
@@ -566,9 +594,9 @@ async function saveInvoice(){
 async function sendInvoiceEmail(){
   var custSel=document.getElementById('f-customer');
   if(!custSel.value){showToast('Select a customer first');return;}
-  var total=_items.reduce(function(s,i){return s+i.total;},0);
-  if(total===0&&_currentInv&&_currentInv.total>0)total=_currentInv.total;
-  var data={customerId:custSel.value,customerName:custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'',items:_items,total:total,status:document.getElementById('f-status').value,service:document.getElementById('f-service').value,sqft:document.getElementById('f-sqft').value,address:document.getElementById('f-address').value,finish:document.getElementById('f-finish').value,notes:document.getElementById('f-notes').value,dueDate:document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).getTime():null};
+  var t=computeTotals();
+  if(t.subtotal===0&&_currentInv&&_currentInv.total>0){t.subtotal=Number(_currentInv.subtotal||_currentInv.total||0);t.tax=Number(_currentInv.tax||0);t.total=Number(_currentInv.total||t.subtotal);}
+  var data={customerId:custSel.value,customerName:custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'',items:_items,subtotal:t.subtotal,taxRate:t.taxRate,tax:t.tax,total:t.total,status:document.getElementById('f-status').value,service:document.getElementById('f-service').value,sqft:document.getElementById('f-sqft').value,address:document.getElementById('f-address').value,finish:document.getElementById('f-finish').value,notes:document.getElementById('f-notes').value,dueDate:document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).getTime():null};
 
   try{
     if(_currentInv&&_currentInv.id){
