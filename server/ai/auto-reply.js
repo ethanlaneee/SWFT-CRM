@@ -277,6 +277,18 @@ async function handleInboundMeta(orgId, ownerUid, ownerData, senderId, body, cha
       sentAt: Date.now(),
     });
 
+    // Let the owner know the AI spoke on their behalf
+    const who = matched?.customerName || senderId;
+    db.collection("notifications").add({
+      orgId, userId: orgId,
+      type: "ai",
+      title: `AI replied to ${who}`,
+      body: replyText.length > 120 ? replyText.slice(0, 117) + "…" : replyText,
+      channel,
+      customerId: customerId || null,
+      read: false, createdAt: Date.now(),
+    }).catch(() => {});
+
     console.log(`[auto-reply] ${channel} reply sent to ${senderId} (org ${orgId})`);
   } catch (err) {
     console.error(`[auto-reply] ${channel} error:`, err.message);

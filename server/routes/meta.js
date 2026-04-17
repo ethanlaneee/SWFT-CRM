@@ -17,6 +17,7 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const meta = require("../meta");
 const { handleInboundMeta } = require("../ai/auto-reply");
+const { notifyInboundMessage } = require("../utils/notifications");
 
 const col = () => db.collection("users");
 
@@ -400,6 +401,14 @@ async function webhookReceive(req, res) {
           sentVia: channel,
           metaSenderId: senderId,
           sentAt: Date.now(),
+        });
+
+        notifyInboundMessage({
+          orgId,
+          channel,
+          from: customerName || senderId,
+          body: text,
+          customerId,
         });
 
         console.log(`[meta] ${channel} message from ${customerName} (${senderId}) → org ${orgId}`);

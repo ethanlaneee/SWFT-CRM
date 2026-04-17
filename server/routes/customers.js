@@ -83,15 +83,6 @@ router.post("/", async (req, res, next) => {
     };
     const ref = await col().add(data);
 
-    // Notify org about new customer
-    db.collection("notifications").add({
-      orgId: req.orgId, userId: req.orgId,
-      type: "info",
-      title: `New Customer Added${data.name ? ": " + data.name : ""}`,
-      body: [data.phone, data.email].filter(Boolean).join(" · ") || "A new customer was added",
-      read: false, createdAt: Date.now(),
-    }).catch(() => {});
-
     // Trigger automations for customer_created
     triggerAutomation(req.orgId, "customer_created", {
       id: ref.id,

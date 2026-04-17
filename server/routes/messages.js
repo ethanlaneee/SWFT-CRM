@@ -5,6 +5,7 @@ const { google } = require("googleapis");
 const { getPlan } = require("../plans");
 const { getUsage } = require("../usage");
 const { handleInbound } = require("../ai/auto-reply");
+const { notifyInboundMessage } = require("../utils/notifications");
 const { getGmailClient, getOAuthClient, encodeMime } = require("../utils/email");
 
 /**
@@ -509,6 +510,14 @@ router.post("/sync-gmail", async (req, res, next) => {
         gmailThreadId: msg.threadId,
         rfcMessageId: messageIdHeader ? messageIdHeader.value : null,
         sentAt,
+      });
+
+      notifyInboundMessage({
+        orgId: req.orgId || req.uid,
+        channel: "email",
+        from: cust.name || fromEmail,
+        body: bodyText,
+        customerId: cust.id,
       });
 
       // Auto-approve a pending quote if the email clearly signals approval

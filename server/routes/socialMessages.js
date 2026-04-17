@@ -5,6 +5,7 @@
 
 const router = require("express").Router();
 const { admin, db } = require("../firebase");
+const { notifyInboundMessage } = require("../utils/notifications");
 const FieldValue = admin.firestore.FieldValue;
 
 const GRAPH_API_BASE = "https://graph.facebook.com/v19.0";
@@ -171,6 +172,13 @@ async function facebookIncomingHandler(req, res) {
           platformMessageId: messageId || "",
           sentAt: timestamp,
         });
+        notifyInboundMessage({
+          orgId: owner.orgId,
+          channel: "facebook",
+          from: customer?.customerName || senderId,
+          body: messageText,
+          customerId: customer?.customerId || null,
+        });
 
         console.log(`${LOG} FB message stored for org ${owner.orgId}`);
       }
@@ -306,6 +314,13 @@ async function instagramIncomingHandler(req, res) {
           status: "received",
           platformMessageId: messageId || "",
           sentAt: timestamp,
+        });
+        notifyInboundMessage({
+          orgId: owner.orgId,
+          channel: "instagram",
+          from: customer?.customerName || senderId,
+          body: messageText,
+          customerId: customer?.customerId || null,
         });
 
         console.log(`${LOG} IG message stored for org ${owner.orgId}`);
@@ -462,6 +477,13 @@ async function whatsappIncomingHandler(req, res) {
             platformMessageId: messageId || "",
             whatsappMessageType: msgType,
             sentAt: timestamp,
+          });
+          notifyInboundMessage({
+            orgId: owner.orgId,
+            channel: "whatsapp",
+            from: customer?.customerName || senderPhone,
+            body: messageText,
+            customerId: customer?.customerId || null,
           });
 
           console.log(`${LOG} WA message stored for org ${owner.orgId}`);
