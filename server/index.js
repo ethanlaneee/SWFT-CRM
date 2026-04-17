@@ -463,6 +463,7 @@ app.post(
 app.use("/api/broadcasts",        auth, checkAccess, requirePlan("pro"), require("./routes/broadcasts"));
 app.use("/api/sending-domain",    auth, checkAccess, requirePlan("pro"), require("./routes/sendingDomain"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
+app.use("/api/tts",               auth, checkAccess,  require("./routes/tts"));
 app.use("/api/dev",               auth,               require("./routes/dev"));
 app.use("/api/outreach",          auth,               require("./routes/outreach"));
 app.use("/api/service-requests",  auth, checkAccess,  serviceRequestsRouter);

@@ -778,12 +778,57 @@
   }
 
 
-  // ── Text-to-speech ──
-  function speak(text) {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel(); // stop any ongoing speech
-    const clean = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/^[-•]\s/gm, '').replace(/^#+\s/gm, '').trim();
+  // ── Text-to-speech ────────────────────────────────────────────────────
+  // Uses OpenAI's tts-1 (via /api/tts) for a natural-sounding voice.
+  // Falls back to the browser's SpeechSynthesis API if the fetch fails
+  // (offline, 500 error, etc.) so the user still hears the reply.
+  let _ttsAudio = null;
+  let _ttsAbort = null;
+
+  function stopSpeak() {
+    if (_ttsAbort) { try { _ttsAbort.abort(); } catch (_) {} _ttsAbort = null; }
+    if (_ttsAudio) {
+      try { _ttsAudio.pause(); } catch (_) {}
+      try { if (_ttsAudio.src && _ttsAudio.src.startsWith('blob:')) URL.revokeObjectURL(_ttsAudio.src); } catch (_) {}
+      _ttsAudio = null;
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  async function speak(text) {
+    stopSpeak();
+    const clean = String(text || '')
+      .replace(/\*\*/g, '').replace(/\*/g, '')
+      .replace(/^[-•]\s/gm, '').replace(/^#+\s/gm, '')
+      .trim();
     if (!clean) return;
+
+    // Try OpenAI TTS first
+    try {
+      const token = await getToken();
+      _ttsAbort = new AbortController();
+      const res = await fetch(`${API_BASE}/api/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text: clean, voice: 'nova' }),
+        signal: _ttsAbort.signal,
+      });
+      if (!res.ok) throw new Error('TTS ' + res.status);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      _ttsAudio = new Audio(url);
+      _ttsAudio.onended = () => { try { URL.revokeObjectURL(url); } catch (_) {} };
+      await _ttsAudio.play();
+      _ttsAbort = null;
+      return;
+    } catch (err) {
+      // Swallow abort errors — they just mean a newer reply is speaking
+      if (err && err.name === 'AbortError') return;
+      console.warn('[tts] falling back to browser voice:', err.message || err);
+    }
+
+    // Fallback: browser SpeechSynthesis
+    if (!window.speechSynthesis) return;
     const utt = new SpeechSynthesisUtterance(clean);
     utt.rate = 1.05;
     utt.pitch = 1;
@@ -837,8 +882,9 @@
 
     _recordingAutoSend = !!autoSend;
 
-    // Stop any ongoing TTS so we don't record the AI's own voice
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    // Stop any ongoing TTS (OpenAI audio or browser fallback) so we don't
+    // record the AI's own voice back into the next utterance.
+    stopSpeak();
 
     try {
       _recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
