@@ -5,8 +5,15 @@
 // ════════════════════════════════════════════════
 
 (function () {
-  // Don't show chat bubble on dashboard (AI is embedded there)
-  if (window.location.pathname.endsWith('swft-dashboard') || window.location.pathname.endsWith('swft-dashboard.html') || window.location.pathname === '/' || window.location.pathname === '') return;
+  // On the dashboard the AI chat is already embedded in the page, so we
+  // don't want a floating pill on top of it. But Ctrl+Win push-to-talk
+  // should still work there — transcribed text gets routed into the
+  // dashboard's own dashSend() handler instead of opening a duplicate
+  // panel. We detect this and branch the UI-rendering steps below.
+  const isDashboard = window.location.pathname.endsWith('swft-dashboard')
+    || window.location.pathname.endsWith('swft-dashboard.html')
+    || window.location.pathname === '/'
+    || window.location.pathname === '';
 
   const isMessagesPage = window.location.pathname.endsWith('swft-messages') || window.location.pathname.endsWith('swft-messages.html');
   const isTeamChatPage = window.location.pathname.endsWith('swft-team-chat') || window.location.pathname.endsWith('swft-team-chat.html');
@@ -506,6 +513,15 @@
   // The pill sits in the same spot on every page — bottom-center, fixed.
   // No per-page offsets; consistency wins.
 
+  // On the dashboard, hide the pill + panel entirely (we keep them in the
+  // DOM so the hotkey pipeline stays wired up, but the owner sees only
+  // the embedded dashboard chat).
+  if (isDashboard) {
+    style.textContent += `
+      .swft-chat-fab, .swft-chat-panel { display: none !important; }
+    `;
+  }
+
   document.head.appendChild(style);
 
   // ── Build DOM ──
@@ -989,17 +1005,31 @@
         const isMeaningful = transcribed.length >= 3 && /\b[a-z]{2,}\b/i.test(transcribed);
         if (isMeaningful) {
           if (_recordingAutoSend) {
-            // Hotkey path — send straight to the AI, open the panel to show the reply
-            if (!isOpen) {
-              isOpen = true;
-              panel.classList.add('visible');
-              fab.classList.add('open');
+            // Hotkey path. On the dashboard, route into the embedded
+            // dashSend() so the transcribed message appears in the
+            // dashboard's own chat UI. Elsewhere, open the pill panel
+            // and send through its normal pipeline.
+            if (isDashboard && typeof window.dashSend === 'function') {
+              window.dashSend(transcribed);
+            } else {
+              if (!isOpen) {
+                isOpen = true;
+                panel.classList.add('visible');
+                fab.classList.add('open');
+              }
+              sendMessage(transcribed);
             }
-            sendMessage(transcribed);
           } else {
-            input.value = transcribed;
-            sendBtn.disabled = false;
-            input.focus();
+            // In-panel mic (fill-input mode). Only meaningful off-dashboard
+            // since we hide the panel on dashboard — but be safe and fall
+            // back to dashSend there too.
+            if (isDashboard && typeof window.dashSend === 'function') {
+              window.dashSend(transcribed);
+            } else {
+              input.value = transcribed;
+              sendBtn.disabled = false;
+              input.focus();
+            }
           }
         }
       } catch (err) {
@@ -1051,6 +1081,9 @@
     if (!t) return true;
     if (t === input) return true; // chat panel input — OK
     if (panel.contains(t)) return true;
+    // The dashboard's embedded chat input is the intended target on that
+    // page, so allow the hotkey to fire even when it's focused.
+    if (isDashboard && t.id === 'dash-chat-input') return true;
     const tag = t.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || t.isContentEditable) return false;
     return true;
