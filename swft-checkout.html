@@ -270,7 +270,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <a href="/" class="logo-top">SWFT<span>.</span></a>
   <div class="logo-tagline">simple. smart. swft.</div>
   <h1 class="page-title">CHOOSE YOUR <span class="accent">PLAN</span></h1>
-  <p class="page-sub">14-day free trial on every plan. You won't be charged until the trial ends.</p>
+  <p class="page-sub">14-day free trial on every plan. No credit card required to start.</p>
 
   <!-- Billing toggle -->
   <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:32px;" id="coToggle">
@@ -352,11 +352,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <!-- Checkout button (shown when logged in or before auth) -->
   <div class="checkout-section" id="checkout-section">
     <div class="trial-note">
-      <strong>14-day free trial</strong> — no charge today. Cancel anytime.<br/>
-      Have a discount code? You can enter it on the next step.
+      <strong>14-day free trial</strong> — no credit card required.<br/>
+      We'll prompt you for payment when your trial ends.
     </div>
     <button class="checkout-btn" id="checkout-btn" onclick="startCheckout()">
-      <span class="btn-text">Continue to Payment</span>
+      <span class="btn-text">Start Free Trial</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       <div class="spinner"></div>
     </button>
@@ -368,7 +368,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <!-- SIGNUP VIEW -->
     <div id="auth-signup">
       <div class="auth-title">CREATE YOUR ACCOUNT</div>
-      <div class="auth-sub">Then you'll go straight to payment.</div>
+      <div class="auth-sub">No credit card required — start your free trial.</div>
       <div class="auth-form">
         <div class="auth-row">
           <div class="field">
@@ -393,7 +393,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
           <input type="password" id="s-password" placeholder="Min. 8 characters"/>
         </div>
         <button class="checkout-btn" id="signup-btn" onclick="handleSignup()" style="width:100%;justify-content:center;">
-          <span class="btn-text">Create Account & Continue</span>
+          <span class="btn-text">Start Free Trial</span>
           <div class="spinner"></div>
         </button>
         <div class="divider">or</div>
@@ -408,7 +408,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <!-- LOGIN VIEW -->
     <div id="auth-login" style="display:none;">
       <div class="auth-title">SIGN IN</div>
-      <div class="auth-sub">Sign in to continue to payment.</div>
+      <div class="auth-sub">Sign in to continue to your dashboard.</div>
       <div class="auth-form">
         <div class="field">
           <label>Email</label>
@@ -515,11 +515,30 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
   }
 
-  // ── "Continue to Payment" — if logged in go to Stripe, else show auth form ──
+  // ── Decide where to send the user after auth ──
+  // Trialing / active accounts → dashboard (no payment needed).
+  // Expired / canceled accounts → Stripe payment.
+  async function continueAfterAuth(user) {
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/me/status', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.status === 402) {
+        await goToStripe(user);
+        return;
+      }
+    } catch {
+      // Network error — fall through to dashboard
+    }
+    window.location.href = 'swft-dashboard';
+  }
+
+  // ── "Start Free Trial" — if logged in decide based on status, else show auth form ──
   window.startCheckout = function() {
     if (window._firebaseUser) {
       setLoading('checkout-btn');
-      goToStripe(window._firebaseUser);
+      continueAfterAuth(window._firebaseUser);
     } else {
       // Show inline auth form, hide checkout button
       document.getElementById('auth-section').classList.add('show');
@@ -559,7 +578,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       }, { merge: true });
 
       window._firebaseUser = cred.user;
-      await goToStripe(cred.user);
+      await continueAfterAuth(cred.user);
     } catch (err) {
       showError(firebaseMsg(err.code));
       resetButtons();
@@ -578,7 +597,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     try {
       const cred = await signInWithEmailAndPassword(auth, email, pwd);
       window._firebaseUser = cred.user;
-      await goToStripe(cred.user);
+      await continueAfterAuth(cred.user);
     } catch (err) {
       showError(firebaseMsg(err.code));
       resetButtons();
@@ -597,7 +616,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         updatedAt: serverTimestamp(),
       }, { merge: true });
       window._firebaseUser = user;
-      await goToStripe(user);
+      await continueAfterAuth(user);
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') showError(firebaseMsg(err.code));
     }
