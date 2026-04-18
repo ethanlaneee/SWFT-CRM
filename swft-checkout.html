@@ -484,6 +484,21 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('checkout-btn').disabled = false;
   });
 
+  // When the user arrives from the post-trial paywall (?expired=1), adjust the
+  // copy so it reads as a renewal rather than a fresh trial.
+  (function applyExpiredCopy() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') !== '1') return;
+    const title = document.querySelector('.page-title');
+    if (title) title.innerHTML = 'YOUR TRIAL HAS <span class="accent">ENDED</span>';
+    const sub = document.querySelector('.page-sub');
+    if (sub) sub.textContent = 'Pick a plan to keep using SWFT.';
+    const note = document.querySelector('.trial-note');
+    if (note) note.innerHTML = '<strong>Pick a plan</strong> to continue where you left off. Cancel anytime.';
+    const btn = document.querySelector('#checkout-btn .btn-text');
+    if (btn) btn.textContent = 'Continue to Payment';
+  })();
+
   // ── Mount Stripe Embedded Checkout ──
   async function goToStripe(user) {
     try {

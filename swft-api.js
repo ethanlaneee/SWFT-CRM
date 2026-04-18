@@ -102,6 +102,96 @@ async function getAuthToken() {
   return token;
 }
 
+// ── Paywall overlay: full-screen takeover when the backend reports the
+// trial has ended. Triggered from any apiFetch that returns 403 with
+// redirect: "/billing" (see server/middleware/checkAccess.js). Idempotent —
+// multiple failing calls will only render one overlay.
+let _paywallShown = false;
+function showTrialEndedPaywall(message) {
+  if (_paywallShown) return;
+  _paywallShown = true;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    .swft-paywall-backdrop {
+      position: fixed; inset: 0; z-index: 2147483647;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; font-family: 'DM Sans', sans-serif;
+      animation: swft-paywall-fade 0.3s ease;
+    }
+    @keyframes swft-paywall-fade { from { opacity: 0; } to { opacity: 1; } }
+    .swft-paywall-card {
+      background: #111; border: 1px solid #2c2c2c; border-radius: 20px;
+      max-width: 440px; width: 100%; padding: 40px 32px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .swft-paywall-icon {
+      width: 56px; height: 56px; margin: 0 auto 20px;
+      border-radius: 50%; background: rgba(200,241,53,0.12);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .swft-paywall-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: 32px;
+      letter-spacing: 1px; color: #f0f0f0; margin-bottom: 12px; line-height: 1.1;
+    }
+    .swft-paywall-title span { color: #c8f135; }
+    .swft-paywall-msg {
+      font-size: 15px; color: #7a7a7a; line-height: 1.5; margin-bottom: 28px;
+    }
+    .swft-paywall-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700;
+      background: #c8f135; color: #0a0a0a; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; width: 100%; justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 24px rgba(200,241,53,0.2);
+    }
+    .swft-paywall-btn:hover { transform: translateY(-1px); box-shadow: 0 0 36px rgba(200,241,53,0.3); }
+    .swft-paywall-link {
+      display: block; margin-top: 14px; font-size: 13px;
+      color: #7a7a7a; text-decoration: none; cursor: pointer;
+    }
+    .swft-paywall-link:hover { color: #f0f0f0; }
+  `;
+  document.head.appendChild(style);
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "swft-paywall-backdrop";
+  backdrop.innerHTML = `
+    <div class="swft-paywall-card" role="dialog" aria-modal="true" aria-labelledby="swft-paywall-title">
+      <div class="swft-paywall-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c8f135" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="swft-paywall-title" id="swft-paywall-title">YOUR TRIAL HAS <span>ENDED</span></div>
+      <div class="swft-paywall-msg"></div>
+      <button class="swft-paywall-btn" id="swft-paywall-upgrade">
+        Upgrade to continue
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <a class="swft-paywall-link" id="swft-paywall-logout">Sign out</a>
+    </div>
+  `;
+  backdrop.querySelector(".swft-paywall-msg").textContent =
+    message || "Upgrade to keep using SWFT. Pick a plan and continue where you left off.";
+  document.body.appendChild(backdrop);
+
+  document.getElementById("swft-paywall-upgrade").addEventListener("click", () => {
+    window.location.href = "swft-checkout?expired=1";
+  });
+  document.getElementById("swft-paywall-logout").addEventListener("click", async () => {
+    try {
+      const { getAuth, signOut } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+      await signOut(getAuth());
+    } catch (_) { /* sign-out failure shouldn't block the redirect */ }
+    window.location.href = "swft-login";
+  });
+}
+
 // ── Base fetch wrapper ──
 async function apiFetch(path, options = {}, _retried) {
   const token = await getAuthToken();
@@ -119,6 +209,12 @@ async function apiFetch(path, options = {}, _retried) {
     throw new Error(res.ok ? "Empty response from server" : `Server error (${res.status})`);
   }
   if (!res.ok) {
+    // Trial-expired paywall — backend returns 403 with redirect: "/billing".
+    // Intercept here so every page gets the overlay instead of a broken UI.
+    if (res.status === 403 && data && data.redirect === "/billing") {
+      showTrialEndedPaywall(data.message);
+      throw new Error(data.message || "Trial ended");
+    }
     // On 401, force-refresh the token and retry once
     if (res.status === 401 && !_retried) {
       _cachedToken = null;
