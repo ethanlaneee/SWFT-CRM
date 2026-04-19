@@ -646,12 +646,13 @@ import { initializeApp }                from "https://www.gstatic.com/firebasejs
 import { getAuth, onAuthStateChanged }  from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey:            "AIzaSyBZPrEFLRnRjN6Ix_c82fy-GxEMNZi2V3A",
-  authDomain:        "swft-crm.firebaseapp.com",
-  projectId:         "swft-crm",
-  storageBucket:     "swft-crm.appspot.com",
-  messagingSenderId: "952032957792473",
-  appId:             "1:952032957792473:web:abc123",
+  apiKey:            "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+  authDomain:        "swft-ai26.firebaseapp.com",
+  projectId:         "swft-ai26",
+  storageBucket:     "swft-ai26.firebasestorage.app",
+  messagingSenderId: "170879575187",
+  appId:             "1:170879575187:web:e329382b0adf9518ead966",
+  measurementId:     "G-B8BEW7E87V",
 };
 initializeApp(firebaseConfig);
 const auth = getAuth();
@@ -666,6 +667,11 @@ let selectedVoice = "jennifer";
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
+  // Guard against transient null on initial hydration from IndexedDB
+  if (!user) {
+    try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+    user = auth.currentUser;
+  }
   if (!user) { window.location.href = "swft-login"; return; }
   document.body.style.visibility = "visible";
 
