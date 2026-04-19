@@ -40,6 +40,7 @@ const surveyRouter = require("./routes/survey");
 const publicChatRouter = require("./routes/publicChat");
 const { router: serviceRequestsRouter, publicRouter: intakePublicRouter } = require("./routes/serviceRequests");
 const intakeFormsRouter = require("./routes/intakeForms");
+const { router: phoneRouter, vapiWebhookHandler } = require("./routes/phone");
 
 // ── Validate required environment variables on startup ──
 const REQUIRED_ENV = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "ANTHROPIC_API_KEY"];
@@ -108,6 +109,9 @@ app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+
+// ── Vapi phone webhook (no auth — called by Vapi after each call) ──
+app.post("/api/phone/vapi-webhook", express.json(), vapiWebhookHandler);
 
 // ── Social messaging webhooks (no auth — called by Meta) ──
 app.get("/api/webhooks/facebook", facebookVerifyWebhook);
@@ -468,6 +472,7 @@ app.use("/api/dev",               auth,               require("./routes/dev"));
 app.use("/api/outreach",          auth,               require("./routes/outreach"));
 app.use("/api/service-requests",  auth, checkAccess,  serviceRequestsRouter);
 app.use("/api/intake-forms",      auth, checkAccess,  intakeFormsRouter);
+app.use("/api/phone",             auth, checkAccess,  phoneRouter);
 // ── Public one-click unsubscribe for outreach emails (no auth — recipient clicks this) ──
 app.get("/unsubscribe", async (req, res) => {
   const { id } = req.query;
