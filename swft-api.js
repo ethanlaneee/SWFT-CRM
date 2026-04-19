@@ -326,6 +326,19 @@ const API = {
     save: (data) => apiFetch("/api/ai-settings", { method: "PUT", body: JSON.stringify(data) }),
   },
 
+  // ── Phone AI Add-on ──
+  phone: {
+    status:          ()         => apiFetch("/api/phone/status"),
+    subscribe:       ()         => apiFetch("/api/phone/subscribe",       { method: "POST", body: JSON.stringify({}) }),
+    verifySession:   (sessionId)=> apiFetch(`/api/phone/verify-session?phone_session_id=${encodeURIComponent(sessionId)}`),
+    provision:       (data)     => apiFetch("/api/phone/provision",       { method: "POST", body: JSON.stringify(data || {}) }),
+    saveSettings:    (data)     => apiFetch("/api/phone/settings",        { method: "PUT",  body: JSON.stringify(data) }),
+    calls:           (limit)    => apiFetch(`/api/phone/calls${limit ? `?limit=${limit}` : ""}`),
+    call:            (id)       => apiFetch(`/api/phone/calls/${id}`),
+    convertToLead:   (id, data) => apiFetch(`/api/phone/calls/${id}/lead`, { method: "POST", body: JSON.stringify(data || {}) }),
+    cancel:          ()         => apiFetch("/api/phone/cancel",          { method: "DELETE" }),
+  },
+
   // ── Survey (public — no auth) ──
   survey: {
     get:    (token) => fetch(`/api/survey/${token}`).then(r => r.json()),
