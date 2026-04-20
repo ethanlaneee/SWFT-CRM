@@ -204,6 +204,7 @@ const API = {
     send:   (id)     => apiFetch(`/api/invoices/${id}/send`,  { method: "POST", body: JSON.stringify({}) }),
     email:  (id, msg) => apiFetch(`/api/invoices/${id}/email`, { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
     pay:    (id, data) => apiFetch(`/api/invoices/${id}/pay`, { method: "POST", body: JSON.stringify(data) }),
+    cancelRecurring: (id) => apiFetch(`/api/invoices/${id}/cancel-recurring`, { method: "POST", body: "{}" }),
     delete: (id)     => apiFetch(`/api/invoices/${id}`,   { method: "DELETE" }),
   },
 

@@ -136,6 +136,23 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .pdf-totals{margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;}
 .pdf-total-line{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;min-width:220px;}
 .pdf-total-line.grand{font-size:18px;font-weight:700;color:#111;border-top:2px solid #111;margin-top:4px;padding-top:12px;}
+/* Recurring invoice controls */
+.pdf-recurring-row{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding:10px 12px;background:#fafafa;border:1px solid #eee;border-radius:8px;}
+.pdf-recurring-label{font-size:13px;color:#111;font-weight:500;display:flex;align-items:center;gap:8px;}
+.pdf-recurring-desc{font-size:11px;color:#888;margin-top:2px;}
+.pdf-toggle{position:relative;width:38px;height:22px;background:#ddd;border-radius:22px;cursor:pointer;transition:background 0.18s;flex-shrink:0;}
+.pdf-toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left 0.18s;}
+.pdf-toggle.on{background:#111;}
+.pdf-toggle.on::after{left:18px;}
+.pdf-recurring-details{padding:14px 12px 4px;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px;background:#fafafa;margin-top:-8px;display:none;}
+.pdf-recurring-details.open{display:block;}
+.pdf-recurring-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+.pdf-recurring-status{margin-top:10px;padding:8px 10px;font-size:11.5px;border-radius:6px;display:none;}
+.pdf-recurring-status.active{display:block;background:rgba(200,241,53,0.15);color:#5a7a00;border:1px solid rgba(200,241,53,0.4);}
+.pdf-recurring-status.cancelled{display:block;background:#f0f0f0;color:#666;border:1px solid #ddd;}
+.pdf-recurring-status.error{display:block;background:rgba(255,82,82,0.08);color:#c43030;border:1px solid rgba(255,82,82,0.3);}
+/* Recurring badge on list */
+.inv-recurring-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(179,136,255,0.12);color:var(--purple);font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:5px;margin-left:6px;letter-spacing:0.3px;text-transform:uppercase;}
 .pdf-notes-label{margin-top:24px;margin-bottom:6px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}
 .pdf-notes-area{background:#fafafa;border:1px solid #e8e8e8;border-radius:8px;padding:12px 14px;color:#111;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;min-height:60px;resize:vertical;line-height:1.5;width:100%;transition:border-color 0.15s;}
 .pdf-notes-area:focus{border-color:#111;}
@@ -299,11 +316,42 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <button class="pdf-add-btn" onclick="addLineItem()">+</button>
       </div>
       <div class="pdf-totals" id="totals-area"></div>
+
+      <!-- Recurring billing toggle -->
+      <div class="pdf-recurring-row">
+        <div>
+          <div class="pdf-recurring-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-6.36-2.64L3 16M3 12a9 9 0 0 1 9-9 9 9 0 0 1 6.36 2.64L21 8" stroke-width="1.8" stroke-linecap="round"/><polyline points="3 22 3 16 9 16" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="21 2 21 8 15 8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Repeat this invoice
+          </div>
+          <div class="pdf-recurring-desc">Bill the customer automatically on a schedule. Powered by Stripe.</div>
+        </div>
+        <div class="pdf-toggle" id="f-recurring-toggle" onclick="toggleRecurring()"></div>
+      </div>
+      <div class="pdf-recurring-details" id="f-recurring-details">
+        <div class="pdf-recurring-grid">
+          <div class="pdf-field-row"><span class="pdf-field-label">Cadence</span>
+            <select class="pdf-field-select" id="f-rec-cadence">
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Every 2 weeks</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          <div class="pdf-field-row"><span class="pdf-field-label">Starts</span><input class="pdf-field-input" id="f-rec-start" type="date"/></div>
+          <div class="pdf-field-row"><span class="pdf-field-label">Ends on</span><input class="pdf-field-input" id="f-rec-end" type="date" placeholder="optional"/></div>
+          <div class="pdf-field-row"><span class="pdf-field-label"># of cycles</span><input class="pdf-field-input" id="f-rec-count" type="number" min="1" placeholder="optional"/></div>
+        </div>
+        <div class="pdf-recurring-status" id="f-rec-status"></div>
+      </div>
+
       <div class="pdf-notes-label">Notes</div>
       <textarea class="pdf-notes-area" id="f-notes" placeholder="Add notes..."></textarea>
     </div>
     <div class="pdf-doc-footer">
       <button class="pdf-btn danger" id="btn-delete" onclick="deleteInvoice()" style="display:none;">Delete</button>
+      <button class="pdf-btn danger" id="btn-cancel-recurring" onclick="cancelRecurring()" style="display:none;">Stop Recurring</button>
       <div class="pdf-spacer"></div>
       <button class="pdf-btn" onclick="printInvoicePdf()">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke-width="1.8"/><rect x="6" y="14" width="12" height="8" stroke-width="1.8"/></svg>
@@ -407,8 +455,15 @@ function renderTable(){
       var daysOverdue=Math.floor((Date.now()-inv.dueDate)/86400000);
       overdueBadge='<span style="color:#f5a623;font-size:10px;margin-left:5px;" title="'+daysOverdue+' days overdue — follow-up agent tracking">🔔 '+daysOverdue+'d</span>';
     }
+    var recurringBadge='';
+    if(inv.isRecurring){
+      var recStatus=inv.recurring&&inv.recurring.status||'active';
+      var cadenceLabel={weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly',quarterly:'Quarterly',yearly:'Yearly'}[(inv.recurring&&inv.recurring.cadence)||'monthly']||'Recurring';
+      var label=recStatus==='cancelled'?'Stopped':recStatus==='error'?'Error':cadenceLabel;
+      recurringBadge='<span class="inv-recurring-badge" title="Recurring invoice">↻ '+label+'</span>';
+    }
     return '<div class="inv-row" onclick="openInvoice(\''+inv.id+'\')">'+
-      '<div><div class="inv-customer">'+(inv.customerName||'Unnamed')+'</div><div class="inv-job">'+(inv.service||'')+'</div></div>'+
+      '<div><div class="inv-customer">'+(inv.customerName||'Unnamed')+recurringBadge+'</div><div class="inv-job">'+(inv.service||'')+'</div></div>'+
       '<div class="inv-date">'+(inv.service||'—')+'</div>'+
       '<div class="inv-date">'+due+'</div>'+
       '<div class="inv-total">'+total+'</div>'+
@@ -469,7 +524,7 @@ async function openInvoice(id){
   }catch(e){showToast('Error loading invoice');}
 }
 
-function openNewInvoice(){_currentInv=null;_items=[];populateModal({});document.getElementById('btn-delete').style.display='none';document.getElementById('btn-paid').style.display='none';document.getElementById('btn-paylink').style.display='none';document.getElementById('btn-square-link').style.display='none';document.getElementById('modal-overlay').classList.add('open');}
+function openNewInvoice(){_currentInv=null;_items=[];populateModal({});document.getElementById('btn-delete').style.display='none';document.getElementById('btn-paid').style.display='none';document.getElementById('btn-paylink').style.display='none';document.getElementById('btn-square-link').style.display='none';document.getElementById('btn-cancel-recurring').style.display='none';document.getElementById('modal-overlay').classList.add('open');}
 
 function populateModal(inv){
   // Render company brand header
@@ -487,7 +542,74 @@ function populateModal(inv){
   document.getElementById('f-finish').value=inv.finish||'';
   document.getElementById('f-notes').value=inv.notes||'';
   document.getElementById('f-due').value=inv.dueDate?new Date(inv.dueDate).toISOString().split('T')[0]:'';
+
+  // Recurring state — restore fields from saved invoice, or default to "off"
+  var rec=inv.recurring||{};
+  var isRec=!!inv.isRecurring;
+  setRecurringToggle(isRec);
+  document.getElementById('f-rec-cadence').value=rec.cadence||'monthly';
+  document.getElementById('f-rec-start').value=rec.startDate?new Date(rec.startDate).toISOString().split('T')[0]:'';
+  document.getElementById('f-rec-end').value=rec.endDate?new Date(rec.endDate).toISOString().split('T')[0]:'';
+  document.getElementById('f-rec-count').value=rec.cycleCount||'';
+
+  // Status chip + cancel button show only for saved recurring invoices
+  var statusEl=document.getElementById('f-rec-status');
+  var cancelBtn=document.getElementById('btn-cancel-recurring');
+  statusEl.className='pdf-recurring-status';
+  cancelBtn.style.display='none';
+  if(isRec&&inv.id){
+    var st=rec.status||'active';
+    if(st==='active'){
+      var done=rec.completedCycles||0;
+      var cap=rec.cycleCount?(' of '+rec.cycleCount):'';
+      var next=rec.nextDueDate?new Date(rec.nextDueDate).toLocaleDateString():'—';
+      statusEl.classList.add('active');
+      statusEl.textContent='Active — '+done+cap+' cycles billed. Next: '+next+'.';
+      cancelBtn.style.display='';
+    } else if(st==='cancelled'||st==='completed'){
+      statusEl.classList.add('cancelled');
+      statusEl.textContent=(st==='completed'?'Completed':'Stopped')+' — no further invoices will be sent.';
+    } else if(st==='error'){
+      statusEl.classList.add('error');
+      statusEl.textContent=rec.error||'Stripe subscription could not be created. Check your Stripe connection in Settings.';
+    }
+  }
+
   renderLineItems();
+}
+
+function setRecurringToggle(on){
+  var t=document.getElementById('f-recurring-toggle');
+  var details=document.getElementById('f-recurring-details');
+  if(on){t.classList.add('on');details.classList.add('open');}
+  else{t.classList.remove('on');details.classList.remove('open');}
+}
+function toggleRecurring(){
+  var on=!document.getElementById('f-recurring-toggle').classList.contains('on');
+  setRecurringToggle(on);
+}
+function buildRecurringPayload(){
+  var on=document.getElementById('f-recurring-toggle').classList.contains('on');
+  if(!on)return null;
+  var startStr=document.getElementById('f-rec-start').value;
+  var endStr=document.getElementById('f-rec-end').value;
+  var count=parseInt(document.getElementById('f-rec-count').value,10);
+  return{
+    enabled:true,
+    cadence:document.getElementById('f-rec-cadence').value,
+    startDate:startStr?new Date(startStr).getTime():Date.now(),
+    endDate:endStr?new Date(endStr).getTime():null,
+    cycleCount:isFinite(count)&&count>0?count:null,
+  };
+}
+async function cancelRecurring(){
+  if(!_currentInv||!_currentInv.id)return;
+  var ok=await swftConfirm('Stop recurring invoice?','This cancels the Stripe subscription. No more cycles will be billed. The history stays on this invoice.',{danger:true,confirmLabel:'Stop Billing'});
+  if(!ok)return;
+  try{
+    await API.invoices.cancelRecurring(_currentInv.id);
+    showToast('Recurring stopped');closeModal();loadInvoices();
+  }catch(e){showToast('Error: '+e.message);}
 }
 
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
@@ -585,9 +707,20 @@ async function saveInvoice(){
   if(!custSel.value){showToast('Select a customer');return;}
   var t=computeTotals();
   var data={customerId:custSel.value,customerName:custOpt.textContent,items:_items,subtotal:t.subtotal,taxRate:t.taxRate,tax:t.tax,total:t.total,status:document.getElementById('f-status').value,service:document.getElementById('f-service').value,sqft:document.getElementById('f-sqft').value,address:document.getElementById('f-address').value,finish:document.getElementById('f-finish').value,notes:document.getElementById('f-notes').value,dueDate:document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).getTime():null};
+  // Recurring is only set up on create. Editing a live recurring invoice
+  // later just saves non-recurring fields — changing cadence mid-stream
+  // would require regenerating the Stripe Subscription, which we don't
+  // support yet.
+  var rec=buildRecurringPayload();
+  if(rec&&(!_currentInv||!_currentInv.id)){data.recurring=rec;}
   try{
     if(_currentInv&&_currentInv.id){await API.invoices.update(_currentInv.id,data);showToast('Invoice saved');}
-    else{await API.invoices.create(data);showToast('Invoice created');}
+    else{
+      var created=await API.invoices.create(data);
+      if(created&&created.recurringWarning){showToast(created.recurringWarning);}
+      else if(rec){showToast('Recurring invoice created — Stripe will bill automatically');}
+      else{showToast('Invoice created');}
+    }
     closeModal();loadInvoices();
   }catch(e){showToast('Error: '+e.message);}
 }
