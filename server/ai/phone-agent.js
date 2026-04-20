@@ -144,13 +144,17 @@ async function getOrCreateVapiAssistant(orgId, orgData, phoneSettings) {
 
 // ── Phone number provisioning ─────────────────────────────────────────────────
 
-async function provisionPhoneNumber(vapiAssistantId, country, areaCode) {
+// Vapi removed the auto-buy path on `provider: "twilio"` — that endpoint now
+// requires the caller to supply an already-owned number in E.164 plus Twilio
+// credentials. For a turnkey add-on we instead use `provider: "vapi"`, which
+// buys a Vapi-managed number and bills it on our Vapi account. Vapi assigns
+// an available US number; area-code preference isn't accepted on this path.
+async function provisionPhoneNumber(vapiAssistantId, _country, _areaCode) {
   const body = {
-    provider: "twilio",
+    provider: "vapi",
     assistantId: vapiAssistantId,
-    country: country || "US",
+    name: "SWFT Phone AI",
   };
-  if (areaCode) body.numberDesiredAreaCode = String(areaCode);
 
   const data = await vapiRequest("POST", "/phone-number", body);
   return { phoneNumberId: data.id, phoneNumber: data.number };
