@@ -419,6 +419,52 @@ app.get("/api/login-hint", hintLimiter, async (req, res) => {
   }
 });
 
+// ── Demo login — public, no auth ──
+// Issues a Firebase custom token for the shared demo account so visitors can
+// explore the app without creating a profile. The demo Firestore doc is created
+// (or refreshed) on every call so it always has an active subscription.
+const demoLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests." },
+});
+const DEMO_UID = "demo-swft-user";
+app.post("/api/demo-login", demoLimiter, async (req, res) => {
+  try {
+    const { authAdmin, db } = require("./firebase");
+
+    // Upsert the demo Firestore profile so it's always active
+    const now = Date.now();
+    await db.collection("users").doc(DEMO_UID).set({
+      uid: DEMO_UID,
+      email: "demo@goswft.com",
+      firstName: "Jake",
+      lastName: "Reynolds",
+      name: "Jake Reynolds",
+      displayName: "Jake Reynolds",
+      company: "Reynolds Concrete LLC",
+      businessName: "Reynolds Concrete LLC",
+      plan: "pro",
+      isSubscribed: true,
+      accountStatus: "active",
+      stripeCustomerId: "",
+      trialStartDate: now,
+      trialEndDate: now + 365 * 24 * 60 * 60 * 1000,
+      role: "owner",
+      orgId: DEMO_UID,
+      updatedAt: now,
+    }, { merge: true });
+
+    const token = await authAdmin.createCustomToken(DEMO_UID);
+    return res.json({ token });
+  } catch (err) {
+    console.error("[demo-login]", err.message);
+    return res.status(500).json({ error: "Demo login unavailable." });
+  }
+});
+
 // ── Routes ──
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
