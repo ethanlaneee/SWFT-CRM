@@ -83,22 +83,22 @@ async function vapiRequest(method, path, body) {
 
 // ── Assistant management ──────────────────────────────────────────────────────
 
-// Vapi's built-in voice provider ("vapi") ships with a set of named voices we
-// can use without any extra PlayHT or ElevenLabs credentials. We keep the
-// friendly names the UI uses and map each to a Vapi voice that fits the vibe
-// (warm vs. professional, female vs. male).
-const VAPI_VOICE_MAP = {
-  jennifer: "Kylie",    // warm female
-  natalie:  "Paige",    // professional female
-  ryan:     "Elliot",   // warm male
-  will:     "Cole",     // professional male
+// Map the friendly voice names the UI uses to stable ElevenLabs voice IDs.
+// Vapi supports 11labs natively and these voice IDs are part of ElevenLabs'
+// permanent default library (Rachel, Bella, Antoni, Adam) — they won't be
+// deprecated the way Vapi's legacy built-in voices were.
+const ELEVENLABS_VOICE_MAP = {
+  jennifer: "21m00Tcm4TlvDq8ikWAM", // Rachel — warm female
+  natalie:  "EXAVITQu4vr4xnSDxMaL", // Bella — professional female
+  ryan:     "ErXwobaYiN019PkySvjV", // Antoni — warm male
+  will:     "pNInz6obpgDQGcFmaJgB", // Adam — professional male
 };
 
 function buildAssistantPayload(orgData, phoneSettings, orgId) {
   const companyName = orgData.companyName || orgData.businessName || "Business";
   const appUrl      = process.env.APP_URL || "https://goswft.com";
   const friendlyVoice = phoneSettings.voiceId || "jennifer";
-  const vapiVoice = VAPI_VOICE_MAP[friendlyVoice] || VAPI_VOICE_MAP.jennifer;
+  const elevenVoiceId = ELEVENLABS_VOICE_MAP[friendlyVoice] || ELEVENLABS_VOICE_MAP.jennifer;
 
   return {
     name: `${companyName} — SWFT Phone Agent`,
@@ -110,8 +110,9 @@ function buildAssistantPayload(orgData, phoneSettings, orgId) {
       temperature: 0.6,
     },
     voice: {
-      provider: "vapi",
-      voiceId: vapiVoice,
+      provider: "11labs",
+      voiceId: elevenVoiceId,
+      model: "eleven_turbo_v2_5",
     },
     firstMessage: phoneSettings.greeting || `Thanks for calling ${companyName}! How can I help you today?`,
     endCallMessage: "Perfect — I've got all your information. Someone from our team will be in touch very shortly. Have a great day!",
