@@ -308,6 +308,7 @@ const API = {
     clockIn:        ()         => apiFetch("/api/tracker/clock-in",  { method: "POST", body: JSON.stringify({}) }),
     clockOut:       ()         => apiFetch("/api/tracker/clock-out", { method: "POST", body: JSON.stringify({}) }),
     updateLocation: (data)     => apiFetch("/api/tracker/location",  { method: "POST", body: JSON.stringify(data) }),
+    optimizeRoute:  (data)     => apiFetch("/api/tracker/optimize-route", { method: "POST", body: JSON.stringify(data) }),
   },
 
   // ── Automations ──

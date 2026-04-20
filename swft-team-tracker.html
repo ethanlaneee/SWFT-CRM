@@ -81,6 +81,34 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--gray2);flex-shrink:0;}
 .status-dot.on{background:var(--green);box-shadow:0 0 6px rgba(200,241,53,0.5);}
 
+/* Optimize Route — per-member action */
+.member-optimize{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.member-optimize:hover{background:var(--surface2);color:var(--green);border-color:var(--green);}
+.member-optimize:disabled{opacity:0.5;cursor:wait;}
+
+/* Route panel — overlay in top-right of map when a route is rendered */
+.route-panel{position:absolute;top:14px;right:14px;width:320px;max-width:calc(100% - 28px);max-height:calc(100% - 28px);background:var(--surface);border:1px solid var(--border2);border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,0.55);z-index:5;display:none;flex-direction:column;overflow:hidden;animation:fadeUp 0.25s ease both;}
+.route-panel.open{display:flex;}
+.route-panel-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.route-panel-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--white);}
+.route-panel-close{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.route-panel-close:hover{background:var(--surface2);color:var(--white);}
+.route-stats{padding:10px 14px;display:flex;gap:14px;border-bottom:1px solid var(--border);font-size:12px;}
+.route-stat{display:flex;flex-direction:column;gap:2px;}
+.route-stat-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--green);}
+.route-stat-lbl{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--gray2);}
+.route-stops{flex:1;overflow-y:auto;padding:6px 8px 10px;}
+.route-stop{display:flex;gap:10px;padding:8px 8px;border-radius:8px;}
+.route-stop + .route-stop{margin-top:4px;}
+.route-stop:hover{background:var(--surface2);}
+.route-stop-num{width:22px;height:22px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.route-stop-body{flex:1;min-width:0;}
+.route-stop-name{font-size:12.5px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.route-stop-addr{font-size:11px;color:var(--gray);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.route-stop-leg{font-size:10.5px;color:var(--gray2);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.route-panel-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
+.route-truncated{font-size:10.5px;color:var(--amber);padding:8px 14px;background:rgba(245,166,35,0.06);border-bottom:1px solid var(--border);}
+
 /* Map container */
 .map-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-height:0;animation:fadeUp 0.4s ease both;}
 #map{width:100%;height:100%;min-height:420px;}
@@ -178,6 +206,15 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       <div class="map-wrap">
         <div id="map"></div>
         <div class="map-overlay" id="map-overlay">Loading map…</div>
+        <div class="route-panel" id="route-panel">
+          <div class="route-panel-header">
+            <div class="route-panel-title" id="route-panel-title">Optimized Route</div>
+            <button class="route-panel-close" onclick="clearRoute()" title="Clear route">&times;</button>
+          </div>
+          <div class="route-stats" id="route-stats"></div>
+          <div class="route-truncated" id="route-truncated" style="display:none;"></div>
+          <div class="route-stops" id="route-stops"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -358,12 +395,19 @@ function renderMembers(){
     var status = m.clockedIn ? 'Clocked in' : 'Off the clock';
     var updated = m.location ? ' · ' + fmtAgo(m.location.updatedAt) : '';
     var role = (m.role || 'technician').toLowerCase();
-    return '<div class="member-row" data-uid="' + (m.uid || '') + '" onclick="focusMember(\'' + (m.uid || '') + '\')">'
+    var uid = m.uid || '';
+    var optimizeBtn = uid
+      ? '<button class="member-optimize" title="Optimize today\'s route" onclick="event.stopPropagation();optimizeRoute(\'' + uid + '\',this)">'
+          + '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2" stroke-width="1.8"/><circle cx="19" cy="18" r="2" stroke-width="1.8"/><path d="M7 6h8a4 4 0 0 1 0 8H9a4 4 0 0 0 0 8h8" stroke-width="1.8" stroke-linecap="round"/></svg>'
+        + '</button>'
+      : '';
+    return '<div class="member-row" data-uid="' + uid + '" onclick="focusMember(\'' + uid + '\')">'
       + '<div class="member-avatar ' + role + '">' + initialsOf(m.name || m.email) + '</div>'
       + '<div class="member-info">'
         + '<div class="member-name">' + (m.name || '(unnamed)') + '</div>'
         + '<div class="member-meta"><span class="status-dot ' + (m.clockedIn ? 'on' : '') + '"></span>' + status + updated + '</div>'
       + '</div>'
+      + optimizeBtn
     + '</div>';
   }).join('');
 }
@@ -427,6 +471,153 @@ function focusMember(uid){
   document.querySelectorAll('.member-row').forEach(function(el){ el.classList.remove('selected'); });
   var row = document.querySelector('.member-row[data-uid="' + uid + '"]');
   if(row) row.classList.add('selected');
+}
+
+/* ── Route optimization ── */
+var _routePolyline = null;
+var _routeStopMarkers = [];
+
+// Google encoded polyline decoder — copied from the standard algorithm so we
+// don't need the geometry library. Returns an array of {lat,lng}.
+function decodePolyline(encoded){
+  if(!encoded) return [];
+  var points = [], index = 0, lat = 0, lng = 0;
+  while(index < encoded.length){
+    var b, shift = 0, result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1)); lat += dlat;
+    shift = 0; result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1)); lng += dlng;
+    points.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+  return points;
+}
+
+function clearRoute(){
+  if(_routePolyline){ _routePolyline.setMap(null); _routePolyline = null; }
+  _routeStopMarkers.forEach(function(m){ m.setMap(null); });
+  _routeStopMarkers = [];
+  var panel = document.getElementById('route-panel');
+  if(panel) panel.classList.remove('open');
+}
+
+function fmtDuration(sec){
+  if(!sec) return '0m';
+  var h = Math.floor(sec / 3600);
+  var m = Math.round((sec % 3600) / 60);
+  if(h && m) return h + 'h ' + m + 'm';
+  if(h) return h + 'h';
+  return m + 'm';
+}
+function fmtMiles(meters){
+  if(!meters) return '0 mi';
+  return (meters * 0.000621371).toFixed(1) + ' mi';
+}
+function numberPinSvg(n){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">' +
+    '<path d="M16 0C7.16 0 0 7.16 0 16c0 11.64 16 24 16 24s16-12.36 16-24C32 7.16 24.84 0 16 0z" fill="#c8f135"/>' +
+    '<circle cx="16" cy="16" r="10" fill="#0a0a0a"/>' +
+    '<text x="16" y="20" text-anchor="middle" font-family="DM Sans,Arial,sans-serif" font-size="11" font-weight="700" fill="#c8f135">' + n + '</text>' +
+    '</svg>';
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+
+async function optimizeRoute(techUid, btn){
+  if(!_mapReady){ showToast('Map still loading…'); return; }
+  if(btn) btn.disabled = true;
+  var member = _members.find(function(x){ return x.uid === techUid; });
+  var techName = (member && member.name) || 'Member';
+  showToast('Optimizing ' + techName + "'s route…");
+  try {
+    var r = await API.team.optimizeRoute({ techUid: techUid });
+    renderRoute(r, techName);
+  } catch (e) {
+    showToast(e.message || 'Optimize failed');
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+}
+
+function renderRoute(r, techName){
+  clearRoute();
+  if(!r || !r.orderedJobs || !r.orderedJobs.length){
+    showToast('No route to show');
+    return;
+  }
+
+  // Draw the polyline if we got one
+  if(r.polyline){
+    var path = decodePolyline(r.polyline);
+    _routePolyline = new google.maps.Polyline({
+      path: path,
+      map: _map,
+      strokeColor: '#c8f135',
+      strokeOpacity: 0.9,
+      strokeWeight: 4,
+      zIndex: 50,
+    });
+    var bounds = new google.maps.LatLngBounds();
+    path.forEach(function(p){ bounds.extend(p); });
+    _map.fitBounds(bounds, 80);
+  }
+
+  // Drop numbered pins at each stop so the owner can see the order on the map.
+  // We don't have lat/lng on jobs — only addresses — but the Directions legs
+  // carry the geocoded endpoint coordinates via the polyline path. For v1 we
+  // rely on the polyline to show the route; stop pins use approximate
+  // positions picked from evenly-spaced polyline points.
+  if(r.polyline){
+    var pts = decodePolyline(r.polyline);
+    var stopCount = r.orderedJobs.length;
+    for(var i = 0; i < stopCount; i++){
+      var idx = i === 0 ? 0 : (i === stopCount - 1 ? pts.length - 1 : Math.floor((i / (stopCount - 1)) * (pts.length - 1)));
+      var pt = pts[idx];
+      if(!pt) continue;
+      var marker = new google.maps.Marker({
+        position: pt,
+        map: _map,
+        icon: { url: numberPinSvg(i + 1), scaledSize: new google.maps.Size(28, 35), anchor: new google.maps.Point(14, 35) },
+        zIndex: 60,
+      });
+      _routeStopMarkers.push(marker);
+    }
+  }
+
+  // Populate the side panel
+  document.getElementById('route-panel-title').textContent = techName + ' — Today';
+  document.getElementById('route-stats').innerHTML =
+    '<div class="route-stat"><span class="route-stat-val">' + fmtMiles(r.totalDistanceMeters) + '</span><span class="route-stat-lbl">Total drive</span></div>' +
+    '<div class="route-stat"><span class="route-stat-val">' + fmtDuration(r.totalDurationSeconds) + '</span><span class="route-stat-lbl">Drive time</span></div>' +
+    '<div class="route-stat"><span class="route-stat-val">' + r.orderedJobs.length + '</span><span class="route-stat-lbl">Stops</span></div>';
+
+  var truncEl = document.getElementById('route-truncated');
+  if(r.truncated){
+    truncEl.style.display = 'block';
+    truncEl.textContent = 'Showing first 25 of ' + r.originalCount + ' stops. Split into two days for more.';
+  } else {
+    truncEl.style.display = 'none';
+  }
+
+  var legs = r.legs || [];
+  var stopsHtml = r.orderedJobs.map(function(j, i){
+    var prevLeg = i > 0 ? legs[i - 1] : null;
+    var legLine = prevLeg
+      ? '<div class="route-stop-leg">+ ' + prevLeg.durationText + ' · ' + prevLeg.distanceText + '</div>'
+      : '';
+    var name = j.customerName || j.title || 'Stop ' + (i + 1);
+    var addr = j.address || '';
+    return '<div class="route-stop">'
+      + '<div class="route-stop-num">' + (i + 1) + '</div>'
+      + '<div class="route-stop-body">'
+        + '<div class="route-stop-name">' + name + '</div>'
+        + '<div class="route-stop-addr">' + addr + '</div>'
+        + legLine
+      + '</div>'
+    + '</div>';
+  }).join('');
+  document.getElementById('route-stops').innerHTML = stopsHtml;
+  document.getElementById('route-panel').classList.add('open');
 }
 function setClockButton(on){
   _myClockedIn = !!on;
