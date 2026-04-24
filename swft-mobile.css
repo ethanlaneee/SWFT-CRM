@@ -1825,29 +1825,17 @@
   .mob-more-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
-/* ── TEAM TRACKER: mirror desktop flex-fill approach so map gets real height ──
-   Desktop works because tracker-split has flex:1 inside page-body's flex column,
-   giving the map concrete dimensions via height:100%. Replicate that on mobile
-   with a single-column grid and grid-template-rows:auto 1fr so the map row
-   fills whatever space remains after the member panel.                        */
+/* ── TEAM TRACKER: let the desktop CSS handle layout; only patch iOS canvas ──
+   The HTML already has @media(max-width:860px){.tracker-split{grid-template-columns:1fr;
+   grid-template-rows:auto 1fr}} which gives the correct single-column layout.
+   The desktop flex chain (tracker-split flex:1 → page-body flex:1 → main) gives
+   #map{height:100%;min-height:420px} a concrete resolved height — same on mobile.
+   The ONLY mobile-specific issue: -webkit-overflow-scrolling:touch on .page-body
+   creates an iOS compositing layer that swallows canvas children (the Maps tiles). */
 @media (max-width: 768px) {
-  .tracker-split {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto 1fr !important;
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
-    gap: 10px !important;
-  }
-  .map-wrap {
-    height: auto !important;
-    min-height: 200px !important;
-    overflow: hidden !important;
-  }
-  #map {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 200px !important;
+  .main:has(.tracker-split) .page-body {
+    -webkit-overflow-scrolling: auto !important;
+    overflow-scrolling: auto !important;
   }
   .member-panel { max-height: 180px !important; }
 }
