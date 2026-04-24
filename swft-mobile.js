@@ -437,6 +437,7 @@
           var gap = 8;
           swftPanel.style.setProperty('bottom', (kh + gap) + 'px', 'important');
           swftPanel.style.setProperty('max-height', (window.visualViewport.height - gap * 2) + 'px', 'important');
+          window.scrollTo(0, 0); // cancel iOS viewport pan so panel stays in view
         } else {
           swftPanel.style.removeProperty('bottom');
           swftPanel.style.removeProperty('max-height');
@@ -506,6 +507,7 @@
     // Delegated handlers for SWFT AI input (created dynamically by swft-chat.js)
     document.addEventListener('focusin', function (e) {
       if (!e.target.classList || !e.target.classList.contains('swft-chat-input')) return;
+      window.scrollTo(0, 0); // immediately cancel iOS viewport pan
       setTimeout(adjustPanels, 300);
       setTimeout(adjustPanels, 600);
     });

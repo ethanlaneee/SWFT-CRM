@@ -413,7 +413,7 @@
     height: 4px !important;
     background: var(--green) !important;
     font-size: 0 !important;
-    vertical-align: baseline !important;
+    vertical-align: 2px !important;
     margin-left: 2px !important;
   }
   .topbar-right { gap: 8px !important; }
