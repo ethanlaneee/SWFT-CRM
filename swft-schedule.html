@@ -1374,11 +1374,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       '<div class="cal-popup-row"><span class="cal-popup-label">Address</span><span class="cal-popup-val">' + (job.address||'—') + '</span></div>' +
       '<div class="cal-popup-row"><span class="cal-popup-label">Status</span><span class="cal-popup-val">' + (job.color||'—') + '</span></div>' +
       '<div style="margin-top:10px;"><a href="swft-jobs" style="font-size:11px;color:var(--green);">View in Jobs &rarr;</a></div>';
-    // Position near click
-    var x = e.clientX;
-    var y = e.clientY;
-    popup.style.left = Math.min(x, window.innerWidth - 300) + 'px';
-    popup.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+    // Mobile: CSS centers it; desktop: position near click
+    if (window.innerWidth > 768) {
+      var x = e.clientX, y = e.clientY;
+      popup.style.left = Math.min(x, window.innerWidth - 300) + 'px';
+      popup.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+    } else {
+      popup.style.left = '';
+      popup.style.top = '';
+    }
     popup.classList.add('open');
     e.stopPropagation();
   }

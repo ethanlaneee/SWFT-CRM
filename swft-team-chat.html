@@ -440,6 +440,7 @@ function filterChats(q){
 
 // ── Select and load a chat ──
 async function selectChat(chatId){
+  if (window.innerWidth <= 768) document.body.classList.add('mob-tc-open');
   _activeChatId = chatId;
   var chat = _chats.find(function(c){ return c.id === chatId; });
   if(!chat) return;

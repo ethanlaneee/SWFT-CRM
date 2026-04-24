@@ -244,29 +244,41 @@
     transition-duration: 0.22s !important;
   }
 
-  /* ── Calendar popups: centered on mobile, properly sized ── */
-  .cal-popup, .wx-popup {
+  /* ── ALL fixed popups: centered, properly sized, no horizontal scroll ── */
+  .cal-popup,
+  .wx-popup {
     position: fixed !important;
     left: 50% !important;
-    top: 50% !important;
+    top: 45% !important;
     transform: translate(-50%, -50%) !important;
     width: calc(100vw - 40px) !important;
     max-width: 320px !important;
-    max-height: 70vh !important;
+    max-height: 72vh !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
   .cal-popup.open, .wx-popup.open {
+    display: block !important;
     transform: translate(-50%, -50%) !important;
   }
-  /* Popup rows: wrap text instead of overflowing */
+  /* Prevent any content inside from overflowing popup width */
+  .cal-popup *,
+  .wx-popup * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Popup rows: wrap so long text doesn't force horizontal scroll */
   .cal-popup-row {
     flex-wrap: wrap !important;
+    align-items: flex-start !important;
     gap: 2px !important;
   }
+  .cal-popup-label { flex-shrink: 0 !important; }
   .cal-popup-val {
-    max-width: 100% !important;
     word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: right !important;
   }
 
   /* ── Show mobile-only elements ── */
@@ -942,6 +954,14 @@
     letter-spacing: 1.5px !important;
     color: var(--gray) !important;
   }
+
+  /* Search bar — compact, matches contact-search */
+  .chat-list-search {
+    padding: 5px 10px !important;
+    margin-top: 6px !important;
+    border-radius: 8px !important;
+  }
+  .chat-list-search input { font-size: 13px !important; }
 
   /* Channel list items — match contact-item sizing */
   .chat-list-items { flex: 1 !important; overflow-y: auto !important; }
