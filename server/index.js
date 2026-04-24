@@ -382,10 +382,9 @@ app.use(express.static(staticRoot, {
   etag: true,        // enables conditional requests (If-None-Match → 304)
   lastModified: true,
   setHeaders: function(res, filePath) {
-    // HTML, JS, CSS: no-cache + ETag = always revalidate, but 304 when unchanged (fast)
-    // This means deploys take effect immediately while repeated page loads are cheap
+    // HTML, JS, CSS: no-store = browser never caches, always fetches fresh copy
     if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
-      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
     // Images/fonts: safe to cache long-term — they don't change between deploys
     else if (/\.(png|jpg|jpeg|gif|svg|ico|woff2?|ttf)$/i.test(filePath)) {
