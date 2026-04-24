@@ -282,18 +282,22 @@ async function loadMapsSdk(){
     var res = await API.user.mapsKey();
     if(!res || !res.key) throw new Error('Maps key unavailable');
     await new Promise(function(resolve, reject){
+      var timer = setTimeout(function(){ reject(new Error('Maps SDK timeout')); }, 15000);
+      window.__swftMapReady = function(){
+        clearTimeout(timer);
+        delete window.__swftMapReady;
+        try { initMap(); } catch(e){ reject(e); return; }
+        _mapReady = true;
+        var ov = document.getElementById('map-overlay');
+        if(ov) ov.classList.add('hidden');
+        resolve();
+      };
       var s = document.createElement('script');
       s.async = true;
-      s.defer = true;
-      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(res.key) + '&v=weekly';
-      s.onload = resolve;
-      s.onerror = function(){ reject(new Error('Failed to load Google Maps')); };
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(res.key) + '&v=weekly&callback=__swftMapReady';
+      s.onerror = function(){ clearTimeout(timer); reject(new Error('Failed to load Google Maps')); };
       document.head.appendChild(s);
     });
-    initMap();
-    _mapReady = true;
-    var overlay = document.getElementById('map-overlay');
-    if(overlay) overlay.classList.add('hidden');
   } catch (e) {
     var overlay = document.getElementById('map-overlay');
     if(overlay) overlay.textContent = 'Map unavailable: ' + (e.message || 'error');
@@ -304,61 +308,29 @@ async function loadMapsSdk(){
 
 function initMap(){
   var mapEl = document.getElementById('map');
-  // Ensure the container has explicit dimensions before Google Maps reads them.
-  // On mobile, CSS may not have resolved height:100% in time.
-  if (mapEl.offsetHeight < 50) {
-    var wrapH = mapEl.parentElement ? mapEl.parentElement.offsetHeight : 0;
-    mapEl.style.height = (wrapH > 50 ? wrapH : Math.round(window.innerHeight * 0.55)) + 'px';
-  }
-  _map = new google.maps.Map(mapEl, {
+  var opts = {
     zoom: 12,
     center: { lat: 39.5, lng: -98.35 },
     disableDefaultUI: false,
     mapTypeControl: false,
     streetViewControl: false,
-    renderingType: google.maps.RenderingType ? google.maps.RenderingType.RASTER : undefined,
     styles: [
-      { elementType: 'geometry',                stylers: [{ color: '#1a1a1a' }] },
-      { elementType: 'labels.text.stroke',      stylers: [{ color: '#0a0a0a' }] },
-      { elementType: 'labels.text.fill',        stylers: [{ color: '#7a7a7a' }] },
-      { featureType: 'road',     elementType: 'geometry', stylers: [{ color: '#2c2c2c' }] },
-      { featureType: 'water',    elementType: 'geometry', stylers: [{ color: '#111111' }] },
-      { featureType: 'poi',      stylers: [{ visibility: 'off' }] },
-      { featureType: 'transit',  stylers: [{ visibility: 'off' }] },
+      { elementType: 'geometry',               stylers: [{ color: '#1a1a1a' }] },
+      { elementType: 'labels.text.stroke',     stylers: [{ color: '#0a0a0a' }] },
+      { elementType: 'labels.text.fill',       stylers: [{ color: '#7a7a7a' }] },
+      { featureType: 'road',    elementType: 'geometry', stylers: [{ color: '#2c2c2c' }] },
+      { featureType: 'water',   elementType: 'geometry', stylers: [{ color: '#111111' }] },
+      { featureType: 'poi',     stylers: [{ visibility: 'off' }] },
+      { featureType: 'transit', stylers: [{ visibility: 'off' }] },
     ],
-  });
-  // Force resize after layout settles (mobile needs multiple passes)
-  [250, 600, 1200].forEach(function(ms){
-    setTimeout(function(){
-      if(!_map) return;
-      google.maps.event.trigger(_map, 'resize');
-    }, ms);
-  });
-  // Re-center after each resize so tiles fill the viewport
-  [300, 700, 1300].forEach(function(ms){
-    setTimeout(function(){
-      if(_map) _map.panTo(_map.getCenter());
-    }, ms);
-  });
-  // ResizeObserver: re-trigger when container dimensions actually change
-  if(typeof ResizeObserver !== 'undefined'){
-    var _mapRO = new ResizeObserver(function(){
-      if(_map){ google.maps.event.trigger(_map, 'resize'); _map.panTo(_map.getCenter()); }
-    });
-    _mapRO.observe(document.getElementById('map'));
+  };
+  if(google.maps.RenderingType && google.maps.RenderingType.RASTER){
+    opts.renderingType = google.maps.RenderingType.RASTER;
   }
-  // IntersectionObserver: trigger when map scrolls into view
-  if(typeof IntersectionObserver !== 'undefined'){
-    var _mapIO = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if(e.isIntersecting && _map){
-          google.maps.event.trigger(_map, 'resize');
-          _map.panTo(_map.getCenter());
-        }
-      });
-    }, { threshold: 0.1 });
-    _mapIO.observe(document.getElementById('map'));
-  }
+  _map = new google.maps.Map(mapEl, opts);
+  setTimeout(function(){
+    if(_map){ google.maps.event.trigger(_map, 'resize'); _map.panTo(_map.getCenter()); }
+  }, 400);
 }
 
 function roleColor(role){
