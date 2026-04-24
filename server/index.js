@@ -374,18 +374,21 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(staticRoot, {
-  etag: false,
+  etag: true,        // enables 304 Not Modified — no re-download when file unchanged
+  lastModified: true,
   setHeaders: function(res, filePath) {
-    // HTML: never cache — always fetch fresh so deploys take effect immediately
+    // HTML: always revalidate so deploys take effect immediately
+    // With ETags the browser sends If-None-Match and gets a cheap 304 if unchanged
     if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+      res.setHeader('Cache-Control', 'no-cache');
     }
-    // JS/CSS: allow browser to cache for 10 min, must revalidate after
-    // This prevents redundant full-file downloads on page navigation
+    // JS/CSS: cache for 1 hour; ETags let the browser skip the download when unchanged
     else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
-      res.setHeader('Cache-Control', 'public, max-age=600, must-revalidate');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+    // Images/fonts: cache for 7 days
+    else if (/\.(png|jpg|jpeg|gif|svg|ico|woff2?|ttf)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
     }
   }
 }));
