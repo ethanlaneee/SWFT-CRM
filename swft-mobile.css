@@ -335,27 +335,62 @@
   #agent-strip::-webkit-scrollbar { display: none; }
   #agent-strip > a { display: none !important; }
 
-  /* ── JOB ROWS: simplified — show name + address only ── */
+  /* ── JOB ROWS: name + "Tap for more" ── */
+  .table-head { display: none !important; }
   .job-row {
     display: flex !important;
-    flex-direction: column !important;
-    padding: 10px 14px !important;
-    gap: 2px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 11px 14px !important;
+    gap: 8px !important;
   }
-  /* Hide: checkbox, customer, status select, action buttons */
+  /* Hide: checkbox, customer, address, status select, action buttons */
   .job-row > div:nth-child(1),
   .job-row > div:nth-child(3),
+  .job-row > div:nth-child(4),
   .job-row > div:nth-child(5),
   .job-row > div:nth-child(6) { display: none !important; }
-  /* Show job-id-cell as block */
-  .job-id-cell { display: block !important; }
-  /* Hide the #JOB-xxxx sub-line, keep just the title */
+  .job-id-cell {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
   .job-id { display: none !important; }
   .job-title { font-size: 13px !important; font-weight: 500 !important; }
-  .job-addr { font-size: 11px !important; color: var(--gray) !important; margin-top: 1px !important; }
-  /* Status pip next to title inline */
-  .job-id-cell { display: flex !important; align-items: center !important; gap: 6px !important; }
   .status-pip { flex-shrink: 0; }
+  .job-row::after {
+    content: "Tap for more" !important;
+    font-size: 10px !important;
+    color: var(--gray) !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ── CUSTOMER ROWS: name + "Tap for more" ── */
+  .cust-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+  }
+  /* Hide: checkbox, address, phone, email, status, tags, actions */
+  .cust-row > div:nth-child(1),
+  .cust-row > div:nth-child(3),
+  .cust-row > div:nth-child(4),
+  .cust-row > div:nth-child(5),
+  .cust-row > div:nth-child(6),
+  .cust-row > div:nth-child(7),
+  .cust-row > div:nth-child(8) { display: none !important; }
+  .cust-name-cell { flex: 1 !important; }
+  .cust-row::after {
+    content: "Tap for more" !important;
+    font-size: 10px !important;
+    color: var(--gray) !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
 
   .schedule-row { padding: 10px 14px !important; }
 
