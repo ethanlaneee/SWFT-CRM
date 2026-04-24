@@ -425,22 +425,25 @@
         }
       });
 
-      // Dashboard AI panel: resize to exactly fill the space above the keyboard
+      // Dashboard AI panel: iMessage-style — hide nav bar, resize panel to hug keyboard
       var dashPanel = document.querySelector('#dash-main-grid > .panel');
       if (dashPanel) {
         var pb = document.querySelector('.page-body');
+        var nav = document.querySelector('.mob-bottom-nav');
         if (kh > 60) {
           var topbarH = 54;
           var availH = window.visualViewport.height - topbarH;
           dashPanel.style.setProperty('height', availH + 'px', 'important');
           dashPanel.style.setProperty('max-height', availH + 'px', 'important');
           if (pb) pb.style.setProperty('padding-bottom', '0', 'important');
-          // Prevent iOS from panning the viewport — snap back to top
+          // Hide nav bar so input sits directly above keyboard
+          if (nav) nav.style.setProperty('display', 'none', 'important');
           window.scrollTo(0, 0);
         } else {
           dashPanel.style.removeProperty('height');
           dashPanel.style.removeProperty('max-height');
           if (pb) pb.style.removeProperty('padding-bottom');
+          if (nav) nav.style.removeProperty('display');
         }
         var msgs = document.querySelector('#dash-chat-messages');
         if (msgs && kh > 60) setTimeout(function () { msgs.scrollTop = msgs.scrollHeight; }, 50);
