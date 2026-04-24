@@ -1422,10 +1422,10 @@
   /* Segment control: full-width wrapping on mobile */
   .segment { display: flex !important; flex-wrap: wrap !important; width: 100% !important; }
   .segment button { flex: 1 !important; padding: 8px 10px !important; }
-  /* Tabs: on mobile show emoji + hide long label text */
-  .ptab { padding: 10px 12px !important; font-size: 0 !important; gap: 4px !important; }
+  /* Tabs: show emoji alongside label, compact sizing, horizontal scroll */
+  .ptab { padding: 10px 12px !important; }
   .ptab-dot { display: none !important; }
-  .ptab-emoji { font-size: 16px !important; }
-  .ptab-label { display: none !important; }
-  .page-tabs { gap: 4px !important; padding: 0 0 0 2px !important; margin-bottom: 18px !important; }
+  .ptab-emoji { font-size: 14px !important; }
+  .ptab-label { font-size: 12px !important; }
+  .page-tabs { gap: 2px !important; }
 }
