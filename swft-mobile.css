@@ -621,16 +621,28 @@
   /* Customers table row */
   .cust-row { min-width: 0 !important; }
 
-  /* ── QUOTE / INVOICE EDIT MODAL — centered, full height, no horizontal scroll ── */
-  .modal-overlay { padding: 8px !important; align-items: center !important; }
+  /* ── QUOTE / INVOICE EDIT MODAL — sits above bottom nav ── */
+  .modal-overlay {
+    padding: 8px !important;
+    padding-bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px)) + 8px) !important;
+    align-items: center !important;
+  }
   .pdf-modal {
     max-width: 100% !important;
     width: 100% !important;
-    max-height: 92dvh !important;
+    max-height: calc(100dvh - 90px - max(0px, env(safe-area-inset-bottom, 0px))) !important;
     border-radius: 14px !important;
     overflow: hidden !important;
   }
-  .pdf-doc-header { padding: 20px 16px 0 !important; flex-wrap: wrap !important; gap: 10px !important; }
+  /* Keep header in a single row — brand left, X right, no wrap */
+  .pdf-doc-header {
+    padding: 16px 16px 0 !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+  }
+  .pdf-brand { flex: 1 !important; min-width: 0 !important; overflow: hidden !important; }
+  .pdf-close { flex-shrink: 0 !important; }
   .pdf-2col { grid-template-columns: 1fr !important; gap: 8px !important; }
   .pdf-li-header { display: none !important; }
   .pdf-li-row {
@@ -754,9 +766,20 @@
     scrollbar-width: none !important;
   }
   .drawer-tabs::-webkit-scrollbar { display: none; }
-  /* Stack 2-column edit form rows into single column */
+  /* Stack 2-column edit form rows into single column (except date+time rows) */
   .edit-row-2 {
     grid-template-columns: 1fr !important;
+  }
+  /* Keep date + time side-by-side — they're compact enough */
+  .drawer .edit-row-2:has(input[type="date"]),
+  .drawer .edit-row-2:has(input[type="time"]) {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  /* Constrain date/time input height to match text inputs */
+  .drawer input[type="date"],
+  .drawer input[type="time"] {
+    height: 38px !important;
+    padding: 8px 10px !important;
   }
   /* Force all form inputs inside drawer to fit within bounds */
   .drawer input,
@@ -868,15 +891,17 @@
     color: var(--white) !important;
   }
 
-  /* ── More sheet — more room so bottom row never clips ── */
+  /* ── More sheet — align bottom edge exactly with bottom nav top edge ── */
   .mob-more-sheet {
     max-height: 82vh !important;
-    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    padding-bottom: 20px !important;
   }
 
-  /* ── Settings nav sticky — match mobile topbar height ── */
+  /* ── Settings nav sticky — stick at top of page-body scroll container ── */
   .settings-nav {
-    top: 54px !important;
+    top: 0 !important;
+    margin: 0 !important;
     padding-bottom: 12px !important;
   }
 
@@ -1062,7 +1087,7 @@
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
     width: 100% !important;
     min-width: unset !important;
     height: auto !important;
@@ -1082,7 +1107,7 @@
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
     width: 100% !important;
     height: auto !important;
     z-index: 101 !important;
@@ -1091,6 +1116,7 @@
     transition: transform 0.3s cubic-bezier(0.22,1,0.36,1) !important;
     display: flex !important;
     flex-direction: column !important;
+    overflow: hidden !important;
   }
 
   /* Conversation active: chat slides in, thread list slides out */
@@ -1165,7 +1191,7 @@
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
     width: 100% !important;
     min-width: unset !important;
     height: auto !important;
@@ -1184,7 +1210,7 @@
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
     width: 100% !important;
     height: auto !important;
     z-index: 101 !important;
