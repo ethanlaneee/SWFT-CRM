@@ -647,6 +647,8 @@
     max-height: 88dvh !important;
     border-radius: 16px !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: 1110 !important; /* must be above nj-overlay z-index:1100 */
     /* top:50%;left:50%;translate(-50%,-50%) from desktop CSS is preserved */
   }
   /* Remove drag handle (bottom-sheet artifact) */
@@ -657,6 +659,16 @@
     gap: 8px !important;
   }
   .nj-body { padding: 8px 16px 12px !important; }
+  /* Force all form inputs inside modal to stay within bounds
+     (overrides the exception-list rule: input { max-width: none }) */
+  .nj-modal .nj-input,
+  .nj-modal input,
+  .nj-modal select,
+  .nj-modal textarea {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 
   /* ── JOB DETAIL / SCHEDULE DRAWER: centered modal on mobile ── */
   .drawer-overlay { z-index: 1100 !important; }
@@ -686,9 +698,35 @@
   .drawer.center-modal.open {
     transform: translate(-50%, -50%) !important;
   }
+  /* Prevent horizontal overflow inside the drawer scroll area */
+  .drawer-content {
+    overflow-x: hidden !important;
+    padding: 16px !important;
+  }
+  /* 4-stat strip → 2×2 grid on mobile */
+  .drawer-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* Tabs row: scrollable, single row, no wrapping */
+  .drawer-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding: 0 12px !important;
+    scrollbar-width: none !important;
+  }
+  .drawer-tabs::-webkit-scrollbar { display: none; }
   /* Stack 2-column edit form rows into single column */
   .edit-row-2 {
     grid-template-columns: 1fr !important;
+  }
+  /* Force all form inputs inside drawer to fit within bounds */
+  .drawer input,
+  .drawer select,
+  .drawer textarea,
+  .drawer .edit-input {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* ── SWFT MODAL (confirm dialogs) — above bottom nav ── */
@@ -1002,8 +1040,17 @@
   /* Compose bar — pinned to bottom of chat panel */
   .compose-bar {
     flex-shrink: 0 !important;
-    padding: 10px 12px !important;
+    padding: 8px 10px !important;
     border-top: 1px solid var(--border) !important;
+  }
+  /* Hide var-chips on mobile (template vars not needed for quick mobile replies) */
+  .var-chips { display: none !important; }
+  /* Compose subject row: full width */
+  .compose-subject-row { width: 100% !important; }
+  .compose-subject-row input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
   }
 }
 
