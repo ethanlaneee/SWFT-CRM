@@ -82,26 +82,8 @@
   border: 2px solid rgba(17,17,17,0.96);
 }
 
-/* Hamburger menu button in topbar */
-.mob-menu-btn {
-  display: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border2);
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--gray);
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 0.14s;
-}
-.mob-menu-btn:active {
-  background: var(--surface2);
-  color: var(--white);
-}
+/* Hamburger menu button — removed, bottom nav replaces sidebar navigation */
+.mob-menu-btn { display: none !important; }
 
 /* Mobile sidebar backdrop */
 .mob-sidebar-overlay {
@@ -131,7 +113,7 @@
   display: block;
 }
 
-/* More bottom sheet */
+/* More bottom sheet — completely hidden until .open is added */
 .mob-more-sheet {
   position: fixed;
   bottom: calc(60px + env(safe-area-inset-bottom, 0px));
@@ -143,14 +125,25 @@
   border-radius: 20px 20px 0 0;
   z-index: 860;
   padding: 0 14px 20px;
-  transform: translateY(110%);
-  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1);
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s ease,
+              visibility 0s linear 0.32s;
   max-height: 74vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 .mob-more-sheet.open {
   transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s ease,
+              visibility 0s linear 0s;
 }
 
 .mob-more-handle {
@@ -227,7 +220,6 @@
 
   /* ── Show mobile-only elements ── */
   .mob-bottom-nav { display: flex; }
-  .mob-menu-btn { display: flex; margin-right: 4px; }
 
   /* ── SIDEBAR: off-screen by default, shown as overlay ── */
   .sidebar {
@@ -408,11 +400,25 @@
     border-radius: 16px !important;
   }
 
-  /* ── TOAST ── */
+  /* ── TOAST: centered on screen ── */
   .toast {
+    top: 50% !important;
+    left: 50% !important;
     font-size: 12px !important;
     padding: 10px 16px !important;
-    max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 40px) !important;
+    width: auto !important;
+    transform: translate(-50%, calc(-50% - 10px)) !important;
+  }
+  .toast.show {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  /* ── PREVENT iOS AUTO-ZOOM on input focus (requires font-size ≥ 16px) ── */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 
   /* ── ACTIVITY ITEMS ── */

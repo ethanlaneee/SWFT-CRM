@@ -87,9 +87,9 @@
   function init() {
     if (!document.querySelector('.sidebar')) return; // not an app page
     injectBottomNav();
-    injectHamburger();
     injectSidebarOverlay();
     injectMoreSheet();
+    fixInputsAboveKeyboard();
   }
 
   /* ── Bottom nav ── */
@@ -126,20 +126,6 @@
     });
 
     document.body.appendChild(nav);
-  }
-
-  /* ── Hamburger button in topbar ── */
-  function injectHamburger() {
-    var topbar = document.querySelector('.topbar');
-    if (!topbar) return;
-
-    var btn = document.createElement('button');
-    btn.className = 'mob-menu-btn';
-    btn.id = 'mob-menu-btn';
-    btn.setAttribute('aria-label', 'Open navigation menu');
-    btn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>';
-    btn.onclick = toggleMobileSidebar;
-    topbar.insertBefore(btn, topbar.firstChild);
   }
 
   /* ── Sidebar overlay backdrop ── */
@@ -234,6 +220,17 @@
     if (overlay) overlay.classList.remove('open');
     if (sheet) sheet.classList.remove('open');
     document.body.style.overflow = '';
+  }
+
+  /* ── Scroll input into view above keyboard on focus ── */
+  function fixInputsAboveKeyboard() {
+    document.addEventListener('focusin', function (e) {
+      var el = e.target;
+      if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
+      setTimeout(function () {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350); // wait for iOS keyboard to fully appear
+    }, true);
   }
 
   /* ── Keyboard: close overlays on Escape ── */
