@@ -410,17 +410,37 @@
     if (!window.visualViewport) return;
     function adjustPanels() {
       var kh = Math.max(0, window.innerHeight - window.visualViewport.height - (window.visualViewport.offsetTop || 0));
+
+      // Fixed-position chat panels (Messages + Team Chat): shift bottom up with keyboard
       ['.chat-panel', '.tc-panel'].forEach(function (sel) {
         var el = document.querySelector(sel);
         if (!el) return;
         if (kh > 60) {
-          // Keyboard open — override CSS !important by matching it with inline !important
           el.style.setProperty('bottom', kh + 'px', 'important');
         } else {
-          // Keyboard closed — remove inline override, let CSS take over
           el.style.removeProperty('bottom');
         }
       });
+
+      // Dashboard AI panel: resize to exactly fill the space above the keyboard
+      var dashPanel = document.querySelector('#dash-main-grid > .panel');
+      if (dashPanel) {
+        var pb = document.querySelector('.page-body');
+        if (kh > 60) {
+          var topbarH = 54;
+          var availH = window.visualViewport.height - topbarH;
+          dashPanel.style.setProperty('height', availH + 'px', 'important');
+          dashPanel.style.setProperty('max-height', availH + 'px', 'important');
+          if (pb) pb.style.setProperty('padding-bottom', '0', 'important');
+        } else {
+          dashPanel.style.removeProperty('height');
+          dashPanel.style.removeProperty('max-height');
+          if (pb) pb.style.removeProperty('padding-bottom');
+        }
+        var msgs = document.querySelector('#dash-chat-messages');
+        if (msgs && kh > 60) setTimeout(function () { msgs.scrollTop = msgs.scrollHeight; }, 50);
+      }
+
       // Keep messages scrolled to newest when keyboard opens
       if (kh > 60) {
         ['#chat-messages', '.tc-messages'].forEach(function (sel) {
