@@ -116,7 +116,7 @@
 
 /* ── TABLE ── */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both;}
-.table-head{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.table-head{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 90px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;transition:color 0.14s;}
 .th:hover{color:var(--gray);}
 .th.sort-active{color:var(--green);}
@@ -134,7 +134,7 @@
 .bulk-clear-btn{margin-left:auto;font-size:11px;color:var(--gray);cursor:pointer;padding:4px 8px;border-radius:6px;transition:all 0.12s;}
 .bulk-clear-btn:hover{color:var(--white);background:var(--surface2);}
 
-.job-row{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
+.job-row{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 90px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
 .job-row:last-child{border-bottom:none;}
 .job-row:hover{background:var(--surface2);}
 .job-row:nth-child(1){animation-delay:0.04s;} .job-row:nth-child(2){animation-delay:0.08s;} .job-row:nth-child(3){animation-delay:0.12s;} .job-row:nth-child(4){animation-delay:0.16s;} .job-row:nth-child(5){animation-delay:0.20s;} .job-row:nth-child(6){animation-delay:0.20s;}
@@ -1043,6 +1043,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
             '<option value="complete"' + (status === 'complete' ? ' selected' : '') + '>Complete</option>' +
           '</select></div>' +
           '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
+            '<div class="row-btn" onclick="event.stopPropagation();pipelineJobToQuote(\'' + job.id + '\')" title="Create Quote for this job" style="color:#4d9fff;border-color:rgba(77,159,255,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>' +
             '<div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this,\'' + job.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>' +
             '<div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>' +
           '</div>';
@@ -1228,6 +1229,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     rows.forEach(function(r) { tbody.appendChild(r); });
     showToast('Sorted by ' + _sortLabels[key]);
+  }
+
+  function pipelineJobToQuote(jobId) {
+    var j = window._jobs[jobId];
+    if (!j) return;
+    var url = 'swft-quotes?customer=' + encodeURIComponent(j.customerName || '');
+    if (j.address) url += '&address=' + encodeURIComponent(j.address);
+    if (j.service) url += '&service=' + encodeURIComponent(j.service);
+    window.location.href = url;
   }
 
   async function deleteJobRow(el, jobId) {

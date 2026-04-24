@@ -216,6 +216,18 @@ body{visibility:hidden;background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sa
 .nj-btn:hover{background:var(--surface2);color:var(--white);}
 .nj-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);flex:2;}
 .nj-btn.primary:hover{background:#d5ff40;}
+.nj-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* PIPELINE WIZARD */
+.pl-steps{display:flex;align-items:center;padding:12px 20px 0;gap:0;}
+.pl-dot{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray);transition:all 0.25s;flex-shrink:0;}
+.pl-dot.done{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.pl-dot.active{background:var(--green);border-color:var(--green);color:#0a0a0a;box-shadow:0 0 0 4px rgba(200,241,53,0.2);}
+.pl-line{flex:1;height:2px;background:var(--border2);transition:background 0.25s;}
+.pl-line.done{background:var(--green);}
+.pl-step-label{font-size:10px;color:var(--gray);letter-spacing:0.5px;padding:4px 20px 0;}
+.pl-summary{background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.15);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--gray);}
+.pl-summary strong{color:var(--green);}
 
 /* DASHBOARD CHAT */
 .dash-chat-sug{background:var(--surface2);border:1px solid var(--border2);color:var(--gray);font-family:'DM Sans',sans-serif;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border2);}
@@ -326,9 +338,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
       <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg><div class="badge-dot"></div></div>
-      <button class="btn-primary swft-magnetic" onclick="openNewJobModal()">
+      <button class="btn-primary swft-magnetic" onclick="openPipelineModal()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
-        New Job
+        New Customer Pipeline
       </button>
     </div>
   </header>
@@ -516,6 +528,132 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!cust) return;
     var addr = document.getElementById('nj-address');
     if (addr && !addr.value) addr.value = cust.address || '';
+  }
+
+  // ── PIPELINE WIZARD ──
+  var _plStep = 1, _plCustomerId = null, _plCustomerName = null, _plJobId = null, _plJobTitle = null;
+
+  function openPipelineModal() {
+    _plStep = 1; _plCustomerId = null; _plCustomerName = null; _plJobId = null; _plJobTitle = null;
+    ['pl-cust-name','pl-cust-phone','pl-cust-email','pl-cust-address','pl-job-sqft','pl-job-address','pl-quote-amount','pl-quote-sqft','pl-quote-notes'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    var jobTime=document.getElementById('pl-job-time'); if(jobTime) jobTime.value='08:00';
+    var jobDate=document.getElementById('pl-job-date'); if(jobDate) jobDate.value='';
+    var customSvc=document.getElementById('pl-job-custom-svc'); if(customSvc) customSvc.style.display='none';
+    var svcSel=document.getElementById('pl-job-service'); if(svcSel) svcSel.selectedIndex=0;
+    plShowStep(1);
+    document.getElementById('pl-overlay').classList.add('open');
+    document.getElementById('pl-modal').classList.add('open');
+  }
+
+  function closePipelineModal() {
+    document.getElementById('pl-overlay').classList.remove('open');
+    document.getElementById('pl-modal').classList.remove('open');
+  }
+
+  function plShowStep(n) {
+    _plStep = n;
+    var stepLabels = {1:'Step 1 of 3 — Add Customer', 2:'Step 2 of 3 — Create Job', 3:'Step 3 of 3 — Create Quote'};
+    var nextLabels = {1:'Create Customer →', 2:'Create Job →', 3:'Create Quote & Finish'};
+    document.getElementById('pl-step-label').textContent = stepLabels[n];
+    document.getElementById('pl-next-btn').textContent = nextLabels[n];
+    document.getElementById('pl-back-btn').style.display = n > 1 ? '' : 'none';
+    [1,2,3].forEach(function(i) {
+      document.getElementById('pl-step'+i).style.display = i===n ? 'flex' : 'none';
+      var dot = document.getElementById('pl-dot'+i);
+      dot.className = 'pl-dot' + (i<n?' done':i===n?' active':'');
+      if(i<3){var line=document.getElementById('pl-line'+i); line.className='pl-line'+(i<n?' done':'');}
+    });
+    if(n===2){
+      var s=document.getElementById('pl-cust-summary');
+      if(s) s.innerHTML='<strong>Customer:</strong> '+(_plCustomerName||'');
+      var addr=document.getElementById('pl-cust-address');
+      var jobAddr=document.getElementById('pl-job-address');
+      if(jobAddr&&addr&&addr.value&&!jobAddr.value) jobAddr.value=addr.value;
+    }
+    if(n===3){
+      var svcEl=document.getElementById('pl-job-service');
+      var svc=svcEl&&svcEl.value==='Other'?document.getElementById('pl-job-custom-svc').value:svcEl?svcEl.value:'';
+      var sqft=document.getElementById('pl-job-sqft');
+      var qs=document.getElementById('pl-quote-sqft'); if(qs&&sqft&&sqft.value&&!qs.value) qs.value=sqft.value;
+      var s=document.getElementById('pl-job-summary');
+      if(s) s.innerHTML='<strong>Customer:</strong> '+(_plCustomerName||'')+' &nbsp;·&nbsp; <strong>Job:</strong> '+esc(svc||_plJobTitle||'');
+    }
+  }
+
+  function plGoBack() { if(_plStep>1) plShowStep(_plStep-1); }
+
+  async function plNext() {
+    var btn=document.getElementById('pl-next-btn');
+    if(btn.disabled) return;
+    if(_plStep===1) await plCreateCustomer();
+    else if(_plStep===2) await plCreateJob();
+    else if(_plStep===3) await plCreateQuote();
+  }
+
+  async function plCreateCustomer() {
+    var name=(document.getElementById('pl-cust-name').value||'').trim();
+    if(!name){showToast('Customer name is required');return;}
+    var btn=document.getElementById('pl-next-btn');
+    btn.disabled=true; btn.textContent='Creating...';
+    try{
+      var c=await API.customers.create({
+        name:name,
+        phone:(document.getElementById('pl-cust-phone').value||'').trim(),
+        email:(document.getElementById('pl-cust-email').value||'').trim(),
+        address:(document.getElementById('pl-cust-address').value||'').trim()
+      });
+      _plCustomerId=c.id||c;
+      _plCustomerName=name;
+      plShowStep(2);
+    }catch(e){showToast('Error: '+e.message);}
+    btn.disabled=false;
+  }
+
+  async function plCreateJob() {
+    var svcEl=document.getElementById('pl-job-service');
+    var svc=svcEl&&svcEl.value==='Other'?(document.getElementById('pl-job-custom-svc').value||'').trim():svcEl?svcEl.value:'Stamped Concrete';
+    if(!svc){showToast('Service type is required');return;}
+    var btn=document.getElementById('pl-next-btn');
+    btn.disabled=true; btn.textContent='Creating...';
+    var address=(document.getElementById('pl-job-address').value||'').trim();
+    var sqft=(document.getElementById('pl-job-sqft').value||'').trim();
+    var dateVal=document.getElementById('pl-job-date').value;
+    var timeVal=document.getElementById('pl-job-time').value;
+    var title=_plCustomerName+' - '+svc;
+    try{
+      var j=await API.jobs.create({
+        title:title, customerName:_plCustomerName, customerId:_plCustomerId||'',
+        service:svc, address:address, sqft:sqft,
+        scheduledDate:dateVal||(new Date().toISOString().split('T')[0]),
+        startTime:timeVal||'08:00', status:'scheduled'
+      });
+      _plJobId=j.id||j;
+      _plJobTitle=title;
+      plShowStep(3);
+    }catch(e){showToast('Error: '+e.message);}
+    btn.disabled=false;
+  }
+
+  async function plCreateQuote() {
+    var btn=document.getElementById('pl-next-btn');
+    btn.disabled=true; btn.textContent='Creating...';
+    var svcEl=document.getElementById('pl-job-service');
+    var svc=svcEl&&svcEl.value==='Other'?(document.getElementById('pl-job-custom-svc').value||'').trim():svcEl?svcEl.value:'';
+    var amount=parseFloat((document.getElementById('pl-quote-amount').value||'').replace(/[^0-9.]/g,''))||0;
+    var sqft=(document.getElementById('pl-quote-sqft').value||'').trim();
+    var notes=(document.getElementById('pl-quote-notes').value||'').trim();
+    var address=(document.getElementById('pl-job-address').value||'').trim();
+    try{
+      await API.quotes.create({
+        customerName:_plCustomerName, customerId:_plCustomerId||'',
+        service:svc, address:address, sqft:sqft, notes:notes,
+        items:amount?[{desc:svc||'Service',qty:1,rate:amount,total:amount}]:[],
+        total:amount, status:'draft'
+      });
+      closePipelineModal();
+      showToast('Pipeline complete! Customer, job, and quote created.');
+    }catch(e){showToast('Error: '+e.message);}
+    btn.disabled=false;
   }
 
   function openNewJobModal() {
@@ -1169,6 +1307,71 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Create Job
     </button>
+  </div>
+</div>
+
+<!-- PIPELINE WIZARD MODAL -->
+<div class="nj-overlay" id="pl-overlay" onclick="closePipelineModal()"></div>
+<div class="nj-modal" id="pl-modal" style="max-height:90vh;">
+  <div class="nj-header">
+    <div>
+      <div class="nj-title">NEW CUSTOMER PIPELINE</div>
+      <div class="pl-step-label" id="pl-step-label">Step 1 of 3 — Add Customer</div>
+    </div>
+    <div class="nj-close" onclick="closePipelineModal()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg></div>
+  </div>
+  <div class="pl-steps">
+    <div class="pl-dot active" id="pl-dot1">1</div>
+    <div class="pl-line" id="pl-line1"></div>
+    <div class="pl-dot" id="pl-dot2">2</div>
+    <div class="pl-line" id="pl-line2"></div>
+    <div class="pl-dot" id="pl-dot3">3</div>
+  </div>
+
+  <!-- Step 1: Customer -->
+  <div id="pl-step1" class="nj-body">
+    <div class="nj-field"><label class="nj-label">Customer Name *</label><input class="nj-input" id="pl-cust-name" type="text" placeholder="e.g. John Smith"/></div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Phone</label><input class="nj-input" id="pl-cust-phone" type="tel" placeholder="(555) 000-0000"/></div>
+      <div class="nj-field"><label class="nj-label">Email</label><input class="nj-input" id="pl-cust-email" type="email" placeholder="john@email.com"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Property Address</label><input class="nj-input" id="pl-cust-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
+  </div>
+
+  <!-- Step 2: Job -->
+  <div id="pl-step2" class="nj-body" style="display:none;">
+    <div id="pl-cust-summary" class="pl-summary"></div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Service Type</label>
+        <select class="nj-input" id="pl-job-service" onchange="if(this.value==='Other'){document.getElementById('pl-job-custom-svc').style.display='block';}else{document.getElementById('pl-job-custom-svc').style.display='none';}">
+          <option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option><option>Other</option>
+        </select>
+        <input class="nj-input" id="pl-job-custom-svc" type="text" placeholder="Custom service type..." style="display:none;margin-top:6px;"/>
+      </div>
+      <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="pl-job-sqft" type="text" placeholder="e.g. 480"/></div>
+    </div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="pl-job-date" type="date"/></div>
+      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="pl-job-time" type="time" value="08:00"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="pl-job-address" type="text" placeholder="Job site address"/></div>
+  </div>
+
+  <!-- Step 3: Quote -->
+  <div id="pl-step3" class="nj-body" style="display:none;">
+    <div id="pl-job-summary" class="pl-summary"></div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Est. Amount ($)</label><input class="nj-input" id="pl-quote-amount" type="text" placeholder="e.g. 5500"/></div>
+      <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="pl-quote-sqft" type="text" placeholder="auto-filled"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Notes / Scope</label><textarea class="nj-input nj-textarea" id="pl-quote-notes" placeholder="Details, materials, scope of work..."></textarea></div>
+    <div style="font-size:11px;color:var(--gray);margin-top:-4px;">A draft quote will be created and linked to this job. You can add line items from the Quotes page.</div>
+  </div>
+
+  <div class="nj-footer">
+    <button class="nj-btn" id="pl-cancel-btn" onclick="closePipelineModal()">Cancel</button>
+    <button class="nj-btn" id="pl-back-btn" style="display:none;flex:0.6;" onclick="plGoBack()">← Back</button>
+    <button class="nj-btn primary" id="pl-next-btn" onclick="plNext()">Create Customer →</button>
   </div>
 </div>
 

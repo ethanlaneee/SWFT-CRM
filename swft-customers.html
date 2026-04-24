@@ -135,7 +135,7 @@ transition:border-color 0.15s;
 
 .table-head {
 display:grid;
-grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
+grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 112px;
 padding:11px 20px;
 border-bottom:1px solid var(--border);
 background:var(--surface2);
@@ -154,7 +154,7 @@ user-select:none; transition:color 0.14s;
 
 .cust-row {
 display:grid;
-grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
+grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 112px;
 padding:13px 20px;
 border-bottom:1px solid var(--border);
 align-items:center;
@@ -857,10 +857,20 @@ async function loadCustomers() {
         '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(cust.email||'—') + '</div>' +
         '<div class="cust-status"><span class="status-active">Active</span></div>' +
         '<div class="cust-tags-cell" style="position:relative;" onclick="event.stopPropagation()">' + ((cust.tags||[]).length > 0 ? (cust.tags||[]).map(function(t){ return '<span class="cust-tag">' + esc(t) + '</span>'; }).join('') : '') + '<button class="tag-add-btn" onclick="event.stopPropagation();toggleTagPopover(this,\'' + cust.id + '\')">+</button></div>' +
-        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></div>';
+        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;">' +
+          '<div class="row-btn" onclick="event.stopPropagation();pipelineCustToJob(\'' + cust.id + '\')" title="Create Job for this customer" style="color:#4d9fff;border-color:rgba(77,159,255,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>' +
+          '<div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>' +
+          '<div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>' +
+        '</div>';
       tbody.appendChild(row);
     });
   } catch(e) { console.error('loadCustomers error:', e); }
+}
+
+function pipelineCustToJob(id) {
+  var c = window._customers[id];
+  if (!c) return;
+  window.location.href = 'swft-jobs?customer=' + encodeURIComponent(c.name || '') + '&new=1';
 }
 
 async function deleteCustById(id) {
