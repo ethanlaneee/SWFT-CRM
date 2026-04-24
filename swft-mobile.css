@@ -1825,49 +1825,31 @@
   .mob-more-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
-/* ── TEAM TRACKER: undo bounded scroll so Google Maps tiles render on iOS ──
-   The global body:has(.page-body){overflow:hidden;height:100dvh} rule puts the
-   map inside a scroll container. iOS Safari refuses to composite canvas layers
-   inside overflow:auto/scroll ancestors — the tiles simply never paint.
-   Solution: revert to natural window scroll for this page only.              */
+/* ── TEAM TRACKER: mirror desktop flex-fill approach so map gets real height ──
+   Desktop works because tracker-split has flex:1 inside page-body's flex column,
+   giving the map concrete dimensions via height:100%. Replicate that on mobile
+   with a single-column grid and grid-template-rows:auto 1fr so the map row
+   fills whatever space remains after the member panel.                        */
 @media (max-width: 768px) {
-  html:has(.tracker-split),
-  body:has(.tracker-split) {
-    height: auto !important;
-    overflow: auto !important;
-    overflow-x: hidden !important;
-  }
-  .main:has(.tracker-split) {
-    height: auto !important;
-    min-height: 100svh !important;
-    overflow: visible !important;
-  }
-  .main:has(.tracker-split) .page-body {
-    overflow: visible !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: auto !important;
-    flex: 1 !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-  }
   .tracker-split {
     display: grid !important;
     grid-template-columns: 1fr !important;
-    grid-template-rows: auto auto !important;
-    flex: none !important;
-    height: auto !important;
+    grid-template-rows: auto 1fr !important;
+    flex: 1 1 0 !important;
     min-height: 0 !important;
+    gap: 10px !important;
   }
   .map-wrap {
-    height: 300px !important;
-    min-height: 300px !important;
+    height: auto !important;
+    min-height: 200px !important;
     overflow: hidden !important;
   }
   #map {
     width: 100% !important;
-    height: 300px !important;
-    min-height: 300px !important;
+    height: 100% !important;
+    min-height: 200px !important;
   }
-  .member-panel { max-height: 200px !important; }
+  .member-panel { max-height: 180px !important; }
 }
 
 /* ── PHONE AI: fix subscribe button text overflow ── */
