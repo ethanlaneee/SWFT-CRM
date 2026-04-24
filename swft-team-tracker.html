@@ -303,7 +303,14 @@ async function loadMapsSdk(){
 }
 
 function initMap(){
-  _map = new google.maps.Map(document.getElementById('map'), {
+  var mapEl = document.getElementById('map');
+  // Ensure the container has explicit dimensions before Google Maps reads them.
+  // On mobile, CSS may not have resolved height:100% in time.
+  if (mapEl.offsetHeight < 50) {
+    var wrapH = mapEl.parentElement ? mapEl.parentElement.offsetHeight : 0;
+    mapEl.style.height = (wrapH > 50 ? wrapH : Math.round(window.innerHeight * 0.55)) + 'px';
+  }
+  _map = new google.maps.Map(mapEl, {
     zoom: 12,
     center: { lat: 39.5, lng: -98.35 },
     disableDefaultUI: false,

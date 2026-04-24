@@ -997,6 +997,26 @@
     color: var(--white) !important;
   }
 
+  /* ── iOS Safari: prevent auto-zoom on input focus (font-size must be ≥16px) ──
+     Targets all text inputs/textareas/selects to prevent the zoom that breaks
+     the visualViewport keyboard-height calculation in Safari. */
+  .swft-chat-input,
+  .nj-input,
+  .edit-input,
+  .approve-input,
+  .evt-input,
+  .form-input,
+  .pdf-field-input,
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="password"],
+  textarea {
+    font-size: 16px !important;
+  }
+
   /* ── More sheet — align bottom edge exactly with bottom nav top edge ── */
   .mob-more-sheet {
     max-height: 82vh !important;
@@ -1774,24 +1794,19 @@
     min-height: 0 !important;
     height: auto !important;
   }
-  /* iOS Safari: overflow:hidden + border-radius blocks Google Maps tile rendering.
-     Use clip-path for rounded corners instead, and remove overflow:hidden. */
+  /* Explicit pixel height — Google Maps needs concrete dimensions at init time.
+     overflow:visible avoids iOS Safari tile-clipping issue with overflow:hidden. */
   .map-wrap {
-    height: 55vh !important;
-    min-height: 280px !important;
+    height: 300px !important;
+    min-height: 300px !important;
     overflow: visible !important;
-    -webkit-clip-path: inset(0 round 14px) !important;
-    clip-path: inset(0 round 14px) !important;
     -webkit-transform: translateZ(0) !important;
     transform: translateZ(0) !important;
   }
   #map {
-    position: absolute !important;
-    inset: 0 !important;
     width: 100% !important;
-    height: 100% !important;
-  }
-  .map-overlay {
+    height: 300px !important;
+    min-height: 300px !important;
     border-radius: 14px !important;
   }
   .member-panel { max-height: 200px !important; }
