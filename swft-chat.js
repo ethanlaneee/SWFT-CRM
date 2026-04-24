@@ -643,6 +643,11 @@
     <span class="pill-label">SWFT AI</span>
   `;
 
+  const backdrop = document.createElement("div");
+  backdrop.className = "swft-chat-backdrop";
+  backdrop.addEventListener("click", () => { if (isOpen) closePanel(); });
+
+  document.body.appendChild(backdrop);
   document.body.appendChild(panel);
   document.body.appendChild(fab);
 
@@ -676,6 +681,7 @@
   function openPanel() {
     isOpen = true;
     panel.classList.add("visible");
+    backdrop.classList.add("visible");
     fab.classList.add("open");
     document.body.classList.add("swft-ai-open");
     // Liquify FAB then trigger border shimmer on panel
@@ -692,6 +698,7 @@
   function closePanel() {
     isOpen = false;
     panel.classList.remove("visible");
+    backdrop.classList.remove("visible");
     fab.classList.remove("open");
     document.body.classList.remove("swft-ai-open");
   }

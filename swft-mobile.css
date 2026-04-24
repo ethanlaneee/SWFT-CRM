@@ -547,38 +547,44 @@
     padding: 14px 16px !important;
     align-items: center !important;
   }
-  /* Customer + job name */
-  .q-row > div:nth-child(1), .inv-row > div:nth-child(1) {
-    grid-area: customer !important;
-  }
-  /* Service column — duplicate info, hide on mobile */
-  .q-row > div:nth-child(2), .inv-row > div:nth-child(2) {
-    display: none !important;
-  }
-  /* Date */
-  .q-row > div:nth-child(3), .inv-row > div:nth-child(3) {
-    grid-area: info !important;
-    align-self: end !important;
-  }
-  /* Total */
-  .q-row > div:nth-child(4), .inv-row > div:nth-child(4) {
-    grid-area: total !important;
-    text-align: right !important;
-    align-self: start !important;
-    font-size: 14px !important;
-  }
-  /* Status pill */
-  .q-row > div:nth-child(5), .inv-row > div:nth-child(5) {
-    grid-area: status !important;
-    justify-self: end !important;
-    align-self: end !important;
-  }
-  /* Arrow button */
-  .q-row > div:nth-child(6), .inv-row > div:nth-child(6) {
-    grid-area: arrow !important;
-    align-self: center !important;
-    justify-self: end !important;
-  }
+  /* Default (quotes page): child 1 = customer */
+  .q-row > div:nth-child(1) { grid-area: customer !important; }
+  .q-row > div:nth-child(2) { display: none !important; }
+  .q-row > div:nth-child(3) { grid-area: info !important; align-self: end !important; }
+  .q-row > div:nth-child(4) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; }
+  .q-row > div:nth-child(5) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
+  .q-row > div:nth-child(6) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
+
+  /* Billing page q-row (7 children: num | customer | date | expires | total | status | buttons) */
+  .page-billing .q-row > div:nth-child(1) { display: none !important; }
+  .page-billing .q-row > div:nth-child(2) { grid-area: customer !important; display: block !important; }
+  .page-billing .q-row > div:nth-child(3) { grid-area: info !important; align-self: end !important; }
+  .page-billing .q-row > div:nth-child(4) { display: none !important; }
+  .page-billing .q-row > div:nth-child(5) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; font-weight: 600 !important; }
+  .page-billing .q-row > div:nth-child(6) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
+  .page-billing .q-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
+  /* Hide convert + delete buttons in billing q-row, keep only the arrow/view */
+  .page-billing .q-row > div:nth-child(7) > *:not(:last-child) { display: none !important; }
+
+  /* Default inv-row (non-billing) */
+  .inv-row > div:nth-child(1) { grid-area: customer !important; }
+  .inv-row > div:nth-child(2) { display: none !important; }
+  .inv-row > div:nth-child(3) { grid-area: info !important; align-self: end !important; }
+  .inv-row > div:nth-child(4) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; }
+  .inv-row > div:nth-child(5) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
+  .inv-row > div:nth-child(6) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
+
+  /* Billing page inv-row (7 children: num | customer | total | paid | balance | status | buttons) */
+  .page-billing .inv-row > div:nth-child(1) { display: none !important; }
+  .page-billing .inv-row > div:nth-child(2) { grid-area: customer !important; display: block !important; }
+  .page-billing .inv-row > div:nth-child(3) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; font-weight: 600 !important; }
+  .page-billing .inv-row > div:nth-child(4) { display: none !important; }
+  .page-billing .inv-row > div:nth-child(5) { grid-area: info !important; align-self: end !important; }
+  .page-billing .inv-row > div:nth-child(6) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
+  .page-billing .inv-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
+  /* Hide delete button in billing inv-row, keep only the arrow */
+  .page-billing .inv-row > div:nth-child(7) > *:not(:last-child) { display: none !important; }
+
   /* Customers table row */
   .cust-row { min-width: 0 !important; }
 
@@ -737,8 +743,47 @@
     bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .swft-chat-panel {
-    bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
-    max-height: calc(55vh) !important;
+    bottom: calc(152px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100svh - 220px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .swft-chat-messages {
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+  }
+  .swft-chat-input-area {
+    flex-shrink: 0 !important;
+  }
+  .swft-chat-suggestions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .swft-chat-suggestion {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+
+  /* ── SWFT AI backdrop blur — dims/blurs page behind the panel ── */
+  .swft-chat-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9990;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+  .swft-chat-backdrop.visible {
+    display: block;
+    opacity: 1;
+    pointer-events: all;
   }
 
   /* Hide FAB when More sheet, drawer overlay, chat view, or AI panel is open */
