@@ -335,21 +335,53 @@
   #agent-strip::-webkit-scrollbar { display: none; }
   #agent-strip > a { display: none !important; }
 
-  /* ── JOB / SCHEDULE ROWS ── */
-  .job-row { padding: 12px 14px !important; gap: 10px; }
+  /* ── JOB ROWS: simplified — show name + address only ── */
+  .job-row {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 10px 14px !important;
+    gap: 2px !important;
+  }
+  /* Hide: checkbox, customer, status select, action buttons */
+  .job-row > div:nth-child(1),
+  .job-row > div:nth-child(3),
+  .job-row > div:nth-child(5),
+  .job-row > div:nth-child(6) { display: none !important; }
+  /* Show job-id-cell as block */
+  .job-id-cell { display: block !important; }
+  /* Hide the #JOB-xxxx sub-line, keep just the title */
+  .job-id { display: none !important; }
+  .job-title { font-size: 13px !important; font-weight: 500 !important; }
+  .job-addr { font-size: 11px !important; color: var(--gray) !important; margin-top: 1px !important; }
+  /* Status pip next to title inline */
+  .job-id-cell { display: flex !important; align-items: center !important; gap: 6px !important; }
+  .status-pip { flex-shrink: 0; }
+
   .schedule-row { padding: 10px 14px !important; }
 
-  /* ── FILTER TABS: horizontally scrollable ── */
+  /* ── FILTER TABS: compact + horizontally scrollable ── */
   .job-filters,
   .filter-group {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    padding: 10px 14px !important;
-    gap: 6px !important;
+    padding: 8px 14px !important;
+    gap: 5px !important;
     flex-wrap: nowrap !important;
   }
   .job-filters::-webkit-scrollbar,
   .filter-group::-webkit-scrollbar { display: none; }
+  /* Smaller filter tabs across all pages */
+  .ftab {
+    font-size: 10.5px !important;
+    padding: 5px 10px !important;
+    border-radius: 7px !important;
+    white-space: nowrap !important;
+  }
+  /* Smaller sort button */
+  .sort-btn {
+    font-size: 10.5px !important;
+    padding: 5px 10px !important;
+  }
 
   /* ── TOOLBAR (search + filter row) ── */
   .toolbar {
@@ -434,6 +466,11 @@
   .swft-chat-panel {
     bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
     max-height: calc(55vh) !important;
+  }
+
+  /* Hide FAB when More sheet is open so it doesn't block options */
+  body.mob-more-open .swft-chat-fab {
+    display: none !important;
   }
 
   /* ── SWFT CONFIRM MODAL ── */

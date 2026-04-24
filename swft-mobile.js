@@ -221,6 +221,7 @@
       var overlay = document.getElementById('mob-more-overlay');
       if (overlay) overlay.classList.add('open');
       sheet.classList.add('open');
+      document.body.classList.add('mob-more-open');
       document.body.style.overflow = 'hidden';
     }
   }
@@ -230,6 +231,7 @@
     var sheet = document.getElementById('mob-more-sheet');
     if (overlay) overlay.classList.remove('open');
     if (sheet) sheet.classList.remove('open');
+    document.body.classList.remove('mob-more-open');
     document.body.style.overflow = '';
   }
 

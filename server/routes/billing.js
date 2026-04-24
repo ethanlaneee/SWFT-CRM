@@ -81,6 +81,13 @@ router.post("/create-checkout-session", async (req, res, next) => {
       await users().doc(req.uid).set({ stripeCustomerId: customerId }, { merge: true });
     }
 
+    // Only give trial to brand-new subscribers
+    const hasExistingSub = !!(data.stripeSubscriptionId);
+    const subscriptionData = {
+      metadata: { firebaseUid: req.uid, plan: planKey, billing: isAnnual ? "annual" : "monthly" },
+      ...(!hasExistingSub ? { trial_period_days: 14 } : {}),
+    };
+
     const session = await stripe.checkout.sessions.create({
       ui_mode:              "embedded",
       customer:             customerId,
@@ -89,10 +96,7 @@ router.post("/create-checkout-session", async (req, res, next) => {
       allow_promotion_codes: true,
       billing_address_collection: "required",
       customer_update: { address: "auto" },
-      subscription_data: {
-        trial_period_days: 14,
-        metadata: { firebaseUid: req.uid, plan: planKey, billing: isAnnual ? "annual" : "monthly" },
-      },
+      subscription_data: subscriptionData,
       return_url: `${process.env.APP_URL}/swft-checkout?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
       metadata:   { firebaseUid: req.uid, plan: planKey, billing: isAnnual ? "annual" : "monthly" },
     });
@@ -303,6 +307,18 @@ router.get("/verify-session", async (req, res, next) => {
       return res.status(402).json({ error: "Payment not completed.", paymentStatus: session.payment_status });
     }
 
+    // Cancel old subscription if this is an upgrade
+    const oldSubId = userData.stripeSubscriptionId;
+    const newSubId = session.subscription;
+    if (oldSubId && newSubId && oldSubId !== newSubId) {
+      try {
+        await stripe.subscriptions.cancel(oldSubId);
+        console.log(`[verify-session] Cancelled old subscription ${oldSubId} for uid ${req.uid}`);
+      } catch (cancelErr) {
+        console.error("[verify-session] Failed to cancel old subscription:", cancelErr.message);
+      }
+    }
+
     // Flip account to active immediately (webhook is the durable update,
     // but this makes the UI responsive without waiting for the webhook)
     await users().doc(req.uid).set({
@@ -354,6 +370,20 @@ async function webhookHandler(req, res) {
       const session = event.data.object;
       const uid     = session.metadata?.firebaseUid;
       if (uid) {
+        // Cancel old subscription if this is an upgrade
+        const userSnap = await users().doc(uid).get();
+        const oldSubId = userSnap.exists ? userSnap.data().stripeSubscriptionId : null;
+        const newSubId = session.subscription;
+        if (oldSubId && newSubId && oldSubId !== newSubId) {
+          try {
+            const stripe = getStripe();
+            await stripe.subscriptions.cancel(oldSubId);
+            console.log(`[billing-webhook] Cancelled old subscription ${oldSubId} for uid ${uid}`);
+          } catch (cancelErr) {
+            console.error("[billing-webhook] Failed to cancel old subscription:", cancelErr.message);
+          }
+        }
+
         await users().doc(uid).set({
           accountStatus:        "active",
           isSubscribed:         true,
@@ -377,10 +407,17 @@ async function webhookHandler(req, res) {
       // Look up user by Stripe customer ID
       const snap = await users().where("stripeCustomerId", "==", subscription.customer).limit(1).get();
       if (!snap.empty) {
-        await snap.docs[0].ref.set({
-          accountStatus: "canceled",
-          isSubscribed:  false,
-        }, { merge: true });
+        const currentSubId = snap.docs[0].data().stripeSubscriptionId;
+        // Guard: if the deleted sub is not the current one, it's an old sub being
+        // cleaned up during an upgrade — don't cancel the account
+        if (currentSubId && currentSubId !== subscription.id) {
+          console.log(`[billing-webhook] Ignoring deletion of old sub ${subscription.id} (current: ${currentSubId})`);
+        } else {
+          await snap.docs[0].ref.set({
+            accountStatus: "canceled",
+            isSubscribed:  false,
+          }, { merge: true });
+        }
       }
     }
 
