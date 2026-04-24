@@ -218,15 +218,55 @@
 
 @media (max-width: 768px) {
 
-  /* ── Prevent ALL horizontal overflow — no horizontal scrolling ever ── */
-  html, body { overflow-x: hidden !important; max-width: 100vw !important; }
-  .main, .page-body, .panel { max-width: 100% !important; overflow-x: hidden !important; }
+  /* ── Static layout: page itself never scrolls, only inner containers do ── */
+  html, body {
+    overflow: hidden !important;
+    height: 100dvh !important;
+    max-width: 100vw !important;
+  }
+  .main {
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  .page-body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
 
-  /* ── Popups must stay within viewport width ── */
+  /* ── Speed up all transitions to feel snappier ── */
+  * {
+    transition-duration: 0.15s !important;
+  }
+  /* Panel slides need slightly longer to feel smooth */
+  .contact-panel, .chat-panel, .chat-list-panel, .tc-panel,
+  .mob-more-sheet, .nj-modal, .drawer, .sidebar {
+    transition-duration: 0.22s !important;
+  }
+
+  /* ── Calendar popups: centered on mobile, properly sized ── */
   .cal-popup, .wx-popup {
-    width: auto !important;
-    max-width: calc(100vw - 30px) !important;
-    min-width: 220px !important;
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 40px) !important;
+    max-width: 320px !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .cal-popup.open, .wx-popup.open {
+    transform: translate(-50%, -50%) !important;
+  }
+  /* Popup rows: wrap text instead of overflowing */
+  .cal-popup-row {
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+  }
+  .cal-popup-val {
+    max-width: 100% !important;
+    word-break: break-word !important;
   }
 
   /* ── Show mobile-only elements ── */

@@ -1439,17 +1439,19 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     body.innerHTML = html;
 
-    // Position near click, capped to stay within screen and above bottom nav
-    var isMob = window.innerWidth <= 768;
-    var pw = isMob ? Math.min(260, window.innerWidth - 30) : 290;
-    var ph = 300;
-    var navH = isMob ? 70 : 0;
-    var margin = 15;
-    var x = Math.max(margin, Math.min(e.clientX - pw / 2, window.innerWidth - pw - margin));
-    var y = Math.max(60, Math.min(e.clientY + 12, window.innerHeight - ph - navH));
-    popup.style.left = x + 'px';
-    popup.style.top = y + 'px';
-    popup.style.transform = '';
+    // On mobile: CSS centers it via fixed+transform; on desktop: position near click
+    if (window.innerWidth > 768) {
+      var pw = 290, ph = 300;
+      var x = Math.max(10, Math.min(e.clientX, window.innerWidth - pw - 10));
+      var y = Math.max(60, Math.min(e.clientY + 12, window.innerHeight - ph - 10));
+      popup.style.left = x + 'px';
+      popup.style.top = y + 'px';
+      popup.style.transform = '';
+    } else {
+      // CSS handles centering via .cal-popup { left:50%; top:50%; transform:translate(-50%,-50%) }
+      popup.style.left = '';
+      popup.style.top = '';
+    }
     popup.classList.add('open');
   }
 
@@ -1492,10 +1494,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       '<div class="wx-popup-cond ' + condCls + '">' + condText + '</div>';
 
     var popup = document.getElementById('wx-popup');
-    var x = e.clientX;
-    var y = e.clientY;
-    popup.style.left = Math.min(x, window.innerWidth - 260) + 'px';
-    popup.style.top = Math.min(y + 10, window.innerHeight - 250) + 'px';
+    if (window.innerWidth > 768) {
+      popup.style.left = Math.min(e.clientX, window.innerWidth - 260) + 'px';
+      popup.style.top = Math.min(e.clientY + 10, window.innerHeight - 250) + 'px';
+    } else {
+      popup.style.left = '';
+      popup.style.top = '';
+    }
     popup.classList.add('open');
   }
 
