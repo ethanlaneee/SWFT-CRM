@@ -356,7 +356,10 @@
   .chart-area { height: 88px !important; }
   .chart-footer { flex-wrap: wrap; gap: 10px; }
 
-  /* ── NEW JOB MODAL → full-screen bottom sheet ── */
+  /* ── NEW JOB MODAL → full-screen bottom sheet, above bottom nav ── */
+  .nj-overlay {
+    z-index: 1100 !important;
+  }
   .nj-modal {
     position: fixed !important;
     top: auto !important;
@@ -369,6 +372,7 @@
     max-height: 90vh !important;
     border-radius: 20px 20px 0 0 !important;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 1110 !important;
     transition: transform 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.25s !important;
   }
   .nj-overlay.open + .nj-modal,
@@ -393,6 +397,18 @@
     gap: 8px !important;
   }
   .nj-body { padding: 8px 16px 12px !important; }
+
+  /* ── SWFT MODAL (confirm dialogs) — above bottom nav ── */
+  .swft-modal-overlay { z-index: 1100 !important; }
+
+  /* ── SWFT AI CHAT FAB — float above bottom nav ── */
+  .swft-chat-fab {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .swft-chat-panel {
+    bottom: calc(136px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(55vh) !important;
+  }
 
   /* ── SWFT CONFIRM MODAL ── */
   .swft-modal {
