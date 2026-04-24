@@ -665,7 +665,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <div class="contact-row">
         <div class="contact-icon">📍</div>
-        <div><div class="contact-label">Property Address</div><div class="contact-value" id="d-address">411 Birchwood Dr, Austin TX 78745</div></div>
+        <div style="flex:1;min-width:0;">
+          <div class="contact-label">Property Address</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="contact-value" id="d-address" style="flex:1;min-width:0;">411 Birchwood Dr, Austin TX 78745</div>
+            <a id="d-maps-link" href="#" target="_blank" rel="noopener" title="View in Google Maps" style="color:var(--gray);flex-shrink:0;display:flex;align-items:center;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#c8f135'" onmouseout="this.style.color='var(--gray)'">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>
+            </a>
+          </div>
+        </div>
       </div>
       
       <div class="contact-row">
@@ -1054,6 +1062,8 @@ function openDrawer(id) {
   document.getElementById('d-phone').textContent     = c.phone || '';
   document.getElementById('d-email').textContent     = c.email || '';
   document.getElementById('d-address').textContent   = c.address || '';
+  var mapsLink = document.getElementById('d-maps-link');
+  if (mapsLink) mapsLink.href = c.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.address) : '#';
   document.getElementById('d-since').textContent     = c.since || c.createdAt || '';
   switchTab(document.querySelector('.dtab'), 'contact');
   document.getElementById('c-edit-mode').style.display='none';
@@ -1125,6 +1135,8 @@ function openNewCustomer() {
   document.getElementById('d-phone').textContent = '';
   document.getElementById('d-email').textContent = '';
   document.getElementById('d-address').textContent = '';
+  var mapsLinkNew = document.getElementById('d-maps-link');
+  if (mapsLinkNew) mapsLinkNew.href = '#';
   switchTab(document.querySelector('.dtab'), 'contact');
   document.getElementById('e-fname').value = '';
   document.getElementById('e-lname').value = '';
