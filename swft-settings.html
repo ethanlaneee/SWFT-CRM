@@ -2193,5 +2193,59 @@ function downloadQR() {
 <script src="swft-notifications.js"></script>
 <script src="swft-chat.js"></script>
 <script src="swft-mobile.js"></script>
+<script>
+/* Mobile settings layout — JS enforcement beats all CSS specificity */
+(function applyMobileSettings() {
+  if (window.innerWidth > 768) return;
+  function fix() {
+    var s = function(el, prop, val) { el.style.setProperty(prop, val, 'important'); };
+    /* Stack each settings-row vertically */
+    document.querySelectorAll('.settings-row').forEach(function(r) {
+      s(r,'flex-direction','column'); s(r,'align-items','stretch');
+      s(r,'gap','10px'); s(r,'padding','14px 0');
+    });
+    /* Row-info: don't flex-grow, full width */
+    document.querySelectorAll('.settings-row-info').forEach(function(el) {
+      s(el,'width','100%'); s(el,'flex','none');
+    });
+    /* All inputs and selects: full width */
+    document.querySelectorAll('.settings-input,.settings-select').forEach(function(el) {
+      s(el,'width','100%'); s(el,'max-width','100%'); s(el,'box-sizing','border-box');
+    });
+    /* Every div/span wrapper inside a row: full width */
+    document.querySelectorAll('.settings-row > div, .settings-row > span').forEach(function(el) {
+      s(el,'width','100%'); s(el,'max-width','100%'); s(el,'box-sizing','border-box');
+    });
+    /* All buttons: full-width, tap-friendly */
+    document.querySelectorAll('.settings-btn, .settings-row button, .settings-body > div > button').forEach(function(el) {
+      s(el,'width','100%'); s(el,'min-height','44px'); s(el,'display','flex');
+      s(el,'align-items','center'); s(el,'justify-content','center');
+      s(el,'padding','12px 16px'); s(el,'font-size','13px'); s(el,'box-sizing','border-box');
+      s(el,'white-space','normal');
+    });
+    /* 2-col grids: single column */
+    document.querySelectorAll('.settings-2col').forEach(function(el) {
+      s(el,'grid-template-columns','1fr');
+    });
+    /* Billing plan card: stack */
+    document.querySelectorAll('.billing-plan-card').forEach(function(el) {
+      s(el,'flex-direction','column'); s(el,'align-items','stretch');
+    });
+    /* Quick setup banner */
+    var qs = document.querySelector('#quick-setup-banner > div');
+    if (qs) { s(qs,'flex-direction','column'); s(qs,'align-items','stretch'); }
+    var qsb = document.getElementById('quick-setup-btn');
+    if (qsb) { s(qsb,'width','100%'); s(qsb,'justify-content','center'); }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fix);
+  } else {
+    fix();
+  }
+  /* Re-run after settings load from server (fills dynamic content) */
+  setTimeout(fix, 1500);
+  setTimeout(fix, 3000);
+})();
+</script>
 </body>
 </html>

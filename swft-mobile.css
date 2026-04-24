@@ -1340,25 +1340,10 @@
     grid-template-columns: repeat(7, 1fr) !important;
   }
   .cal-dow { font-size: 9px !important; padding: 6px 0 !important; }
-  .cal-cell { padding: 4px 5px !important; height: auto !important; min-height: 56px !important; }
+  .cal-cell { padding: 4px 5px !important; height: auto !important; min-height: 52px !important; overflow: hidden !important; }
   .day-num { font-size: 11px !important; height: auto !important; margin-bottom: 1px !important; }
-  /* Weather: tiny temp-only badge, top-right of each cell */
-  .day-wx {
-    display: block !important;
-    position: absolute !important;
-    top: 2px !important;
-    right: 3px !important;
-    font-size: 7px !important;
-    color: var(--gray) !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-    pointer-events: none !important;
-    font-family: 'JetBrains Mono', monospace !important;
-  }
-  /* Always hide the weather emoji icon — number only */
-  .day-wx .wx-icon,
-  .day-wx > *:first-child { display: none !important; }
-  .day-wx .wx-num { display: inline !important; }
+  /* Hide weather in calendar cells — too small at 52px to display cleanly */
+  .day-wx { display: none !important; }
   .job-block { font-size: 8px !important; padding: 1px 3px !important; }
 
   /* ── CHART STATS: remove side scroll ── */
