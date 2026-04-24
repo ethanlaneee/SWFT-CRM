@@ -1184,14 +1184,14 @@
 
   /* ── QUOTE / PDF MODAL: windowed feel with visible blur surround ── */
   .modal-overlay {
-    padding: 52px 14px 14px !important;
+    padding: 52px 14px calc(var(--nav-h, 64px) + 14px) !important;
     align-items: flex-start !important;
     background: rgba(0,0,0,0.55) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
   }
   .pdf-modal {
-    max-height: calc(100dvh - 80px) !important;
+    max-height: calc(100dvh - 52px - var(--nav-h, 64px) - 28px) !important;
     border-radius: 16px !important;
   }
   /* Hide the printable brand header on mobile — saves vertical space */
