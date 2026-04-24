@@ -168,16 +168,27 @@
       background: none;
       border: 1px solid #333;
       color: #7a7a7a;
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      flex-shrink: 0;
     }
     .swft-chat-clear:hover {
-      color: #fff;
-      border-color: #555;
+      color: #ff5252;
+      border-color: #ff5252;
+      background: rgba(255,82,82,0.08);
+    }
+    .swft-chat-clear svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.5;
     }
     .swft-chat-voice {
       background: #1a1a1a;
@@ -370,6 +381,39 @@
     .swft-chat-mic.recording svg { stroke: #fff; }
 
 
+    /* ── Liquify open animation on the FAB ── */
+    @keyframes swft-fab-liquify {
+      0%   { transform: translateX(-50%) scale(1); filter: blur(0px); border-radius: 999px; }
+      30%  { transform: translateX(-50%) scale(1.08) scaleY(0.82); filter: blur(1px); border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; }
+      55%  { transform: translateX(-50%) scale(0.94) scaleY(1.06); filter: blur(0.5px); border-radius: 45% 55% 40% 60% / 60% 40% 55% 45%; }
+      80%  { transform: translateX(-50%) scale(1.02); filter: blur(0px); border-radius: 999px; }
+      100% { transform: translateX(-50%) scale(1); filter: blur(0px); border-radius: 999px; }
+    }
+    .swft-chat-fab.liquify {
+      animation: swft-fab-liquify 0.55s cubic-bezier(0.22,1,0.36,1) forwards !important;
+    }
+
+    /* ── Panel shimmer border on open ── */
+    @keyframes swft-panel-border-in {
+      0%   { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 0px rgba(200,241,53,0); }
+      30%  { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 3px rgba(200,241,53,0.8), 0 0 20px 4px rgba(200,241,53,0.35); }
+      60%  { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 2px rgba(200,241,53,0.5), 0 0 30px 6px rgba(200,241,53,0.2); }
+      80%  { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 1.5px rgba(200,241,53,0.3), 0 0 16px 3px rgba(200,241,53,0.12); }
+      100% { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,241,53,0.18), 0 0 0 0px rgba(200,241,53,0); }
+    }
+    @keyframes swft-panel-shimmer-sweep {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    .swft-chat-panel.opening {
+      animation: swft-panel-border-in 0.75s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+    .swft-chat-panel.opening .swft-chat-header {
+      background: linear-gradient(90deg, transparent 0%, rgba(200,241,53,0.06) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: swft-panel-shimmer-sweep 0.9s ease-out forwards;
+    }
+
     /* Subtle darken of the pill while the panel is open so it reads as "active" */
     .swft-chat-fab.open {
       filter: brightness(0.92);
@@ -552,7 +596,9 @@
             <option value="adam">Adam</option>
           </optgroup>
         </select>
-        <button class="swft-chat-clear">Clear</button>
+        <button class="swft-chat-clear" title="Close">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
     </div>
     <div class="swft-chat-messages">
@@ -620,6 +666,29 @@
   }
 
   // ── Toggle panel ──
+  function openPanel() {
+    isOpen = true;
+    panel.classList.add("visible");
+    fab.classList.add("open");
+    document.body.classList.add("swft-ai-open");
+    // Liquify FAB then trigger border shimmer on panel
+    fab.classList.remove("liquify");
+    void fab.offsetWidth; // reflow to restart animation
+    fab.classList.add("liquify");
+    panel.classList.remove("opening");
+    void panel.offsetWidth;
+    panel.classList.add("opening");
+    fab.addEventListener("animationend", () => fab.classList.remove("liquify"), { once: true });
+    panel.addEventListener("animationend", () => panel.classList.remove("opening"), { once: true });
+    input.focus();
+  }
+  function closePanel() {
+    isOpen = false;
+    panel.classList.remove("visible");
+    fab.classList.remove("open");
+    document.body.classList.remove("swft-ai-open");
+  }
+
   // If a voice session is active (push-to-talk or toggle), a click cancels it
   // instead of opening the panel.
   fab.addEventListener("click", () => {
@@ -627,10 +696,7 @@
       if (typeof stopRecording === 'function') stopRecording();
       return;
     }
-    isOpen = !isOpen;
-    panel.classList.toggle("visible", isOpen);
-    fab.classList.toggle("open", isOpen);
-    if (isOpen) input.focus();
+    if (isOpen) closePanel(); else openPanel();
   });
 
   // ── Input handling ──
@@ -656,21 +722,8 @@
     });
   });
 
-  // ── Clear history ──
-  clearBtn.addEventListener("click", async () => {
-    try {
-      const token = await getToken();
-      await fetch(`${API_BASE}/api/ai/history`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (e) { /* ignore */ }
-
-    // Reset UI
-    messagesContainer.querySelectorAll(".swft-chat-msg, .swft-chat-action").forEach(el => el.remove());
-    welcomeEl.style.display = "";
-    hasMessages = false;
-  });
+  // ── X button: close panel (history persists until page refresh) ──
+  clearBtn.addEventListener("click", () => closePanel());
 
   // ── Get auth token ──
   async function getToken() {
@@ -1012,11 +1065,7 @@
             if (isDashboard && typeof window.dashSend === 'function') {
               window.dashSend(transcribed);
             } else {
-              if (!isOpen) {
-                isOpen = true;
-                panel.classList.add('visible');
-                fab.classList.add('open');
-              }
+              if (!isOpen) openPanel();
               sendMessage(transcribed);
             }
           } else {
