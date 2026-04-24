@@ -964,9 +964,10 @@
 
   /* ── Settings nav sticky ── */
   .settings-nav {
-    top: 60px !important;
+    top: 0 !important;
     margin: 0 !important;
     padding-bottom: 12px !important;
+    background: var(--bg) !important;
   }
 
   /* ── SETTINGS PAGE: full mobile overhaul ── */

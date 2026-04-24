@@ -207,8 +207,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     overflow-x: hidden !important;
   }
 
-  /* Settings top-nav stays under the 54px topbar */
-  .settings-nav { top: 54px !important; padding-bottom: 10px !important; }
+  /* Settings top-nav: sticky inside .page-body (the scroll container).
+     top:0 = sticks right at the top of the scroll container = right below the topbar */
+  .settings-nav { top: 0 !important; padding-bottom: 10px !important; background: var(--bg) !important; }
+
+  /* Prevent iOS auto-zoom on input tap (font-size < 16px triggers zoom) */
+  .settings-input,
+  .settings-select,
+  .settings-input[type="text"],
+  .settings-input[type="email"],
+  .settings-input[type="number"],
+  .settings-input[type="url"],
+  textarea.settings-input {
+    font-size: 16px !important;
+  }
 
   /* Single column grid */
   .settings-2col { grid-template-columns: 1fr !important; gap: 10px !important; }
