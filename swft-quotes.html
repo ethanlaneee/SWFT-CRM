@@ -423,7 +423,8 @@ window.swftConfirm = function(title, message, opts = {}) {
 // ── Load ──
 async function loadQuotes(){
   try{
-    var res=await Promise.all([API.quotes.list(),API.customers.list(),API.jobs.list().catch(function(){return[];})]);
+    var jobsP;try{jobsP=API.jobs.list();}catch(e){jobsP=Promise.resolve([]);}
+    var res=await Promise.all([API.quotes.list(),API.customers.list(),jobsP.catch(function(){return[];})]);
     _quotes=res[0];_customers=res[1].slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});_jobs=res[2]||[];
     renderStats();renderTable();
     // Pipeline pre-fill: if arriving from job pipeline, store data for next "New Quote" open
