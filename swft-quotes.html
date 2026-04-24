@@ -764,22 +764,40 @@ function openAIEstimate(){
   if(!overlay){
     overlay=document.createElement('div');
     overlay.id='ai-est-overlay';
-    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px;';
     overlay.onclick=function(e){if(e.target===overlay)overlay.style.display='none';};
-    overlay.innerHTML='<div style="background:#111;border:1px solid #1f1f1f;border-radius:16px;padding:28px;width:420px;max-width:90vw;">'+
-      '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:2px;color:#c8f135;margin-bottom:16px;">AI ESTIMATE</div>'+
+    var iStyle='background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;width:100%;box-sizing:border-box;';
+    overlay.innerHTML='<div style="background:#111;border:1px solid #1f1f1f;border-radius:16px;padding:24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'+
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:2px;color:#c8f135;">AI ESTIMATE</div>'+
+        '<button onclick="document.getElementById(\'ai-est-overlay\').style.display=\'none\'" style="background:transparent;border:1px solid #2c2c2c;border-radius:7px;color:#7a7a7a;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">&times;</button>'+
+      '</div>'+
       '<div style="display:flex;flex-direction:column;gap:10px;">'+
-        '<select id="ai-est-customer" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;"><option value="">Select customer (optional)</option></select>'+
-        '<input id="ai-est-service" placeholder="Service type (e.g. driveway, patio)" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
-        '<input id="ai-est-sqft" placeholder="Square footage" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
-        '<input id="ai-est-finish" placeholder="Finish type (optional)" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
-        '<input id="ai-est-desc" placeholder="Description / details" style="background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:9px 12px;color:#f0f0f0;font-size:13px;font-family:inherit;outline:none;">'+
+        '<select id="ai-est-customer" style="'+iStyle+'"><option value="">Select customer (optional)</option></select>'+
+        '<input id="ai-est-service" placeholder="Service type (e.g. driveway, patio, roofing)" style="'+iStyle+'">'+
+        '<input id="ai-est-sqft" placeholder="Square footage (leave blank if unknown)" style="'+iStyle+'">'+
+        '<input id="ai-est-finish" placeholder="Finish type (optional)" style="'+iStyle+'">'+
+        '<div style="position:relative;">'+
+          '<input id="ai-est-address" placeholder="Job site address (optional)" style="'+iStyle+';padding-right:40px;">'+
+          '<button onclick="openMapsFromAddress()" title="View in Google Maps" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;color:#7a7a7a;display:flex;align-items:center;padding:4px;" onmouseover="this.style.color=\'#c8f135\'" onmouseout="this.style.color=\'#7a7a7a\'">'+
+            '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>'+
+          '</button>'+
+        '</div>'+
+        '<input id="ai-est-desc" placeholder="Description / additional details" style="'+iStyle+'">'+
+        '<div>'+
+          '<div style="font-size:11px;color:#7a7a7a;margin-bottom:6px;letter-spacing:0.5px;">PHOTOS (upload job site images for smarter estimates)</div>'+
+          '<label id="ai-est-photo-label" style="display:flex;align-items:center;gap:8px;background:#181818;border:1px dashed #2c2c2c;border-radius:8px;padding:10px 14px;cursor:pointer;color:#7a7a7a;font-size:12px;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#c8f135\'" onmouseout="this.style.borderColor=\'#2c2c2c\'">'+
+            '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+            '<span id="ai-est-photo-label-text">Upload photos (up to 5)</span>'+
+            '<input id="ai-est-photos" type="file" accept="image/*" multiple style="display:none;" onchange="onAIEstPhotoChange(this)">'+
+          '</label>'+
+          '<div id="ai-est-photo-thumbs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>'+
+        '</div>'+
         '<button id="ai-est-btn" onclick="runAIEstimate()" style="background:#c8f135;color:#0a0a0a;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Generate Estimate</button>'+
         '<div id="ai-est-result" style="display:none;background:#181818;border:1px solid #2c2c2c;border-radius:8px;padding:14px;font-size:12px;color:#f0f0f0;line-height:1.6;"></div>'+
       '</div>'+
     '</div>';
     document.body.appendChild(overlay);
-    // Populate customer dropdown
     if(_customers&&_customers.length){
       var sel=document.getElementById('ai-est-customer');
       _customers.forEach(function(c){
@@ -787,7 +805,38 @@ function openAIEstimate(){
       });
     }
   }
+  window._aiEstPhotos=[];
+  document.getElementById('ai-est-photo-thumbs').innerHTML='';
+  document.getElementById('ai-est-photo-label-text').textContent='Upload photos (up to 5)';
+  document.getElementById('ai-est-result').style.display='none';
   overlay.style.display='flex';
+}
+
+function onAIEstPhotoChange(input){
+  var files=Array.from(input.files).slice(0,5);
+  window._aiEstPhotos=[];
+  var thumbs=document.getElementById('ai-est-photo-thumbs');
+  thumbs.innerHTML='';
+  document.getElementById('ai-est-photo-label-text').textContent=files.length+' photo'+(files.length!==1?'s':'')+' selected';
+  files.forEach(function(f,i){
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var b64=ev.target.result.split(',')[1];
+      var mt=f.type||'image/jpeg';
+      window._aiEstPhotos.push({data:b64,mediaType:mt});
+      var img=document.createElement('img');
+      img.src=ev.target.result;
+      img.style.cssText='width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #2c2c2c;';
+      thumbs.appendChild(img);
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function openMapsFromAddress(){
+  var addr=document.getElementById('ai-est-address').value.trim();
+  if(!addr){alert('Enter an address first');return;}
+  window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(addr),'_blank');
 }
 
 async function runAIEstimate(){
@@ -796,14 +845,17 @@ async function runAIEstimate(){
   var custId=document.getElementById('ai-est-customer').value;
   var custName='';
   if(custId&&_customers){var c=_customers.find(function(x){return x.id===custId;});if(c)custName=c.name||'';}
-  btn.textContent='Generating...';btn.disabled=true;result.style.display='none';
+  var photos=window._aiEstPhotos||[];
+  btn.textContent=photos.length>0?'Analyzing photos...':'Generating...';btn.disabled=true;result.style.display='none';
   try{
     var est=await API.agents.estimate({
       service:document.getElementById('ai-est-service').value,
       sqft:document.getElementById('ai-est-sqft').value,
       finish:document.getElementById('ai-est-finish').value,
       description:document.getElementById('ai-est-desc').value,
-      customerId:custId,customerName:custName
+      address:document.getElementById('ai-est-address').value,
+      customerId:custId,customerName:custName,
+      photos:photos
     });
     var html='<div style="color:#c8f135;font-weight:700;font-size:16px;margin-bottom:8px;">Total: $'+(est.total||0).toLocaleString()+'</div>';
     html+='<div style="color:#7a7a7a;font-size:11px;margin-bottom:8px;">Confidence: '+est.confidence+'</div>';
@@ -845,6 +897,7 @@ async function createQuoteFromEstimate(){
       service:document.getElementById('ai-est-service').value,
       sqft:document.getElementById('ai-est-sqft').value,
       finish:document.getElementById('ai-est-finish').value,
+      address:document.getElementById('ai-est-address').value,
       status:'draft'
     });
     showToast('Quote created from AI estimate');
