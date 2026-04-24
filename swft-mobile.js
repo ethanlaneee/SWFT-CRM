@@ -392,6 +392,7 @@
       var el = e.target;
       if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
       if (el.id === 'dash-chat-input') return; // dashboard: handled by visualViewport resize
+      if (el.classList && el.classList.contains('swft-chat-input')) return; // SWFT AI panel: handled below
       setTimeout(function () {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 350);
@@ -427,6 +428,19 @@
           el.style.removeProperty('bottom');
         }
       });
+
+      // SWFT AI floating panel: shift above keyboard when open
+      var swftPanel = document.querySelector('.swft-chat-panel');
+      if (swftPanel && swftPanel.classList.contains('visible')) {
+        if (kh > 60) {
+          var gap = 8;
+          swftPanel.style.setProperty('bottom', (kh + gap) + 'px', 'important');
+          swftPanel.style.setProperty('max-height', (window.visualViewport.height - gap * 2) + 'px', 'important');
+        } else {
+          swftPanel.style.removeProperty('bottom');
+          swftPanel.style.removeProperty('max-height');
+        }
+      }
 
       // Dashboard AI panel: iMessage-style — hide nav bar, resize panel to hug keyboard
       var dashPanel = document.querySelector('#dash-main-grid > .panel');
@@ -475,6 +489,18 @@
         setTimeout(adjustPanels, 300);
       });
     }
+
+    // Delegated handlers for SWFT AI input (created dynamically by swft-chat.js)
+    document.addEventListener('focusin', function (e) {
+      if (!e.target.classList || !e.target.classList.contains('swft-chat-input')) return;
+      setTimeout(adjustPanels, 300);
+      setTimeout(adjustPanels, 600);
+    });
+    document.addEventListener('focusout', function (e) {
+      if (!e.target.classList || !e.target.classList.contains('swft-chat-input')) return;
+      setTimeout(adjustPanels, 100);
+      setTimeout(adjustPanels, 300);
+    });
   }
 
   /* ── Keyboard: close overlays on Escape ── */

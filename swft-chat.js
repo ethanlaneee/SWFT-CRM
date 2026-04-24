@@ -557,8 +557,9 @@
         transform: translateY(0) scale(1);
       }
       .swft-chat-fab {
-        min-width: 144px;
-        padding: 0 16px;
+        min-width: 44px;
+        width: 44px;
+        padding: 0;
       }
     }
   `;
