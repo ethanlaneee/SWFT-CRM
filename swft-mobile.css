@@ -1774,14 +1774,25 @@
     min-height: 0 !important;
     height: auto !important;
   }
+  /* iOS Safari: overflow:hidden + border-radius blocks Google Maps tile rendering.
+     Use clip-path for rounded corners instead, and remove overflow:hidden. */
   .map-wrap {
     height: 55vh !important;
     min-height: 280px !important;
+    overflow: visible !important;
+    -webkit-clip-path: inset(0 round 14px) !important;
+    clip-path: inset(0 round 14px) !important;
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
   }
-  /* #map must match the wrap exactly so Google Maps renders the full tile grid */
   #map {
-    height: 55vh !important;
-    min-height: 280px !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .map-overlay {
+    border-radius: 14px !important;
   }
   .member-panel { max-height: 200px !important; }
 }

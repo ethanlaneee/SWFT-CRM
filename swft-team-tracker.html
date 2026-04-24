@@ -319,10 +319,38 @@ function initMap(){
       { featureType: 'transit',  stylers: [{ visibility: 'off' }] },
     ],
   });
-  // Force resize after layout settles — needed on mobile where CSS height resolves after constructor
+  // Force resize after layout settles (mobile needs multiple passes)
   [250, 600, 1200].forEach(function(ms){
-    setTimeout(function(){ if(_map) google.maps.event.trigger(_map, 'resize'); }, ms);
+    setTimeout(function(){
+      if(!_map) return;
+      google.maps.event.trigger(_map, 'resize');
+    }, ms);
   });
+  // Re-center after each resize so tiles fill the viewport
+  [300, 700, 1300].forEach(function(ms){
+    setTimeout(function(){
+      if(_map) _map.panTo(_map.getCenter());
+    }, ms);
+  });
+  // ResizeObserver: re-trigger when container dimensions actually change
+  if(typeof ResizeObserver !== 'undefined'){
+    var _mapRO = new ResizeObserver(function(){
+      if(_map){ google.maps.event.trigger(_map, 'resize'); _map.panTo(_map.getCenter()); }
+    });
+    _mapRO.observe(document.getElementById('map'));
+  }
+  // IntersectionObserver: trigger when map scrolls into view
+  if(typeof IntersectionObserver !== 'undefined'){
+    var _mapIO = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting && _map){
+          google.maps.event.trigger(_map, 'resize');
+          _map.panTo(_map.getCenter());
+        }
+      });
+    }, { threshold: 0.1 });
+    _mapIO.observe(document.getElementById('map'));
+  }
 }
 
 function roleColor(role){
