@@ -562,7 +562,9 @@
     }
 
     document.addEventListener('touchstart', function (e) {
-      if (scrollTop() === 0) {
+      var topbar = document.querySelector('.topbar');
+      var topbarBottom = topbar ? topbar.getBoundingClientRect().bottom : 60;
+      if (scrollTop() === 0 && e.touches[0].clientY <= topbarBottom) {
         startY = e.touches[0].clientY;
         pulling = true;
       }

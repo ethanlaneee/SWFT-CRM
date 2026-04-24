@@ -1800,11 +1800,12 @@
     min-height: 0 !important;
     height: auto !important;
   }
-  /* Explicit pixel height — Google Maps needs concrete dimensions at init time. */
+  /* Explicit pixel height — Google Maps needs concrete dimensions at init time.
+     overflow:visible prevents iOS Safari from clipping the map canvas layer. */
   .map-wrap {
     height: 300px !important;
     min-height: 300px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
   #map {
     width: 100% !important;

@@ -84,9 +84,9 @@ background:linear-gradient(90deg, var(--green), rgba(200,241,53,0.2));
 font-family:’Space Mono’,monospace;font-weight:700;
 font-size:28px;letter-spacing:4px;text-transform:uppercase;
 color:var(--white);line-height:1;
-display:flex;align-items:center;gap:2px;
+display:inline-flex;align-items:baseline;
 }
-.logo em{color:var(--green);font-style:normal;}
+.logo em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;font-style:normal;}
 
 .tagline{
 font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
@@ -349,7 +349,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <!-- HEADER -->
 <div class="card-header">
-  <div class="logo">SWFT<em>.</em></div>
+  <div class="logo">SWFT<em></em></div>
   <div class="tagline">simple. smart. swft.</div>
   <div class="tab-row" id="tab-row">
     <div class="tab active" onclick="switchTab('login')">Sign In</div>
