@@ -634,41 +634,19 @@
   .chart-area { height: 88px !important; }
   .chart-footer { flex-wrap: wrap; gap: 10px; }
 
-  /* ── NEW JOB MODAL → full-screen bottom sheet, above bottom nav ── */
+  /* ── NEW JOB MODAL: centered modal on mobile (desktop already centers it) ── */
   .nj-overlay {
     z-index: 1100 !important;
   }
   .nj-modal {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    transform: translateY(110%) !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 90vh !important;
-    border-radius: 20px 20px 0 0 !important;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    z-index: 1110 !important;
-    transition: transform 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.25s !important;
+    width: calc(100vw - 24px) !important;
+    max-height: 88dvh !important;
+    border-radius: 16px !important;
+    overflow-y: auto !important;
+    /* top:50%;left:50%;translate(-50%,-50%) from desktop CSS is preserved */
   }
-  .nj-overlay.open + .nj-modal,
-  .nj-modal.open {
-    transform: translateY(0) !important;
-    opacity: 1 !important;
-    pointer-events: all !important;
-  }
-  /* Drag handle on modal */
-  .nj-modal::before {
-    content: '';
-    display: block;
-    width: 36px;
-    height: 4px;
-    background: var(--border2);
-    border-radius: 2px;
-    margin: 10px auto 2px;
-  }
+  /* Remove drag handle (bottom-sheet artifact) */
+  .nj-modal::before { display: none !important; }
   /* Stack the 2-col form rows on small screens */
   .nj-row {
     grid-template-columns: 1fr !important;
@@ -676,27 +654,33 @@
   }
   .nj-body { padding: 8px 16px 12px !important; }
 
-  /* ── JOB DETAIL DRAWER → bottom sheet on mobile ── */
+  /* ── JOB DETAIL / SCHEDULE DRAWER: centered modal on mobile ── */
   .drawer-overlay { z-index: 1100 !important; }
   .drawer {
     position: fixed !important;
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    transform: translateY(110%) !important;
-    width: 100% !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) scale(0.95) !important;
+    width: calc(100vw - 24px) !important;
     max-width: 100% !important;
-    max-height: 92vh !important;
-    border-radius: 20px 20px 0 0 !important;
+    max-height: 88dvh !important;
+    border-radius: 16px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     z-index: 1110 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), opacity 0.2s !important;
   }
   .drawer.open {
-    transform: translateY(0) !important;
+    transform: translate(-50%, -50%) scale(1) !important;
     opacity: 1 !important;
     pointer-events: all !important;
+  }
+  .drawer.center-modal.open {
+    transform: translate(-50%, -50%) !important;
   }
   /* Stack 2-column edit form rows into single column */
   .edit-row-2 {
