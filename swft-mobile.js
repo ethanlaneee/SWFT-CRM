@@ -101,7 +101,7 @@
     if (!topbar) return;
     var logo = document.createElement('span');
     logo.className = 'mob-topbar-logo';
-    logo.innerHTML = 'SWFT<em>.</em>';
+    logo.innerHTML = 'SWFT<em></em>';
     topbar.insertBefore(logo, topbar.firstChild);
   }
 
@@ -247,7 +247,7 @@
     if (contactTitle && contactTitle.parentNode) {
       var logo = document.createElement('span');
       logo.className = 'mob-topbar-logo';
-      logo.innerHTML = 'SWFT<em>.</em>';
+      logo.innerHTML = 'SWFT<em></em>';
       contactTitle.parentNode.insertBefore(logo, contactTitle);
     }
 

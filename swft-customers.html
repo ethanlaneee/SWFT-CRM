@@ -28,8 +28,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
 .sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{display:inline-block;width:5px;height:5px;background:var(--green);font-size:0;vertical-align:3px;margin-left:2px;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:flex-end;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:7px;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
 .nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
@@ -461,7 +461,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
     <div>
-      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-mark">SWFT<em></em></div>
       <div class="logo-sub">simple. smart. swft.</div>
     </div>
     <div class="collapse-btn" onclick="toggleSidebar()">

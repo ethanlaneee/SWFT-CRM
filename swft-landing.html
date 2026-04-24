@@ -203,8 +203,8 @@ body::after{
   transition:all 0.3s ease;
 }
 .nav.scrolled{background:rgba(10,10,10,0.92);box-shadow:0 4px 30px rgba(0,0,0,0.4);}
-.nav-logo{font-family:'Space Mono',monospace;font-weight:700;font-size:28px;letter-spacing:4px;text-transform:uppercase;color:var(--white);text-decoration:none;}
-.nav-logo span{color:var(--green);}
+.nav-logo{font-family:'Space Mono',monospace;font-weight:700;font-size:28px;letter-spacing:0;text-transform:uppercase;color:var(--white);text-decoration:none;display:inline-flex;align-items:flex-end;}
+.nav-logo em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:7px;font-style:normal;}
 .nav-links{display:flex;align-items:center;gap:32px;}
 .nav-link{color:var(--gray);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;}
 .nav-link:hover{color:var(--white);}
@@ -974,7 +974,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <!-- ── NAV ── -->
 <nav class="nav" id="nav">
-  <a href="/" class="nav-logo">SWFT<span>.</span></a>
+  <a href="/" class="nav-logo">SWFT<em></em></a>
   <div class="nav-links">
     <a href="#problems" class="nav-link">Why SWFT</a>
     <a href="#product" class="nav-link">Product</a>
@@ -1579,7 +1579,7 @@ function toggleSidebar(){
   <div class="container">
     <div class="footer-inner">
       <div class="footer-brand">
-        <a href="/" class="nav-logo" style="font-size:28px;">SWFT<span>.</span></a>
+        <a href="/" class="nav-logo" style="font-size:28px;">SWFT<em></em></a>
         <p class="footer-tagline">Simple. Smart. SWFT.</p>
       </div>
       <div class="footer-links">

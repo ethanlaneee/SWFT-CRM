@@ -251,14 +251,39 @@
     height: 100dvh !important;
   }
 
-  /* Sidebar pages WITHOUT .page-body (connect, phone, agents, reviews, etc.) — body scrolls */
-  body:has(.main):not(:has(.main .page-body)) {
+  /* Pages with .main-body (automations, phone, connect) — fixed topbar, scrollable content area */
+  body:has(.main-body), html:has(.main-body) {
+    overflow: hidden !important;
+    height: 100dvh !important;
+  }
+  .main:has(.main-body) {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .main-body {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 16px 14px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Sidebar pages WITHOUT .page-body and WITHOUT .main-body — body scrolls */
+  body:has(.main):not(:has(.main .page-body)):not(:has(.main-body)) {
     overflow-y: auto !important;
     height: auto !important;
     width: 100vw !important;
     max-width: 100vw !important;
   }
-  html:has(.main):not(:has(.main .page-body)) {
+  html:has(.main):not(:has(.main .page-body)):not(:has(.main-body)) {
     overflow-y: auto !important;
     height: auto !important;
   }
@@ -280,8 +305,8 @@
     overflow: hidden !important;
     width: 100% !important;
   }
-  /* .main without .page-body: natural height, scrolls with the body */
-  .main:not(:has(.page-body)) {
+  /* .main without .page-body or .main-body: natural height, scrolls with the body */
+  .main:not(:has(.page-body)):not(:has(.main-body)) {
     height: auto !important;
     min-height: 0 !important;
     overflow-y: visible !important;
@@ -290,7 +315,7 @@
     max-width: 100% !important;
   }
   /* Pages without .page-body that have a topbar: no top padding, topbar is the boundary */
-  .main:not(:has(.page-body)):has(.topbar) {
+  .main:not(:has(.page-body)):not(:has(.main-body)):has(.topbar) {
     padding-top: 0 !important;
   }
 
@@ -395,6 +420,12 @@
     text-overflow: ellipsis !important;
     flex: 1 !important;
   }
+  /* Separator between injected SWFT logo and page name */
+  .mob-topbar-logo + .topbar-page {
+    padding-left: 10px !important;
+    border-left: 1px solid var(--border2) !important;
+    margin-left: 4px !important;
+  }
 
   /* ── Mobile topbar SWFT logo ── */
   .mob-topbar-logo {
@@ -406,15 +437,17 @@
     color: var(--white) !important;
     line-height: 1;
     flex-shrink: 0;
+    display: inline-flex !important;
+    align-items: flex-end !important;
   }
   .mob-topbar-logo em {
-    display: inline-block !important;
+    display: block !important;
     width: 4px !important;
     height: 4px !important;
     background: var(--green) !important;
-    font-size: 0 !important;
-    vertical-align: 2px !important;
+    flex-shrink: 0 !important;
     margin-left: 2px !important;
+    margin-bottom: 6px !important;
   }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
@@ -1737,7 +1770,9 @@
   .tracker-split {
     grid-template-columns: 1fr !important;
     grid-template-rows: auto auto !important;
+    flex: none !important;
     min-height: 0 !important;
+    height: auto !important;
   }
   .map-wrap {
     height: 55vh !important;
