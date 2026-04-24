@@ -1406,6 +1406,11 @@
     height: 55vh !important;
     min-height: 280px !important;
   }
+  /* #map must match the wrap exactly so Google Maps renders the full tile grid */
+  #map {
+    height: 55vh !important;
+    min-height: 280px !important;
+  }
   .member-panel { max-height: 200px !important; }
 }
 

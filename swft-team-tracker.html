@@ -305,7 +305,7 @@ async function loadMapsSdk(){
 function initMap(){
   _map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12,
-    center: { lat: 39.5, lng: -98.35 },        // continental US fallback — re-centers on viewer/pins immediately
+    center: { lat: 39.5, lng: -98.35 },
     disableDefaultUI: false,
     mapTypeControl: false,
     streetViewControl: false,
@@ -319,6 +319,9 @@ function initMap(){
       { featureType: 'transit',  stylers: [{ visibility: 'off' }] },
     ],
   });
+  // Force resize after layout settles — needed on mobile where map container
+  // height is resolved via CSS after the Map constructor runs
+  setTimeout(function(){ if(_map) google.maps.event.trigger(_map, 'resize'); }, 250);
 }
 
 function roleColor(role){

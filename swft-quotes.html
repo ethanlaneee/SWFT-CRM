@@ -125,6 +125,11 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .pdf-field-select:hover{border-bottom-color:#ccc;}
 .pdf-field-select:focus{border-bottom:2px solid #111;}
 .pdf-field-select option{direction:ltr;background:#fff;}
+.pdf-ui-field{margin-bottom:8px;}
+.pdf-ui-label{display:block;font-size:10px;color:#999;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-weight:600;}
+.pdf-ui-select{width:100%;background:#f7f7f7;border:1px solid #ddd;border-radius:7px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:#111;font-weight:500;outline:none;cursor:pointer;-webkit-appearance:auto;appearance:auto;}
+.pdf-ui-select:focus{border-color:#111;background:#fff;}
+.pdf-ui-select option{background:#fff;color:#111;}
 .pdf-2col{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;}
 .pdf-section-label{margin-top:20px;margin-bottom:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#999;}
 .pdf-li-header{display:grid;grid-template-columns:2fr 0.6fr 0.8fr 0.8fr 26px;padding:8px 0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#999;border-bottom:1px solid #e0e0e0;}
@@ -311,9 +316,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         </div>
       </div>
       <div class="pdf-fields">
-        <div class="pdf-field-row">
-          <span class="pdf-field-label">Customer</span>
-          <select class="pdf-field-select" id="f-customer"></select>
+        <div class="pdf-ui-field">
+          <label class="pdf-ui-label">Customer</label>
+          <select class="pdf-ui-select" id="f-customer" onchange="onCustomerSelect(this.value)"></select>
+        </div>
+        <div class="pdf-ui-field">
+          <label class="pdf-ui-label">Job (optional)</label>
+          <select class="pdf-ui-select" id="f-job" onchange="onJobSelect(this.value)"><option value="">No linked job</option></select>
         </div>
         <div class="pdf-2col">
           <div class="pdf-field-row"><span class="pdf-field-label">Service</span><input class="pdf-field-input" id="f-service" placeholder="e.g. Stamped Concrete"/></div>
@@ -372,6 +381,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script>
 var _quotes=[];
 var _customers=[];
+var _jobs=[];
 var _currentQuote=null; // {id,items,...} or null for new
 var _items=[];          // current line items in modal
 var _filter='all';
@@ -413,8 +423,8 @@ window.swftConfirm = function(title, message, opts = {}) {
 // ── Load ──
 async function loadQuotes(){
   try{
-    var res=await Promise.all([API.quotes.list(),API.customers.list()]);
-    _quotes=res[0];_customers=res[1].slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+    var res=await Promise.all([API.quotes.list(),API.customers.list(),API.jobs.list().catch(function(){return[];})]);
+    _quotes=res[0];_customers=res[1].slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});_jobs=res[2]||[];
     renderStats();renderTable();
     // Pipeline pre-fill: if arriving from job pipeline, store data for next "New Quote" open
     try{
@@ -538,7 +548,7 @@ function openNewQuote(){
     var custSel=document.getElementById('f-customer');
     if(custSel&&pd.customerName){
       var match=_customers.find(function(c){return (c.name||'')===(pd.customerName||'');});
-      if(match) custSel.value=match.id;
+      if(match){custSel.value=match.id;populateJobDropdown(match.id,'');}
     }
     if(pd.address&&document.getElementById('f-address')) document.getElementById('f-address').value=pd.address;
     if(pd.service&&document.getElementById('f-service')) document.getElementById('f-service').value=pd.service;
@@ -562,6 +572,9 @@ function populateModal(q){
     sel.appendChild(o);
   });
 
+  // Job dropdown
+  populateJobDropdown(q.customerId||'', q.jobId||'');
+
   document.getElementById('f-status').value=q.status||'draft';
   document.getElementById('f-service').value=q.service||'';
   document.getElementById('f-sqft').value=q.sqft||'';
@@ -571,6 +584,38 @@ function populateModal(q){
   document.getElementById('f-scheduled').value=q.scheduledDate?new Date(q.scheduledDate).toISOString().split('T')[0]:'';
 
   renderLineItems();
+}
+
+function populateJobDropdown(custId, selectedJobId){
+  var jobSel=document.getElementById('f-job');
+  if(!jobSel)return;
+  var filtered=custId?_jobs.filter(function(j){return (j.customerId||j.custId||'')===(custId||'');}):_jobs;
+  jobSel.innerHTML='<option value="">No linked job</option>';
+  filtered.forEach(function(j){
+    var o=document.createElement('option');
+    o.value=j.id;
+    var label=(j.service||'Job')+(j.address?' — '+j.address.split(',')[0]:'');
+    o.textContent=label;
+    if(j.id===selectedJobId)o.selected=true;
+    jobSel.appendChild(o);
+  });
+}
+
+function onCustomerSelect(custId){
+  populateJobDropdown(custId,'');
+}
+
+function onJobSelect(jobId){
+  if(!jobId)return;
+  var j=_jobs.find(function(x){return x.id===jobId;});
+  if(!j)return;
+  if(j.customerId){
+    var custSel=document.getElementById('f-customer');
+    if(custSel)custSel.value=j.customerId;
+  }
+  if(j.address)document.getElementById('f-address').value=j.address;
+  if(j.service)document.getElementById('f-service').value=j.service;
+  if(j.sqft)document.getElementById('f-sqft').value=j.sqft;
 }
 
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
@@ -687,9 +732,14 @@ async function saveQuote(action){
 
   var t=computeTotals();
   if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);t.tax=Number(_currentQuote.tax||0);t.total=Number(_currentQuote.total||t.subtotal);}
+  var jobSel=document.getElementById('f-job');
+  var jobId=jobSel?jobSel.value:'';
+  var jobName='';if(jobId){var jj=_jobs.find(function(x){return x.id===jobId;});if(jj)jobName=jj.service||'';}
   var data={
     customerId:custSel.value,
     customerName:custOpt.textContent,
+    jobId:jobId||'',
+    jobName:jobName,
     items:_items,
     subtotal:t.subtotal,
     taxRate:t.taxRate,
