@@ -493,11 +493,12 @@
     padding: 11px 14px !important;
     gap: 10px !important;
   }
-  /* Hide: checkbox, customer, address, action buttons */
+  /* Hide: checkbox, customer, address */
   .job-row > div:nth-child(1),
   .job-row > div:nth-child(3),
-  .job-row > div:nth-child(4),
-  .job-row > div:nth-child(6) { display: none !important; }
+  .job-row > div:nth-child(4) { display: none !important; }
+  /* Show action buttons column */
+  .job-row > div:nth-child(6) { flex-shrink: 0 !important; display: flex !important; gap: 5px !important; }
   /* job-id-cell: flex row with pip + title */
   .job-id-cell {
     flex: 1 !important;
@@ -533,14 +534,15 @@
     padding: 10px 14px !important;
     gap: 8px !important;
   }
-  /* Hide: checkbox, address, phone, email, status, tags, actions */
+  /* Hide: checkbox, address, phone, email, status, tags */
   .cust-row > div:nth-child(1),
   .cust-row > div:nth-child(3),
   .cust-row > div:nth-child(4),
   .cust-row > div:nth-child(5),
   .cust-row > div:nth-child(6),
-  .cust-row > div:nth-child(7),
-  .cust-row > div:nth-child(8) { display: none !important; }
+  .cust-row > div:nth-child(7) { display: none !important; }
+  /* Show action buttons column */
+  .cust-row > div:nth-child(8) { flex-shrink: 0 !important; }
   .cust-name-cell { flex: 1 !important; }
 
   .schedule-row { padding: 10px 14px !important; }
@@ -593,11 +595,14 @@
   }
   .table-head { display: none !important; }
 
+  /* Slightly smaller row action buttons on mobile so 3 fit side-by-side */
+  .row-btn { width: 26px !important; height: 26px !important; border-radius: 6px !important; }
+
   /* Quote / invoice list rows → 2-row card grid */
   .q-row, .inv-row, .quote-row {
     min-width: 0 !important;
     display: grid !important;
-    grid-template-columns: 1fr auto 36px !important;
+    grid-template-columns: 1fr auto 86px !important;
     grid-template-rows: auto auto !important;
     grid-template-areas:
       "customer total arrow"
@@ -613,7 +618,7 @@
   .q-row > div:nth-child(3) { grid-area: info !important; align-self: end !important; }
   .q-row > div:nth-child(4) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; }
   .q-row > div:nth-child(5) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
-  .q-row > div:nth-child(6) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
+  .q-row > div:nth-child(6) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; display: flex !important; gap: 5px !important; justify-content: flex-end !important; }
 
   /* Billing page q-row (7 children: num | customer | date | expires | total | status | buttons) */
   .page-billing .q-row > div:nth-child(1) { display: none !important; }
