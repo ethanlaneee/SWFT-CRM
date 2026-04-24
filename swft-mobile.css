@@ -672,6 +672,16 @@
   .pdf-close { flex-shrink: 0 !important; }
   /* Keep pdf-2col as 2 columns on mobile — prevents unexpected blank fields appearing */
   .pdf-2col { gap: 6px !important; }
+  /* In half-width cells, stack label above input so date/text inputs have full width */
+  .pdf-2col .pdf-field-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 2px !important;
+    min-height: unset !important;
+  }
+  .pdf-2col .pdf-field-label { min-width: unset !important; font-size: 10px !important; }
+  .pdf-2col .pdf-field-input { text-align: left !important; max-width: 100% !important; width: 100% !important; padding: 4px 2px !important; font-size: 12px !important; }
   /* Shrink pdf modal text for mobile */
   .pdf-doc-body { padding: 12px 14px 16px !important; font-size: 13px !important; }
   .pdf-field-label { font-size: 11px !important; }
