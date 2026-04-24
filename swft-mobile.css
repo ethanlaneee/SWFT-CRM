@@ -289,6 +289,10 @@
     padding: 16px 14px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
     max-width: 100% !important;
   }
+  /* Pages without .page-body that have a topbar: no top padding, topbar is the boundary */
+  .main:not(:has(.page-body)):has(.topbar) {
+    padding-top: 0 !important;
+  }
 
   .page-body {
     flex: 1 1 0 !important;
@@ -409,9 +413,8 @@
     height: 4px !important;
     background: var(--green) !important;
     font-size: 0 !important;
-    vertical-align: middle !important;
+    vertical-align: baseline !important;
     margin-left: 2px !important;
-    margin-bottom: 3px !important;
   }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
