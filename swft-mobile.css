@@ -438,7 +438,7 @@
     line-height: 1;
     flex-shrink: 0;
     display: inline-flex !important;
-    align-items: flex-end !important;
+    align-items: baseline !important;
   }
   .mob-topbar-logo em {
     display: block !important;
@@ -447,7 +447,7 @@
     background: var(--green) !important;
     flex-shrink: 0 !important;
     margin-left: 2px !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 0 !important;
   }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
