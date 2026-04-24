@@ -459,6 +459,30 @@
 }
 
 
+/* ── DASHBOARD: simplified mobile layout ── */
+@media (max-width: 768px) {
+  /* Hide KPI grid, automation strip — SWFT AI is the dashboard on mobile */
+  .kpi-grid,
+  #agent-strip,
+  .greeting { display: none !important; }
+
+  /* Single column — AI panel fills full width */
+  #dash-main-grid {
+    grid-template-columns: 1fr !important;
+    min-height: calc(100vh - 140px) !important;
+    gap: 0 !important;
+  }
+
+  /* Hide schedule + this week columns */
+  #dash-schedule-col { display: none !important; }
+
+  /* SWFT AI panel — full height, no border-radius at bottom */
+  #dash-main-grid > .panel:first-child {
+    min-height: calc(100dvh - 140px) !important;
+    border-radius: 14px !important;
+  }
+}
+
 /* ── MESSAGES PAGE: iMessage-style full-screen thread layout ── */
 
 /* Back button — hidden on desktop, shown on mobile */
