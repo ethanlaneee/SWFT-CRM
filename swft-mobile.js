@@ -190,6 +190,22 @@
       sheet.appendChild(grid);
     });
 
+    var footer = document.createElement('div');
+    footer.className = 'mob-more-footer';
+    var logoutBtn = document.createElement('button');
+    logoutBtn.className = 'mob-more-logout';
+    logoutBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out';
+    logoutBtn.onclick = function () {
+      closeMoreSheet();
+      import('https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js').then(function (m) {
+        return m.signOut(m.getAuth());
+      }).catch(function () {}).finally(function () {
+        window.location.href = 'swft-login';
+      });
+    };
+    footer.appendChild(logoutBtn);
+    sheet.appendChild(footer);
+
     document.body.appendChild(sheet);
   }
 
