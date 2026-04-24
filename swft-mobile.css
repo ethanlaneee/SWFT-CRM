@@ -1317,22 +1317,24 @@
   /* ── ACTIVITY ITEMS ── */
   .activity-item { padding: 12px 14px !important; }
 
-  /* ── SCHEDULE: hide weather strip, calendar full screen ── */
+  /* ── SCHEDULE: hide weather strip, calendar fits screen without scrolling ── */
   .weather-strip { display: none !important; }
-  .page-tabs { margin-bottom: 12px !important; }
-  .cal-header { margin-bottom: 10px !important; }
+  .page-tabs { margin-bottom: 10px !important; }
+  .cal-header { margin-bottom: 8px !important; }
   #cal-view {
     display: flex; /* no !important — lets JS set style.display='none' when switching to Time Blocks */
     flex-direction: column !important;
-    flex: 1 !important;
-    min-height: calc(100dvh - 180px) !important;
+    flex: none !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
   .cal-grid-wrap {
-    flex: 1 !important;
+    flex: none !important;
+    height: auto !important;
     border-radius: 10px !important;
   }
   .cal-grid {
-    grid-auto-rows: minmax(56px, 1fr) !important;
+    grid-auto-rows: 52px !important;
   }
   .cal-dow-row {
     grid-template-columns: repeat(7, 1fr) !important;
@@ -1728,10 +1730,9 @@
   /* Segment control: full-width wrapping on mobile */
   .segment { display: flex !important; flex-wrap: wrap !important; width: 100% !important; }
   .segment button { flex: 1 !important; padding: 8px 10px !important; }
-  /* Tabs: show emoji alongside label, compact sizing, horizontal scroll */
+  /* Tabs: compact sizing on automations page */
   .ptab { padding: 10px 12px !important; }
   .ptab-dot { display: none !important; }
   .ptab-emoji { font-size: 14px !important; }
-  .ptab-label { font-size: 12px !important; }
   .page-tabs { gap: 2px !important; }
 }
