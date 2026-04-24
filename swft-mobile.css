@@ -71,6 +71,20 @@
   transform: scale(0.88);
 }
 
+/* Mic / Voice AI pill button in bottom nav */
+.mob-nav-pill {
+  flex: 0 0 auto;
+  background: rgba(200,241,53,0.10);
+  border: 1px solid rgba(200,241,53,0.25);
+  border-radius: 28px;
+  padding: 0 18px;
+  color: var(--green);
+  margin: auto 8px;
+}
+.mob-nav-pill span { display: none; }
+.mob-nav-pill svg { width: 22px; height: 22px; }
+.mob-nav-pill:active { background: rgba(200,241,53,0.2); }
+
 .mob-nav-badge {
   position: absolute;
   top: 7px;
@@ -1439,6 +1453,11 @@
   #dash-chat-messages {
     min-height: 0 !important;
     flex: 1 !important;
+  }
+
+  /* SWFT AI welcome screen: subtle opacity so it's calm, not loud */
+  #dash-chat-welcome {
+    opacity: 0.6 !important;
   }
 
   /* Input: 16px prevents iOS Safari auto-zoom on focus */
