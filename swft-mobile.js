@@ -21,11 +21,11 @@
       svg: svgWrap('<path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-linecap="round"/>')
     },
     {
-      id: 'swft-voice',
-      label: '',
-      href: 'swft-dashboard',
-      pill: true,
-      svg: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="1.8"/><path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke-width="1.8"/><line x1="12" y1="19" x2="12" y2="23" stroke-width="1.8"/><line x1="8" y1="23" x2="16" y2="23" stroke-width="1.8"/></svg>'
+      id: 'swft-messages',
+      label: 'Messages',
+      href: 'swft-messages',
+      badge: true,
+      svg: svgWrap('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
     },
     {
       id: 'swft-schedule',
@@ -114,9 +114,9 @@
 
     BOTTOM_ITEMS.forEach(function (item) {
       var el = document.createElement('div');
-      el.className = 'mob-nav-item' + (isActive(item.id) ? ' active' : '') + (item.pill ? ' mob-nav-pill' : '');
+      el.className = 'mob-nav-item' + (isActive(item.id) ? ' active' : '');
       el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', item.label || 'Voice AI');
+      el.setAttribute('aria-label', item.label);
       el.setAttribute('data-nav-id', item.id);
       el.innerHTML = item.svg + '<span>' + item.label + '</span>';
 
