@@ -962,11 +962,224 @@
     padding-bottom: 20px !important;
   }
 
-  /* ── Settings nav sticky — stick at top of page-body scroll container ── */
+  /* ── Settings nav sticky ── */
   .settings-nav {
-    top: 0 !important;
+    top: 60px !important;
     margin: 0 !important;
     padding-bottom: 12px !important;
+  }
+
+  /* ── SETTINGS PAGE: full mobile overhaul ── */
+
+  /* 2-col grids → single column */
+  .settings-2col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* All inputs/selects inside settings → full width */
+  .settings-input,
+  .settings-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Each settings-row → stack vertically */
+  .settings-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px 0 !important;
+  }
+
+  /* Row info should not flex-shrink away */
+  .settings-row-info {
+    width: 100% !important;
+  }
+
+  /* Buttons inside rows: full width, decent tap height */
+  .settings-row > .settings-btn,
+  .settings-row > button,
+  .settings-row > a.settings-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+  }
+
+  /* Save buttons at bottom of sections: full width */
+  .settings-body > div[style*="justify-content:flex-end"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .settings-body > div[style*="justify-content:flex-end"] > button,
+  .settings-body > div[style*="justify-content:flex-end"] > a {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+  }
+
+  /* Settings section body: less side padding on mobile */
+  .settings-body {
+    padding: 14px 16px !important;
+  }
+  .settings-header {
+    padding: 14px 16px !important;
+  }
+
+  /* Billing plan card: stack vertically */
+  .billing-plan-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  .billing-plan-card .settings-btn,
+  .billing-plan-card a.settings-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+  }
+
+  /* Buy packs row: stack buttons */
+  .settings-row > div[style*="display:flex"] {
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+  .settings-row > div[style*="display:flex"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Service types / crew / line items: stack label+input */
+  .settings-row > div[style*="flex-direction:column"] {
+    width: 100% !important;
+  }
+  .settings-row > div[style*="flex-direction:column"] .settings-input {
+    width: 100% !important;
+  }
+
+  /* Logo upload row */
+  .settings-body > div[style*="align-items:center"] > div {
+    width: 100% !important;
+  }
+
+  /* Quick setup banner */
+  #quick-setup-banner { padding: 14px 16px !important; }
+  #quick-setup-banner > div { flex-direction: column !important; align-items: stretch !important; }
+  #quick-setup-btn { width: 100% !important; justify-content: center !important; padding: 11px !important; margin-top: 4px; }
+
+  /* Analyze website row: stack input + button */
+  #s-biz-website { flex: unset !important; width: 100% !important; }
+  #analyze-website-btn { width: 100% !important; margin-top: 6px; justify-content: center !important; padding: 10px !important; }
+  #s-biz-website + button,
+  .settings-field > div[style*="display:flex;gap:8px"] {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .settings-field > div[style*="display:flex;gap:8px"] > input,
+  .settings-field > div[style*="display:flex;gap:8px"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Template modal: full-screen sheet on mobile */
+  #template-modal > div {
+    max-width: 100% !important;
+    max-height: 95vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    margin: auto 0 0 !important;
+    padding: 20px 16px !important;
+    width: 100% !important;
+  }
+  #template-modal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  /* Template modal inline flex row → column */
+  #template-modal > div > div[style*="display:flex;gap:10px"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* Billing modal on mobile */
+  .billing-modal {
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 95vh !important;
+  }
+  .billing-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  /* Export row: stack select + button */
+  .settings-row > div[style*="display:flex;gap:8px;align-items:center"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .settings-row > div[style*="display:flex;gap:8px;align-items:center"] > select,
+  .settings-row > div[style*="display:flex;gap:8px;align-items:center"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* DNS records section: sending domain */
+  #sd-pending > div[style*="display:flex;gap:8px"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  #sd-pending > div[style*="display:flex;gap:8px"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 10px !important;
+  }
+
+  /* QR code section: stack side by side items */
+  #sec-intake div[style*="display:flex;align-items:flex-start;gap:20px"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  #intake-qr-wrap {
+    width: 140px !important;
+    height: 140px !important;
+    margin: 0 auto !important;
+  }
+  #sec-intake div[style*="flex:1;min-width:200px"] {
+    min-width: unset !important;
+    width: 100% !important;
+  }
+  #sec-intake div[style*="display:flex;gap:8px;flex-wrap:wrap"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  #sec-intake div[style*="display:flex;gap:8px;flex-wrap:wrap"] > button,
+  #sec-intake div[style*="display:flex;gap:8px;flex-wrap:wrap"] > a {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 10px !important;
   }
 
   /* ── ALL STAT / KPI CARDS: hidden on mobile ── */
