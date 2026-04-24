@@ -1598,6 +1598,12 @@
     letter-spacing: 1.5px !important;
     color: var(--gray) !important;
   }
+  /* Same separator as .mob-topbar-logo + .topbar-page */
+  .mob-topbar-logo + .contact-title {
+    padding-left: 10px !important;
+    border-left: 1px solid var(--border2) !important;
+    margin-left: 4px !important;
+  }
   .contact-item { padding: 14px 16px !important; }
   .c-avatar {
     width: 44px !important;
