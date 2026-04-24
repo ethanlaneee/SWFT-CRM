@@ -89,6 +89,8 @@
     injectSidebarOverlay();
     injectMoreSheet();
     fixInputsAboveKeyboard();
+    setupDrawerFabHide();
+    setupPhotoLightbox();
     if (PAGE === 'swft-messages') setupMobileMessages();
     if (PAGE === 'swft-team-chat') setupMobileTeamChat();
   }
@@ -270,15 +272,12 @@
       observer.observe(chatHeader, { attributes: true, attributeFilter: ['style'] });
     }
 
-    // Also catch contact-item clicks directly
-    var contactList = document.getElementById('contact-list');
-    if (contactList) {
-      contactList.addEventListener('click', function (e) {
-        if (e.target.closest('.contact-item')) {
-          setTimeout(function () { document.body.classList.add('mob-chat-open'); }, 60);
-        }
-      });
-    }
+    // Single-tap: capture phase fires before onclick, opening panel immediately
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.contact-item')) {
+        document.body.classList.add('mob-chat-open');
+      }
+    }, true);
   }
 
   /* ── Team Chat: iMessage-style full-screen layout ── */
@@ -297,15 +296,12 @@
       observer.observe(tcHeader, { attributes: true, attributeFilter: ['style'] });
     }
 
-    // Click on chat list items → open chat
-    var chatListItems = document.getElementById('chat-list-items');
-    if (chatListItems) {
-      chatListItems.addEventListener('click', function (e) {
-        if (e.target.closest('.tc-item, [class*="chat-item"]')) {
-          setTimeout(function () { document.body.classList.add('mob-tc-open'); }, 60);
-        }
-      });
-    }
+    // Single-tap: capture phase fires before onclick
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.chat-list-item, .tc-item')) {
+        document.body.classList.add('mob-tc-open');
+      }
+    }, true);
 
     // Inject "+" new chat button into thread list header
     var chatListHeader = document.querySelector('.chat-list-header');
@@ -326,6 +322,48 @@
         document.body.classList.remove('mob-tc-open');
       };
     }
+  }
+
+  /* ── Hide FAB when drawer/modal overlay is open ── */
+  function setupDrawerFabHide() {
+    // Watch for any .drawer-overlay gaining class "open"
+    function watchOverlay(el) {
+      if (!el) return;
+      new MutationObserver(function () {
+        document.body.classList.toggle('mob-overlay-open', el.classList.contains('open'));
+      }).observe(el, { attributes: true, attributeFilter: ['class'] });
+    }
+    // Some pages use #overlay, others may use .drawer-overlay
+    watchOverlay(document.getElementById('overlay'));
+    document.querySelectorAll('.drawer-overlay').forEach(watchOverlay);
+  }
+
+  /* ── Photo lightbox: tap photo → fullscreen popup instead of new tab ── */
+  function setupPhotoLightbox() {
+    // Inject lightbox DOM once
+    var lb = document.createElement('div');
+    lb.id = 'mob-lightbox';
+    var lbImg = document.createElement('img');
+    lbImg.id = 'mob-lightbox-img';
+    lbImg.alt = '';
+    lb.appendChild(lbImg);
+    lb.addEventListener('click', function () { lb.classList.remove('open'); });
+    document.body.appendChild(lb);
+
+    // Intercept clicks on photo images before window.open fires
+    document.addEventListener('click', function (e) {
+      var img = e.target;
+      if (img.tagName !== 'IMG') return;
+      if (img.id === 'mob-lightbox-img') return;
+      // Target classes that are photo thumbnails / job photos
+      var isPhoto = img.classList.contains('sr-photo-thumb') ||
+                    img.closest('.photo-grid, .photo-tile, .sr-photos');
+      if (!isPhoto) return;
+      lbImg.src = img.src;
+      lb.classList.add('open');
+      e.stopPropagation();
+      e.preventDefault();
+    }, true);
   }
 
   /* ── Keyboard handling: keep compose bars above keyboard ── */

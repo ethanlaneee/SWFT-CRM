@@ -513,8 +513,11 @@
     max-height: calc(55vh) !important;
   }
 
-  /* Hide FAB when More sheet is open so it doesn't block options */
-  body.mob-more-open .swft-chat-fab {
+  /* Hide FAB when More sheet, drawer overlay, or chat view is open */
+  body.mob-more-open .swft-chat-fab,
+  body.mob-overlay-open .swft-chat-fab,
+  body.mob-chat-open .swft-chat-fab,
+  body.mob-tc-open .swft-chat-fab {
     display: none !important;
   }
 
@@ -664,10 +667,16 @@
   /* Hide schedule + this week columns */
   #dash-schedule-col { display: none !important; }
 
+  /* Remove "Connect your tools" tab — use SWFT Connect for that */
+  #dash-tools-tab,
+  #dash-tools-drawer { display: none !important; }
+
   /* SWFT AI panel — full height, no border-radius at bottom */
   #dash-main-grid > .panel:first-child {
     min-height: calc(100dvh - 140px) !important;
+    max-height: calc(100dvh - 140px) !important;
     border-radius: 14px !important;
+    overflow: hidden !important;
   }
 }
 
@@ -835,7 +844,27 @@
   .tc-header { padding: 10px 14px !important; min-height: 54px !important; }
   .tc-compose { flex-shrink: 0 !important; }
   .chat-list-header { padding: 18px 16px 10px !important; }
-  .chat-list-title { font-size: 26px !important; letter-spacing: 2px !important; }
+  /* Shrink "TEAM CHAT" title so it fits one line */
+  .chat-list-title { font-size: 18px !important; letter-spacing: 1.5px !important; }
+}
+
+/* ── Photo lightbox — fullscreen tap-to-dismiss ── */
+#mob-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 9998;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+#mob-lightbox.open { display: flex; }
+#mob-lightbox img {
+  max-width: 95vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
 }
 
 /* ── Extra-small phones (≤ 390px) ── */
