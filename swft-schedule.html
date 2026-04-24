@@ -1440,9 +1440,12 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     body.innerHTML = html;
 
     // Position near click, capped to stay within screen and above bottom nav
-    var pw = 290, ph = 300;
-    var navH = window.innerWidth <= 768 ? 70 : 0;
-    var x = Math.max(10, Math.min(e.clientX, window.innerWidth - pw - 10));
+    var isMob = window.innerWidth <= 768;
+    var pw = isMob ? Math.min(260, window.innerWidth - 30) : 290;
+    var ph = 300;
+    var navH = isMob ? 70 : 0;
+    var margin = 15;
+    var x = Math.max(margin, Math.min(e.clientX - pw / 2, window.innerWidth - pw - margin));
     var y = Math.max(60, Math.min(e.clientY + 12, window.innerHeight - ph - navH));
     popup.style.left = x + 'px';
     popup.style.top = y + 'px';

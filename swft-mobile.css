@@ -218,6 +218,17 @@
 
 @media (max-width: 768px) {
 
+  /* ── Prevent ALL horizontal overflow — no horizontal scrolling ever ── */
+  html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+  .main, .page-body, .panel { max-width: 100% !important; overflow-x: hidden !important; }
+
+  /* ── Popups must stay within viewport width ── */
+  .cal-popup, .wx-popup {
+    width: auto !important;
+    max-width: calc(100vw - 30px) !important;
+    min-width: 220px !important;
+  }
+
   /* ── Show mobile-only elements ── */
   .mob-bottom-nav { display: flex; }
 
