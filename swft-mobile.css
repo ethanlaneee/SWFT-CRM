@@ -1183,6 +1183,31 @@
     padding: 10px !important;
   }
 
+  /* ── SETTINGS: native document scroll (inner scroll unreliable on iOS) ── */
+  /* Override the global overflow:hidden/height:100dvh body for settings only */
+  body:has(#settingsNav),
+  html:has(#settingsNav) {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+  body:has(#settingsNav) .main {
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+  body:has(#settingsNav) .page-body {
+    overflow: visible !important;
+    height: auto !important;
+    flex: none !important;
+    min-height: 0 !important;
+    /* Keep bottom padding so content clears the fixed nav bar */
+    padding-bottom: calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+  }
+  /* Sticky nav: top relative to document viewport now, below topbar */
+  body:has(#settingsNav) .settings-nav {
+    top: 54px !important;
+  }
+
   /* ── QUOTE / PDF MODAL: windowed feel with visible blur surround ── */
   .modal-overlay {
     padding: 52px 14px calc(var(--nav-h, 64px) + 14px) !important;

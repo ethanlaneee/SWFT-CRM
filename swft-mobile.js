@@ -386,19 +386,22 @@
 
   /* ── Keyboard handling: keep compose bars above keyboard ── */
   function fixInputsAboveKeyboard() {
-    // Scroll non-panel inputs into view on focus
+    // Scroll non-panel inputs into view on focus (not for dashboard — panel resize handles it)
     document.addEventListener('focusin', function (e) {
       var el = e.target;
       if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
+      if (el.id === 'dash-chat-input') return; // dashboard: handled by visualViewport resize
       setTimeout(function () {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 350);
     }, true);
 
     // On blur: reset viewport scroll so content isn't stuck shifted after keyboard closes
+    // Skip on settings (document scroll — user may have scrolled intentionally)
     document.addEventListener('focusout', function (e) {
       var el = e.target;
       if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
+      if (document.getElementById('settingsNav')) return;
       setTimeout(function () {
         window.scrollTo(0, 0);
         var pb = document.querySelector('.page-body');
@@ -432,6 +435,8 @@
           dashPanel.style.setProperty('height', availH + 'px', 'important');
           dashPanel.style.setProperty('max-height', availH + 'px', 'important');
           if (pb) pb.style.setProperty('padding-bottom', '0', 'important');
+          // Prevent iOS from panning the viewport — snap back to top
+          window.scrollTo(0, 0);
         } else {
           dashPanel.style.removeProperty('height');
           dashPanel.style.removeProperty('max-height');
