@@ -76,7 +76,7 @@
         "Team chat with file sharing",
         "Broadcasts (email)",
         "AI automations",
-        "Data import from Jobber, ServiceTitan and Housecall Pro",
+        "Data import from other CRMs",
         "QuickBooks integration"
       ],
       "screenshot": "https://goswft.com/",
@@ -336,6 +336,8 @@ section{position:relative;z-index:1;}
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
+.shimmer{background:linear-gradient(90deg,#c8f135 0%,#eeffa0 35%,#ffffff 50%,#eeffa0 65%,#c8f135 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 
@@ -1002,6 +1004,10 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     Pricing
   </a>
+  <a href="#compare" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+    Compare
+  </a>
   <div class="sidebar-cta">
     <a href="/swft-login" class="sidebar-login">Log In</a>
     <a href="/swft-checkout" class="sidebar-trial">Start Free Trial</a>
@@ -1021,7 +1027,7 @@ function toggleSidebar(){
 <section class="hero">
   <div class="container">
     <div class="hero-badge"><span class="dot"></span> AI-Powered CRM for Home Services</div>
-    <h1>SAVE HOURS.<br/>SCALE <span class="accent">FASTER</span>.</h1>
+    <h1>SAVE HOURS.<br/>SCALE <span class="accent shimmer">FASTER</span>.</h1>
     <p class="hero-sub">
       One AI-powered platform that handles your quotes, invoices, scheduling, follow-ups, and customer management — so you can focus on the work that actually makes you money.
     </p>
@@ -1102,6 +1108,74 @@ function toggleSidebar(){
       </div>
     </div>
     <p class="pain-bottom reveal">Every hour you spend on admin is an hour you're <strong style="color:var(--red)">not</strong> on a job site making money. <strong style="color:var(--green)">What if your back office just ran itself?</strong></p>
+  </div>
+</section>
+
+<!-- ── SWFT vs THE REST TABLE ── -->
+<section class="vs-table-section" id="compare">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">The Difference</span>
+      <h2 class="section-title">SWFT VS. <span class="accent">EVERYONE ELSE</span></h2>
+    </div>
+
+    <div class="vs-table-wrapper reveal">
+      <table class="vs-table">
+        <thead>
+          <tr>
+            <th class="vs-feature-col"></th>
+            <th class="vs-other-col">Other CRMs</th>
+            <th class="vs-swft-col">SWFT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="vs-feature">Pricing</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> $39–$500+/mo with per-user and usage-based fees</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> $89–$349/mo flat. AI limits clearly listed per plan.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Per-user charges</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> $20–$200+ per seat/technician</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> No per-user fees. Up to 5 users on Starter, 10 on Pro, unlimited on Business.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Setup time</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Days to months. Some require paid onboarding.</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> Under 2 minutes. No onboarding fee.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Contracts</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Annual contracts, multi-year lock-ins</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> Month-to-month. Cancel anytime.</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">AI automation</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Often a paid add-on or limited availability</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> AI estimator &amp; follow-up included in every plan</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">All-in-one</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> CRM only — invoicing, scheduling cost extra</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> CRM, quotes, invoices, jobs, scheduling, email, AI, team chat &amp; broadcasts</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Learning curve</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Steep — weeks of training, video courses</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> If you can text, you can use SWFT</td>
+          </tr>
+          <tr>
+            <td class="vs-feature">Switch easily</td>
+            <td class="vs-other"><span class="compare-x">&#10005;</span> Manual CSV uploads, data loss</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> Easy import from other CRMs</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="text-align:center;margin-top:24px;font-size:12px;color:var(--gray);" class="reveal">
+      Competitor pricing based on publicly available information as of April 2026. Actual costs may vary and are subject to change. SWFT AI message limits vary by plan — see pricing for details.
+    </p>
   </div>
 </section>
 
