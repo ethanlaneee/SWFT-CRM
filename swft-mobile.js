@@ -404,6 +404,7 @@
       var el = e.target;
       if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
       if (document.getElementById('settingsNav')) return;
+      if (el.classList && el.classList.contains('swft-chat-input')) return; // panel handles its own scroll
       setTimeout(function () {
         window.scrollTo(0, 0);
         var pb = document.querySelector('.page-body');
@@ -442,23 +443,35 @@
         }
       }
 
-      // Dashboard AI panel: iMessage-style — hide nav bar, resize panel to hug keyboard
+      // Dashboard AI panel: fixed-position approach (same as SWFT AI panel)
       var dashPanel = document.querySelector('#dash-main-grid > .panel');
       if (dashPanel) {
         var pb = document.querySelector('.page-body');
         var nav = document.querySelector('.mob-bottom-nav');
         if (kh > 60) {
           var topbarH = 54;
-          var availH = window.visualViewport.height - topbarH;
-          dashPanel.style.setProperty('height', availH + 'px', 'important');
-          dashPanel.style.setProperty('max-height', availH + 'px', 'important');
+          dashPanel.style.setProperty('position', 'fixed', 'important');
+          dashPanel.style.setProperty('top', topbarH + 'px', 'important');
+          dashPanel.style.setProperty('bottom', kh + 'px', 'important');
+          dashPanel.style.setProperty('left', '0', 'important');
+          dashPanel.style.setProperty('right', '0', 'important');
+          dashPanel.style.setProperty('height', 'auto', 'important');
+          dashPanel.style.setProperty('max-height', 'none', 'important');
+          dashPanel.style.setProperty('border-radius', '0', 'important');
+          dashPanel.style.setProperty('z-index', '50', 'important');
           if (pb) pb.style.setProperty('padding-bottom', '0', 'important');
-          // Hide nav bar so input sits directly above keyboard
           if (nav) nav.style.setProperty('display', 'none', 'important');
           window.scrollTo(0, 0);
         } else {
+          dashPanel.style.removeProperty('position');
+          dashPanel.style.removeProperty('top');
+          dashPanel.style.removeProperty('bottom');
+          dashPanel.style.removeProperty('left');
+          dashPanel.style.removeProperty('right');
           dashPanel.style.removeProperty('height');
           dashPanel.style.removeProperty('max-height');
+          dashPanel.style.removeProperty('border-radius');
+          dashPanel.style.removeProperty('z-index');
           if (pb) pb.style.removeProperty('padding-bottom');
           if (nav) nav.style.removeProperty('display');
         }

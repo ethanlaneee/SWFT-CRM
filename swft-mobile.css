@@ -404,8 +404,14 @@
     flex-shrink: 0;
   }
   .mob-topbar-logo em {
-    color: var(--green) !important;
-    font-style: normal;
+    display: inline-block !important;
+    width: 4px !important;
+    height: 4px !important;
+    background: var(--green) !important;
+    font-size: 0 !important;
+    vertical-align: middle !important;
+    margin-left: 2px !important;
+    margin-bottom: 3px !important;
   }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
