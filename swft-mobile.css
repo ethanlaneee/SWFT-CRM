@@ -1370,33 +1370,54 @@
 }
 
 
-/* ── DASHBOARD: simplified mobile layout ── */
+/* ── DASHBOARD: SWFT AI fills screen, no outer scroll ── */
 @media (max-width: 768px) {
   /* Hide KPI grid, automation strip — SWFT AI is the dashboard on mobile */
   .kpi-grid,
   #agent-strip,
   .greeting { display: none !important; }
 
-  /* Single column — AI panel fills full width */
-  #dash-main-grid {
-    grid-template-columns: 1fr !important;
-    min-height: calc(100vh - 140px) !important;
+  /* Page-body on dashboard: no padding, no scroll — panel fills it entirely */
+  body:has(#dash-main-grid) .page-body {
+    overflow-y: hidden !important;
+    padding: 0 !important;
     gap: 0 !important;
   }
 
-  /* Hide schedule + this week columns */
+  /* Grid: single column, fill page-body via flex-grow */
+  #dash-main-grid {
+    grid-template-columns: 1fr !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    gap: 0 !important;
+  }
+
+  /* Hide schedule column */
   #dash-schedule-col { display: none !important; }
 
-  /* Remove "Connect your tools" tab — use SWFT Connect for that */
+  /* Remove "Connect your tools" tab */
   #dash-tools-tab,
   #dash-tools-drawer { display: none !important; }
 
-  /* SWFT AI panel — full height, no border-radius at bottom */
+  /* AI panel: fill grid cell fully, clip overflow so only messages scroll */
   #dash-main-grid > .panel:first-child {
-    min-height: calc(100dvh - 140px) !important;
-    max-height: calc(100dvh - 140px) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
     border-radius: 14px !important;
     overflow: hidden !important;
+  }
+
+  /* Chat messages: fill remaining panel space, no forced min-height */
+  #dash-chat-messages {
+    min-height: 0 !important;
+    flex: 1 !important;
+  }
+
+  /* Input: 16px prevents iOS Safari auto-zoom on focus */
+  #dash-chat-input {
+    font-size: 16px !important;
   }
 }
 

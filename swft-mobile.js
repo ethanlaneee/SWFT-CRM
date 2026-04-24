@@ -386,13 +386,24 @@
 
   /* ── Keyboard handling: keep compose bars above keyboard ── */
   function fixInputsAboveKeyboard() {
-    // Scroll non-panel inputs into view
+    // Scroll non-panel inputs into view on focus
     document.addEventListener('focusin', function (e) {
       var el = e.target;
       if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
       setTimeout(function () {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 350);
+    }, true);
+
+    // On blur: reset viewport scroll so content isn't stuck shifted after keyboard closes
+    document.addEventListener('focusout', function (e) {
+      var el = e.target;
+      if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
+      setTimeout(function () {
+        window.scrollTo(0, 0);
+        var pb = document.querySelector('.page-body');
+        if (pb) pb.scrollTop = 0;
+      }, 100);
     }, true);
 
     // Use visualViewport to shift fixed chat panels above the keyboard on iOS

@@ -910,7 +910,8 @@ function toggleSidebar(){
   var nav = document.getElementById('settingsNav');
   if (!nav) return;
   var items    = nav.querySelectorAll('.settings-nav-item');
-  var sections = document.querySelectorAll('.settings-section');
+  /* Include the quick-setup-banner (not a .settings-section but has data-group) */
+  var sections = document.querySelectorAll('.settings-section, #quick-setup-banner');
 
   var tabLabels = { profile: 'Profile', operations: 'Operations', billing: 'Billing', account: 'Account' };
 
@@ -923,7 +924,9 @@ function toggleSidebar(){
     });
     var sub = document.getElementById('settings-topbar-sub');
     if (sub) sub.textContent = tabLabels[group] || group;
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    /* Scroll the page-body container (not window) back to top */
+    var pb = document.querySelector('.page-body');
+    if (pb) pb.scrollTop = 0; else window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   items.forEach(function(item) {
