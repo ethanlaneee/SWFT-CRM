@@ -234,11 +234,7 @@
     -webkit-overflow-scrolling: touch !important;
   }
 
-  /* ── Speed up all transitions to feel snappier ── */
-  * {
-    transition-duration: 0.15s !important;
-  }
-  /* Panel slides need slightly longer to feel smooth */
+  /* ── Speed up panel slide transitions ── */
   .contact-panel, .chat-panel, .chat-list-panel, .tc-panel,
   .mob-more-sheet, .nj-modal, .drawer, .sidebar {
     transition-duration: 0.22s !important;

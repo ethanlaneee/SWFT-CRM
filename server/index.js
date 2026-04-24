@@ -11,6 +11,7 @@ process.on("unhandledRejection", (err) => {
 const http = require("http");
 const path = require("path");
 const express = require("express");
+const compression = require("compression");
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -65,6 +66,10 @@ const PORT = process.env.PORT || 3000;
 // Trust one hop so req.ip reflects the real client and express-rate-limit keys
 // on the right address.
 app.set("trust proxy", 1);
+
+// ── Gzip/Brotli compression — apply before everything else ──
+// Compresses HTML/JS/CSS by 60-80%, dramatically reducing transfer times
+app.use(compression({ level: 6 }));
 
 // ── Security headers ──
 app.use(helmet({
