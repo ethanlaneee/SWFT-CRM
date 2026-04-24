@@ -397,7 +397,7 @@
     font-family: 'Space Mono', monospace !important;
     font-weight: 700 !important;
     font-size: 22px !important;
-    letter-spacing: 4px !important;
+    letter-spacing: 0 !important;
     text-transform: uppercase;
     color: var(--white) !important;
     line-height: 1;
@@ -406,7 +406,6 @@
   .mob-topbar-logo em {
     color: var(--green) !important;
     font-style: normal;
-    margin-left: -4px;
   }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
