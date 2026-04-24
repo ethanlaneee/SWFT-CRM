@@ -807,7 +807,7 @@
   }
 }
 
-/* ── TEAM CHAT PAGE: iMessage-style layout ── */
+/* ── TEAM CHAT PAGE: identical layout to Messages page ── */
 @media (max-width: 768px) {
   /* Thread list fills full screen by default */
   .chat-list-panel {
@@ -820,8 +820,12 @@
     min-width: unset !important;
     height: auto !important;
     z-index: 100 !important;
+    background: var(--bg) !important;
     transform: translateX(0) !important;
     transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* Chat view: off-screen right by default */
@@ -834,6 +838,7 @@
     width: 100% !important;
     height: auto !important;
     z-index: 101 !important;
+    background: var(--bg) !important;
     transform: translateX(100%) !important;
     transition: transform 0.3s cubic-bezier(0.22,1,0.36,1) !important;
     display: flex !important;
@@ -850,26 +855,66 @@
     pointer-events: none !important;
   }
 
-  /* Style the back button */
+  /* Back button — matches mob-chat-back on messages */
   .tc-list-toggle {
     display: flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 5px !important;
+    height: 36px !important;
+    width: auto !important;
     background: transparent !important;
     border: none !important;
+    border-radius: 0 !important;
     color: var(--green) !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     font-family: 'DM Sans', sans-serif !important;
     cursor: pointer !important;
     padding: 0 10px 0 0 !important;
+    flex-shrink: 0 !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
 
-  .tc-header { padding: 10px 14px !important; min-height: 54px !important; }
-  .tc-compose { flex-shrink: 0 !important; }
-  .chat-list-header { padding: 18px 16px 10px !important; }
-  /* Shrink "TEAM CHAT" title so it fits one line */
-  .chat-list-title { font-size: 18px !important; letter-spacing: 1.5px !important; }
+  /* Header — matches chat-header */
+  .tc-header {
+    padding: 10px 14px !important;
+    min-height: 54px !important;
+    background: var(--surface) !important;
+  }
+
+  /* Channel list header — matches contact-header */
+  .chat-list-header { padding: 14px 16px 10px !important; }
+
+  /* Channel title — matches contact-title */
+  .chat-list-title {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
+  }
+
+  /* Channel list items — match contact-item sizing */
+  .chat-list-items { flex: 1 !important; overflow-y: auto !important; }
+  .chat-list-item { padding: 14px 16px !important; }
+  .cl-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 15px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+  .cl-name { font-size: 14px !important; font-weight: 600 !important; }
+  .cl-preview { font-size: 12px !important; margin-top: 3px !important; }
+  .cl-time { font-size: 11px !important; }
+
+  /* Messages area — matches chat-messages */
+  .tc-messages { flex: 1 !important; padding: 16px 14px !important; }
+
+  /* Compose area — matches compose-bar */
+  .tc-compose {
+    flex-shrink: 0 !important;
+    padding: 10px 12px !important;
+    border-top: 1px solid var(--border) !important;
+  }
 }
 
 /* ── Photo lightbox — fullscreen tap-to-dismiss ── */

@@ -332,11 +332,11 @@
       chatListHeader.appendChild(newChatBtn);
     }
 
-    // Existing tc-list-toggle → use as back button
+    // Replace tc-list-toggle with back arrow matching mob-chat-back style
     var listToggle = document.querySelector('.tc-list-toggle');
     if (listToggle) {
-      var orig = listToggle.onclick;
-      listToggle.onclick = function (e) {
+      listToggle.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg><span>Back</span>';
+      listToggle.onclick = function () {
         document.body.classList.remove('mob-tc-open');
       };
     }
