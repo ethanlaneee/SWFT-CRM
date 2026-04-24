@@ -5,6 +5,8 @@ services:
     rootDir: server
     buildCommand: npm install
     startCommand: node index.js
+    previews:
+      generation: automatic
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
