@@ -1800,20 +1800,16 @@
     min-height: 0 !important;
     height: auto !important;
   }
-  /* Explicit pixel height — Google Maps needs concrete dimensions at init time.
-     overflow:visible avoids iOS Safari tile-clipping issue with overflow:hidden. */
+  /* Explicit pixel height — Google Maps needs concrete dimensions at init time. */
   .map-wrap {
     height: 300px !important;
     min-height: 300px !important;
-    overflow: visible !important;
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
+    overflow: hidden !important;
   }
   #map {
     width: 100% !important;
     height: 300px !important;
     min-height: 300px !important;
-    border-radius: 14px !important;
   }
   .member-panel { max-height: 200px !important; }
 }
@@ -1865,4 +1861,40 @@
   .ptab-dot { display: none !important; }
   .ptab-emoji { font-size: 14px !important; }
   .page-tabs { gap: 2px !important; }
+}
+
+/* ── Pull-to-refresh indicator ── */
+#mob-ptr {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-44px);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+#mob-ptr svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--gray);
+  transition: stroke 0.15s;
+}
+#mob-ptr.mob-ptr-ready svg {
+  stroke: var(--green);
+}
+@keyframes mob-ptr-spin {
+  to { transform: rotate(360deg); }
+}
+#mob-ptr.mob-ptr-spinning svg {
+  stroke: var(--green);
+  animation: mob-ptr-spin 0.6s linear infinite;
 }
