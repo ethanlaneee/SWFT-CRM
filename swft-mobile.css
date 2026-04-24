@@ -272,6 +272,7 @@
   .mob-topbar-logo em {
     color: var(--green) !important;
     font-style: normal;
+    margin-left: -4px;
   }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
@@ -460,6 +461,26 @@
   textarea,
   select {
     font-size: 16px !important;
+  }
+
+  /* ── STAT ROW (quotes / invoices pages) ── */
+  .stat-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .stat-card {
+    padding: 16px 14px 12px !important;
+  }
+  .stat-value { font-size: 24px !important; }
+
+  /* ── NOTIFICATION DROPDOWN — re-position to stay on screen ── */
+  .notif-dropdown {
+    top: 56px !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    max-height: 60vh !important;
   }
 
   /* ── ACTIVITY ITEMS ── */
