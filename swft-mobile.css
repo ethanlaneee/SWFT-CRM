@@ -532,8 +532,18 @@
   .cal-dow { font-size: 9px !important; padding: 6px 0 !important; }
   .cal-cell { padding: 4px 5px !important; height: auto !important; min-height: 56px !important; }
   .day-num { font-size: 11px !important; height: auto !important; margin-bottom: 1px !important; }
-  /* Hide inline weather inside cells on mobile — too cramped */
-  .day-wx { display: none !important; }
+  /* Inline weather — compact, stacked cleanly below the day number */
+  .day-wx {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    font-size: 8px !important;
+    color: var(--gray) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
   .job-block { font-size: 8px !important; padding: 1px 3px !important; }
 
   /* ── CHART STATS: remove side scroll ── */
