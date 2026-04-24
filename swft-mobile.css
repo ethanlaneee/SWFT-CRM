@@ -427,12 +427,12 @@
   /* ── SWFT MODAL (confirm dialogs) — above bottom nav ── */
   .swft-modal-overlay { z-index: 1100 !important; }
 
-  /* ── SWFT AI CHAT FAB — float above bottom nav ── */
+  /* ── SWFT AI CHAT FAB — float well above bottom nav ── */
   .swft-chat-fab {
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .swft-chat-panel {
-    bottom: calc(136px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
     max-height: calc(55vh) !important;
   }
 
@@ -463,8 +463,38 @@
     font-size: 16px !important;
   }
 
-  /* ── STAT ROW: hide on mobile (too much space, not needed) ── */
-  .stat-row { display: none !important; }
+  /* ── ALL STAT / KPI CARDS: hidden on mobile ── */
+  .stat-row,
+  .stat-strip,
+  .kpi-grid { display: none !important; }
+
+  /* ── THREAD LIST: hide bottom new-button (replaced by "+" in header) ── */
+  .new-msg-btn,
+  .new-chat-btn { display: none !important; }
+
+  /* ── "+" button injected into thread list headers ── */
+  .mob-new-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+    background: var(--green) !important;
+    color: #0a0a0a !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+  }
+  .mob-new-btn:active { background: #d5ff40 !important; transform: scale(0.93); }
+
+  /* Header rows need flex+space-between so the "+" sits on the right */
+  .contact-header > div:first-child,
+  .chat-list-header {
+    display: flex !important;
+    align-items: center !important;
+  }
 
   /* ── NOTIFICATION DROPDOWN — re-position to stay on screen ── */
   .notif-dropdown {
@@ -500,9 +530,11 @@
     grid-template-columns: repeat(7, 1fr) !important;
   }
   .cal-dow { font-size: 9px !important; padding: 6px 0 !important; }
-  .cal-day { padding: 4px 5px !important; }
-  .cal-day-num { font-size: 11px !important; }
-  .cal-event { font-size: 9px !important; padding: 1px 4px !important; }
+  .cal-cell { padding: 4px 5px !important; height: auto !important; min-height: 56px !important; }
+  .day-num { font-size: 11px !important; height: auto !important; margin-bottom: 1px !important; }
+  /* Hide inline weather inside cells on mobile — too cramped */
+  .day-wx { display: none !important; }
+  .job-block { font-size: 8px !important; padding: 1px 3px !important; }
 
   /* ── CHART STATS: remove side scroll ── */
   .chart-goal { margin-left: 0; }

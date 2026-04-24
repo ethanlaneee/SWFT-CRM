@@ -237,6 +237,17 @@
   function setupMobileMessages() {
     if (window.innerWidth > 768) return;
 
+    // Inject "+" new conversation button into thread list header
+    var contactHeaderRow = document.querySelector('.contact-header > div');
+    if (contactHeaderRow) {
+      var newMsgBtn = document.createElement('button');
+      newMsgBtn.className = 'mob-new-btn';
+      newMsgBtn.setAttribute('aria-label', 'New conversation');
+      newMsgBtn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      newMsgBtn.onclick = function () { if (typeof openNewConversation === 'function') openNewConversation(); };
+      contactHeaderRow.appendChild(newMsgBtn);
+    }
+
     // Inject back button into chat header
     var chatHeader = document.getElementById('chat-header');
     if (chatHeader) {
@@ -292,6 +303,17 @@
           setTimeout(function () { document.body.classList.add('mob-tc-open'); }, 60);
         }
       });
+    }
+
+    // Inject "+" new chat button into thread list header
+    var chatListHeader = document.querySelector('.chat-list-header');
+    if (chatListHeader) {
+      var newChatBtn = document.createElement('button');
+      newChatBtn.className = 'mob-new-btn';
+      newChatBtn.setAttribute('aria-label', 'New chat');
+      newChatBtn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      newChatBtn.onclick = function () { if (typeof openNewChatModal === 'function') openNewChatModal(); };
+      chatListHeader.appendChild(newChatBtn);
     }
 
     // Existing tc-list-toggle → use as back button
