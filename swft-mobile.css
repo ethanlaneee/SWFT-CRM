@@ -1184,6 +1184,9 @@
     padding: 10px !important;
   }
 
+  /* ── Hide SWFT AI FAB on settings page ── */
+  body:has(#settingsNav) .swft-chat-fab { display: none !important; }
+
   /* ── SETTINGS: native document scroll (inner scroll unreliable on iOS) ── */
   /* Override the global overflow:hidden/height:100dvh body for settings only */
   body:has(#settingsNav),

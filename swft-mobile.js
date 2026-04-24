@@ -413,7 +413,9 @@
     // Use visualViewport to shift fixed chat panels above the keyboard on iOS
     if (!window.visualViewport) return;
     function adjustPanels() {
-      var kh = Math.max(0, window.innerHeight - window.visualViewport.height - (window.visualViewport.offsetTop || 0));
+      // iOS with overflow:hidden pans via offsetTop instead of shrinking height,
+      // so exclude offsetTop to get true keyboard height
+      var kh = Math.max(0, window.innerHeight - window.visualViewport.height);
 
       // Fixed-position chat panels (Messages + Team Chat): shift bottom up with keyboard
       ['.chat-panel', '.tc-panel'].forEach(function (sel) {
@@ -460,6 +462,19 @@
     }
     window.visualViewport.addEventListener('resize', adjustPanels);
     window.visualViewport.addEventListener('scroll', adjustPanels);
+
+    // Fallback: trigger adjustPanels on dashboard input focus/blur for reliability
+    var dashInput = document.getElementById('dash-chat-input');
+    if (dashInput) {
+      dashInput.addEventListener('focus', function () {
+        setTimeout(adjustPanels, 300);
+        setTimeout(adjustPanels, 600);
+      });
+      dashInput.addEventListener('blur', function () {
+        setTimeout(adjustPanels, 100);
+        setTimeout(adjustPanels, 300);
+      });
+    }
   }
 
   /* ── Keyboard: close overlays on Escape ── */

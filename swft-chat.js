@@ -31,8 +31,9 @@
       left: 50%;
       transform: translateX(-50%);
       height: 44px;
-      min-width: 168px;
-      padding: 0 20px;
+      min-width: 44px;
+      width: 44px;
+      padding: 0;
       border-radius: 999px;
       background: linear-gradient(135deg, #c8f135 0%, #a8d12a 100%);
       border: none;
@@ -40,12 +41,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 0;
       box-shadow: 0 4px 24px rgba(200, 241, 53, 0.35), 0 0 0 1px rgba(200, 241, 53, 0.4) inset;
       transition: transform 0.2s, box-shadow 0.2s, background 0.25s;
       z-index: 9999;
       overflow: hidden;
       font-family: 'DM Sans', sans-serif;
+      opacity: 0.75;
     }
     .swft-chat-fab:hover {
       transform: translateX(-50%) translateY(-2px);
@@ -61,8 +63,8 @@
       z-index: 2;
     }
     .swft-chat-fab .pill-icon {
-      width: 16px;
-      height: 16px;
+      width: 20px;
+      height: 20px;
       stroke: #0a0a0a;
       fill: none;
       stroke-width: 2;
@@ -75,7 +77,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.55) 48%, rgba(255,255,255,0.55) 52%, transparent 75%);
+      background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.2) 52%, transparent 75%);
       transform: translateX(-120%);
       animation: swft-pill-shimmer 3.2s ease-in-out infinite;
       pointer-events: none;
@@ -640,7 +642,6 @@
   fab.setAttribute("title", "Click to chat · Hold Ctrl+Win to talk · Ctrl+Win+Space to toggle");
   fab.innerHTML = `
     <svg class="pill-icon" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-    <span class="pill-label">SWFT AI</span>
   `;
 
   const backdrop = document.createElement("div");
