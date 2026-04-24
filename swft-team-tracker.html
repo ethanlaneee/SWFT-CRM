@@ -294,7 +294,7 @@ async function loadMapsSdk(){
       };
       var s = document.createElement('script');
       s.async = true;
-      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(res.key) + '&v=weekly&callback=__swftMapReady';
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(res.key) + '&v=3&callback=__swftMapReady';
       s.onerror = function(){ clearTimeout(timer); reject(new Error('Failed to load Google Maps')); };
       document.head.appendChild(s);
     });
@@ -324,9 +324,6 @@ function initMap(){
       { featureType: 'transit', stylers: [{ visibility: 'off' }] },
     ],
   };
-  if(google.maps.RenderingType && google.maps.RenderingType.RASTER){
-    opts.renderingType = google.maps.RenderingType.RASTER;
-  }
   _map = new google.maps.Map(mapEl, opts);
   setTimeout(function(){
     if(_map){ google.maps.event.trigger(_map, 'resize'); _map.panTo(_map.getCenter()); }
