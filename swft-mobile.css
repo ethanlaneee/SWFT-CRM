@@ -620,35 +620,49 @@
   .q-row > div:nth-child(5) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
   .q-row > div:nth-child(6) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; display: flex !important; gap: 5px !important; justify-content: flex-end !important; }
 
-  /* Billing page q-row (7 children: num | customer | date | expires | total | status | buttons) */
+  /* Billing page q-row — redesigned: customer|buttons top row, date+status bottom row, no $0 */
+  .page-billing .q-row {
+    grid-template-columns: 1fr auto 86px !important;
+    grid-template-areas:
+      "customer customer arrow"
+      "info     status   arrow" !important;
+  }
   .page-billing .q-row > div:nth-child(1) { display: none !important; }
   .page-billing .q-row > div:nth-child(2) { grid-area: customer !important; display: block !important; }
-  .page-billing .q-row > div:nth-child(3) { grid-area: info !important; align-self: end !important; }
+  .page-billing .q-row > div:nth-child(3) { grid-area: info !important; align-self: center !important; }
   .page-billing .q-row > div:nth-child(4) { display: none !important; }
-  .page-billing .q-row > div:nth-child(5) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; font-weight: 600 !important; }
-  .page-billing .q-row > div:nth-child(6) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
-  .page-billing .q-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
-  /* Hide convert + delete buttons in billing q-row, keep only the arrow/view */
-  .page-billing .q-row > div:nth-child(7) > *:not(:last-child) { display: none !important; }
+  .page-billing .q-row > div:nth-child(5) { display: none !important; }
+  .page-billing .q-row > div:nth-child(6) { grid-area: status !important; align-self: center !important; justify-self: start !important; }
+  .page-billing .q-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; display: flex !important; gap: 5px !important; justify-content: flex-end !important; }
+  /* Status pill on billing q-row: tiny read-only badge */
+  .page-billing .q-row .status-pill {
+    font-size: 9px !important; padding: 2px 7px !important;
+    height: auto !important; min-height: unset !important;
+    pointer-events: none !important; cursor: default !important;
+    -webkit-appearance: none !important; appearance: none !important;
+  }
 
-  /* Default inv-row (non-billing) */
-  .inv-row > div:nth-child(1) { grid-area: customer !important; }
-  .inv-row > div:nth-child(2) { display: none !important; }
-  .inv-row > div:nth-child(3) { grid-area: info !important; align-self: end !important; }
-  .inv-row > div:nth-child(4) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; }
-  .inv-row > div:nth-child(5) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
-  .inv-row > div:nth-child(6) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
-
-  /* Billing page inv-row (7 children: num | customer | total | paid | balance | status | buttons) */
+  /* Billing page inv-row — customer+total top, status bottom, both buttons */
+  .page-billing .inv-row {
+    grid-template-columns: 1fr auto 62px !important;
+    grid-template-areas:
+      "customer total  arrow"
+      ".        status arrow" !important;
+  }
   .page-billing .inv-row > div:nth-child(1) { display: none !important; }
   .page-billing .inv-row > div:nth-child(2) { grid-area: customer !important; display: block !important; }
-  .page-billing .inv-row > div:nth-child(3) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; font-weight: 600 !important; }
+  .page-billing .inv-row > div:nth-child(3) { grid-area: total !important; text-align: right !important; align-self: center !important; font-size: 14px !important; font-weight: 600 !important; }
   .page-billing .inv-row > div:nth-child(4) { display: none !important; }
-  .page-billing .inv-row > div:nth-child(5) { grid-area: info !important; align-self: end !important; }
-  .page-billing .inv-row > div:nth-child(6) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
-  .page-billing .inv-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; }
-  /* Hide delete button in billing inv-row, keep only the arrow */
-  .page-billing .inv-row > div:nth-child(7) > *:not(:last-child) { display: none !important; }
+  .page-billing .inv-row > div:nth-child(5) { display: none !important; }
+  .page-billing .inv-row > div:nth-child(6) { grid-area: status !important; justify-self: end !important; align-self: center !important; }
+  .page-billing .inv-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; display: flex !important; gap: 5px !important; justify-content: flex-end !important; }
+  /* Status pill on billing inv-row: tiny read-only badge */
+  .page-billing .inv-row .status-pill {
+    font-size: 9px !important; padding: 2px 7px !important;
+    height: auto !important; min-height: unset !important;
+    pointer-events: none !important; cursor: default !important;
+    -webkit-appearance: none !important; appearance: none !important;
+  }
 
   /* Customers table row */
   .cust-row { min-width: 0 !important; }
@@ -1036,7 +1050,7 @@
   .page-tabs { margin-bottom: 12px !important; }
   .cal-header { margin-bottom: 10px !important; }
   #cal-view {
-    display: flex !important;
+    display: flex; /* no !important — lets JS set style.display='none' when switching to Time Blocks */
     flex-direction: column !important;
     flex: 1 !important;
     min-height: calc(100dvh - 180px) !important;

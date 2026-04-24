@@ -416,21 +416,16 @@ async function loadQuotes(){
     var res=await Promise.all([API.quotes.list(),API.customers.list()]);
     _quotes=res[0];_customers=res[1].slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
     renderStats();renderTable();
-    // Pipeline pre-fill: ?customer=Name&address=X&service=Y opens new quote modal
-    var params=new URLSearchParams(window.location.search);
-    if(params.get('customer')){
-      setTimeout(function(){
-        openNewQuote();
-        var custName=params.get('customer');
-        var custSel=document.getElementById('f-customer');
-        if(custSel){
-          var match=_customers.find(function(c){return (c.name||'')===(custName||'');});
-          if(match){custSel.value=match.id;}
-        }
-        var addr=params.get('address');if(addr&&document.getElementById('f-address'))document.getElementById('f-address').value=decodeURIComponent(addr);
-        var svc=params.get('service');if(svc&&document.getElementById('f-service'))document.getElementById('f-service').value=decodeURIComponent(svc);
-      },400);
-    }
+    // Pipeline pre-fill: if arriving from job pipeline, store data for next "New Quote" open
+    try{
+      var pipeData=sessionStorage.getItem('swft_pipeline_quote');
+      if(pipeData){
+        sessionStorage.removeItem('swft_pipeline_quote');
+        var pd=JSON.parse(pipeData);
+        window._pipelineQuoteData=pd;
+        showToast('Creating quote for '+(pd.customerName||'customer')+' — tap New Quote');
+      }
+    }catch(e){}
   }catch(e){console.error(e);}
 }
 
@@ -536,6 +531,18 @@ function openNewQuote(){
   _currentQuote=null;_items=[];
   populateModal({});
   document.getElementById('btn-delete').style.display='none';
+  // Auto-fill from pipeline (jobs → quotes navigation)
+  if(window._pipelineQuoteData){
+    var pd=window._pipelineQuoteData;
+    window._pipelineQuoteData=null;
+    var custSel=document.getElementById('f-customer');
+    if(custSel&&pd.customerName){
+      var match=_customers.find(function(c){return (c.name||'')===(pd.customerName||'');});
+      if(match) custSel.value=match.id;
+    }
+    if(pd.address&&document.getElementById('f-address')) document.getElementById('f-address').value=pd.address;
+    if(pd.service&&document.getElementById('f-service')) document.getElementById('f-service').value=pd.service;
+  }
   document.getElementById('modal-overlay').classList.add('open');
 }
 

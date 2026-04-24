@@ -1233,11 +1233,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
   function pipelineJobToQuote(jobId) {
     var j = window._jobs[jobId];
-    if (!j) return;
-    var url = 'swft-quotes?customer=' + encodeURIComponent(j.customerName || '');
-    if (j.address) url += '&address=' + encodeURIComponent(j.address);
-    if (j.service) url += '&service=' + encodeURIComponent(j.service);
-    window.location.href = url;
+    if (j) {
+      try {
+        sessionStorage.setItem('swft_pipeline_quote', JSON.stringify({
+          customerName: j.customerName || '',
+          address: j.address || '',
+          service: j.service || ''
+        }));
+      } catch(e) {}
+    }
+    window.location.href = 'swft-quotes';
   }
 
   async function deleteJobRow(el, jobId) {
