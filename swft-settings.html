@@ -176,107 +176,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-@media (max-width: 768px) {
-  /* Layout */
-  .main { margin-left: 0 !important; }
-  .page-body { padding: 14px 12px !important; gap: 14px !important; }
-
-  /* Settings nav stays below topbar */
-  .settings-nav { top: 60px !important; }
-
-  /* Collapse 2-column grid to single column */
-  .settings-2col { grid-template-columns: 1fr !important; gap: 10px !important; }
-
-  /* Settings section spacing */
-  .settings-header { padding: 14px 16px !important; }
-  .settings-body { padding: 14px 16px !important; gap: 12px !important; }
-
-  /* Stack settings rows vertically */
-  .settings-row {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-    padding: 14px 0 !important;
-  }
-  .settings-row-info { width: 100% !important; }
-
-  /* Make all inputs and selects full width */
-  .settings-input,
-  .settings-select {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Override specific inline-width inputs */
-  #s-tax,
-  #s-services,
-  #s-line-items,
-  #s-crews,
-  #intake-hear-about,
-  #intake-title,
-  #intake-subtitle {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Containers holding 300px inputs — make them full width too */
-  .settings-row > div[style] {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Buttons — full width, tall enough to tap */
-  .settings-btn {
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 44px !important;
-    padding: 12px 16px !important;
-    font-size: 13px !important;
-    box-sizing: border-box !important;
-    text-align: center !important;
-  }
-
-  /* Save button rows */
-  div[style*="justify-content:flex-end"] {
-    justify-content: stretch !important;
-  }
-  div[style*="justify-content:flex-end"] .settings-btn {
-    flex: 1 !important;
-  }
-
-  /* Billing plan card — stack vertically */
-  .billing-plan-card {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 14px !important;
-  }
-
-  /* Quick Setup banner */
-  #quick-setup-banner > div:first-child {
-    flex-direction: column !important;
-  }
-  #quick-setup-btn {
-    width: 100% !important;
-  }
-
-  /* Template modal — full screen bottom sheet */
-  #template-modal > div {
-    max-width: 100% !important;
-    width: 100% !important;
-    max-height: 90dvh !important;
-    border-radius: 16px 16px 0 0 !important;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-  }
-  #template-modal {
-    align-items: flex-end !important;
-  }
-}
 </style>
 
 <!-- Meta Pixel Code -->
@@ -297,6 +196,98 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 <link rel="stylesheet" href="swft-mobile.css"/>
+<!-- Settings mobile overrides — must come AFTER swft-mobile.css to win cascade -->
+<style>
+@media (max-width: 768px) {
+  /* Full-width layout */
+  .main { margin-left: 0 !important; }
+  .page-body {
+    padding: 14px 12px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    gap: 14px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Settings top-nav stays under the 54px topbar */
+  .settings-nav { top: 54px !important; padding-bottom: 10px !important; }
+
+  /* Single column grid */
+  .settings-2col { grid-template-columns: 1fr !important; gap: 10px !important; }
+
+  /* Section spacing */
+  .settings-header { padding: 14px 16px !important; }
+  .settings-body { padding: 14px 16px !important; gap: 12px !important; }
+
+  /* Each row stacks label + control vertically */
+  .settings-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px 0 !important;
+  }
+  .settings-row-info { width: 100% !important; flex: none !important; }
+
+  /* ALL inputs and selects go full width regardless of inline style */
+  .settings-input,
+  .settings-select,
+  #s-tax, #s-services, #s-line-items, #s-crews,
+  #intake-hear-about, #intake-title, #intake-subtitle,
+  #export-data-type {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Wrapper divs holding inputs go full width too */
+  .settings-row > div,
+  .settings-body > .settings-2col > .settings-field,
+  .settings-field { width: 100% !important; box-sizing: border-box !important; }
+
+  /* ALL buttons — tap-friendly, full width */
+  .settings-btn,
+  .settings-row > button,
+  .settings-body > div > button,
+  .billing-plan-card .settings-btn,
+  .billing-plan-card a.settings-btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  /* Save-row wrapper — stretch so button fills it */
+  .settings-body > div[style] { width: 100% !important; }
+
+  /* Billing plan card — stack */
+  .billing-plan-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  /* Quick Setup banner */
+  #quick-setup-banner > div { flex-direction: column !important; align-items: stretch !important; }
+  #quick-setup-btn { width: 100% !important; justify-content: center !important; }
+
+  /* Prevent text overflow everywhere */
+  .settings-row-label,
+  .settings-row-desc { word-break: break-word !important; overflow-wrap: break-word !important; }
+
+  /* Template modal — bottom sheet */
+  #template-modal { align-items: flex-end !important; padding: 0 !important; }
+  #template-modal > div {
+    max-width: 100% !important; width: 100% !important;
+    max-height: 92dvh !important; border-radius: 16px 16px 0 0 !important;
+    position: fixed !important; bottom: 0 !important; left: 0 !important;
+  }
+  #template-modal > div > div[style*="flex"] { flex-direction: column !important; gap: 8px !important; }
+}
+</style>
 </head>
 <body>
 

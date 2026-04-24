@@ -398,18 +398,23 @@
     // Use visualViewport to shift fixed chat panels above the keyboard on iOS
     if (!window.visualViewport) return;
     function adjustPanels() {
-      var kh = Math.max(0, window.innerHeight - window.visualViewport.height);
+      var kh = Math.max(0, window.innerHeight - window.visualViewport.height - (window.visualViewport.offsetTop || 0));
       ['.chat-panel', '.tc-panel'].forEach(function (sel) {
         var el = document.querySelector(sel);
         if (!el) return;
-        // When keyboard open, pin panel bottom to keyboard top; else restore CSS
-        el.style.bottom = kh > 0 ? kh + 'px' : '';
+        if (kh > 60) {
+          // Keyboard open — override CSS !important by matching it with inline !important
+          el.style.setProperty('bottom', kh + 'px', 'important');
+        } else {
+          // Keyboard closed — remove inline override, let CSS take over
+          el.style.removeProperty('bottom');
+        }
       });
       // Keep messages scrolled to newest when keyboard opens
-      if (kh > 0) {
+      if (kh > 60) {
         ['#chat-messages', '.tc-messages'].forEach(function (sel) {
           var el = document.querySelector(sel);
-          if (el) el.scrollTop = el.scrollHeight;
+          if (el) setTimeout(function () { el.scrollTop = el.scrollHeight; }, 50);
         });
       }
     }
