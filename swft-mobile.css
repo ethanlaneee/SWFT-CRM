@@ -234,11 +234,7 @@
     -webkit-overflow-scrolling: touch !important;
   }
 
-  /* ── Speed up all transitions to feel snappier ── */
-  * {
-    transition-duration: 0.15s !important;
-  }
-  /* Panel slides need slightly longer to feel smooth */
+  /* ── Panel slides — slightly longer for smoothness ── */
   .contact-panel, .chat-panel, .chat-list-panel, .tc-panel,
   .mob-more-sheet, .nj-modal, .drawer, .sidebar {
     transition-duration: 0.22s !important;
@@ -491,16 +487,113 @@
     flex: none !important;
   }
 
-  /* ── DATA TABLES: make horizontally scrollable ── */
+  /* ── DATA TABLES: no horizontal scroll — card layout on mobile ── */
   .table-wrap {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+    overflow-x: hidden !important;
   }
-  .table-head,
-  .cust-row,
-  .inv-row,
-  .q-row,
-  .quote-row { min-width: 640px; }
+  /* Hide column headers (redundant in card view) */
+  .table-head { display: none !important; }
+
+  /* Filter tabs — wrap instead of overflow */
+  .filter-group {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Quote / invoice list rows → 2-row card grid */
+  .q-row, .inv-row, .quote-row {
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto 36px !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+      "customer total arrow"
+      "info     status arrow" !important;
+    row-gap: 4px !important;
+    column-gap: 10px !important;
+    padding: 14px 16px !important;
+    align-items: center !important;
+  }
+  /* Customer + job name */
+  .q-row > div:nth-child(1), .inv-row > div:nth-child(1) {
+    grid-area: customer !important;
+  }
+  /* Service column — duplicate info, hide on mobile */
+  .q-row > div:nth-child(2), .inv-row > div:nth-child(2) {
+    display: none !important;
+  }
+  /* Date */
+  .q-row > div:nth-child(3), .inv-row > div:nth-child(3) {
+    grid-area: info !important;
+    align-self: end !important;
+  }
+  /* Total */
+  .q-row > div:nth-child(4), .inv-row > div:nth-child(4) {
+    grid-area: total !important;
+    text-align: right !important;
+    align-self: start !important;
+    font-size: 14px !important;
+  }
+  /* Status pill */
+  .q-row > div:nth-child(5), .inv-row > div:nth-child(5) {
+    grid-area: status !important;
+    justify-self: end !important;
+    align-self: end !important;
+  }
+  /* Arrow button */
+  .q-row > div:nth-child(6), .inv-row > div:nth-child(6) {
+    grid-area: arrow !important;
+    align-self: center !important;
+    justify-self: end !important;
+  }
+  /* Customers table row */
+  .cust-row { min-width: 0 !important; }
+
+  /* ── QUOTE / INVOICE EDIT MODAL — no horizontal scroll ── */
+  .modal-overlay { padding: 0 !important; align-items: flex-end !important; }
+  .pdf-modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 94dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+  .pdf-doc-header { padding: 20px 16px 0 !important; flex-wrap: wrap !important; gap: 10px !important; }
+  .pdf-2col { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .pdf-li-header { display: none !important; }
+  .pdf-li-row {
+    display: grid !important;
+    grid-template-areas:
+      "desc desc desc desc"
+      "qty  rate total del" !important;
+    grid-template-columns: 50px 80px 1fr 28px !important;
+    gap: 4px !important;
+    padding: 8px 0 !important;
+  }
+  .pdf-li-row > .pdf-li-input:nth-child(1) { grid-area: desc !important; }
+  .pdf-li-row > .pdf-li-input:nth-child(2) { grid-area: qty !important; }
+  .pdf-li-row > .pdf-li-input:nth-child(3) { grid-area: rate !important; }
+  .pdf-li-row > .pdf-li-total { grid-area: total !important; }
+  .pdf-li-row > .pdf-li-del { grid-area: del !important; }
+  .pdf-add-row {
+    display: grid !important;
+    grid-template-areas:
+      "desc desc desc desc"
+      "qty  rate total add" !important;
+    grid-template-columns: 50px 80px 1fr 28px !important;
+    gap: 4px !important;
+    padding: 8px 0 !important;
+  }
+  .pdf-add-row > .pdf-add-input:nth-child(1) { grid-area: desc !important; }
+  .pdf-add-row > .pdf-add-input:nth-child(2) { grid-area: qty !important; }
+  .pdf-add-row > .pdf-add-input:nth-child(3) { grid-area: rate !important; }
+  .pdf-add-row > .pdf-add-input:nth-child(4) { grid-area: total !important; }
+  .pdf-add-row > .pdf-add-btn { grid-area: add !important; }
+  .pdf-doc-footer {
+    padding: 12px 16px !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    flex-wrap: wrap !important;
+  }
+  .pdf-doc-footer .pdf-btn { flex: 1 1 auto !important; text-align: center !important; }
 
   /* ── CHART ── */
   .chart-body { padding: 16px !important; }
@@ -592,11 +685,12 @@
     max-height: calc(55vh) !important;
   }
 
-  /* Hide FAB when More sheet, drawer overlay, or chat view is open */
+  /* Hide FAB when More sheet, drawer overlay, chat view, or AI panel is open */
   body.mob-more-open .swft-chat-fab,
   body.mob-overlay-open .swft-chat-fab,
   body.mob-chat-open .swft-chat-fab,
-  body.mob-tc-open .swft-chat-fab {
+  body.mob-tc-open .swft-chat-fab,
+  body.swft-ai-open .swft-chat-fab {
     display: none !important;
   }
 
