@@ -90,6 +90,7 @@
     injectSidebarOverlay();
     injectMoreSheet();
     fixInputsAboveKeyboard();
+    if (PAGE === 'swft-messages') setupMobileMessages();
   }
 
   /* ── Bottom nav ── */
@@ -220,6 +221,41 @@
     if (overlay) overlay.classList.remove('open');
     if (sheet) sheet.classList.remove('open');
     document.body.style.overflow = '';
+  }
+
+  /* ── Messages page: iMessage-style full-screen threads ── */
+  function setupMobileMessages() {
+    if (window.innerWidth > 768) return;
+
+    // Inject back button into chat header
+    var chatHeader = document.getElementById('chat-header');
+    if (chatHeader) {
+      var backBtn = document.createElement('button');
+      backBtn.className = 'mob-chat-back';
+      backBtn.setAttribute('aria-label', 'Back to conversations');
+      backBtn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg><span>Back</span>';
+      backBtn.onclick = function () { document.body.classList.remove('mob-chat-open'); };
+      chatHeader.insertBefore(backBtn, chatHeader.firstChild);
+
+      // Watch for chat header becoming visible (conversation selected)
+      var observer = new MutationObserver(function () {
+        var style = chatHeader.getAttribute('style') || '';
+        if (!style.includes('display: none') && !style.includes('display:none')) {
+          document.body.classList.add('mob-chat-open');
+        }
+      });
+      observer.observe(chatHeader, { attributes: true, attributeFilter: ['style'] });
+    }
+
+    // Also catch contact-item clicks directly
+    var contactList = document.getElementById('contact-list');
+    if (contactList) {
+      contactList.addEventListener('click', function (e) {
+        if (e.target.closest('.contact-item')) {
+          setTimeout(function () { document.body.classList.add('mob-chat-open'); }, 60);
+        }
+      });
+    }
   }
 
   /* ── Scroll input into view above keyboard on focus ── */

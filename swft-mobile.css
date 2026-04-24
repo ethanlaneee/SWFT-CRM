@@ -13,16 +13,16 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(17,17,17,0.96);
+  background: rgba(17,17,17,0.97);
   border-top: 1px solid var(--border);
   z-index: 800;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: space-around;
-  padding: 0 2px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  height: calc(60px + env(safe-area-inset-bottom, 0px));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 8px 2px 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  height: calc(64px + max(12px, env(safe-area-inset-bottom, 12px)));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .mob-nav-item {
@@ -269,9 +269,20 @@
   }
   .btn-primary svg { display: block; }
 
+  /* ── Desktop sidebar re-open toggle + any stray hamburger: force off ── */
+  .sidebar-toggle,
+  #sidebar-toggle,
+  .mob-menu-btn,
+  #mob-menu-btn {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
   /* ── PAGE BODY ── */
   .page-body {
-    padding: 16px 14px calc(70px + env(safe-area-inset-bottom, 0px)) 14px !important;
+    padding: 16px 14px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) 14px !important;
     gap: 12px !important;
   }
 
@@ -447,6 +458,109 @@
   .chart-goal { margin-left: 0; }
 }
 
+
+/* ── MESSAGES PAGE: iMessage-style full-screen thread layout ── */
+
+/* Back button — hidden on desktop, shown on mobile */
+.mob-chat-back {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--green);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0 10px 0 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+.mob-chat-back svg { flex-shrink: 0; }
+
+@media (max-width: 768px) {
+
+  /* Thread list — fills full screen */
+  .contact-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    min-width: unset !important;
+    height: auto !important;
+    z-index: 100 !important;
+    border-right: none !important;
+    background: var(--bg) !important;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Conversation view — off-screen right by default */
+  .chat-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 101 !important;
+    background: var(--bg) !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Conversation active: chat slides in, thread list slides out */
+  body.mob-chat-open .chat-panel {
+    transform: translateX(0) !important;
+  }
+  body.mob-chat-open .contact-panel {
+    transform: translateX(-25%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Thread list items — bigger touch targets */
+  .contact-header { padding: 18px 16px 10px !important; }
+  .contact-title { font-size: 26px !important; letter-spacing: 2px !important; }
+  .contact-item { padding: 14px 16px !important; }
+  .c-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 15px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+  .c-name { font-size: 14px !important; font-weight: 600 !important; }
+  .c-preview { font-size: 12px !important; margin-top: 3px !important; }
+  .c-time { font-size: 11px !important; }
+  .c-badge { font-size: 10px !important; }
+  .new-msg-btn { margin: 10px 14px !important; }
+
+  /* Chat view — back button visible, header adjustments */
+  .mob-chat-back { display: flex !important; }
+  .chat-header {
+    padding: 10px 14px !important;
+    min-height: 54px !important;
+  }
+  .chat-messages { flex: 1 !important; padding: 16px 14px !important; }
+
+  /* Compose bar — pinned to bottom of chat panel */
+  .compose-bar {
+    flex-shrink: 0 !important;
+    padding: 10px 12px !important;
+    border-top: 1px solid var(--border) !important;
+  }
+}
 
 /* ── Extra-small phones (≤ 390px) ── */
 @media (max-width: 390px) {
