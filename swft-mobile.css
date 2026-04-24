@@ -356,6 +356,7 @@
   .table-head,
   .cust-row,
   .inv-row,
+  .q-row,
   .quote-row { min-width: 640px; }
 
   /* ── CHART ── */
