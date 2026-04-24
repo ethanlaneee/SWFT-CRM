@@ -286,11 +286,18 @@ async function loadMapsSdk(){
       window.__swftMapReady = function(){
         clearTimeout(timer);
         delete window.__swftMapReady;
-        try { initMap(); } catch(e){ reject(e); return; }
-        _mapReady = true;
-        var ov = document.getElementById('map-overlay');
-        if(ov) ov.classList.add('hidden');
-        resolve();
+        // Double-rAF: first frame enters the paint cycle,
+        // second guarantees the flex layout has been computed
+        // before Google Maps reads offsetWidth/offsetHeight.
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            try { initMap(); } catch(e){ reject(e); return; }
+            _mapReady = true;
+            var ov = document.getElementById('map-overlay');
+            if(ov) ov.classList.add('hidden');
+            resolve();
+          });
+        });
       };
       var s = document.createElement('script');
       s.async = true;
@@ -308,6 +315,14 @@ async function loadMapsSdk(){
 
 function initMap(){
   var mapEl = document.getElementById('map');
+  // If the flex/grid layout hasn't resolved yet, force concrete pixel
+  // dimensions so Google Maps loads tiles for a real viewport.
+  if(mapEl.offsetWidth < 50){
+    mapEl.style.width = (window.innerWidth - 28) + 'px';
+  }
+  if(mapEl.offsetHeight < 50){
+    mapEl.style.height = Math.max(300, Math.round(window.innerHeight * 0.55)) + 'px';
+  }
   var opts = {
     zoom: 12,
     center: { lat: 39.5, lng: -98.35 },
@@ -325,9 +340,17 @@ function initMap(){
     ],
   };
   _map = new google.maps.Map(mapEl, opts);
-  setTimeout(function(){
-    if(_map){ google.maps.event.trigger(_map, 'resize'); _map.panTo(_map.getCenter()); }
-  }, 400);
+  // Trigger resize at multiple intervals — lets CSS layout finish
+  // and replaces any inline dimensions we forced above.
+  [300, 800, 1600].forEach(function(ms){
+    setTimeout(function(){
+      if(!_map) return;
+      mapEl.style.width = '';
+      mapEl.style.height = '';
+      google.maps.event.trigger(_map, 'resize');
+      _map.panTo(_map.getCenter());
+    }, ms);
+  });
 }
 
 function roleColor(role){
