@@ -1825,21 +1825,42 @@
   .mob-more-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
-/* ── TEAM TRACKER: map needs explicit height when page-body scrolls ── */
+/* ── TEAM TRACKER: undo bounded scroll so Google Maps tiles render on iOS ──
+   The global body:has(.page-body){overflow:hidden;height:100dvh} rule puts the
+   map inside a scroll container. iOS Safari refuses to composite canvas layers
+   inside overflow:auto/scroll ancestors — the tiles simply never paint.
+   Solution: revert to natural window scroll for this page only.              */
 @media (max-width: 768px) {
+  html:has(.tracker-split),
+  body:has(.tracker-split) {
+    height: auto !important;
+    overflow: auto !important;
+    overflow-x: hidden !important;
+  }
+  .main:has(.tracker-split) {
+    height: auto !important;
+    min-height: 100svh !important;
+    overflow: visible !important;
+  }
+  .main:has(.tracker-split) .page-body {
+    overflow: visible !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    flex: 1 !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  }
   .tracker-split {
+    display: grid !important;
     grid-template-columns: 1fr !important;
     grid-template-rows: auto auto !important;
     flex: none !important;
-    min-height: 0 !important;
     height: auto !important;
+    min-height: 0 !important;
   }
-  /* Explicit pixel height — Google Maps needs concrete dimensions at init time.
-     overflow:visible prevents iOS Safari from clipping the map canvas layer. */
   .map-wrap {
     height: 300px !important;
     min-height: 300px !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
   #map {
     width: 100% !important;
