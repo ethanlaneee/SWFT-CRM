@@ -485,30 +485,34 @@
 
   .schedule-row { padding: 10px 14px !important; }
 
-  /* ── FILTER TABS: horizontal scroll, clean single row ── */
+  /* ── FILTER TABS: all fit on one row, no scrolling ── */
   .job-filters,
   .filter-group {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+    overflow-x: hidden !important;
     flex-wrap: nowrap !important;
-    padding: 8px 14px !important;
-    gap: 6px !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
     scrollbar-width: none !important;
+    width: 100% !important;
   }
   .job-filters::-webkit-scrollbar,
   .filter-group::-webkit-scrollbar { display: none; }
 
-  /* Smaller filter tabs across all pages */
+  /* Each tab gets equal share of row width — no truncation, no scroll */
   .ftab {
-    font-size: 10.5px !important;
-    padding: 5px 10px !important;
+    flex: 1 1 0 !important;
+    font-size: 9.5px !important;
+    padding: 5px 3px !important;
     border-radius: 7px !important;
     white-space: nowrap !important;
+    text-align: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
   }
-  .sort-btn {
-    font-size: 10.5px !important;
-    padding: 5px 10px !important;
-  }
+
+  /* Sort button: hide on mobile to make room for all filter tabs */
+  .sort-wrap,
+  .sort-btn { display: none !important; }
 
   /* ── TOOLBAR (search + filter row) ── */
   .toolbar {
