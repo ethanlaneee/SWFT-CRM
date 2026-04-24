@@ -1182,6 +1182,65 @@
     padding: 10px !important;
   }
 
+  /* ── QUOTE / PDF MODAL: windowed feel with visible blur surround ── */
+  .modal-overlay {
+    padding: 52px 14px 14px !important;
+    align-items: flex-start !important;
+    background: rgba(0,0,0,0.55) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+  }
+  .pdf-modal {
+    max-height: calc(100dvh - 80px) !important;
+    border-radius: 16px !important;
+  }
+  /* Hide the printable brand header on mobile — saves vertical space */
+  .pdf-brand { display: none !important; }
+  .pdf-doc-header {
+    padding: 10px 14px !important;
+    justify-content: flex-end !important;
+  }
+  /* Footer buttons: stack vertically */
+  .pdf-doc-footer {
+    flex-direction: column !important;
+    padding: 10px 14px 14px !important;
+    gap: 8px !important;
+  }
+  .pdf-doc-footer .pdf-spacer { display: none !important; }
+  .pdf-doc-footer .pdf-btn,
+  .pdf-doc-footer button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+  }
+  /* Reduce body padding inside modal */
+  .pdf-doc-body {
+    padding: 12px 18px 16px !important;
+  }
+  /* 2-col fields → single column inside modal */
+  .pdf-2col {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+  /* Tax row input larger tap target on mobile */
+  .pdf-tax-rate-input {
+    width: 70px !important;
+    padding: 6px 8px !important;
+    font-size: 14px !important;
+  }
+
+  /* ── GLOBAL BLUR: all overlay/modal backdrops get blur ── */
+  .np-overlay,
+  .billing-overlay,
+  .swft-modal-overlay,
+  .swft-drawer-overlay {
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    background: rgba(0,0,0,0.55) !important;
+  }
+
   /* ── ALL STAT / KPI CARDS: hidden on mobile ── */
   .stat-row,
   .stat-strip,

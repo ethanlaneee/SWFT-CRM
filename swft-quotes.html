@@ -121,10 +121,17 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .pdf-field-input:hover{border-bottom-color:#ccc;}
 .pdf-field-input:focus{border-bottom:2px solid #111;padding-bottom:3px;}
 .pdf-field-input::placeholder{color:#ccc;font-weight:400;}
-.pdf-field-input[type="date"]::-webkit-datetime-edit{color:#111;}
-.pdf-field-input[type="date"]::-webkit-datetime-edit-fields-wrapper{color:#111;}
-.pdf-field-input[type="date"]::-webkit-datetime-edit-year-field,.pdf-field-input[type="date"]::-webkit-datetime-edit-month-field,.pdf-field-input[type="date"]::-webkit-datetime-edit-day-field{color:#111;}
+.pdf-field-input[type="date"]{color-scheme:light;-webkit-text-fill-color:#111;}
+.pdf-field-input[type="date"]::-webkit-datetime-edit{color:#111;-webkit-text-fill-color:#111;}
+.pdf-field-input[type="date"]::-webkit-datetime-edit-fields-wrapper{color:#111;-webkit-text-fill-color:#111;}
+.pdf-field-input[type="date"]::-webkit-datetime-edit-year-field,.pdf-field-input[type="date"]::-webkit-datetime-edit-month-field,.pdf-field-input[type="date"]::-webkit-datetime-edit-day-field{color:#111;-webkit-text-fill-color:#111;}
 .pdf-field-input[type="date"]::-webkit-calendar-picker-indicator{opacity:0.5;cursor:pointer;}
+.pdf-tax-row{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:10px 0;border-top:1px dashed #e0e0e0;margin-top:4px;}
+.pdf-tax-lbl{font-size:13px;color:#666;font-weight:500;}
+.pdf-tax-rate-input{width:58px;background:transparent;border:1px solid #ddd;border-radius:5px;padding:4px 6px;font-size:13px;font-family:'DM Sans',sans-serif;color:#111;text-align:center;outline:none;}
+.pdf-tax-rate-input:focus{border-color:#111;}
+.pdf-tax-pct{font-size:13px;color:#666;}
+.pdf-tax-amt{font-family:'JetBrains Mono',monospace;font-size:13px;color:#111;font-weight:500;min-width:76px;text-align:right;}
 .pdf-field-select{background:transparent;border:none;border-bottom:1px dashed transparent;padding:4px 8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#111;font-weight:500;text-align:right;outline:none;cursor:pointer;flex:1;max-width:280px;direction:rtl;}
 .pdf-field-select:hover{border-bottom-color:#ccc;}
 .pdf-field-select:focus{border-bottom:2px solid #111;}
@@ -347,6 +354,12 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <input class="pdf-add-input" id="add-rate" placeholder="$ Rate"/>
         <input class="pdf-add-input" id="add-total" placeholder="Total" readonly style="color:#111;font-weight:500;"/>
         <button class="pdf-add-btn" onclick="addLineItem()">+</button>
+      </div>
+      <div class="pdf-tax-row">
+        <span class="pdf-tax-lbl">Tax</span>
+        <input class="pdf-tax-rate-input" id="f-tax-rate" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="recalcTotals()"/>
+        <span class="pdf-tax-pct">%</span>
+        <span class="pdf-tax-amt" id="f-tax-display">$0.00</span>
       </div>
       <div class="pdf-totals" id="totals-area"></div>
       <div class="pdf-notes-label">Notes</div>
@@ -588,6 +601,15 @@ function populateModal(q){
   document.getElementById('f-notes').value=q.notes||'';
   document.getElementById('f-scheduled').value=q.scheduledDate?new Date(q.scheduledDate).toISOString().split('T')[0]:'';
 
+  // Tax rate: use quote's saved rate if present, otherwise settings default
+  var taxEl=document.getElementById('f-tax-rate');
+  if(taxEl){
+    var s=window._swftSettings||{};
+    var def=parseFloat(String(s.taxRate||'').replace('%',''))||0;
+    var stored=(q.taxRate!=null&&q.taxRate!=='')?parseFloat(String(q.taxRate).replace('%','')):null;
+    taxEl.value=(stored!=null&&isFinite(stored))?stored:def;
+  }
+
   renderLineItems();
 }
 
@@ -637,7 +659,7 @@ function renderLineItems(){
       '<button class="pdf-li-del" onclick="removeItem('+i+')">&times;</button>'+
     '</div>';
   }).join('');
-  renderTotals();
+  recalcTotals();
 }
 
 function updateItem(i,field,val){
@@ -668,17 +690,21 @@ function addLineItem(){
   });
 });
 
-// Pick up the org's default tax rate from Settings. Per-quote override (e.g.
-// on an older saved quote) wins if present.
+// Read tax rate from the always-visible input in the modal
 function getTaxRate(){
+  var el=document.getElementById('f-tax-rate');
+  if(el&&el.value!==''){var v=parseFloat(el.value);if(isFinite(v)&&v>=0)return v;}
   var s=window._swftSettings||{};
-  if(_currentQuote&&_currentQuote.taxRate!=null&&_currentQuote.taxRate!==''){
-    var v=parseFloat(String(_currentQuote.taxRate).replace('%',''));
-    if(isFinite(v)) return v;
-  }
   var raw=String(s.taxRate||'').replace('%','').trim();
   var n=parseFloat(raw);
   return isFinite(n)&&n>=0?n:0;
+}
+
+function recalcTotals(){
+  var t=computeTotals();
+  var disp=document.getElementById('f-tax-display');
+  if(disp)disp.textContent=money(t.tax);
+  renderTotals();
 }
 
 function computeTotals(){
@@ -694,9 +720,6 @@ function money(n){return '$'+(n||0).toLocaleString("en-US",{minimumFractionDigit
 function renderTotals(){
   var t=computeTotals();
   var html='<div class="pdf-total-line"><span>Subtotal</span><span>'+money(t.subtotal)+'</span></div>';
-  if(t.taxRate>0){
-    html+='<div class="pdf-total-line"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>'+money(t.tax)+'</span></div>';
-  }
   html+='<div class="pdf-total-line grand"><span>Total</span><span>'+money(t.total)+'</span></div>';
   document.getElementById('totals-area').innerHTML=html;
 }
@@ -709,7 +732,7 @@ function buildQuoteHtml(){
   var lines=_items.map(function(l){return'<div class="pdf-line"><div>'+esc(l.desc)+'</div><div>'+(l.qty||1)+'</div><div>$'+l.rate.toFixed(2)+'</div><div class="amt">$'+l.total.toFixed(2)+'</div></div>';}).join('');
   var t=computeTotals();
   if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);t.tax=Number(_currentQuote.tax||0);t.total=Number(_currentQuote.total||t.subtotal);}
-  var taxRow=t.taxRate>0?'<div class="pdf-total-row"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>$'+t.tax.toFixed(2)+'</span></div>':'';
+  var taxRow='<div class="pdf-total-row"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>$'+t.tax.toFixed(2)+'</span></div>';
   var sched=document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
   var finish=document.getElementById('f-finish').value;
   var sqft=document.getElementById('f-sqft').value;
