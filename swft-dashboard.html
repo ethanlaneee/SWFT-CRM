@@ -553,7 +553,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   function plShowStep(n) {
     _plStep = n;
     var stepLabels = {1:'Step 1 of 3 — Add Customer', 2:'Step 2 of 3 — Create Job', 3:'Step 3 of 3 — Create Quote'};
-    var nextLabels = {1:'Create Customer →', 2:'Create Job →', 3:'Create Quote & Finish'};
+    var nextLabels = {1:'Create Customer →', 2:'Create Job →', 3:'Open Quote Editor →'};
     document.getElementById('pl-step-label').textContent = stepLabels[n];
     document.getElementById('pl-next-btn').textContent = nextLabels[n];
     document.getElementById('pl-back-btn').style.display = n > 1 ? '' : 'none';
@@ -594,15 +594,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     var name=(document.getElementById('pl-cust-name').value||'').trim();
     if(!name){showToast('Customer name is required');return;}
     var btn=document.getElementById('pl-next-btn');
-    btn.disabled=true; btn.textContent='Creating...';
+    btn.disabled=true; btn.textContent='Saving...';
+    var payload={
+      name:name,
+      phone:(document.getElementById('pl-cust-phone').value||'').trim(),
+      email:(document.getElementById('pl-cust-email').value||'').trim(),
+      address:(document.getElementById('pl-cust-address').value||'').trim()
+    };
     try{
-      var c=await API.customers.create({
-        name:name,
-        phone:(document.getElementById('pl-cust-phone').value||'').trim(),
-        email:(document.getElementById('pl-cust-email').value||'').trim(),
-        address:(document.getElementById('pl-cust-address').value||'').trim()
-      });
-      _plCustomerId=c.id||c;
+      if(_plCustomerId){
+        await API.customers.update(_plCustomerId, payload);
+      } else {
+        var c=await API.customers.create(payload);
+        _plCustomerId=c.id||c;
+      }
       _plCustomerName=name;
       plShowStep(2);
     }catch(e){showToast('Error: '+e.message);}
@@ -614,46 +619,44 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     var svc=svcEl&&svcEl.value==='Other'?(document.getElementById('pl-job-custom-svc').value||'').trim():svcEl?svcEl.value:'Stamped Concrete';
     if(!svc){showToast('Service type is required');return;}
     var btn=document.getElementById('pl-next-btn');
-    btn.disabled=true; btn.textContent='Creating...';
+    btn.disabled=true; btn.textContent='Saving...';
     var address=(document.getElementById('pl-job-address').value||'').trim();
     var sqft=(document.getElementById('pl-job-sqft').value||'').trim();
     var dateVal=document.getElementById('pl-job-date').value;
     var timeVal=document.getElementById('pl-job-time').value;
     var title=_plCustomerName+' - '+svc;
+    var payload={
+      title:title, customerName:_plCustomerName, customerId:_plCustomerId||'',
+      service:svc, address:address, sqft:sqft,
+      scheduledDate:dateVal||(new Date().toISOString().split('T')[0]),
+      startTime:timeVal||'08:00', status:'scheduled'
+    };
     try{
-      var j=await API.jobs.create({
-        title:title, customerName:_plCustomerName, customerId:_plCustomerId||'',
-        service:svc, address:address, sqft:sqft,
-        scheduledDate:dateVal||(new Date().toISOString().split('T')[0]),
-        startTime:timeVal||'08:00', status:'scheduled'
-      });
-      _plJobId=j.id||j;
+      if(_plJobId){
+        await API.jobs.update(_plJobId, payload);
+      } else {
+        var j=await API.jobs.create(payload);
+        _plJobId=j.id||j;
+      }
       _plJobTitle=title;
       plShowStep(3);
     }catch(e){showToast('Error: '+e.message);}
     btn.disabled=false;
   }
 
-  async function plCreateQuote() {
-    var btn=document.getElementById('pl-next-btn');
-    btn.disabled=true; btn.textContent='Creating...';
+  function plCreateQuote() {
     var svcEl=document.getElementById('pl-job-service');
     var svc=svcEl&&svcEl.value==='Other'?(document.getElementById('pl-job-custom-svc').value||'').trim():svcEl?svcEl.value:'';
-    var amount=parseFloat((document.getElementById('pl-quote-amount').value||'').replace(/[^0-9.]/g,''))||0;
     var sqft=(document.getElementById('pl-quote-sqft').value||'').trim();
-    var notes=(document.getElementById('pl-quote-notes').value||'').trim();
     var address=(document.getElementById('pl-job-address').value||'').trim();
     try{
-      await API.quotes.create({
+      sessionStorage.setItem('swft_pipeline_quote', JSON.stringify({
         customerName:_plCustomerName, customerId:_plCustomerId||'',
-        service:svc, address:address, sqft:sqft, notes:notes,
-        items:amount?[{desc:svc||'Service',qty:1,rate:amount,total:amount}]:[],
-        total:amount, status:'draft'
-      });
-      closePipelineModal();
-      showToast('Pipeline complete! Customer, job, and quote created.');
-    }catch(e){showToast('Error: '+e.message);}
-    btn.disabled=false;
+        jobId:_plJobId||'', service:svc, address:address, sqft:sqft
+      }));
+    }catch(e){}
+    closePipelineModal();
+    window.location.href='swft-quotes';
   }
 
   function openNewJobModal() {
@@ -1360,12 +1363,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <!-- Step 3: Quote -->
   <div id="pl-step3" class="nj-body" style="display:none;">
     <div id="pl-job-summary" class="pl-summary"></div>
-    <div class="nj-row">
-      <div class="nj-field"><label class="nj-label">Est. Amount ($)</label><input class="nj-input" id="pl-quote-amount" type="text" placeholder="e.g. 5500"/></div>
-      <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="pl-quote-sqft" type="text" placeholder="auto-filled"/></div>
+    <input type="hidden" id="pl-quote-amount"/>
+    <input type="hidden" id="pl-quote-sqft"/>
+    <textarea style="display:none;" id="pl-quote-notes"></textarea>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 0 8px;">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <p style="font-size:13px;color:var(--gray);text-align:center;line-height:1.5;max-width:260px;">Customer and job are ready. The full quote editor will open with everything pre-filled — add line items, pricing, and send directly from there.</p>
     </div>
-    <div class="nj-field"><label class="nj-label">Notes / Scope</label><textarea class="nj-input nj-textarea" id="pl-quote-notes" placeholder="Details, materials, scope of work..."></textarea></div>
-    <div style="font-size:11px;color:var(--gray);margin-top:-4px;">A draft quote will be created and linked to this job. You can add line items from the Quotes page.</div>
   </div>
 
   <div class="nj-footer">
