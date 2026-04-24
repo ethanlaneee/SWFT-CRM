@@ -1377,10 +1377,10 @@
   #agent-strip,
   .greeting { display: none !important; }
 
-  /* Page-body on dashboard: no padding, no scroll — panel fills it entirely */
+  /* Page-body on dashboard: no scroll — panel fills it, bottom padding clears the nav bar */
   body:has(#dash-main-grid) .page-body {
     overflow-y: hidden !important;
-    padding: 0 !important;
+    padding: 0 0 calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) 0 !important;
     gap: 0 !important;
   }
 
