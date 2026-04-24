@@ -376,11 +376,16 @@ app.use((req, res, next) => {
 app.use(express.static(staticRoot, {
   etag: false,
   setHeaders: function(res, filePath) {
-    // No caching for HTML/JS/CSS files so deploys take effect immediately
-    if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+    // HTML: never cache — always fetch fresh so deploys take effect immediately
+    if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+    }
+    // JS/CSS: allow browser to cache for 10 min, must revalidate after
+    // This prevents redundant full-file downloads on page navigation
+    else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'public, max-age=600, must-revalidate');
     }
   }
 }));

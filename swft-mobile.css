@@ -255,8 +255,18 @@
   }
   .topbar-slash,
   .topbar-sub { display: none !important; }
-  .topbar-page { display: none !important; }
   .ai-pill { display: none !important; }
+
+  /* Page name visible after the logo, styled smaller */
+  .topbar-page {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1 !important;
+  }
 
   /* ── Mobile topbar SWFT logo ── */
   .mob-topbar-logo {
@@ -604,19 +614,33 @@
   .cal-dow { font-size: 9px !important; padding: 6px 0 !important; }
   .cal-cell { padding: 4px 5px !important; height: auto !important; min-height: 56px !important; }
   .day-num { font-size: 11px !important; height: auto !important; margin-bottom: 1px !important; }
-  /* Inline weather — compact, stacked cleanly below the day number */
+  /* Weather: temp-only in absolute top-right corner of each cell */
   .day-wx {
-    display: flex !important;
-    align-items: center !important;
-    gap: 2px !important;
+    display: block !important;
+    position: absolute !important;
+    top: 3px !important;
+    right: 4px !important;
     font-size: 8px !important;
     color: var(--gray) !important;
     line-height: 1 !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
     pointer-events: none !important;
   }
+  /* Hide icon, show only the number */
+  .day-wx .wx-icon { display: none !important; }
+  .day-wx .wx-num { display: inline !important; }
   .job-block { font-size: 8px !important; padding: 1px 3px !important; }
+
+  /* ── CAL POPUP: centered on mobile ── */
+  .cal-popup {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 40px) !important;
+    max-width: 340px !important;
+    z-index: 9100 !important;
+  }
 
   /* ── CHART STATS: remove side scroll ── */
   .chart-goal { margin-left: 0; }

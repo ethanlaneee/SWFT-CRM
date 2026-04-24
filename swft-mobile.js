@@ -328,15 +328,37 @@
     }
   }
 
-  /* ── Scroll input into view above keyboard on focus ── */
+  /* ── Keyboard handling: keep compose bars above keyboard ── */
   function fixInputsAboveKeyboard() {
+    // Scroll non-panel inputs into view
     document.addEventListener('focusin', function (e) {
       var el = e.target;
       if (!el.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) return;
       setTimeout(function () {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 350); // wait for iOS keyboard to fully appear
+      }, 350);
     }, true);
+
+    // Use visualViewport to shift fixed chat panels above the keyboard on iOS
+    if (!window.visualViewport) return;
+    function adjustPanels() {
+      var kh = Math.max(0, window.innerHeight - window.visualViewport.height);
+      ['.chat-panel', '.tc-panel'].forEach(function (sel) {
+        var el = document.querySelector(sel);
+        if (!el) return;
+        // When keyboard open, pin panel bottom to keyboard top; else restore CSS
+        el.style.bottom = kh > 0 ? kh + 'px' : '';
+      });
+      // Keep messages scrolled to newest when keyboard opens
+      if (kh > 0) {
+        ['#chat-messages', '.tc-messages'].forEach(function (sel) {
+          var el = document.querySelector(sel);
+          if (el) el.scrollTop = el.scrollHeight;
+        });
+      }
+    }
+    window.visualViewport.addEventListener('resize', adjustPanels);
+    window.visualViewport.addEventListener('scroll', adjustPanels);
   }
 
   /* ── Keyboard: close overlays on Escape ── */
