@@ -373,6 +373,23 @@
   }
   .btn-primary svg { display: block; }
 
+  /* AI Estimate topbar button — icon-only on mobile */
+  .ai-est-topbar-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    background: rgba(200,241,53,0.08) !important;
+    border: 1px solid rgba(200,241,53,0.2) !important;
+    color: #c8f135 !important;
+    border-radius: 9px !important;
+    padding: 8px 10px !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+    transition: all 0.15s !important;
+  }
+  .ai-est-topbar-btn .ai-est-btn-label { display: none !important; }
+  .ai-est-topbar-btn svg { display: block !important; width: 16px !important; height: 16px !important; }
+
   /* ── Desktop sidebar re-open toggle + any stray hamburger: force off ── */
   .sidebar-toggle,
   #sidebar-toggle,
@@ -792,6 +809,13 @@
   body.mob-chat-open .swft-chat-fab,
   body.mob-tc-open .swft-chat-fab,
   body.swft-ai-open .swft-chat-fab {
+    display: none !important;
+  }
+
+  /* Hide FAB + panel when PDF quote/invoice modal is open */
+  body:has(.modal-overlay.open) .swft-chat-fab,
+  body:has(.modal-overlay.open) .swft-chat-panel,
+  body:has(.modal-overlay.open) .swft-chat-backdrop {
     display: none !important;
   }
 

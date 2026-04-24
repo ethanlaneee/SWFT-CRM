@@ -142,6 +142,9 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .pdf-add-input::placeholder{color:#bbb;}
 .pdf-add-btn{width:22px;height:22px;border-radius:5px;background:rgba(17,17,17,0.1);border:1px solid rgba(17,17,17,0.3);color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
 .pdf-add-btn:hover{background:rgba(17,17,17,0.2);}
+.pdf-ai-photo-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(200,241,53,0.12);border:1px solid rgba(200,241,53,0.35);border-radius:6px;color:#5a6e00;padding:4px 10px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;white-space:nowrap;}
+.pdf-ai-photo-btn:hover{background:rgba(200,241,53,0.25);border-color:rgba(200,241,53,0.6);}
+.pdf-ai-photo-btn svg{flex-shrink:0;}
 .pdf-totals{margin-top:16px;display:flex;flex-direction:column;align-items:flex-end;}
 .pdf-total-line{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;min-width:220px;}
 .pdf-total-line.grand{font-size:18px;font-weight:700;color:#111;border-top:2px solid #111;margin-top:4px;padding-top:12px;}
@@ -176,6 +179,9 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .swft-modal-btn.danger{background:rgba(255,82,82,0.12);border-color:rgba(255,82,82,0.25);color:var(--red);}
 .swft-modal-btn.danger:hover{background:rgba(255,82,82,0.2);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+/* AI Estimate topbar button */
+.ai-est-topbar-btn{display:flex;align-items:center;gap:6px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);color:var(--green);border-radius:9px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.ai-est-topbar-btn:hover{background:rgba(200,241,53,0.15);}
 </style>
 
 <!-- Meta Pixel Code -->
@@ -247,9 +253,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <span class="topbar-slash">/</span>
     <div class="topbar-sub" id="q-count">loading...</div>
     <div class="topbar-right">
-      <button style="display:flex;align-items:center;gap:6px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);color:#c8f135;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;" onmouseover="this.style.background='rgba(200,241,53,0.15)'" onmouseout="this.style.background='rgba(200,241,53,0.08)'" onclick="openAIEstimate()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke-width="1.8"/><path d="M2 17l10 5 10-5" stroke-width="1.8"/><path d="M2 12l10 5 10-5" stroke-width="1.8"/></svg>
-        AI Estimate
+      <button class="ai-est-topbar-btn" onclick="openAIEstimate()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span class="ai-est-btn-label">AI Estimate</span>
       </button>
       <button class="btn-primary" onclick="openNewQuote()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -296,7 +302,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="pdf-doc-body">
       <div class="pdf-type-row">
         <div class="pdf-type-label">QUOTE</div>
-        <select class="pdf-status-select" id="f-status"><option value="draft">Draft</option><option value="sent">Sent</option><option value="approved">Approved</option></select>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="pdf-ai-photo-btn" onclick="photoEstimateFromModal()" title="AI Photo Estimate — snap a photo of the job site to auto-fill line items">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            AI Estimate
+          </button>
+          <select class="pdf-status-select" id="f-status"><option value="draft">Draft</option><option value="sent">Sent</option><option value="approved">Approved</option></select>
+        </div>
       </div>
       <div class="pdf-fields">
         <div class="pdf-field-row">
@@ -762,8 +774,54 @@ async function deleteQuote(){
 
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
+// ── Photo Estimate from within the quote modal ──
+function photoEstimateFromModal(){
+  var plan=window.SWFT_PLAN||sessionStorage.getItem('swft_plan')||'starter';
+  var lvl={starter:0,pro:1,business:2};
+  if((lvl[plan]||0)<1){if(window.swftUpgradeRequired)window.swftUpgradeRequired('AI Photo Estimator is available on the Pro plan and higher.','pro');return;}
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';
+  inp.onchange=async function(){
+    if(!inp.files[0])return;
+    var btn=document.querySelector('.pdf-ai-photo-btn');
+    if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
+    try{
+      var file=inp.files[0];
+      var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
+      var est=await API.agents.estimate({
+        photos:[{data:b64,mediaType:file.type||'image/jpeg'}],
+        service:document.getElementById('f-service')?document.getElementById('f-service').value:'',
+        address:document.getElementById('f-address')?document.getElementById('f-address').value:'',
+      });
+      if(est.items&&est.items.length){
+        _items=est.items.map(function(i){
+          var desc=i.desc||i.description||i.name||'';
+          var qty=Math.max(1,parseInt(i.qty||i.quantity,10)||1);
+          var rate=Number(i.rate)||0;
+          var total=Number(i.total)||qty*rate;
+          return{desc:desc,qty:qty,rate:rate,total:total};
+        });
+        renderLineItems();recalcTotals();
+      }
+      var notes=document.getElementById('f-notes');
+      if(notes&&est.notes)notes.value=(notes.value?notes.value+'\n\n':'')+est.notes+' (AI '+est.confidence+' confidence)';
+      showToast('AI estimate applied — review and adjust as needed');
+    }catch(e){
+      if(e.message&&e.message.toLowerCase().includes('plan')&&window.swftUpgradeRequired){
+        window.swftUpgradeRequired('AI Estimator requires the Pro plan or higher.','pro');
+      }else{showToast('AI estimate failed: '+e.message);}
+    }finally{
+      if(btn){btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> AI Estimate';btn.disabled=false;}
+    }
+  };
+  inp.click();
+}
+
 // ── AI Estimate Modal ──
 function openAIEstimate(){
+  var plan=window.SWFT_PLAN||sessionStorage.getItem('swft_plan')||'starter';
+  var lvl={starter:0,pro:1,business:2};
+  if((lvl[plan]||0)<1){if(window.swftUpgradeRequired)window.swftUpgradeRequired('AI Estimator is available on the Pro plan and higher.','pro');return;}
   var overlay=document.getElementById('ai-est-overlay');
   if(!overlay){
     overlay=document.createElement('div');
@@ -874,7 +932,12 @@ async function runAIEstimate(){
     window._lastEstimate=est;
     window._lastEstimateCustId=custId;
     window._lastEstimateCustName=custName;
-  }catch(e){showToast('Estimate failed: '+e.message);}
+  }catch(e){
+    if(e.message&&e.message.toLowerCase().includes('plan')&&window.swftUpgradeRequired){
+      document.getElementById('ai-est-overlay').style.display='none';
+      window.swftUpgradeRequired('AI Estimator requires the Pro plan or higher.','pro');
+    }else{showToast('Estimate failed: '+e.message);}
+  }
   finally{btn.textContent='Generate Estimate';btn.disabled=false;}
 }
 

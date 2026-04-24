@@ -218,6 +218,9 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .bal-green{color:var(--green);}
 .bal-amber{color:var(--amber);}
 .bal-red{color:var(--red);}
+.pdf-ai-photo-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(200,241,53,0.12);border:1px solid rgba(200,241,53,0.35);border-radius:6px;color:#5a6e00;padding:4px 10px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;white-space:nowrap;}
+.pdf-ai-photo-btn:hover{background:rgba(200,241,53,0.25);border-color:rgba(200,241,53,0.6);}
+.pdf-ai-photo-btn svg{flex-shrink:0;}
 
 </style>
 
@@ -419,7 +422,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="pdf-doc-body">
       <div class="pdf-type-row">
         <div class="pdf-type-label" id="m-doc-type">QUOTE</div>
-        <select class="pdf-status-select" id="e-status"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="pdf-ai-photo-btn" id="billing-ai-photo-btn" onclick="billingPhotoEstimate()" title="AI Photo Estimate — snap a photo to auto-fill line items">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            AI Estimate
+          </button>
+          <select class="pdf-status-select" id="e-status"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select>
+        </div>
       </div>
       <div class="pdf-fields">
         <div class="pdf-field-row">
@@ -1016,6 +1025,49 @@ function toggleDescCustom(selId, inputId) {
   var show = sel.value === '__custom__';
   inp.style.display = show ? 'block' : 'none';
   if (show) inp.focus();
+}
+
+// ── AI Photo Estimate from within billing modal ──
+async function billingPhotoEstimate(){
+  var plan=window.SWFT_PLAN||sessionStorage.getItem('swft_plan')||'starter';
+  var lvl={starter:0,pro:1,business:2};
+  if((lvl[plan]||0)<1){if(window.swftUpgradeRequired)window.swftUpgradeRequired('AI Photo Estimator is available on the Pro plan and higher.','pro');return;}
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';
+  inp.onchange=async function(){
+    if(!inp.files[0])return;
+    var btn=document.getElementById('billing-ai-photo-btn');
+    if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
+    try{
+      var file=inp.files[0];
+      var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
+      var est=await API.agents.estimate({
+        photos:[{data:b64,mediaType:file.type||'image/jpeg'}],
+        service:document.getElementById('e-service')?document.getElementById('e-service').value:'',
+        address:document.getElementById('e-address')?document.getElementById('e-address').value:'',
+      });
+      if(est.items&&est.items.length&&_q){
+        _q.lines=est.items.map(function(i){
+          var desc=i.desc||i.description||i.name||'';
+          var qty=Math.max(1,parseInt(i.qty||i.quantity,10)||1);
+          var rate=Number(i.rate)||0;
+          var total=Number(i.total)||qty*rate;
+          return{desc:desc,sub:'',qty:String(qty),rate:'$'+rate.toFixed(2),total:'$'+total.toFixed(2)};
+        });
+        renderLineItems(_q.lines);
+      }
+      var notes=document.getElementById('e-notes');
+      if(notes&&est.notes)notes.value=(notes.value?notes.value+'\n\n':'')+est.notes+' (AI '+est.confidence+' confidence)';
+      showToast('AI estimate applied — review and adjust as needed');
+    }catch(e){
+      if(e.message&&e.message.toLowerCase().includes('plan')&&window.swftUpgradeRequired){
+        window.swftUpgradeRequired('AI Estimator requires the Pro plan or higher.','pro');
+      }else{showToast('AI estimate failed: '+e.message);}
+    }finally{
+      if(btn){btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> AI Estimate';btn.disabled=false;}
+    }
+  };
+  inp.click();
 }
 
 function addLineItem() {
