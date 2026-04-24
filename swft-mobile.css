@@ -13,16 +13,16 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(17,17,17,0.96);
+  background: rgba(17,17,17,0.97);
   border-top: 1px solid var(--border);
   z-index: 800;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: space-around;
-  padding: 0 2px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  height: calc(60px + env(safe-area-inset-bottom, 0px));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 8px 2px 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  height: calc(64px + max(12px, env(safe-area-inset-bottom, 12px)));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .mob-nav-item {
@@ -82,26 +82,8 @@
   border: 2px solid rgba(17,17,17,0.96);
 }
 
-/* Hamburger menu button in topbar */
-.mob-menu-btn {
-  display: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border2);
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--gray);
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 0.14s;
-}
-.mob-menu-btn:active {
-  background: var(--surface2);
-  color: var(--white);
-}
+/* Hamburger menu button — removed, bottom nav replaces sidebar navigation */
+.mob-menu-btn { display: none !important; }
 
 /* Mobile sidebar backdrop */
 .mob-sidebar-overlay {
@@ -131,7 +113,7 @@
   display: block;
 }
 
-/* More bottom sheet */
+/* More bottom sheet — completely hidden until .open is added */
 .mob-more-sheet {
   position: fixed;
   bottom: calc(60px + env(safe-area-inset-bottom, 0px));
@@ -143,14 +125,25 @@
   border-radius: 20px 20px 0 0;
   z-index: 860;
   padding: 0 14px 20px;
-  transform: translateY(110%);
-  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1);
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s ease,
+              visibility 0s linear 0.32s;
   max-height: 74vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 .mob-more-sheet.open {
   transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s ease,
+              visibility 0s linear 0s;
 }
 
 .mob-more-handle {
@@ -227,7 +220,6 @@
 
   /* ── Show mobile-only elements ── */
   .mob-bottom-nav { display: flex; }
-  .mob-menu-btn { display: flex; margin-right: 4px; }
 
   /* ── SIDEBAR: off-screen by default, shown as overlay ── */
   .sidebar {
@@ -263,11 +255,35 @@
   }
   .topbar-slash,
   .topbar-sub { display: none !important; }
-  .topbar-page {
-    font-size: 17px !important;
-    letter-spacing: 2px !important;
-  }
   .ai-pill { display: none !important; }
+
+  /* Page name visible after the logo, styled smaller */
+  .topbar-page {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1 !important;
+  }
+
+  /* ── Mobile topbar SWFT logo ── */
+  .mob-topbar-logo {
+    font-family: 'Space Mono', monospace !important;
+    font-weight: 700 !important;
+    font-size: 22px !important;
+    letter-spacing: 4px !important;
+    text-transform: uppercase;
+    color: var(--white) !important;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .mob-topbar-logo em {
+    color: var(--green) !important;
+    font-style: normal;
+    margin-left: -4px;
+  }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
   .btn-primary {
@@ -277,9 +293,20 @@
   }
   .btn-primary svg { display: block; }
 
+  /* ── Desktop sidebar re-open toggle + any stray hamburger: force off ── */
+  .sidebar-toggle,
+  #sidebar-toggle,
+  .mob-menu-btn,
+  #mob-menu-btn {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
   /* ── PAGE BODY ── */
   .page-body {
-    padding: 16px 14px calc(70px + env(safe-area-inset-bottom, 0px)) 14px !important;
+    padding: 16px 14px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) 14px !important;
     gap: 12px !important;
   }
 
@@ -318,21 +345,89 @@
   #agent-strip::-webkit-scrollbar { display: none; }
   #agent-strip > a { display: none !important; }
 
-  /* ── JOB / SCHEDULE ROWS ── */
-  .job-row { padding: 12px 14px !important; gap: 10px; }
+  /* ── JOB ROWS: status pip + title + status chip ── */
+  .table-head { display: none !important; }
+  .job-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 11px 14px !important;
+    gap: 10px !important;
+  }
+  /* Hide: checkbox, customer, address, action buttons */
+  .job-row > div:nth-child(1),
+  .job-row > div:nth-child(3),
+  .job-row > div:nth-child(4),
+  .job-row > div:nth-child(6) { display: none !important; }
+  /* job-id-cell: flex row with pip + title */
+  .job-id-cell {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .status-pip { flex-shrink: 0 !important; }
+  .job-title {
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .job-id { display: none !important; }
+  /* Status select: right-side read-only chip */
+  .job-row > div:nth-child(5) { flex-shrink: 0 !important; }
+  .job-row .status-tag {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+    pointer-events: none !important;
+    cursor: default !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  /* ── CUSTOMER ROWS: avatar + name + tap indicator ── */
+  .cust-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+  }
+  /* Hide: checkbox, address, phone, email, status, tags, actions */
+  .cust-row > div:nth-child(1),
+  .cust-row > div:nth-child(3),
+  .cust-row > div:nth-child(4),
+  .cust-row > div:nth-child(5),
+  .cust-row > div:nth-child(6),
+  .cust-row > div:nth-child(7),
+  .cust-row > div:nth-child(8) { display: none !important; }
+  .cust-name-cell { flex: 1 !important; }
+
   .schedule-row { padding: 10px 14px !important; }
 
-  /* ── FILTER TABS: horizontally scrollable ── */
+  /* ── FILTER TABS: compact + horizontally scrollable ── */
   .job-filters,
   .filter-group {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    padding: 10px 14px !important;
-    gap: 6px !important;
+    padding: 8px 14px !important;
+    gap: 5px !important;
     flex-wrap: nowrap !important;
   }
   .job-filters::-webkit-scrollbar,
   .filter-group::-webkit-scrollbar { display: none; }
+  /* Smaller filter tabs across all pages */
+  .ftab {
+    font-size: 10.5px !important;
+    padding: 5px 10px !important;
+    border-radius: 7px !important;
+    white-space: nowrap !important;
+  }
+  /* Smaller sort button */
+  .sort-btn {
+    font-size: 10.5px !important;
+    padding: 5px 10px !important;
+  }
 
   /* ── TOOLBAR (search + filter row) ── */
   .toolbar {
@@ -353,6 +448,7 @@
   .table-head,
   .cust-row,
   .inv-row,
+  .q-row,
   .quote-row { min-width: 640px; }
 
   /* ── CHART ── */
@@ -364,7 +460,10 @@
   .chart-area { height: 88px !important; }
   .chart-footer { flex-wrap: wrap; gap: 10px; }
 
-  /* ── NEW JOB MODAL → full-screen bottom sheet ── */
+  /* ── NEW JOB MODAL → full-screen bottom sheet, above bottom nav ── */
+  .nj-overlay {
+    z-index: 1100 !important;
+  }
   .nj-modal {
     position: fixed !important;
     top: auto !important;
@@ -377,6 +476,7 @@
     max-height: 90vh !important;
     border-radius: 20px 20px 0 0 !important;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 1110 !important;
     transition: transform 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.25s !important;
   }
   .nj-overlay.open + .nj-modal,
@@ -402,29 +502,394 @@
   }
   .nj-body { padding: 8px 16px 12px !important; }
 
+  /* ── JOB DETAIL DRAWER → bottom sheet on mobile ── */
+  .drawer-overlay { z-index: 1100 !important; }
+  .drawer {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(110%) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: 1110 !important;
+  }
+  .drawer.open {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
+  }
+  /* Stack 2-column edit form rows into single column */
+  .edit-row-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── SWFT MODAL (confirm dialogs) — above bottom nav ── */
+  .swft-modal-overlay { z-index: 1100 !important; }
+
+  /* ── SWFT AI CHAT FAB — float well above bottom nav ── */
+  .swft-chat-fab {
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .swft-chat-panel {
+    bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(55vh) !important;
+  }
+
+  /* Hide FAB when More sheet, drawer overlay, or chat view is open */
+  body.mob-more-open .swft-chat-fab,
+  body.mob-overlay-open .swft-chat-fab,
+  body.mob-chat-open .swft-chat-fab,
+  body.mob-tc-open .swft-chat-fab {
+    display: none !important;
+  }
+
   /* ── SWFT CONFIRM MODAL ── */
   .swft-modal {
     width: calc(100% - 24px) !important;
     border-radius: 16px !important;
   }
 
-  /* ── TOAST ── */
+  /* ── TOAST: centered on screen ── */
   .toast {
+    top: 50% !important;
+    left: 50% !important;
     font-size: 12px !important;
     padding: 10px 16px !important;
-    max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 40px) !important;
+    width: auto !important;
+    transform: translate(-50%, calc(-50% - 10px)) !important;
+  }
+  .toast.show {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  /* ── PREVENT iOS AUTO-ZOOM on input focus (requires font-size ≥ 16px) ── */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* ── ALL STAT / KPI CARDS: hidden on mobile ── */
+  .stat-row,
+  .stat-strip,
+  .kpi-grid { display: none !important; }
+
+  /* ── THREAD LIST: hide bottom new-button (replaced by "+" in header) ── */
+  .new-msg-btn,
+  .new-chat-btn { display: none !important; }
+
+  /* ── "+" button injected into thread list headers ── */
+  .mob-new-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+    background: var(--green) !important;
+    color: #0a0a0a !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+  }
+  .mob-new-btn:active { background: #d5ff40 !important; transform: scale(0.93); }
+
+  /* Header rows need flex+space-between so the "+" sits on the right */
+  .contact-header > div:first-child,
+  .chat-list-header {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* ── NOTIFICATION DROPDOWN — re-position to stay on screen ── */
+  .notif-dropdown {
+    top: 56px !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    max-height: 60vh !important;
   }
 
   /* ── ACTIVITY ITEMS ── */
   .activity-item { padding: 12px 14px !important; }
 
-  /* ── WEATHER STRIP ── */
-  .weather-strip { padding: 8px 14px !important; }
+  /* ── SCHEDULE: hide weather strip, calendar full screen ── */
+  .weather-strip { display: none !important; }
+  .page-tabs { margin-bottom: 12px !important; }
+  .cal-header { margin-bottom: 10px !important; }
+  #cal-view {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: calc(100dvh - 180px) !important;
+  }
+  .cal-grid-wrap {
+    flex: 1 !important;
+    border-radius: 10px !important;
+  }
+  .cal-grid {
+    grid-auto-rows: minmax(56px, 1fr) !important;
+  }
+  .cal-dow-row {
+    grid-template-columns: repeat(7, 1fr) !important;
+  }
+  .cal-dow { font-size: 9px !important; padding: 6px 0 !important; }
+  .cal-cell { padding: 4px 5px !important; height: auto !important; min-height: 56px !important; }
+  .day-num { font-size: 11px !important; height: auto !important; margin-bottom: 1px !important; }
+  /* Weather: tiny temp-only badge, top-right of each cell */
+  .day-wx {
+    display: block !important;
+    position: absolute !important;
+    top: 2px !important;
+    right: 3px !important;
+    font-size: 7px !important;
+    color: var(--gray) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+  /* Always hide the weather emoji icon — number only */
+  .day-wx .wx-icon,
+  .day-wx > *:first-child { display: none !important; }
+  .day-wx .wx-num { display: inline !important; }
+  .job-block { font-size: 8px !important; padding: 1px 3px !important; }
 
   /* ── CHART STATS: remove side scroll ── */
   .chart-goal { margin-left: 0; }
 }
 
+
+/* ── DASHBOARD: simplified mobile layout ── */
+@media (max-width: 768px) {
+  /* Hide KPI grid, automation strip — SWFT AI is the dashboard on mobile */
+  .kpi-grid,
+  #agent-strip,
+  .greeting { display: none !important; }
+
+  /* Single column — AI panel fills full width */
+  #dash-main-grid {
+    grid-template-columns: 1fr !important;
+    min-height: calc(100vh - 140px) !important;
+    gap: 0 !important;
+  }
+
+  /* Hide schedule + this week columns */
+  #dash-schedule-col { display: none !important; }
+
+  /* Remove "Connect your tools" tab — use SWFT Connect for that */
+  #dash-tools-tab,
+  #dash-tools-drawer { display: none !important; }
+
+  /* SWFT AI panel — full height, no border-radius at bottom */
+  #dash-main-grid > .panel:first-child {
+    min-height: calc(100dvh - 140px) !important;
+    max-height: calc(100dvh - 140px) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+}
+
+/* ── MESSAGES PAGE: iMessage-style full-screen thread layout ── */
+
+/* Back button — hidden on desktop, shown on mobile */
+.mob-chat-back {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--green);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0 10px 0 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+.mob-chat-back svg { flex-shrink: 0; }
+
+@media (max-width: 768px) {
+
+  /* Thread list — fills full screen */
+  .contact-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    min-width: unset !important;
+    height: auto !important;
+    z-index: 100 !important;
+    border-right: none !important;
+    background: var(--bg) !important;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Conversation view — off-screen right by default */
+  .chat-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 101 !important;
+    background: var(--bg) !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Conversation active: chat slides in, thread list slides out */
+  body.mob-chat-open .chat-panel {
+    transform: translateX(0) !important;
+  }
+  body.mob-chat-open .contact-panel {
+    transform: translateX(-25%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Thread list items — bigger touch targets */
+  .contact-header { padding: 14px 16px 10px !important; }
+  /* Contact-title: styled like .topbar-page after the injected logo */
+  .contact-title {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
+  }
+  .contact-item { padding: 14px 16px !important; }
+  .c-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 15px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+  .c-name { font-size: 14px !important; font-weight: 600 !important; }
+  .c-preview { font-size: 12px !important; margin-top: 3px !important; }
+  .c-time { font-size: 11px !important; }
+  .c-badge { font-size: 10px !important; }
+  .new-msg-btn { margin: 10px 14px !important; }
+
+  /* Chat view — back button visible, header adjustments */
+  .mob-chat-back { display: flex !important; }
+  .chat-header {
+    padding: 10px 14px !important;
+    min-height: 54px !important;
+  }
+  .chat-messages { flex: 1 !important; padding: 16px 14px !important; }
+
+  /* Compose bar — pinned to bottom of chat panel */
+  .compose-bar {
+    flex-shrink: 0 !important;
+    padding: 10px 12px !important;
+    border-top: 1px solid var(--border) !important;
+  }
+}
+
+/* ── TEAM CHAT PAGE: iMessage-style layout ── */
+@media (max-width: 768px) {
+  /* Thread list fills full screen by default */
+  .chat-list-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    min-width: unset !important;
+    height: auto !important;
+    z-index: 100 !important;
+    transform: translateX(0) !important;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s !important;
+  }
+
+  /* Chat view: off-screen right by default */
+  .tc-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 101 !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Chat selected: slide in chat, slide out list */
+  body.mob-tc-open .tc-panel {
+    transform: translateX(0) !important;
+  }
+  body.mob-tc-open .chat-list-panel {
+    transform: translateX(-25%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Style the back button */
+  .tc-list-toggle {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--green) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    cursor: pointer !important;
+    padding: 0 10px 0 0 !important;
+  }
+
+  .tc-header { padding: 10px 14px !important; min-height: 54px !important; }
+  .tc-compose { flex-shrink: 0 !important; }
+  .chat-list-header { padding: 18px 16px 10px !important; }
+  /* Shrink "TEAM CHAT" title so it fits one line */
+  .chat-list-title { font-size: 18px !important; letter-spacing: 1.5px !important; }
+}
+
+/* ── Photo lightbox — fullscreen tap-to-dismiss ── */
+#mob-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 9998;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+#mob-lightbox.open { display: flex; }
+#mob-lightbox img {
+  max-width: 95vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
 
 /* ── Extra-small phones (≤ 390px) ── */
 @media (max-width: 390px) {
