@@ -255,11 +255,24 @@
   }
   .topbar-slash,
   .topbar-sub { display: none !important; }
-  .topbar-page {
-    font-size: 17px !important;
-    letter-spacing: 2px !important;
-  }
+  .topbar-page { display: none !important; }
   .ai-pill { display: none !important; }
+
+  /* ── Mobile topbar SWFT logo ── */
+  .mob-topbar-logo {
+    font-family: 'Space Mono', monospace !important;
+    font-weight: 700 !important;
+    font-size: 22px !important;
+    letter-spacing: 4px !important;
+    text-transform: uppercase;
+    color: var(--white) !important;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .mob-topbar-logo em {
+    color: var(--green) !important;
+    font-style: normal;
+  }
   .topbar-right { gap: 8px !important; }
   /* Shrink primary button to icon-only on mobile */
   .btn-primary {

@@ -86,11 +86,22 @@
   /* ── Init ── */
   function init() {
     if (!document.querySelector('.sidebar')) return; // not an app page
+    injectTopbarLogo();
     injectBottomNav();
     injectSidebarOverlay();
     injectMoreSheet();
     fixInputsAboveKeyboard();
     if (PAGE === 'swft-messages') setupMobileMessages();
+  }
+
+  /* ── Topbar logo (replaces page name on mobile) ── */
+  function injectTopbarLogo() {
+    var topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+    var logo = document.createElement('span');
+    logo.className = 'mob-topbar-logo';
+    logo.innerHTML = 'SWFT<em>.</em>';
+    topbar.insertBefore(logo, topbar.firstChild);
   }
 
   /* ── Bottom nav ── */
