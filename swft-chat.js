@@ -131,6 +131,7 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0) scale(1);
       pointer-events: all;
+      animation: swft-panel-shimmer-loop 2.8s ease-in-out infinite;
     }
 
     /* ── Header ── */
@@ -393,7 +394,13 @@
       animation: swft-fab-liquify 0.55s cubic-bezier(0.22,1,0.36,1) forwards !important;
     }
 
-    /* ── Panel shimmer border on open ── */
+    /* ── Persistent looping shimmer while panel is open ── */
+    @keyframes swft-panel-shimmer-loop {
+      0%, 100% { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 1.5px rgba(200,241,53,0.45), 0 0 14px 3px rgba(200,241,53,0.15); }
+      50%       { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 2.5px rgba(200,241,53,0.8), 0 0 26px 7px rgba(200,241,53,0.32); }
+    }
+
+    /* ── Panel intro animation on open ── */
     @keyframes swft-panel-border-in {
       0%   { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 0px rgba(200,241,53,0); }
       30%  { box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 3px rgba(200,241,53,0.8), 0 0 20px 4px rgba(200,241,53,0.35); }

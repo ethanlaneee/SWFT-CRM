@@ -778,10 +778,40 @@
   .mob-new-btn:active { background: #d5ff40 !important; transform: scale(0.93); }
 
   /* Header rows need flex+space-between so the "+" sits on the right */
-  .contact-header > div:first-child,
-  .chat-list-header {
+  .contact-header > div:first-child {
     display: flex !important;
     align-items: center !important;
+  }
+
+  /* Team Chat header: logo + title + "+" on top row; search full-width below */
+  .chat-list-header {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0 6px !important;
+  }
+  .chat-list-header .mob-topbar-logo {
+    flex-shrink: 0 !important;
+  }
+  .chat-list-header .chat-list-title {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  .chat-list-header .mob-new-btn {
+    flex-shrink: 0 !important;
+    margin-left: 0 !important;
+  }
+  .chat-list-search {
+    flex: 1 1 100% !important;
+    margin-top: 8px !important;
+    order: 99 !important;
+    width: 100% !important;
+  }
+
+  /* Messages: contact search full-width below title row */
+  .contact-search {
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* ── NOTIFICATION DROPDOWN — re-position to stay on screen ── */
@@ -944,7 +974,14 @@
     pointer-events: none !important;
   }
 
-  /* Thread list items — bigger touch targets */
+  /* Thread list items — bigger touch targets, single-tap */
+  .contact-item,
+  .chat-list-item,
+  .tc-item {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
+  }
   .contact-header { padding: 14px 16px 10px !important; }
   /* Contact-title: styled like .topbar-page after the injected logo */
   .contact-title {
