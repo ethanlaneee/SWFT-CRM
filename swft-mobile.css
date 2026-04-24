@@ -218,18 +218,22 @@
 
 @media (max-width: 768px) {
 
-  /* ── Nuclear no-horizontal-scroll: clamp every element to its container ── */
+  /* ── Nuclear no-horizontal-scroll ── */
   *, *::before, *::after {
     max-width: 100% !important;
+    min-width: 0 !important;
     box-sizing: border-box !important;
   }
-  /* Explicit exceptions that legitimately overflow their parent */
+  /* Exceptions: positioned overlays/panels that live outside normal flow */
   .swft-chat-fab, .swft-chat-panel,
   .cal-popup, .wx-popup,
   .drawer, .nj-modal, .mob-more-sheet,
   .sidebar, .contact-panel, .chat-panel,
-  .tc-panel, .chat-list-panel {
+  .tc-panel, .chat-list-panel,
+  .modal-overlay, .pdf-modal,
+  input, select, textarea, button {
     max-width: none !important;
+    min-width: 0 !important;
   }
 
   /* ── Static layout: page itself never scrolls, only inner containers do ── */
@@ -481,23 +485,18 @@
 
   .schedule-row { padding: 10px 14px !important; }
 
-  /* ── FILTER TABS ── */
-  .job-filters {
+  /* ── FILTER TABS: horizontal scroll, clean single row ── */
+  .job-filters,
+  .filter-group {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     flex-wrap: nowrap !important;
     padding: 8px 14px !important;
-    gap: 5px !important;
-  }
-  .job-filters::-webkit-scrollbar { display: none; }
-
-  /* Quote/invoice/billing filter tabs: wrap, no horizontal scroll */
-  .filter-group {
-    overflow-x: hidden !important;
-    flex-wrap: wrap !important;
-    padding: 8px 14px !important;
     gap: 6px !important;
+    scrollbar-width: none !important;
   }
+  .job-filters::-webkit-scrollbar,
+  .filter-group::-webkit-scrollbar { display: none; }
 
   /* Smaller filter tabs across all pages */
   .ftab {
@@ -579,13 +578,14 @@
   /* Customers table row */
   .cust-row { min-width: 0 !important; }
 
-  /* ── QUOTE / INVOICE EDIT MODAL — no horizontal scroll ── */
-  .modal-overlay { padding: 0 !important; align-items: flex-end !important; }
+  /* ── QUOTE / INVOICE EDIT MODAL — centered, full height, no horizontal scroll ── */
+  .modal-overlay { padding: 8px !important; align-items: center !important; }
   .pdf-modal {
     max-width: 100% !important;
     width: 100% !important;
-    max-height: 94dvh !important;
-    border-radius: 20px 20px 0 0 !important;
+    max-height: 92dvh !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
   }
   .pdf-doc-header { padding: 20px 16px 0 !important; flex-wrap: wrap !important; gap: 10px !important; }
   .pdf-2col { grid-template-columns: 1fr !important; gap: 8px !important; }
