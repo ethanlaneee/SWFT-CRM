@@ -486,8 +486,30 @@
   /* ── ACTIVITY ITEMS ── */
   .activity-item { padding: 12px 14px !important; }
 
-  /* ── WEATHER STRIP ── */
-  .weather-strip { padding: 8px 14px !important; }
+  /* ── SCHEDULE: hide weather strip, calendar full screen ── */
+  .weather-strip { display: none !important; }
+  .page-tabs { margin-bottom: 12px !important; }
+  .cal-header { margin-bottom: 10px !important; }
+  #cal-view {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: calc(100dvh - 180px) !important;
+  }
+  .cal-grid-wrap {
+    flex: 1 !important;
+    border-radius: 10px !important;
+  }
+  .cal-grid {
+    grid-auto-rows: minmax(56px, 1fr) !important;
+  }
+  .cal-dow-row {
+    grid-template-columns: repeat(7, 1fr) !important;
+  }
+  .cal-dow { font-size: 9px !important; padding: 6px 0 !important; }
+  .cal-day { padding: 4px 5px !important; }
+  .cal-day-num { font-size: 11px !important; }
+  .cal-event { font-size: 9px !important; padding: 1px 4px !important; }
 
   /* ── CHART STATS: remove side scroll ── */
   .chart-goal { margin-left: 0; }
