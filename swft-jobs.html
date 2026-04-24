@@ -277,8 +277,8 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
 /* ── EDIT MODE ── */
-.edit-field{display:flex;flex-direction:column;gap:5px;}
-.edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.edit-field{display:flex;flex-direction:column;gap:5px;justify-content:flex-end;}
+.edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;}
 .edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
 .edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .edit-input:focus{border-color:var(--green);}
@@ -362,8 +362,8 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .approve-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:460px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
 .approve-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);margin-bottom:6px;}
 .approve-modal-sub{font-size:12.5px;color:var(--gray);margin-bottom:20px;}
-.approve-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
-.approve-field{display:flex;flex-direction:column;gap:5px;}
+.approve-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;align-items:end;}
+.approve-field{display:flex;flex-direction:column;gap:5px;justify-content:flex-end;}
 .approve-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:600;}
 .approve-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .approve-input:focus{border-color:var(--green);}
