@@ -4,10 +4,34 @@ const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
 const { sendViaGmail } = require("./messages");
 const { normalizeItems } = require("../utils/normalizeItems");
+const { getStripe, ensureStripeCustomer } = require("../utils/stripe");
 
 const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const col = () => db.collection("invoices");
+
+// Stripe recurring interval mapping. We keep our cadence labels friendly
+// ("weekly", "monthly", etc.) and convert at the edge when calling Stripe.
+const CADENCE_TO_STRIPE = {
+  weekly:    { interval: "week",  interval_count: 1 },
+  biweekly:  { interval: "week",  interval_count: 2 },
+  monthly:   { interval: "month", interval_count: 1 },
+  quarterly: { interval: "month", interval_count: 3 },
+  yearly:    { interval: "year",  interval_count: 1 },
+};
+
+function addCadence(ts, cadence) {
+  const d = new Date(ts);
+  switch (cadence) {
+    case "weekly":    d.setDate(d.getDate() + 7);  break;
+    case "biweekly":  d.setDate(d.getDate() + 14); break;
+    case "monthly":   d.setMonth(d.getMonth() + 1); break;
+    case "quarterly": d.setMonth(d.getMonth() + 3); break;
+    case "yearly":    d.setFullYear(d.getFullYear() + 1); break;
+    default: return ts;
+  }
+  return d.getTime();
+}
 
 // List invoices
 router.get("/", async (req, res, next) => {
@@ -65,8 +89,151 @@ router.post("/", async (req, res, next) => {
       scheduledDate: req.body.scheduledDate || null,
       createdAt: Date.now(),
     };
+
+    // Recurring setup — validate up front so we don't save a half-configured doc
+    const recurring = req.body.recurring;
+    if (recurring && recurring.enabled) {
+      if (!CADENCE_TO_STRIPE[recurring.cadence]) {
+        return res.status(400).json({ error: "Invalid cadence. Use weekly, biweekly, monthly, quarterly, or yearly." });
+      }
+      if (!data.customerId) {
+        return res.status(400).json({ error: "Recurring invoices require a linked customer." });
+      }
+      if (!data.total || data.total < 0.5) {
+        return res.status(400).json({ error: "Recurring invoice total must be at least $0.50." });
+      }
+      data.isRecurring = true;
+      data.recurring = {
+        cadence: recurring.cadence,
+        startDate: recurring.startDate || Date.now(),
+        endDate: recurring.endDate || null,
+        cycleCount: recurring.cycleCount || null,
+        completedCycles: 0,
+        nextDueDate: recurring.startDate || Date.now(),
+        status: "active",
+      };
+    }
+
     const ref = await col().add(data);
+
+    // Kick off the Stripe Subscription on the owner's connected account. Done
+    // after the Firestore write so we can stamp the Subscription ID back onto
+    // the doc and so a Stripe failure doesn't orphan the record.
+    if (data.isRecurring) {
+      try {
+        const ownerDoc = await db.collection("users").doc(req.orgId).get();
+        const ownerStripe = ownerDoc.exists ? ownerDoc.data()?.integrations?.stripe : null;
+        const connectedAccountId = ownerStripe?.accountId;
+        if (!connectedAccountId) {
+          await col().doc(ref.id).update({
+            "recurring.status": "error",
+            "recurring.error": "Stripe account not connected. Connect Stripe in Settings to enable recurring invoices.",
+            updatedAt: Date.now(),
+          });
+          return res.status(201).json({ id: ref.id, ...data, recurringWarning: "Stripe not connected — subscription not created." });
+        }
+
+        const stripeCustomerId = await ensureStripeCustomer({
+          db, customerId: data.customerId, orgId: req.orgId, connectedAccountId,
+        });
+
+        const stripe = getStripe();
+        const stripeOpts = { stripeAccount: connectedAccountId };
+        const cadenceCfg = CADENCE_TO_STRIPE[recurring.cadence];
+
+        const price = await stripe.prices.create({
+          currency: "usd",
+          unit_amount: Math.round(data.total * 100),
+          recurring: cadenceCfg,
+          product_data: {
+            name: `${data.service || "Service"} — ${data.customerName || "Customer"}`,
+          },
+        }, stripeOpts);
+
+        const subParams = {
+          customer: stripeCustomerId,
+          items: [{ price: price.id }],
+          collection_method: "send_invoice",
+          days_until_due: 7,
+          metadata: {
+            swftInvoiceId: ref.id,
+            orgId: req.orgId,
+            swftCustomerId: data.customerId,
+          },
+        };
+        // If the user picked a future start date, let Stripe hold off first
+        // charge until then.
+        if (data.recurring.startDate && data.recurring.startDate > Date.now() + 60_000) {
+          subParams.billing_cycle_anchor = Math.floor(data.recurring.startDate / 1000);
+          subParams.proration_behavior = "none";
+        }
+        // Cap the subscription either by end date or by number of cycles.
+        if (data.recurring.endDate) {
+          subParams.cancel_at = Math.floor(data.recurring.endDate / 1000);
+        }
+
+        const subscription = await stripe.subscriptions.create(subParams, stripeOpts);
+
+        await col().doc(ref.id).update({
+          stripeSubscriptionId: subscription.id,
+          stripePriceId: price.id,
+          stripeConnectAccountId: connectedAccountId,
+          "recurring.status": "active",
+          updatedAt: Date.now(),
+        });
+        data.stripeSubscriptionId = subscription.id;
+        data.stripePriceId = price.id;
+        data.stripeConnectAccountId = connectedAccountId;
+      } catch (e) {
+        console.error("[invoices] Recurring subscription create failed:", e);
+        await col().doc(ref.id).update({
+          "recurring.status": "error",
+          "recurring.error": e.message || "Failed to create Stripe subscription",
+          updatedAt: Date.now(),
+        }).catch(() => {});
+        return res.status(201).json({
+          id: ref.id, ...data,
+          recurringWarning: `Invoice saved, but Stripe subscription failed: ${e.message}`,
+        });
+      }
+    }
+
     res.status(201).json({ id: ref.id, ...data });
+  } catch (err) { next(err); }
+});
+
+// Cancel a recurring invoice's Stripe Subscription. Leaves the parent
+// Firestore doc in place (so the owner keeps the history) but flips the
+// recurring.status to "cancelled" and stops future auto-generated invoices.
+router.post("/:id/cancel-recurring", async (req, res, next) => {
+  try {
+    const doc = await col().doc(req.params.id).get();
+    if (!doc.exists || doc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Invoice not found" });
+    }
+    const inv = doc.data();
+    if (!inv.isRecurring) {
+      return res.status(400).json({ error: "Invoice is not recurring." });
+    }
+
+    if (inv.stripeSubscriptionId && inv.stripeConnectAccountId) {
+      try {
+        const stripe = getStripe();
+        await stripe.subscriptions.cancel(inv.stripeSubscriptionId, {
+          stripeAccount: inv.stripeConnectAccountId,
+        });
+      } catch (e) {
+        // If Stripe already cancelled it, keep going so our doc reflects reality.
+        console.warn("[invoices] Stripe cancel failed (non-fatal):", e.message);
+      }
+    }
+
+    await col().doc(req.params.id).update({
+      "recurring.status": "cancelled",
+      "recurring.cancelledAt": Date.now(),
+      updatedAt: Date.now(),
+    });
+    res.json({ success: true });
   } catch (err) { next(err); }
 });
 

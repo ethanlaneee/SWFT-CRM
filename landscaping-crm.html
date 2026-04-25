@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
@@ -91,6 +91,8 @@
 }
 </script>
 
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--green-dim:rgba(200,241,53,0.12);--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;}
@@ -100,8 +102,8 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;ov
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 20%,rgba(200,241,53,0.04) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(77,159,255,0.03) 0%,transparent 50%);pointer-events:none;z-index:0;}
 
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(10,10,10,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
-.nav-logo{font-family:'Space Mono',monospace;font-weight:700;text-transform:uppercase;font-size:32px;letter-spacing:3px;color:var(--white);text-decoration:none;}
-.nav-logo span{color:var(--green);}
+.nav-logo{font-family:'Space Mono',monospace;font-weight:700;text-transform:uppercase;font-size:32px;letter-spacing:0;color:var(--white);text-decoration:none;display:inline-flex;align-items:baseline;line-height:1;}
+.nav-logo em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;font-style:normal;}
 .nav-links{display:flex;align-items:center;gap:24px;}
 .nav-link{color:var(--gray);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;}
 .nav-link:hover{color:var(--white);}
@@ -190,11 +192,12 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
 <nav class="nav">
-  <a href="/" class="nav-logo">SWFT<span>.</span></a>
+  <a href="/" class="nav-logo">SWFT<em></em></a>
   <div class="nav-links">
     <a href="/#problems" class="nav-link">Why SWFT</a>
     <a href="/#product" class="nav-link">Product</a>
@@ -333,7 +336,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="container">
     <div class="footer-inner">
       <div>
-        <a href="/" class="nav-logo" style="font-size:28px;">SWFT<span>.</span></a>
+        <a href="/" class="nav-logo" style="font-size:28px;">SWFT<em></em></a>
         <p class="footer-tagline">Simple. Smart. SWFT.</p>
       </div>
       <div class="footer-links">
@@ -367,5 +370,6 @@ document.querySelectorAll('.faq-question').forEach(function(btn) {
   });
 });
 </script>
+<script src="swft-mobile.js"></script>
 </body>
 </html>

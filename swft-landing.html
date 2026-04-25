@@ -76,7 +76,7 @@
         "Team chat with file sharing",
         "Broadcasts (email)",
         "AI automations",
-        "Data import from Jobber, ServiceTitan and Housecall Pro",
+        "Data import from other CRMs",
         "QuickBooks integration"
       ],
       "screenshot": "https://goswft.com/",
@@ -155,27 +155,13 @@
             "text": "Yes. SWFT is built for all home service professionals including plumbers, HVAC technicians, electricians, landscapers, roofers, cleaners, and general contractors."
           }
         },
-        {
-          "@type": "Question",
-          "name": "How does SWFT compare to GoHighLevel?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "GoHighLevel plans range from $97-$497/month, but SMS, email, and AI credits are billed separately on top. Optional add-ons like AI Employee ($97/mo), Premium Support ($500/mo), and SEO tools ($79/mo) increase costs further. It's designed for marketing agencies and has a steep learning curve. SWFT is purpose-built for home service pros with flat pricing starting at $89/month and clearly listed AI limits per plan."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How does SWFT compare to Jobber?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Jobber plans range from $29/mo (Core annual) to $699/mo (Team Plus monthly with 15 users). AI features are a paid add-on. SWFT has no per-user fees and includes AI automation starting at $89/month."
-          }
-        }
       ]
     }
   ]
 }
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -217,8 +203,8 @@ body::after{
   transition:all 0.3s ease;
 }
 .nav.scrolled{background:rgba(10,10,10,0.92);box-shadow:0 4px 30px rgba(0,0,0,0.4);}
-.nav-logo{font-family:'Space Mono',monospace;font-weight:700;font-size:28px;letter-spacing:4px;text-transform:uppercase;color:var(--white);text-decoration:none;}
-.nav-logo span{color:var(--green);}
+.nav-logo{font-family:'Space Mono',monospace;font-weight:700;font-size:28px;letter-spacing:0;text-transform:uppercase;color:var(--white);text-decoration:none;display:inline-flex;align-items:baseline;line-height:1;}
+.nav-logo em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;font-style:normal;}
 .nav-links{display:flex;align-items:center;gap:32px;}
 .nav-link{color:var(--gray);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s;}
 .nav-link:hover{color:var(--white);}
@@ -350,6 +336,8 @@ section{position:relative;z-index:1;}
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
+.shimmer{background:linear-gradient(115deg,#c8f135 0%,#eeffa0 30%,#ffffff 50%,#eeffa0 70%,#c8f135 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;}
 @keyframes fadeDown{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 
@@ -980,12 +968,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
 <!-- ── NAV ── -->
 <nav class="nav" id="nav">
-  <a href="/" class="nav-logo">SWFT<span>.</span></a>
+  <a href="/" class="nav-logo">SWFT<em></em></a>
   <div class="nav-links">
     <a href="#problems" class="nav-link">Why SWFT</a>
     <a href="#product" class="nav-link">Product</a>
@@ -1038,7 +1027,7 @@ function toggleSidebar(){
 <section class="hero">
   <div class="container">
     <div class="hero-badge"><span class="dot"></span> AI-Powered CRM for Home Services</div>
-    <h1>SAVE HOURS.<br/>SCALE <span class="accent">FASTER</span>.</h1>
+    <h1>SAVE HOURS.<br/>SCALE <span class="accent shimmer">FASTER</span>.</h1>
     <p class="hero-sub">
       One AI-powered platform that handles your quotes, invoices, scheduling, follow-ups, and customer management — so you can focus on the work that actually makes you money.
     </p>
@@ -1122,85 +1111,6 @@ function toggleSidebar(){
   </div>
 </section>
 
-<!-- ── WHY OTHER CRMS FAIL ── -->
-<section class="competitors" id="competitors">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="section-tag">The Real Problem</span>
-      <h2 class="section-title">YOUR CRM SHOULDN'T BE <span class="accent">ANOTHER HEADACHE</span></h2>
-      <p class="section-sub">You've probably tried other software. Here's why it didn't work.</p>
-    </div>
-
-    <div class="competitor-grid">
-
-      <div class="competitor-card reveal">
-        <div class="competitor-header">
-          <span class="competitor-name">GoHighLevel</span>
-          <span class="competitor-price">$97–$497/mo + usage fees &amp; add-ons</span>
-        </div>
-        <ul class="competitor-complaints">
-          <li><span class="compare-x">&#10005;</span> Base plans are $97–$497/mo, but email, AI, and phone credits are billed separately on top</li>
-          <li><span class="compare-x">&#10005;</span> Add-ons stack up: AI Employee ($97/mo), Premium Support ($500/mo), SEO tools ($79/mo)</li>
-          <li><span class="compare-x">&#10005;</span> Complex automation setup with a steep learning curve</li>
-          <li><span class="compare-x">&#10005;</span> Paying for funnels, white-labeling, and features you'll never use</li>
-          <li><span class="compare-x">&#10005;</span> Built for marketing agencies managing multiple clients, not field service pros</li>
-        </ul>
-        <a href="https://www.gohighlevel.com/pricing" target="_blank" rel="noopener" class="verify-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Verify on gohighlevel.com</a>
-      </div>
-
-      <div class="competitor-card reveal">
-        <div class="competitor-header">
-          <span class="competitor-name">Jobber</span>
-          <span class="competitor-price">$29–$699/mo depending on plan &amp; team size</span>
-        </div>
-        <ul class="competitor-complaints">
-          <li><span class="compare-x">&#10005;</span> Per-user pricing adds up — each additional user costs $29/mo on top of the base plan</li>
-          <li><span class="compare-x">&#10005;</span> Key automation features require the Grow plan ($199+/mo)</li>
-          <li><span class="compare-x">&#10005;</span> AI features are a paid add-on ($99/mo for AI Receptionist)</li>
-          <li><span class="compare-x">&#10005;</span> Key features like automated quoting locked behind higher tiers</li>
-          <li><span class="compare-x">&#10005;</span> Team plans scale up to $699/mo for 15 users</li>
-        </ul>
-        <a href="https://www.getjobber.com/pricing/" target="_blank" rel="noopener" class="verify-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Verify on getjobber.com</a>
-      </div>
-
-      <div class="competitor-card reveal">
-        <div class="competitor-header">
-          <span class="competitor-name">Enterprise CRMs</span>
-          <span class="competitor-price">HubSpot, ServiceTitan, Zoho</span>
-        </div>
-        <ul class="competitor-complaints">
-          <li><span class="compare-x">&#10005;</span> HubSpot jumps from $20/seat/mo (Starter) to $500/mo (Professional) — pricing scales fast</li>
-          <li><span class="compare-x">&#10005;</span> ServiceTitan typically costs $245–$500+/technician/mo with significant implementation fees</li>
-          <li><span class="compare-x">&#10005;</span> Onboarding takes weeks or months — some charge $1,500+ just for setup</li>
-          <li><span class="compare-x">&#10005;</span> Built for large companies, not a 1–10 person operation</li>
-          <li><span class="compare-x">&#10005;</span> Over 50% of CRM implementations fail due to complexity</li>
-        </ul>
-        <a href="https://www.hubspot.com/pricing/crm" target="_blank" rel="noopener" class="verify-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Verify on hubspot.com</a>
-      </div>
-
-    </div>
-
-    <div style="text-align:center;" class="reveal">
-      <button class="sources-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-        View pricing sources
-      </button>
-      <div class="sources-list">
-        <ul>
-          <li><a href="https://www.gohighlevel.com/pricing" target="_blank" rel="noopener">GoHighLevel — Official Pricing</a></li>
-          <li><a href="https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide" target="_blank" rel="noopener">GoHighLevel — Billing &amp; Add-ons Guide</a></li>
-          <li><a href="https://www.getjobber.com/pricing/" target="_blank" rel="noopener">Jobber — Official Pricing</a></li>
-          <li><a href="https://www.hubspot.com/pricing/crm" target="_blank" rel="noopener">HubSpot — CRM Pricing</a></li>
-          <li><a href="https://www.servicetitan.com/pricing" target="_blank" rel="noopener">ServiceTitan — Pricing</a></li>
-          <li><a href="https://www.housecallpro.com/pricing/" target="_blank" rel="noopener">Housecall Pro — Pricing</a></li>
-          <li><a href="https://www.zoho.com/crm/zohocrm-pricing.html" target="_blank" rel="noopener">Zoho CRM — Pricing</a></li>
-        </ul>
-      </div>
-    </div>
-
-  </div>
-</section>
-
 <!-- ── SWFT vs THE REST TABLE ── -->
 <section class="vs-table-section" id="compare">
   <div class="container">
@@ -1257,7 +1167,7 @@ function toggleSidebar(){
           <tr>
             <td class="vs-feature">Switch easily</td>
             <td class="vs-other"><span class="compare-x">&#10005;</span> Manual CSV uploads, data loss</td>
-            <td class="vs-swft"><span class="compare-check">&#10003;</span> Import from Jobber, ServiceTitan &amp; Housecall Pro</td>
+            <td class="vs-swft"><span class="compare-check">&#10003;</span> Easy import from other CRMs</td>
           </tr>
         </tbody>
       </table>
@@ -1669,7 +1579,7 @@ function toggleSidebar(){
   <div class="container">
     <div class="footer-inner">
       <div class="footer-brand">
-        <a href="/" class="nav-logo" style="font-size:28px;">SWFT<span>.</span></a>
+        <a href="/" class="nav-logo" style="font-size:28px;">SWFT<em></em></a>
         <p class="footer-tagline">Simple. Smart. SWFT.</p>
       </div>
       <div class="footer-links">
@@ -1856,5 +1766,6 @@ document.querySelectorAll('.pricing-card.reveal').forEach((el, i) => { el.datase
 })();
 </script>
 
+<script src="swft-mobile.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
@@ -16,8 +16,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
 .collapse-btn:hover{background:var(--surface2);color:var(--white);}
@@ -97,13 +97,14 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
 <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg></div>
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
-    <div><div class="logo-mark">SWFT<em>.</em></div><div class="logo-sub">CRM PLATFORM</div></div>
+    <div><div class="logo-mark">SWFT<em></em></div><div class="logo-sub">CRM PLATFORM</div></div>
     <button class="collapse-btn" onclick="toggleSidebar()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round"/></svg></button>
   </div>
   <nav class="nav">
@@ -377,5 +378,6 @@ async function runImport(type) {
   }
 }
 </script>
+<script src="swft-mobile.js"></script>
 </body>
 </html>

@@ -80,10 +80,11 @@ async function getPastQuotes(orgId) {
 }
 
 /**
- * Generate a quote estimate from a description.
+ * Generate a quote estimate from a description and/or photos.
  *
  * @param {string} orgId - Organization ID
- * @param {object} request - { description, service, sqft, finish, customerId, customerName, address }
+ * @param {object} request - { description, service, sqft, finish, customerId, customerName, address, photos }
+ *   photos: array of { data: base64String, mediaType: "image/jpeg"|"image/png"|... }
  * @returns {{ items: Array, total: number, notes: string, confidence: string, reasoning: string }}
  */
 async function generateEstimate(orgId, request) {
@@ -94,9 +95,10 @@ async function generateEstimate(orgId, request) {
     getPastQuotes(orgId),
   ]);
 
-  const systemPrompt = buildEstimatorPrompt(config, pastJobs, pastQuotes);
+  const hasPhotos = Array.isArray(request.photos) && request.photos.length > 0;
+  const systemPrompt = buildEstimatorPrompt(config, pastJobs, pastQuotes, hasPhotos);
 
-  const userMessage = [
+  const textParts = [
     `Generate a quote estimate for this job:`,
     request.description ? `Description: ${request.description}` : null,
     request.service ? `Service type: ${request.service}` : null,
@@ -105,19 +107,38 @@ async function generateEstimate(orgId, request) {
     request.address ? `Address: ${request.address}` : null,
   ].filter(Boolean).join("\n");
 
+  // Build message content — photos first (vision), then text description
+  const photos = Array.isArray(request.photos) ? request.photos : [];
+  const content = [];
+
+  if (photos.length > 0) {
+    content.push({ type: "text", text: "Analyze these job site photos to estimate the scope and generate pricing:" });
+    for (const photo of photos.slice(0, 5)) { // max 5 photos
+      content.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: photo.mediaType || "image/jpeg",
+          data: photo.data,
+        },
+      });
+    }
+    content.push({ type: "text", text: textParts });
+  } else {
+    content.push({ type: "text", text: textParts });
+  }
+
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 1024,
     system: systemPrompt,
-    messages: [{ role: "user", content: userMessage }],
+    messages: [{ role: "user", content }],
   });
 
   const text = response.content[0]?.text || "";
 
-  // Parse the structured JSON from Claude's response
   const estimate = parseEstimateResponse(text);
 
-  // Log the estimation for training data
   await logEstimation(orgId, request, estimate);
 
   return estimate;
@@ -126,8 +147,8 @@ async function generateEstimate(orgId, request) {
 /**
  * Build the system prompt with pricing context and historical data.
  */
-function buildEstimatorPrompt(config, pastJobs, pastQuotes) {
-  let prompt = `You are an AI estimator for a concrete/construction service business. Your job is to generate accurate quote estimates based on job descriptions.
+function buildEstimatorPrompt(config, pastJobs, pastQuotes, hasPhotos = false) {
+  let prompt = `You are an AI estimator for a concrete/construction service business. Your job is to generate accurate quote estimates based on job descriptions${hasPhotos ? " and job site photos" : ""}.
 
 PRICING CONFIGURATION:
 - Base price range: $${config.basePriceMin} - $${config.basePriceMax} per sqft
@@ -141,7 +162,8 @@ ESTIMATION RULES:
 3. Factor in complexity (obstacles, grade, access difficulty)
 4. Use historical data to calibrate your pricing — match similar past jobs
 5. If you're unsure about sqft, estimate conservatively and note your assumption
-6. Always provide a confidence level (high/medium/low)
+6. Always provide a confidence level (high/medium/low)${hasPhotos ? `
+7. When photos are provided: analyze visible area size, surface condition, access difficulty, and any special features (curves, obstacles, slopes, patterns). Use this visual context to refine your estimate.` : ""}
 
 RESPOND WITH ONLY valid JSON in this exact format:
 {

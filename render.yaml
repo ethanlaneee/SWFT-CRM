@@ -5,6 +5,8 @@ services:
     rootDir: server
     buildCommand: npm install
     startCommand: node index.js
+    previews:
+      generation: automatic
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
@@ -33,6 +35,12 @@ services:
       - key: ENCRYPT_KEY
         sync: false
       - key: OPENAI_API_KEY
+        sync: false
+      - key: VAPI_API_KEY
+        sync: false
+      - key: VAPI_WEBHOOK_SECRET
+        sync: false
+      - key: PHONE_ADDON_PRICE_ID
         sync: false
       - key: NODE_ENV
         value: production

@@ -115,4 +115,144 @@ router.post("/location", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/tracker/optimize-route
+// One-click "optimize my day" for a single tech. Takes today's (or a chosen
+// date's) assigned jobs with addresses, hands them to Google Directions with
+// `waypoints=optimize:true`, and returns the best stop order plus total drive
+// distance and duration. Doesn't mutate jobs — display-only; the owner can
+// choose whether to adjust start times themselves.
+router.post("/optimize-route", async (req, res, next) => {
+  try {
+    const { techUid, date } = req.body || {};
+    if (!techUid) return res.status(400).json({ error: "techUid is required" });
+
+    // Only owner or someone with tracker.viewAll can optimize anyone else's route.
+    // Techs can still optimize their own without that permission.
+    if (techUid !== req.uid && !canViewAll(req)) {
+      return res.status(403).json({ error: "Not allowed to optimize another member's route" });
+    }
+
+    const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY;
+    if (!MAPS_KEY) return res.status(503).json({ error: "Google Maps is not configured on this server." });
+
+    // Resolve the day window — default to today, interpreted in the caller's
+    // locale roughly via startOfDay/endOfDay calculated on the server.
+    const day = date ? new Date(date) : new Date();
+    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime();
+    const end = start + 24 * 60 * 60 * 1000;
+
+    // Pull all jobs for this tech on the selected day, dropping anything
+    // without an address (can't route to it) or already completed.
+    const jobsSnap = await db.collection("jobs")
+      .where("orgId", "==", req.orgId)
+      .where("assignedTo", "==", techUid)
+      .get();
+
+    const jobs = jobsSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(j => {
+        if (!j.address || !j.address.trim()) return false;
+        if (j.status === "complete" || j.status === "cancelled") return false;
+        const sched = Number(j.scheduledDate);
+        return Number.isFinite(sched) && sched >= start && sched < end;
+      })
+      .sort((a, b) => (a.scheduledDate || 0) - (b.scheduledDate || 0));
+
+    if (jobs.length === 0) {
+      return res.status(400).json({ error: "No jobs with addresses scheduled for this day." });
+    }
+    if (jobs.length === 1) {
+      return res.json({
+        orderedJobs: jobs,
+        totalDistanceMeters: 0,
+        totalDurationSeconds: 0,
+        polyline: null,
+        note: "Only one stop — nothing to optimize.",
+      });
+    }
+
+    // Google Directions caps at ~25 waypoints per request. We use origin + dest
+    // + up to 23 optimizable waypoints; past that we'd need chunking, which is
+    // a v2 concern.
+    const MAX_STOPS = 25;
+    const truncated = jobs.length > MAX_STOPS;
+    const stops = jobs.slice(0, MAX_STOPS);
+
+    // Origin: tech's current location if they're clocked in and sharing,
+    // otherwise the first stop's address. Destination: last stop.
+    const techSnap = await db.collection("team")
+      .where("orgId", "==", req.orgId)
+      .where("uid", "==", techUid)
+      .limit(1)
+      .get();
+    const techData = techSnap.empty ? null : techSnap.docs[0].data();
+    const liveLoc = techData?.clockedIn && techData?.location?.lat != null
+      ? `${techData.location.lat},${techData.location.lng}`
+      : null;
+
+    const origin = liveLoc || stops[0].address;
+    const destination = stops[stops.length - 1].address;
+    // If we used the live location as origin, every stop is a waypoint.
+    // Otherwise the first stop is the origin and the last is the destination —
+    // only the middle stops are waypoints.
+    const waypointJobs = liveLoc ? stops.slice(0, -1) : stops.slice(1, -1);
+    const waypointsParam = waypointJobs.length
+      ? "optimize:true|" + waypointJobs.map(j => j.address).join("|")
+      : null;
+
+    const params = new URLSearchParams({
+      origin,
+      destination,
+      key: MAPS_KEY,
+      mode: "driving",
+    });
+    if (waypointsParam) params.set("waypoints", waypointsParam);
+
+    const dirRes = await fetch(`https://maps.googleapis.com/maps/api/directions/json?${params}`);
+    const dirData = await dirRes.json();
+    if (dirData.status !== "OK" || !dirData.routes?.length) {
+      return res.status(502).json({ error: `Routing failed: ${dirData.status || "unknown"}. ${dirData.error_message || ""}`.trim() });
+    }
+
+    const route = dirData.routes[0];
+    // waypoint_order tells us the optimized permutation of the waypoints we sent.
+    // Reconstruct the full ordered job list: origin → reordered waypoints → dest.
+    const order = route.waypoint_order || [];
+    const orderedJobs = [];
+    if (liveLoc) {
+      // All stops were waypoints; last one is destination
+      const mid = order.map(i => waypointJobs[i]);
+      orderedJobs.push(...mid, stops[stops.length - 1]);
+    } else {
+      orderedJobs.push(stops[0]);
+      orderedJobs.push(...order.map(i => waypointJobs[i]));
+      orderedJobs.push(stops[stops.length - 1]);
+    }
+
+    const totalDistanceMeters = route.legs.reduce((s, l) => s + (l.distance?.value || 0), 0);
+    const totalDurationSeconds = route.legs.reduce((s, l) => s + (l.duration?.value || 0), 0);
+
+    // Per-leg durations so the UI can show "Stop 1 → Stop 2: 14 min / 6 mi"
+    const legs = route.legs.map(l => ({
+      distanceMeters: l.distance?.value || 0,
+      distanceText: l.distance?.text || "",
+      durationSeconds: l.duration?.value || 0,
+      durationText: l.duration?.text || "",
+      startAddress: l.start_address,
+      endAddress: l.end_address,
+    }));
+
+    res.json({
+      orderedJobs,
+      legs,
+      totalDistanceMeters,
+      totalDurationSeconds,
+      polyline: route.overview_polyline?.points || null,
+      origin: liveLoc ? { type: "live", location: techData.location } : { type: "address", address: stops[0].address },
+      truncated,
+      originalCount: jobs.length,
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

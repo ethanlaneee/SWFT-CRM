@@ -188,14 +188,16 @@ router.put("/conversations/:customerId/mode", async (req, res, next) => {
 });
 
 // POST /api/agents/estimator/estimate — generate a quote estimate via AI
+// Body: { description, service, sqft, finish, customerId, customerName, address,
+//         photos: [{ data: base64, mediaType: "image/jpeg" }] }
 router.post("/estimator/estimate", async (req, res, next) => {
   try {
-    const { description, service, sqft, finish, customerId, customerName, address } = req.body;
-    if (!description && !service) {
-      return res.status(400).json({ error: "Provide a description or service type" });
+    const { description, service, sqft, finish, customerId, customerName, address, photos } = req.body;
+    if (!description && !service && (!photos || photos.length === 0)) {
+      return res.status(400).json({ error: "Provide a description, service type, or photos" });
     }
     const estimate = await generateEstimate(req.orgId, {
-      description, service, sqft, finish, customerId, customerName, address,
+      description, service, sqft, finish, customerId, customerName, address, photos,
     });
     res.json(estimate);
   } catch (err) { next(err); }

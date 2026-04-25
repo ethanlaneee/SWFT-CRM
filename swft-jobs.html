@@ -3,12 +3,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <title>SWFT — Jobs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="swft-animations.css"/>
 <style>
@@ -34,8 +36,8 @@
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
 .sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
 .nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
@@ -114,7 +116,7 @@
 
 /* ── TABLE ── */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both;}
-.table-head{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.table-head{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 90px;gap:16px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .th{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;transition:color 0.14s;}
 .th:hover{color:var(--gray);}
 .th.sort-active{color:var(--green);}
@@ -132,7 +134,7 @@
 .bulk-clear-btn{margin-left:auto;font-size:11px;color:var(--gray);cursor:pointer;padding:4px 8px;border-radius:6px;transition:all 0.12s;}
 .bulk-clear-btn:hover{color:var(--white);background:var(--surface2);}
 
-.job-row{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 50px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
+.job-row{display:grid;grid-template-columns:36px 2fr 1.2fr 1.5fr 1fr 1fr 90px;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.12s;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
 .job-row:last-child{border-bottom:none;}
 .job-row:hover{background:var(--surface2);}
 .job-row:nth-child(1){animation-delay:0.04s;} .job-row:nth-child(2){animation-delay:0.08s;} .job-row:nth-child(3){animation-delay:0.12s;} .job-row:nth-child(4){animation-delay:0.16s;} .job-row:nth-child(5){animation-delay:0.20s;} .job-row:nth-child(6){animation-delay:0.20s;}
@@ -188,7 +190,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .drawer-close{margin-left:auto;width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
 .drawer-close:hover{background:var(--surface2);color:var(--white);}
 .drawer-job-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray2);margin-bottom:4px;}
-.drawer-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);line-height:1;}
+.drawer-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
 .drawer-customer{font-size:12.5px;color:var(--gray);margin-top:5px;}
 .drawer-customer span{color:var(--green);}
 
@@ -203,7 +205,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .dstat{padding:13px 16px;border-right:1px solid var(--border);}
 .dstat:last-child{border-right:none;}
 .dstat-label{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);}
-.dstat-value{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-top:3px;line-height:1;}
+.dstat-value{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);margin-top:3px;line-height:1;display:inline-flex;align-items:baseline;}
 .dstat-value.green{color:var(--green);}
 .dstat-value.amber{color:var(--amber);}
 
@@ -275,8 +277,8 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
 /* ── EDIT MODE ── */
-.edit-field{display:flex;flex-direction:column;gap:5px;}
-.edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.edit-field{display:flex;flex-direction:column;gap:5px;justify-content:flex-end;}
+.edit-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;}
 .edit-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
 .edit-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .edit-input:focus{border-color:var(--green);}
@@ -307,7 +309,7 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .ptab{font-size:13px;font-weight:500;padding:10px 18px;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.14s;user-select:none;display:flex;align-items:center;gap:7px;white-space:nowrap;}
 .ptab:hover{color:var(--white);}
 .ptab.active{color:var(--green);border-bottom-color:var(--green);}
-.ptab-badge{background:var(--amber);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:'JetBrains Mono',monospace;line-height:1;}
+.ptab-badge{background:var(--amber);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:'JetBrains Mono',monospace;line-height:1;display:inline-flex;align-items:baseline;}
 .ptab-badge.green{background:var(--green);}
 .ptab-badge.hidden{display:none;}
 
@@ -360,8 +362,8 @@ select.status-tag option{background:#141414;color:#e0e0e0;}
 .approve-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:460px;width:calc(100% - 40px);box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:fadeUp 0.2s ease both;}
 .approve-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);margin-bottom:6px;}
 .approve-modal-sub{font-size:12.5px;color:var(--gray);margin-bottom:20px;}
-.approve-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
-.approve-field{display:flex;flex-direction:column;gap:5px;}
+.approve-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;align-items:end;}
+.approve-field{display:flex;flex-direction:column;gap:5px;justify-content:flex-end;}
 .approve-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:600;}
 .approve-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .approve-input:focus{border-color:var(--green);}
@@ -387,6 +389,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
@@ -395,7 +398,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
     <div>
-      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-mark">SWFT<em></em></div>
       <div class="logo-sub">simple. smart. swft.</div>
     </div>
     <div class="collapse-btn" onclick="toggleSidebar()">
@@ -426,7 +429,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
     <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
-    <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
+        <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
+<div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
     <div class="nav-item" onclick="window.location.href='swft-team-tracker'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker</div>
@@ -668,7 +672,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="detail-grid">
       <div class="detail-row">
         <div class="detail-icon">📍</div>
-        <div><div class="detail-label">Address</div><div class="detail-value" id="d-address">411 Birchwood Dr, Austin TX 78745</div></div>
+        <div style="flex:1;min-width:0;"><div class="detail-label">Address</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="detail-value" id="d-address" style="flex:1;min-width:0;">411 Birchwood Dr, Austin TX 78745</div>
+            <a id="d-maps-link" href="#" target="_blank" rel="noopener" title="View in Google Maps" style="color:#7a7a7a;flex-shrink:0;display:flex;align-items:center;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#c8f135'" onmouseout="this.style.color='#7a7a7a'">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>
+            </a>
+          </div>
+        </div>
       </div>
       <div class="detail-row">
         <div class="detail-icon">📅</div>
@@ -1032,6 +1043,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
             '<option value="complete"' + (status === 'complete' ? ' selected' : '') + '>Complete</option>' +
           '</select></div>' +
           '<div style="display:flex;justify-content:flex-end;gap:6px;">' +
+            '<div class="row-btn" onclick="event.stopPropagation();pipelineJobToQuote(\'' + job.id + '\')" title="Create Quote for this job" style="color:#4d9fff;border-color:rgba(77,159,255,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>' +
             '<div class="row-btn" onclick="event.stopPropagation();deleteJobRow(this,\'' + job.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>' +
             '<div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>' +
           '</div>';
@@ -1112,6 +1124,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('d-service').textContent   = j.service || '—';
     document.getElementById('d-pay').textContent       = j.payStatus || '—';
     document.getElementById('d-address').textContent   = j.address || '';
+    var mapsLink = document.getElementById('d-maps-link');
+    if (mapsLink) mapsLink.href = j.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(j.address) : '#';
     document.getElementById('d-date').textContent      = j.scheduledDate || 'TBD';
     document.getElementById('d-duration').textContent  = j.duration || '—';
     document.getElementById('d-finish').textContent    = j.finish || j.service || '';
@@ -1217,6 +1231,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     showToast('Sorted by ' + _sortLabels[key]);
   }
 
+  function pipelineJobToQuote(jobId) {
+    var j = window._jobs[jobId];
+    if (j) {
+      try {
+        sessionStorage.setItem('swft_pipeline_quote', JSON.stringify({
+          customerName: j.customerName || '',
+          address: j.address || '',
+          service: j.service || ''
+        }));
+      } catch(e) {}
+    }
+    window.location.href = 'swft-quotes';
+  }
+
   async function deleteJobRow(el, jobId) {
     var row = el.closest('.job-row');
     if (!row) return;
@@ -1256,8 +1284,27 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   async function aiEstimateForJob() {
     if (!_currentJob) return;
     var btn = event.target;
-    btn.textContent = 'Generating...'; btn.disabled = true;
+    btn.textContent = 'Analyzing...'; btn.disabled = true;
     try {
+      // Fetch job photos and convert to base64 for vision analysis
+      var photos = [];
+      try {
+        var photoRes = await API.photos.list(_currentJob.id || _currentJobId);
+        var photoList = photoRes.photos || photoRes || [];
+        // Fetch up to 4 photos and convert to base64
+        var imgFetches = photoList.slice(0, 4).map(function(p) {
+          return fetch(p.url).then(function(r){ return r.blob(); }).then(function(blob){
+            return new Promise(function(resolve){
+              var reader = new FileReader();
+              reader.onload = function(e){ resolve({ data: e.target.result.split(',')[1], mediaType: blob.type || 'image/jpeg' }); };
+              reader.readAsDataURL(blob);
+            });
+          }).catch(function(){ return null; });
+        });
+        var results = await Promise.all(imgFetches);
+        photos = results.filter(Boolean);
+      } catch(e) {}
+
       var est = await API.agents.estimate({
         service: _currentJob.service || '',
         sqft: _currentJob.sqft || '',
@@ -1266,6 +1313,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         customerId: _currentJob.customerId || '',
         customerName: _currentJob.customerName || '',
         address: _currentJob.address || '',
+        photos: photos,
       });
       if (est.total > 0) {
         await API.quotes.create({
@@ -2033,5 +2081,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
+<script src="swft-mobile.js"></script>
 </body>
 </html>

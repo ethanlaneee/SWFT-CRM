@@ -204,6 +204,7 @@ const API = {
     send:   (id)     => apiFetch(`/api/invoices/${id}/send`,  { method: "POST", body: JSON.stringify({}) }),
     email:  (id, msg) => apiFetch(`/api/invoices/${id}/email`, { method: "POST", body: JSON.stringify({ message: msg || "" }) }),
     pay:    (id, data) => apiFetch(`/api/invoices/${id}/pay`, { method: "POST", body: JSON.stringify(data) }),
+    cancelRecurring: (id) => apiFetch(`/api/invoices/${id}/cancel-recurring`, { method: "POST", body: "{}" }),
     delete: (id)     => apiFetch(`/api/invoices/${id}`,   { method: "DELETE" }),
   },
 
@@ -307,6 +308,7 @@ const API = {
     clockIn:        ()         => apiFetch("/api/tracker/clock-in",  { method: "POST", body: JSON.stringify({}) }),
     clockOut:       ()         => apiFetch("/api/tracker/clock-out", { method: "POST", body: JSON.stringify({}) }),
     updateLocation: (data)     => apiFetch("/api/tracker/location",  { method: "POST", body: JSON.stringify(data) }),
+    optimizeRoute:  (data)     => apiFetch("/api/tracker/optimize-route", { method: "POST", body: JSON.stringify(data) }),
   },
 
   // ── Automations ──
@@ -324,6 +326,19 @@ const API = {
   aiSettings: {
     get:  ()     => apiFetch("/api/ai-settings"),
     save: (data) => apiFetch("/api/ai-settings", { method: "PUT", body: JSON.stringify(data) }),
+  },
+
+  // ── Phone AI Add-on ──
+  phone: {
+    status:          ()         => apiFetch("/api/phone/status"),
+    subscribe:       ()         => apiFetch("/api/phone/subscribe",       { method: "POST", body: JSON.stringify({}) }),
+    verifySession:   (sessionId)=> apiFetch(`/api/phone/verify-session?phone_session_id=${encodeURIComponent(sessionId)}`),
+    provision:       (data)     => apiFetch("/api/phone/provision",       { method: "POST", body: JSON.stringify(data || {}) }),
+    saveSettings:    (data)     => apiFetch("/api/phone/settings",        { method: "PUT",  body: JSON.stringify(data) }),
+    calls:           (limit)    => apiFetch(`/api/phone/calls${limit ? `?limit=${limit}` : ""}`),
+    call:            (id)       => apiFetch(`/api/phone/calls/${id}`),
+    convertToLead:   (id, data) => apiFetch(`/api/phone/calls/${id}/lead`, { method: "POST", body: JSON.stringify(data || {}) }),
+    cancel:          ()         => apiFetch("/api/phone/cancel",          { method: "DELETE" }),
   },
 
   // ── Survey (public — no auth) ──

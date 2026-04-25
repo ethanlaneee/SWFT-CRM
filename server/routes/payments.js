@@ -92,6 +92,134 @@ async function webhookHandler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // Recurring invoices: Stripe generates + collects each cycle on the owner's
+  // connected account. We mirror the outcome onto the parent SWFT invoice so
+  // the owner can see paid cycles, outstanding cycles, and failures.
+  if (event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
+    const stripeInvoice = event.data.object;
+    const subscriptionId = stripeInvoice.subscription;
+    if (subscriptionId) {
+      try {
+        const parentSnap = await db.collection("invoices")
+          .where("stripeSubscriptionId", "==", subscriptionId)
+          .limit(1)
+          .get();
+        if (!parentSnap.empty) {
+          const parentDoc = parentSnap.docs[0];
+          const parent = parentDoc.data();
+
+          // Connect-account safety check — same pattern as below
+          if (event.account && parent.stripeConnectAccountId && event.account !== parent.stripeConnectAccountId) {
+            console.warn(`[stripe-webhook] subscription account mismatch, ignoring`);
+            return res.json({ received: true, ignored: "account_mismatch" });
+          }
+
+          const paid = event.type === "invoice.payment_succeeded";
+          const update = { updatedAt: Date.now() };
+
+          if (paid) {
+            update["recurring.completedCycles"] = (parent.recurring?.completedCycles || 0) + 1;
+            update["recurring.lastPaidAt"] = Date.now();
+            update["recurring.lastPaidAmount"] = (stripeInvoice.amount_paid || 0) / 100;
+            update["recurring.lastError"] = null;
+
+            // Check cycle cap — if the user said "bill me 6 times" and we've hit 6, cancel.
+            const cap = parent.recurring?.cycleCount;
+            if (cap && update["recurring.completedCycles"] >= cap) {
+              try {
+                await getStripe().subscriptions.cancel(subscriptionId, {
+                  stripeAccount: parent.stripeConnectAccountId,
+                });
+                update["recurring.status"] = "completed";
+                update["recurring.cancelledAt"] = Date.now();
+              } catch (e) {
+                console.warn("[stripe-webhook] auto-cancel after cycle cap failed:", e.message);
+              }
+            }
+          } else {
+            update["recurring.lastError"] = stripeInvoice.last_finalization_error?.message
+              || "Payment failed";
+            update["recurring.lastFailedAt"] = Date.now();
+          }
+
+          await parentDoc.ref.update(update);
+
+          // Log a per-cycle record so the owner can see history. Separate
+          // subcollection keeps the main invoices list clean.
+          await parentDoc.ref.collection("cycles").add({
+            stripeInvoiceId: stripeInvoice.id,
+            stripeInvoiceNumber: stripeInvoice.number || null,
+            hostedInvoiceUrl: stripeInvoice.hosted_invoice_url || null,
+            amount: (stripeInvoice.amount_paid || stripeInvoice.amount_due || 0) / 100,
+            status: paid ? "paid" : "failed",
+            periodStart: stripeInvoice.period_start ? stripeInvoice.period_start * 1000 : null,
+            periodEnd: stripeInvoice.period_end ? stripeInvoice.period_end * 1000 : null,
+            createdAt: Date.now(),
+          });
+
+          // Notify + fire automation on paid cycles
+          if (paid && parent.userId) {
+            await pushNotification(parent.userId, {
+              type: "payment",
+              title: "Recurring Payment Received",
+              body: `${parent.customerName || "A customer"} paid cycle #${update["recurring.completedCycles"]} — $${((stripeInvoice.amount_paid || 0) / 100).toLocaleString()}`,
+              link: "/swft-invoices",
+            });
+          }
+
+          if (paid && parent.customerId && parent.orgId) {
+            try {
+              const custDoc = await db.collection("customers").doc(parent.customerId).get();
+              const cust = custDoc.exists ? custDoc.data() : {};
+              triggerAutomation(parent.orgId, "invoice_paid", {
+                id: parent.customerId,
+                invoiceId: parentDoc.id,
+                name: cust.name || parent.customerName || "",
+                phone: cust.phone || "",
+                email: cust.email || "",
+                total: (stripeInvoice.amount_paid || 0) / 100,
+                service: parent.service || "",
+              }).catch(console.error);
+            } catch (autoErr) {
+              console.error("Recurring payment automation error:", autoErr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`[stripe-webhook] subscription invoice handling failed:`, err);
+      }
+    }
+  }
+
+  // Stripe marks a Subscription as "canceled" either when we cancel it, when
+  // cancel_at is reached, or when retries exhaust on payment failure. Keep
+  // the parent doc in sync either way.
+  if (event.type === "customer.subscription.deleted") {
+    const sub = event.data.object;
+    try {
+      const parentSnap = await db.collection("invoices")
+        .where("stripeSubscriptionId", "==", sub.id)
+        .limit(1)
+        .get();
+      if (!parentSnap.empty) {
+        const parentDoc = parentSnap.docs[0];
+        const parent = parentDoc.data();
+        if (event.account && parent.stripeConnectAccountId && event.account !== parent.stripeConnectAccountId) {
+          return res.json({ received: true, ignored: "account_mismatch" });
+        }
+        if (parent.recurring?.status !== "completed" && parent.recurring?.status !== "cancelled") {
+          await parentDoc.ref.update({
+            "recurring.status": "cancelled",
+            "recurring.cancelledAt": Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[stripe-webhook] subscription.deleted handling failed:", err);
+    }
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const invoiceId = session.metadata?.invoiceId;

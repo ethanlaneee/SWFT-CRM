@@ -3,12 +3,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <title>SWFT — Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="swft-animations.css"/>
 <style>
@@ -27,8 +29,8 @@
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
 .sidebar.collapsed{transform:translateX(-100%);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
 .collapse-btn:hover{background:var(--surface2);color:var(--white);}
@@ -128,7 +130,7 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .modal-overlay.open .modal{transform:scale(1) translateY(0);}
 .pdf-doc-header{padding:28px 32px 0;display:flex;align-items:flex-start;justify-content:space-between;}
 .pdf-brand{display:flex;flex-direction:column;}
-.pdf-company-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#111;line-height:1;}
+.pdf-company-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#111;line-height:1;display:inline-flex;align-items:baseline;}
 .pdf-company-name em{color:#8ab800;font-style:normal;}
 .pdf-company-logo{max-height:90px;max-width:260px;width:auto;height:auto;object-fit:contain;margin-bottom:4px;display:block;}
 .pdf-tagline{font-size:10px;color:#999;letter-spacing:1.5px;margin-top:4px;}
@@ -200,7 +202,7 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .ptab{font-size:13px;font-weight:500;padding:10px 18px;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.14s;user-select:none;display:flex;align-items:center;gap:7px;white-space:nowrap;}
 .ptab:hover{color:var(--white);}
 .ptab.active{color:var(--green);border-bottom-color:var(--green);}
-.ptab-badge{background:var(--amber);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:'JetBrains Mono',monospace;line-height:1;}
+.ptab-badge{background:var(--amber);color:#0a0a0a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:'JetBrains Mono',monospace;line-height:1;display:inline-flex;align-items:baseline;}
 .ptab-badge.hidden{display:none;}
 
 /* ── INVOICE ROWS ── */
@@ -216,6 +218,9 @@ select.status-pill option{background:#141414;color:#e0e0e0;}
 .bal-green{color:var(--green);}
 .bal-amber{color:var(--amber);}
 .bal-red{color:var(--red);}
+.pdf-ai-photo-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(200,241,53,0.12);border:1px solid rgba(200,241,53,0.35);border-radius:6px;color:#5a6e00;padding:4px 10px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;white-space:nowrap;}
+.pdf-ai-photo-btn:hover{background:rgba(200,241,53,0.25);border-color:rgba(200,241,53,0.6);}
+.pdf-ai-photo-btn svg{flex-shrink:0;}
 
 </style>
 
@@ -237,14 +242,15 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
-<body>
+<body class="page-billing">
 
 <!-- SIDEBAR -->
 
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
-    <div><div class="logo-mark">SWFT<em>.</em></div><div class="logo-sub">simple. smart. swft.</div></div>
+    <div><div class="logo-mark">SWFT<em></em></div><div class="logo-sub">simple. smart. swft.</div></div>
     <div class="collapse-btn" onclick="toggleSidebar()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
@@ -273,7 +279,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
     <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
-    <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
+        <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
+<div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
     <div class="nav-item" onclick="window.location.href='swft-team-tracker'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker</div>
@@ -415,7 +422,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="pdf-doc-body">
       <div class="pdf-type-row">
         <div class="pdf-type-label" id="m-doc-type">QUOTE</div>
-        <select class="pdf-status-select" id="e-status"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="pdf-ai-photo-btn" id="billing-ai-photo-btn" onclick="billingPhotoEstimate()" title="AI Photo Estimate — snap a photo to auto-fill line items">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            AI Estimate
+          </button>
+          <select class="pdf-status-select" id="e-status"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select>
+        </div>
       </div>
       <div class="pdf-fields">
         <div class="pdf-field-row">
@@ -971,7 +984,7 @@ function renderPdfBrand() {
   var brand = document.getElementById('pdf-brand');
   var s = window._swftSettings || {};
   if (s.companyLogo) { brand.innerHTML = '<img class="pdf-company-logo" src="' + s.companyLogo + '"/><div class="pdf-tagline">' + (s.phone || '') + ' &nbsp; ' + (s.address || '') + '</div>'; }
-  else { brand.innerHTML = '<div class="pdf-company-name">' + (s.company || 'SWFT') + '<em>.</em></div><div class="pdf-tagline">' + (s.phone ? s.phone + ' &nbsp; ' : '') + (s.address || 'simple. smart. swft.') + '</div>'; }
+  else { brand.innerHTML = '<div class="pdf-company-name">' + (s.company || 'SWFT') + '<em></em></div><div class="pdf-tagline">' + (s.phone ? s.phone + ' &nbsp; ' : '') + (s.address || 'simple. smart. swft.') + '</div>'; }
 }
 
 function openNewQuote() {
@@ -1012,6 +1025,49 @@ function toggleDescCustom(selId, inputId) {
   var show = sel.value === '__custom__';
   inp.style.display = show ? 'block' : 'none';
   if (show) inp.focus();
+}
+
+// ── AI Photo Estimate from within billing modal ──
+async function billingPhotoEstimate(){
+  var plan=window.SWFT_PLAN||sessionStorage.getItem('swft_plan')||'starter';
+  var lvl={starter:0,pro:1,business:2};
+  if((lvl[plan]||0)<1){if(window.swftUpgradeRequired)window.swftUpgradeRequired('AI Photo Estimator is available on the Pro plan and higher.','pro');return;}
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';
+  inp.onchange=async function(){
+    if(!inp.files[0])return;
+    var btn=document.getElementById('billing-ai-photo-btn');
+    if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
+    try{
+      var file=inp.files[0];
+      var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
+      var est=await API.agents.estimate({
+        photos:[{data:b64,mediaType:file.type||'image/jpeg'}],
+        service:document.getElementById('e-service')?document.getElementById('e-service').value:'',
+        address:document.getElementById('e-address')?document.getElementById('e-address').value:'',
+      });
+      if(est.items&&est.items.length&&_q){
+        _q.lines=est.items.map(function(i){
+          var desc=i.desc||i.description||i.name||'';
+          var qty=Math.max(1,parseInt(i.qty||i.quantity,10)||1);
+          var rate=Number(i.rate)||0;
+          var total=Number(i.total)||qty*rate;
+          return{desc:desc,sub:'',qty:String(qty),rate:'$'+rate.toFixed(2),total:'$'+total.toFixed(2)};
+        });
+        renderLineItems(_q.lines);
+      }
+      var notes=document.getElementById('e-notes');
+      if(notes&&est.notes)notes.value=(notes.value?notes.value+'\n\n':'')+est.notes+' (AI '+est.confidence+' confidence)';
+      showToast('AI estimate applied — review and adjust as needed');
+    }catch(e){
+      if(e.message&&e.message.toLowerCase().includes('plan')&&window.swftUpgradeRequired){
+        window.swftUpgradeRequired('AI Estimator requires the Pro plan or higher.','pro');
+      }else{showToast('AI estimate failed: '+e.message);}
+    }finally{
+      if(btn){btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> AI Estimate';btn.disabled=false;}
+    }
+  };
+  inp.click();
 }
 
 function addLineItem() {
@@ -1589,5 +1645,6 @@ function filterInvoices(q) {
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
+<script src="swft-mobile.js"></script>
 </body>
 </html>

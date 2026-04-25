@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
@@ -22,8 +22,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
 .sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
 .nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
@@ -40,8 +40,12 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .user-name{font-size:12px;font-weight:500;color:var(--white);}
 .user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
 
-.main{margin-left:var(--sidebar-w);flex:1;padding:32px 36px 64px;max-width:960px;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
 .main.expanded{margin-left:0!important;}
+.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.main-body{flex:1;padding:32px 36px 64px;max-width:960px;}
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:16px;}
 h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);margin-bottom:4px;}
 .subtitle{color:var(--gray);font-size:13px;max-width:560px;line-height:1.5;}
@@ -169,6 +173,10 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:v
 .btn-icon{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;}
 .btn-icon:hover{background:var(--surface2);color:var(--white);}
 .btn-icon.del:hover{color:var(--red);border-color:rgba(255,82,82,0.3);}
+@media (max-width: 768px) {
+  .ptab-label { display: none !important; }
+  .ptab { padding: 10px 14px !important; gap: 0 !important; }
+}
 </style>
 
 <!-- Meta Pixel Code -->
@@ -187,12 +195,13 @@ fbq('track', 'PageView');
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
-    <div><div class="logo-mark">SWFT<em>.</em></div><div class="logo-sub">simple. smart. swft.</div></div>
+    <div><div class="logo-mark">SWFT<em></em></div><div class="logo-sub">simple. smart. swft.</div></div>
     <div class="collapse-btn" onclick="toggleSidebar()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
@@ -221,7 +230,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
     <div class="nav-item active"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
-    <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
+        <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
+<div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
     <div class="nav-item" onclick="window.location.href='swft-team-tracker'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker</div>
@@ -241,6 +251,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-page">AUTOMATIONS</div>
+    <div class="topbar-right"></div>
+  </header>
+  <div class="main-body">
   <div class="page-header">
     <div>
       <h1>AI AUTOMATIONS</h1>
@@ -256,28 +271,28 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="page-tabs" id="page-tabs">
     <div class="ptab active" data-tab="qf" onclick="switchTab('qf')">
       <span class="ptab-dot on" id="dot-qf"></span>
-      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/></svg>
-      Quote Follow-Ups
+      <span class="ptab-emoji">📄</span>
+      <span class="ptab-label">Quote Follow-Ups</span>
     </div>
     <div class="ptab" data-tab="inv" onclick="switchTab('inv')">
       <span class="ptab-dot on" id="dot-inv"></span>
-      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.8" stroke-linecap="round"/></svg>
-      Invoice Follow-Ups
+      <span class="ptab-emoji">💰</span>
+      <span class="ptab-label">Invoice Follow-Ups</span>
     </div>
     <div class="ptab" data-tab="rev" onclick="switchTab('rev')">
       <span class="ptab-dot on" id="dot-rev"></span>
-      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      Review Requests
+      <span class="ptab-emoji">⭐</span>
+      <span class="ptab-label">Review Requests</span>
     </div>
     <div class="ptab" data-tab="ar" onclick="switchTab('ar')">
       <span class="ptab-dot on" id="dot-ar"></span>
-      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>
-      Inbound Replies
+      <span class="ptab-emoji">💬</span>
+      <span class="ptab-label">Inbound Replies</span>
     </div>
     <div class="ptab" data-tab="mem" onclick="switchTab('mem')">
       <span class="ptab-dot on" id="dot-mem"></span>
-      <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z" stroke-width="1.8"/><path d="M8 14v3a4 4 0 0 0 8 0v-3" stroke-width="1.8"/></svg>
-      Customer Memory
+      <span class="ptab-emoji">🧠</span>
+      <span class="ptab-label">Customer Memory</span>
     </div>
   </div>
 
@@ -744,6 +759,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </table>
     </div>
   </div>
+  </div><!-- end .main-body -->
 </main>
 
 <div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
@@ -1011,5 +1027,6 @@ async function init() {
 init();
 </script>
 <script type="module" src="swft-user-sync.js"></script>
+<script src="swft-mobile.js"></script>
 </body>
 </html>

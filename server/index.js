@@ -11,6 +11,7 @@ process.on("unhandledRejection", (err) => {
 const http = require("http");
 const path = require("path");
 const express = require("express");
+const compression = require("compression");
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -40,6 +41,7 @@ const surveyRouter = require("./routes/survey");
 const publicChatRouter = require("./routes/publicChat");
 const { router: serviceRequestsRouter, publicRouter: intakePublicRouter } = require("./routes/serviceRequests");
 const intakeFormsRouter = require("./routes/intakeForms");
+const { router: phoneRouter, vapiWebhookHandler } = require("./routes/phone");
 
 // ── Validate required environment variables on startup ──
 const REQUIRED_ENV = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "ANTHROPIC_API_KEY"];
@@ -64,6 +66,10 @@ const PORT = process.env.PORT || 3000;
 // Trust one hop so req.ip reflects the real client and express-rate-limit keys
 // on the right address.
 app.set("trust proxy", 1);
+
+// ── Gzip/Brotli compression — apply before everything else ──
+// Compresses HTML/JS/CSS by 60-80%, dramatically reducing transfer times
+app.use(compression({ level: 6 }));
 
 // ── Security headers ──
 app.use(helmet({
@@ -108,6 +114,9 @@ app.post("/api/square/webhook", express.json(), squareWebhookHandler);
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+
+// ── Vapi phone webhook (no auth — called by Vapi after each call) ──
+app.post("/api/phone/vapi-webhook", express.json(), vapiWebhookHandler);
 
 // ── Social messaging webhooks (no auth — called by Meta) ──
 app.get("/api/webhooks/facebook", facebookVerifyWebhook);
@@ -370,13 +379,16 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(staticRoot, {
-  etag: false,
+  etag: true,        // enables conditional requests (If-None-Match → 304)
+  lastModified: true,
   setHeaders: function(res, filePath) {
-    // No caching for HTML/JS files so deploys take effect immediately
-    if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+    // HTML, JS, CSS: no-store = browser never caches, always fetches fresh copy
+    if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+    // Images/fonts: safe to cache long-term — they don't change between deploys
+    else if (/\.(png|jpg|jpeg|gif|svg|ico|woff2?|ttf)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
     }
   }
 }));
@@ -412,6 +424,52 @@ app.get("/api/login-hint", hintLimiter, async (req, res) => {
     return res.json({ exists: true, firstName, initials });
   } catch (_) {
     return res.json({ exists: false });
+  }
+});
+
+// ── Demo login — public, no auth ──
+// Issues a Firebase custom token for the shared demo account so visitors can
+// explore the app without creating a profile. The demo Firestore doc is created
+// (or refreshed) on every call so it always has an active subscription.
+const demoLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests." },
+});
+const DEMO_UID = "demo-swft-user";
+app.post("/api/demo-login", demoLimiter, async (req, res) => {
+  try {
+    const { authAdmin, db } = require("./firebase");
+
+    // Upsert the demo Firestore profile so it's always active
+    const now = Date.now();
+    await db.collection("users").doc(DEMO_UID).set({
+      uid: DEMO_UID,
+      email: "demo@goswft.com",
+      firstName: "Jake",
+      lastName: "Reynolds",
+      name: "Jake Reynolds",
+      displayName: "Jake Reynolds",
+      company: "Reynolds Concrete LLC",
+      businessName: "Reynolds Concrete LLC",
+      plan: "pro",
+      isSubscribed: true,
+      accountStatus: "active",
+      stripeCustomerId: "",
+      trialStartDate: now,
+      trialEndDate: now + 365 * 24 * 60 * 60 * 1000,
+      role: "owner",
+      orgId: DEMO_UID,
+      updatedAt: now,
+    }, { merge: true });
+
+    const token = await authAdmin.createCustomToken(DEMO_UID);
+    return res.json({ token });
+  } catch (err) {
+    console.error("[demo-login]", err.message);
+    return res.status(500).json({ error: "Demo login unavailable." });
   }
 });
 
@@ -468,6 +526,7 @@ app.use("/api/dev",               auth,               require("./routes/dev"));
 app.use("/api/outreach",          auth,               require("./routes/outreach"));
 app.use("/api/service-requests",  auth, checkAccess,  serviceRequestsRouter);
 app.use("/api/intake-forms",      auth, checkAccess,  intakeFormsRouter);
+app.use("/api/phone",             auth, checkAccess,  phoneRouter);
 // ── Public one-click unsubscribe for outreach emails (no auth — recipient clicks this) ──
 app.get("/unsubscribe", async (req, res) => {
   const { id } = req.query;

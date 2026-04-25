@@ -3,12 +3,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <title>SWFT — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="swft-animations.css"/>
 <style>
@@ -29,8 +31,8 @@ body{visibility:hidden;background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sa
 .main.expanded{margin-left:0!important;}
 .main.expanded .topbar{padding-left:56px;}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
 .nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
@@ -73,7 +75,7 @@ body{visibility:hidden;background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sa
 
 /* GREETING */
 .greeting{margin-bottom:4px;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
-.greeting h2{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--white);line-height:1;}
+.greeting h2{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
 .greeting h2 em{color:var(--green);font-style:normal;}
 .greeting p{font-size:12.5px;color:var(--gray);margin-top:5px;font-weight:300;}
 
@@ -202,8 +204,8 @@ body{visibility:hidden;background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sa
 .nj-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;}
 .nj-close:hover{background:var(--surface2);color:var(--white);}
 .nj-body{padding:14px 20px;display:flex;flex-direction:column;gap:10px;}
-.nj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.nj-field{display:flex;flex-direction:column;gap:3px;}
+.nj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;}
+.nj-field{display:flex;flex-direction:column;gap:3px;justify-content:flex-end;}
 .nj-label{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
 .nj-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%;}
 .nj-input:focus{border-color:var(--green);}
@@ -214,6 +216,18 @@ body{visibility:hidden;background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sa
 .nj-btn:hover{background:var(--surface2);color:var(--white);}
 .nj-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);flex:2;}
 .nj-btn.primary:hover{background:#d5ff40;}
+.nj-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* PIPELINE WIZARD */
+.pl-steps{display:flex;align-items:center;padding:12px 20px 0;gap:0;}
+.pl-dot{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray);transition:all 0.25s;flex-shrink:0;}
+.pl-dot.done{background:var(--green);border-color:var(--green);color:#0a0a0a;}
+.pl-dot.active{background:var(--green);border-color:var(--green);color:#0a0a0a;box-shadow:0 0 0 4px rgba(200,241,53,0.2);}
+.pl-line{flex:1;height:2px;background:var(--border2);transition:background 0.25s;}
+.pl-line.done{background:var(--green);}
+.pl-step-label{font-size:10px;color:var(--gray);letter-spacing:0.5px;padding:4px 20px 0;}
+.pl-summary{background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.15);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--gray);}
+.pl-summary strong{color:var(--green);}
 
 /* DASHBOARD CHAT */
 .dash-chat-sug{background:var(--surface2);border:1px solid var(--border2);color:var(--gray);font-family:'DM Sans',sans-serif;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border2);}
@@ -256,6 +270,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
@@ -264,7 +279,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
     <div>
-      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-mark">SWFT<em></em></div>
       <div class="logo-sub">simple. smart. swft.</div>
     </div>
     <div class="collapse-btn" onclick="toggleSidebar()">
@@ -295,7 +310,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
     <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
-    <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
+        <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
+<div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
     <div class="nav-item" onclick="window.location.href='swft-team-tracker'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker</div>
@@ -322,9 +338,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="topbar-right">
       <div class="ai-pill"><div class="pulse"></div>AI Active</div>
       <div class="icon-btn"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.8"/></svg><div class="badge-dot"></div></div>
-      <button class="btn-primary swft-magnetic" onclick="openNewJobModal()">
+      <button class="btn-primary swft-magnetic" onclick="openPipelineModal()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
-        New Job
+        New Customer Pipeline
       </button>
     </div>
   </header>
@@ -348,12 +364,12 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- AI Chat + Schedule Side by Side -->
-<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;min-height:calc(100vh - 190px);">
+<div id="dash-main-grid" style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;min-height:calc(100vh - 190px);">
 
 <!-- SWFT AI AGENT -->
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
   <div class="panel-header">
-    <div class="panel-title" style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:glow 2.2s ease-in-out infinite;"></div> SWFT AI AGENT</div>
+    <div class="panel-title" style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:glow 2.2s ease-in-out infinite;"></div> SWFT AGENT</div>
   </div>
   <div id="dash-chat-messages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-height:300px;">
     <div id="dash-chat-welcome" style="text-align:center;padding:30px 20px;color:var(--gray2);">
@@ -394,7 +410,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- TODAY'S SCHEDULE + AI TASKS -->
-<div style="display:flex;flex-direction:column;gap:14px;">
+<div id="dash-schedule-col" style="display:flex;flex-direction:column;gap:14px;">
 
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
   <div class="panel-header">
@@ -512,6 +528,135 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!cust) return;
     var addr = document.getElementById('nj-address');
     if (addr && !addr.value) addr.value = cust.address || '';
+  }
+
+  // ── PIPELINE WIZARD ──
+  var _plStep = 1, _plCustomerId = null, _plCustomerName = null, _plJobId = null, _plJobTitle = null;
+
+  function openPipelineModal() {
+    _plStep = 1; _plCustomerId = null; _plCustomerName = null; _plJobId = null; _plJobTitle = null;
+    ['pl-cust-name','pl-cust-phone','pl-cust-email','pl-cust-address','pl-job-sqft','pl-job-address','pl-quote-amount','pl-quote-sqft','pl-quote-notes'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    var jobTime=document.getElementById('pl-job-time'); if(jobTime) jobTime.value='08:00';
+    var jobDate=document.getElementById('pl-job-date'); if(jobDate) jobDate.value='';
+    var customSvc=document.getElementById('pl-job-custom-svc'); if(customSvc) customSvc.style.display='none';
+    var svcSel=document.getElementById('pl-job-service'); if(svcSel) svcSel.selectedIndex=0;
+    plShowStep(1);
+    document.getElementById('pl-overlay').classList.add('open');
+    document.getElementById('pl-modal').classList.add('open');
+  }
+
+  function closePipelineModal() {
+    document.getElementById('pl-overlay').classList.remove('open');
+    document.getElementById('pl-modal').classList.remove('open');
+  }
+
+  function plShowStep(n) {
+    _plStep = n;
+    var stepLabels = {1:'Step 1 of 3 — Add Customer', 2:'Step 2 of 3 — Create Job', 3:'Step 3 of 3 — Create Quote'};
+    var nextLabels = {1:'Create Customer →', 2:'Create Job →', 3:'Open Quote Editor →'};
+    document.getElementById('pl-step-label').textContent = stepLabels[n];
+    document.getElementById('pl-next-btn').textContent = nextLabels[n];
+    document.getElementById('pl-back-btn').style.display = n > 1 ? '' : 'none';
+    [1,2,3].forEach(function(i) {
+      document.getElementById('pl-step'+i).style.display = i===n ? 'flex' : 'none';
+      var dot = document.getElementById('pl-dot'+i);
+      dot.className = 'pl-dot' + (i<n?' done':i===n?' active':'');
+      if(i<3){var line=document.getElementById('pl-line'+i); line.className='pl-line'+(i<n?' done':'');}
+    });
+    if(n===2){
+      var s=document.getElementById('pl-cust-summary');
+      if(s) s.innerHTML='<strong>Customer:</strong> '+(_plCustomerName||'');
+      var addr=document.getElementById('pl-cust-address');
+      var jobAddr=document.getElementById('pl-job-address');
+      if(jobAddr&&addr&&addr.value&&!jobAddr.value) jobAddr.value=addr.value;
+    }
+    if(n===3){
+      var svcEl=document.getElementById('pl-job-service');
+      var svc=svcEl&&svcEl.value==='Other'?document.getElementById('pl-job-custom-svc').value:svcEl?svcEl.value:'';
+      var sqft=document.getElementById('pl-job-sqft');
+      var qs=document.getElementById('pl-quote-sqft'); if(qs&&sqft&&sqft.value&&!qs.value) qs.value=sqft.value;
+      var s=document.getElementById('pl-job-summary');
+      if(s) s.innerHTML='<strong>Customer:</strong> '+(_plCustomerName||'')+' &nbsp;·&nbsp; <strong>Job:</strong> '+esc(svc||_plJobTitle||'');
+    }
+  }
+
+  function plGoBack() { if(_plStep>1) plShowStep(_plStep-1); }
+
+  async function plNext() {
+    var btn=document.getElementById('pl-next-btn');
+    if(btn.disabled) return;
+    if(_plStep===1) await plCreateCustomer();
+    else if(_plStep===2) await plCreateJob();
+    else if(_plStep===3) await plCreateQuote();
+  }
+
+  async function plCreateCustomer() {
+    var name=(document.getElementById('pl-cust-name').value||'').trim();
+    if(!name){showToast('Customer name is required');return;}
+    var btn=document.getElementById('pl-next-btn');
+    btn.disabled=true; btn.textContent='Saving...';
+    var payload={
+      name:name,
+      phone:(document.getElementById('pl-cust-phone').value||'').trim(),
+      email:(document.getElementById('pl-cust-email').value||'').trim(),
+      address:(document.getElementById('pl-cust-address').value||'').trim()
+    };
+    try{
+      if(_plCustomerId){
+        await API.customers.update(_plCustomerId, payload);
+      } else {
+        var c=await API.customers.create(payload);
+        _plCustomerId=c.id||c;
+      }
+      _plCustomerName=name;
+      plShowStep(2);
+    }catch(e){showToast('Error: '+e.message);}
+    btn.disabled=false;
+  }
+
+  async function plCreateJob() {
+    var svcEl=document.getElementById('pl-job-service');
+    var svc=svcEl&&svcEl.value==='Other'?(document.getElementById('pl-job-custom-svc').value||'').trim():svcEl?svcEl.value:'Stamped Concrete';
+    if(!svc){showToast('Service type is required');return;}
+    var btn=document.getElementById('pl-next-btn');
+    btn.disabled=true; btn.textContent='Saving...';
+    var address=(document.getElementById('pl-job-address').value||'').trim();
+    var sqft=(document.getElementById('pl-job-sqft').value||'').trim();
+    var dateVal=document.getElementById('pl-job-date').value;
+    var timeVal=document.getElementById('pl-job-time').value;
+    var title=_plCustomerName+' - '+svc;
+    var payload={
+      title:title, customerName:_plCustomerName, customerId:_plCustomerId||'',
+      service:svc, address:address, sqft:sqft,
+      scheduledDate:dateVal||(new Date().toISOString().split('T')[0]),
+      startTime:timeVal||'08:00', status:'scheduled'
+    };
+    try{
+      if(_plJobId){
+        await API.jobs.update(_plJobId, payload);
+      } else {
+        var j=await API.jobs.create(payload);
+        _plJobId=j.id||j;
+      }
+      _plJobTitle=title;
+      plShowStep(3);
+    }catch(e){showToast('Error: '+e.message);}
+    btn.disabled=false;
+  }
+
+  function plCreateQuote() {
+    var svcEl=document.getElementById('pl-job-service');
+    var svc=svcEl&&svcEl.value==='Other'?(document.getElementById('pl-job-custom-svc').value||'').trim():svcEl?svcEl.value:'';
+    var sqft=(document.getElementById('pl-quote-sqft').value||'').trim();
+    var address=(document.getElementById('pl-job-address').value||'').trim();
+    try{
+      sessionStorage.setItem('swft_pipeline_quote', JSON.stringify({
+        customerName:_plCustomerName, customerId:_plCustomerId||'',
+        jobId:_plJobId||'', service:svc, address:address, sqft:sqft
+      }));
+    }catch(e){}
+    closePipelineModal();
+    window.location.href='swft-quotes';
   }
 
   function openNewJobModal() {
@@ -1168,6 +1313,72 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
+<!-- PIPELINE WIZARD MODAL -->
+<div class="nj-overlay" id="pl-overlay" onclick="closePipelineModal()"></div>
+<div class="nj-modal" id="pl-modal" style="max-height:90vh;">
+  <div class="nj-header">
+    <div>
+      <div class="nj-title">NEW CUSTOMER PIPELINE</div>
+      <div class="pl-step-label" id="pl-step-label">Step 1 of 3 — Add Customer</div>
+    </div>
+    <div class="nj-close" onclick="closePipelineModal()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg></div>
+  </div>
+  <div class="pl-steps">
+    <div class="pl-dot active" id="pl-dot1">1</div>
+    <div class="pl-line" id="pl-line1"></div>
+    <div class="pl-dot" id="pl-dot2">2</div>
+    <div class="pl-line" id="pl-line2"></div>
+    <div class="pl-dot" id="pl-dot3">3</div>
+  </div>
+
+  <!-- Step 1: Customer -->
+  <div id="pl-step1" class="nj-body">
+    <div class="nj-field"><label class="nj-label">Customer Name *</label><input class="nj-input" id="pl-cust-name" type="text" placeholder="e.g. John Smith"/></div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Phone</label><input class="nj-input" id="pl-cust-phone" type="tel" placeholder="(555) 000-0000"/></div>
+      <div class="nj-field"><label class="nj-label">Email</label><input class="nj-input" id="pl-cust-email" type="email" placeholder="john@email.com"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Property Address</label><input class="nj-input" id="pl-cust-address" type="text" placeholder="e.g. 411 Birchwood Dr, Austin TX"/></div>
+  </div>
+
+  <!-- Step 2: Job -->
+  <div id="pl-step2" class="nj-body" style="display:none;">
+    <div id="pl-cust-summary" class="pl-summary"></div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Service Type</label>
+        <select class="nj-input" id="pl-job-service" onchange="if(this.value==='Other'){document.getElementById('pl-job-custom-svc').style.display='block';}else{document.getElementById('pl-job-custom-svc').style.display='none';}">
+          <option>Stamped Concrete</option><option>Broom Finish</option><option>Exposed Aggregate</option><option>Epoxy Coating</option><option>Sealing</option><option>Site Estimate</option><option>Other</option>
+        </select>
+        <input class="nj-input" id="pl-job-custom-svc" type="text" placeholder="Custom service type..." style="display:none;margin-top:6px;"/>
+      </div>
+      <div class="nj-field"><label class="nj-label">Sqft</label><input class="nj-input" id="pl-job-sqft" type="text" placeholder="e.g. 480"/></div>
+    </div>
+    <div class="nj-row">
+      <div class="nj-field"><label class="nj-label">Date</label><input class="nj-input" id="pl-job-date" type="date"/></div>
+      <div class="nj-field"><label class="nj-label">Start Time</label><input class="nj-input" id="pl-job-time" type="time" value="08:00"/></div>
+    </div>
+    <div class="nj-field"><label class="nj-label">Address</label><input class="nj-input" id="pl-job-address" type="text" placeholder="Job site address"/></div>
+  </div>
+
+  <!-- Step 3: Quote -->
+  <div id="pl-step3" class="nj-body" style="display:none;">
+    <div id="pl-job-summary" class="pl-summary"></div>
+    <input type="hidden" id="pl-quote-amount"/>
+    <input type="hidden" id="pl-quote-sqft"/>
+    <textarea style="display:none;" id="pl-quote-notes"></textarea>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 0 8px;">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <p style="font-size:13px;color:var(--gray);text-align:center;line-height:1.5;max-width:260px;">Customer and job are ready. The full quote editor will open with everything pre-filled — add line items, pricing, and send directly from there.</p>
+    </div>
+  </div>
+
+  <div class="nj-footer">
+    <button class="nj-btn" id="pl-cancel-btn" onclick="closePipelineModal()">Cancel</button>
+    <button class="nj-btn" id="pl-back-btn" style="display:none;flex:0.6;" onclick="plGoBack()">← Back</button>
+    <button class="nj-btn primary" id="pl-next-btn" onclick="plNext()">Create Customer →</button>
+  </div>
+</div>
+
 <script type="module" src="swft-user-sync.js"></script>
 <script src="swft-weather.js"></script>
 <script src="swft-calendar-sync.js"></script>
@@ -1179,5 +1390,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
+<script src="swft-mobile.js"></script>
 </body>
 </html>

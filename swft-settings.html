@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <title>SWFT — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
@@ -23,8 +25,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
 .sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
 .nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
@@ -59,7 +61,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .settings-nav-item{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;color:var(--gray);cursor:pointer;white-space:nowrap;transition:all 0.14s;font-family:'DM Sans',sans-serif;flex-shrink:0;}
 .settings-nav-item:hover{background:var(--surface2);color:var(--white);border-color:var(--border2);}
 .settings-nav-item.active{background:rgba(200,241,53,0.08);color:var(--green);border-color:rgba(200,241,53,0.2);font-weight:500;}
-.settings-nav-icon{font-size:13px;line-height:1;}
+.settings-nav-icon{font-size:13px;line-height:1;display:inline-flex;align-items:baseline;}
 .settings-section{scroll-margin-top:130px;}
 
 /* Settings sections */
@@ -174,7 +176,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
 </style>
 
 <!-- Meta Pixel Code -->
@@ -194,12 +195,117 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
+<!-- Settings mobile overrides — must come AFTER swft-mobile.css to win cascade -->
+<style>
+@media (max-width: 768px) {
+  /* Full-width layout */
+  .main { margin-left: 0 !important; }
+  .page-body {
+    padding: 14px 12px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    gap: 14px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Settings top-nav: sticky inside .page-body (the scroll container).
+     top:0 = sticks right at the top of the scroll container = right below the topbar */
+  .settings-nav { top: 0 !important; padding-bottom: 10px !important; background: var(--bg) !important; }
+
+  /* Prevent iOS auto-zoom on input tap (font-size < 16px triggers zoom) */
+  .settings-input,
+  .settings-select,
+  .settings-input[type="text"],
+  .settings-input[type="email"],
+  .settings-input[type="number"],
+  .settings-input[type="url"],
+  textarea.settings-input {
+    font-size: 16px !important;
+  }
+
+  /* Single column grid */
+  .settings-2col { grid-template-columns: 1fr !important; gap: 10px !important; }
+
+  /* Section spacing */
+  .settings-header { padding: 14px 16px !important; }
+  .settings-body { padding: 14px 16px !important; gap: 12px !important; }
+
+  /* Each row stacks label + control vertically */
+  .settings-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px 0 !important;
+  }
+  .settings-row-info { width: 100% !important; flex: none !important; }
+
+  /* ALL inputs and selects go full width regardless of inline style */
+  .settings-input,
+  .settings-select,
+  #s-tax, #s-services, #s-line-items, #s-crews,
+  #intake-hear-about, #intake-title, #intake-subtitle,
+  #export-data-type {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Wrapper divs holding inputs go full width too */
+  .settings-row > div,
+  .settings-body > .settings-2col > .settings-field,
+  .settings-field { width: 100% !important; box-sizing: border-box !important; }
+
+  /* ALL buttons — tap-friendly, full width */
+  .settings-btn,
+  .settings-row > button,
+  .settings-body > div > button,
+  .billing-plan-card .settings-btn,
+  .billing-plan-card a.settings-btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  /* Save-row wrapper — stretch so button fills it */
+  .settings-body > div[style] { width: 100% !important; }
+
+  /* Billing plan card — stack */
+  .billing-plan-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  /* Quick Setup banner */
+  #quick-setup-banner > div { flex-direction: column !important; align-items: stretch !important; }
+  #quick-setup-btn { width: 100% !important; justify-content: center !important; }
+
+  /* Prevent text overflow everywhere */
+  .settings-row-label,
+  .settings-row-desc { word-break: break-word !important; overflow-wrap: break-word !important; }
+
+  /* Template modal — bottom sheet */
+  #template-modal { align-items: flex-end !important; padding: 0 !important; }
+  #template-modal > div {
+    max-width: 100% !important; width: 100% !important;
+    max-height: 92dvh !important; border-radius: 16px 16px 0 0 !important;
+    position: fixed !important; bottom: 0 !important; left: 0 !important;
+  }
+  #template-modal > div > div[style*="flex"] { flex-direction: column !important; gap: 8px !important; }
+}
+</style>
 </head>
 <body>
 
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
-    <div><div class="logo-mark">SWFT<em>.</em></div><div class="logo-sub">simple. smart. swft.</div></div>
+    <div><div class="logo-mark">SWFT<em></em></div><div class="logo-sub">simple. smart. swft.</div></div>
     <div class="collapse-btn" onclick="toggleSidebar()">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
@@ -228,7 +334,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
     <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
-    <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
+        <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
+<div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
     <div class="nav-item" onclick="window.location.href='swft-team-tracker'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker</div>
@@ -815,7 +922,8 @@ function toggleSidebar(){
   var nav = document.getElementById('settingsNav');
   if (!nav) return;
   var items    = nav.querySelectorAll('.settings-nav-item');
-  var sections = document.querySelectorAll('.settings-section');
+  /* Include the quick-setup-banner (not a .settings-section but has data-group) */
+  var sections = document.querySelectorAll('.settings-section, #quick-setup-banner');
 
   var tabLabels = { profile: 'Profile', operations: 'Operations', billing: 'Billing', account: 'Account' };
 
@@ -828,7 +936,9 @@ function toggleSidebar(){
     });
     var sub = document.getElementById('settings-topbar-sub');
     if (sub) sub.textContent = tabLabels[group] || group;
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    /* Scroll the page-body container (not window) back to top */
+    var pb = document.querySelector('.page-body');
+    if (pb) pb.scrollTop = 0; else window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   items.forEach(function(item) {
@@ -2097,5 +2207,60 @@ function downloadQR() {
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
 <script src="swft-chat.js"></script>
+<script src="swft-mobile.js"></script>
+<script>
+/* Mobile settings layout — JS enforcement beats all CSS specificity */
+(function applyMobileSettings() {
+  if (window.innerWidth > 768) return;
+  function fix() {
+    var s = function(el, prop, val) { el.style.setProperty(prop, val, 'important'); };
+    /* Stack each settings-row vertically */
+    document.querySelectorAll('.settings-row').forEach(function(r) {
+      s(r,'flex-direction','column'); s(r,'align-items','stretch');
+      s(r,'gap','10px'); s(r,'padding','14px 0');
+    });
+    /* Row-info: don't flex-grow, full width */
+    document.querySelectorAll('.settings-row-info').forEach(function(el) {
+      s(el,'width','100%'); s(el,'flex','none');
+    });
+    /* All inputs and selects: full width */
+    document.querySelectorAll('.settings-input,.settings-select').forEach(function(el) {
+      s(el,'width','100%'); s(el,'max-width','100%'); s(el,'box-sizing','border-box');
+    });
+    /* Every div/span wrapper inside a row: full width */
+    document.querySelectorAll('.settings-row > div, .settings-row > span').forEach(function(el) {
+      s(el,'width','100%'); s(el,'max-width','100%'); s(el,'box-sizing','border-box');
+    });
+    /* All buttons: full-width, tap-friendly */
+    document.querySelectorAll('.settings-btn, .settings-row button, .settings-body > div > button').forEach(function(el) {
+      s(el,'width','100%'); s(el,'min-height','44px'); s(el,'display','flex');
+      s(el,'align-items','center'); s(el,'justify-content','center');
+      s(el,'padding','12px 16px'); s(el,'font-size','13px'); s(el,'box-sizing','border-box');
+      s(el,'white-space','normal');
+    });
+    /* 2-col grids: single column */
+    document.querySelectorAll('.settings-2col').forEach(function(el) {
+      s(el,'grid-template-columns','1fr');
+    });
+    /* Billing plan card: stack */
+    document.querySelectorAll('.billing-plan-card').forEach(function(el) {
+      s(el,'flex-direction','column'); s(el,'align-items','stretch');
+    });
+    /* Quick setup banner */
+    var qs = document.querySelector('#quick-setup-banner > div');
+    if (qs) { s(qs,'flex-direction','column'); s(qs,'align-items','stretch'); }
+    var qsb = document.getElementById('quick-setup-btn');
+    if (qsb) { s(qsb,'width','100%'); s(qsb,'justify-content','center'); }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fix);
+  } else {
+    fix();
+  }
+  /* Re-run after settings load from server (fills dynamic content) */
+  setTimeout(fix, 1500);
+  setTimeout(fix, 3000);
+})();
+</script>
 </body>
 </html>

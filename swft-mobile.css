@@ -1,0 +1,1926 @@
+/* ================================================================
+   SWFT MOBILE — Responsive stylesheet
+   Desktop appearance is completely unchanged.
+   These styles only activate on screens ≤ 768px.
+   ================================================================ */
+
+/* ── Always-rendered mobile elements (hidden on desktop via display:none) ── */
+
+/* Bottom Navigation Bar */
+.mob-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(17,17,17,0.97);
+  border-top: 1px solid var(--border);
+  z-index: 800;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding: 8px 2px 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  height: calc(64px + max(12px, env(safe-area-inset-bottom, 12px)));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.mob-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  cursor: pointer;
+  color: var(--gray);
+  transition: color 0.15s;
+  padding: 8px 2px 6px;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  user-select: none;
+}
+
+.mob-nav-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.mob-nav-item span {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mob-nav-item.active {
+  color: var(--green);
+}
+
+.mob-nav-item.active svg {
+  filter: drop-shadow(0 0 5px rgba(200,241,53,0.45));
+}
+
+.mob-nav-item:active svg {
+  transform: scale(0.88);
+}
+
+
+.mob-nav-badge {
+  position: absolute;
+  top: 7px;
+  left: calc(50% + 4px);
+  width: 7px;
+  height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  border: 2px solid rgba(17,17,17,0.96);
+}
+
+/* Hamburger menu button — removed, bottom nav replaces sidebar navigation */
+.mob-menu-btn { display: none !important; }
+
+/* Mobile sidebar backdrop */
+.mob-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.mob-sidebar-overlay.open {
+  display: block;
+}
+
+/* More sheet backdrop */
+.mob-more-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 850;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.mob-more-overlay.open {
+  display: block;
+}
+
+/* More bottom sheet — completely hidden until .open is added */
+.mob-more-sheet {
+  position: fixed;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  z-index: 860;
+  padding: 0 14px 20px;
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s ease,
+              visibility 0s linear 0.32s;
+  max-height: 74vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mob-more-sheet.open {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s ease,
+              visibility 0s linear 0s;
+}
+
+.mob-more-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 14px auto 16px;
+  flex-shrink: 0;
+}
+
+.mob-more-section-label {
+  font-size: 9.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gray2);
+  font-weight: 600;
+  padding: 4px 4px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  display: block;
+}
+
+.mob-more-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mob-more-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 6px 11px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--gray);
+  transition: all 0.14s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.mob-more-item:active {
+  background: var(--border2);
+  color: var(--white);
+  transform: scale(0.95);
+}
+.mob-more-item.active {
+  background: rgba(200,241,53,0.08);
+  border-color: rgba(200,241,53,0.22);
+  color: var(--green);
+}
+.mob-more-item svg {
+  width: 20px;
+  height: 20px;
+}
+.mob-more-item span {
+  font-size: 10px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.mob-more-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.mob-more-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,82,82,0.2);
+  background: rgba(255,82,82,0.06);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.14s;
+}
+.mob-more-logout:active {
+  background: rgba(255,82,82,0.14);
+  transform: scale(0.96);
+}
+.mob-more-logout svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+
+/* ================================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ================================================================ */
+
+@media (max-width: 768px) {
+
+  /* ── Nuclear no-horizontal-scroll ── */
+  *, *::before, *::after {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* Exceptions: positioned overlays/panels that live outside normal flow */
+  .swft-chat-fab, .swft-chat-panel,
+  .cal-popup, .wx-popup,
+  .drawer, .nj-modal, .mob-more-sheet,
+  .sidebar, .contact-panel, .chat-panel,
+  .tc-panel, .chat-list-panel,
+  .modal-overlay, .pdf-modal,
+  input, select, textarea, button {
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  /* ── Static layout: differentiate pages with/without .page-body scroll container ── */
+
+  /* Pages that use a .page-body inside .main: body + .main both clip, .page-body scrolls */
+  body:has(.main .page-body) {
+    overflow: hidden !important;
+    height: 100dvh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+  html:has(.main .page-body) {
+    overflow: hidden !important;
+    height: 100dvh !important;
+  }
+
+  /* Pages with .main-body (automations, phone, connect) — fixed topbar, scrollable content area */
+  body:has(.main-body), html:has(.main-body) {
+    overflow: hidden !important;
+    height: 100dvh !important;
+  }
+  .main:has(.main-body) {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .main-body {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 16px 14px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Sidebar pages WITHOUT .page-body and WITHOUT .main-body — body scrolls */
+  body:has(.main):not(:has(.main .page-body)):not(:has(.main-body)) {
+    overflow-y: auto !important;
+    height: auto !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+  html:has(.main):not(:has(.main .page-body)):not(:has(.main-body)) {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  /* Standalone pages (checkout, login, landing) scroll normally */
+  body:not(:has(.main)) {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+  html:not(:has(.main)) {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  /* .main with .page-body: fixed height, clips content so .page-body can scroll */
+  .main:has(.page-body) {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+  }
+  /* .main without .page-body or .main-body: natural height, scrolls with the body */
+  .main:not(:has(.page-body)):not(:has(.main-body)) {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+    padding: 16px 14px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    max-width: 100% !important;
+  }
+  /* Pages without .page-body that have a topbar: no top padding, topbar is the boundary */
+  .main:not(:has(.page-body)):not(:has(.main-body)):has(.topbar) {
+    padding-top: 0 !important;
+  }
+
+  .page-body {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+  }
+
+  /* ── Panel slides — slightly longer for smoothness ── */
+  .contact-panel, .chat-panel, .chat-list-panel, .tc-panel,
+  .mob-more-sheet, .nj-modal, .drawer, .sidebar {
+    transition-duration: 0.22s !important;
+  }
+
+  /* ── ALL fixed popups: centered, properly sized, no horizontal scroll ── */
+  .cal-popup,
+  .wx-popup {
+    position: fixed !important;
+    left: 50% !important;
+    top: 45% !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 40px) !important;
+    max-width: 320px !important;
+    max-height: 72vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  .cal-popup.open, .wx-popup.open {
+    display: block !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  /* Prevent any content inside from overflowing popup width */
+  .cal-popup *,
+  .wx-popup * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Popup rows: wrap so long text doesn't force horizontal scroll */
+  .cal-popup-row {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+  .cal-popup-label { flex-shrink: 0 !important; }
+  .cal-popup-val {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: right !important;
+  }
+
+  /* ── Show mobile-only elements ── */
+  .mob-bottom-nav { display: flex; }
+
+  /* ── SIDEBAR: off-screen by default, shown as overlay ── */
+  .sidebar {
+    transform: translateX(-100%) !important;
+    z-index: 1000 !important;
+    width: min(280px, 82vw) !important;
+    box-shadow: 8px 0 40px rgba(0,0,0,0.55);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0) !important;
+  }
+  /* Collapse button lives inside sidebar — hide on mobile (bottom nav replaces it) */
+  .collapse-btn { display: none !important; }
+
+  /* ── MAIN: full width, no sidebar offset ── */
+  .main,
+  .main.expanded {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  .main.expanded .topbar {
+    padding-left: 14px !important;
+  }
+
+  /* ── Desktop sidebar re-open toggle: hide on mobile ── */
+  .sidebar-toggle { display: none !important; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: 54px !important;
+    padding: 0 14px !important;
+    gap: 10px !important;
+  }
+  .topbar-slash,
+  .topbar-sub { display: none !important; }
+  .ai-pill { display: none !important; }
+
+  /* Page name visible after the logo, styled smaller */
+  .topbar-page {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1 !important;
+  }
+  /* Separator between injected SWFT logo and page name */
+  .mob-topbar-logo + .topbar-page {
+    padding-left: 10px !important;
+    border-left: 1px solid var(--border2) !important;
+    margin-left: 4px !important;
+  }
+
+  /* ── Mobile topbar SWFT logo ── */
+  .mob-topbar-logo {
+    font-family: 'Space Mono', monospace !important;
+    font-weight: 700 !important;
+    font-size: 22px !important;
+    letter-spacing: 0 !important;
+    text-transform: uppercase;
+    color: var(--white) !important;
+    line-height: 1;
+    flex-shrink: 0;
+    display: inline-flex !important;
+    align-items: baseline !important;
+  }
+  .mob-topbar-logo em {
+    display: block !important;
+    width: 4px !important;
+    height: 4px !important;
+    background: var(--green) !important;
+    flex-shrink: 0 !important;
+    margin-left: 2px !important;
+    margin-bottom: 0 !important;
+  }
+  .topbar-right { gap: 8px !important; }
+  /* Shrink primary button to icon-only on mobile */
+  .btn-primary {
+    padding: 8px 10px !important;
+    font-size: 0 !important;
+    gap: 0 !important;
+  }
+  .btn-primary svg { display: block; }
+
+  /* AI Estimate topbar button — icon-only on mobile */
+  .ai-est-topbar-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    background: rgba(200,241,53,0.08) !important;
+    border: 1px solid rgba(200,241,53,0.2) !important;
+    color: #c8f135 !important;
+    border-radius: 9px !important;
+    padding: 8px 10px !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+    transition: all 0.15s !important;
+  }
+  .ai-est-topbar-btn .ai-est-btn-label { display: none !important; }
+  .ai-est-topbar-btn svg { display: block !important; width: 16px !important; height: 16px !important; }
+
+  /* ── Desktop sidebar re-open toggle + any stray hamburger: force off ── */
+  .sidebar-toggle,
+  #sidebar-toggle,
+  .mob-menu-btn,
+  #mob-menu-btn {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
+  /* ── PAGE BODY ── */
+  .page-body {
+    padding: 16px 14px calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) 14px !important;
+    gap: 12px !important;
+  }
+
+  /* ── GREETING ── */
+  .greeting h2 { font-size: 22px !important; }
+  .greeting p { font-size: 11.5px !important; }
+
+  /* ── KPI GRID: 4 cols → 2 cols ── */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .kpi-card {
+    padding: 16px 14px 12px !important;
+  }
+  .kpi-value { font-size: 24px !important; }
+  .kpi-bg-icon { font-size: 34px !important; }
+
+  /* ── TWO COLUMN → SINGLE COLUMN ── */
+  .two-col {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* ── PANELS ── */
+  .panel { border-radius: 12px !important; }
+  .panel-header { padding: 14px 16px !important; }
+
+  /* ── AI AGENT STRIP ── */
+  #agent-strip {
+    padding: 10px 14px !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+  }
+  #agent-strip::-webkit-scrollbar { display: none; }
+  #agent-strip > a { display: none !important; }
+
+  /* ── JOB ROWS: status pip + title + status chip ── */
+  .table-head { display: none !important; }
+  .job-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 11px 14px !important;
+    gap: 10px !important;
+  }
+  /* Hide: checkbox, customer, address */
+  .job-row > div:nth-child(1),
+  .job-row > div:nth-child(3),
+  .job-row > div:nth-child(4) { display: none !important; }
+  /* Show action buttons column */
+  .job-row > div:nth-child(6) { flex-shrink: 0 !important; display: flex !important; gap: 5px !important; }
+  /* job-id-cell: flex row with pip + title */
+  .job-id-cell {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .status-pip { flex-shrink: 0 !important; }
+  .job-title {
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .job-id { display: none !important; }
+  /* Status select: right-side read-only chip */
+  .job-row > div:nth-child(5) { flex-shrink: 0 !important; }
+  .job-row .status-tag {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+    pointer-events: none !important;
+    cursor: default !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  /* ── CUSTOMER ROWS: avatar + name + tap indicator ── */
+  .cust-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+  }
+  /* Hide: checkbox, address, phone, email, status, tags */
+  .cust-row > div:nth-child(1),
+  .cust-row > div:nth-child(3),
+  .cust-row > div:nth-child(4),
+  .cust-row > div:nth-child(5),
+  .cust-row > div:nth-child(6),
+  .cust-row > div:nth-child(7) { display: none !important; }
+  /* Show action buttons column */
+  .cust-row > div:nth-child(8) { flex-shrink: 0 !important; }
+  .cust-name-cell { flex: 1 !important; }
+
+  .schedule-row { padding: 10px 14px !important; }
+
+  /* ── FILTER TABS: all fit on one row, no scrolling ── */
+  .job-filters,
+  .filter-group {
+    overflow-x: hidden !important;
+    flex-wrap: nowrap !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    scrollbar-width: none !important;
+    width: 100% !important;
+  }
+  .job-filters::-webkit-scrollbar,
+  .filter-group::-webkit-scrollbar { display: none; }
+
+  /* Each tab gets equal share of row width — no truncation, no scroll */
+  .ftab {
+    flex: 1 1 0 !important;
+    font-size: 9.5px !important;
+    padding: 5px 3px !important;
+    border-radius: 7px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+  }
+
+  /* Sort button: hide on mobile to make room for all filter tabs */
+  .sort-wrap,
+  .sort-btn { display: none !important; }
+
+  /* ── TOOLBAR (search + filter row) ── */
+  .toolbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    overflow-x: hidden !important;
+  }
+  .search-wrap {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+  }
+
+  /* ── DATA TABLES: card layout, no horizontal scroll ── */
+  .table-wrap {
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+  .table-head { display: none !important; }
+
+  /* Slightly smaller row action buttons on mobile so 3 fit side-by-side */
+  .row-btn { width: 26px !important; height: 26px !important; border-radius: 6px !important; }
+
+  /* Quote / invoice list rows → 2-row card grid */
+  .q-row, .inv-row, .quote-row {
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto 86px !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+      "customer total arrow"
+      "info     status arrow" !important;
+    row-gap: 4px !important;
+    column-gap: 10px !important;
+    padding: 14px 16px !important;
+    align-items: center !important;
+  }
+  /* Default (quotes page): child 1 = customer */
+  .q-row > div:nth-child(1) { grid-area: customer !important; }
+  .q-row > div:nth-child(2) { display: none !important; }
+  .q-row > div:nth-child(3) { grid-area: info !important; align-self: end !important; }
+  .q-row > div:nth-child(4) { grid-area: total !important; text-align: right !important; align-self: start !important; font-size: 14px !important; }
+  .q-row > div:nth-child(5) { grid-area: status !important; justify-self: end !important; align-self: end !important; }
+  .q-row > div:nth-child(6) { grid-area: arrow !important; align-self: center !important; justify-self: end !important; display: flex !important; gap: 5px !important; justify-content: flex-end !important; }
+
+  /* Billing page q-row — redesigned: customer|buttons top row, date+status bottom row, no $0 */
+  .page-billing .q-row {
+    grid-template-columns: 1fr auto 86px !important;
+    grid-template-areas:
+      "customer customer arrow"
+      "info     status   arrow" !important;
+  }
+  .page-billing .q-row > div:nth-child(1) { display: none !important; }
+  .page-billing .q-row > div:nth-child(2) { grid-area: customer !important; display: block !important; }
+  .page-billing .q-row > div:nth-child(3) { grid-area: info !important; align-self: center !important; }
+  .page-billing .q-row > div:nth-child(4) { display: none !important; }
+  .page-billing .q-row > div:nth-child(5) { display: none !important; }
+  .page-billing .q-row > div:nth-child(6) { grid-area: status !important; align-self: center !important; justify-self: start !important; }
+  .page-billing .q-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; display: flex !important; gap: 5px !important; justify-content: flex-end !important; }
+  /* Status pill on billing q-row: tiny read-only badge */
+  .page-billing .q-row .status-pill {
+    font-size: 9px !important; padding: 2px 7px !important;
+    height: auto !important; min-height: unset !important;
+    pointer-events: none !important; cursor: default !important;
+    -webkit-appearance: none !important; appearance: none !important;
+  }
+
+  /* Billing page inv-row — customer+total top, status bottom, both buttons */
+  .page-billing .inv-row {
+    grid-template-columns: 1fr auto 62px !important;
+    grid-template-areas:
+      "customer total  arrow"
+      ".        status arrow" !important;
+  }
+  .page-billing .inv-row > div:nth-child(1) { display: none !important; }
+  .page-billing .inv-row > div:nth-child(2) { grid-area: customer !important; display: block !important; }
+  .page-billing .inv-row > div:nth-child(3) { grid-area: total !important; text-align: right !important; align-self: center !important; font-size: 14px !important; font-weight: 600 !important; }
+  .page-billing .inv-row > div:nth-child(4) { display: none !important; }
+  .page-billing .inv-row > div:nth-child(5) { display: none !important; }
+  .page-billing .inv-row > div:nth-child(6) { grid-area: status !important; justify-self: end !important; align-self: center !important; }
+  .page-billing .inv-row > div:nth-child(7) { grid-area: arrow !important; align-self: center !important; display: flex !important; gap: 5px !important; justify-content: flex-end !important; }
+  /* Status pill on billing inv-row: tiny read-only badge */
+  .page-billing .inv-row .status-pill {
+    font-size: 9px !important; padding: 2px 7px !important;
+    height: auto !important; min-height: unset !important;
+    pointer-events: none !important; cursor: default !important;
+    -webkit-appearance: none !important; appearance: none !important;
+  }
+
+  /* Customers table row */
+  .cust-row { min-width: 0 !important; }
+
+  /* ── QUOTE / INVOICE EDIT MODAL — sits above bottom nav ── */
+  .modal-overlay {
+    padding: 8px !important;
+    padding-bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px)) + 8px) !important;
+    align-items: center !important;
+  }
+  .pdf-modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: calc(100dvh - 90px - max(0px, env(safe-area-inset-bottom, 0px))) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+  /* Keep header in a single row — brand left, X right, no wrap */
+  .pdf-doc-header {
+    padding: 16px 16px 0 !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+  }
+  .pdf-brand { flex: 1 !important; min-width: 0 !important; overflow: hidden !important; }
+  .pdf-close { flex-shrink: 0 !important; }
+  /* Keep pdf-2col as 2 columns on mobile — prevents unexpected blank fields appearing */
+  .pdf-2col { gap: 6px !important; }
+  /* In half-width cells, stack label above input so date/text inputs have full width */
+  .pdf-2col .pdf-field-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 2px !important;
+    min-height: unset !important;
+  }
+  .pdf-2col .pdf-field-label { min-width: unset !important; font-size: 10px !important; }
+  .pdf-2col .pdf-field-input { text-align: left !important; max-width: 100% !important; width: 100% !important; padding: 4px 2px !important; font-size: 12px !important; }
+  /* Shrink pdf modal text for mobile */
+  .pdf-doc-body { padding: 12px 14px 16px !important; font-size: 13px !important; }
+  .pdf-field-label { font-size: 11px !important; }
+  .pdf-field-input,
+  .pdf-add-input { font-size: 13px !important; padding: 6px 10px !important; }
+  .pdf-section-label { font-size: 10px !important; }
+  .pdf-notes-area { font-size: 13px !important; }
+  .pdf-li-header { display: none !important; }
+  .pdf-li-row {
+    display: grid !important;
+    grid-template-areas:
+      "desc desc desc desc"
+      "qty  rate total del" !important;
+    grid-template-columns: 50px 80px 1fr 28px !important;
+    gap: 4px !important;
+    padding: 8px 0 !important;
+  }
+  .pdf-li-row > .pdf-li-input:nth-child(1) { grid-area: desc !important; }
+  .pdf-li-row > .pdf-li-input:nth-child(2) { grid-area: qty !important; }
+  .pdf-li-row > .pdf-li-input:nth-child(3) { grid-area: rate !important; }
+  .pdf-li-row > .pdf-li-total { grid-area: total !important; }
+  .pdf-li-row > .pdf-li-del { grid-area: del !important; }
+  .pdf-add-row {
+    display: grid !important;
+    grid-template-areas:
+      "desc desc desc desc"
+      "qty  rate total add" !important;
+    grid-template-columns: 50px 80px 1fr 28px !important;
+    gap: 4px !important;
+    padding: 8px 0 !important;
+  }
+  .pdf-add-row > .pdf-add-input:nth-child(1) { grid-area: desc !important; }
+  .pdf-add-row > .pdf-add-input:nth-child(2) { grid-area: qty !important; }
+  .pdf-add-row > .pdf-add-input:nth-child(3) { grid-area: rate !important; }
+  .pdf-add-row > .pdf-add-input:nth-child(4) { grid-area: total !important; }
+  .pdf-add-row > .pdf-add-btn { grid-area: add !important; }
+  .pdf-doc-footer {
+    padding: 12px 16px !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    flex-wrap: wrap !important;
+  }
+  .pdf-doc-footer .pdf-btn { flex: 1 1 auto !important; text-align: center !important; }
+
+  /* ── CHART ── */
+  .chart-body { padding: 16px !important; }
+  .chart-stats {
+    gap: 16px !important;
+    flex-wrap: wrap !important;
+  }
+  .chart-area { height: 88px !important; }
+  .chart-footer { flex-wrap: wrap; gap: 10px; }
+
+  /* ── NEW JOB MODAL: centered modal on mobile (desktop already centers it) ── */
+  .nj-overlay {
+    z-index: 1100 !important;
+  }
+  .nj-modal {
+    width: calc(100vw - 24px) !important;
+    max-height: 88dvh !important;
+    border-radius: 16px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: 1110 !important; /* must be above nj-overlay z-index:1100 */
+    /* top:50%;left:50%;translate(-50%,-50%) from desktop CSS is preserved */
+  }
+  /* Remove drag handle (bottom-sheet artifact) */
+  .nj-modal::before { display: none !important; }
+  /* Stack the 2-col form rows on small screens */
+  .nj-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .nj-body { padding: 8px 16px 12px !important; }
+  /* Force all form inputs inside modal to stay within bounds
+     (overrides the exception-list rule: input { max-width: none }) */
+  .nj-modal .nj-input,
+  .nj-modal input,
+  .nj-modal select,
+  .nj-modal textarea {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── JOB DETAIL / SCHEDULE DRAWER: centered modal on mobile ── */
+  .drawer-overlay { z-index: 1100 !important; }
+  .drawer {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) scale(0.95) !important;
+    width: calc(100vw - 24px) !important;
+    max-width: 100% !important;
+    max-height: 88dvh !important;
+    border-radius: 16px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: 1110 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), opacity 0.2s !important;
+  }
+  .drawer.open {
+    transform: translate(-50%, -50%) scale(1) !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
+  }
+  .drawer.center-modal.open {
+    transform: translate(-50%, -50%) !important;
+  }
+  /* Prevent horizontal overflow inside the drawer scroll area */
+  .drawer-content {
+    overflow-x: hidden !important;
+    padding: 16px !important;
+  }
+  /* 4-stat strip → 2×2 grid on mobile */
+  .drawer-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* Tabs row: scrollable, single row, no wrapping */
+  .drawer-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding: 0 12px !important;
+    scrollbar-width: none !important;
+  }
+  .drawer-tabs::-webkit-scrollbar { display: none; }
+  /* Stack 2-column edit form rows into single column (except date+time rows) */
+  .edit-row-2 {
+    grid-template-columns: 1fr !important;
+  }
+  /* Keep date + time side-by-side — they're compact enough */
+  .drawer .edit-row-2:has(input[type="date"]),
+  .drawer .edit-row-2:has(input[type="time"]) {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  /* Constrain date/time input height to match text inputs */
+  .drawer input[type="date"],
+  .drawer input[type="time"] {
+    height: 38px !important;
+    padding: 8px 10px !important;
+  }
+  /* Force all form inputs inside drawer to fit within bounds */
+  .drawer input,
+  .drawer select,
+  .drawer textarea,
+  .drawer .edit-input {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── SWFT MODAL (confirm dialogs) — above bottom nav ── */
+  .swft-modal-overlay { z-index: 1100 !important; }
+
+  /* ── SWFT AI CHAT FAB — float well above bottom nav ── */
+  .swft-chat-fab {
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .swft-chat-panel {
+    bottom: calc(152px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100svh - 220px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .swft-chat-messages {
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+  }
+  .swft-chat-input-area {
+    flex-shrink: 0 !important;
+  }
+  .swft-chat-suggestions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .swft-chat-suggestion {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+
+  /* ── SWFT AI backdrop blur — dims/blurs page behind the panel ── */
+  .swft-chat-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9990;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+  .swft-chat-backdrop.visible {
+    display: block;
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* Hide FAB when More sheet, drawer overlay, chat view, or AI panel is open */
+  body.mob-more-open .swft-chat-fab,
+  body.mob-overlay-open .swft-chat-fab,
+  body.mob-chat-open .swft-chat-fab,
+  body.mob-tc-open .swft-chat-fab,
+  body.swft-ai-open .swft-chat-fab {
+    display: none !important;
+  }
+
+  /* Hide FAB + panel when PDF quote/invoice modal is open */
+  body:has(.modal-overlay.open) .swft-chat-fab,
+  body:has(.modal-overlay.open) .swft-chat-panel,
+  body:has(.modal-overlay.open) .swft-chat-backdrop {
+    display: none !important;
+  }
+
+  /* ── SWFT CONFIRM MODAL ── */
+  .swft-modal {
+    width: calc(100% - 24px) !important;
+    border-radius: 16px !important;
+  }
+
+  /* ── TOAST: centered on screen ── */
+  .toast {
+    top: 50% !important;
+    left: 50% !important;
+    font-size: 12px !important;
+    padding: 10px 16px !important;
+    max-width: calc(100vw - 40px) !important;
+    width: auto !important;
+    transform: translate(-50%, calc(-50% - 10px)) !important;
+  }
+  .toast.show {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  /* ── PREVENT iOS AUTO-ZOOM on input focus (requires font-size ≥ 16px) ── */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* ── iOS date/time input color scheme — forces dark theme chrome ── */
+  input[type="date"], input[type="time"], input[type="datetime-local"] {
+    color-scheme: dark !important;
+    color: var(--white) !important;
+  }
+
+  /* ── iOS Safari: prevent auto-zoom on input focus (font-size must be ≥16px) ──
+     Targets all text inputs/textareas/selects to prevent the zoom that breaks
+     the visualViewport keyboard-height calculation in Safari. */
+  .swft-chat-input,
+  .nj-input,
+  .edit-input,
+  .approve-input,
+  .evt-input,
+  .form-input,
+  .pdf-field-input,
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="password"],
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* ── More sheet — align bottom edge exactly with bottom nav top edge ── */
+  .mob-more-sheet {
+    max-height: 82vh !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    padding-bottom: 20px !important;
+  }
+
+  /* ── Settings nav sticky ── */
+  .settings-nav {
+    top: 0 !important;
+    margin: 0 !important;
+    padding-bottom: 12px !important;
+    background: var(--bg) !important;
+  }
+
+  /* ── SETTINGS PAGE: full mobile overhaul ── */
+
+  /* 2-col grids → single column */
+  .settings-2col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* All inputs/selects inside settings → full width */
+  .settings-input,
+  .settings-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Each settings-row → stack vertically */
+  .settings-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px 0 !important;
+  }
+
+  /* Row info should not flex-shrink away */
+  .settings-row-info {
+    width: 100% !important;
+  }
+
+  /* Buttons inside rows: full width, decent tap height */
+  .settings-row > .settings-btn,
+  .settings-row > button,
+  .settings-row > a.settings-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+  }
+
+  /* Save buttons at bottom of sections: full width */
+  .settings-body > div[style*="justify-content:flex-end"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .settings-body > div[style*="justify-content:flex-end"] > button,
+  .settings-body > div[style*="justify-content:flex-end"] > a {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+  }
+
+  /* Settings section body: less side padding on mobile */
+  .settings-body {
+    padding: 14px 16px !important;
+  }
+  .settings-header {
+    padding: 14px 16px !important;
+  }
+
+  /* Billing plan card: stack vertically */
+  .billing-plan-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  .billing-plan-card .settings-btn,
+  .billing-plan-card a.settings-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+  }
+
+  /* Buy packs row: stack buttons */
+  .settings-row > div[style*="display:flex"] {
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+  .settings-row > div[style*="display:flex"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    min-height: 42px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Service types / crew / line items: stack label+input */
+  .settings-row > div[style*="flex-direction:column"] {
+    width: 100% !important;
+  }
+  .settings-row > div[style*="flex-direction:column"] .settings-input {
+    width: 100% !important;
+  }
+
+  /* Logo upload row */
+  .settings-body > div[style*="align-items:center"] > div {
+    width: 100% !important;
+  }
+
+  /* Quick setup banner */
+  #quick-setup-banner { padding: 14px 16px !important; }
+  #quick-setup-banner > div { flex-direction: column !important; align-items: stretch !important; }
+  #quick-setup-btn { width: 100% !important; justify-content: center !important; padding: 11px !important; margin-top: 4px; }
+
+  /* Analyze website row: stack input + button */
+  #s-biz-website { flex: unset !important; width: 100% !important; }
+  #analyze-website-btn { width: 100% !important; margin-top: 6px; justify-content: center !important; padding: 10px !important; }
+  #s-biz-website + button,
+  .settings-field > div[style*="display:flex;gap:8px"] {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .settings-field > div[style*="display:flex;gap:8px"] > input,
+  .settings-field > div[style*="display:flex;gap:8px"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Template modal: full-screen sheet on mobile */
+  #template-modal > div {
+    max-width: 100% !important;
+    max-height: 95vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    margin: auto 0 0 !important;
+    padding: 20px 16px !important;
+    width: 100% !important;
+  }
+  #template-modal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  /* Template modal inline flex row → column */
+  #template-modal > div > div[style*="display:flex;gap:10px"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* Billing modal on mobile */
+  .billing-modal {
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 95vh !important;
+  }
+  .billing-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  /* Export row: stack select + button */
+  .settings-row > div[style*="display:flex;gap:8px;align-items:center"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .settings-row > div[style*="display:flex;gap:8px;align-items:center"] > select,
+  .settings-row > div[style*="display:flex;gap:8px;align-items:center"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* DNS records section: sending domain */
+  #sd-pending > div[style*="display:flex;gap:8px"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  #sd-pending > div[style*="display:flex;gap:8px"] > button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 10px !important;
+  }
+
+  /* QR code section: stack side by side items */
+  #sec-intake div[style*="display:flex;align-items:flex-start;gap:20px"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  #intake-qr-wrap {
+    width: 140px !important;
+    height: 140px !important;
+    margin: 0 auto !important;
+  }
+  #sec-intake div[style*="flex:1;min-width:200px"] {
+    min-width: unset !important;
+    width: 100% !important;
+  }
+  #sec-intake div[style*="display:flex;gap:8px;flex-wrap:wrap"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  #sec-intake div[style*="display:flex;gap:8px;flex-wrap:wrap"] > button,
+  #sec-intake div[style*="display:flex;gap:8px;flex-wrap:wrap"] > a {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 10px !important;
+  }
+
+  /* ── Hide SWFT AI FAB on settings page ── */
+  body:has(#settingsNav) .swft-chat-fab { display: none !important; }
+
+  /* ── SETTINGS: native document scroll (inner scroll unreliable on iOS) ── */
+  /* Override the global overflow:hidden/height:100dvh body for settings only */
+  body:has(#settingsNav),
+  html:has(#settingsNav) {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+  body:has(#settingsNav) .main {
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+  body:has(#settingsNav) .page-body {
+    overflow: visible !important;
+    height: auto !important;
+    flex: none !important;
+    min-height: 0 !important;
+    /* Keep bottom padding so content clears the fixed nav bar */
+    padding-bottom: calc(80px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+  }
+  /* Sticky nav: top relative to document viewport now, below topbar */
+  body:has(#settingsNav) .settings-nav {
+    top: 54px !important;
+  }
+
+  /* ── QUOTE / PDF MODAL: windowed feel with visible blur surround ── */
+  .modal-overlay {
+    padding: 52px 14px calc(var(--nav-h, 64px) + 14px) !important;
+    align-items: flex-start !important;
+    background: rgba(0,0,0,0.55) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+  }
+  .pdf-modal {
+    max-height: calc(100dvh - 52px - var(--nav-h, 64px) - 28px) !important;
+    border-radius: 16px !important;
+  }
+  /* Hide the printable brand header on mobile — saves vertical space */
+  .pdf-brand { display: none !important; }
+  .pdf-doc-header {
+    padding: 10px 14px !important;
+    justify-content: flex-end !important;
+  }
+  /* Footer buttons: stack vertically */
+  .pdf-doc-footer {
+    flex-direction: column !important;
+    padding: 10px 14px 14px !important;
+    gap: 8px !important;
+  }
+  .pdf-doc-footer .pdf-spacer { display: none !important; }
+  .pdf-doc-footer .pdf-btn,
+  .pdf-doc-footer button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+  }
+  /* Reduce body padding inside modal */
+  .pdf-doc-body {
+    padding: 12px 18px 16px !important;
+  }
+  /* 2-col fields → single column inside modal */
+  .pdf-2col {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+  /* Tax row input larger tap target on mobile */
+  .pdf-tax-rate-input {
+    width: 70px !important;
+    padding: 6px 8px !important;
+    font-size: 14px !important;
+  }
+
+  /* ── GLOBAL BLUR: all overlay/modal backdrops get blur ── */
+  .np-overlay,
+  .billing-overlay,
+  .swft-modal-overlay,
+  .swft-drawer-overlay {
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    background: rgba(0,0,0,0.55) !important;
+  }
+
+  /* ── ALL STAT / KPI CARDS: hidden on mobile ── */
+  .stat-row,
+  .stat-strip,
+  .kpi-grid { display: none !important; }
+
+  /* ── THREAD LIST: hide bottom new-button (replaced by "+" in header) ── */
+  .new-msg-btn,
+  .new-chat-btn { display: none !important; }
+
+  /* ── "+" button injected into thread list headers ── */
+  .mob-new-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+    background: var(--green) !important;
+    color: #0a0a0a !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+  }
+  .mob-new-btn:active { background: #d5ff40 !important; transform: scale(0.93); }
+
+  /* Header rows need flex+space-between so the "+" sits on the right */
+  .contact-header > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Team Chat header: logo + title + "+" on top row; search full-width below */
+  .chat-list-header {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0 6px !important;
+  }
+  .chat-list-header .mob-topbar-logo {
+    flex-shrink: 0 !important;
+  }
+  .chat-list-header .chat-list-title {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  .chat-list-header .mob-new-btn {
+    flex-shrink: 0 !important;
+    margin-left: 0 !important;
+  }
+  .chat-list-search {
+    flex: 1 1 100% !important;
+    margin-top: 8px !important;
+    order: 99 !important;
+    width: 100% !important;
+  }
+
+  /* Messages: contact search full-width below title row */
+  .contact-search {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── NOTIFICATION DROPDOWN — re-position to stay on screen ── */
+  .notif-dropdown {
+    top: 56px !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    max-height: 60vh !important;
+  }
+
+  /* ── ACTIVITY ITEMS ── */
+  .activity-item { padding: 12px 14px !important; }
+
+  /* ── SCHEDULE: hide weather strip, calendar fits screen without scrolling ── */
+  .weather-strip { display: none !important; }
+  .page-tabs { margin-bottom: 10px !important; }
+  .cal-header { margin-bottom: 8px !important; }
+  #cal-view {
+    display: flex; /* no !important — lets JS set style.display='none' when switching to Time Blocks */
+    flex-direction: column !important;
+    flex: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  .cal-grid-wrap {
+    flex: none !important;
+    height: auto !important;
+    border-radius: 10px !important;
+  }
+  .cal-grid {
+    grid-auto-rows: 52px !important;
+  }
+  .cal-dow-row {
+    grid-template-columns: repeat(7, 1fr) !important;
+  }
+  .cal-dow { font-size: 9px !important; padding: 6px 0 !important; }
+  .cal-cell { padding: 3px 4px !important; height: auto !important; min-height: 52px !important; overflow: hidden !important; }
+  /* Day number + weather on same row, weather on the right */
+  .day-num {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 1px !important;
+  }
+  .day-wx {
+    position: static !important;
+    display: inline !important;
+    font-size: 7px !important;
+    color: var(--gray) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+  /* Keep only the number, no icon */
+  .day-wx .wx-icon { display: none !important; }
+  .day-wx .wx-num { display: inline !important; }
+  .job-block { font-size: 8px !important; padding: 1px 3px !important; }
+
+  /* ── CHART STATS: remove side scroll ── */
+  .chart-goal { margin-left: 0; }
+}
+
+
+/* ── DASHBOARD: SWFT AI fills screen, no outer scroll ── */
+@media (max-width: 768px) {
+  /* Hide KPI grid, automation strip — SWFT AI is the dashboard on mobile */
+  .kpi-grid,
+  #agent-strip,
+  .greeting { display: none !important; }
+
+  /* Page-body on dashboard: no scroll — panel fills it, bottom padding clears the nav bar */
+  body:has(#dash-main-grid) .page-body {
+    overflow-y: hidden !important;
+    padding: 0 0 calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) 0 !important;
+    gap: 0 !important;
+  }
+
+  /* Grid: single column, fill page-body via flex-grow */
+  #dash-main-grid {
+    grid-template-columns: 1fr !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    gap: 0 !important;
+  }
+
+  /* Hide schedule column */
+  #dash-schedule-col { display: none !important; }
+
+  /* Remove "Connect your tools" tab */
+  #dash-tools-tab,
+  #dash-tools-drawer { display: none !important; }
+
+  /* AI panel: fill grid cell fully, clip overflow so only messages scroll */
+  #dash-main-grid > .panel:first-child {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+
+  /* Chat messages: fill remaining panel space, no forced min-height */
+  #dash-chat-messages {
+    min-height: 0 !important;
+    flex: 1 !important;
+  }
+
+  /* Input: 16px prevents iOS Safari auto-zoom on focus */
+  #dash-chat-input {
+    font-size: 16px !important;
+  }
+}
+
+/* ── MESSAGES PAGE: iMessage-style full-screen thread layout ── */
+
+/* Back button — hidden on desktop, shown on mobile */
+.mob-chat-back {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--green);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0 10px 0 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+.mob-chat-back svg { flex-shrink: 0; }
+
+@media (max-width: 768px) {
+
+  /* Thread list — fills full screen */
+  .contact-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    width: 100% !important;
+    min-width: unset !important;
+    height: auto !important;
+    z-index: 100 !important;
+    border-right: none !important;
+    background: var(--bg) !important;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Conversation view — off-screen right by default */
+  .chat-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 101 !important;
+    background: var(--bg) !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* Conversation active: chat slides in, thread list slides out */
+  body.mob-chat-open .chat-panel {
+    transform: translateX(0) !important;
+  }
+  body.mob-chat-open .contact-panel {
+    transform: translateX(-25%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Thread list items — bigger touch targets, single-tap */
+  .contact-item,
+  .chat-list-item,
+  .tc-item {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
+  }
+  .contact-header { padding: 14px 16px 10px !important; }
+  /* Contact-title: styled like .topbar-page after the injected logo */
+  .contact-title {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
+  }
+  /* Same separator as .mob-topbar-logo + .topbar-page */
+  .mob-topbar-logo + .contact-title {
+    padding-left: 10px !important;
+    border-left: 1px solid var(--border2) !important;
+    margin-left: 4px !important;
+  }
+  .contact-item { padding: 14px 16px !important; }
+  .c-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 15px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+  .c-name { font-size: 14px !important; font-weight: 600 !important; }
+  .c-preview { font-size: 12px !important; margin-top: 3px !important; }
+  .c-time { font-size: 11px !important; }
+  .c-badge { font-size: 10px !important; }
+  .new-msg-btn { margin: 10px 14px !important; }
+
+  /* Chat view — back button visible, header adjustments */
+  .mob-chat-back { display: flex !important; }
+  .chat-header {
+    padding: 10px 14px !important;
+    min-height: 54px !important;
+  }
+  .chat-messages { flex: 1 !important; padding: 16px 14px !important; }
+
+  /* Compose bar — pinned to bottom of chat panel */
+  .compose-bar {
+    flex-shrink: 0 !important;
+    padding: 8px 10px !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  /* Hide var-chips on mobile (template vars not needed for quick mobile replies) */
+  .var-chips { display: none !important; }
+  /* Compose subject row: full width */
+  .compose-subject-row { width: 100% !important; }
+  .compose-subject-row input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ── TEAM CHAT PAGE: identical layout to Messages page ── */
+@media (max-width: 768px) {
+  /* Thread list fills full screen by default */
+  .chat-list-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    width: 100% !important;
+    min-width: unset !important;
+    height: auto !important;
+    z-index: 100 !important;
+    background: var(--bg) !important;
+    transform: translateX(0) !important;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Chat view: off-screen right by default */
+  .tc-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(64px + max(12px, env(safe-area-inset-bottom, 12px))) !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 101 !important;
+    background: var(--bg) !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Chat selected: slide in chat, slide out list */
+  body.mob-tc-open .tc-panel {
+    transform: translateX(0) !important;
+  }
+  body.mob-tc-open .chat-list-panel {
+    transform: translateX(-25%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Back button — matches mob-chat-back on messages */
+  .tc-list-toggle {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    height: 36px !important;
+    width: auto !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: var(--green) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    cursor: pointer !important;
+    padding: 0 10px 0 0 !important;
+    flex-shrink: 0 !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  /* Header — matches chat-header */
+  .tc-header {
+    padding: 10px 14px !important;
+    min-height: 54px !important;
+    background: var(--surface) !important;
+  }
+
+  /* Channel list header — matches contact-header */
+  .chat-list-header { padding: 14px 16px 10px !important; }
+
+  /* Channel title — matches contact-title */
+  .chat-list-title {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
+  }
+
+  /* Search bar — compact, matches contact-search */
+  .chat-list-search {
+    padding: 5px 10px !important;
+    margin-top: 6px !important;
+    border-radius: 8px !important;
+  }
+  .chat-list-search input { font-size: 13px !important; }
+
+  /* Channel list items — match contact-item sizing */
+  .chat-list-items { flex: 1 !important; overflow-y: auto !important; }
+  .chat-list-item { padding: 14px 16px !important; }
+  .cl-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 15px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+  .cl-name { font-size: 14px !important; font-weight: 600 !important; }
+  .cl-preview { font-size: 12px !important; margin-top: 3px !important; }
+  .cl-time { font-size: 11px !important; }
+
+  /* Messages area — matches chat-messages */
+  .tc-messages { flex: 1 !important; padding: 16px 14px !important; }
+
+  /* Compose area — matches compose-bar */
+  .tc-compose {
+    flex-shrink: 0 !important;
+    padding: 10px 12px !important;
+    border-top: 1px solid var(--border) !important;
+  }
+}
+
+/* ── Photo lightbox — fullscreen tap-to-dismiss ── */
+#mob-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 9998;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+#mob-lightbox.open { display: flex; }
+#mob-lightbox img {
+  max-width: 95vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+/* ── Extra-small phones (≤ 390px) ── */
+@media (max-width: 390px) {
+  .kpi-card { padding: 12px 10px 10px !important; }
+  .kpi-value { font-size: 20px !important; }
+  .page-body {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .mob-more-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+/* ── TEAM TRACKER: let the desktop CSS handle layout; only patch iOS canvas ──
+   The HTML already has @media(max-width:860px){.tracker-split{grid-template-columns:1fr;
+   grid-template-rows:auto 1fr}} which gives the correct single-column layout.
+   The desktop flex chain (tracker-split flex:1 → page-body flex:1 → main) gives
+   #map{height:100%;min-height:420px} a concrete resolved height — same on mobile.
+   The ONLY mobile-specific issue: -webkit-overflow-scrolling:touch on .page-body
+   creates an iOS compositing layer that swallows canvas children (the Maps tiles). */
+@media (max-width: 768px) {
+  .main:has(.tracker-split) .page-body {
+    -webkit-overflow-scrolling: auto !important;
+    overflow-scrolling: auto !important;
+  }
+  .member-panel { max-height: 180px !important; }
+}
+
+/* ── PHONE AI: fix subscribe button text overflow ── */
+@media (max-width: 768px) {
+  #subscribe-btn {
+    white-space: normal !important;
+    flex-wrap: wrap !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    justify-content: center !important;
+  }
+  .pricing-card { padding: 28px 20px !important; }
+  .pricing-number { font-size: 52px !important; }
+  .pricing-desc { font-size: 12px !important; margin-bottom: 20px !important; }
+}
+
+/* ── AUTOMATIONS (swft-ai-agents): page header, save button, flow steps, behaviors ── */
+@media (max-width: 768px) {
+  /* Page header: wrap so save button doesn't get crushed next to title */
+  .page-header {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  .btn-save-primary {
+    white-space: normal !important;
+    flex-shrink: 0 !important;
+    align-self: flex-start !important;
+  }
+  /* Preserve flow-step min-width so they don't collapse */
+  .flow-step { min-width: 100px !important; flex-shrink: 0 !important; }
+  /* Behavior card head: wrap so toggle doesn't get crushed */
+  .behavior-head {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 14px 16px !important;
+  }
+  .behavior-head-left { min-width: 0 !important; }
+  /* Behavior body: normal padding */
+  .behavior-body { padding: 16px !important; }
+  /* Grid inside cards: single column */
+  .grid, .grid-3 { grid-template-columns: 1fr !important; }
+  /* Segment control: full-width wrapping on mobile */
+  .segment { display: flex !important; flex-wrap: wrap !important; width: 100% !important; }
+  .segment button { flex: 1 !important; padding: 8px 10px !important; }
+  /* Tabs: compact sizing on automations page */
+  .ptab { padding: 10px 12px !important; }
+  .ptab-dot { display: none !important; }
+  .ptab-emoji { font-size: 14px !important; }
+  .page-tabs { gap: 2px !important; }
+}
+
+/* ── Pull-to-refresh indicator ── */
+#mob-ptr {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-44px);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+#mob-ptr svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--gray);
+  transition: stroke 0.15s;
+}
+#mob-ptr.mob-ptr-ready svg {
+  stroke: var(--green);
+}
+@keyframes mob-ptr-spin {
+  to { transform: rotate(360deg); }
+}
+#mob-ptr.mob-ptr-spinning svg {
+  stroke: var(--green);
+  animation: mob-ptr-spin 0.6s linear infinite;
+}

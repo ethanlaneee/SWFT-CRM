@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <title>SWFT — Developer Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;}
@@ -22,9 +24,9 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 
 /* HEADER */
 .header{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);z-index:100;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:24px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
-.header-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2.5px;color:var(--gray);line-height:1;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:24px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
+.header-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2.5px;color:var(--gray);line-height:1;display:inline-flex;align-items:baseline;}
 .header-slash{color:var(--border2);font-family:'JetBrains Mono',monospace;font-size:16px;margin:0 2px;}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .back-btn{display:flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--border2);color:var(--gray);font-size:12px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all 0.14s;font-family:'DM Sans',sans-serif;text-decoration:none;}
@@ -52,7 +54,7 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 .kpi-card[data-accent="red"]::before{background:var(--red);}
 .kpi-card[data-accent="white"]::before{background:var(--white);}
 .kpi-label{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:8px;}
-.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--white);line-height:1;}
+.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
 .kpi-value.green{color:var(--green);}
 .kpi-value.blue{color:var(--blue);}
 .kpi-value.amber{color:var(--amber);}
@@ -148,7 +150,7 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 /* LOGIN GATE */
 .login-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
 .login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:380px;animation:fadeUp 0.45s ease both;}
-.login-box .logo{font-family:'Space Mono',monospace;font-weight:700;font-size:30px;letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:4px;}
+.login-box .logo{font-family:'Space Mono',monospace;font-weight:700;font-size:30px;letter-spacing:0;text-transform:uppercase;text-align:center;margin-bottom:4px;}
 .login-box .logo em{color:var(--green);font-style:normal;}
 .login-box .login-subtitle{text-align:center;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:28px;}
 .login-box label{display:block;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);font-weight:500;margin-bottom:6px;}
@@ -269,13 +271,14 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
 <!-- LOGIN GATE (shown when not authenticated) -->
 <div class="login-gate" id="loginGate" style="display:none;">
   <div class="login-box">
-    <div class="logo">SWFT<em>.</em></div>
+    <div class="logo">SWFT<em></em></div>
     <div class="login-subtitle">Developer Dashboard</div>
     <form id="loginForm" onsubmit="return false;">
       <label for="loginEmail">Email</label>
@@ -292,7 +295,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <div id="dashboardWrap" style="display:none;">
   <!-- HEADER -->
   <div class="header">
-    <div class="logo-mark">SWFT<em>.</em></div>
+    <div class="logo-mark">SWFT<em></em></div>
     <span class="header-slash">/</span>
     <span class="header-title">DEVELOPER DASHBOARD</span>
     <div class="header-right">
@@ -1825,5 +1828,6 @@ onAuthStateChanged(auth, (user) => {
   loadAllData();
 });
 </script>
+<script src="swft-mobile.js"></script>
 </body>
 </html>

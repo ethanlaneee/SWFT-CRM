@@ -3,12 +3,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <title>SWFT — Customers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="swft-animations.css"/>
 <style>
@@ -26,8 +28,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .sidebar-toggle.visible{opacity:1;pointer-events:all;}
 .sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
 .logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:4px;text-transform:uppercase;color:var(--white);line-height:1;}
-.logo-mark em{color:var(--green);font-style:normal;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
 .logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
 .nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
 .nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
@@ -133,7 +135,7 @@ transition:border-color 0.15s;
 
 .table-head {
 display:grid;
-grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
+grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 112px;
 padding:11px 20px;
 border-bottom:1px solid var(--border);
 background:var(--surface2);
@@ -152,7 +154,7 @@ user-select:none; transition:color 0.14s;
 
 .cust-row {
 display:grid;
-grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 80px;
+grid-template-columns: 36px 1.6fr 1.4fr 1.1fr 1.4fr 0.7fr 1.2fr 112px;
 padding:13px 20px;
 border-bottom:1px solid var(--border);
 align-items:center;
@@ -450,6 +452,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<link rel="stylesheet" href="swft-mobile.css"/>
 </head>
 <body>
 
@@ -458,7 +461,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <aside class="sidebar" id="sidebar">
   <div class="logo-wrap">
     <div>
-      <div class="logo-mark">SWFT<em>.</em></div>
+      <div class="logo-mark">SWFT<em></em></div>
       <div class="logo-sub">simple. smart. swft.</div>
     </div>
     <div class="collapse-btn" onclick="toggleSidebar()">
@@ -489,7 +492,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
     <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
-    <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
+        <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
+<div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
     <div class="nav-item" onclick="window.location.href='swft-team'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team</div>
     <div class="nav-item" onclick="window.location.href='swft-team-tracker'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker</div>
@@ -661,7 +665,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <div class="contact-row">
         <div class="contact-icon">📍</div>
-        <div><div class="contact-label">Property Address</div><div class="contact-value" id="d-address">411 Birchwood Dr, Austin TX 78745</div></div>
+        <div style="flex:1;min-width:0;">
+          <div class="contact-label">Property Address</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="contact-value" id="d-address" style="flex:1;min-width:0;">411 Birchwood Dr, Austin TX 78745</div>
+            <a id="d-maps-link" href="#" target="_blank" rel="noopener" title="View in Google Maps" style="color:var(--gray);flex-shrink:0;display:flex;align-items:center;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#c8f135'" onmouseout="this.style.color='var(--gray)'">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>
+            </a>
+          </div>
+        </div>
       </div>
       
       <div class="contact-row">
@@ -845,10 +857,20 @@ async function loadCustomers() {
         '<div class="cust-email" style="font-size:12px;color:var(--gray);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(cust.email||'—') + '</div>' +
         '<div class="cust-status"><span class="status-active">Active</span></div>' +
         '<div class="cust-tags-cell" style="position:relative;" onclick="event.stopPropagation()">' + ((cust.tags||[]).length > 0 ? (cust.tags||[]).map(function(t){ return '<span class="cust-tag">' + esc(t) + '</span>'; }).join('') : '') + '<button class="tag-add-btn" onclick="event.stopPropagation();toggleTagPopover(this,\'' + cust.id + '\')">+</button></div>' +
-        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;"><div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></div>';
+        '<div class="cust-action" style="display:flex;gap:6px;justify-content:flex-end;">' +
+          '<div class="row-btn" onclick="event.stopPropagation();pipelineCustToJob(\'' + cust.id + '\')" title="Create Job for this customer" style="color:#4d9fff;border-color:rgba(77,159,255,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>' +
+          '<div class="row-btn" onclick="event.stopPropagation();deleteCustById(\'' + cust.id + '\')" style="color:#ff5252;border-color:rgba(255,82,82,0.3);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>' +
+          '<div class="row-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>' +
+        '</div>';
       tbody.appendChild(row);
     });
   } catch(e) { console.error('loadCustomers error:', e); }
+}
+
+function pipelineCustToJob(id) {
+  var c = window._customers[id];
+  if (!c) return;
+  window.location.href = 'swft-jobs?customer=' + encodeURIComponent(c.name || '') + '&new=1';
 }
 
 async function deleteCustById(id) {
@@ -1050,6 +1072,8 @@ function openDrawer(id) {
   document.getElementById('d-phone').textContent     = c.phone || '';
   document.getElementById('d-email').textContent     = c.email || '';
   document.getElementById('d-address').textContent   = c.address || '';
+  var mapsLink = document.getElementById('d-maps-link');
+  if (mapsLink) mapsLink.href = c.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.address) : '#';
   document.getElementById('d-since').textContent     = c.since || c.createdAt || '';
   switchTab(document.querySelector('.dtab'), 'contact');
   document.getElementById('c-edit-mode').style.display='none';
@@ -1121,6 +1145,8 @@ function openNewCustomer() {
   document.getElementById('d-phone').textContent = '';
   document.getElementById('d-email').textContent = '';
   document.getElementById('d-address').textContent = '';
+  var mapsLinkNew = document.getElementById('d-maps-link');
+  if (mapsLinkNew) mapsLinkNew.href = '#';
   switchTab(document.querySelector('.dtab'), 'contact');
   document.getElementById('e-fname').value = '';
   document.getElementById('e-lname').value = '';
@@ -1621,5 +1647,6 @@ function applySort(key) {
     </div>
   </div>
 </div>
+<script src="swft-mobile.js"></script>
 </body>
 </html><!-- deploy 1775518209 -->

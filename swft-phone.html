@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<title>Phone AI — SWFT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--surface3:#1e1e1e;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{background:#0a0a0a;}
+body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;letter-spacing:0;text-transform:uppercase;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;margin-bottom:0;}
+.logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
+.user-tile{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background 0.14s;}
+.user-tile:hover{background:var(--surface2);}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--white);}
+.user-role{font-size:10.5px;color:var(--gray2);margin-top:1px;}
+
+/* ── Main layout ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
+.topbar{height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;background:rgba(10,10,10,0.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:100;}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--white);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.main-body{flex:1;padding:32px 36px 64px;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--white);margin-bottom:4px;}
+.subtitle{color:var(--gray);font-size:13px;max-width:560px;line-height:1.5;}
+
+/* ── Buttons ── */
+.btn-primary{background:var(--green);color:#0a0a0a;font-weight:700;font-size:13px;padding:11px 22px;border-radius:9px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.15s;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary:hover:not(:disabled){background:#d5ff40;}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-secondary{background:transparent;color:var(--white);font-weight:500;font-size:13px;padding:10px 20px;border-radius:9px;border:1px solid var(--border2);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all 0.15s;display:inline-flex;align-items:center;gap:8px;}
+.btn-secondary:hover:not(:disabled){background:var(--surface2);border-color:var(--gray2);}
+.btn-secondary:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-danger{background:transparent;color:var(--red);font-weight:500;font-size:12px;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,82,82,0.3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;display:inline-flex;align-items:center;gap:6px;}
+.btn-danger:hover{background:rgba(255,82,82,0.08);}
+.btn-icon{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.14s;flex-shrink:0;}
+.btn-icon:hover{background:var(--surface2);color:var(--white);}
+
+/* ── Toast ── */
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.toast-dot.red{background:var(--red);}
+.toast-dot.amber{background:var(--amber);}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;}
+.card:hover{border-color:var(--border2);}
+
+/* ── Page tabs ── */
+.page-tabs{display:flex;align-items:center;gap:2px;padding:0 2px;border-bottom:1px solid var(--border);margin:0 0 26px;overflow-x:auto;scrollbar-width:none;}
+.page-tabs::-webkit-scrollbar{display:none;}
+.ptab{font-size:13px;font-weight:500;padding:11px 16px;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color 0.14s,border-color 0.14s;user-select:none;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.ptab:hover{color:var(--white);}
+.ptab.active{color:var(--green);border-bottom-color:var(--green);}
+.ptab-icon{width:14px;height:14px;flex-shrink:0;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadeUp 0.22s cubic-bezier(0.22,1,0.36,1) both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── Toggles ── */
+.toggle{width:38px;height:22px;border-radius:11px;background:var(--border2);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#0a0a0a;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(16px);}
+
+/* ── Form inputs ── */
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.form-textarea{resize:vertical;min-height:90px;line-height:1.5;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green);}
+.form-select{appearance:none;cursor:pointer;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237a7a7a' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.form-select option{background:var(--surface2);}
+.field{margin-bottom:16px;}
+.field-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);font-weight:600;margin-bottom:6px;display:block;}
+.field-hint{font-size:11px;color:var(--gray);margin-top:4px;line-height:1.4;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.grid{grid-template-columns:1fr;}}
+
+/* ── Stats strip ── */
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.stat-label{font-size:11px;color:var(--gray);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.stat-sub{font-size:11px;color:var(--green);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+@media(max-width:700px){.stats-strip{grid-template-columns:1fr 1fr;}.stat-card:last-child{grid-column:1/-1;}}
+
+/* ── Number header ── */
+.number-header{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 26px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.number-display{display:flex;align-items:center;gap:16px;}
+.phone-icon-wrap{width:48px;height:48px;border-radius:12px;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);display:flex;align-items:center;justify-content:center;color:var(--green);flex-shrink:0;}
+.number-text{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;letter-spacing:2px;color:var(--white);}
+.number-sub{font-size:11px;color:var(--gray);margin-top:2px;}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;}
+.status-pill.active{background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.25);}
+.status-pill.inactive{background:rgba(122,122,122,0.1);color:var(--gray);border:1px solid var(--border2);}
+.status-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.number-actions{display:flex;align-items:center;gap:8px;}
+
+/* ── Call log table ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+.call-table{width:100%;border-collapse:collapse;font-size:13px;}
+.call-table th{text-align:left;padding:10px 16px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);border-bottom:1px solid var(--border);font-weight:600;background:var(--surface);}
+.call-table td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--white);vertical-align:middle;}
+.call-table tr:last-child td{border-bottom:none;}
+.call-table tr:hover td{background:var(--surface2);}
+.caller-cell{display:flex;flex-direction:column;gap:2px;}
+.caller-name{font-weight:500;color:var(--white);font-size:13px;}
+.caller-number{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);}
+.duration-badge{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gray);}
+.lead-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:10px;font-size:10.5px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.lead-badge.yes{background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.25);}
+.lead-badge.no{background:rgba(122,122,122,0.08);color:var(--gray2);border:1px solid var(--border2);}
+.row-actions{display:flex;align-items:center;gap:6px;}
+.table-empty{text-align:center;padding:56px 24px;color:var(--gray);}
+.table-empty-icon{margin-bottom:12px;opacity:0.3;}
+
+/* ── Upgrade state ── */
+.upgrade-wrap{max-width:720px;margin:0 auto;padding-top:24px;}
+.pricing-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;position:relative;overflow:hidden;}
+.pricing-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),#8bde22);}
+.pricing-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.25);margin-bottom:20px;}
+.pricing-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white);margin-bottom:10px;}
+.pricing-amount{display:flex;align-items:flex-start;justify-content:center;gap:4px;margin-bottom:6px;}
+.pricing-dollar{font-size:22px;font-weight:700;color:var(--green);margin-top:6px;}
+.pricing-number{font-family:'Bebas Neue',sans-serif;font-size:68px;letter-spacing:2px;color:var(--green);line-height:1;display:inline-flex;align-items:baseline;}
+.pricing-period{font-size:14px;color:var(--gray);align-self:flex-end;margin-bottom:8px;}
+.pricing-desc{font-size:13px;color:var(--gray);margin-bottom:32px;line-height:1.6;max-width:440px;margin-left:auto;margin-right:auto;}
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:32px;text-align:left;}
+.feature-item{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
+.feature-check{width:18px;height:18px;border-radius:50%;background:rgba(200,241,53,0.12);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.feature-text{font-size:12.5px;color:var(--white);line-height:1.4;}
+.feature-sub{font-size:11px;color:var(--gray);margin-top:2px;}
+@media(max-width:580px){.features-grid{grid-template-columns:1fr;}}
+
+/* ── Provision state ── */
+.provision-wrap{max-width:540px;margin:0 auto;padding-top:24px;}
+.provision-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;}
+.provision-step{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-top:1px solid var(--border);}
+.provision-step:first-child{border-top:none;padding-top:0;}
+.step-num{width:26px;height:26px;border-radius:50%;background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.3);color:var(--green);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+.step-text{font-size:13px;color:var(--white);line-height:1.5;}
+.step-hint{font-size:11.5px;color:var(--gray);margin-top:3px;line-height:1.4;}
+
+/* ── AI Config ── */
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--border);}
+.toggle-row:first-child{border-top:none;padding-top:0;}
+.toggle-row-text{flex:1;min-width:0;}
+.toggle-row-title{font-size:13px;color:var(--white);font-weight:500;}
+.toggle-row-desc{font-size:11.5px;color:var(--gray);margin-top:3px;line-height:1.4;}
+
+/* ── Voice selector chips ── */
+.voice-group{display:flex;flex-wrap:wrap;gap:8px;}
+.voice-chip{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:20px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--gray);cursor:pointer;user-select:none;transition:all 0.14s;font-family:'DM Sans',sans-serif;}
+.voice-chip:hover{border-color:var(--gray2);color:var(--white);}
+.voice-chip.on{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.4);color:var(--green);}
+
+/* ── Transcript modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(4px);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;transform:translateY(16px);transition:transform 0.22s cubic-bezier(0.22,1,0.36,1);}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);}
+.modal-title{font-size:15px;font-weight:600;color:var(--white);}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.transcript-text{font-size:12.5px;line-height:1.8;color:var(--white);white-space:pre-wrap;font-family:'DM Sans',sans-serif;}
+.transcript-text .line-ai{color:var(--green);}
+.transcript-text .line-caller{color:var(--white);}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.meta-item{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;}
+.meta-key{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:3px;}
+.meta-val{font-size:13px;color:var(--white);font-weight:500;}
+.lead-form{background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:18px;margin-top:16px;}
+.lead-form-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:14px;}
+</style>
+<link rel="stylesheet" href="swft-mobile.css"/>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div><div class="logo-mark">SWFT<em></em></div><div class="logo-sub">simple. smart. swft.</div></div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item" onclick="location.href='swft-dashboard'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-label">CRM</div>
+    <div class="nav-item" onclick="location.href='swft-customers'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
+      Customers
+    </div>
+    <div class="nav-item" onclick="location.href='swft-jobs'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Jobs
+    </div>
+    <div class="nav-item" onclick="location.href='swft-billing'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Billing
+    </div>
+    <div class="nav-item" onclick="location.href='swft-schedule'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>
+      Schedule
+    </div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="location.href='swft-messages'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>
+      Messages
+    </div>
+    <div class="nav-item" onclick="location.href='swft-broadcasts'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Broadcasts
+    </div>
+    <div class="nav-item" onclick="location.href='swft-ai-agents'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      Automations
+    </div>
+    <div class="nav-item active">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>
+      Phone AI
+    </div>
+    <div class="nav-item" onclick="location.href='swft-connect'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      SWFT Connect
+    </div>
+    <div class="nav-label">Admin</div>
+    <div class="nav-item" onclick="location.href='swft-team'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.8"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>
+      Team
+    </div>
+    <div class="nav-item" onclick="location.href='swft-team-tracker'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>
+      Team Tracker
+    </div>
+    <div class="nav-item" onclick="location.href='swft-team-chat'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke-width="1.8"/></svg>
+      Team Chat
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="location.href='swft-settings'" style="margin-bottom:4px;">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>
+      Settings
+    </div>
+    <div class="user-tile" id="user-tile">
+      <div class="s-avatar" id="user-avatar"></div>
+      <div><div class="user-name" id="user-name"></div><div class="user-role" id="user-role"></div></div>
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-page">PHONE AI</div>
+    <div class="topbar-right"></div>
+  </header>
+  <div class="main-body">
+  <!-- ── Toast ── -->
+  <div class="toast" id="toast"><span class="toast-dot" id="toast-dot"></span><span id="toast-msg"></span></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       STATE: LOADING
+  ══════════════════════════════════════════════════════ -->
+  <div id="state-loading" style="display:flex;align-items:center;justify-content:center;min-height:60vh;">
+    <div style="text-align:center;color:var(--gray);">
+      <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;margin-bottom:12px;opacity:0.4;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-width="2" stroke-linecap="round"/></svg>
+      <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+      <div style="font-size:13px;">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       STATE: NOT SUBSCRIBED — upgrade / pricing card
+  ══════════════════════════════════════════════════════ -->
+  <div id="state-upgrade" style="display:none;">
+    <div class="page-header">
+      <div>
+        <h1>PHONE AI</h1>
+        <p class="subtitle">An AI receptionist that answers missed calls, collects leads, and never puts a customer on hold — even at 2 AM.</p>
+      </div>
+    </div>
+
+    <div class="upgrade-wrap">
+      <div class="pricing-card">
+        <div class="pricing-badge">
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="2"/></svg>
+          Add-on
+        </div>
+        <div class="pricing-name">Phone AI Receptionist</div>
+        <div class="pricing-amount">
+          <span class="pricing-dollar">$</span>
+          <span class="pricing-number">39</span>
+          <span class="pricing-period">/ month</span>
+        </div>
+        <p class="pricing-desc">Add an AI-powered phone line to your SWFT account. Train it on your business, let it answer calls, and never miss a lead again.</p>
+
+        <div class="features-grid">
+          <div class="feature-item">
+            <div class="feature-check"><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="feature-text">Dedicated phone number</div><div class="feature-sub">Local or toll-free</div></div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check"><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="feature-text">AI answers missed calls</div><div class="feature-sub">24/7, sounds natural</div></div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check"><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="feature-text">Full call transcripts</div><div class="feature-sub">Saved to your dashboard</div></div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check"><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="feature-text">One-click lead conversion</div><div class="feature-sub">Creates customer + job</div></div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check"><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="feature-text">Trained on your business</div><div class="feature-sub">Services, hours, area</div></div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-check"><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="feature-text">Cancel anytime</div><div class="feature-sub">No long-term contracts</div></div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="subscribe-btn" onclick="subscribe()" style="width:100%;justify-content:center;padding:14px;font-size:15px;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="2"/></svg>
+          Add Phone AI — $39/mo
+        </button>
+        <p style="font-size:11.5px;color:var(--gray);margin-top:12px;">Charged separately from your SWFT plan. Cancel anytime from your billing settings.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       STATE: SUBSCRIBED — provision your number
+  ══════════════════════════════════════════════════════ -->
+  <div id="state-provision" style="display:none;">
+    <div class="page-header">
+      <div>
+        <h1>PHONE AI</h1>
+        <p class="subtitle">Subscription active — let's get your number set up. This only takes about 30 seconds.</p>
+      </div>
+      <span class="status-pill active">Subscribed</span>
+    </div>
+
+    <div class="provision-wrap">
+      <div class="provision-card">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white);margin-bottom:6px;">Set Up Your Number</h2>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:24px;line-height:1.5;">We'll provision a dedicated phone number and configure your AI receptionist. Calls to this number will be answered by SWFT on your behalf.</p>
+
+        <div class="provision-step">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-text">Choose an area code (optional)</div>
+            <div class="step-hint">Leave blank for any available number, or enter a 3-digit area code to get a local number for your market.</div>
+            <input class="form-input" id="area-code-input" type="text" maxlength="3" placeholder="e.g. 512" style="max-width:160px;margin-top:10px;" oninput="this.value=this.value.replace(/\D/g,'')"/>
+          </div>
+        </div>
+
+        <div class="provision-step">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-text">Your AI greeting</div>
+            <div class="step-hint">What should the AI say when it picks up? Leave blank to use your business name.</div>
+            <input class="form-input" id="provision-greeting" type="text" placeholder="Thanks for calling! How can I help?" style="margin-top:10px;"/>
+          </div>
+        </div>
+
+        <div class="provision-step">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-text">Forward missed calls to this number</div>
+            <div class="step-hint">After provisioning, set up call forwarding on your existing business number. We'll show you exactly how once your SWFT number is ready.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-primary" id="provision-btn" onclick="provision()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="6" y1="12" x2="18" y2="12" stroke-width="2" stroke-linecap="round"/></svg>
+            Provision My Number
+          </button>
+          <button class="btn-danger" onclick="cancelAddon()">Cancel Subscription</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       STATE: ACTIVE — full dashboard
+  ══════════════════════════════════════════════════════ -->
+  <div id="state-active" style="display:none;">
+    <div class="page-header">
+      <div>
+        <h1>PHONE AI</h1>
+        <p class="subtitle">Your AI receptionist is live. Every missed call is answered, transcribed, and saved here as a lead.</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-icon" id="refresh-btn" title="Refresh" onclick="refreshCalls()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Number header -->
+    <div class="number-header">
+      <div class="number-display">
+        <div class="phone-icon-wrap">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>
+        </div>
+        <div>
+          <div class="number-text" id="display-number">—</div>
+          <div class="number-sub">Forward your missed calls to this number</div>
+        </div>
+      </div>
+      <div class="number-actions">
+        <span class="status-pill active" id="active-status-pill">Active</span>
+        <button class="btn-icon" id="copy-number-btn" title="Copy number" onclick="copyNumber()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Total Calls</div>
+        <div class="stat-sub" id="stat-total-sub">all time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-leads">0</div>
+        <div class="stat-label">Leads Created</div>
+        <div class="stat-sub" id="stat-leads-sub">converted to CRM</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-duration">0s</div>
+        <div class="stat-label">Avg Call Length</div>
+        <div class="stat-sub">per call</div>
+      </div>
+    </div>
+
+    <!-- Page tabs -->
+    <div class="page-tabs">
+      <div class="ptab active" data-tab="calls" onclick="switchTab('calls')">
+        <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>
+        Call Log
+      </div>
+      <div class="ptab" data-tab="config" onclick="switchTab('config')">
+        <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        AI Config
+      </div>
+      <div class="ptab" data-tab="setup" onclick="switchTab('setup')">
+        <svg class="ptab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>
+        Number Setup
+      </div>
+    </div>
+
+    <!-- ── Tab: AI Config ── -->
+    <div class="tab-panel" id="panel-config">
+      <div style="max-width:700px;">
+
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <div style="font-size:15px;font-weight:600;color:var(--white);">AI Receptionist Config</div>
+              <div style="font-size:12px;color:var(--gray);margin-top:2px;">Controls how your AI answers calls and what it collects.</div>
+            </div>
+            <button class="btn-primary" id="save-config-btn" onclick="saveConfig()" disabled>Save</button>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Opening greeting</label>
+            <input class="form-input" id="cfg-greeting" type="text" placeholder="Thanks for calling! How can I help you today?" oninput="markConfigDirty()"/>
+            <div class="field-hint">What the AI says first when it picks up. Leave blank to use your business name automatically.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">AI voice</label>
+            <div class="voice-group" id="voice-group">
+              <div class="voice-chip on" data-voice="jennifer" onclick="selectVoice('jennifer')">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke-width="2" stroke-linecap="round"/></svg>
+                Jennifer <span style="font-size:10px;color:var(--gray);margin-left:2px;">(female)</span>
+              </div>
+              <div class="voice-chip" data-voice="ryan" onclick="selectVoice('ryan')">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke-width="2" stroke-linecap="round"/></svg>
+                Ryan <span style="font-size:10px;color:var(--gray);margin-left:2px;">(male)</span>
+              </div>
+              <div class="voice-chip" data-voice="natalie" onclick="selectVoice('natalie')">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke-width="2" stroke-linecap="round"/></svg>
+                Natalie <span style="font-size:10px;color:var(--gray);margin-left:2px;">(female)</span>
+              </div>
+              <div class="voice-chip" data-voice="will" onclick="selectVoice('will')">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke-width="2" stroke-linecap="round"/></svg>
+                Will <span style="font-size:10px;color:var(--gray);margin-left:2px;">(male)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Custom instructions</label>
+            <textarea class="form-textarea" id="cfg-instructions" placeholder="E.g. Only serve customers in Austin and surrounding areas. If they mention a commercial job, let them know we focus on residential." oninput="markConfigDirty()"></textarea>
+            <div class="field-hint">Extra context the AI should know. Stacks on top of your business profile from settings.</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px;">Information to Collect</div>
+          <div style="font-size:12px;color:var(--gray);margin-bottom:18px;">What the AI asks callers for during the conversation.</div>
+
+          <div class="toggle-row" style="padding-top:0;border-top:none;">
+            <div class="toggle-row-text">
+              <div class="toggle-row-title">Caller name</div>
+              <div class="toggle-row-desc">Always ask for the caller's full name. Recommended.</div>
+            </div>
+            <button class="toggle on" id="cfg-collect-name" onclick="toggleCfg(this,'collectName')"></button>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-row-text">
+              <div class="toggle-row-title">Email address</div>
+              <div class="toggle-row-desc">Ask for an email so you can follow up digitally.</div>
+            </div>
+            <button class="toggle" id="cfg-collect-email" onclick="toggleCfg(this,'collectEmail')"></button>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-row-text">
+              <div class="toggle-row-title">Service address</div>
+              <div class="toggle-row-desc">Useful for service businesses that need to know where to go.</div>
+            </div>
+            <button class="toggle" id="cfg-collect-address" onclick="toggleCfg(this,'collectAddress')"></button>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-row-text">
+              <div class="toggle-row-title">Job description</div>
+              <div class="toggle-row-desc">Ask what work the caller needs done. Recommended.</div>
+            </div>
+            <button class="toggle on" id="cfg-collect-job" onclick="toggleCfg(this,'collectJobDetails')"></button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <button class="btn-danger" onclick="cancelAddon()">Cancel Phone Add-on</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Call Log ── -->
+    <div class="tab-panel active" id="panel-calls">
+      <div class="table-wrap">
+        <table class="call-table">
+          <thead>
+            <tr>
+              <th>Caller</th>
+              <th>Date &amp; Time</th>
+              <th>Duration</th>
+              <th>Summary</th>
+              <th>Lead</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="call-log-body">
+            <tr>
+              <td colspan="6">
+                <div class="table-empty">
+                  <div class="table-empty-icon">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.5"/></svg>
+                  </div>
+                  <div style="font-size:14px;font-weight:500;color:var(--white);margin-bottom:4px;">No calls yet</div>
+                  <div style="font-size:12px;">Calls will appear here as they come in.</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Tab: Number Setup ── -->
+    <div class="tab-panel" id="panel-setup">
+      <div style="max-width:600px;">
+        <div class="card" style="margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;color:var(--white);margin-bottom:4px;">Your SWFT Phone Number</div>
+          <div style="font-size:12px;color:var(--gray);margin-bottom:20px;">This is your dedicated AI receptionist line.</div>
+          <div style="display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+            <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--green);" id="setup-display-number">—</div>
+            <button class="btn-icon" onclick="copyNumber()" title="Copy">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/></svg>
+            </button>
+          </div>
+
+          <div style="font-size:12px;font-weight:600;color:var(--white);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">How to forward missed calls</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--white);">
+              <span style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">iPhone</span>
+              Settings → Phone → Call Forwarding → No Answer → enter your SWFT number
+            </div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--white);">
+              <span style="color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">Android / Google Voice</span>
+              Call settings → When unanswered → Forward to → enter your SWFT number
+            </div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--white);">
+              <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px;">VoIP / Business Line</span>
+              Log in to your carrier or VoIP provider → Find "No-Answer Forward" or "Conditional Forward" → set your SWFT number
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end state-active -->
+  </div><!-- end .main-body -->
+
+</main><!-- end .main -->
+
+<script src="swft-api.js"></script>
+<script type="module">
+import { initializeApp }                from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, onAuthStateChanged }  from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBQ3Ki8OnOtzxnh0ODzgtMf_o8k5Hgv5mA",
+  authDomain:        "swft-ai26.firebaseapp.com",
+  projectId:         "swft-ai26",
+  storageBucket:     "swft-ai26.firebasestorage.app",
+  messagingSenderId: "170879575187",
+  appId:             "1:170879575187:web:e329382b0adf9518ead966",
+  measurementId:     "G-B8BEW7E87V",
+};
+initializeApp(firebaseConfig);
+const auth = getAuth();
+
+// ── State ──────────────────────────────────────────────────────────────────
+let phoneStatus   = null;
+let callsData     = [];
+let activeCallId  = null;
+let configDirty   = false;
+let configState   = {};
+let selectedVoice = "jennifer";
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  // Guard against transient null on initial hydration from IndexedDB
+  if (!user) {
+    try { if (auth.authStateReady) await auth.authStateReady(); } catch (_) {}
+    user = auth.currentUser;
+  }
+  if (!user) { window.location.href = "swft-login"; return; }
+  document.body.style.visibility = "visible";
+
+  const name   = user.displayName || user.email || "User";
+  const parts  = name.split(" ");
+  const initials = ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "U";
+  document.getElementById("user-avatar").textContent = initials;
+  document.getElementById("user-name").textContent   = name;
+  document.getElementById("user-role").textContent   = "Owner";
+
+  const params = new URLSearchParams(location.search);
+  if (params.get("phone_session_id")) {
+    await verifyStripeSession(params.get("phone_session_id"));
+    history.replaceState({}, "", location.pathname);
+  }
+  await loadStatus();
+});
+
+// ── loadStatus ─────────────────────────────────────────────────────────────
+async function loadStatus() {
+  showState("state-loading");
+  try { phoneStatus = await API.phone.status(); }
+  catch (err) { toast("Failed to load: " + err.message, "red"); showState("state-upgrade"); return; }
+
+  if (!phoneStatus.subscribed)  { showState("state-upgrade");   return; }
+  if (!phoneStatus.provisioned) { showState("state-provision"); return; }
+
+  showState("state-active");
+  const num = phoneStatus.phoneNumber || "—";
+  document.getElementById("display-number").textContent      = formatPhone(num);
+  document.getElementById("setup-display-number").textContent = formatPhone(num);
+
+  const s = phoneStatus.stats || {};
+  document.getElementById("stat-total").textContent    = s.totalCalls    || 0;
+  document.getElementById("stat-leads").textContent    = s.leadsCreated  || 0;
+  document.getElementById("stat-duration").textContent = formatDuration(s.avgDurationSeconds || 0);
+
+  await loadCalls();
+  loadConfigIntoUI(phoneStatus.settings || {});
+}
+
+function showState(id) {
+  ["state-loading","state-upgrade","state-provision","state-active"].forEach(s => {
+    document.getElementById(s).style.display = s === id ? "block" : "none";
+  });
+}
+
+async function verifyStripeSession(sessionId) {
+  try { await API.phone.verifySession(sessionId); toast("Phone add-on activated!", "green"); }
+  catch (err) { toast("Could not verify payment: " + err.message, "red"); }
+}
+
+// ── Formatting helpers ─────────────────────────────────────────────────────
+function formatPhone(num) {
+  if (!num || num === "—") return num || "—";
+  const d = num.replace(/\D/g, "");
+  if (d.length === 11 && d[0] === "1") return `+1 (${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  if (d.length === 10)                  return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  return num;
+}
+function formatDuration(sec) {
+  if (!sec) return "0s";
+  if (sec < 60) return `${sec}s`;
+  return `${Math.floor(sec/60)}m ${sec % 60}s`;
+}
+function formatDate(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleDateString("en-US",{month:"short",day:"numeric"}) + " " +
+         new Date(ts).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, type = "green") {
+  const el = document.getElementById("toast");
+  document.getElementById("toast-dot").className = "toast-dot" + (type !== "green" ? " " + type : "");
+  document.getElementById("toast-msg").textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 3200);
+}
+
+window.toast          = toast;
+window.loadStatus     = loadStatus;
+window.showState      = showState;
+window.formatPhone    = formatPhone;
+window.formatDuration = formatDuration;
+window.formatDate     = formatDate;
+</script>
+
+<script type="module">
+// ── Subscribe — redirect to Stripe hosted checkout ─────────────────────────
+window.subscribe = async function() {
+  const btn = document.getElementById("subscribe-btn");
+  btn.disabled = true;
+  btn.textContent = "Redirecting to checkout...";
+  try {
+    const { url } = await API.phone.subscribe();
+    window.location.href = url;
+  } catch (err) {
+    window.toast("Checkout failed: " + err.message, "red");
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="2"/></svg> Add Phone AI — $39/mo`;
+  }
+};
+
+// ── Provision — create Vapi assistant + buy number ─────────────────────────
+window.provision = async function() {
+  const btn      = document.getElementById("provision-btn");
+  const areaCode = document.getElementById("area-code-input").value.trim();
+  const greeting = document.getElementById("provision-greeting").value.trim();
+  btn.disabled   = true;
+  btn.textContent = "Provisioning your number...";
+  try {
+    const result = await API.phone.provision({ areaCode: areaCode || undefined, greeting: greeting || undefined });
+    window.toast("Number provisioned: " + window.formatPhone(result.phoneNumber), "green");
+    await window.loadStatus();
+  } catch (err) {
+    window.toast("Provisioning failed: " + err.message, "red");
+    btn.disabled = false;
+    btn.textContent = "Provision My Number";
+  }
+};
+
+// ── Cancel add-on ──────────────────────────────────────────────────────────
+window.cancelAddon = async function() {
+  if (!confirm("Cancel your Phone AI add-on? Your number will be released and you will stop being billed.")) return;
+  try {
+    await API.phone.cancel();
+    window.toast("Phone add-on cancelled.", "amber");
+    setTimeout(() => window.loadStatus(), 800);
+  } catch (err) {
+    window.toast("Cancel failed: " + err.message, "red");
+  }
+};
+
+// ── Copy number to clipboard ───────────────────────────────────────────────
+window.copyNumber = function() {
+  const raw = phoneStatus?.phoneNumber || "";
+  if (!raw) return;
+  navigator.clipboard.writeText(raw).then(() => window.toast("Number copied!", "green"))
+    .catch(() => window.toast("Copy failed", "red"));
+};
+
+// ── Refresh calls ──────────────────────────────────────────────────────────
+window.refreshCalls = async function() {
+  const btn = document.getElementById("refresh-btn");
+  btn.style.opacity = "0.4";
+  btn.style.pointerEvents = "none";
+  try {
+    await loadCalls();
+    window.toast("Calls refreshed", "green");
+  } finally {
+    btn.style.opacity = "";
+    btn.style.pointerEvents = "";
+  }
+};
+</script>
+
+<script type="module">
+// ── loadCalls + renderCallLog ──────────────────────────────────────────────
+window.loadCalls = async function() {
+  try {
+    const res = await API.phone.calls(100);
+    callsData = res.calls || [];
+    renderCallLog(callsData);
+  } catch (err) {
+    window.toast("Could not load calls: " + err.message, "red");
+  }
+};
+
+// make callsData available across module scripts
+window._callsData = [];
+
+function renderCallLog(calls) {
+  window._callsData = calls;
+  const tbody = document.getElementById("call-log-body");
+  if (!calls.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="table-empty">
+      <div class="table-empty-icon"><svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.5"/></svg></div>
+      <div style="font-size:14px;font-weight:500;color:var(--white);margin-bottom:4px;">No calls yet</div>
+      <div style="font-size:12px;">Calls will appear here as they come in.</div>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = calls.map(c => {
+    const name    = c.callerName || "";
+    const number  = window.formatPhone(c.callerNumber) || "Unknown";
+    const dur     = window.formatDuration(c.durationSeconds);
+    const dt      = window.formatDate(c.startedAt);
+    const summary = c.summary ? c.summary.slice(0,60) + (c.summary.length > 60 ? "…" : "") : "—";
+    const leadBadge = c.leadCreated
+      ? `<span class="lead-badge yes">&#10003; Lead</span>`
+      : `<span class="lead-badge no">Not yet</span>`;
+    const convertBtn = c.leadCreated
+      ? `<button class="btn-icon" title="View in CRM" onclick="window.openTranscript('${c.id}')"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg></button>`
+      : `<button class="btn-primary" style="padding:5px 10px;font-size:11.5px;border-radius:7px;" onclick="window.openTranscript('${c.id}')">Convert</button>`;
+
+    return `<tr>
+      <td><div class="caller-cell"><div class="caller-name">${name || number}</div>${name ? `<div class="caller-number">${number}</div>` : ""}</div></td>
+      <td style="font-size:12px;color:var(--gray);">${dt}</td>
+      <td><span class="duration-badge">${dur}</span></td>
+      <td style="font-size:12px;color:var(--gray);max-width:200px;">${summary}</td>
+      <td>${leadBadge}</td>
+      <td style="text-align:right;"><div class="row-actions" style="justify-content:flex-end;">
+        <button class="btn-icon" title="View transcript" onclick="window.openTranscript('${c.id}')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="2"/><polyline points="14,2 14,8 20,8" stroke-width="2"/><line x1="9" y1="13" x2="15" y2="13" stroke-width="1.8"/><line x1="9" y1="17" x2="13" y2="17" stroke-width="1.8"/></svg>
+        </button>
+        ${convertBtn}
+      </div></td>
+    </tr>`;
+  }).join("");
+}
+window.renderCallLog = renderCallLog;
+
+// ── openTranscript ─────────────────────────────────────────────────────────
+window.openTranscript = async function(callId) {
+  window.activeCallId = callId;
+  const modal = document.getElementById("transcript-modal");
+  document.getElementById("modal-transcript").textContent = "Loading...";
+  document.getElementById("modal-meta").innerHTML = "";
+  document.getElementById("lead-form").style.display   = "none";
+  document.getElementById("modal-convert-btn").style.display = "none";
+  document.getElementById("modal-view-btn").style.display    = "none";
+  document.getElementById("modal-recording-link").style.display = "none";
+  modal.classList.add("open");
+
+  try {
+    const call = await API.phone.call(callId);
+    document.getElementById("modal-caller-title").textContent =
+      (call.callerName || window.formatPhone(call.callerNumber) || "Unknown Caller");
+
+    // Meta grid
+    const metas = [
+      { k: "Caller",   v: window.formatPhone(call.callerNumber) || "Unknown" },
+      { k: "Date",     v: window.formatDate(call.startedAt) },
+      { k: "Duration", v: window.formatDuration(call.durationSeconds) },
+      { k: "Status",   v: call.leadCreated ? "Lead created" : "Not converted" },
+    ];
+    if (call.callerEmail)   metas.push({ k: "Email",   v: call.callerEmail });
+    if (call.callerAddress) metas.push({ k: "Address", v: call.callerAddress });
+
+    document.getElementById("modal-meta").innerHTML = metas.map(m =>
+      `<div class="meta-item"><div class="meta-key">${m.k}</div><div class="meta-val">${m.v}</div></div>`
+    ).join("");
+
+    // Transcript
+    const raw = call.transcript || "(no transcript)";
+    document.getElementById("modal-transcript").innerHTML = raw
+      .split("\n")
+      .map(line => {
+        const isAI = /^(AI|Assistant|SWFT):/i.test(line);
+        return `<span class="${isAI ? "line-ai" : "line-caller"}">${escHtml(line)}</span>`;
+      })
+      .join("\n");
+
+    // Recording link
+    if (call.recordingUrl) {
+      const a = document.getElementById("modal-recording-link");
+      a.href = call.recordingUrl;
+      a.style.display = "inline-flex";
+    }
+
+    if (call.leadCreated) {
+      document.getElementById("modal-view-btn").style.display = "inline-flex";
+      window._viewCustomerId = call.customerId;
+      window._viewJobId      = call.jobId;
+    } else {
+      // Show lead conversion form pre-filled
+      document.getElementById("lead-form").style.display     = "block";
+      document.getElementById("modal-convert-btn").style.display = "inline-flex";
+      const nameParts = (call.callerName || "").split(" ");
+      document.getElementById("lead-fname").value     = nameParts[0] || "";
+      document.getElementById("lead-lname").value     = nameParts.slice(1).join(" ") || "";
+      document.getElementById("lead-phone").value     = call.callerNumber || "";
+      document.getElementById("lead-email").value     = call.callerEmail  || "";
+      document.getElementById("lead-job-title").value = call.jobDescription ? call.jobDescription.slice(0,60) : "";
+      document.getElementById("lead-job-desc").value  = call.summary || call.jobDescription || "";
+    }
+  } catch (err) {
+    document.getElementById("modal-transcript").textContent = "Failed to load: " + err.message;
+  }
+};
+
+function escHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+window.closeTranscript = function(e) {
+  if (e && e.target !== document.getElementById("transcript-modal")) return;
+  document.getElementById("transcript-modal").classList.remove("open");
+  window.activeCallId = null;
+};
+
+// ── submitConvert — create customer + job from call ────────────────────────
+window.submitConvert = async function() {
+  const btn = document.getElementById("modal-convert-btn");
+  btn.disabled = true;
+  btn.textContent = "Creating...";
+  try {
+    const data = {
+      firstName:      document.getElementById("lead-fname").value.trim(),
+      lastName:       document.getElementById("lead-lname").value.trim(),
+      phone:          document.getElementById("lead-phone").value.trim(),
+      email:          document.getElementById("lead-email").value.trim(),
+      jobTitle:       document.getElementById("lead-job-title").value.trim(),
+      jobDescription: document.getElementById("lead-job-desc").value.trim(),
+    };
+    await API.phone.convertToLead(window.activeCallId, data);
+    window.toast("Customer + job created!", "green");
+    document.getElementById("transcript-modal").classList.remove("open");
+    await window.loadCalls();
+    // refresh stats
+    const fresh = await API.phone.status();
+    if (fresh.stats) {
+      document.getElementById("stat-total").textContent    = fresh.stats.totalCalls   || 0;
+      document.getElementById("stat-leads").textContent    = fresh.stats.leadsCreated || 0;
+      document.getElementById("stat-duration").textContent = window.formatDuration(fresh.stats.avgDurationSeconds || 0);
+    }
+  } catch (err) {
+    window.toast("Convert failed: " + err.message, "red");
+    btn.disabled = false;
+    btn.textContent = "Create Customer + Job";
+  }
+};
+
+window.viewLead = function() {
+  if (window._viewCustomerId) {
+    window.location.href = `swft-customers?id=${window._viewCustomerId}`;
+  }
+};
+</script>
+
+<script type="module">
+// ── AI Config UI ───────────────────────────────────────────────────────────
+window._cfgState = {
+  collectName: true, collectEmail: false,
+  collectAddress: false, collectJobDetails: true,
+  voiceId: "jennifer",
+};
+
+window.loadConfigIntoUI = function(settings) {
+  window._cfgState = { ...window._cfgState, ...settings };
+  document.getElementById("cfg-greeting").value      = settings.greeting           || "";
+  document.getElementById("cfg-instructions").value  = settings.customInstructions || "";
+  setToggle("cfg-collect-name",    settings.collectName        !== false);
+  setToggle("cfg-collect-email",   Boolean(settings.collectEmail));
+  setToggle("cfg-collect-address", Boolean(settings.collectAddress));
+  setToggle("cfg-collect-job",     settings.collectJobDetails  !== false);
+  selectVoice(settings.voiceId || "jennifer");
+  window.configDirty = false;
+  document.getElementById("save-config-btn").disabled = true;
+  document.getElementById("save-config-btn").textContent = "Saved";
+};
+
+function setToggle(id, on) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle("on", on);
+}
+
+window.selectVoice = function(id) {
+  window._cfgState.voiceId = id;
+  document.querySelectorAll(".voice-chip").forEach(c => {
+    c.classList.toggle("on", c.dataset.voice === id);
+  });
+  markConfigDirty();
+};
+
+window.toggleCfg = function(btn, key) {
+  const isOn = btn.classList.toggle("on");
+  window._cfgState[key] = isOn;
+  markConfigDirty();
+};
+
+window.markConfigDirty = function() {
+  window.configDirty = true;
+  const btn = document.getElementById("save-config-btn");
+  if (btn) { btn.disabled = false; btn.textContent = "Save Changes"; }
+};
+
+window.saveConfig = async function() {
+  const btn = document.getElementById("save-config-btn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+  try {
+    const data = {
+      greeting:           document.getElementById("cfg-greeting").value.trim(),
+      customInstructions: document.getElementById("cfg-instructions").value.trim(),
+      voiceId:            window._cfgState.voiceId        || "jennifer",
+      collectName:        window._cfgState.collectName    !== false,
+      collectEmail:       Boolean(window._cfgState.collectEmail),
+      collectAddress:     Boolean(window._cfgState.collectAddress),
+      collectJobDetails:  window._cfgState.collectJobDetails !== false,
+    };
+    await API.phone.saveSettings(data);
+    window.toast("AI config saved!", "green");
+    btn.textContent = "Saved";
+    window.configDirty = false;
+  } catch (err) {
+    window.toast("Save failed: " + err.message, "red");
+    btn.disabled = false;
+    btn.textContent = "Save Changes";
+  }
+};
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+window.switchTab = function(name) {
+  document.querySelectorAll(".ptab").forEach(t =>
+    t.classList.toggle("active", t.dataset.tab === name)
+  );
+  document.querySelectorAll(".tab-panel").forEach(p =>
+    p.classList.toggle("active", p.id === "panel-" + name)
+  );
+};
+
+// ── Sidebar toggle ─────────────────────────────────────────────────────────
+window.toggleSidebar = function() {
+  const sidebar = document.getElementById("sidebar");
+  const main    = document.getElementById("main");
+  const toggle  = document.getElementById("sidebar-toggle");
+  const collapsed = sidebar.classList.toggle("collapsed");
+  main.classList.toggle("expanded", collapsed);
+  toggle.classList.toggle("visible", collapsed);
+};
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     TRANSCRIPT MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="transcript-modal" onclick="closeTranscript(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-caller-title">Call Details</div>
+      <button class="btn-icon" onclick="closeTranscript()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="meta-grid" id="modal-meta"></div>
+      <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:10px;font-weight:600;">Transcript</div>
+      <div class="transcript-text" id="modal-transcript">Loading...</div>
+
+      <!-- Lead conversion form (shown when not yet a lead) -->
+      <div class="lead-form" id="lead-form" style="display:none;">
+        <div class="lead-form-title">Convert to Lead</div>
+        <div class="grid" style="margin-bottom:12px;">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">First name</label>
+            <input class="form-input" id="lead-fname" type="text" placeholder="From call..."/>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Last name</label>
+            <input class="form-input" id="lead-lname" type="text" placeholder="Caller"/>
+          </div>
+        </div>
+        <div class="grid" style="margin-bottom:12px;">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Phone</label>
+            <input class="form-input" id="lead-phone" type="text" placeholder="+1..."/>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Email</label>
+            <input class="form-input" id="lead-email" type="text" placeholder="(optional)"/>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label class="field-label">Job / service needed</label>
+          <input class="form-input" id="lead-job-title" type="text" placeholder="e.g. AC tune-up, roof inspection..."/>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">Job description</label>
+          <textarea class="form-textarea" id="lead-job-desc" style="min-height:70px;" placeholder="Details from the call..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div id="modal-foot-left">
+        <a id="modal-recording-link" href="#" target="_blank" style="font-size:12px;color:var(--blue);display:none;align-items:center;gap:6px;">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" stroke-width="2"/></svg>
+          Listen to recording
+        </a>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-secondary" onclick="closeTranscript()">Close</button>
+        <button class="btn-primary" id="modal-convert-btn" onclick="submitConvert()" style="display:none;">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><line x1="19" y1="8" x2="19" y2="14" stroke-width="2" stroke-linecap="round"/><line x1="22" y1="11" x2="16" y2="11" stroke-width="2" stroke-linecap="round"/></svg>
+          Create Customer + Job
+        </button>
+        <button class="btn-secondary" id="modal-view-btn" onclick="viewLead()" style="display:none;">
+          View in CRM
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="swft-mobile.js"></script>
+</body>
+</html>
