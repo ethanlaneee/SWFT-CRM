@@ -143,6 +143,34 @@ router.get("/", async (req, res, next) => {
       };
     });
 
+    // If the org owner has no team record yet, create it so they can use all
+    // team features (including clock-in) without needing a team member to join first.
+    const ownerInList = members.some(m => m.uid === req.orgId);
+    if (!ownerInList) {
+      const ownerDoc = await db.collection("users").doc(req.orgId).get();
+      const ownerData = ownerDoc.exists ? ownerDoc.data() : {};
+      const ref = await db.collection("team").add({
+        orgId: req.orgId,
+        uid: req.orgId,
+        email: ownerData.email || "",
+        name: ownerData.name || ownerData.company || "Owner",
+        role: "owner",
+        status: "active",
+        joinedAt: ownerData.createdAt || Date.now(),
+      });
+      members.push({
+        id: ref.id,
+        uid: req.orgId,
+        name: ownerData.name || ownerData.company || "Owner",
+        email: ownerData.email || "",
+        role: "owner",
+        status: "active",
+        joinedAt: ownerData.createdAt || Date.now(),
+        invitedAt: null,
+        avatarInitials: (ownerData.name || ownerData.company || "O")[0].toUpperCase(),
+      });
+    }
+
     // Sort: owner first, then by name
     const roleOrder = { owner: 0, admin: 1, office: 2, technician: 3 };
     members.sort((a, b) =>
