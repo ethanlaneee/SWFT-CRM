@@ -1,4 +1,5 @@
 require("dotenv").config();
+const crypto = require("crypto");
 
 // Prevent unhandled errors from crashing the server
 process.on("uncaughtException", (err) => {
@@ -428,9 +429,9 @@ app.get("/api/login-hint", hintLimiter, async (req, res) => {
 });
 
 // ── Demo login — public, no auth ──
-// Issues a Firebase custom token for the shared demo account so visitors can
-// explore the app without creating a profile. The demo Firestore doc is created
-// (or refreshed) on every call so it always has an active subscription.
+// Issues a Firebase custom token for a fresh per-session demo account so each
+// visitor gets their own isolated sandbox. Data created in one demo session is
+// never visible to any other demo visitor.
 const demoLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
@@ -438,15 +439,16 @@ const demoLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many requests." },
 });
-const DEMO_UID = "demo-swft-user";
 app.post("/api/demo-login", demoLimiter, async (req, res) => {
   try {
     const { authAdmin, db } = require("./firebase");
 
-    // Upsert the demo Firestore profile so it's always active
+    // Unique UID per demo session — each visitor gets their own org
+    const demoUid = "demo-" + crypto.randomBytes(8).toString("hex");
     const now = Date.now();
-    await db.collection("users").doc(DEMO_UID).set({
-      uid: DEMO_UID,
+
+    await db.collection("users").doc(demoUid).set({
+      uid: demoUid,
       email: "demo@goswft.com",
       firstName: "Jake",
       lastName: "Reynolds",
@@ -461,11 +463,13 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
       trialStartDate: now,
       trialEndDate: now + 365 * 24 * 60 * 60 * 1000,
       role: "owner",
-      orgId: DEMO_UID,
+      orgId: demoUid,
+      demoAccount: true,
+      demoCreatedAt: now,
       updatedAt: now,
-    }, { merge: true });
+    });
 
-    const token = await authAdmin.createCustomToken(DEMO_UID);
+    const token = await authAdmin.createCustomToken(demoUid);
     return res.json({ token });
   } catch (err) {
     console.error("[demo-login]", err.message);
