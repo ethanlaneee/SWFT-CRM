@@ -271,6 +271,15 @@
     min-width: 0 !important;
   }
 
+  /* Google Maps tiles use content-box geometry and absolutely-positioned
+     <img> children at fixed pixel sizes — the nuclear box-sizing+max-width
+     above breaks the tile layer (chrome stays, tiles stay white). */
+  #map, #map *, #map *::before, #map *::after,
+  .gm-style, .gm-style *, .gm-style *::before, .gm-style *::after {
+    max-width: none !important;
+    box-sizing: content-box !important;
+  }
+
   /* ── Static layout: differentiate pages with/without .page-body scroll container ── */
 
   /* Pages that use a .page-body inside .main: body + .main both clip, .page-body scrolls */
