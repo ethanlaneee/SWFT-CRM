@@ -372,7 +372,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke-width="1.8"/><rect x="6" y="14" width="12" height="8" stroke-width="1.8"/></svg>
         Print / Save PDF
       </button>
-      <button class="pdf-btn primary" onclick="saveQuote('draft')">Save Quote</button>
+      <button class="pdf-btn primary" id="btn-save-quote" onclick="saveQuote('draft')">Save Quote</button>
       <button class="pdf-btn" id="btn-send-email" onclick="sendQuoteEmail()" style="background:#111;color:#fff;border-color:#111;">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Send to Customer
@@ -754,51 +754,71 @@ function printQuotePdf(){
 }
 
 // ── Save ──
+var _quoteSaving=false;
 async function saveQuote(action){
-  var custSel=document.getElementById('f-customer');
-  var custOpt=custSel.options[custSel.selectedIndex];
-  if(!custSel.value){showToast('Select a customer');return;}
-
-  var t=computeTotals();
-  if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);t.tax=Number(_currentQuote.tax||0);t.total=Number(_currentQuote.total||t.subtotal);}
-  var jobSel=document.getElementById('f-job');
-  var jobId=jobSel?jobSel.value:'';
-  var jobName='';if(jobId){var jj=_jobs.find(function(x){return x.id===jobId;});if(jj)jobName=jj.service||'';}
-  var data={
-    customerId:custSel.value,
-    customerName:custOpt.textContent,
-    jobId:jobId||'',
-    jobName:jobName,
-    items:_items,
-    subtotal:t.subtotal,
-    taxRate:t.taxRate,
-    tax:t.tax,
-    total:t.total,
-    status:document.getElementById('f-status').value,
-    service:document.getElementById('f-service').value,
-    sqft:document.getElementById('f-sqft').value,
-    address:document.getElementById('f-address').value,
-    finish:document.getElementById('f-finish').value,
-    notes:document.getElementById('f-notes').value,
-    scheduledDate:document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).getTime():null
-  };
-
+  if(_quoteSaving)return;
+  _quoteSaving=true;
+  var saveBtn=document.getElementById('btn-save-quote');
+  var sendBtn=document.getElementById('btn-send-email');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving...';}
+  if(sendBtn)sendBtn.disabled=true;
   try{
-    if(_currentQuote&&_currentQuote.id){
-      await API.quotes.update(_currentQuote.id,data);
-      if(action==='send')await API.quotes.send(_currentQuote.id);
-      showToast(action==='send'?'Quote sent':'Quote saved');
-    }else{
-      var created=await API.quotes.create(data);
-      if(action==='send'&&created.id)await API.quotes.send(created.id);
-      showToast(action==='send'?'Quote created & sent':'Quote created');
-    }
-    closeModal();
-    loadQuotes();
-  }catch(e){showToast('Error: '+e.message);}
+    var custSel=document.getElementById('f-customer');
+    var custOpt=custSel.options[custSel.selectedIndex];
+    if(!custSel.value){showToast('Select a customer');return;}
+
+    var t=computeTotals();
+    if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);t.tax=Number(_currentQuote.tax||0);t.total=Number(_currentQuote.total||t.subtotal);}
+    var jobSel=document.getElementById('f-job');
+    var jobId=jobSel?jobSel.value:'';
+    var jobName='';if(jobId){var jj=_jobs.find(function(x){return x.id===jobId;});if(jj)jobName=jj.service||'';}
+    var data={
+      customerId:custSel.value,
+      customerName:custOpt.textContent,
+      jobId:jobId||'',
+      jobName:jobName,
+      items:_items,
+      subtotal:t.subtotal,
+      taxRate:t.taxRate,
+      tax:t.tax,
+      total:t.total,
+      status:document.getElementById('f-status').value,
+      service:document.getElementById('f-service').value,
+      sqft:document.getElementById('f-sqft').value,
+      address:document.getElementById('f-address').value,
+      finish:document.getElementById('f-finish').value,
+      notes:document.getElementById('f-notes').value,
+      scheduledDate:document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).getTime():null
+    };
+
+    try{
+      if(_currentQuote&&_currentQuote.id){
+        await API.quotes.update(_currentQuote.id,data);
+        if(action==='send')await API.quotes.send(_currentQuote.id);
+        showToast(action==='send'?'Quote sent':'Quote saved');
+      }else{
+        var created=await API.quotes.create(data);
+        if(action==='send'&&created.id)await API.quotes.send(created.id);
+        showToast(action==='send'?'Quote created & sent':'Quote created');
+      }
+      closeModal();
+      loadQuotes();
+    }catch(e){showToast('Error: '+e.message);}
+  }finally{
+    _quoteSaving=false;
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save Quote';}
+    if(sendBtn)sendBtn.disabled=false;
+  }
 }
 
 async function sendQuoteEmail(){
+  if(_quoteSaving)return;
+  _quoteSaving=true;
+  var sendBtn=document.getElementById('btn-send-email');
+  var saveBtn=document.getElementById('btn-save-quote');
+  if(sendBtn){sendBtn.disabled=true;}
+  if(saveBtn)saveBtn.disabled=true;
+  try{
   // Save first if needed
   if(!_currentQuote||!_currentQuote.id){
     var custSel=document.getElementById('f-customer');
@@ -866,6 +886,11 @@ async function sendQuoteEmail(){
     showToast('Quote sent to customer!');
     closeModal();loadQuotes();
   }catch(e){showToast('Error sending: '+e.message);}
+  }finally{
+    _quoteSaving=false;
+    if(sendBtn){sendBtn.disabled=false;}
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save Quote';}
+  }
 }
 
 async function deleteQuote(){

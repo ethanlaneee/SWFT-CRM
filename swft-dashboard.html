@@ -545,7 +545,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('pl-modal').classList.add('open');
   }
 
-  function closePipelineModal() {
+  async function closePipelineModal(force) {
+    if(!force && _plJobId){
+      var ok=await swftConfirm('Cancel Pipeline?','A job was already created for this customer. Cancel anyway? The job will stay but no quote will be linked.', {confirmLabel:'Cancel Pipeline',cancelLabel:'Keep Going'});
+      if(!ok)return;
+    }
     document.getElementById('pl-overlay').classList.remove('open');
     document.getElementById('pl-modal').classList.remove('open');
   }
@@ -655,7 +659,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         jobId:_plJobId||'', service:svc, address:address, sqft:sqft
       }));
     }catch(e){}
-    closePipelineModal();
+    closePipelineModal(true);
     window.location.href='swft-quotes';
   }
 
