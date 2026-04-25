@@ -301,7 +301,7 @@ async function loadMapsSdk(){
       };
       var s = document.createElement('script');
       s.async = true;
-      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(res.key) + '&v=3&callback=__swftMapReady';
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(res.key) + '&v=3&loading=async&callback=__swftMapReady';
       s.onerror = function(){ clearTimeout(timer); reject(new Error('Failed to load Google Maps')); };
       document.head.appendChild(s);
     });
