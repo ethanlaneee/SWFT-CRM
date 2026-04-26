@@ -601,13 +601,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       const data = await res.json();
       sessionStorage.setItem('swft_me_cache', JSON.stringify({ data, ts: Date.now() }));
 
-      // Also prime the user-sync sidebar cache so the name/avatar appears instantly
+      // Also prime the user-sync sidebar cache so the name/avatar appears instantly.
+      // Use Firebase Auth `user.email` as the login identity — Firestore
+      // `data.email` can drift from the actual login email on older accounts.
       const firstName = data.firstName || data.name?.split(' ')[0] || '';
       const lastName  = data.lastName  || data.name?.split(' ').slice(1).join(' ') || '';
       const fullName  = [firstName, lastName].filter(Boolean).join(' ');
       const initials  = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || '?';
       sessionStorage.setItem('swft_profile', JSON.stringify({
-        fullName, initials, email: data.email || user.email || ''
+        fullName, initials, email: user.email || data.email || ''
       }));
     } catch (_) {
       // Prefetch failed — dashboard will fetch fresh on load, no impact on login

@@ -50,7 +50,16 @@ router.get("/", async (req, res, next) => {
 
       return res.json({ id: req.uid, ...profile });
     }
-    const data = await checkTrialExpired(doc.id, doc.data());
+    let data = await checkTrialExpired(doc.id, doc.data());
+
+    // Self-heal `users.email` to match the Firebase Auth login email. There's
+    // no UI to deliberately diverge them (Settings only edits `companyEmail`),
+    // so any drift is staleness from older sign-up code paths. Keeping these
+    // in sync ensures the team page and other surfaces show the right email.
+    if (req.user?.email && data.email !== req.user.email) {
+      await col().doc(req.uid).set({ email: req.user.email }, { merge: true });
+      data = { ...data, email: req.user.email };
+    }
 
     // Return effective permissions so the frontend can gate nav/pages correctly.
     // For non-owner roles, check orgRoles for custom overrides, then fall back to built-in defaults.

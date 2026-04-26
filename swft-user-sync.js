@@ -37,14 +37,12 @@ onAuthStateChanged(auth, async (user) => {
   let firstName = "";
   let lastName = "";
 
-  // Try Firebase Auth displayName first
-  if (user.displayName) {
-    const parts = user.displayName.split(" ");
-    firstName = parts[0] || "";
-    lastName = parts.slice(1).join(" ") || "";
-  }
-
-  // Then try Firestore profile for first/last name.
+  // Prefer Firestore profile — it's what the user updates via /api/me and
+  // stays in sync with the name they signed up with. Firebase Auth
+  // `displayName` is set once at signup and has no edit UI, so it can drift
+  // (e.g. left as a Google OAuth profile name) and shouldn't override the
+  // Firestore source of truth.
+  //
   // NOTE: never read `data.email` here — the sidebar shows the user's
   // login identity, which is Firebase Auth `user.email`. The Firestore
   // `email` field has historically doubled as the company email and will
@@ -54,12 +52,17 @@ onAuthStateChanged(auth, async (user) => {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
       const data = snap.data();
-      if (!firstName) {
-        firstName = data.firstName || data.name?.split(" ")[0] || "";
-        lastName = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
-      }
+      firstName = data.firstName || data.name?.split(" ")[0] || "";
+      lastName = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
     }
   } catch (e) { /* ignore */ }
+
+  // Fall back to Firebase Auth displayName if Firestore had nothing
+  if (!firstName && user.displayName) {
+    const parts = user.displayName.split(" ");
+    firstName = parts[0] || "";
+    lastName = parts.slice(1).join(" ") || "";
+  }
 
   // Fallback to email
   if (!firstName && user.email) {
