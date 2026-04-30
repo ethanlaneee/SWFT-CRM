@@ -8,7 +8,14 @@ const router = require("express").Router();
 const { google } = require("googleapis");
 const { admin, db } = require("../firebase");
 const { getOAuthClient } = require("../utils/email");
+const { requirePlan } = require("../middleware/requirePlan");
 const FieldValue = admin.firestore.FieldValue;
+
+// QuickBooks is available on all plans; all other integrations require SWFT Pro (business)
+const requireBusinessForNonQB = (req, res, next) => {
+  if (req.params.id === "quickbooks") return next();
+  return requirePlan("business")(req, res, next);
+};
 
 // All available integrations and their metadata
 const INTEGRATIONS = [
@@ -196,7 +203,7 @@ router.get("/", async (req, res, next) => {
 });
 
 // POST /api/integrations/:id/connect — start OAuth flow for an integration
-router.post("/:id/connect", (req, res, next) => {
+router.post("/:id/connect", requireBusinessForNonQB, (req, res, next) => {
   try {
     const integration = INTEGRATIONS.find(i => i.id === req.params.id);
     if (!integration) return res.status(404).json({ error: "Integration not found" });
@@ -311,7 +318,7 @@ router.post("/:id/connect", (req, res, next) => {
 });
 
 // POST /api/integrations/:id/disconnect — remove an integration
-router.post("/:id/disconnect", async (req, res, next) => {
+router.post("/:id/disconnect", requireBusinessForNonQB, async (req, res, next) => {
   try {
     const integrationId = req.params.id;
     const userRef = db.collection("users").doc(req.uid);
