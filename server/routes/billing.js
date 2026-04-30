@@ -109,18 +109,18 @@ router.post("/create-checkout-session", async (req, res, next) => {
 router.get("/plans", (req, res) => {
   res.json({
     starter: {
-      name: "SWFT Starter", monthlyPrice: 89, annualPrice: 71,
-      aiMessageLimit: 75,
+      name: "Starter", monthlyPrice: 149, annualPrice: 119,
+      seatLimit: 5, aiMessageLimit: 250,
       priceId: PRICE_IDS.starter, annualPriceId: PRICE_IDS.starter_annual,
     },
     pro: {
-      name: "SWFT+", monthlyPrice: 179, annualPrice: 143,
-      aiMessageLimit: 1000,
+      name: "Growth", monthlyPrice: 349, annualPrice: 279,
+      seatLimit: 15, aiMessageLimit: 1000,
       priceId: PRICE_IDS.pro, annualPriceId: PRICE_IDS.pro_annual,
     },
     business: {
-      name: "SWFT PRO", monthlyPrice: 349, annualPrice: 279,
-      aiMessageLimit: "Unlimited",
+      name: "Scale", monthlyPrice: 599, annualPrice: 479,
+      seatLimit: "Unlimited", aiMessageLimit: "Unlimited",
       priceId: PRICE_IDS.business, annualPriceId: PRICE_IDS.business_annual,
     },
     overagePacks: OVERAGE_PACKS,

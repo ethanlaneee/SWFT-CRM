@@ -1,29 +1,31 @@
 /**
  * SWFT CRM — Plan definitions and usage limits.
  *
- * Each plan defines monthly caps for metered features (AI messages).
- * "Business" plan gets unlimited usage (Infinity).
- * Annual billing = 20% discount.
+ * Keys (starter / pro / business) are stored in Firestore and must not change.
+ * Display names and pricing may be updated freely here.
  */
 
 const PLANS = {
   starter: {
-    name: "SWFT Starter",
-    monthlyPrice: 89,
-    annualPrice: 71,           // ~20% off ($852/yr)
-    aiMessageLimit: 75,        // AI chat messages per month
+    name: "Starter",
+    monthlyPrice: 149,
+    annualPrice: 119,            // ~20% off ($1,428/yr)
+    seatLimit: 5,
+    aiMessageLimit: 250,         // AI chat messages per month
   },
   pro: {
-    name: "SWFT+",
-    monthlyPrice: 179,
-    annualPrice: 143,          // ~20% off ($1,716/yr)
+    name: "Growth",
+    monthlyPrice: 349,
+    annualPrice: 279,            // ~20% off ($3,348/yr)
+    seatLimit: 15,
     aiMessageLimit: 1000,
   },
   business: {
-    name: "SWFT PRO",
-    monthlyPrice: 349,
-    annualPrice: 279,          // ~20% off ($3,348/yr)
-    aiMessageLimit: Infinity,  // uncapped
+    name: "Scale",
+    monthlyPrice: 599,
+    annualPrice: 479,            // ~20% off ($5,748/yr)
+    seatLimit: Infinity,         // unlimited
+    aiMessageLimit: Infinity,    // uncapped
   },
 };
 
