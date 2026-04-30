@@ -619,8 +619,15 @@ async function runAgent(uid, userMessage, userProfile, orgId) {
     response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
-      system: systemPrompt,
-      tools: allTools,
+      // Cache the system prompt — it's large and identical across calls for the same user.
+      // Anthropic charges ~80% less on cache hits (min 1024 tokens to qualify).
+      system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+      // Cache the tools definition — it never changes between rounds of the same conversation.
+      tools: allTools.map((t, idx) =>
+        idx === allTools.length - 1
+          ? { ...t, cache_control: { type: "ephemeral" } }
+          : t
+      ),
       messages,
     });
 
