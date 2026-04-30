@@ -480,18 +480,20 @@ async function quickbooksCallback(req, res) {
     if (tokens.error) throw new Error(tokens.error_description || tokens.error);
 
     await db.collection("users").doc(uid).set({
-      "integrations.quickbooks": {
-        connected: true,
-        account: realmId || "QuickBooks",
-        realmId: realmId || null,
-        tokens: {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          token_type: tokens.token_type,
-          expires_in: tokens.expires_in,
+      integrations: {
+        quickbooks: {
+          connected: true,
+          account: realmId || "QuickBooks",
+          realmId: realmId || null,
+          tokens: {
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            token_type: tokens.token_type,
+            expires_in: tokens.expires_in,
+            connectedAt: Date.now(),
+          },
           connectedAt: Date.now(),
         },
-        connectedAt: Date.now(),
       },
     }, { merge: true });
 
