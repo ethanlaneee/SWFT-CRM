@@ -477,7 +477,8 @@ var _doors = [];          // all doors loaded from server
 var _selectedStatus = 'no_answer';
 var _activeFilter = 'all';
 var _selectedDoorId = null;
-var _detailDoor = null;   // door currently open in detail modal
+var _detailDoor = null;        // door currently open in detail modal
+var _detailSelectedStatus = null;  // status the user has selected in the detail modal (not yet saved)
 var _logCoords = null;    // { lat, lng, accuracy }
 var _mapReady = false;
 var _mapLoading = false;
@@ -525,7 +526,7 @@ function fmtTime(ms){
 
 /* ── Status metadata ── */
 var STATUS_META = {
-  pending:        { label: 'Planned',        color: '#9aa0a6', mark: '?' },
+  pending:        { label: 'Planned',        color: '#ffffff', mark: '?' },
   no_answer:      { label: 'No answer',      color: '#7a7a7a', mark: '—' },
   not_interested: { label: 'Not interested', color: '#ff5252', mark: '×' },
   chatted:        { label: 'Chatted',        color: '#4d9fff', mark: '●' },
@@ -1042,6 +1043,7 @@ function openDetailModal(id){
   var d = _doors.find(function(x){ return x.id === id; });
   if(!d) return;
   _detailDoor = d;
+  _detailSelectedStatus = null; // user must explicitly pick a status to log
   var meta = statusMeta(d.status);
 
   document.getElementById('detail-addr').textContent = d.address || ('@ ' + d.lat.toFixed(5) + ', ' + d.lng.toFixed(5));
@@ -1067,13 +1069,13 @@ function renderDetailBody(d){
   var visits = (Array.isArray(d.visits) ? d.visits.slice() : []).sort(function(a,b){ return (b.ts||0) - (a.ts||0); });
   var html = '';
 
-  // Quick-log status grid — visible on every door for one-tap logging
+  // Quick-log status grid — pick a status, then hit Save Visit in the footer
   html += '<div class="field">';
-  html += '  <label class="field-label">' + (visits.length === 0 ? 'Tap to log first knock' : 'Tap to log a visit') + '</label>';
-  html += '  <div class="status-grid quick-grid">';
+  html += '  <label class="field-label">' + (visits.length === 0 ? 'Pick a response, then tap Save' : 'Log another visit') + '</label>';
+  html += '  <div class="status-grid quick-grid" id="detail-status-grid">';
   ['no_answer','not_interested','chatted','come_back','callback','lead','sale'].forEach(function(s){
     var sm = statusMeta(s);
-    html += '<button type="button" class="status-btn s-' + s + '" onclick="quickLogVisit(\'' + d.id + '\',\'' + s + '\')"><span class="ic">' + sm.mark + '</span>' + sm.label + '</button>';
+    html += '<button type="button" class="status-btn s-' + s + '" data-status="' + s + '" onclick="selectDetailStatus(\'' + s + '\')"><span class="ic">' + sm.mark + '</span>' + sm.label + '</button>';
   });
   html += '  </div>';
   html += '</div>';
@@ -1106,7 +1108,28 @@ function renderDetailBody(d){
   document.getElementById('detail-body').innerHTML = html;
 }
 
-async function quickLogVisit(doorId, status){
+// Tap a status in the detail modal: just selects, does NOT save.
+// The user has to hit "Save Visit" in the footer to commit.
+function selectDetailStatus(status){
+  _detailSelectedStatus = status;
+  document.querySelectorAll('#detail-status-grid .status-btn').forEach(function(b){
+    b.classList.toggle('selected', b.dataset.status === status);
+  });
+  // Enable the save button now that a status is picked
+  var save = document.getElementById('detail-save-visit');
+  if(save) save.disabled = false;
+}
+
+async function saveDetailVisit(){
+  if(!_detailDoor){ return; }
+  if(!_detailSelectedStatus){
+    showToast('Pick a response first');
+    return;
+  }
+  var doorId = _detailDoor.id;
+  var status = _detailSelectedStatus;
+  var btn = document.getElementById('detail-save-visit');
+  if(btn) btn.disabled = true;
   try {
     var saved = await API.doors.logVisit(doorId, { status: status, notes: '' });
     var idx = _doors.findIndex(function(x){ return x.id === doorId; });
@@ -1115,19 +1138,22 @@ async function quickLogVisit(doorId, status){
     showToast('Logged · ' + meta.label);
     refreshKpis();
     renderDoors();
-    renderMarkers();
-    // Refresh the detail modal in place so the user sees the new visit
+    renderMarkers();   // pin recolors immediately based on new status
+    // Refresh detail modal in place — user sees the new visit in the timeline
     if(_detailDoor && _detailDoor.id === doorId){
       _detailDoor = saved;
+      _detailSelectedStatus = null;
       var pill = document.getElementById('detail-status');
       pill.querySelector('.dot').style.background = meta.color;
       pill.querySelector('.lbl').textContent = meta.label;
       pill.style.color = meta.color;
       pill.style.borderColor = meta.color + '55';
       renderDetailBody(saved);
+      renderDetailFoot(saved);
     }
   } catch (e) {
     showToast('Could not log: ' + (e.message || 'error'));
+    if(btn) btn.disabled = false;
   }
 }
 
@@ -1135,7 +1161,7 @@ function renderDetailFoot(d){
   var html = '';
   html += '<button class="modal-btn danger" onclick="deleteDoor(\'' + d.id + '\')">Delete</button>';
   html += '<button class="modal-btn" onclick="saveDetailEdits(\'' + d.id + '\')">Save details</button>';
-  html += '<button class="modal-btn primary" onclick="logReturnVisit(\'' + d.id + '\')">Log Return Visit</button>';
+  html += '<button class="modal-btn primary" id="detail-save-visit" onclick="saveDetailVisit()" disabled>Save Visit</button>';
   document.getElementById('detail-foot').innerHTML = html;
 }
 
