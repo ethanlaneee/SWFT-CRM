@@ -592,15 +592,15 @@ app.use("/api/ai",        auth, checkAccess,  require("./routes/ai"));
 app.use("/api/agents",    auth, checkAccess, requirePlan("pro"), require("./routes/agents"));
 const { router: teamRouter, publicRouter: teamPublicRouter } = require("./routes/team");
 app.use("/api/team",        teamPublicRouter);                        // validate invite (no auth), join (has own auth)
-app.use("/api/team",        auth, checkAccess, teamRouter);           // full auth — manage team
-app.use("/api/tracker",     auth, checkAccess, require("./routes/tracker")); // team tracker — gated on tracker.view
-app.use("/api/integrations", auth, checkAccess, integrationsRouter);
-app.use("/api/team-chat",    auth, checkAccess, require("./routes/teamChat"));
+app.use("/api/team",        auth, checkAccess, requirePlan("pro"), teamRouter);           // SWFT+ and above
+app.use("/api/tracker",     auth, checkAccess, requirePlan("pro"), require("./routes/tracker")); // SWFT+ and above
+app.use("/api/integrations", auth, checkAccess, requirePlan("business"), integrationsRouter);    // SWFT Pro only
+app.use("/api/team-chat",    auth, checkAccess, requirePlan("pro"), require("./routes/teamChat")); // SWFT+ and above
 app.use("/api/email",           auth, checkAccess,  require("./routes/email"));
 app.use("/api/email-templates", auth, checkAccess,  require("./routes/emailTemplates"));
-app.use("/api/messages",  auth, checkAccess,  messagesRouter);
-app.use("/api/social",    auth, checkAccess,  socialMessagesRouter);
-app.use("/api/meta",      auth, checkAccess,  metaRouter);
+app.use("/api/messages",  auth, checkAccess,  requirePlan("pro"), messagesRouter);          // SMS — SWFT+ and above
+app.use("/api/social",    auth, checkAccess,  requirePlan("business"), socialMessagesRouter); // Social DMs — SWFT Pro only
+app.use("/api/meta",      auth, checkAccess,  requirePlan("business"), metaRouter);          // Meta — SWFT Pro only
 app.use("/api/photos",        auth, checkAccess,  require("./routes/photos"));
 app.use("/api/notifications", auth, checkAccess,  notificationsRouter);
 app.use("/api/square",        auth, checkAccess,  squareRouter);
