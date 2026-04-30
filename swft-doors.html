@@ -681,8 +681,9 @@ function centerOnViewer(){
    guaranteeing color/glyph updates appear immediately. */
 function makeMarkerOptions(d){
   var meta = statusMeta(d.status);
-  var visits = Array.isArray(d.visits) ? d.visits.length : 0;
-  var glyph = visits > 1 ? String(visits) : (meta.mark || '');
+  // Pin glyph is always the latest visit's status mark — never a visit
+  // count. The visit count still shows as a pill in the door list row.
+  var glyph = meta.mark || '';
 
   // Choose a label color that contrasts with the pin color.
   var lightFill = meta.color === '#ffffff' || meta.color === '#c8f135' || meta.color === '#4de2ff';
