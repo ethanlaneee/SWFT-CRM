@@ -1493,42 +1493,32 @@ function toggleSidebar(){
       </button>
       <div class="carousel-viewport">
         <div class="carousel-track" id="carouselTrack">
-          <!-- Slide 1: Dashboard -->
+          <!-- Slide: AI Chat -->
           <div class="carousel-slide">
             <div class="mock-app">
               <div class="mock-side" data-active="dashboard"></div>
               <div class="mock-body">
-                <div class="mock-top">DASHBOARD <span class="slash">/</span> <span class="sub">Tuesday, April 30</span>
-                  <div class="mock-top-right"><span class="mock-top-pill"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);"></span> AI Online</span></div>
+                <div class="mock-top">AI ASSISTANT <span class="slash">/</span> <span class="sub">Always on · Trained on your business</span>
+                  <div class="mock-top-right"><span class="mock-top-pill"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);"></span> Live</span></div>
                 </div>
                 <div class="mock-content-area">
-                  <div class="mock-kpis">
-                    <div class="mock-kpi"><span class="mock-kpi-label">Revenue (MTD)</span><span class="mock-kpi-value">$48,920</span><span class="mock-kpi-delta up">+22%</span></div>
-                    <div class="mock-kpi"><span class="mock-kpi-label">Active Jobs</span><span class="mock-kpi-value">18</span><span class="mock-kpi-delta up">+4</span></div>
-                    <div class="mock-kpi"><span class="mock-kpi-label">Pending Quotes</span><span class="mock-kpi-value">11</span><span class="mock-kpi-delta" style="color:var(--amber)">3 expiring</span></div>
-                    <div class="mock-kpi"><span class="mock-kpi-label">Unpaid Invoices</span><span class="mock-kpi-value">$12,640</span><span class="mock-kpi-delta up">5 due this wk</span></div>
-                  </div>
-                  <div class="mock-content">
-                    <div class="mock-panel">
-                      <div class="mock-panel-head">Today's Schedule</div>
-                      <div class="mock-row"><span class="mock-status" style="background:var(--green)"></span><span>8:30 AM — Roof inspection @ 1429 Maple Ave</span></div>
-                      <div class="mock-row"><span class="mock-status" style="background:var(--blue)"></span><span>11:00 AM — Estimate — Patel residence</span></div>
-                      <div class="mock-row"><span class="mock-status" style="background:var(--amber)"></span><span>2:15 PM — Follow-up call — Tanya Brooks</span></div>
-                      <div class="mock-row"><span class="mock-status" style="background:var(--green)"></span><span>4:00 PM — Service call @ 88 Birch Lane</span></div>
+                  <div class="mock-ai-pane">
+                    <div class="mock-ai-head"><div class="mock-ai-head-title">SWFT AI</div><span style="font-size:10px;color:var(--gray2);">·  GPT-powered · context: 247 customers, 18 jobs</span></div>
+                    <div class="mock-ai-stream">
+                      <div class="mock-ai-bubble user">Send a quote to Marcus Liu for a full roof replacement, asphalt shingle, ~22 squares. Use my standard template.</div>
+                      <div class="mock-ai-bubble bot">Drafted quote #143 for Marcus Liu — <strong>$11,200</strong> (22 squares × $510 + $200 disposal). Ready to send via SMS + email?<div class="tag">✓ Ready to send</div></div>
+                      <div class="mock-ai-bubble user">Yes send it. And book the inspection for Friday morning.</div>
+                      <div class="mock-ai-bubble bot">Quote sent to Marcus (SMS + email). Inspection booked for <strong>Fri May 3, 9:00 AM</strong> — assigned to Devon. Calendar invite sent.<div class="tag">✓ 3 actions complete</div></div>
+                      <div class="mock-ai-bubble user">Who hasn't paid an invoice from last month?</div>
+                      <div class="mock-ai-bubble bot">3 unpaid invoices from March: <strong>L. Reyes</strong> ($620, 14d overdue), <strong>K. Yamamoto</strong> ($2,150, 8d overdue), <strong>F. Adekunle</strong> ($890, 4d overdue). Want me to send a reminder text to all three?</div>
                     </div>
-                    <div class="mock-panel">
-                      <div class="mock-panel-head">Recent Activity</div>
-                      <div class="mock-row"><span style="color:var(--green)">$</span><span>Invoice #2087 paid — $4,850 (Hendricks)</span></div>
-                      <div class="mock-row"><span style="color:var(--blue)">+</span><span>New lead — Marcus Liu (web form)</span></div>
-                      <div class="mock-row"><span style="color:var(--amber)">!</span><span>Quote #142 expires tomorrow</span></div>
-                      <div class="mock-row"><span style="color:var(--green)">✓</span><span>Job #318 marked complete by Devon</span></div>
-                    </div>
+                    <div class="mock-ai-input"><div class="field">Ask SWFT anything…</div><div class="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- Slide 2: Customers -->
+          <!-- Slide: Customers -->
           <div class="carousel-slide">
             <div class="mock-app">
               <div class="mock-side" data-active="customers"></div>
@@ -1621,34 +1611,9 @@ function toggleSidebar(){
               </div>
             </div>
           </div>
-          <!-- Slide 5: AI Chat -->
-          <div class="carousel-slide">
-            <div class="mock-app">
-              <div class="mock-side" data-active="dashboard"></div>
-              <div class="mock-body">
-                <div class="mock-top">AI ASSISTANT <span class="slash">/</span> <span class="sub">Always on · Trained on your business</span>
-                  <div class="mock-top-right"><span class="mock-top-pill"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);"></span> Live</span></div>
-                </div>
-                <div class="mock-content-area">
-                  <div class="mock-ai-pane">
-                    <div class="mock-ai-head"><div class="mock-ai-head-title">SWFT AI</div><span style="font-size:10px;color:var(--gray2);">·  GPT-powered · context: 247 customers, 18 jobs</span></div>
-                    <div class="mock-ai-stream">
-                      <div class="mock-ai-bubble user">Send a quote to Marcus Liu for a full roof replacement, asphalt shingle, ~22 squares. Use my standard template.</div>
-                      <div class="mock-ai-bubble bot">Drafted quote #143 for Marcus Liu — <strong>$11,200</strong> (22 squares × $510 + $200 disposal). Ready to send via SMS + email?<div class="tag">✓ Ready to send</div></div>
-                      <div class="mock-ai-bubble user">Yes send it. And book the inspection for Friday morning.</div>
-                      <div class="mock-ai-bubble bot">Quote sent to Marcus (SMS + email). Inspection booked for <strong>Fri May 3, 9:00 AM</strong> — assigned to Devon. Calendar invite sent.<div class="tag">✓ 3 actions complete</div></div>
-                      <div class="mock-ai-bubble user">Who hasn't paid an invoice from last month?</div>
-                      <div class="mock-ai-bubble bot">3 unpaid invoices from March: <strong>L. Reyes</strong> ($620, 14d overdue), <strong>K. Yamamoto</strong> ($2,150, 8d overdue), <strong>F. Adekunle</strong> ($890, 4d overdue). Want me to send a reminder text to all three?</div>
-                    </div>
-                    <div class="mock-ai-input"><div class="field">Ask SWFT anything…</div><div class="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-      <div class="carousel-label" id="carouselLabel"><span class="accent">01</span> · Dashboard</div>
+      <div class="carousel-label" id="carouselLabel"><span class="accent">01</span> · AI Assistant</div>
       <div class="carousel-dots" id="carouselDots"></div>
     </div>
 
@@ -2078,7 +2043,7 @@ function ptSelectCol(col) {
 <script>
 /* ── App mockup carousel ── */
 (function(){
-  const SLIDE_LABELS = ['Dashboard','Customers','Jobs','Messages','AI Assistant'];
+  const SLIDE_LABELS = ['AI Assistant','Customers','Jobs','Messages'];
   const NAV_ITEMS = [
     { label:'CRM', section:true },
     { key:'dashboard', name:'Dashboard', icon:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>' },
@@ -2089,7 +2054,7 @@ function ptSelectCol(col) {
     { label:'Tools', section:true },
     { key:'messages', name:'Messages', icon:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
     { key:'broadcasts', name:'Broadcasts', icon:'<path d="M3 11l18-8v18l-18-8z"/>' },
-    { key:'phoneai', name:'Phone AI', icon:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>', tag:'SOON' },
+    { key:'phoneai', name:'Phone AI', icon:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>' },
     { key:'connect', name:'SWFT Connect', icon:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/>' },
     { label:'Team', section:true },
     { key:'team', name:'Team', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>' },
