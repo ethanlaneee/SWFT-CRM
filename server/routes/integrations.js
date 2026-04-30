@@ -549,11 +549,13 @@ async function stripeOAuthCallback(req, res) {
     } catch (_) { /* non-fatal */ }
 
     await db.collection("users").doc(uid).set({
-      "integrations.stripe": {
-        connected: true,
-        accountId,
-        accountEmail,
-        connectedAt: Date.now(),
+      integrations: {
+        stripe: {
+          connected: true,
+          accountId,
+          accountEmail,
+          connectedAt: Date.now(),
+        },
       },
     }, { merge: true });
 
