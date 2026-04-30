@@ -842,17 +842,17 @@ function setImportProgress(done, total, label){
   document.getElementById('import-progress-bar').style.width = pct + '%';
 }
 
-function geocodeOne(geocoder, address){
-  return new Promise(function(resolve){
-    geocoder.geocode({ address: address }, function(results, status){
-      if(status === 'OK' && results && results[0]){
-        var loc = results[0].geometry.location;
-        resolve({ address: results[0].formatted_address || address, lat: loc.lat(), lng: loc.lng() });
-      } else {
-        resolve({ address: address, error: status || 'GEOCODE_FAILED' });
-      }
-    });
-  });
+// Human-readable hints for Google Geocoding error codes
+function geocodeHint(code){
+  switch(code){
+    case 'ZERO_RESULTS':    return 'address not found';
+    case 'OVER_QUERY_LIMIT':return 'rate limited — wait a minute';
+    case 'REQUEST_DENIED':  return 'Geocoding API not enabled on the server key';
+    case 'INVALID_REQUEST': return 'check the format';
+    case 'NO_API_KEY':      return 'server has no Maps API key configured';
+    case 'NETWORK_ERROR':   return 'network error reaching Google';
+    default: return code || 'unknown error';
+  }
 }
 
 async function runImport(){
@@ -864,52 +864,37 @@ async function runImport(){
   var btn = document.getElementById('import-submit');
   btn.disabled = true;
   btn.textContent = 'Working…';
+  setImportProgress(0, lines.length, 'Geocoding ' + lines.length + ' address' + (lines.length === 1 ? '' : 'es') + '…');
 
-  // Lazy-load the Maps SDK so the Geocoder is available
-  if(!_mapReady){
-    setImportProgress(0, lines.length, 'Loading map service…');
-    await loadMapsSdk();
-  }
-  if(!window.google || !google.maps || !google.maps.Geocoder){
-    showToast('Map service unavailable — try again');
-    btn.disabled = false; btn.textContent = 'Import';
-    return;
-  }
-
-  var geocoder = new google.maps.Geocoder();
-  var entries = [];
-  var failed = [];
-  for (var i = 0; i < lines.length; i++){
-    setImportProgress(i, lines.length, 'Geocoding…');
-    var r = await geocodeOne(geocoder, lines[i]);
-    if(r.error){ failed.push(lines[i]); }
-    else { entries.push({ address: r.address, lat: r.lat, lng: r.lng }); }
-    // throttle: 50ms between calls keeps us under Google's per-second limit
-    await new Promise(function(res){ setTimeout(res, 50); });
-  }
-  setImportProgress(lines.length, lines.length, 'Saving…');
-
-  if(!entries.length){
-    showToast('Could not geocode any address — check formatting');
-    btn.disabled = false; btn.textContent = 'Import';
-    return;
-  }
-
+  // Server-side geocode + save in a single call — more reliable than the
+  // browser Geocoder, which can be blocked by HTTP-referrer restrictions.
   try {
-    var resp = await API.doors.bulk(entries);
-    var added = (resp && resp.created) || [];
+    var resp = await API.doors.bulk({ addresses: lines });
+    var added  = (resp && resp.created) || [];
+    var failed = (resp && resp.failed)  || [];
     _doors = added.concat(_doors);
     closeImportModal();
     var msg = 'Imported ' + added.length + ' door' + (added.length === 1 ? '' : 's');
-    if(failed.length) msg += ' · ' + failed.length + ' failed to geocode';
+    if(failed.length) msg += ' · ' + failed.length + ' failed';
     showToast(msg);
     refreshKpis();
     renderDoors();
     renderMarkers();
   } catch (e) {
-    showToast('Could not import: ' + (e.message || 'error'));
+    // Server may have returned a structured error like
+    // { error, firstFailure, firstMessage, failed }
+    var detail = '';
+    try { var p = JSON.parse(e.message); if(p && p.firstFailure) detail = p.firstFailure; } catch(_){}
+    var hint = '';
+    var msg = (e && e.message) || 'error';
+    // Try to surface a friendly hint by checking for known error codes in the message
+    ['REQUEST_DENIED','OVER_QUERY_LIMIT','ZERO_RESULTS','NO_API_KEY','NETWORK_ERROR','INVALID_REQUEST'].forEach(function(code){
+      if(msg.indexOf(code) >= 0) hint = ' (' + geocodeHint(code) + ')';
+    });
+    showToast('Could not import: ' + msg + hint);
     btn.disabled = false;
     btn.textContent = 'Import';
+    document.getElementById('import-progress').style.display = 'none';
   }
 }
 

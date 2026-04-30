@@ -43,6 +43,35 @@ function validCoord(lat, lng) {
       && Number.isFinite(lng) && lng >= -180 && lng <= 180;
 }
 
+// Server-side geocoder using the Google Geocoding REST API.
+// Uses GOOGLE_MAPS_API_KEY which the server already has configured for
+// /api/tracker/optimize-route. Browser-side Geocoder() can fail when the key
+// has HTTP-referrer restrictions or Geocoding API isn't enabled, so we proxy
+// it here. Returns { address, lat, lng } or { error, message } on failure.
+async function geocodeAddress(address) {
+  const KEY = process.env.GOOGLE_MAPS_API_KEY;
+  if (!KEY) return { error: "NO_API_KEY", message: "Server Maps API key not configured" };
+
+  const url = "https://maps.googleapis.com/maps/api/geocode/json?address="
+    + encodeURIComponent(address)
+    + "&key=" + KEY;
+  try {
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data.status === "OK" && data.results && data.results[0]) {
+      const g = data.results[0];
+      return {
+        address: g.formatted_address || address,
+        lat: g.geometry.location.lat,
+        lng: g.geometry.location.lng,
+      };
+    }
+    return { error: data.status || "GEOCODE_FAILED", message: data.error_message || "" };
+  } catch (e) {
+    return { error: "NETWORK_ERROR", message: e.message };
+  }
+}
+
 async function getKnockerName(req) {
   try {
     const teamSnap = await db.collection("team")
@@ -136,35 +165,64 @@ router.post("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/doors/bulk — bulk-create planned doors from a list of geocoded addresses
-// Body: { entries: [{ address, lat, lng }] }
+// POST /api/doors/bulk — bulk-create planned doors from addresses or pre-geocoded entries
+// Body: { addresses: ["123 Main St", ...] }   (server-side geocodes each)
+//   or: { entries:  [{ address, lat, lng }] } (already geocoded by caller)
 // Each door starts with status='pending' and an empty visits[] so it shows
-// as planned-but-not-yet-knocked. Capped at 200 entries per call.
+// as planned-but-not-yet-knocked. Capped at 200 per call.
 router.post("/bulk", async (req, res, next) => {
   try {
-    const entries = Array.isArray(req.body && req.body.entries) ? req.body.entries : [];
-    if (!entries.length) return res.status(400).json({ error: "No entries provided" });
-    if (entries.length > 200) return res.status(400).json({ error: "Too many entries (max 200 per import)" });
+    const rawAddresses = Array.isArray(req.body && req.body.addresses) ? req.body.addresses : [];
+    const preGeocoded  = Array.isArray(req.body && req.body.entries)   ? req.body.entries   : [];
+
+    const total = rawAddresses.length + preGeocoded.length;
+    if (!total) return res.status(400).json({ error: "No addresses provided" });
+    if (total > 200) return res.status(400).json({ error: "Too many addresses (max 200 per import)" });
 
     const userName = await getKnockerName(req);
     const now = Date.now();
-
     const valid = [];
-    const skipped = [];
-    for (const e of entries) {
+    const failed = [];   // [{ address, error, message }]
+
+    // 1) geocode raw addresses on the server
+    for (const raw of rawAddresses) {
+      const address = clampStr(raw, 300);
+      if (!address) { failed.push({ address: raw, error: "EMPTY", message: "Empty line" }); continue; }
+      const r = await geocodeAddress(address);
+      if (r.error) {
+        failed.push({ address, error: r.error, message: r.message });
+      } else {
+        valid.push({
+          orgId: req.orgId,
+          userId: req.uid,
+          userName,
+          lat: r.lat,
+          lng: r.lng,
+          accuracy: null,
+          address: r.address,
+          name: "", phone: "", email: "", notes: "",
+          status: "pending",
+          visits: [],
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      // throttle to stay under Geocoding API per-second limits
+      await new Promise(res => setTimeout(res, 50));
+    }
+
+    // 2) accept any pre-geocoded entries the client supplied
+    for (const e of preGeocoded) {
       const lat = Number(e.lat);
       const lng = Number(e.lng);
       const address = clampStr(e.address, 300);
-      if (!address) { skipped.push({ reason: "missing address" }); continue; }
-      if (!validCoord(lat, lng)) { skipped.push({ address, reason: "invalid coordinates" }); continue; }
+      if (!address) { failed.push({ address: "", error: "EMPTY" }); continue; }
+      if (!validCoord(lat, lng)) { failed.push({ address, error: "INVALID_COORDS" }); continue; }
       valid.push({
         orgId: req.orgId,
         userId: req.uid,
         userName,
-        lat,
-        lng,
-        accuracy: null,
-        address,
+        lat, lng, accuracy: null, address,
         name: clampStr(e.name, 120),
         phone: clampStr(e.phone, 40),
         email: "",
@@ -176,7 +234,19 @@ router.post("/bulk", async (req, res, next) => {
       });
     }
 
-    if (!valid.length) return res.status(400).json({ error: "No valid entries to import", skipped });
+    if (!valid.length) {
+      // Embed the first failure code in the error message so it survives
+      // the apiFetch wrapper (which only forwards data.error to the client).
+      const first = failed[0] || {};
+      const code = first.error || "UNKNOWN";
+      const detail = first.message ? `: ${first.message}` : "";
+      return res.status(400).json({
+        error: `Could not import any addresses [${code}]${detail}`,
+        firstFailure: code,
+        firstMessage: first.message || "",
+        failed,
+      });
+    }
 
     // Firestore batched writes max 500 ops per batch — we cap at 200 so one batch is enough.
     const batch = db.batch();
@@ -188,7 +258,12 @@ router.post("/bulk", async (req, res, next) => {
     }
     await batch.commit();
 
-    res.status(201).json({ created, count: created.length, skippedCount: skipped.length, skipped });
+    res.status(201).json({
+      created,
+      count: created.length,
+      failedCount: failed.length,
+      failed,
+    });
   } catch (err) { next(err); }
 });
 
