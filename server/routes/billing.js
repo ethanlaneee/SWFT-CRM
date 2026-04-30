@@ -110,18 +110,22 @@ router.get("/plans", (req, res) => {
   res.json({
     starter: {
       name: "Starter", monthlyPrice: 149, annualPrice: 119,
-      seatLimit: 5, aiMessageLimit: 250,
+      seatLimit: 5, extraSeatPrice: 30, aiMessageLimit: 250,
       priceId: PRICE_IDS.starter, annualPriceId: PRICE_IDS.starter_annual,
     },
     pro: {
       name: "Growth", monthlyPrice: 349, annualPrice: 279,
-      seatLimit: 15, aiMessageLimit: 1000,
+      seatLimit: 10, extraSeatPrice: 23, aiMessageLimit: 1000,
       priceId: PRICE_IDS.pro, annualPriceId: PRICE_IDS.pro_annual,
     },
     business: {
       name: "Scale", monthlyPrice: 599, annualPrice: 479,
-      seatLimit: "Unlimited", aiMessageLimit: "Unlimited",
+      seatLimit: 25, extraSeatPrice: 10, aiMessageLimit: "Unlimited",
       priceId: PRICE_IDS.business, annualPriceId: PRICE_IDS.business_annual,
+    },
+    enterprise: {
+      name: "Enterprise", monthlyPrice: null, annualPrice: null,
+      seatLimit: "Unlimited", extraSeatPrice: null, aiMessageLimit: "Unlimited",
     },
     overagePacks: OVERAGE_PACKS,
   });
