@@ -384,6 +384,21 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <input class="settings-input" id="quick-setup-url" placeholder="https://yourbusiness.com" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;"/>
 </div>
 
+<!-- Your Profile -->
+<div class="settings-section" data-group="profile" id="sec-profile">
+  <div class="settings-header"><span class="settings-header-icon">👤</span><h3>YOUR PROFILE</h3></div>
+  <div class="settings-body">
+    <div class="settings-2col">
+      <div class="settings-field"><label>First Name</label><input class="settings-input" id="s-firstname" style="width:100%;" placeholder="Jake" autocomplete="given-name"/></div>
+      <div class="settings-field"><label>Last Name</label><input class="settings-input" id="s-lastname" style="width:100%;" placeholder="Reynolds" autocomplete="family-name"/></div>
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin-top:4px;">Your name as it appears in the sidebar and on team pages.</div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+      <button class="settings-btn primary" onclick="saveSettings('profile')">Save Profile</button>
+    </div>
+  </div>
+</div>
+
 <!-- Company Profile -->
 <div class="settings-section" data-group="profile" id="sec-company">
   <div class="settings-header"><span class="settings-header-icon">🏢</span><h3>COMPANY PROFILE</h3></div>
@@ -1169,7 +1184,13 @@ async function saveSettings(section) {
   try {
     const token = await getToken();
     const data = {};
-    if (section === 'company') {
+    if (section === 'profile') {
+      const firstName = document.getElementById('s-firstname').value.trim();
+      const lastName = document.getElementById('s-lastname').value.trim();
+      data.firstName = firstName;
+      data.lastName = lastName;
+      data.name = [firstName, lastName].filter(Boolean).join(' ');
+    } else if (section === 'company') {
       data.company = document.getElementById('s-company').value.trim();
       data.phone = document.getElementById('s-phone').value.trim();
       data.address = document.getElementById('s-address').value.trim();
@@ -1203,6 +1224,19 @@ async function saveSettings(section) {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify(data)
     });
+    if (section === 'profile') {
+      // Push the new name into the sidebar immediately so the user sees the
+      // change without refreshing. Mirrors the format swft-user-sync.js writes.
+      try {
+        const fullName = data.name || '';
+        const initials = ((data.firstName?.[0] || '') + (data.lastName?.[0] || '')).toUpperCase() || '?';
+        const cached = JSON.parse(sessionStorage.getItem('swft_profile') || '{}');
+        const email = cached.email || '';
+        sessionStorage.setItem('swft_profile', JSON.stringify({ fullName, initials, email }));
+        document.querySelectorAll('.user-name').forEach(el => { el.textContent = fullName; });
+        document.querySelectorAll('.s-avatar, .avatar').forEach(el => { el.textContent = initials; });
+      } catch (_) {}
+    }
     showToast('Settings saved');
   } catch (e) {
     showToast('Error: ' + e.message);
@@ -1214,6 +1248,12 @@ async function loadSettings() {
     const token = await getToken();
     const res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } });
     const data = await res.json();
+    // Personal profile — fall back to splitting the legacy `name` field
+    // for users whose Firestore doc never had firstName/lastName populated.
+    var fnEl = document.getElementById('s-firstname');
+    var lnEl = document.getElementById('s-lastname');
+    if (fnEl) fnEl.value = data.firstName || (data.name ? data.name.split(' ')[0] : '') || '';
+    if (lnEl) lnEl.value = data.lastName  || (data.name ? data.name.split(' ').slice(1).join(' ') : '') || '';
     if (data.company) document.getElementById('s-company').value = data.company;
     if (data.phone) document.getElementById('s-phone').value = data.phone;
     if (data.address) document.getElementById('s-address').value = data.address;
