@@ -4,9 +4,10 @@ const multer = require("multer");
 const { google } = require("googleapis");
 const { getPlan } = require("../plans");
 const { getUsage } = require("../usage");
-const { handleInbound } = require("../ai/auto-reply");
+const { handleInboundMeta } = require("../ai/auto-reply");
 const { notifyInboundMessage } = require("../utils/notifications");
 const { getGmailClient, getOAuthClient, encodeMime, withSignature } = require("../utils/email");
+const { sendSms } = require("../utils/twilio");
 
 /**
  * Send email via user's connected Gmail account.
@@ -122,10 +123,35 @@ const upload = multer({
   },
 });
 
-// POST /api/messages/send — send email (with file attachments)
+// POST /api/messages/send — send email or SMS
 router.post("/send", upload.array("files", 10), async (req, res, next) => {
   try {
     const { to, subject, body, customerId, customerName, type, quoteId, invoiceId, inReplyTo, replyThreadId, replyReferences } = req.body;
+
+    // ── SMS path ──
+    if (type === "sms") {
+      if (!to) return res.status(400).json({ error: "Recipient phone number is required" });
+      if (!body) return res.status(400).json({ error: "Message body is required" });
+
+      const result = await sendSms(to, body);
+
+      const msgRecord = {
+        userId: req.uid,
+        orgId: req.orgId || req.uid,
+        to,
+        body,
+        customerId: customerId || "",
+        customerName: customerName || "",
+        type: "sms",
+        platform: "sms",
+        direction: "outbound",
+        status: "sent",
+        twilioSid: result.sid,
+        sentAt: Date.now(),
+      };
+      const docRef = await db.collection("messages").add(msgRecord);
+      return res.json({ success: true, id: docRef.id, sentVia: "twilio" });
+    }
 
     // Get user profile
     const userDoc = await db.collection("users").doc(req.uid).get();

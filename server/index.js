@@ -620,6 +620,8 @@ app.post(
   express.json({ type: "*/*", limit: "1mb" }),
   require("./routes/sesWebhook").sesWebhookHandler
 );
+// Twilio inbound SMS — no auth, Twilio signs the request itself
+app.use("/api/sms", require("./routes/smsWebhook"));
 app.use("/api/broadcasts",        auth, checkAccess, requirePlan("pro"), require("./routes/broadcasts"));
 app.use("/api/sending-domain",    auth, checkAccess, requirePlan("pro"), require("./routes/sendingDomain"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));
