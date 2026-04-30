@@ -1421,6 +1421,12 @@
     flex: 1 !important;
     min-width: 0 !important;
   }
+  /* Same separator as .mob-topbar-logo + .topbar-page */
+  .chat-list-header .mob-topbar-logo + .chat-list-title {
+    padding-left: 10px !important;
+    border-left: 1px solid var(--border2) !important;
+    margin-left: 4px !important;
+  }
   .chat-list-header .mob-new-btn {
     flex-shrink: 0 !important;
     margin-left: 0 !important;
@@ -1762,7 +1768,7 @@
   }
 
   /* Channel list header — matches contact-header */
-  .chat-list-header { padding: 14px 16px 10px !important; border-bottom: 1px solid var(--border) !important; }
+  .chat-list-header { padding: 14px 16px 10px !important; }
 
   /* Channel title — matches contact-title */
   .chat-list-title {
