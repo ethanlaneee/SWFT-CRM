@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════
 // SWFT Agent Inbox
-// Proactive AI actions — drop-down next to the bell
+// Proactive AI actions — drops down from AI Active pill
 // ════════════════════════════════════════════════
 
 (function () {
@@ -101,18 +101,23 @@
     .agent-drop-empty {
       text-align: center; padding: 40px 20px; color: #444; font-size: 13px;
     }
-    .agent-inbox-btn-badge {
-      position: absolute; top: 5px; right: 5px;
-      width: 7px; height: 7px; background: #c8f135;
-      border-radius: 50%; border: 2px solid var(--bg, #0a0a0a);
-      display: none;
+    .ai-pill.agent-has-actions {
+      background: rgba(200,241,53,0.13);
+      border-color: rgba(200,241,53,0.35);
+    }
+    .ai-pill-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px; font-weight: 700;
+      background: rgba(200,241,53,0.2); color: #c8f135;
+      padding: 1px 6px; border-radius: 8px; letter-spacing: 0.3px;
+      margin-left: 2px;
     }
   `;
   document.head.appendChild(style);
 
   var _actions = [];
   var _isOpen = false;
-  var _inboxBtn = null;
+  var _pill = null;
 
   var TYPE_LABELS = {
     quote_followup:   'Quote follow-up',
@@ -152,13 +157,13 @@
     if (!_actions.length) {
       list.innerHTML = '<div class="agent-drop-empty">Your agent is watching — no pending actions</div>';
       badge.style.display = 'none';
-      updateBtnBadge(false);
+      updatePill(0);
       return;
     }
 
     badge.textContent = _actions.length;
     badge.style.display = '';
-    updateBtnBadge(true);
+    updatePill(_actions.length);
 
     list.innerHTML = _actions.map(function(a) {
       var typeClass = a.type || '';
@@ -191,10 +196,19 @@
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function updateBtnBadge(hasItems) {
-    if (_inboxBtn) {
-      var dot = _inboxBtn.querySelector('.agent-inbox-btn-badge');
-      if (dot) dot.style.display = hasItems ? '' : 'none';
+  function updatePill(count) {
+    if (!_pill) return;
+    _pill.classList.toggle('agent-has-actions', count > 0);
+    var countEl = _pill.querySelector('.ai-pill-count');
+    if (count > 0) {
+      if (!countEl) {
+        countEl = document.createElement('span');
+        countEl.className = 'ai-pill-count';
+        _pill.appendChild(countEl);
+      }
+      countEl.textContent = count;
+    } else if (countEl) {
+      countEl.remove();
     }
   }
 
@@ -247,36 +261,17 @@
     }
   }
 
-  // ── Inject button next to bell ────────────────────────────────────────────
-  function injectButton() {
-    var bellBtn = null;
-    document.querySelectorAll('.icon-btn').forEach(function(btn) {
-      if (btn.innerHTML.indexOf('M18 8A6') > -1 || btn.querySelector('.badge-dot')) {
-        bellBtn = btn;
-      }
-    });
-    if (!bellBtn) return;
+  // ── Wire to AI Active pill ────────────────────────────────────────────────
+  function wirePill() {
+    _pill = document.querySelector('.ai-pill');
+    if (!_pill) return;
 
-    var btn = document.createElement('div');
-    btn.className = 'icon-btn';
-    btn.id = 'agent-inbox-btn';
-    btn.title = 'Agent Inbox';
-    // Sparkle / AI icon
-    btn.innerHTML =
-      '<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-        '<path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" stroke-width="1.8" stroke-linejoin="round"/>' +
-      '</svg>' +
-      '<div class="agent-inbox-btn-badge"></div>';
-
-    bellBtn.parentNode.insertBefore(btn, bellBtn);
-    _inboxBtn = btn;
-
-    btn.addEventListener('click', function(e) {
+    _pill.addEventListener('click', function(e) {
       e.stopPropagation();
       _isOpen = !_isOpen;
       dropdown.classList.toggle('open', _isOpen);
       if (_isOpen) {
-        var rect = btn.getBoundingClientRect();
+        var rect = _pill.getBoundingClientRect();
         dropdown.style.top  = (rect.bottom + 8) + 'px';
         dropdown.style.right = (window.innerWidth - rect.right) + 'px';
         loadActions();
@@ -292,7 +287,7 @@
   });
 
   function init() {
-    injectButton();
+    wirePill();
     setTimeout(loadActions, 2200);
     setInterval(loadActions, 5 * 60 * 1000);
   }
