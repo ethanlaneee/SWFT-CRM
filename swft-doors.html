@@ -150,13 +150,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .map-legend-row{display:flex;align-items:center;gap:7px;}
 .map-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 
-/* FLOATING ACTION BUTTON */
-.fab{position:fixed;bottom:24px;right:24px;height:58px;padding:0 22px 0 18px;border-radius:30px;background:var(--green);color:#0a0a0a;border:none;cursor:pointer;display:flex;align-items:center;gap:9px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;box-shadow:0 12px 30px rgba(200,241,53,0.35),0 4px 10px rgba(0,0,0,0.4);z-index:300;transition:transform 0.16s,box-shadow 0.16s;}
-.fab:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(200,241,53,0.45),0 6px 14px rgba(0,0,0,0.5);}
-.fab:active{transform:translateY(0);}
-.fab svg{width:20px;height:20px;}
-@media (max-width:768px){.fab{bottom:80px;right:18px;height:54px;padding:0 20px 0 16px;font-size:13.5px;}}
-
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
@@ -409,11 +402,6 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     </div>
   </div>
 </div>
-
-<button class="fab" id="fab" onclick="openLogModal()" title="Log a new knock">
-  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
-  Log Knock
-</button>
 
 <!-- LOG KNOCK MODAL -->
 <div class="modal-overlay" id="log-overlay" onclick="closeLogModal()"></div>
