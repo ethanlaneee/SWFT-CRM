@@ -1543,37 +1543,76 @@ function toggleSidebar(){
               </div>
             </div>
           </div>
-          <!-- Slide 3: Jobs Kanban -->
+          <!-- Slide: Jobs -->
           <div class="carousel-slide">
             <div class="mock-app">
               <div class="mock-side" data-active="jobs"></div>
               <div class="mock-body">
-                <div class="mock-top">JOBS <span class="slash">/</span> <span class="sub">Pipeline · 18 active</span>
+                <div class="mock-top">JOBS <span class="slash">/</span> <span class="sub">18 active · $94,340 open revenue</span>
                   <div class="mock-top-right"><span class="mock-top-btn">+ New Job</span></div>
                 </div>
-                <div class="mock-content-area">
-                  <div class="mock-kanban">
-                    <div class="mock-col">
-                      <div class="mock-col-head">Quoted <span class="count">5</span></div>
-                      <div class="mock-card"><div class="mock-card-title">Kitchen remodel</div><div class="mock-card-cust">Patel residence</div><div class="mock-card-foot"><span class="mock-pill warn">Sent</span><span class="mock-card-amt">$24,800</span></div></div>
-                      <div class="mock-card"><div class="mock-card-title">Roof replacement</div><div class="mock-card-cust">M. Liu</div><div class="mock-card-foot"><span class="mock-pill warn">Pending</span><span class="mock-card-amt">$11,200</span></div></div>
-                      <div class="mock-card"><div class="mock-card-title">Driveway pour</div><div class="mock-card-cust">A. Ng</div><div class="mock-card-foot"><span class="mock-pill warn">Sent</span><span class="mock-card-amt">$6,400</span></div></div>
+                <div class="mock-content-area" style="padding:14px 16px;gap:10px;">
+                  <!-- Stat strip -->
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-top:2px solid var(--green);"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);">Active</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green);margin-top:3px;">18</div></div>
+                    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-top:2px solid var(--blue);"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);">Scheduled</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--blue);margin-top:3px;">4</div></div>
+                    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-top:2px solid var(--amber);"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);">Pending</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--amber);margin-top:3px;">5</div></div>
+                    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-top:2px solid var(--gray2);"><div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);">Done (mo)</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);margin-top:3px;">31</div></div>
+                  </div>
+                  <!-- Toolbar -->
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="display:flex;gap:4px;">
+                      <span style="font-size:11px;padding:5px 12px;border-radius:7px;background:rgba(200,241,53,0.1);color:var(--green);border:1px solid rgba(200,241,53,0.25);">All</span>
+                      <span style="font-size:11px;padding:5px 12px;border-radius:7px;color:var(--gray);border:1px solid var(--border2);">In Progress</span>
+                      <span style="font-size:11px;padding:5px 12px;border-radius:7px;color:var(--gray);border:1px solid var(--border2);">Scheduled</span>
+                      <span style="font-size:11px;padding:5px 12px;border-radius:7px;color:var(--gray);border:1px solid var(--border2);">Pending</span>
                     </div>
-                    <div class="mock-col">
-                      <div class="mock-col-head">Scheduled <span class="count">4</span></div>
-                      <div class="mock-card"><div class="mock-card-title">HVAC install</div><div class="mock-card-cust">T. Brooks</div><div class="mock-card-foot"><span class="mock-pill lead">Wed 9 AM</span><span class="mock-card-amt">$8,200</span></div></div>
-                      <div class="mock-card"><div class="mock-card-title">Deck staining</div><div class="mock-card-cust">D. Castro</div><div class="mock-card-foot"><span class="mock-pill lead">Thu 1 PM</span><span class="mock-card-amt">$2,100</span></div></div>
+                    <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--gray2);">🔍 Search jobs…</div>
+                  </div>
+                  <!-- Table -->
+                  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex:1;">
+                    <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr 0.9fr 80px;gap:12px;padding:9px 16px;background:var(--surface2);border-bottom:1px solid var(--border);">
+                      <div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);">Job / Customer</div>
+                      <div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);">Service</div>
+                      <div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);">Crew</div>
+                      <div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);">Amount</div>
+                      <div style="font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray2);">Status</div>
                     </div>
-                    <div class="mock-col">
-                      <div class="mock-col-head">In Progress <span class="count">6</span></div>
-                      <div class="mock-card"><div class="mock-card-title">Bathroom remodel</div><div class="mock-card-cust">J. Kowalski</div><div class="mock-card-foot"><span class="mock-pill active">Day 3 / 5</span><span class="mock-card-amt">$14,600</span></div></div>
-                      <div class="mock-card"><div class="mock-card-title">Fence install</div><div class="mock-card-cust">S. Hendricks</div><div class="mock-card-foot"><span class="mock-pill active">Day 1 / 2</span><span class="mock-card-amt">$3,950</span></div></div>
-                      <div class="mock-card"><div class="mock-card-title">Water heater</div><div class="mock-card-cust">R. Okafor</div><div class="mock-card-foot"><span class="mock-pill active">Today</span><span class="mock-card-amt">$1,840</span></div></div>
+                    <!-- rows -->
+                    <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr 0.9fr 80px;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;">
+                      <div><div style="font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:7px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px rgba(200,241,53,0.5);flex-shrink:0;"></span>Bathroom Remodel</div><div style="font-size:10.5px;color:var(--gray);margin-top:2px;padding-left:14px;">J. Kowalski · #J-318</div></div>
+                      <div style="font-size:11.5px;color:var(--gray);">Remodel<div style="font-size:10px;color:var(--gray2);font-family:'JetBrains Mono',monospace;">1,240 sqft</div></div>
+                      <div style="display:flex;gap:4px;"><span style="font-size:10.5px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;color:var(--gray);">Devon</span><span style="font-size:10.5px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;color:var(--gray);">Mike</span></div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--white);">$14,600<div style="font-size:10px;color:var(--amber);">Deposit paid</div></div>
+                      <div><span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(200,241,53,0.1);color:var(--green);">In Progress</span></div>
                     </div>
-                    <div class="mock-col">
-                      <div class="mock-col-head">Completed <span class="count">3</span></div>
-                      <div class="mock-card"><div class="mock-card-title">Drain clean</div><div class="mock-card-cust">D. Castro</div><div class="mock-card-foot"><span class="mock-pill done">Paid</span><span class="mock-card-amt">$890</span></div></div>
-                      <div class="mock-card"><div class="mock-card-title">AC repair</div><div class="mock-card-cust">L. Reyes</div><div class="mock-card-foot"><span class="mock-pill due">Invoice</span><span class="mock-card-amt">$620</span></div></div>
+                    <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr 0.9fr 80px;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;">
+                      <div><div style="font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:7px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 5px rgba(77,159,255,0.4);flex-shrink:0;"></span>HVAC Install</div><div style="font-size:10.5px;color:var(--gray);margin-top:2px;padding-left:14px;">T. Brooks · #J-321</div></div>
+                      <div style="font-size:11.5px;color:var(--gray);">HVAC<div style="font-size:10px;color:var(--gray2);font-family:'JetBrains Mono',monospace;">Carrier 4-ton</div></div>
+                      <div><span style="font-size:10.5px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;color:var(--gray);">Tyler</span></div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--white);">$8,200<div style="font-size:10px;color:var(--blue);">Invoiced</div></div>
+                      <div><span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(77,159,255,0.1);color:var(--blue);">Scheduled</span></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr 0.9fr 80px;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;">
+                      <div><div style="font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:7px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0;"></span>Roof Replacement</div><div style="font-size:10.5px;color:var(--gray);margin-top:2px;padding-left:14px;">M. Liu · #J-322</div></div>
+                      <div style="font-size:11.5px;color:var(--gray);">Roofing<div style="font-size:10px;color:var(--gray2);font-family:'JetBrains Mono',monospace;">22 squares</div></div>
+                      <div style="font-size:11px;color:var(--gray2);">Unassigned</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--white);">$11,200<div style="font-size:10px;color:var(--gray2);">No payment</div></div>
+                      <div><span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(245,166,35,0.1);color:var(--amber);">Pending</span></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr 0.9fr 80px;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;">
+                      <div><div style="font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:7px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px rgba(200,241,53,0.5);flex-shrink:0;"></span>Fence Install</div><div style="font-size:10.5px;color:var(--gray);margin-top:2px;padding-left:14px;">S. Hendricks · #J-315</div></div>
+                      <div style="font-size:11.5px;color:var(--gray);">Fencing<div style="font-size:10px;color:var(--gray2);font-family:'JetBrains Mono',monospace;">180 lin ft</div></div>
+                      <div><span style="font-size:10.5px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;color:var(--gray);">Devon</span></div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--white);">$3,950<div style="font-size:10px;color:var(--green);">Paid ✓</div></div>
+                      <div><span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(200,241,53,0.1);color:var(--green);">In Progress</span></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1.8fr 1fr 1fr 0.9fr 80px;gap:12px;padding:11px 16px;align-items:center;">
+                      <div><div style="font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:7px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--gray2);flex-shrink:0;"></span>Drain Cleaning</div><div style="font-size:10.5px;color:var(--gray);margin-top:2px;padding-left:14px;">D. Castro · #J-309</div></div>
+                      <div style="font-size:11.5px;color:var(--gray);">Plumbing<div style="font-size:10px;color:var(--gray2);font-family:'JetBrains Mono',monospace;">Main line</div></div>
+                      <div><span style="font-size:10.5px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;color:var(--gray);">Mike</span></div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--white);">$890<div style="font-size:10px;color:var(--green);">Paid ✓</div></div>
+                      <div><span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;background:rgba(100,100,100,0.12);color:var(--gray);">Complete</span></div>
                     </div>
                   </div>
                 </div>
