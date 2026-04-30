@@ -15,6 +15,7 @@ const PLANS = {
     seatLimit: 5,
     extraSeatPrice: 30,          // $30/mo per seat over 5
     aiMessageLimit: 250,
+    broadcastLimit: 0,           // no broadcasts on Core
   },
   pro: {
     name: "SWFT+",
@@ -23,6 +24,7 @@ const PLANS = {
     seatLimit: 10,
     extraSeatPrice: 23,          // $23/mo per seat over 10
     aiMessageLimit: 1000,
+    broadcastLimit: 25,          // 25 broadcasts/month
   },
   business: {
     name: "SWFT Pro",
@@ -31,6 +33,7 @@ const PLANS = {
     seatLimit: 25,
     extraSeatPrice: 10,          // $10/mo per seat over 25
     aiMessageLimit: Infinity,    // uncapped
+    broadcastLimit: Infinity,    // uncapped
   },
   enterprise: {
     name: "SWFT Enterprise",

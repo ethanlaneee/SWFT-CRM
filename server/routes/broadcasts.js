@@ -29,6 +29,26 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: "Broadcasting is not configured. Contact support." });
     }
 
+    // Enforce monthly broadcast limit per plan
+    const { getPlan } = require("../plans");
+    const plan = getPlan(req.userPlan);
+    if (plan.broadcastLimit !== Infinity) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const usedSnap = await db.collection("broadcasts")
+        .where("orgId", "==", req.orgId)
+        .where("createdAt", ">=", startOfMonth.getTime())
+        .get();
+      if (usedSnap.size >= plan.broadcastLimit) {
+        return res.status(403).json({
+          error: `You've reached your ${plan.broadcastLimit} broadcast limit for this month. Upgrade to SWFT Pro for unlimited broadcasts.`,
+          limitReached: true,
+          upgradeUrl: "/swft-checkout?plan=business",
+        });
+      }
+    }
+
     // Fetch org user for sending
     const userDoc = await db.collection("users").doc(req.uid).get();
     if (!userDoc.exists) return res.status(400).json({ error: "User not found" });
