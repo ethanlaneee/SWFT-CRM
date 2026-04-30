@@ -77,12 +77,13 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .kpi-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:6px;}
 .kpi-sub{font-size:10.5px;color:var(--gray2);margin-top:4px;}
 @media (max-width:760px){
-  .kpi-strip{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .kpi-strip{grid-template-columns:repeat(2,1fr);gap:6px;}
   .kpi-card.kpi-hide-mobile{display:none;}
-  .kpi-card{padding:8px 12px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  /* Match tab-button height (~36px) — tight horizontal layout */
+  .kpi-card{padding:5px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:9px;}
   .kpi-card::before{height:2px;}
-  .kpi-label{font-size:9px;letter-spacing:1.4px;flex:1;}
-  .kpi-value{font-size:18px;margin-top:0;letter-spacing:0.5px;}
+  .kpi-label{font-size:9px;letter-spacing:1.2px;flex:1;}
+  .kpi-value{font-size:15px;margin-top:0;letter-spacing:0.5px;}
   .kpi-sub{display:none;}
 }
 
@@ -380,7 +381,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
           <div><span class="bulk-bar-count" id="bulk-count">0</span> selected</div>
           <div class="bulk-bar-actions">
             <button class="bulk-btn" onclick="selectAllVisible()">Select all</button>
-            <button class="bulk-btn" onclick="clearSelection()">Clear</button>
+            <button class="bulk-btn" onclick="bulkClearLogs()">Clear logs</button>
             <button class="bulk-btn danger" onclick="bulkDeleteSelected()">Delete</button>
           </div>
         </div>
@@ -947,6 +948,32 @@ function clearSelection(){
 function updateBulkCount(){
   var n = Object.keys(_selectedIds).length;
   document.getElementById('bulk-count').textContent = String(n);
+}
+
+async function bulkClearLogs(){
+  var ids = Object.keys(_selectedIds);
+  if(!ids.length){ showToast('No doors selected'); return; }
+  if(!confirm('Clear visit logs and notes from ' + ids.length + ' door' + (ids.length === 1 ? '' : 's') + '? Addresses stay; they go back to Planned.')) return;
+
+  var btnSnapshot = _selectedIds;
+  try {
+    var resp = await API.doors.bulkReset(ids);
+    // Apply the reset locally so the UI updates without a full reload
+    var idSet = {};
+    ids.forEach(function(id){ idSet[id] = true; });
+    _doors = _doors.map(function(d){
+      if(!idSet[d.id]) return d;
+      return Object.assign({}, d, { status: 'pending', notes: '', visits: [], updatedAt: Date.now() });
+    });
+    _selectedIds = {};
+    toggleSelectMode();   // exits select mode and re-renders
+    refreshKpis();
+    renderMarkers();
+    showToast('Cleared ' + (resp.reset || ids.length) + ' door' + (ids.length === 1 ? '' : 's'));
+  } catch (e) {
+    _selectedIds = btnSnapshot;
+    showToast('Could not clear: ' + (e.message || 'error'));
+  }
 }
 
 async function bulkDeleteSelected(){

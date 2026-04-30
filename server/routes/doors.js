@@ -368,6 +368,37 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/doors/bulk-reset — wipe visits, notes, and status on selected doors
+// Body: { ids: ["..."] }   max 200 per call
+// Doors stay (lat/lng/address/name/phone preserved) but go back to pending
+// with an empty visit history. Useful for re-using a route on a new day.
+router.post("/bulk-reset", async (req, res, next) => {
+  try {
+    const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
+    if (!ids.length) return res.status(400).json({ error: "No ids provided" });
+    if (ids.length > 200) return res.status(400).json({ error: "Too many ids (max 200 per call)" });
+
+    const refs = ids.map(id => col().doc(String(id)));
+    const docs = await db.getAll(...refs);
+    const batch = db.batch();
+    const now = Date.now();
+    let reset = 0;
+    for (const d of docs) {
+      if (d.exists && d.data().orgId === req.orgId) {
+        batch.update(d.ref, {
+          status: "pending",
+          notes: "",
+          visits: [],
+          updatedAt: now,
+        });
+        reset++;
+      }
+    }
+    if (reset) await batch.commit();
+    res.json({ success: true, reset });
+  } catch (err) { next(err); }
+});
+
 // POST /api/doors/bulk-delete — delete many doors in one batch
 // Body: { ids: ["..."] }   max 200 per call
 router.post("/bulk-delete", async (req, res, next) => {
