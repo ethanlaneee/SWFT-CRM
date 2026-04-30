@@ -495,10 +495,10 @@ async function quickbooksCallback(req, res) {
       },
     }, { merge: true });
 
-    res.redirect(`/swft-settings?connected=quickbooks`);
+    res.redirect(`/swft-connect?connected=quickbooks`);
   } catch (err) {
     console.error("QuickBooks OAuth callback error:", err);
-    res.redirect(`/swft-settings?error=oauth_failed`);
+    res.redirect(`/swft-connect?error=oauth_failed`);
   }
 }
 
