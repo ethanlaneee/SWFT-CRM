@@ -369,21 +369,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="settings-nav-item" data-group="account"><span class="settings-nav-icon">👤</span>Account</div>
 </nav>
 
-<!-- Quick Setup: AI reads the site and fills everything -->
-<div data-group="profile" id="quick-setup-banner" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(200,241,53,0.08) 0%,rgba(200,241,53,0.02) 100%);border:1px solid rgba(200,241,53,0.2);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:220px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--green);">QUICK SETUP</div>
-      <div style="font-size:12.5px;color:var(--gray);margin-top:3px;line-height:1.5;">Paste your website URL and let AI fill in everything — company info, services, pricing, hours, FAQs. You can tweak anything afterwards.</div>
-    </div>
-    <button onclick="quickSetupFromWebsite()" id="quick-setup-btn" class="settings-btn primary" style="white-space:nowrap;flex-shrink:0;">
-      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:-1px;margin-right:4px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
-      Auto-fill everything
-    </button>
-  </div>
-  <input class="settings-input" id="quick-setup-url" placeholder="https://yourbusiness.com" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;"/>
-</div>
-
 <!-- Your Profile -->
 <div class="settings-section" data-group="profile" id="sec-profile">
   <div class="settings-header"><span class="settings-header-icon">👤</span><h3>YOUR PROFILE</h3></div>
@@ -510,6 +495,22 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="settings-header"><span class="settings-header-icon">🧠</span><h3>BUSINESS PROFILE FOR AI</h3></div>
   <div class="settings-body">
     <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.5;">This info powers your AI agents. The more you fill in, the smarter your estimator and follow-up agents will be. As you add jobs and customers, the AI also learns automatically.</div>
+
+    <!-- Quick Setup: AI reads the website and fills the fields below -->
+    <div id="quick-setup-banner" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(200,241,53,0.08) 0%,rgba(200,241,53,0.02) 100%);border:1px solid rgba(200,241,53,0.2);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--green);">QUICK SETUP</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:3px;line-height:1.5;">Paste your website URL — AI fills in services, pricing, hours, FAQs and more. You can edit anything afterwards.</div>
+        </div>
+        <button onclick="quickSetupFromWebsite()" id="quick-setup-btn" class="settings-btn primary" style="white-space:nowrap;flex-shrink:0;">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:-1px;margin-right:4px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          Auto-fill with AI
+        </button>
+      </div>
+      <input class="settings-input" id="quick-setup-url" placeholder="https://yourbusiness.com" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;"/>
+    </div>
+
     <div class="settings-field">
       <label>About Your Business</label>
       <textarea class="settings-input" id="s-biz-about" rows="3" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. We're a family-owned exterior cleaning company based in Edmonton, AB. We've been serving residential and commercial clients since 2020."></textarea>
@@ -524,22 +525,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <input class="settings-input" id="s-biz-area" style="width:100%;" placeholder="e.g. Edmonton, St. Albert, Sherwood Park"/>
       </div>
     </div>
-    <div class="settings-2col">
-      <div class="settings-field">
-        <label>Business Hours</label>
-        <input class="settings-input" id="s-biz-hours" style="width:100%;" placeholder="e.g. Mon-Sat 8am-6pm"/>
-      </div>
-      <div class="settings-field">
-        <label>Business Website</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input class="settings-input" id="s-biz-website" style="flex:1;" placeholder="e.g. https://yourcompany.com"/>
-          <button class="settings-btn" id="analyze-website-btn" onclick="analyzeWebsite()" title="Let AI read your website and fill in your profile automatically" style="white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0;border-color:rgba(200,241,53,0.3);color:var(--green);">
-            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke-width="1.8" stroke-linejoin="round"/></svg>
-            Auto-fill with AI
-          </button>
-        </div>
-        <div style="font-size:10.5px;color:var(--gray);margin-top:4px;">Enter your website URL and click Auto-fill — AI will read your site and fill in your profile.</div>
-      </div>
+    <div class="settings-field">
+      <label>Business Hours</label>
+      <input class="settings-input" id="s-biz-hours" style="width:100%;" placeholder="e.g. Mon-Sat 8am-6pm"/>
     </div>
     <div class="settings-2col">
       <div class="settings-field">
@@ -565,24 +553,16 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <label>Common FAQs</label>
       <textarea class="settings-input" id="s-biz-faqs" rows="3" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. Q: Do you offer same-day service? A: Yes, subject to availability. Q: Are you insured? A: Yes, fully insured and licensed."></textarea>
     </div>
+
+    <div style="border-top:1px solid var(--border2);margin:18px 0 14px;"></div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;color:var(--white);margin-bottom:6px;">CUSTOM INSTRUCTIONS</div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.6;">Hard rules that override defaults — personality, do-not-quote-prices, sign-offs, etc. Applied to every AI conversation.</div>
+    <div class="settings-field">
+      <textarea class="settings-input" id="s-ai-instructions" rows="6" style="width:100%;resize:vertical;line-height:1.6;font-family:'DM Sans',sans-serif;" placeholder="e.g.&#10;- Always greet customers by first name&#10;- Never quote prices over the phone — always say we'll send a formal quote&#10;- If someone asks about competitor pricing, stay positive and highlight our warranty&#10;- Always end messages with 'Have a great day!'"></textarea>
+    </div>
+
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
       <button class="settings-btn primary" onclick="saveSettings('bizprofile')">Save Business Profile</button>
-    </div>
-  </div>
-</div>
-
-<!-- Train Your AI -->
-<div class="settings-section" data-group="profile" id="sec-ai-train">
-  <div class="settings-header"><span class="settings-header-icon">🎯</span><h3>TRAIN YOUR AI</h3></div>
-  <div class="settings-body">
-    <div style="font-size:12px;color:var(--gray);margin-bottom:14px;line-height:1.6;">Write custom instructions that are always injected into your AI's behaviour. Use this to define its personality, set hard rules, or tell it exactly how to handle specific situations.</div>
-    <div class="settings-field">
-      <label>Custom AI Instructions</label>
-      <textarea class="settings-input" id="s-ai-instructions" rows="6" style="width:100%;resize:vertical;line-height:1.6;font-family:'DM Sans',sans-serif;" placeholder="e.g.&#10;- Always greet customers by first name&#10;- Never quote prices over the phone — always say we'll send a formal quote&#10;- If someone asks about competitor pricing, stay positive and highlight our warranty&#10;- Always end messages with 'Have a great day!'"></textarea>
-      <div style="font-size:10.5px;color:var(--gray2);margin-top:5px;">These instructions override defaults. The AI will always follow these rules for every conversation.</div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-      <button class="settings-btn primary" onclick="saveSettings('aiinstructions')">Save AI Instructions</button>
     </div>
   </div>
 </div>
@@ -841,10 +821,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <option value="auto">Auto-detect</option><option value="fahrenheit">Fahrenheit (°F)</option><option value="celsius">Celsius (°C)</option>
       </select>
     </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Notifications</div><div class="settings-row-desc">Show notification badge and dropdown</div></div>
-      <div class="settings-toggle on" onclick="this.classList.toggle('on');showToast(this.classList.contains('on')?'Notifications on':'Notifications off')"></div>
-    </div>
   </div>
 </div>
 
@@ -1010,36 +986,34 @@ async function findGoogleBusiness() {
   }
 }
 
-// Called from the top-of-Settings Quick Setup banner. Takes the URL from the
-// banner input, copies it into the Business Profile → Website input (so it
-// ends up saved too), then delegates to analyzeWebsite(), which handles
-// the AI call + auto-save.
+// Called from the Quick Setup banner. Reads the URL from the banner's input,
+// also copies it into Company Profile → Website (so it persists), then runs
+// the AI extract + auto-save.
 async function quickSetupFromWebsite() {
   var top = document.getElementById('quick-setup-url');
-  var bottom = document.getElementById('s-biz-website');
-  var url = (top.value || '').trim();
-  if (!url) { showToast('Enter your website URL first'); top.focus(); return; }
-  if (bottom) bottom.value = url;
+  var url = (top && top.value || '').trim();
+  if (!url) { showToast('Enter your website URL first'); if (top) top.focus(); return; }
+  var siteEl = document.getElementById('s-website');
+  if (siteEl && !siteEl.value.trim()) siteEl.value = url;
   var btn = document.getElementById('quick-setup-btn');
   var orig = btn.innerHTML;
   btn.innerHTML = 'Analyzing…';
   btn.disabled = true;
   try {
-    await analyzeWebsite();
+    await analyzeWebsite(url);
   } finally {
     btn.innerHTML = orig;
     btn.disabled = false;
   }
 }
 
-async function analyzeWebsite() {
-  var btn = document.getElementById('analyze-website-btn');
-  var url = (document.getElementById('s-biz-website').value || '').trim();
+async function analyzeWebsite(urlArg) {
+  var btn = document.getElementById('quick-setup-btn');
+  var url = (urlArg || (document.getElementById('quick-setup-url')?.value) || (document.getElementById('s-website')?.value) || '').trim();
   if (!url) { showToast('Enter your website URL first'); return; }
 
-  var origHtml = btn.innerHTML;
-  btn.innerHTML = 'Analyzing...';
-  btn.disabled = true;
+  var origHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = 'Analyzing...'; btn.disabled = true; }
 
   try {
     var token = await getToken();
@@ -1096,8 +1070,7 @@ async function analyzeWebsite() {
   } catch(e) {
     showToast('Error: ' + (e.message || 'Could not analyze website'));
   } finally {
-    btn.innerHTML = origHtml;
-    btn.disabled = false;
+    if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
   }
 }
 
@@ -1202,13 +1175,13 @@ async function saveSettings(section) {
       data.bizServices = document.getElementById('s-biz-services').value.trim();
       data.bizArea = document.getElementById('s-biz-area').value.trim();
       data.bizHours = document.getElementById('s-biz-hours').value.trim();
-      data.bizWebsite = document.getElementById('s-biz-website').value.trim();
       data.bizNotes = document.getElementById('s-biz-notes').value.trim();
       data.bizPricing = document.getElementById('s-biz-pricing').value.trim();
       data.bizPaymentMethods = document.getElementById('s-biz-payment-methods').value.trim();
       data.bizBookingLink = document.getElementById('s-biz-booking-link').value.trim();
       data.bizFaqs = document.getElementById('s-biz-faqs').value.trim();
-    } else if (section === 'aiinstructions') {
+      // Custom instructions live alongside the business profile now —
+      // both are AI-context fields, both saved by the same button.
       data.aiCustomInstructions = document.getElementById('s-ai-instructions').value.trim();
     } else if (section === 'defaults') {
       data.taxRate = document.getElementById('s-tax').value.trim();
@@ -1272,7 +1245,6 @@ async function loadSettings() {
     if (data.bizServices) document.getElementById('s-biz-services').value = data.bizServices;
     if (data.bizArea) document.getElementById('s-biz-area').value = data.bizArea;
     if (data.bizHours) document.getElementById('s-biz-hours').value = data.bizHours;
-    if (data.bizWebsite) document.getElementById('s-biz-website').value = data.bizWebsite;
     if (data.bizNotes) document.getElementById('s-biz-notes').value = data.bizNotes;
     if (data.bizPricing) document.getElementById('s-biz-pricing').value = data.bizPricing;
     if (data.bizPaymentMethods) document.getElementById('s-biz-payment-methods').value = data.bizPaymentMethods;
