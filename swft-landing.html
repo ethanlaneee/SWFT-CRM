@@ -915,26 +915,35 @@ section{position:relative;z-index:1;}
   .pricing{padding:60px 0 80px;}
   /* Pricing table mobile — tab switcher */
   .pt-mobile-tabs{
-    display:flex;gap:6px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;
+    display:flex;gap:6px;justify-content:center;margin-bottom:0;flex-wrap:nowrap;
   }
   .pt-tab{
-    padding:7px 14px;border-radius:8px;border:1px solid var(--border2);
-    background:var(--surface);color:var(--gray);font-size:13px;font-weight:600;
-    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+    flex:1;padding:8px 6px;border-radius:8px;border:1px solid var(--border2);
+    background:var(--surface);color:var(--gray);font-size:12px;font-weight:600;
+    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;text-align:center;
   }
   .pt-tab-active{background:var(--green-dim);border-color:rgba(200,241,53,0.35);color:var(--green);}
   /* On mobile: hide non-active plan columns */
   .pricing-table [data-col]:not(.pt-col-active){display:none;}
-  /* Group row colspan collapses to 2 on mobile */
-  .pricing-table .pt-group-row td{colspan:2;}
-  /* Make first column take remaining space */
-  .pricing-table thead th:first-child{width:55%;}
+  /* Hide the empty feature-label header cell; active plan th spans full width */
+  .pricing-table thead th.pt-feature-col{display:none;}
+  .pricing-table thead th[data-col].pt-col-active{width:100%;text-align:center;}
+  /* Body: feature label takes ~70%, value takes ~30% */
+  .pricing-table{table-layout:auto;}
+  .pricing-table tbody td:first-child{width:70%;font-size:13px;}
+  .pricing-table tbody td[data-col]{width:30%;font-size:13px;}
+  /* Plan header on mobile — make price inline, not stacked awkwardly */
+  .pt-price .monthly-price,.pt-price .annual-price{font-size:40px;}
+  .pt-period{display:inline;font-size:13px;}
+  .pt-plan-name{font-size:20px;}
+  .pt-popular-badge{margin-bottom:8px;}
   /* Active featured column keeps its highlight */
   .pricing-table [data-col].pt-col-active.pt-featured{
     background:rgba(200,241,53,0.05);
-    border-left:1px solid rgba(200,241,53,0.2);
-    border-right:1px solid rgba(200,241,53,0.2);
+    border-left:none;border-right:none;
   }
+  /* Group row spans 2 visible cols */
+  .pricing-table .pt-group-row td[colspan]{display:table-cell;}
 }
 </style>
 <!-- ── CHAT BUBBLE STYLES ── -->
@@ -1738,15 +1747,19 @@ document.querySelectorAll('.compare-col.reveal').forEach((el, i) => { el.dataset
 
 /* ── Pricing table mobile column switcher ── */
 function ptSelectCol(col) {
-  // Update tab active states
   document.querySelectorAll('.pt-tab').forEach(function(btn) {
     btn.classList.toggle('pt-tab-active', parseInt(btn.dataset.col) === col);
   });
-  // Show only the selected column
   document.querySelectorAll('.pricing-table [data-col]').forEach(function(el) {
-    const active = parseInt(el.dataset.col) === col;
+    var active = parseInt(el.dataset.col) === col;
     el.classList.toggle('pt-col-active', active);
   });
+  // Collapse group-row colspan to 2 on mobile (feature col + 1 plan col)
+  if (window.innerWidth <= 768) {
+    document.querySelectorAll('.pricing-table .pt-group-row td').forEach(function(td) {
+      td.setAttribute('colspan', '2');
+    });
+  }
 }
 // Init: show SWFT+ (col 2) by default on mobile
 (function() {
