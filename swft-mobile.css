@@ -1762,7 +1762,7 @@
   }
 
   /* Channel list header — matches contact-header */
-  .chat-list-header { padding: 14px 16px 10px !important; }
+  .chat-list-header { padding: 14px 16px 10px !important; border-bottom: 1px solid var(--border) !important; }
 
   /* Channel title — matches contact-title */
   .chat-list-title {
