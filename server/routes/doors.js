@@ -43,24 +43,22 @@ function validCoord(lat, lng) {
       && Number.isFinite(lng) && lng >= -180 && lng <= 180;
 }
 
-// Server-side geocoder using the Google Geocoding REST API.
-// Uses GOOGLE_MAPS_API_KEY which the server already has configured for
-// /api/tracker/optimize-route. Browser-side Geocoder() can fail when the key
-// has HTTP-referrer restrictions or Geocoding API isn't enabled, so we proxy
-// it here. Returns { address, lat, lng } or { error, message } on failure.
-async function geocodeAddress(address) {
+// Server-side geocoder. Tries Google Geocoding API first (using
+// GOOGLE_MAPS_API_KEY), then falls back to OpenStreetMap Nominatim — which
+// is free and key-less, so imports work even if the Google key isn't set
+// up for Geocoding. Returns { address, lat, lng, source } or { error, message }.
+async function geocodeViaGoogle(address) {
   const KEY = process.env.GOOGLE_MAPS_API_KEY;
-  if (!KEY) return { error: "NO_API_KEY", message: "Server Maps API key not configured" };
-
+  if (!KEY) return { error: "NO_API_KEY" };
   const url = "https://maps.googleapis.com/maps/api/geocode/json?address="
-    + encodeURIComponent(address)
-    + "&key=" + KEY;
+    + encodeURIComponent(address) + "&key=" + KEY;
   try {
     const r = await fetch(url);
     const data = await r.json();
     if (data.status === "OK" && data.results && data.results[0]) {
       const g = data.results[0];
       return {
+        source: "google",
         address: g.formatted_address || address,
         lat: g.geometry.location.lat,
         lng: g.geometry.location.lng,
@@ -70,6 +68,44 @@ async function geocodeAddress(address) {
   } catch (e) {
     return { error: "NETWORK_ERROR", message: e.message };
   }
+}
+
+async function geocodeViaNominatim(address) {
+  const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&q="
+    + encodeURIComponent(address);
+  try {
+    const r = await fetch(url, {
+      // Nominatim requires a User-Agent identifying the application
+      headers: { "User-Agent": "SWFT-CRM/1.0 (https://goswft.com)" },
+    });
+    const data = await r.json();
+    if (Array.isArray(data) && data[0]) {
+      const g = data[0];
+      return {
+        source: "nominatim",
+        address: g.display_name || address,
+        lat: parseFloat(g.lat),
+        lng: parseFloat(g.lon),
+      };
+    }
+    return { error: "ZERO_RESULTS", message: "No match in OpenStreetMap" };
+  } catch (e) {
+    return { error: "NETWORK_ERROR", message: e.message };
+  }
+}
+
+async function geocodeAddress(address) {
+  // Try Google when configured
+  const google = await geocodeViaGoogle(address);
+  if (!google.error) return google;
+  // ZERO_RESULTS is unlikely to be solved by the fallback — but try anyway
+  // since Nominatim sometimes finds addresses Google misses.
+  // For REQUEST_DENIED / NO_API_KEY / OVER_QUERY_LIMIT / NETWORK_ERROR,
+  // fall through to OSM.
+  const osm = await geocodeViaNominatim(address);
+  if (!osm.error) return osm;
+  // Both failed — return Google's error first since it's usually more actionable
+  return google.error ? google : osm;
 }
 
 async function getKnockerName(req) {
@@ -185,10 +221,12 @@ router.post("/bulk", async (req, res, next) => {
     const failed = [];   // [{ address, error, message }]
 
     // 1) geocode raw addresses on the server
+    let usedNominatim = false;  // OSM TOS = 1 req/sec; bump throttle once we hit it
     for (const raw of rawAddresses) {
       const address = clampStr(raw, 300);
       if (!address) { failed.push({ address: raw, error: "EMPTY", message: "Empty line" }); continue; }
       const r = await geocodeAddress(address);
+      if (r.source === "nominatim") usedNominatim = true;
       if (r.error) {
         failed.push({ address, error: r.error, message: r.message });
       } else {
@@ -207,8 +245,8 @@ router.post("/bulk", async (req, res, next) => {
           updatedAt: now,
         });
       }
-      // throttle to stay under Geocoding API per-second limits
-      await new Promise(res => setTimeout(res, 50));
+      // Adaptive throttle: 1.1s for Nominatim (per their TOS), 100ms for Google
+      await new Promise(res => setTimeout(res, usedNominatim ? 1100 : 100));
     }
 
     // 2) accept any pre-geocoded entries the client supplied
