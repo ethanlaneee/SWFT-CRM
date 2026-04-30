@@ -980,22 +980,49 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   };
 
   // ── DEMO LOGIN ──
-  window.handleDemoLogin = async function() {
+  window.handleDemoLogin = function() {
     clearErrors();
-    const btn = document.getElementById('demo-btn');
+    window.openDemoModal();
+  };
+
+  window.startDemoFromModal = async function() {
+    const fname = document.getElementById('demo-fname').value.trim();
+    const email = document.getElementById('demo-email').value.trim();
+    const fnameEl = document.getElementById('demo-fname');
+    const emailEl = document.getElementById('demo-email');
+    const fnameErr = document.getElementById('demo-fname-err');
+    const emailErr = document.getElementById('demo-email-err');
+    fnameErr.classList.remove('show'); fnameEl.classList.remove('error');
+    emailErr.classList.remove('show'); emailEl.classList.remove('error');
+
+    let valid = true;
+    if (!fname) { fnameErr.classList.add('show'); fnameEl.classList.add('error'); valid = false; }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { emailErr.classList.add('show'); emailEl.classList.add('error'); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('demo-start-btn');
     btn.disabled = true;
     btn.classList.add('loading');
     try {
-      const res = await fetch('/api/demo-login', { method: 'POST' });
-      if (!res.ok) throw new Error('Demo unavailable');
+      const res = await fetch('/api/demo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: fname, email }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Demo unavailable');
+      }
       const { token } = await res.json();
       const cred = await signInWithCustomToken(auth, token);
       prefetchUserProfile(cred.user).catch(() => {});
+      window.closeDemoModal();
       showSuccessState('Welcome to the SWFT demo! Loading dashboard...');
     } catch (err) {
       btn.disabled = false;
       btn.classList.remove('loading');
-      showGlobalError('Demo login failed. Please try again.');
+      emailErr.textContent = err.message || 'Demo login failed. Please try again.';
+      emailErr.classList.add('show');
     }
   };
 
@@ -1182,7 +1209,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   // Allow Enter key to submit
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
-      if (document.getElementById('form-2fa').classList.contains('active')) {
+      if (document.getElementById('demo-modal-backdrop').classList.contains('show')) {
+        window.startDemoFromModal?.();
+      } else if (document.getElementById('form-2fa').classList.contains('active')) {
         window.handle2FAVerify?.();
       } else if (currentTab === 'login') {
         window.handleLogin?.();
@@ -1190,6 +1219,92 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         window.handleSignup?.();
       }
     }
+  });
+</script>
+
+<!-- ── DEMO MODAL ── -->
+<style>
+.demo-modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+  z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn 0.2s ease-out;
+}
+.demo-modal-backdrop.show{display:flex;}
+.demo-modal{
+  width:100%;max-width:380px;background:var(--surface);
+  border:1px solid var(--border2);border-radius:16px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6);
+  padding:28px;animation:slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+.demo-modal h3{
+  font-size:16px;font-weight:600;color:var(--white);margin-bottom:6px;
+  font-family:'DM Sans',sans-serif;
+}
+.demo-modal p{
+  font-size:13px;color:var(--gray);line-height:1.5;margin-bottom:20px;
+}
+.demo-modal .field{margin-bottom:14px;}
+.demo-modal .field-error{font-size:11px;color:var(--red);margin-top:4px;display:none;}
+.demo-modal .field-error.show{display:block;}
+.demo-modal-actions{display:flex;gap:10px;margin-top:20px;}
+.demo-modal-actions button{flex:1;}
+.demo-modal-cancel{
+  background:transparent;border:1px solid var(--border2);color:var(--gray);
+  padding:11px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all 0.14s;
+}
+.demo-modal-cancel:hover{background:var(--surface2);color:var(--white);}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+</style>
+
+<div class="demo-modal-backdrop" id="demo-modal-backdrop">
+  <div class="demo-modal">
+    <h3>Try the SWFT Demo</h3>
+    <p>Just need a couple things so we know who's exploring. We'll send tips to help you get the most out of SWFT.</p>
+
+    <div class="field">
+      <label>First Name</label>
+      <div class="field-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="12" cy="7" r="4" stroke-width="1.8"/></svg>
+        <input type="text" id="demo-fname" placeholder="Jake" autocomplete="given-name"/>
+      </div>
+      <div class="field-error" id="demo-fname-err">Please enter your first name.</div>
+    </div>
+
+    <div class="field">
+      <label>Email Address</label>
+      <div class="field-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="1.8"/><polyline points="22,6 12,13 2,6" stroke-width="1.8"/></svg>
+        <input type="email" id="demo-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="field-error" id="demo-email-err">Please enter a valid email.</div>
+    </div>
+
+    <div class="demo-modal-actions">
+      <button class="demo-modal-cancel" onclick="closeDemoModal()">Cancel</button>
+      <button class="submit-btn" id="demo-start-btn" onclick="startDemoFromModal()" style="margin-top:0;">
+        <span class="btn-text">Start Demo</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.openDemoModal = function() {
+    document.getElementById('demo-modal-backdrop').classList.add('show');
+    document.getElementById('demo-fname-err').classList.remove('show');
+    document.getElementById('demo-email-err').classList.remove('show');
+    document.getElementById('demo-fname').classList.remove('error');
+    document.getElementById('demo-email').classList.remove('error');
+    setTimeout(() => document.getElementById('demo-fname').focus(), 100);
+  };
+  window.closeDemoModal = function() {
+    document.getElementById('demo-modal-backdrop').classList.remove('show');
+  };
+  // Close on backdrop click
+  document.getElementById('demo-modal-backdrop').addEventListener('click', e => {
+    if (e.target.id === 'demo-modal-backdrop') closeDemoModal();
   });
 </script>
 

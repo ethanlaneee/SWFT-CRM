@@ -473,6 +473,16 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
   try {
     const { authAdmin, db } = require("./firebase");
 
+    // Visitor must provide an email + first name to start the demo
+    const visitorEmail = (req.body?.email || "").trim().toLowerCase();
+    const visitorFirstName = (req.body?.firstName || "").trim();
+    if (!visitorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(visitorEmail)) {
+      return res.status(400).json({ error: "A valid email is required to start the demo." });
+    }
+    if (!visitorFirstName) {
+      return res.status(400).json({ error: "First name is required to start the demo." });
+    }
+
     // Unique UID per demo session — each visitor gets their own org
     const demoUid = "demo-" + crypto.randomBytes(8).toString("hex");
     const now = Date.now();
@@ -480,6 +490,8 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
     await db.collection("users").doc(demoUid).set({
       uid: demoUid,
       email: "demo@goswft.com",
+      demoVisitorEmail: visitorEmail,
+      demoVisitorFirstName: visitorFirstName,
       firstName: "Jake",
       lastName: "Reynolds",
       name: "Jake Reynolds",
