@@ -419,9 +419,6 @@ const DEFAULT_PERMISSIONS = [
   // Automations
   { id: "automations.view",     label: "View Automations",       group: "Automations" },
   { id: "automations.manage",   label: "Manage Automations",     group: "Automations" },
-  // Reviews
-  { id: "reviews.view",         label: "View Reviews",           group: "Reviews" },
-  { id: "reviews.respond",      label: "Respond to Reviews",     group: "Reviews" },
   // Intake Forms
   { id: "intake.view",          label: "View Intake Requests",   group: "Intake" },
   { id: "intake.manage",        label: "Manage Intake Forms",    group: "Intake" },
@@ -457,7 +454,6 @@ const BUILT_IN_ROLES = {
     "ai.use",
     "broadcasts.view","broadcasts.send","broadcasts.delete",
     "automations.view","automations.manage",
-    "reviews.view","reviews.respond",
     "intake.view","intake.manage",
     "import.use",
     "teamchat.view","teamchat.send",
@@ -477,7 +473,6 @@ const BUILT_IN_ROLES = {
     "ai.use",
     "broadcasts.view","broadcasts.send",
     "automations.view",
-    "reviews.view","reviews.respond",
     "intake.view",
     "teamchat.view","teamchat.send",
     "tracker.view",
