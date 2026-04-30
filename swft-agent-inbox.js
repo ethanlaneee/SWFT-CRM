@@ -10,6 +10,7 @@
       position: fixed;
       top: 56px; right: 80px;
       width: 400px;
+      max-width: calc(100vw - 16px);
       max-height: 520px;
       background: #111111;
       border: 1px solid #2c2c2c;
@@ -272,8 +273,16 @@
       dropdown.classList.toggle('open', _isOpen);
       if (_isOpen) {
         var rect = _pill.getBoundingClientRect();
-        dropdown.style.top  = (rect.bottom + 8) + 'px';
-        dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        dropdown.style.top = (rect.bottom + 8) + 'px';
+        if (window.innerWidth < 480) {
+          dropdown.style.left = '8px';
+          dropdown.style.right = '8px';
+          dropdown.style.width = 'auto';
+        } else {
+          dropdown.style.left = '';
+          dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+          dropdown.style.width = '';
+        }
         loadActions();
       }
     });

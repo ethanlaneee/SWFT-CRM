@@ -1073,6 +1073,27 @@ function billingPhotoEstimate(){
   }, 0);
 }
 
+function _compressImage(file, maxDim, quality){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve({ data: dataUrl.split(',')[1], mediaType: 'image/jpeg' });
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 async function _billingRunEstimate(files){
   var btn=document.getElementById('billing-ai-photo-btn');
   var picker=document.getElementById('billing-photo-picker');
@@ -1081,7 +1102,7 @@ async function _billingRunEstimate(files){
   if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
   try{
     var photos=await Promise.all(Array.from(files).slice(0,5).map(function(file){
-      return new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res({data:ev.target.result.split(',')[1],mediaType:file.type||'image/jpeg'});};r.onerror=rej;r.readAsDataURL(file);});
+      return _compressImage(file, 1200, 0.75);
     }));
     var est=await API.agents.estimate({
       photos:photos,
