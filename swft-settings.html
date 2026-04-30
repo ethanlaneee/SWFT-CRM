@@ -369,6 +369,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="settings-nav-item" data-group="account"><span class="settings-nav-icon">👤</span>Account</div>
 </nav>
 
+<!-- Re-run setup wizard -->
+<div data-group="profile" style="margin-bottom:16px;display:flex;justify-content:flex-end;">
+  <button class="settings-btn" onclick="window.swftOpenSetupWizard && window.swftOpenSetupWizard()" style="display:inline-flex;align-items:center;gap:7px;border-color:rgba(200,241,53,0.3);color:var(--green);">
+    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    Run setup wizard
+  </button>
+</div>
+
 <!-- Your Profile -->
 <div class="settings-section" data-group="profile" id="sec-profile">
   <div class="settings-header"><span class="settings-header-icon">👤</span><h3>YOUR PROFILE</h3></div>
@@ -2220,6 +2228,7 @@ function downloadQR() {
 <script src="swft-agent-inbox.js"></script>
 <script src="swft-chat.js"></script>
 <script src="swft-mobile.js"></script>
+<script src="swft-setup-wizard.js"></script>
 <script>
 /* Mobile settings layout — JS enforcement beats all CSS specificity */
 (function applyMobileSettings() {

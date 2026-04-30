@@ -150,6 +150,8 @@ router.put("/", async (req, res, next) => {
       "aiCustomInstructions",
       // Subscription
       "plan", "isSubscribed", "stripeCustomerId", "accountStatus",
+      // Onboarding
+      "setupComplete",
     ];
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
