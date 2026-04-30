@@ -423,11 +423,8 @@
     "swft-team-chat":   "teamchat.view",
     "swft-settings":    "settings.manage",
     "swft-team-tracker": "tracker.view",
-    "swft-ai-agents":   "automations.view",
-    "swft-automations": "automations.view",
     "swft-broadcasts":  "broadcasts.view",
     "swft-connect":     "integrations.manage",
-    "swft-reviews":     "reviews.view",
     "swft-import":      "import.use",
     "swft-intake":      "intake.manage",
   };
@@ -462,8 +459,6 @@
     "deleteMessage":       "messages.delete",
     "deleteBroadcast":     "broadcasts.delete",
     "sendBroadcast":       "broadcasts.send",
-    // Reviews
-    "respondToReview":     "reviews.respond",
   };
 
   // Plan hierarchy for comparison
@@ -474,8 +469,6 @@
 
   // Pages / nav items that require a minimum plan (Pro+)
   const PLAN_GATE = {
-    "swft-ai-agents":   "pro",
-    "swft-automations": "pro",
     "swft-broadcasts":  "pro",
   };
 
@@ -492,11 +485,8 @@
     "swft-team-chat":   "teamchat.view",
     "swft-settings":    "settings.manage",
     "swft-team-tracker": "tracker.view",
-    "swft-ai-agents":   "automations.view",
-    "swft-automations": "automations.view",
     "swft-broadcasts":  "broadcasts.view",
     "swft-connect":     "integrations.manage",
-    "swft-reviews":     "reviews.view",
     "swft-import":      "import.use",
     "swft-intake":      "intake.manage",
   };

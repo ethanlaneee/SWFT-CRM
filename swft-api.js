@@ -279,14 +279,6 @@ const API = {
     invoiceLink: (id) => apiFetch(`/api/square/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
   },
 
-  // ── Google Business Profile ──
-  googleBusiness: {
-    accounts: ()                             => apiFetch("/api/google-business/accounts"),
-    reviews:  (accountId, locationId)        => apiFetch(`/api/google-business/reviews?accountId=${accountId}&locationId=${locationId}`),
-    reply:    (reviewId, accountId, locationId, comment) => apiFetch(`/api/google-business/reviews/${reviewId}/reply`, { method: "POST", body: JSON.stringify({ accountId, locationId, comment }) }),
-    deleteReply: (reviewId, accountId, locationId) => apiFetch(`/api/google-business/reviews/${reviewId}/reply?accountId=${accountId}&locationId=${locationId}`, { method: "DELETE" }),
-  },
-
   // ── Import ──
   import: {
     customers: (rows) => apiFetch("/api/import/customers", { method: "POST", body: JSON.stringify({ rows }) }),
