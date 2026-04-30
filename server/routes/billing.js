@@ -109,17 +109,17 @@ router.post("/create-checkout-session", async (req, res, next) => {
 router.get("/plans", (req, res) => {
   res.json({
     starter: {
-      name: "Starter", monthlyPrice: 89, annualPrice: 71,
+      name: "SWFT Starter", monthlyPrice: 89, annualPrice: 71,
       aiMessageLimit: 75,
       priceId: PRICE_IDS.starter, annualPriceId: PRICE_IDS.starter_annual,
     },
     pro: {
-      name: "Pro", monthlyPrice: 179, annualPrice: 143,
+      name: "SWFT+", monthlyPrice: 179, annualPrice: 143,
       aiMessageLimit: 1000,
       priceId: PRICE_IDS.pro, annualPriceId: PRICE_IDS.pro_annual,
     },
     business: {
-      name: "Business", monthlyPrice: 349, annualPrice: 279,
+      name: "SWFT PRO", monthlyPrice: 349, annualPrice: 279,
       aiMessageLimit: "Unlimited",
       priceId: PRICE_IDS.business, annualPriceId: PRICE_IDS.business_annual,
     },

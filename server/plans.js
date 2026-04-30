@@ -8,19 +8,19 @@
 
 const PLANS = {
   starter: {
-    name: "Starter",
+    name: "SWFT Starter",
     monthlyPrice: 89,
     annualPrice: 71,           // ~20% off ($852/yr)
     aiMessageLimit: 75,        // AI chat messages per month
   },
   pro: {
-    name: "Pro",
+    name: "SWFT+",
     monthlyPrice: 179,
     annualPrice: 143,          // ~20% off ($1,716/yr)
     aiMessageLimit: 1000,
   },
   business: {
-    name: "Business",
+    name: "SWFT PRO",
     monthlyPrice: 349,
     annualPrice: 279,          // ~20% off ($3,348/yr)
     aiMessageLimit: Infinity,  // uncapped
