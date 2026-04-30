@@ -541,7 +541,7 @@ section{position:relative;z-index:1;}
 .mock-pill{display:inline-block;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.3px;}
 .mock-pill.active{background:rgba(200,241,53,0.12);color:var(--green);}
 .mock-pill.lead{background:rgba(77,159,255,0.12);color:var(--blue);}
-.mock-pill.vip{background:rgba(179,136,255,0.15);color:var(--purple);}
+.mock-pill.vip{background:rgba(179,136,255,0.15);color:#b388ff;}
 .mock-pill.warn{background:rgba(245,166,35,0.13);color:var(--amber);}
 .mock-pill.done{background:rgba(200,241,53,0.12);color:var(--green);}
 .mock-pill.due{background:rgba(255,82,82,0.13);color:var(--red);}
@@ -598,6 +598,29 @@ section{position:relative;z-index:1;}
 .mock-cal-evt{background:rgba(77,159,255,0.15);color:var(--blue);padding:3px 5px;border-radius:4px;font-size:9.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .mock-cal-evt.g{background:rgba(200,241,53,0.13);color:var(--green);}
 .mock-cal-evt.a{background:rgba(245,166,35,0.13);color:var(--amber);}
+
+@media (max-width: 768px){
+  .carousel-arrow.prev{left:6px;}
+  .carousel-arrow.next{right:6px;}
+  .carousel-arrow{width:36px;height:36px;background:rgba(15,15,15,0.85);backdrop-filter:blur(6px);}
+  .mock-app{height:420px;}
+  .mock-side{width:54px;padding:12px 6px;}
+  .mock-side .mock-logo{font-size:14px;justify-content:center;padding:0;}
+  .mock-logo-sub,.mock-nav-label{display:none;}
+  .mock-nav-row{justify-content:center;padding:8px 4px;font-size:0;gap:0;}
+  .mock-nav-row svg{width:16px;height:16px;opacity:0.85;}
+  .mock-nav-row span{display:none !important;}
+  .mock-top{padding:10px 14px;font-size:12px;}
+  .mock-content-area{padding:12px;gap:10px;}
+  .mock-kpis{grid-template-columns:repeat(2,1fr);}
+  .mock-content{grid-template-columns:1fr;}
+  .mock-kanban{grid-template-columns:repeat(2,1fr);}
+  .mock-kanban .mock-col:nth-child(n+3){display:none;}
+  .mock-msg{grid-template-columns:1fr;}
+  .mock-msg-list{display:none;}
+  .mock-table th:nth-child(3),.mock-table td:nth-child(3),
+  .mock-table th:nth-child(4),.mock-table td:nth-child(4){display:none;}
+}
 
 /* Feature pills */
 .feature-pills{
@@ -1460,71 +1483,173 @@ function toggleSidebar(){
       <p class="section-sub">Everything you need to run your operation — customers, jobs, quotes, invoices, schedule, team chat &amp; more — all in one place.</p>
     </div>
 
-    <!-- CSS-only mock dashboard -->
-    <div class="mock-wrapper reveal">
-      <div class="mock-glow"></div>
-      <div class="mock-dash">
-        <!-- Sidebar -->
-        <div class="mock-sidebar">
-          <div class="mock-logo">SWFT</div>
-          <div class="mock-nav-items">
-            <div class="mock-nav-item active"><span class="mock-nav-dot"></span> Dashboard</div>
-            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Customers</div>
-            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Jobs</div>
-            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Quotes</div>
-            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Invoices</div>
-            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Schedule</div>
-            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Messages</div>
-            <div class="mock-nav-item"><span class="mock-nav-dot" style="background:var(--gray2)"></span> Team</div>
-          </div>
-        </div>
-        <!-- Main content -->
-        <div class="mock-main">
-          <!-- Top bar -->
-          <div class="mock-topbar">
-            <span style="font-weight:600;font-size:14px;">Dashboard</span>
-            <div class="mock-ai-pill"><span class="mock-ai-dot"></span> AI Assistant</div>
-          </div>
-          <!-- KPI row -->
-          <div class="mock-kpis">
-            <div class="mock-kpi">
-              <span class="mock-kpi-label">Revenue (MTD)</span>
-              <span class="mock-kpi-value">$24,850</span>
-              <span class="mock-kpi-delta up">+18%</span>
-            </div>
-            <div class="mock-kpi">
-              <span class="mock-kpi-label">Active Jobs</span>
-              <span class="mock-kpi-value">12</span>
-              <span class="mock-kpi-delta up">+3</span>
-            </div>
-            <div class="mock-kpi">
-              <span class="mock-kpi-label">Pending Quotes</span>
-              <span class="mock-kpi-value">7</span>
-              <span class="mock-kpi-delta" style="color:var(--amber)">2 expiring</span>
-            </div>
-            <div class="mock-kpi">
-              <span class="mock-kpi-label">Unpaid Invoices</span>
-              <span class="mock-kpi-value">$6,400</span>
-              <span class="mock-kpi-delta up">3 due today</span>
+    <!-- Carousel of app mockups -->
+    <div class="carousel reveal" id="appCarousel">
+      <button class="carousel-arrow prev" aria-label="Previous" onclick="carouselPrev()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="carousel-arrow next" aria-label="Next" onclick="carouselNext()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="carousel-viewport">
+        <div class="carousel-track" id="carouselTrack">
+          <!-- Slide 1: Dashboard -->
+          <div class="carousel-slide">
+            <div class="mock-app">
+              <div class="mock-side" data-active="dashboard"></div>
+              <div class="mock-body">
+                <div class="mock-top">DASHBOARD <span class="slash">/</span> <span class="sub">Tuesday, April 30</span>
+                  <div class="mock-top-right"><span class="mock-top-pill"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);"></span> AI Online</span></div>
+                </div>
+                <div class="mock-content-area">
+                  <div class="mock-kpis">
+                    <div class="mock-kpi"><span class="mock-kpi-label">Revenue (MTD)</span><span class="mock-kpi-value">$48,920</span><span class="mock-kpi-delta up">+22%</span></div>
+                    <div class="mock-kpi"><span class="mock-kpi-label">Active Jobs</span><span class="mock-kpi-value">18</span><span class="mock-kpi-delta up">+4</span></div>
+                    <div class="mock-kpi"><span class="mock-kpi-label">Pending Quotes</span><span class="mock-kpi-value">11</span><span class="mock-kpi-delta" style="color:var(--amber)">3 expiring</span></div>
+                    <div class="mock-kpi"><span class="mock-kpi-label">Unpaid Invoices</span><span class="mock-kpi-value">$12,640</span><span class="mock-kpi-delta up">5 due this wk</span></div>
+                  </div>
+                  <div class="mock-content">
+                    <div class="mock-panel">
+                      <div class="mock-panel-head">Today's Schedule</div>
+                      <div class="mock-row"><span class="mock-status" style="background:var(--green)"></span><span>8:30 AM — Roof inspection @ 1429 Maple Ave</span></div>
+                      <div class="mock-row"><span class="mock-status" style="background:var(--blue)"></span><span>11:00 AM — Estimate — Patel residence</span></div>
+                      <div class="mock-row"><span class="mock-status" style="background:var(--amber)"></span><span>2:15 PM — Follow-up call — Tanya Brooks</span></div>
+                      <div class="mock-row"><span class="mock-status" style="background:var(--green)"></span><span>4:00 PM — Service call @ 88 Birch Lane</span></div>
+                    </div>
+                    <div class="mock-panel">
+                      <div class="mock-panel-head">Recent Activity</div>
+                      <div class="mock-row"><span style="color:var(--green)">$</span><span>Invoice #2087 paid — $4,850 (Hendricks)</span></div>
+                      <div class="mock-row"><span style="color:var(--blue)">+</span><span>New lead — Marcus Liu (web form)</span></div>
+                      <div class="mock-row"><span style="color:var(--amber)">!</span><span>Quote #142 expires tomorrow</span></div>
+                      <div class="mock-row"><span style="color:var(--green)">✓</span><span>Job #318 marked complete by Devon</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <!-- Content grid -->
-          <div class="mock-content">
-            <div class="mock-panel">
-              <div class="mock-panel-head">Today's Schedule</div>
-              <div class="mock-row"><span class="mock-status" style="background:var(--green)"></span><span>9:00 AM — Kitchen remodel @ Johnson</span></div>
-              <div class="mock-row"><span class="mock-status" style="background:var(--blue)"></span><span>1:30 PM — Estimate @ 412 Oak St</span></div>
-              <div class="mock-row"><span class="mock-status" style="background:var(--amber)"></span><span>4:00 PM — Follow-up call — Garcia</span></div>
+          <!-- Slide 2: Customers -->
+          <div class="carousel-slide">
+            <div class="mock-app">
+              <div class="mock-side" data-active="customers"></div>
+              <div class="mock-body">
+                <div class="mock-top">CUSTOMERS <span class="slash">/</span> <span class="sub">247 total · 18 new this month</span>
+                  <div class="mock-top-right"><span class="mock-top-btn">+ Add Customer</span></div>
+                </div>
+                <div class="mock-content-area">
+                  <table class="mock-table">
+                    <thead><tr><th>Name</th><th>Phone</th><th>Last Job</th><th>Lifetime</th><th>Status</th></tr></thead>
+                    <tbody>
+                      <tr><td><span class="mock-avatar">SH</span>Sarah Hendricks</td><td>(512) 555-0142</td><td>Apr 28 — Roof repair</td><td>$18,420</td><td><span class="mock-pill vip">VIP</span></td></tr>
+                      <tr><td><span class="mock-avatar">MJ</span>Marcus Liu</td><td>(512) 555-0193</td><td>—</td><td>$0</td><td><span class="mock-pill lead">Lead</span></td></tr>
+                      <tr><td><span class="mock-avatar">TB</span>Tanya Brooks</td><td>(737) 555-0388</td><td>Apr 22 — HVAC tune-up</td><td>$3,240</td><td><span class="mock-pill active">Active</span></td></tr>
+                      <tr><td><span class="mock-avatar">RP</span>Raj Patel</td><td>(512) 555-0271</td><td>Apr 15 — Bathroom remodel</td><td>$24,800</td><td><span class="mock-pill vip">VIP</span></td></tr>
+                      <tr><td><span class="mock-avatar">DC</span>Diego Castro</td><td>(737) 555-0419</td><td>Mar 30 — Drain clean</td><td>$890</td><td><span class="mock-pill active">Active</span></td></tr>
+                      <tr><td><span class="mock-avatar">AM</span>Amelia Ng</td><td>(512) 555-0556</td><td>Apr 11 — Estimate</td><td>$0</td><td><span class="mock-pill warn">Quoted</span></td></tr>
+                      <tr><td><span class="mock-avatar">JK</span>James Kowalski</td><td>(512) 555-0827</td><td>Apr 04 — Repipe</td><td>$9,600</td><td><span class="mock-pill active">Active</span></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div class="mock-panel">
-              <div class="mock-panel-head">Recent Activity</div>
-              <div class="mock-row"><span style="color:var(--green)">$</span><span>Invoice #1042 paid — $3,200</span></div>
-              <div class="mock-row"><span style="color:var(--blue)">+</span><span>New lead — Sarah Mitchell</span></div>
-              <div class="mock-row"><span style="color:var(--amber)">!</span><span>Quote #87 expires tomorrow</span></div>
+          </div>
+          <!-- Slide 3: Jobs Kanban -->
+          <div class="carousel-slide">
+            <div class="mock-app">
+              <div class="mock-side" data-active="jobs"></div>
+              <div class="mock-body">
+                <div class="mock-top">JOBS <span class="slash">/</span> <span class="sub">Pipeline · 18 active</span>
+                  <div class="mock-top-right"><span class="mock-top-btn">+ New Job</span></div>
+                </div>
+                <div class="mock-content-area">
+                  <div class="mock-kanban">
+                    <div class="mock-col">
+                      <div class="mock-col-head">Quoted <span class="count">5</span></div>
+                      <div class="mock-card"><div class="mock-card-title">Kitchen remodel</div><div class="mock-card-cust">Patel residence</div><div class="mock-card-foot"><span class="mock-pill warn">Sent</span><span class="mock-card-amt">$24,800</span></div></div>
+                      <div class="mock-card"><div class="mock-card-title">Roof replacement</div><div class="mock-card-cust">M. Liu</div><div class="mock-card-foot"><span class="mock-pill warn">Pending</span><span class="mock-card-amt">$11,200</span></div></div>
+                      <div class="mock-card"><div class="mock-card-title">Driveway pour</div><div class="mock-card-cust">A. Ng</div><div class="mock-card-foot"><span class="mock-pill warn">Sent</span><span class="mock-card-amt">$6,400</span></div></div>
+                    </div>
+                    <div class="mock-col">
+                      <div class="mock-col-head">Scheduled <span class="count">4</span></div>
+                      <div class="mock-card"><div class="mock-card-title">HVAC install</div><div class="mock-card-cust">T. Brooks</div><div class="mock-card-foot"><span class="mock-pill lead">Wed 9 AM</span><span class="mock-card-amt">$8,200</span></div></div>
+                      <div class="mock-card"><div class="mock-card-title">Deck staining</div><div class="mock-card-cust">D. Castro</div><div class="mock-card-foot"><span class="mock-pill lead">Thu 1 PM</span><span class="mock-card-amt">$2,100</span></div></div>
+                    </div>
+                    <div class="mock-col">
+                      <div class="mock-col-head">In Progress <span class="count">6</span></div>
+                      <div class="mock-card"><div class="mock-card-title">Bathroom remodel</div><div class="mock-card-cust">J. Kowalski</div><div class="mock-card-foot"><span class="mock-pill active">Day 3 / 5</span><span class="mock-card-amt">$14,600</span></div></div>
+                      <div class="mock-card"><div class="mock-card-title">Fence install</div><div class="mock-card-cust">S. Hendricks</div><div class="mock-card-foot"><span class="mock-pill active">Day 1 / 2</span><span class="mock-card-amt">$3,950</span></div></div>
+                      <div class="mock-card"><div class="mock-card-title">Water heater</div><div class="mock-card-cust">R. Okafor</div><div class="mock-card-foot"><span class="mock-pill active">Today</span><span class="mock-card-amt">$1,840</span></div></div>
+                    </div>
+                    <div class="mock-col">
+                      <div class="mock-col-head">Completed <span class="count">3</span></div>
+                      <div class="mock-card"><div class="mock-card-title">Drain clean</div><div class="mock-card-cust">D. Castro</div><div class="mock-card-foot"><span class="mock-pill done">Paid</span><span class="mock-card-amt">$890</span></div></div>
+                      <div class="mock-card"><div class="mock-card-title">AC repair</div><div class="mock-card-cust">L. Reyes</div><div class="mock-card-foot"><span class="mock-pill due">Invoice</span><span class="mock-card-amt">$620</span></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 4: Messages -->
+          <div class="carousel-slide">
+            <div class="mock-app">
+              <div class="mock-side" data-active="messages"></div>
+              <div class="mock-body">
+                <div class="mock-top">MESSAGES <span class="slash">/</span> <span class="sub">SMS · Email · 4 unread</span></div>
+                <div class="mock-content-area">
+                  <div class="mock-msg">
+                    <div class="mock-msg-list">
+                      <div class="mock-thread active"><span class="mock-avatar">SH</span><div class="mock-thread-body"><div class="mock-thread-name">Sarah Hendricks <span>2m</span></div><div class="mock-thread-preview">Perfect, see you Thursday!</div></div></div>
+                      <div class="mock-thread"><span class="mock-avatar">RP</span><div class="mock-thread-body"><div class="mock-thread-name">Raj Patel <span>14m</span></div><div class="mock-thread-preview">Can we push the start to Monday?</div></div></div>
+                      <div class="mock-thread"><span class="mock-avatar">ML</span><div class="mock-thread-body"><div class="mock-thread-name">Marcus Liu <span>1h</span></div><div class="mock-thread-preview">Sounds good — I'll review the quote</div></div></div>
+                      <div class="mock-thread"><span class="mock-avatar">TB</span><div class="mock-thread-body"><div class="mock-thread-name">Tanya Brooks <span>3h</span></div><div class="mock-thread-preview">Thanks for the quick fix!</div></div></div>
+                      <div class="mock-thread"><span class="mock-avatar">DC</span><div class="mock-thread-body"><div class="mock-thread-name">Diego Castro <span>Yest</span></div><div class="mock-thread-preview">Invoice received, paying today</div></div></div>
+                    </div>
+                    <div class="mock-msg-pane">
+                      <div class="mock-msg-head"><span class="mock-avatar">SH</span>Sarah Hendricks · (512) 555-0142</div>
+                      <div class="mock-msg-body">
+                        <div class="mock-bubble them">Hey! Just confirming — Thursday at 10 AM still works for the gutter cleaning?</div>
+                        <div class="mock-bubble me">Yes! Devon will be there 10–11 AM. He'll text 30 min before arrival.</div>
+                        <div class="mock-bubble them">Awesome. Do I need to be home?</div>
+                        <div class="mock-bubble me">No need — full exterior job. We'll send photos when complete + invoice via email.</div>
+                        <div class="mock-bubble them">Perfect, see you Thursday!</div>
+                      </div>
+                      <div class="mock-msg-input">Type a message…</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 5: AI Chat -->
+          <div class="carousel-slide">
+            <div class="mock-app">
+              <div class="mock-side" data-active="dashboard"></div>
+              <div class="mock-body">
+                <div class="mock-top">AI ASSISTANT <span class="slash">/</span> <span class="sub">Always on · Trained on your business</span>
+                  <div class="mock-top-right"><span class="mock-top-pill"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);"></span> Live</span></div>
+                </div>
+                <div class="mock-content-area">
+                  <div class="mock-ai-pane">
+                    <div class="mock-ai-head"><div class="mock-ai-head-title">SWFT AI</div><span style="font-size:10px;color:var(--gray2);">·  GPT-powered · context: 247 customers, 18 jobs</span></div>
+                    <div class="mock-ai-stream">
+                      <div class="mock-ai-bubble user">Send a quote to Marcus Liu for a full roof replacement, asphalt shingle, ~22 squares. Use my standard template.</div>
+                      <div class="mock-ai-bubble bot">Drafted quote #143 for Marcus Liu — <strong>$11,200</strong> (22 squares × $510 + $200 disposal). Ready to send via SMS + email?<div class="tag">✓ Ready to send</div></div>
+                      <div class="mock-ai-bubble user">Yes send it. And book the inspection for Friday morning.</div>
+                      <div class="mock-ai-bubble bot">Quote sent to Marcus (SMS + email). Inspection booked for <strong>Fri May 3, 9:00 AM</strong> — assigned to Devon. Calendar invite sent.<div class="tag">✓ 3 actions complete</div></div>
+                      <div class="mock-ai-bubble user">Who hasn't paid an invoice from last month?</div>
+                      <div class="mock-ai-bubble bot">3 unpaid invoices from March: <strong>L. Reyes</strong> ($620, 14d overdue), <strong>K. Yamamoto</strong> ($2,150, 8d overdue), <strong>F. Adekunle</strong> ($890, 4d overdue). Want me to send a reminder text to all three?</div>
+                    </div>
+                    <div class="mock-ai-input"><div class="field">Ask SWFT anything…</div><div class="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <div class="carousel-label" id="carouselLabel"><span class="accent">01</span> · Dashboard</div>
+      <div class="carousel-dots" id="carouselDots"></div>
     </div>
 
     <!-- Feature pills below -->
@@ -1946,6 +2071,75 @@ function ptSelectCol(col) {
       var hasActive = document.querySelector('.pricing-table [data-col].pt-col-active');
       if (!hasActive) ptSelectCol(2);
     }
+  });
+})();
+</script>
+
+<script>
+/* ── App mockup carousel ── */
+(function(){
+  const SLIDE_LABELS = ['Dashboard','Customers','Jobs','Messages','AI Assistant'];
+  const NAV_ITEMS = [
+    { label:'CRM', section:true },
+    { key:'dashboard', name:'Dashboard', icon:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>' },
+    { key:'customers', name:'Customers', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>' },
+    { key:'jobs', name:'Jobs', icon:'<path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>' },
+    { key:'billing', name:'Billing', icon:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>' },
+    { key:'schedule', name:'Schedule', icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
+    { label:'Tools', section:true },
+    { key:'messages', name:'Messages', icon:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
+    { key:'broadcasts', name:'Broadcasts', icon:'<path d="M3 11l18-8v18l-18-8z"/>' },
+    { key:'phoneai', name:'Phone AI', icon:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>', tag:'SOON' },
+    { key:'connect', name:'SWFT Connect', icon:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/>' },
+    { label:'Team', section:true },
+    { key:'team', name:'Team', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>' },
+    { key:'tracker', name:'Team Tracker', icon:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>' },
+    { key:'teamchat', name:'Team Chat', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
+    { key:'settings', name:'Settings', icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' },
+  ];
+  function buildSidebar(activeKey){
+    let html = '<div class="mock-logo">SWFT<em></em></div><div class="mock-logo-sub">CRM</div>';
+    for (const item of NAV_ITEMS){
+      if (item.section){ html += '<div class="mock-nav-label">'+item.label+'</div>'; continue; }
+      const cls = item.key === activeKey ? 'mock-nav-row active' : 'mock-nav-row';
+      const tag = item.tag ? ' <span style="font-size:8px;letter-spacing:0.5px;color:var(--gray2);margin-left:auto;background:var(--surface2);padding:1px 5px;border-radius:3px;">'+item.tag+'</span>' : '';
+      html += '<div class="'+cls+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+item.icon+'</svg>'+item.name+tag+'</div>';
+    }
+    return html;
+  }
+  document.querySelectorAll('.mock-side[data-active]').forEach(el => {
+    el.innerHTML = buildSidebar(el.getAttribute('data-active'));
+  });
+
+  const track = document.getElementById('carouselTrack');
+  const dotsWrap = document.getElementById('carouselDots');
+  const label = document.getElementById('carouselLabel');
+  if (!track) return;
+  const slides = track.children.length;
+  let idx = 0;
+  for (let i = 0; i < slides; i++){
+    const b = document.createElement('button');
+    b.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    b.setAttribute('aria-label', 'Slide '+(i+1));
+    b.onclick = () => go(i);
+    dotsWrap.appendChild(b);
+  }
+  function go(i){
+    idx = (i + slides) % slides;
+    track.style.transform = 'translateX(-'+(idx*100)+'%)';
+    [...dotsWrap.children].forEach((d,n)=>d.classList.toggle('active', n===idx));
+    const num = String(idx+1).padStart(2,'0');
+    label.innerHTML = '<span class="accent">'+num+'</span> · '+SLIDE_LABELS[idx];
+  }
+  window.carouselPrev = () => go(idx-1);
+  window.carouselNext = () => go(idx+1);
+  document.addEventListener('keydown', e => {
+    const car = document.getElementById('appCarousel');
+    if (!car) return;
+    const r = car.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight) return;
+    if (e.key === 'ArrowLeft') go(idx-1);
+    else if (e.key === 'ArrowRight') go(idx+1);
   });
 })();
 </script>
