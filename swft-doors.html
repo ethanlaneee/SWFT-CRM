@@ -734,9 +734,20 @@ function renderMarkers(){
     var meta = statusMeta(d.status);
     var visits = Array.isArray(d.visits) ? d.visits.length : 0;
     var iconUrl = pinSvg(meta.color, meta.mark, visits);
-    if(_markers[d.id]){
-      _markers[d.id].setPosition(pos);
-      _markers[d.id].setIcon({ url: iconUrl, scaledSize: new google.maps.Size(32, 41), anchor: new google.maps.Point(16, 41) });
+
+    // If the marker exists with a different icon, kill it and recreate.
+    // setIcon() with a fresh URL is unreliable on iOS Safari with data: URIs —
+    // the cached image stays on screen. Removing + re-adding guarantees a
+    // visible color change.
+    var existing = _markers[d.id];
+    if(existing && existing._iconUrl !== iconUrl){
+      existing.setMap(null);
+      delete _markers[d.id];
+      existing = null;
+    }
+
+    if(existing){
+      existing.setPosition(pos);
     } else {
       var marker = new google.maps.Marker({
         position: pos,
@@ -744,6 +755,7 @@ function renderMarkers(){
         title: d.address || (meta.label),
         icon: { url: iconUrl, scaledSize: new google.maps.Size(32, 41), anchor: new google.maps.Point(16, 41) },
       });
+      marker._iconUrl = iconUrl;
       marker.addListener('click', function(){ openDetailModal(d.id); });
       _markers[d.id] = marker;
     }
@@ -798,9 +810,12 @@ function switchTab(tab){
         renderMarkers();
       });
     } else if(_mapReady && _map){
-      // Map containers that were hidden need a resize nudge.
+      // Map containers that were hidden need a resize nudge AND the door
+      // state may have changed since markers were last drawn (visits logged
+      // on the Routes tab). Always re-render so pin colors reflect reality.
       setTimeout(function(){
         google.maps.event.trigger(_map, 'resize');
+        renderMarkers();
         var bounds = new google.maps.LatLngBounds();
         var hasPin = false;
         Object.keys(_markers).forEach(function(id){
