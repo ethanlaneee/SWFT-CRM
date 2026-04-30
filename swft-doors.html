@@ -76,7 +76,15 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .kpi-label{font-size:9.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--gray);font-weight:500;}
 .kpi-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--white);line-height:1;margin-top:6px;}
 .kpi-sub{font-size:10.5px;color:var(--gray2);margin-top:4px;}
-@media (max-width:760px){.kpi-strip{grid-template-columns:repeat(2,1fr);} .kpi-card.kpi-hide-mobile{display:none;}}
+@media (max-width:760px){
+  .kpi-strip{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .kpi-card.kpi-hide-mobile{display:none;}
+  .kpi-card{padding:8px 12px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .kpi-card::before{height:2px;}
+  .kpi-label{font-size:9px;letter-spacing:1.4px;flex:1;}
+  .kpi-value{font-size:18px;margin-top:0;letter-spacing:0.5px;}
+  .kpi-sub{display:none;}
+}
 
 /* TABS */
 .tabs{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;width:fit-content;}
@@ -95,17 +103,17 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .map-pane #map{height:100%;min-height:0;}
 .map-pane .map-wrap{flex:1;min-height:0;}
 
-@media (max-width:768px){.map-legend{display:none;}.door-empty{padding:28px 16px;}.page-body{padding:14px 14px 24px;}.kpi-card{padding:11px 14px 9px;}.kpi-value{font-size:24px;}.tabs{width:100%;}.tab-btn{flex:1;justify-content:center;padding:9px 14px;}}
+@media (max-width:768px){.map-legend{display:none;}.door-empty{padding:28px 16px;}.page-body{padding:14px 14px 24px;}.tabs{width:100%;}.tab-btn{flex:1;justify-content:center;padding:9px 14px;}}
 
 /* DOOR LIST PANEL */
 .door-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden;animation:fadeUp 0.4s ease both;}
 .door-panel-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .door-panel-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
 .door-count{color:var(--green);font-family:'JetBrains Mono',monospace;font-size:11px;}
-.filter-row{display:flex;gap:6px 5px;padding:10px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.filter-chip{background:var(--surface2);border:1px solid var(--border2);color:var(--gray);font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;white-space:nowrap;line-height:1.4;}
-.filter-chip:hover{color:var(--white);}
-.filter-chip.active{background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);}
+.list-controls{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);}
+.control-select{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--white);font-size:12px;font-weight:500;padding:8px 28px 8px 12px;border-radius:9px;cursor:pointer;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7a7a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.control-select:focus{border-color:var(--green);}
+.control-select option{background:var(--surface2);color:var(--white);}
 .door-list{flex:1;overflow-y:auto;padding:6px 6px 80px;}
 .door-row{display:flex;gap:11px;padding:11px 10px;border-radius:10px;cursor:pointer;transition:background 0.14s;align-items:flex-start;}
 .door-row:hover{background:var(--surface2);}
@@ -326,17 +334,27 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
           <span class="door-panel-title">Doors</span>
           <span class="door-count" id="door-count">0</span>
         </div>
-        <div class="filter-row" id="filter-row">
-          <button class="filter-chip active" data-filter="all">All</button>
-          <button class="filter-chip" data-filter="today">Today</button>
-          <button class="filter-chip" data-filter="pending">Planned</button>
-          <button class="filter-chip" data-filter="no_answer">No answer</button>
-          <button class="filter-chip" data-filter="not_interested">Not interested</button>
-          <button class="filter-chip" data-filter="chatted">Chatted</button>
-          <button class="filter-chip" data-filter="come_back">Come back</button>
-          <button class="filter-chip" data-filter="callback">Callback</button>
-          <button class="filter-chip" data-filter="lead">Leads</button>
-          <button class="filter-chip" data-filter="sale">Sales</button>
+        <div class="list-controls">
+          <select class="control-select" id="filter-select" aria-label="Filter doors">
+            <option value="all">All doors</option>
+            <option value="today">Today's knocks</option>
+            <option value="pending">Planned</option>
+            <option value="no_answer">No answer</option>
+            <option value="not_interested">Not interested</option>
+            <option value="chatted">Chatted</option>
+            <option value="come_back">Come back</option>
+            <option value="callback">Callback</option>
+            <option value="lead">Leads</option>
+            <option value="sale">Sales</option>
+          </select>
+          <select class="control-select" id="sort-select" aria-label="Sort doors">
+            <option value="addr_desc">Address # — high to low</option>
+            <option value="addr_asc">Address # — low to high</option>
+            <option value="recent">Most recent</option>
+            <option value="oldest">Oldest first</option>
+            <option value="status">By status</option>
+            <option value="alpha">Address A → Z</option>
+          </select>
         </div>
         <div class="door-list" id="door-list">
           <div class="door-empty">
@@ -476,6 +494,7 @@ var _markers = {};        // doorId -> google.maps.Marker
 var _doors = [];          // all doors loaded from server
 var _selectedStatus = 'no_answer';
 var _activeFilter = 'all';
+var _activeSort = 'addr_desc';
 var _selectedDoorId = null;
 var _detailDoor = null;        // door currently open in detail modal
 var _detailSelectedStatus = null;  // status the user has selected in the detail modal (not yet saved)
@@ -653,9 +672,57 @@ async function loadDoors(){
 }
 
 function filteredDoors(){
-  if(_activeFilter === 'all')   return _doors;
-  if(_activeFilter === 'today') return _doors.filter(function(d){ return isToday(d.updatedAt || d.createdAt); });
-  return _doors.filter(function(d){ return d.status === _activeFilter; });
+  var rows;
+  if(_activeFilter === 'all')        rows = _doors.slice();
+  else if(_activeFilter === 'today') rows = _doors.filter(function(d){ return isToday(d.updatedAt || d.createdAt); });
+  else                                rows = _doors.filter(function(d){ return d.status === _activeFilter; });
+  return sortDoors(rows);
+}
+
+// Pull the leading street number off an address. "456 Oak Ave" -> 456.
+// Returns -Infinity for missing/non-numeric so they sort to one end.
+function addrNumber(addr){
+  if(!addr) return -Infinity;
+  var m = String(addr).match(/^\s*(\d+)/);
+  return m ? parseInt(m[1], 10) : -Infinity;
+}
+
+// Status priority for "By status" sort — leads/sales first, then planned,
+// then conversations, then dead ends. Lower = earlier.
+var STATUS_RANK = {
+  sale: 0, lead: 1, callback: 2, chatted: 3, come_back: 4,
+  pending: 5, no_answer: 6, not_interested: 7,
+};
+
+function sortDoors(rows){
+  var sorted = rows.slice();
+  switch(_activeSort){
+    case 'addr_asc':
+      sorted.sort(function(a,b){ return addrNumber(a.address) - addrNumber(b.address); });
+      break;
+    case 'addr_desc':
+      sorted.sort(function(a,b){ return addrNumber(b.address) - addrNumber(a.address); });
+      break;
+    case 'oldest':
+      sorted.sort(function(a,b){ return (a.updatedAt || a.createdAt || 0) - (b.updatedAt || b.createdAt || 0); });
+      break;
+    case 'status':
+      sorted.sort(function(a,b){
+        var ra = STATUS_RANK[a.status] != null ? STATUS_RANK[a.status] : 99;
+        var rb = STATUS_RANK[b.status] != null ? STATUS_RANK[b.status] : 99;
+        if(ra !== rb) return ra - rb;
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      });
+      break;
+    case 'alpha':
+      sorted.sort(function(a,b){ return String(a.address || '').localeCompare(String(b.address || '')); });
+      break;
+    case 'recent':
+    default:
+      sorted.sort(function(a,b){ return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0); });
+      break;
+  }
+  return sorted;
 }
 
 function refreshKpis(){
@@ -782,15 +849,24 @@ function focusDoor(id){
   openDetailModal(id);
 }
 
-function wireFilters(){
-  document.querySelectorAll('#filter-row .filter-chip').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      _activeFilter = btn.dataset.filter || 'all';
-      document.querySelectorAll('#filter-row .filter-chip').forEach(function(b){ b.classList.toggle('active', b === btn); });
+function wireListControls(){
+  var fs = document.getElementById('filter-select');
+  var ss = document.getElementById('sort-select');
+  if(fs){
+    fs.value = _activeFilter;
+    fs.addEventListener('change', function(){
+      _activeFilter = fs.value || 'all';
       renderDoors();
       renderMarkers();
     });
-  });
+  }
+  if(ss){
+    ss.value = _activeSort;
+    ss.addEventListener('change', function(){
+      _activeSort = ss.value || 'addr_desc';
+      renderDoors();
+    });
+  }
 }
 
 /* ── Tabs ── */
@@ -1268,7 +1344,7 @@ async function deleteDoor(id){
     window._myUid = user.uid;
 
     wireStatusGrid();
-    wireFilters();
+    wireListControls();
     wireTabs();
 
     // Map loads lazily when the Map tab is first opened.
