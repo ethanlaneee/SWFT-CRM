@@ -364,6 +364,14 @@ const API = {
     deleteChat: (chatId)      => apiFetch(`/api/team-chat/${chatId}`, { method: "DELETE" }),
   },
 
+  // ── Agent Inbox ──
+  agentActions: {
+    list:    ()   => apiFetch("/api/agent-actions?status=pending"),
+    scan:    ()   => apiFetch("/api/agent-actions/scan", { method: "POST" }),
+    approve: (id) => apiFetch(`/api/agent-actions/${id}/approve`, { method: "POST" }),
+    dismiss: (id) => apiFetch(`/api/agent-actions/${id}`, { method: "DELETE" }),
+  },
+
 };
 
 // ── Auth guard — call on every protected page ──

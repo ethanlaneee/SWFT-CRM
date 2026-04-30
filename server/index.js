@@ -512,6 +512,7 @@ app.use("/api/export",        auth, checkAccess, requirePlan("pro"), require("./
 app.post("/api/calendar/token", auth, checkAccess, require("./routes/calendar").tokenHandler);
 app.use("/api/calendar",      require("./routes/calendar"));
 app.use("/api/automations",       auth, checkAccess, requirePlan("pro"), automationsRouter);
+app.use("/api/agent-actions",     auth, checkAccess, require("./routes/agentActions"));
 app.use("/api/ai-settings",       auth, checkAccess, requirePlan("pro"), aiSettingsRouter);
 app.get("/api/broadcasts/unsubscribe", require("./routes/broadcasts").unsubscribeHandler);
 app.get("/api/broadcasts/resubscribe", require("./routes/broadcasts").resubscribeHandler);
@@ -580,6 +581,12 @@ setInterval(() => {
 
 // Run once on startup after 10 seconds
 setTimeout(() => processScheduledMessages().catch(console.error), 10000);
+
+// ── Proactive agent worker ──
+// Scans CRM for stale quotes/invoices/completed jobs and drafts follow-up messages hourly.
+const { runProactiveAgentForAllOrgs } = require("./ai/proactive-agent");
+setInterval(() => runProactiveAgentForAllOrgs().catch(console.error), 60 * 60 * 1000);
+setTimeout(() => runProactiveAgentForAllOrgs().catch(console.error), 30000);
 
 // ── Outreach lead finder worker ──
 // Auto-discovers 15 leads per day via Google Places API.

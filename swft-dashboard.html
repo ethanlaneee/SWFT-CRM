@@ -401,6 +401,21 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <!-- TODAY'S SCHEDULE + AI TASKS -->
 <div id="dash-schedule-col" style="display:flex;flex-direction:column;gap:14px;">
 
+<!-- AGENT INBOX -->
+<div class="panel" id="agent-inbox-panel" style="display:flex;flex-direction:column;overflow:hidden;">
+  <div class="panel-header">
+    <div class="panel-title" style="display:flex;align-items:center;gap:8px;">
+      <div id="agent-inbox-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:glow 2.2s ease-in-out infinite;display:none;"></div>
+      AGENT INBOX
+      <span id="agent-inbox-badge" style="display:none;background:rgba(196,255,0,0.15);color:var(--green);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span>
+    </div>
+    <a class="panel-link" id="agent-scan-link" onclick="agentInboxScan()" style="cursor:pointer;">Scan now &#8594;</a>
+  </div>
+  <div id="agent-inbox-list" style="flex:1;overflow-y:auto;max-height:320px;">
+    <div id="agent-inbox-empty" style="padding:20px;text-align:center;color:var(--gray);font-size:12.5px;">Your agent is watching — no actions pending</div>
+  </div>
+</div>
+
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
   <div class="panel-header">
     <div class="panel-title" style="display:flex;align-items:center;gap:8px;">TODAY'S SCHEDULE<span id="ai-tasks-badge" style="display:none;background:rgba(245,166,35,0.15);color:#f5a623;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span></div>
@@ -1235,6 +1250,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     // and renders. Runs on every dashboard load so the panels aren't empty
     // after a refresh.
     loadSchedule();
+    loadAgentInbox();
 
     // ── Load Automations stats strip ──
     try {
@@ -1261,6 +1277,90 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     } catch(e) { console.error('Automations strip error:', e); }
 
   });
+
+  const TYPE_LABELS = {
+    quote_followup:   'Quote follow-up',
+    invoice_followup: 'Invoice reminder',
+    review_request:   'Review request',
+  };
+
+  async function loadAgentInbox() {
+    try {
+      const data = await API.agentActions.list();
+      const actions = data.actions || [];
+      const list = document.getElementById('agent-inbox-list');
+      const badge = document.getElementById('agent-inbox-badge');
+      const dot = document.getElementById('agent-inbox-dot');
+      const empty = document.getElementById('agent-inbox-empty');
+      if (!list) return;
+
+      if (actions.length === 0) {
+        empty.style.display = '';
+        badge.style.display = 'none';
+        dot.style.display = 'none';
+        list.innerHTML = '';
+        list.appendChild(empty);
+        return;
+      }
+
+      badge.textContent = actions.length;
+      badge.style.display = '';
+      dot.style.display = '';
+      empty.style.display = 'none';
+
+      list.innerHTML = actions.map(function(a) {
+        var typeLabel = TYPE_LABELS[a.type] || a.type;
+        var preview = (a.draftMessage || '').replace(/\n/g, ' ').slice(0, 90);
+        if ((a.draftMessage || '').length > 90) preview += '…';
+        return `<div class="agent-action-row" id="arow-${a.id}" style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div>
+              <span style="font-weight:600;font-size:13px;color:var(--white);">${a.customerName}</span>
+              <span style="font-size:11px;color:var(--gray);margin-left:6px;">${typeLabel}</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button onclick="agentApprove('${a.id}')" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:7px;background:var(--green);color:#0a0a0a;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;" title="Send this email">Send</button>
+              <button onclick="agentDismiss('${a.id}')" style="font-size:11px;padding:4px 10px;border-radius:7px;background:var(--surface2);color:var(--gray);border:1px solid var(--border2);cursor:pointer;font-family:'DM Sans',sans-serif;" title="Dismiss">&#10005;</button>
+            </div>
+          </div>
+          <div style="font-size:11.5px;color:var(--gray2);line-height:1.4;">${a.draftSubject ? '<strong style="color:var(--gray);">' + a.draftSubject + '</strong> — ' : ''}${preview}</div>
+        </div>`;
+      }).join('');
+    } catch(e) { console.error('Agent inbox error:', e); }
+  }
+
+  async function agentApprove(id) {
+    try {
+      const btn = document.querySelector(`#arow-${id} button`);
+      if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
+      await API.agentActions.approve(id);
+      document.getElementById('arow-' + id)?.remove();
+      showToast('Email sent');
+      await loadAgentInbox();
+    } catch(e) { showToast('Error: ' + (e.message || 'Could not send')); }
+  }
+
+  async function agentDismiss(id) {
+    try {
+      await API.agentActions.dismiss(id);
+      document.getElementById('arow-' + id)?.remove();
+      await loadAgentInbox();
+    } catch(e) { showToast('Error: ' + (e.message || 'Could not dismiss')); }
+  }
+
+  async function agentInboxScan() {
+    const link = document.getElementById('agent-scan-link');
+    if (link) { link.textContent = 'Scanning…'; }
+    try {
+      const result = await API.agentActions.scan();
+      if (link) link.textContent = 'Scan now →';
+      showToast(result.drafted > 0 ? result.drafted + ' new action' + (result.drafted > 1 ? 's' : '') + ' drafted' : 'Nothing new found');
+      await loadAgentInbox();
+    } catch(e) {
+      if (link) link.textContent = 'Scan now →';
+      showToast('Scan error: ' + (e.message || 'failed'));
+    }
+  }
 </script>
 
 <!-- NEW JOB MODAL -->

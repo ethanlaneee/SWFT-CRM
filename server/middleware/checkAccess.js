@@ -60,6 +60,7 @@ const METHOD_PERMISSION = {
   "/api/import":            { GET: "import.use",       POST: "import.use" },
   "/api/team-chat":         { GET: "teamchat.view",    POST: "teamchat.send",          DELETE: "teamchat.view" },
   "/api/tracker":           { GET: "tracker.view",     POST: "tracker.view" },
+  "/api/agent-actions":     { GET: "dashboard.view",   POST: "dashboard.view",         DELETE: "dashboard.view" },
 };
 
 // Human-readable labels for 403 messages
