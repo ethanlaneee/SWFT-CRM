@@ -384,4 +384,89 @@ router.delete("/delete-account", requireRecentAuth(), async (req, res, next) => 
   } catch (err) { next(err); }
 });
 
+// GET /api/me/data-export — GDPR / CCPA-style data export.
+// Returns a single JSON file containing every record tied to the
+// caller's org so the user can keep their own copy or move to another
+// system. Decrypts any encrypted fields on the way out so the dump is
+// usable without the server's secret key.
+//
+// Response: a JSON file download with collections keyed by name.
+// Includes only data the org owns — never another tenant's records.
+const { decryptFields, PII_FIELDS } = require("../utils/fieldCrypto");
+router.get("/data-export", async (req, res, next) => {
+  try {
+    const orgId = req.orgId;
+    const uid = req.uid;
+
+    // Collections we export. Each entry: [collection name, query field].
+    // We use orgId for tenant-scoped collections and uid for the user's
+    // own profile / settings docs.
+    const ORG_COLLECTIONS = [
+      "customers", "jobs", "quotes", "invoices", "schedule",
+      "messages", "broadcasts", "scheduledMessages", "automations",
+      "tasks", "callLogs", "phoneSettings", "aiSettings",
+      "intakeForms", "serviceRequests", "jobPhotos", "team", "teamChats",
+      "conversationModes", "notifications", "unsubscribes",
+    ];
+
+    const out = { exportedAt: new Date().toISOString(), orgId, uid, collections: {} };
+
+    // User profile + linked sub-records.
+    const userSnap = await db.collection("users").doc(uid).get();
+    if (userSnap.exists) {
+      // Strip secrets from the profile dump — Stripe IDs, integration
+      // tokens, and refresh tokens never belong in an export.
+      const u = userSnap.data();
+      const safe = { ...u };
+      delete safe.stripeCustomerId;
+      delete safe.stripeSubscriptionId;
+      delete safe.gmailTokens;
+      delete safe.integrations;
+      out.collections.user = safe;
+    }
+
+    // Tenant-scoped collections.
+    for (const name of ORG_COLLECTIONS) {
+      try {
+        const snap = await db.collection(name).where("orgId", "==", orgId).get();
+        const fields = PII_FIELDS[name];
+        const docs = snap.docs.map(d => {
+          const data = { id: d.id, ...d.data() };
+          return fields ? decryptFields(data, fields, orgId) : data;
+        });
+        if (docs.length) out.collections[name] = docs;
+      } catch (e) {
+        console.warn(`[data-export] skipped ${name}:`, e.message);
+      }
+    }
+
+    // Conversation history is keyed by uid as a subcollection.
+    try {
+      const convSnap = await db.collection("conversations").doc(uid).collection("messages").get();
+      if (!convSnap.empty) {
+        out.collections.conversations = convSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+    } catch (_) {}
+
+    // Audit log — owner has every right to a copy of their own security
+    // history. Caps at 500 events to keep the file size reasonable.
+    try {
+      const auditSnap = await db.collection("securityAudit")
+        .where("uid", "==", uid).orderBy("ts", "desc").limit(500).get()
+        .catch(() => ({ docs: [] }));
+      if (auditSnap.docs?.length) {
+        out.collections.securityAudit = auditSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+    } catch (_) {}
+
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Content-Disposition",
+      `attachment; filename="swft-data-export-${new Date().toISOString().slice(0,10)}.json"`);
+    res.send(JSON.stringify(out, null, 2));
+  } catch (err) {
+    console.error("[data-export]", err.message);
+    next(err);
+  }
+});
+
 module.exports = router;

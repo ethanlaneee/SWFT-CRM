@@ -886,6 +886,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <button class="settings-btn danger" onclick="signOutEverywhere()">Sign out everywhere</button>
     </div>
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Download all my data</div>
+        <div class="settings-row-desc">Get a JSON file containing every customer, job, quote, invoice, message, and security event tied to your account. Useful for backups or moving to another platform.</div>
+      </div>
+      <button class="settings-btn primary" onclick="downloadMyData()">Download data</button>
+    </div>
     <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:8px;">
       <div class="settings-row-info" style="display:flex;justify-content:space-between;align-items:center;">
         <div>
@@ -1905,6 +1912,27 @@ async function confirmMfaEnrollment() {
 function closeMfaModal() {
   document.getElementById('mfa-overlay').style.display = 'none';
   _mfaEnrollState = null;
+}
+
+// ─── Account Security: data export ────────────────────────────────────────
+async function downloadMyData() {
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/me/data-export', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    var blob = await res.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'swft-data-export-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Download started');
+  } catch (e) {
+    showToast('Export failed: ' + (e && e.message || 'unknown'));
+  }
 }
 
 // ─── Account Security: audit log viewer ───────────────────────────────────

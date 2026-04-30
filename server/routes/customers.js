@@ -1,8 +1,18 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
+const { encryptFields, decryptFields, PII_FIELDS } = require("../utils/fieldCrypto");
 
 const col = () => db.collection("customers");
+const CUSTOMER_PII = PII_FIELDS.customers;
+
+// Decrypt PII on every read so callers see plaintext. No-op when
+// ENCRYPT_KEY isn't configured — protects existing records during the
+// rollout window.
+function readCustomer(doc, orgId) {
+  const data = { id: doc.id, ...doc.data() };
+  return decryptFields(data, CUSTOMER_PII, orgId);
+}
 
 // Collections that hold records tied to a customer via customerId.
 // When a customer is deleted, every record in these collections with a
@@ -50,7 +60,7 @@ async function cascadeDeleteForCustomers(customerIds, orgId) {
 router.get("/", async (req, res, next) => {
   try {
     const snap = await col().where("orgId", "==", req.orgId).get();
-    const customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const customers = snap.docs.map(d => readCustomer(d, req.orgId));
     customers.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     res.json(customers);
   } catch (err) { next(err); }
@@ -63,36 +73,46 @@ router.get("/:id", async (req, res, next) => {
     if (!doc.exists || doc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Customer not found" });
     }
-    res.json({ id: doc.id, ...doc.data() });
+    res.json(readCustomer(doc, req.orgId));
   } catch (err) { next(err); }
 });
 
 // Create customer
 router.post("/", async (req, res, next) => {
   try {
-    const data = {
-      orgId: req.orgId,
-      userId: req.uid, // keep for legacy compat
+    // Capture plaintext values for the automation trigger before encryption,
+    // since downstream automations need to read e.g. the customer email to
+    // send welcome messages. The data written to Firestore is encrypted.
+    const plaintext = {
       name: req.body.name || "",
       email: req.body.email || "",
       phone: req.body.phone || "",
       address: req.body.address || "",
       notes: req.body.notes || "",
       tags: req.body.tags || [],
+    };
+    const data = {
+      orgId: req.orgId,
+      userId: req.uid, // keep for legacy compat
+      ...plaintext,
       createdAt: Date.now(),
     };
+    encryptFields(data, CUSTOMER_PII, req.orgId);
     const ref = await col().add(data);
 
-    // Trigger automations for customer_created
+    // Trigger automations for customer_created — uses plaintext, not the
+    // encrypted record, since automations need to actually read the values.
     triggerAutomation(req.orgId, "customer_created", {
       id: ref.id,
-      name: data.name,
-      phone: data.phone,
-      email: data.email,
-      tags: data.tags || [],
+      name: plaintext.name,
+      phone: plaintext.phone,
+      email: plaintext.email,
+      tags: plaintext.tags || [],
     }).catch(console.error);
 
-    res.status(201).json({ id: ref.id, ...data });
+    // Return plaintext to the caller — encryption is a storage concern,
+    // not a presentation one.
+    res.status(201).json({ id: ref.id, ...data, ...plaintext });
   } catch (err) { next(err); }
 });
 
@@ -108,9 +128,10 @@ router.put("/:id", async (req, res, next) => {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
     updates.updatedAt = Date.now();
+    encryptFields(updates, CUSTOMER_PII, req.orgId);
     await col().doc(req.params.id).update(updates);
     const updated = await col().doc(req.params.id).get();
-    res.json({ id: updated.id, ...updated.data() });
+    res.json(readCustomer(updated, req.orgId));
   } catch (err) { next(err); }
 });
 

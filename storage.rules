@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// SWFT CRM Firebase Storage security rules.
+//
+// Threat model (mirrors firestore.rules):
+//   • All file uploads (job photos, intake-form attachments, team-chat
+//     files, customer attachments) go through /api/* on the server, which
+//     uses the Admin SDK. The Admin SDK bypasses these rules — they only
+//     control direct client-to-Storage requests.
+//
+//   • Public file URLs (e.g. job photos in customer-facing invoice PDFs)
+//     are served via storage.googleapis.com using unguessable filenames
+//     of the form  {prefix}/{timestamp}-{random}{ext}. That capability is
+//     granted by the server marking files as public via Admin SDK
+//     (bucket.file(...).makePublic()), not by these rules.
+//
+//   • Therefore: deny *all* direct client read/write traffic. The browser
+//     should never need to talk to Storage directly. If a future feature
+//     requires client uploads, add a narrow rule for that specific path.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Default deny — every path, every method.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

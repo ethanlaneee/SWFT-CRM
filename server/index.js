@@ -1,6 +1,12 @@
 require("dotenv").config();
 const crypto = require("crypto");
 
+// Install the auto-redacting console wrapper as early as possible so any
+// later code that logs (including third-party libraries) gets PII
+// scrubbed before it hits Render's log stream. Call this BEFORE any
+// other require that might log on import.
+require("./utils/redactLogger").install();
+
 // Prevent unhandled errors from crashing the server
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
