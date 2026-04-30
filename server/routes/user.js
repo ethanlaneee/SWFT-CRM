@@ -50,7 +50,32 @@ router.get("/", async (req, res, next) => {
 
       return res.json({ id: req.uid, ...profile });
     }
-    const data = await checkTrialExpired(doc.id, doc.data());
+    let data = await checkTrialExpired(doc.id, doc.data());
+
+    // Self-heal `users.email` to match the Firebase Auth login email. There's
+    // no UI to deliberately diverge them (Settings only edits `companyEmail`),
+    // so any drift is staleness from older sign-up code paths. Keeping these
+    // in sync ensures the team page and other surfaces show the right email.
+    if (req.user?.email && data.email !== req.user.email) {
+      await col().doc(req.uid).set({ email: req.user.email }, { merge: true });
+      data = { ...data, email: req.user.email };
+    }
+
+    // Backfill personal name from the Firebase Auth displayName captured at
+    // signup. Older accounts (and team-invite joiners) sometimes land here
+    // with no firstName/lastName/name in Firestore even though the auth
+    // profile has the name the user typed. Without this, the sidebar falls
+    // back to the email prefix.
+    if (!data.firstName && !data.lastName && !data.name && req.user?.name) {
+      const parts = req.user.name.trim().split(/\s+/);
+      const firstName = parts[0] || "";
+      const lastName = parts.slice(1).join(" ") || "";
+      const heal = { name: req.user.name };
+      if (firstName) heal.firstName = firstName;
+      if (lastName) heal.lastName = lastName;
+      await col().doc(req.uid).set(heal, { merge: true });
+      data = { ...data, ...heal };
+    }
 
     // Return effective permissions so the frontend can gate nav/pages correctly.
     // For non-owner roles, check orgRoles for custom overrides, then fall back to built-in defaults.
@@ -91,6 +116,17 @@ router.get("/", async (req, res, next) => {
 });
 
 // PUT /api/me
+//
+// One source of truth for company info: every consumer (invoices, quotes,
+// public intake, phone agent, AI prompts, broadcast email) reads from the
+// same `users/{uid}` doc that this handler writes. Two pairs of fields
+// look like duplicates but are intentional and must stay separate:
+//   • `email` (Firebase Auth login, self-healed in GET above)
+//     vs `companyEmail` (user-edited contact email shown on invoices /
+//     used as outbound sender fallback).
+//   • `address` (mailing address shown on invoices)
+//     vs `bizArea` (free-text service-territory description for AI prompts).
+// `website` is the canonical URL — there is no `bizWebsite`.
 router.put("/", async (req, res, next) => {
   try {
     const updates = {};
@@ -108,12 +144,14 @@ router.put("/", async (req, res, next) => {
       // Logo
       "companyLogo",
       // Business Profile for AI
-      "bizAbout", "bizServices", "bizArea", "bizHours", "bizWebsite", "bizNotes",
+      "bizAbout", "bizServices", "bizArea", "bizHours", "bizNotes",
       "bizPricing", "bizPaymentMethods", "bizBookingLink", "bizFaqs",
       // AI custom instructions
       "aiCustomInstructions",
       // Subscription
       "plan", "isSubscribed", "stripeCustomerId", "accountStatus",
+      // Onboarding
+      "setupComplete",
     ];
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];

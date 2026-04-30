@@ -451,7 +451,12 @@
   }
   .topbar-slash,
   .topbar-sub { display: none !important; }
-  .ai-pill { display: none !important; }
+  .ai-pill {
+    padding: 6px 8px !important;
+    font-size: 0 !important;
+    gap: 0 !important;
+  }
+  .ai-pill .pulse { width: 8px !important; height: 8px !important; }
 
   /* Page name visible after the logo, styled smaller */
   .topbar-page {
@@ -1407,29 +1412,60 @@
     align-items: center !important;
   }
 
-  /* Team Chat header: logo + title + "+" on top row; search full-width below */
+  /* Team Chat header: identical to .topbar */
   .chat-list-header {
+    height: 54px !important;
+    padding: 0 14px !important;
+    gap: 10px !important;
+    border-bottom: 1px solid var(--border) !important;
+    background: rgba(10,10,10,0.9) !important;
     display: flex !important;
-    flex-wrap: wrap !important;
     align-items: center !important;
-    gap: 0 6px !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
   }
   .chat-list-header .mob-topbar-logo {
     flex-shrink: 0 !important;
   }
+  /* Page title: matches .topbar-page */
   .chat-list-header .chat-list-title {
+    font-size: 15px !important;
+    letter-spacing: 1.5px !important;
+    color: var(--gray) !important;
     flex: 1 !important;
-    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-family: 'Bebas Neue', sans-serif !important;
   }
-  .chat-list-header .mob-new-btn {
+  /* Same separator as .mob-topbar-logo + .topbar-page */
+  .chat-list-header .mob-topbar-logo + .chat-list-title {
+    padding-left: 10px !important;
+    border-left: 1px solid var(--border2) !important;
+    margin-left: 4px !important;
+  }
+  /* New chat button: matches .clock-btn style */
+  .tc-new-chat-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: var(--surface) !important;
+    color: var(--gray) !important;
+    border: 1px solid var(--border2) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 12.5px !important;
+    padding: 8px 14px !important;
+    border-radius: 9px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+  }
+  /* Search bar: now a sibling of .chat-list-header inside .chat-list-panel */
+  .chat-list-panel > .chat-list-search {
     flex-shrink: 0 !important;
-    margin-left: 0 !important;
-  }
-  .chat-list-search {
-    flex: 1 1 100% !important;
-    margin-top: 8px !important;
-    order: 99 !important;
-    width: 100% !important;
+    margin: 10px 14px !important;
+    width: auto !important;
+    order: unset !important;
   }
 
   /* Messages: contact search full-width below title row */
@@ -1645,7 +1681,7 @@
   .mob-topbar-logo + .contact-title {
     padding-left: 10px !important;
     border-left: 1px solid var(--border2) !important;
-    margin-left: 4px !important;
+    margin-left: 10px !important;
   }
   .contact-item { padding: 14px 16px !important; }
   .c-avatar {
@@ -1761,20 +1797,9 @@
     background: var(--surface) !important;
   }
 
-  /* Channel list header — matches contact-header */
-  .chat-list-header { padding: 14px 16px 10px !important; }
-
-  /* Channel title — matches contact-title */
-  .chat-list-title {
-    font-size: 15px !important;
-    letter-spacing: 1.5px !important;
-    color: var(--gray) !important;
-  }
-
-  /* Search bar — compact, matches contact-search */
+  /* Search bar — compact */
   .chat-list-search {
     padding: 5px 10px !important;
-    margin-top: 6px !important;
     border-radius: 8px !important;
   }
   .chat-list-search input { font-size: 13px !important; }

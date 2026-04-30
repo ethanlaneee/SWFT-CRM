@@ -1,4 +1,5 @@
 require("dotenv").config();
+const crypto = require("crypto");
 
 // Prevent unhandled errors from crashing the server
 process.on("uncaughtException", (err) => {
@@ -394,6 +395,36 @@ app.use(express.static(staticRoot, {
 }));
 
 // ── Login hint — public, no auth ──
+// POST /api/auth/verify-captcha — validate a Cloudflare Turnstile token.
+// Called client-side before Firebase Auth so bots can't hit Auth at all.
+// No auth required — this is a pre-login check.
+const captchaLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: "Too many requests." } });
+app.post("/api/auth/verify-captcha", captchaLimiter, async (req, res) => {
+  const { token } = req.body || {};
+  if (!token) return res.status(400).json({ success: false, error: "Missing token." });
+
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  // If no secret is configured (local dev), pass through so dev isn't blocked.
+  if (!secret) return res.json({ success: true });
+
+  try {
+    const form = new URLSearchParams({ secret, response: token, remoteip: req.ip });
+    const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+    });
+    const data = await r.json();
+    if (data.success) return res.json({ success: true });
+    console.warn("[captcha] Turnstile failed:", data["error-codes"]);
+    return res.status(400).json({ success: false, error: "Captcha verification failed." });
+  } catch (err) {
+    console.error("[captcha] Turnstile error:", err.message);
+    // Network error — fail open so a Cloudflare outage doesn't lock users out
+    return res.json({ success: true });
+  }
+});
+
 // Looks up a Firestore user by email and returns only first name + initials
 // so the sign-in page can personalise the UI (à la Google) before the user
 // authenticates. Intentionally returns no sensitive fields.
@@ -428,9 +459,9 @@ app.get("/api/login-hint", hintLimiter, async (req, res) => {
 });
 
 // ── Demo login — public, no auth ──
-// Issues a Firebase custom token for the shared demo account so visitors can
-// explore the app without creating a profile. The demo Firestore doc is created
-// (or refreshed) on every call so it always has an active subscription.
+// Issues a Firebase custom token for a fresh per-session demo account so each
+// visitor gets their own isolated sandbox. Data created in one demo session is
+// never visible to any other demo visitor.
 const demoLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
@@ -438,15 +469,16 @@ const demoLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many requests." },
 });
-const DEMO_UID = "demo-swft-user";
 app.post("/api/demo-login", demoLimiter, async (req, res) => {
   try {
     const { authAdmin, db } = require("./firebase");
 
-    // Upsert the demo Firestore profile so it's always active
+    // Unique UID per demo session — each visitor gets their own org
+    const demoUid = "demo-" + crypto.randomBytes(8).toString("hex");
     const now = Date.now();
-    await db.collection("users").doc(DEMO_UID).set({
-      uid: DEMO_UID,
+
+    await db.collection("users").doc(demoUid).set({
+      uid: demoUid,
       email: "demo@goswft.com",
       firstName: "Jake",
       lastName: "Reynolds",
@@ -461,11 +493,13 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
       trialStartDate: now,
       trialEndDate: now + 365 * 24 * 60 * 60 * 1000,
       role: "owner",
-      orgId: DEMO_UID,
+      orgId: demoUid,
+      demoAccount: true,
+      demoCreatedAt: now,
       updatedAt: now,
-    }, { merge: true });
+    });
 
-    const token = await authAdmin.createCustomToken(DEMO_UID);
+    const token = await authAdmin.createCustomToken(demoUid);
     return res.json({ token });
   } catch (err) {
     console.error("[demo-login]", err.message);
@@ -477,6 +511,7 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
 app.use("/api/me",        auth,               require("./routes/user"));
+app.use("/api/2fa",       auth,               require("./routes/twoFactor"));
 app.use("/api/auth/google", auth,             googleAuthRouter);
 app.use("/api/billing",   auth,               billingRouter);
 app.use("/api/dashboard", auth, checkAccess,  require("./routes/dashboard"));
@@ -507,8 +542,8 @@ app.use("/api/export",        auth, checkAccess, requirePlan("pro"), require("./
 // Calendar: token generation needs auth, ICS feed is public (uses calendar token)
 app.post("/api/calendar/token", auth, checkAccess, require("./routes/calendar").tokenHandler);
 app.use("/api/calendar",      require("./routes/calendar"));
-app.use("/api/google-business", auth, checkAccess, require("./routes/googleBusiness"));
 app.use("/api/automations",       auth, checkAccess, requirePlan("pro"), automationsRouter);
+app.use("/api/agent-actions",     auth, checkAccess, require("./routes/agentActions"));
 app.use("/api/ai-settings",       auth, checkAccess, requirePlan("pro"), aiSettingsRouter);
 app.get("/api/broadcasts/unsubscribe", require("./routes/broadcasts").unsubscribeHandler);
 app.get("/api/broadcasts/resubscribe", require("./routes/broadcasts").resubscribeHandler);
@@ -577,6 +612,12 @@ setInterval(() => {
 
 // Run once on startup after 10 seconds
 setTimeout(() => processScheduledMessages().catch(console.error), 10000);
+
+// ── Proactive agent worker ──
+// Scans CRM for stale quotes/invoices/completed jobs and drafts follow-up messages hourly.
+const { runProactiveAgentForAllOrgs } = require("./ai/proactive-agent");
+setInterval(() => runProactiveAgentForAllOrgs().catch(console.error), 60 * 60 * 1000);
+setTimeout(() => runProactiveAgentForAllOrgs().catch(console.error), 30000);
 
 // ── Outreach lead finder worker ──
 // Auto-discovers 15 leads per day via Google Places API.

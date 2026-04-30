@@ -278,7 +278,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-label">Tools</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
         <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
 <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
@@ -698,6 +697,7 @@ function openInvoiceModal(inv) {
     status: inv.status || 'open',
     statusStyle: inv.status === 'paid' ? 'background:rgba(200,241,53,0.12);color:#c8f135;' : inv.status === 'overdue' ? 'background:rgba(255,82,82,0.12);color:#ff5252;' : 'background:rgba(245,166,35,0.12);color:#f5a623;',
     lines: inv.items || [],
+    taxRate: inv.taxRate != null ? parseFloat(String(inv.taxRate).replace('%','')) || 0 : parseFloat(String((window._swftSettings||{}).taxRate||'').replace('%','')) || 0,
     expires: '—'
   };
 
@@ -803,6 +803,7 @@ function openModalById(id) {
     status: q.status || 'draft',
     statusStyle: q.status === 'approved' ? 'background:rgba(200,241,53,0.12);color:#c8f135;' : q.status === 'sent' ? 'background:rgba(77,159,255,0.12);color:#4d9fff;' : 'background:rgba(100,100,100,0.12);color:#7a7a7a;',
     lines: q.items || [],
+    taxRate: q.taxRate != null ? parseFloat(String(q.taxRate).replace('%','')) || 0 : parseFloat(String((window._swftSettings||{}).taxRate||'').replace('%','')) || 0,
     expires: q.expiresAt ? new Date(q.expiresAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'
   };
   // Render brand header
@@ -989,7 +990,7 @@ function renderPdfBrand() {
 
 function openNewQuote() {
   loadBillingCustomers();
-  _q = {num:'#Q-' + (window._nextQuoteNum || '…'),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[]};
+  _q = {num:'#Q-' + (window._nextQuoteNum || '…'),created:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),customer:'',job:'',expires:'—',total:'$0',sqft:'',service:'',valid:'30 days',address:'',finish:'',area:'',start:'',status:'Draft',statusStyle:'background:rgba(100,100,100,0.12);color:#7a7a7a;',lines:[],taxRate:parseFloat(String((window._swftSettings||{}).taxRate||'').replace('%',''))||0};
   renderPdfBrand();
   document.getElementById('m-doc-type').textContent = 'QUOTE';
   populateEditForm();
@@ -1013,9 +1014,22 @@ function renderLineItems(lines) {
       <button class="pdf-li-del" onclick="removeLineItem(${i})">&times;</button>
     </div>`).join('');
   const sub = lines.reduce((s,l)=>s+(parseFloat((l.total||'').toString().replace(/[$,]/g,''))||0),0);
+  var taxRate = (_q && _q.taxRate != null) ? (parseFloat(_q.taxRate) || 0) : 0;
+  var tax = Math.round(sub * (taxRate / 100) * 100) / 100;
+  var grandTotal = Math.round((sub + tax) * 100) / 100;
   document.getElementById('totals-block').innerHTML =
     '<div class="pdf-total-line"><span>Subtotal</span><span>$'+sub.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>'+
-    '<div class="pdf-total-line grand"><span>Total</span><span>$'+sub.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>';
+    '<div class="pdf-tax-row">'+
+      '<span class="pdf-tax-lbl">Tax</span>'+
+      '<input class="pdf-tax-rate-input" id="billing-tax-rate" type="number" min="0" max="100" step="0.01" placeholder="0" value="'+(taxRate||'')+'" oninput="_onBillingTaxChange(this.value)"/>'+
+      '<span class="pdf-tax-pct">%</span>'+
+      '<span class="pdf-tax-amt">$'+tax.toFixed(2)+'</span>'+
+    '</div>'+
+    '<div class="pdf-total-line grand"><span>Total</span><span>$'+grandTotal.toLocaleString('en-US',{minimumFractionDigits:2})+'</span></div>';
+}
+function _onBillingTaxChange(val){
+  if(_q) _q.taxRate = parseFloat(val) || 0;
+  renderLineItems(_q ? _q.lines : []);
 }
 
 function toggleDescCustom(selId, inputId) {
@@ -1028,46 +1042,99 @@ function toggleDescCustom(selId, inputId) {
 }
 
 // ── AI Photo Estimate from within billing modal ──
-async function billingPhotoEstimate(){
+function billingPhotoEstimate(){
   var plan=window.SWFT_PLAN||sessionStorage.getItem('swft_plan')||'starter';
   var lvl={starter:0,pro:1,business:2};
   if((lvl[plan]||0)<1){if(window.swftUpgradeRequired)window.swftUpgradeRequired('AI Photo Estimator is available on the Pro plan and higher.','pro');return;}
-  var inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*';inp.capture='environment';
-  inp.onchange=async function(){
-    if(!inp.files[0])return;
-    var btn=document.getElementById('billing-ai-photo-btn');
-    if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
-    try{
-      var file=inp.files[0];
-      var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
-      var est=await API.agents.estimate({
-        photos:[{data:b64,mediaType:file.type||'image/jpeg'}],
-        service:document.getElementById('e-service')?document.getElementById('e-service').value:'',
-        address:document.getElementById('e-address')?document.getElementById('e-address').value:'',
+
+  // Show photo source picker
+  var existing = document.getElementById('billing-photo-picker');
+  if(existing) existing.remove();
+  var btn = document.getElementById('billing-ai-photo-btn');
+  var picker = document.createElement('div');
+  picker.id = 'billing-photo-picker';
+  picker.style.cssText = 'position:absolute;top:calc(100% + 6px);left:0;background:#1a1a1a;border:1px solid #2c2c2c;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:9999;min-width:180px;overflow:hidden;';
+  picker.innerHTML =
+    '<div onclick="_billingOpenCamera()" style="display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;font-size:13px;color:#f0f0f0;transition:background 0.12s;" onmouseover="this.style.background=\'#252525\'" onmouseout="this.style.background=\'\'">'+
+      '<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'+
+      'Take Photo</div>'+
+    '<div onclick="_billingOpenUpload()" style="display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;font-size:13px;color:#f0f0f0;transition:background 0.12s;border-top:1px solid #252525;" onmouseover="this.style.background=\'#252525\'" onmouseout="this.style.background=\'\'">'+
+      '<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+      'Upload Photos</div>';
+
+  var wrap = btn ? btn.parentElement : document.body;
+  if(btn) { wrap.style.position='relative'; wrap.appendChild(picker); }
+  else { document.body.appendChild(picker); }
+
+  setTimeout(function(){
+    document.addEventListener('click', function _closePicker(e){
+      if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',_closePicker);}
+    });
+  }, 0);
+}
+
+function _compressImage(file, maxDim, quality){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve({ data: dataUrl.split(',')[1], mediaType: 'image/jpeg' });
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+async function _billingRunEstimate(files){
+  var btn=document.getElementById('billing-ai-photo-btn');
+  var picker=document.getElementById('billing-photo-picker');
+  if(picker)picker.remove();
+  if(!files||!files.length)return;
+  if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
+  try{
+    var photos=await Promise.all(Array.from(files).slice(0,5).map(function(file){
+      return _compressImage(file, 1200, 0.75);
+    }));
+    var est=await API.agents.estimate({
+      photos:photos,
+      service:document.getElementById('e-service')?document.getElementById('e-service').value:'',
+      address:document.getElementById('e-address')?document.getElementById('e-address').value:'',
+    });
+    if(est.items&&est.items.length&&_q){
+      _q.lines=est.items.map(function(i){
+        var desc=i.desc||i.description||i.name||'';
+        var qty=Math.max(1,parseInt(i.qty||i.quantity,10)||1);
+        var rate=Number(i.rate)||0;
+        var total=Number(i.total)||qty*rate;
+        return{desc:desc,sub:'',qty:String(qty),rate:'$'+rate.toFixed(2),total:'$'+total.toFixed(2)};
       });
-      if(est.items&&est.items.length&&_q){
-        _q.lines=est.items.map(function(i){
-          var desc=i.desc||i.description||i.name||'';
-          var qty=Math.max(1,parseInt(i.qty||i.quantity,10)||1);
-          var rate=Number(i.rate)||0;
-          var total=Number(i.total)||qty*rate;
-          return{desc:desc,sub:'',qty:String(qty),rate:'$'+rate.toFixed(2),total:'$'+total.toFixed(2)};
-        });
-        renderLineItems(_q.lines);
-      }
-      var notes=document.getElementById('e-notes');
-      if(notes&&est.notes)notes.value=(notes.value?notes.value+'\n\n':'')+est.notes+' (AI '+est.confidence+' confidence)';
-      showToast('AI estimate applied — review and adjust as needed');
-    }catch(e){
-      if(e.message&&e.message.toLowerCase().includes('plan')&&window.swftUpgradeRequired){
-        window.swftUpgradeRequired('AI Estimator requires the Pro plan or higher.','pro');
-      }else{showToast('AI estimate failed: '+e.message);}
-    }finally{
-      if(btn){btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> AI Estimate';btn.disabled=false;}
+      renderLineItems(_q.lines);
     }
-  };
-  inp.click();
+    showToast('AI estimate applied — review and adjust as needed');
+  }catch(e){
+    if(e.message&&e.message.toLowerCase().includes('plan')&&window.swftUpgradeRequired){
+      window.swftUpgradeRequired('AI Estimator requires the Pro plan or higher.','pro');
+    }else{showToast('AI estimate failed: '+e.message);}
+  }finally{
+    if(btn){btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> AI Estimate';btn.disabled=false;}
+  }
+}
+function _billingOpenCamera(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.capture='environment';
+  inp.onchange=function(){_billingRunEstimate(inp.files);};inp.click();
+}
+function _billingOpenUpload(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
+  inp.onchange=function(){_billingRunEstimate(inp.files);};inp.click();
 }
 
 function addLineItem() {
@@ -1395,13 +1462,20 @@ async function saveEdit(silent){
   if (!_q.customer) { showToast('Please select a customer'); return; }
 
   var items = _q.lines || [];
-  var total = items.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[\$,]/g,''))||0);},0);
+  var subtotal = items.reduce(function(s,l){return s+(parseFloat((l.total||'').toString().replace(/[\$,]/g,''))||0);},0);
+  var taxRateEl = document.getElementById('billing-tax-rate');
+  var taxRate = taxRateEl ? (parseFloat(taxRateEl.value) || 0) : ((_q && _q.taxRate) ? parseFloat(_q.taxRate) || 0 : 0);
+  var tax = Math.round(subtotal * (taxRate / 100) * 100) / 100;
+  var total = Math.round((subtotal + tax) * 100) / 100;
 
   try {
     var data = {
       customerName: _q.customer,
       customerId: _q.customerId || '',
       items: items,
+      subtotal: subtotal,
+      taxRate: taxRate,
+      tax: tax,
       total: total,
       notes: _q.job || '',
       status: _q.status || 'draft',
@@ -1642,6 +1716,7 @@ function filterInvoices(q) {
 <script src="swft-settings-loader.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
+<script src="swft-agent-inbox.js"></script>
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>

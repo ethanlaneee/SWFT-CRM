@@ -15,10 +15,14 @@ const LOCKED_MODEL = "claude-haiku-4-5-20251001";
 // ── System prompt builder ─────────────────────────────────────────────────────
 
 function buildPhoneSystemPrompt(orgData = {}, phoneSettings = {}) {
-  const companyName   = orgData.companyName   || orgData.businessName || "this business";
-  const services      = Array.isArray(orgData.services) ? orgData.services.join(", ") : (orgData.services || "home services");
-  const serviceArea   = orgData.serviceArea   || "";
-  const businessHours = orgData.businessHours || "regular business hours";
+  // Read the same canonical `users/{uid}` fields every other surface uses
+  // (Settings → Company Profile + Business Profile for AI). No companyName/
+  // businessName/services/serviceArea/businessHours fields actually exist
+  // on the user doc — those were dead lookups that always hit the default.
+  const companyName   = orgData.company    || "this business";
+  const services      = orgData.bizServices || "home services";
+  const serviceArea   = orgData.bizArea     || "";
+  const businessHours = orgData.bizHours    || "regular business hours";
 
   const greeting            = phoneSettings.greeting            || `Thanks for calling ${companyName}!`;
   const customInstructions  = phoneSettings.customInstructions  || "";
@@ -95,7 +99,7 @@ const ELEVENLABS_VOICE_MAP = {
 };
 
 function buildAssistantPayload(orgData, phoneSettings, orgId) {
-  const companyName = orgData.companyName || orgData.businessName || "Business";
+  const companyName = orgData.company || "Business";
   const appUrl      = process.env.APP_URL || "https://goswft.com";
   const friendlyVoice = phoneSettings.voiceId || "jennifer";
   const elevenVoiceId = ELEVENLABS_VOICE_MAP[friendlyVoice] || ELEVENLABS_VOICE_MAP.jennifer;

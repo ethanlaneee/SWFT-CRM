@@ -15,7 +15,25 @@ async function getMyTeamDoc(req) {
     .where("uid", "==", req.uid)
     .limit(1)
     .get();
-  return snap.empty ? null : snap.docs[0];
+  if (!snap.empty) return snap.docs[0];
+
+  // Owner has no team record yet — create it so clock-in/out work immediately
+  if (req.uid === req.orgId) {
+    const userDoc = await db.collection("users").doc(req.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const ref = await db.collection("team").add({
+      orgId: req.orgId,
+      uid: req.uid,
+      email: userData.email || "",
+      name: userData.name || userData.company || "Owner",
+      role: "owner",
+      status: "active",
+      joinedAt: userData.createdAt || Date.now(),
+    });
+    return await ref.get();
+  }
+
+  return null;
 }
 
 // Owner has null permissions (unrestricted); everyone else gets a Set.

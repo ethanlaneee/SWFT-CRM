@@ -34,6 +34,10 @@ services:
         sync: false
       - key: ENCRYPT_KEY
         sync: false
+      - key: TWO_FACTOR_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: VAPI_API_KEY

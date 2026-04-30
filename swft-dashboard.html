@@ -272,7 +272,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <!-- End Meta Pixel Code -->
 <link rel="stylesheet" href="swft-mobile.css"/>
 </head>
-<body>
+<body data-setup-wizard="auto">
 
 <!-- SIDEBAR -->
 
@@ -309,7 +309,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="nav-label">Tools</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
     <div class="nav-item" onclick="window.location.href='swft-broadcasts'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
         <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
 <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
@@ -352,16 +351,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
 
 <!-- AI Agent Activity Strip -->
-<div id="agent-strip" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:4px;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;animation-delay:0.15s;">
-  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-    <div class="swft-breathing" style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
-    <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;color:var(--green);">AUTOMATIONS</span>
-  </div>
-  <div style="display:flex;gap:18px;flex:1;overflow-x:auto;" id="agent-strip-stats">
-    <span class="swft-skeleton swft-skeleton-text long" style="display:inline-block;height:12px;"></span>
-  </div>
-  <a href="swft-ai-agents" style="font-size:11px;color:var(--green);text-decoration:none;white-space:nowrap;flex-shrink:0;">Manage automations →</a>
-</div>
 
 <!-- AI Chat + Schedule Side by Side -->
 <div id="dash-main-grid" style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;min-height:calc(100vh - 190px);">
@@ -545,7 +534,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('pl-modal').classList.add('open');
   }
 
-  function closePipelineModal() {
+  async function closePipelineModal(force) {
+    if(!force && _plJobId){
+      var ok=await swftConfirm('Cancel Pipeline?','A job was already created for this customer. Cancel anyway? The job will stay but no quote will be linked.', {confirmLabel:'Cancel Pipeline',cancelLabel:'Keep Going'});
+      if(!ok)return;
+    }
     document.getElementById('pl-overlay').classList.remove('open');
     document.getElementById('pl-modal').classList.remove('open');
   }
@@ -655,8 +648,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         jobId:_plJobId||'', service:svc, address:address, sqft:sqft
       }));
     }catch(e){}
-    closePipelineModal();
-    window.location.href='swft-quotes';
+    closePipelineModal(true);
+    window.location.href='/swft-quotes';
   }
 
   function openNewJobModal() {
@@ -1387,9 +1380,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <script src="swft-settings-loader.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
+<script src="swft-agent-inbox.js"></script>
 <script src="swft-chat.js"></script>
 <script src="swft-countup.js"></script>
 <script src="swft-magnetic.js"></script>
 <script src="swft-mobile.js"></script>
+<script src="swft-setup-wizard.js"></script>
 </body>
 </html>

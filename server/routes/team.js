@@ -128,20 +128,74 @@ router.get("/", async (req, res, next) => {
       .where("orgId", "==", req.orgId)
       .get();
 
-    const members = snap.docs.map(d => {
-      const data = d.data();
+    // Hydrate name/email from each member's `users` doc so the team page
+    // always reflects the current profile rather than stale invite-time
+    // data denormalized into the `team` record. Pending invites (no uid)
+    // keep using the team record since there's no user profile yet.
+    const memberDocs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    const uids = [...new Set(memberDocs.map(m => m.data.uid).filter(Boolean))];
+    const userById = {};
+    await Promise.all(uids.map(async uid => {
+      try {
+        const u = await db.collection("users").doc(uid).get();
+        if (u.exists) userById[uid] = u.data();
+      } catch (_) {}
+    }));
+
+    const buildName = (u) => {
+      if (!u) return "";
+      const fn = u.firstName || "";
+      const ln = u.lastName || "";
+      const combined = [fn, ln].filter(Boolean).join(" ").trim();
+      return combined || u.name || u.displayName || "";
+    };
+
+    const members = memberDocs.map(({ id, data }) => {
+      const u = data.uid ? userById[data.uid] : null;
+      const name = buildName(u) || data.name || "";
+      const email = (u && u.email) || data.email || "";
       return {
-        id: d.id,
+        id,
         uid: data.uid || null,
-        name: data.name || "",
-        email: data.email || "",
+        name,
+        email,
         role: data.role || "technician",
         status: data.status || "active",
         joinedAt: data.joinedAt || null,
         invitedAt: data.invitedAt || null,
-        avatarInitials: (data.name || data.email || "?")[0].toUpperCase(),
+        avatarInitials: (name || email || "?")[0].toUpperCase(),
       };
     });
+
+    // If the org owner has no team record yet, create it so they can use all
+    // team features (including clock-in) without needing a team member to join first.
+    const ownerInList = members.some(m => m.uid === req.orgId);
+    if (!ownerInList) {
+      const ownerDoc = await db.collection("users").doc(req.orgId).get();
+      const ownerData = ownerDoc.exists ? ownerDoc.data() : {};
+      const ownerName = buildName(ownerData) || ownerData.company || "Owner";
+      const ownerEmail = ownerData.email || "";
+      const ref = await db.collection("team").add({
+        orgId: req.orgId,
+        uid: req.orgId,
+        email: ownerEmail,
+        name: ownerName,
+        role: "owner",
+        status: "active",
+        joinedAt: ownerData.createdAt || Date.now(),
+      });
+      members.push({
+        id: ref.id,
+        uid: req.orgId,
+        name: ownerName,
+        email: ownerEmail,
+        role: "owner",
+        status: "active",
+        joinedAt: ownerData.createdAt || Date.now(),
+        invitedAt: null,
+        avatarInitials: (ownerName || "O")[0].toUpperCase(),
+      });
+    }
 
     // Sort: owner first, then by name
     const roleOrder = { owner: 0, admin: 1, office: 2, technician: 3 };

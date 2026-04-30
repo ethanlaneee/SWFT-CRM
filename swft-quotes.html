@@ -248,7 +248,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
     <div class="nav-label">Tools</div>
     <div class="nav-item" onclick="window.location.href='swft-messages'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages</div>
-    <div class="nav-item" onclick="window.location.href='swft-ai-agents'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>Automations</div>
         <div class="nav-item" onclick="window.location.href='swft-phone'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.13 12.5 19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="1.8"/></svg>Phone AI</div>
 <div class="nav-item" onclick="window.location.href='swft-connect'"><svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SWFT Connect</div>
     <div class="nav-label">Admin</div>
@@ -372,7 +371,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke-width="1.8"/><rect x="6" y="14" width="12" height="8" stroke-width="1.8"/></svg>
         Print / Save PDF
       </button>
-      <button class="pdf-btn primary" onclick="saveQuote('draft')">Save Quote</button>
+      <button class="pdf-btn primary" id="btn-save-quote" onclick="saveQuote('draft')">Save Quote</button>
       <button class="pdf-btn" id="btn-send-email" onclick="sendQuoteEmail()" style="background:#111;color:#fff;border-color:#111;">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Send to Customer
@@ -453,7 +452,25 @@ async function loadQuotes(){
         openNewQuote();
       }
     }catch(e){}
-  }catch(e){console.error(e);}
+  }catch(e){
+    console.error(e);
+    // If the parallel list fetch failed, the page is empty and the body may
+    // still be hidden. Open the modal anyway when arriving from the pipeline,
+    // and reveal the body, so the owner can finish the quote with whatever
+    // they already entered upstream instead of seeing a blank screen.
+    try {
+      var pipeData2=sessionStorage.getItem('swft_pipeline_quote');
+      if (pipeData2) {
+        sessionStorage.removeItem('swft_pipeline_quote');
+        window._pipelineQuoteData=JSON.parse(pipeData2);
+        _quotes=_quotes||[]; _customers=_customers||[]; _jobs=_jobs||[];
+        openNewQuote();
+      }
+    } catch(_) {}
+    if (document.body.style.visibility !== 'visible') {
+      document.body.style.visibility = 'visible';
+    }
+  }
 }
 
 // ── Stats ──
@@ -573,6 +590,15 @@ function openNewQuote(){
     if(pd.sqft&&document.getElementById('f-sqft')) document.getElementById('f-sqft').value=pd.sqft;
   }
   document.getElementById('modal-overlay').classList.add('open');
+  // The page body starts with visibility:hidden and only flips visible once
+  // swft-account.js confirms auth/perms. If that's still pending when we open
+  // the modal (common for navigation immediately after dashboard pipeline →
+  // quotes), the modal renders into a hidden body and the user sees a
+  // completely blank screen. Reveal the body now — backend already enforces
+  // access on every API call.
+  if (document.body.style.visibility !== 'visible') {
+    document.body.style.visibility = 'visible';
+  }
 }
 
 function populateModal(q){
@@ -754,51 +780,71 @@ function printQuotePdf(){
 }
 
 // ── Save ──
+var _quoteSaving=false;
 async function saveQuote(action){
-  var custSel=document.getElementById('f-customer');
-  var custOpt=custSel.options[custSel.selectedIndex];
-  if(!custSel.value){showToast('Select a customer');return;}
-
-  var t=computeTotals();
-  if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);t.tax=Number(_currentQuote.tax||0);t.total=Number(_currentQuote.total||t.subtotal);}
-  var jobSel=document.getElementById('f-job');
-  var jobId=jobSel?jobSel.value:'';
-  var jobName='';if(jobId){var jj=_jobs.find(function(x){return x.id===jobId;});if(jj)jobName=jj.service||'';}
-  var data={
-    customerId:custSel.value,
-    customerName:custOpt.textContent,
-    jobId:jobId||'',
-    jobName:jobName,
-    items:_items,
-    subtotal:t.subtotal,
-    taxRate:t.taxRate,
-    tax:t.tax,
-    total:t.total,
-    status:document.getElementById('f-status').value,
-    service:document.getElementById('f-service').value,
-    sqft:document.getElementById('f-sqft').value,
-    address:document.getElementById('f-address').value,
-    finish:document.getElementById('f-finish').value,
-    notes:document.getElementById('f-notes').value,
-    scheduledDate:document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).getTime():null
-  };
-
+  if(_quoteSaving)return;
+  _quoteSaving=true;
+  var saveBtn=document.getElementById('btn-save-quote');
+  var sendBtn=document.getElementById('btn-send-email');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving...';}
+  if(sendBtn)sendBtn.disabled=true;
   try{
-    if(_currentQuote&&_currentQuote.id){
-      await API.quotes.update(_currentQuote.id,data);
-      if(action==='send')await API.quotes.send(_currentQuote.id);
-      showToast(action==='send'?'Quote sent':'Quote saved');
-    }else{
-      var created=await API.quotes.create(data);
-      if(action==='send'&&created.id)await API.quotes.send(created.id);
-      showToast(action==='send'?'Quote created & sent':'Quote created');
-    }
-    closeModal();
-    loadQuotes();
-  }catch(e){showToast('Error: '+e.message);}
+    var custSel=document.getElementById('f-customer');
+    var custOpt=custSel.options[custSel.selectedIndex];
+    if(!custSel.value){showToast('Select a customer');return;}
+
+    var t=computeTotals();
+    if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);t.tax=Number(_currentQuote.tax||0);t.total=Number(_currentQuote.total||t.subtotal);}
+    var jobSel=document.getElementById('f-job');
+    var jobId=jobSel?jobSel.value:'';
+    var jobName='';if(jobId){var jj=_jobs.find(function(x){return x.id===jobId;});if(jj)jobName=jj.service||'';}
+    var data={
+      customerId:custSel.value,
+      customerName:custOpt.textContent,
+      jobId:jobId||'',
+      jobName:jobName,
+      items:_items,
+      subtotal:t.subtotal,
+      taxRate:t.taxRate,
+      tax:t.tax,
+      total:t.total,
+      status:document.getElementById('f-status').value,
+      service:document.getElementById('f-service').value,
+      sqft:document.getElementById('f-sqft').value,
+      address:document.getElementById('f-address').value,
+      finish:document.getElementById('f-finish').value,
+      notes:document.getElementById('f-notes').value,
+      scheduledDate:document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).getTime():null
+    };
+
+    try{
+      if(_currentQuote&&_currentQuote.id){
+        await API.quotes.update(_currentQuote.id,data);
+        if(action==='send')await API.quotes.send(_currentQuote.id);
+        showToast(action==='send'?'Quote sent':'Quote saved');
+      }else{
+        var created=await API.quotes.create(data);
+        if(action==='send'&&created.id)await API.quotes.send(created.id);
+        showToast(action==='send'?'Quote created & sent':'Quote created');
+      }
+      closeModal();
+      loadQuotes();
+    }catch(e){showToast('Error: '+e.message);}
+  }finally{
+    _quoteSaving=false;
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save Quote';}
+    if(sendBtn)sendBtn.disabled=false;
+  }
 }
 
 async function sendQuoteEmail(){
+  if(_quoteSaving)return;
+  _quoteSaving=true;
+  var sendBtn=document.getElementById('btn-send-email');
+  var saveBtn=document.getElementById('btn-save-quote');
+  if(sendBtn){sendBtn.disabled=true;}
+  if(saveBtn)saveBtn.disabled=true;
+  try{
   // Save first if needed
   if(!_currentQuote||!_currentQuote.id){
     var custSel=document.getElementById('f-customer');
@@ -866,6 +912,11 @@ async function sendQuoteEmail(){
     showToast('Quote sent to customer!');
     closeModal();loadQuotes();
   }catch(e){showToast('Error sending: '+e.message);}
+  }finally{
+    _quoteSaving=false;
+    if(sendBtn){sendBtn.disabled=false;}
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save Quote';}
+  }
 }
 
 async function deleteQuote(){
@@ -917,9 +968,9 @@ function photoEstimateFromModal(){
     if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
     try{
       var file=inp.files[0];
-      var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
+      var compressed=await _compressImage(file,1200,0.75);
       var est=await API.agents.estimate({
-        photos:[{data:b64,mediaType:file.type||'image/jpeg'}],
+        photos:[{data:compressed.data,mediaType:compressed.mediaType}],
         service:document.getElementById('f-service')?document.getElementById('f-service').value:'',
         address:document.getElementById('f-address')?document.getElementById('f-address').value:'',
       });
@@ -1004,24 +1055,40 @@ function openAIEstimate(){
   overlay.style.display='flex';
 }
 
+function _compressImage(file, maxDim, quality){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve({ data: dataUrl.split(',')[1], mediaType: 'image/jpeg', dataUrl: dataUrl });
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 function onAIEstPhotoChange(input){
   var files=Array.from(input.files).slice(0,5);
   window._aiEstPhotos=[];
   var thumbs=document.getElementById('ai-est-photo-thumbs');
   thumbs.innerHTML='';
   document.getElementById('ai-est-photo-label-text').textContent=files.length+' photo'+(files.length!==1?'s':'')+' selected';
-  files.forEach(function(f,i){
-    var reader=new FileReader();
-    reader.onload=function(ev){
-      var b64=ev.target.result.split(',')[1];
-      var mt=f.type||'image/jpeg';
-      window._aiEstPhotos.push({data:b64,mediaType:mt});
+  files.forEach(function(f){
+    _compressImage(f, 1200, 0.75).then(function(compressed){
+      window._aiEstPhotos.push({data:compressed.data,mediaType:compressed.mediaType});
       var img=document.createElement('img');
-      img.src=ev.target.result;
+      img.src=compressed.dataUrl;
       img.style.cssText='width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #2c2c2c;';
       thumbs.appendChild(img);
-    };
-    reader.readAsDataURL(f);
+    });
   });
 }
 
@@ -1117,6 +1184,7 @@ async function createQuoteFromEstimate(){
 <script src="swft-settings-loader.js"></script>
 <script src="swft-account.js"></script>
 <script src="swft-notifications.js"></script>
+<script src="swft-agent-inbox.js"></script>
 <script src="swft-chat.js"></script>
 <script src="swft-mobile.js"></script>
 </body>

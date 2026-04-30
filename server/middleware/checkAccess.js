@@ -58,9 +58,9 @@ const METHOD_PERMISSION = {
   "/api/agents":            { GET: "automations.view", POST: "automations.manage",     PUT: "automations.manage", DELETE: "automations.manage" },
   "/api/automations":       { GET: "automations.view", POST: "automations.manage",     PUT: "automations.manage", DELETE: "automations.manage" },
   "/api/import":            { GET: "import.use",       POST: "import.use" },
-  "/api/google-business":   { GET: "reviews.view",     POST: "reviews.respond",        PUT: "reviews.respond" },
   "/api/team-chat":         { GET: "teamchat.view",    POST: "teamchat.send",          DELETE: "teamchat.view" },
   "/api/tracker":           { GET: "tracker.view",     POST: "tracker.view" },
+  "/api/agent-actions":     { GET: "dashboard.view",   POST: "dashboard.view",         DELETE: "dashboard.view" },
 };
 
 // Human-readable labels for 403 messages
