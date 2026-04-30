@@ -9,7 +9,7 @@
 
 const PLANS = {
   starter: {
-    name: "Core",
+    name: "SWFT Core",
     monthlyPrice: 149,
     annualPrice: 119,            // ~20% off ($1,428/yr)
     seatLimit: 5,
@@ -17,7 +17,7 @@ const PLANS = {
     aiMessageLimit: 250,
   },
   pro: {
-    name: "Growth",
+    name: "SWFT+",
     monthlyPrice: 349,
     annualPrice: 279,            // ~20% off ($3,348/yr)
     seatLimit: 10,
@@ -25,7 +25,7 @@ const PLANS = {
     aiMessageLimit: 1000,
   },
   business: {
-    name: "Scale",
+    name: "SWFT Pro",
     monthlyPrice: 599,
     annualPrice: 479,            // ~20% off ($5,748/yr)
     seatLimit: 25,
@@ -33,7 +33,7 @@ const PLANS = {
     aiMessageLimit: Infinity,    // uncapped
   },
   enterprise: {
-    name: "Enterprise",
+    name: "SWFT Enterprise",
     monthlyPrice: null,          // custom / contact sales
     annualPrice: null,
     seatLimit: Infinity,
