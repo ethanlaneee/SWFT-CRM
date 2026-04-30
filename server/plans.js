@@ -9,7 +9,7 @@
 
 const PLANS = {
   starter: {
-    name: "Starter",
+    name: "Core",
     monthlyPrice: 149,
     annualPrice: 119,            // ~20% off ($1,428/yr)
     seatLimit: 5,

@@ -509,7 +509,7 @@ function renderDashboard(stats, users) {
     <div class="plan-section" style="animation-delay:0.3s">
       <div class="plan-title">Plan Breakdown</div>
       <div class="plan-bars">
-        ${planBar('Starter', plans.starter || 0, totalUsers, 'starter')}
+        ${planBar('Core', plans.starter || 0, totalUsers, 'starter')}
         ${planBar('Growth', plans.pro || 0, totalUsers, 'pro')}
         ${planBar('Scale', plans.business || 0, totalUsers, 'business')}
       </div>
@@ -786,7 +786,7 @@ window._editUser = async function(uid, name, plan, smsLimit, aiLimit, adminNote)
         <label style="font-size:11px;color:var(--gray2);letter-spacing:1px;text-transform:uppercase;font-weight:600;">Plan
           <select id="eu-plan" style="display:block;width:100%;margin-top:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
             <option value="trial" ${plan==='trial'?'selected':''}>Trial</option>
-            <option value="starter" ${plan==='starter'?'selected':''}>Starter</option>
+            <option value="starter" ${plan==='starter'?'selected':''}>Core</option>
             <option value="pro" ${plan==='pro'?'selected':''}>Growth</option>
             <option value="agency" ${plan==='agency'?'selected':''}>Agency</option>
             <option value="custom" ${plan==='custom'?'selected':''}>Custom</option>
@@ -1871,7 +1871,7 @@ onAuthStateChanged(auth, (user) => {
       <div>
         <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">Plan</label>
         <select id="cu-plan" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;">
-          <option value="starter">Starter</option>
+          <option value="starter">Core</option>
           <option value="pro">Growth</option>
           <option value="business">Scale</option>
           <option value="enterprise">Enterprise</option>

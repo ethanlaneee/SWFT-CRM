@@ -109,7 +109,7 @@ router.post("/create-checkout-session", async (req, res, next) => {
 router.get("/plans", (req, res) => {
   res.json({
     starter: {
-      name: "Starter", monthlyPrice: 149, annualPrice: 119,
+      name: "Core", monthlyPrice: 149, annualPrice: 119,
       seatLimit: 5, extraSeatPrice: 30, aiMessageLimit: 250,
       priceId: PRICE_IDS.starter, annualPriceId: PRICE_IDS.starter_annual,
     },
