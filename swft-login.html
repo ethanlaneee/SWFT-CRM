@@ -341,6 +341,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 <link rel="stylesheet" href="swft-mobile.css"/>
+<!-- Cloudflare Turnstile -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+/* Turnstile widget container */
+.cf-turnstile{display:flex;justify-content:center;margin:2px 0;}
+/* Hide Turnstile branding row to keep dark card clean — the widget iframe handles its own display */
+</style>
 </head>
 <body>
 
@@ -396,6 +403,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
 
     <div class="forgot-link" onclick="handleForgotPassword()">Forgot password?</div>
+
+    <div class="cf-turnstile" id="login-turnstile"
+      data-sitekey="0x4AAAAAABkMicPCq73N7F5Z"
+      data-theme="dark"
+      data-size="normal"
+      data-callback="onLoginTurnstileSuccess"
+      data-error-callback="onTurnstileError"
+      data-expired-callback="onTurnstileExpired">
+    </div>
 
     <button class="submit-btn" id="login-btn" onclick="handleLogin()">
       <span class="btn-text">Sign In</span>
@@ -502,6 +518,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div class="pwd-strength-label" id="pwd-label"></div>
       </div>
       <span class="field-error" id="signup-pwd-err">Password must be at least 8 characters.</span>
+    </div>
+
+    <div class="cf-turnstile" id="signup-turnstile"
+      data-sitekey="0x4AAAAAABkMicPCq73N7F5Z"
+      data-theme="dark"
+      data-size="normal"
+      data-callback="onSignupTurnstileSuccess"
+      data-error-callback="onTurnstileError"
+      data-expired-callback="onTurnstileExpired">
     </div>
 
     <button class="submit-btn" id="signup-btn" onclick="handleSignup()">
@@ -704,6 +729,30 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     });
   })();
 
+  // ── TURNSTILE ──
+  let _loginTurnstileToken = '';
+  let _signupTurnstileToken = '';
+
+  window.onLoginTurnstileSuccess  = t => { _loginTurnstileToken  = t; };
+  window.onSignupTurnstileSuccess = t => { _signupTurnstileToken = t; };
+  window.onTurnstileError    = () => { showGlobalError('Security check failed. Please refresh and try again.'); };
+  window.onTurnstileExpired  = () => { _loginTurnstileToken = ''; _signupTurnstileToken = ''; };
+
+  // Verify the Turnstile token server-side (non-blocking if server is unreachable)
+  async function verifyTurnstile(token) {
+    if (!token) return false;
+    try {
+      const res = await fetch('/api/auth/verify-captcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      return !!data.success;
+    } catch { return false; }
+  }
+
   // ── LOGIN ──
   window.handleLogin = async function() {
     clearErrors();
@@ -718,6 +767,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       showFieldError('login-pwd-err', 'login-password'); valid = false;
     }
     if (!valid) return;
+
+    // Verify Turnstile captcha before hitting Firebase Auth
+    if (!_loginTurnstileToken) {
+      showGlobalError('Please complete the security check before signing in.');
+      return;
+    }
+    const captchaOk = await verifyTurnstile(_loginTurnstileToken);
+    if (!captchaOk) {
+      showGlobalError('Security check failed. Please refresh and try again.');
+      // Reset widget so user can retry
+      if (window.turnstile) turnstile.reset('#login-turnstile');
+      _loginTurnstileToken = '';
+      return;
+    }
 
     const btn = document.getElementById('login-btn');
     setLoading(btn, true);
@@ -830,6 +893,19 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       valid = false;
     }
     if (!valid) return;
+
+    // Verify Turnstile captcha before creating account
+    if (!_signupTurnstileToken) {
+      showGlobalError('Please complete the security check before creating your account.');
+      return;
+    }
+    const captchaOkSignup = await verifyTurnstile(_signupTurnstileToken);
+    if (!captchaOkSignup) {
+      showGlobalError('Security check failed. Please refresh and try again.');
+      if (window.turnstile) turnstile.reset('#signup-turnstile');
+      _signupTurnstileToken = '';
+      return;
+    }
 
     const btn = document.getElementById('signup-btn');
     setLoading(btn, true);

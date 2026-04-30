@@ -395,6 +395,36 @@ app.use(express.static(staticRoot, {
 }));
 
 // ── Login hint — public, no auth ──
+// POST /api/auth/verify-captcha — validate a Cloudflare Turnstile token.
+// Called client-side before Firebase Auth so bots can't hit Auth at all.
+// No auth required — this is a pre-login check.
+const captchaLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: "Too many requests." } });
+app.post("/api/auth/verify-captcha", captchaLimiter, async (req, res) => {
+  const { token } = req.body || {};
+  if (!token) return res.status(400).json({ success: false, error: "Missing token." });
+
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  // If no secret is configured (local dev), pass through so dev isn't blocked.
+  if (!secret) return res.json({ success: true });
+
+  try {
+    const form = new URLSearchParams({ secret, response: token, remoteip: req.ip });
+    const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+    });
+    const data = await r.json();
+    if (data.success) return res.json({ success: true });
+    console.warn("[captcha] Turnstile failed:", data["error-codes"]);
+    return res.status(400).json({ success: false, error: "Captcha verification failed." });
+  } catch (err) {
+    console.error("[captcha] Turnstile error:", err.message);
+    // Network error — fail open so a Cloudflare outage doesn't lock users out
+    return res.json({ success: true });
+  }
+});
+
 // Looks up a Firestore user by email and returns only first name + initials
 // so the sign-in page can personalise the UI (à la Google) before the user
 // authenticates. Intentionally returns no sensitive fields.
