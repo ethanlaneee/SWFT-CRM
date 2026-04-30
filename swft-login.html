@@ -768,18 +768,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
     if (!valid) return;
 
-    // Verify Turnstile captcha before hitting Firebase Auth
-    if (!_loginTurnstileToken) {
-      showGlobalError('Please complete the security check before signing in.');
-      return;
-    }
-    const captchaOk = await verifyTurnstile(_loginTurnstileToken);
-    if (!captchaOk) {
-      showGlobalError('Security check failed. Please refresh and try again.');
-      // Reset widget so user can retry
-      if (window.turnstile) turnstile.reset('#login-turnstile');
-      _loginTurnstileToken = '';
-      return;
+    // Verify Turnstile captcha — only enforce if the widget actually rendered
+    const loginWidgetRendered = document.querySelector('#login-turnstile iframe');
+    if (loginWidgetRendered) {
+      if (!_loginTurnstileToken) {
+        showGlobalError('Please complete the security check before signing in.');
+        return;
+      }
+      const captchaOk = await verifyTurnstile(_loginTurnstileToken);
+      if (!captchaOk) {
+        showGlobalError('Security check failed. Please refresh and try again.');
+        if (window.turnstile) turnstile.reset('#login-turnstile');
+        _loginTurnstileToken = '';
+        return;
+      }
     }
 
     const btn = document.getElementById('login-btn');
@@ -894,17 +896,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
     if (!valid) return;
 
-    // Verify Turnstile captcha before creating account
-    if (!_signupTurnstileToken) {
-      showGlobalError('Please complete the security check before creating your account.');
-      return;
-    }
-    const captchaOkSignup = await verifyTurnstile(_signupTurnstileToken);
-    if (!captchaOkSignup) {
-      showGlobalError('Security check failed. Please refresh and try again.');
-      if (window.turnstile) turnstile.reset('#signup-turnstile');
-      _signupTurnstileToken = '';
-      return;
+    // Verify Turnstile captcha — only enforce if the widget actually rendered
+    const signupWidgetRendered = document.querySelector('#signup-turnstile iframe');
+    if (signupWidgetRendered) {
+      if (!_signupTurnstileToken) {
+        showGlobalError('Please complete the security check before creating your account.');
+        return;
+      }
+      const captchaOkSignup = await verifyTurnstile(_signupTurnstileToken);
+      if (!captchaOkSignup) {
+        showGlobalError('Security check failed. Please refresh and try again.');
+        if (window.turnstile) turnstile.reset('#signup-turnstile');
+        _signupTurnstileToken = '';
+        return;
+      }
     }
 
     const btn = document.getElementById('signup-btn');
