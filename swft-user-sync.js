@@ -1,15 +1,19 @@
 // ════════════════════════════════════════════════
 // SWFT User Sync
-// Syncs the sidebar user tile with the logged-in account
+// Syncs the sidebar user tile with the logged-in account.
 // Include via: <script type="module" src="swft-user-sync.js"></script>
-// Must be loaded AFTER Firebase is initialized
+// Must be loaded AFTER Firebase is initialized.
+//
+// Source of truth: /api/me (the server route, which self-heals firstName/
+// lastName/name from the Firebase Auth displayName captured at signup).
+// We deliberately do NOT read users/{uid} via the Firestore client SDK —
+// rules can block that, the read fails silently, and the email-prefix
+// fallback would then overwrite the correct cached name.
 // ════════════════════════════════════════════════
 
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const auth = getAuth();
-const db = getFirestore();
 
 function applyProfile(fullName, initials, email) {
   document.querySelectorAll(".user-name").forEach((el) => { el.textContent = fullName; });
@@ -17,8 +21,8 @@ function applyProfile(fullName, initials, email) {
   document.querySelectorAll(".user-role").forEach((el) => { el.textContent = email || ""; });
 }
 
-// Apply cached profile immediately at DOM-ready — before auth resolves
-// This ensures the profile appears instantly on all pages, even heavy CRM ones
+// Apply cached profile immediately at DOM-ready — before auth/network resolves.
+// This makes the name appear instantly on every page transition.
 const _cached = sessionStorage.getItem("swft_profile");
 if (_cached) {
   try {
@@ -31,42 +35,61 @@ if (_cached) {
   } catch (e) { /* ignore bad cache */ }
 }
 
+function deriveNameParts(data) {
+  let firstName = data.firstName || "";
+  let lastName  = data.lastName  || "";
+  if (!firstName && !lastName && data.name) {
+    const parts = String(data.name).trim().split(/\s+/);
+    firstName = parts[0] || "";
+    lastName  = parts.slice(1).join(" ") || "";
+  }
+  return { firstName, lastName };
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   let firstName = "";
   let lastName = "";
 
-  // Prefer Firestore profile — it's what the user updates via /api/me and
-  // stays in sync with the name they signed up with. Firebase Auth
-  // `displayName` is set once at signup and has no edit UI, so it can drift
-  // (e.g. left as a Google OAuth profile name) and shouldn't override the
-  // Firestore source of truth.
-  //
-  // NOTE: never read `data.email` here — the sidebar shows the user's
-  // login identity, which is Firebase Auth `user.email`. The Firestore
-  // `email` field has historically doubled as the company email and will
-  // diverge from the login email as soon as the owner sets a separate
-  // Company Profile → Email in Settings.
+  // Primary: /api/me — same source the Settings page reads/writes, so the
+  // sidebar can never disagree with what's shown in "Your Profile".
   try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (snap.exists()) {
-      const data = snap.data();
-      firstName = data.firstName || data.name?.split(" ")[0] || "";
-      lastName = data.lastName || data.name?.split(" ").slice(1).join(" ") || "";
+    const token = await user.getIdToken();
+    const res = await fetch("/api/me", { headers: { Authorization: "Bearer " + token } });
+    if (res.ok) {
+      const data = await res.json();
+      const parts = deriveNameParts(data);
+      firstName = parts.firstName;
+      lastName  = parts.lastName;
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) { /* network failure — fall through to local fallbacks */ }
 
-  // Fall back to Firebase Auth displayName if Firestore had nothing
+  // Fallback 1: Firebase Auth displayName (set at signup).
   if (!firstName && user.displayName) {
-    const parts = user.displayName.split(" ");
+    const parts = user.displayName.trim().split(/\s+/);
     firstName = parts[0] || "";
-    lastName = parts.slice(1).join(" ") || "";
+    lastName  = parts.slice(1).join(" ") || "";
   }
 
-  // Fallback to email
+  // Fallback 2: email prefix. ONLY use this when no cached name is already
+  // displayed — otherwise we'd overwrite the user's real name with their
+  // login slug just because /api/me hiccupped on this load.
   if (!firstName && user.email) {
-    firstName = user.email.split("@")[0];
+    let cachedName = "";
+    try { cachedName = (JSON.parse(sessionStorage.getItem("swft_profile") || "{}").fullName) || ""; } catch (_) {}
+    if (!cachedName) {
+      firstName = user.email.split("@")[0];
+    } else {
+      // Keep whatever the cache shows; don't downgrade to the email prefix.
+      // Email below will still update so login identity stays correct.
+      const fullName = cachedName;
+      const initials = (fullName.split(/\s+/).map(p => p[0] || "").join("").slice(0, 2)).toUpperCase() || "?";
+      const displayEmail = user.email || "";
+      sessionStorage.setItem("swft_profile", JSON.stringify({ fullName, initials, email: displayEmail }));
+      applyProfile(fullName, initials, displayEmail);
+      return;
+    }
   }
 
   if (!firstName) firstName = "User";
@@ -75,8 +98,6 @@ onAuthStateChanged(auth, async (user) => {
   const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "?";
   const displayEmail = user.email || "";
 
-  // Update cache under a simple key (no uid needed for lookup)
   sessionStorage.setItem("swft_profile", JSON.stringify({ fullName, initials, email: displayEmail }));
-
   applyProfile(fullName, initials, displayEmail);
 });
