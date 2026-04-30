@@ -133,6 +133,19 @@ router.post("/send", upload.array("files", 10), async (req, res, next) => {
       if (!to) return res.status(400).json({ error: "Recipient phone number is required" });
       if (!body) return res.status(400).json({ error: "Message body is required" });
 
+      const plan = getPlan(req.userPlan);
+      if (plan.smsLimit !== Infinity) {
+        const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0);
+        const usedSnap = await db.collection("messages")
+          .where("orgId","==", req.orgId || req.uid)
+          .where("type","==","sms")
+          .where("direction","==","outbound")
+          .where("sentAt",">=", startOfMonth.getTime()).get();
+        if (usedSnap.size >= plan.smsLimit) {
+          return res.status(403).json({ error: `You've reached your ${plan.smsLimit.toLocaleString()} SMS limit for this month. Upgrade to SWFT Pro for unlimited messaging.`, upgradeUrl: "/swft-checkout?plan=business" });
+        }
+      }
+
       const result = await sendSms(to, body);
 
       const msgRecord = {
