@@ -923,27 +923,38 @@ section{position:relative;z-index:1;}
     cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;text-align:center;
   }
   .pt-tab-active{background:var(--green-dim);border-color:rgba(200,241,53,0.35);color:var(--green);}
-  /* On mobile: hide non-active plan columns */
-  .pricing-table [data-col]:not(.pt-col-active){display:none;}
-  /* Hide the empty feature-label header cell; active plan th spans full width */
+
+  /* On mobile: thead becomes a full-width block */
+  .pricing-table thead{display:block;width:100%;}
+  .pricing-table thead tr{display:block;width:100%;}
+  /* Hide the empty first header cell entirely */
   .pricing-table thead th.pt-feature-col{display:none;}
-  .pricing-table thead th[data-col].pt-col-active{width:100%;text-align:center;}
-  /* Body: feature label takes ~70%, value takes ~30% */
-  .pricing-table{table-layout:auto;}
-  .pricing-table tbody td:first-child{width:70%;font-size:13px;}
-  .pricing-table tbody td[data-col]{width:30%;font-size:13px;}
-  /* Plan header on mobile — make price inline, not stacked awkwardly */
-  .pt-price .monthly-price,.pt-price .annual-price{font-size:40px;}
-  .pt-period{display:inline;font-size:13px;}
-  .pt-plan-name{font-size:20px;}
-  .pt-popular-badge{margin-bottom:8px;}
-  /* Active featured column keeps its highlight */
-  .pricing-table [data-col].pt-col-active.pt-featured{
+  /* Hide non-active plan headers */
+  .pricing-table thead th[data-col]:not(.pt-col-active){display:none;}
+  /* Active plan header fills full width, centered */
+  .pricing-table thead th[data-col].pt-col-active{
+    display:block;width:100%;text-align:center;
+    padding:24px 20px 20px;box-sizing:border-box;
+  }
+  .pricing-table thead th[data-col].pt-col-active.pt-featured{
     background:rgba(200,241,53,0.05);
+    border-top:2px solid rgba(200,241,53,0.4);
     border-left:none;border-right:none;
   }
-  /* Group row spans 2 visible cols */
-  .pricing-table .pt-group-row td[colspan]{display:table-cell;}
+  /* Button full width on mobile */
+  .pricing-table thead .pt-btn{display:block;width:100%;text-align:center;box-sizing:border-box;padding:12px;}
+  /* Body: keep as table, feature label 70%, value 30% */
+  .pricing-table tbody{display:table;width:100%;}
+  .pricing-table{table-layout:auto;}
+  .pricing-table tbody td:first-child{width:70%;font-size:13px;}
+  .pricing-table tbody td[data-col]{width:30%;font-size:13px;text-align:center;}
+  /* On mobile: hide non-active body columns */
+  .pricing-table tbody [data-col]:not(.pt-col-active){display:none;}
+  /* Group row */
+  .pricing-table .pt-group-row td{display:table-cell;}
+  /* Price size */
+  .pt-price .monthly-price,.pt-price .annual-price{font-size:48px;}
+  .pt-plan-name{font-size:22px;}
 }
 </style>
 <!-- ── CHAT BUBBLE STYLES ── -->
