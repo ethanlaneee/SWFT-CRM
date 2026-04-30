@@ -578,9 +578,8 @@ app.post("/api/demo-cleanup", demoCleanupLimiter, async (req, res) => {
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
 
 // ONE-TIME: delete all demo accounts — remove after running
-app.post("/api/admin/purge-demos", auth, async (req, res) => {
-  const ADMIN_EMAILS = ["ethan@goswft.com"];
-  if (!ADMIN_EMAILS.includes(req.user?.email)) return res.status(403).json({ error: "Forbidden" });
+app.post("/api/admin/purge-demos", async (req, res) => {
+  if (req.headers["x-purge-secret"] !== "bbac131c1fecc20d465008f4e1292a19") return res.status(403).json({ error: "Forbidden" });
   const { db, authAdmin } = require("./firebase");
   const snap = await db.collection("users").where("demoAccount", "==", true).get();
   let deleted = 0;
