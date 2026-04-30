@@ -941,9 +941,9 @@ function photoEstimateFromModal(){
     if(btn){btn.textContent='Analyzing...';btn.disabled=true;}
     try{
       var file=inp.files[0];
-      var b64=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(ev){res(ev.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
+      var compressed=await _compressImage(file,1200,0.75);
       var est=await API.agents.estimate({
-        photos:[{data:b64,mediaType:file.type||'image/jpeg'}],
+        photos:[{data:compressed.data,mediaType:compressed.mediaType}],
         service:document.getElementById('f-service')?document.getElementById('f-service').value:'',
         address:document.getElementById('f-address')?document.getElementById('f-address').value:'',
       });
@@ -1028,24 +1028,40 @@ function openAIEstimate(){
   overlay.style.display='flex';
 }
 
+function _compressImage(file, maxDim, quality){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve({ data: dataUrl.split(',')[1], mediaType: 'image/jpeg', dataUrl: dataUrl });
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 function onAIEstPhotoChange(input){
   var files=Array.from(input.files).slice(0,5);
   window._aiEstPhotos=[];
   var thumbs=document.getElementById('ai-est-photo-thumbs');
   thumbs.innerHTML='';
   document.getElementById('ai-est-photo-label-text').textContent=files.length+' photo'+(files.length!==1?'s':'')+' selected';
-  files.forEach(function(f,i){
-    var reader=new FileReader();
-    reader.onload=function(ev){
-      var b64=ev.target.result.split(',')[1];
-      var mt=f.type||'image/jpeg';
-      window._aiEstPhotos.push({data:b64,mediaType:mt});
+  files.forEach(function(f){
+    _compressImage(f, 1200, 0.75).then(function(compressed){
+      window._aiEstPhotos.push({data:compressed.data,mediaType:compressed.mediaType});
       var img=document.createElement('img');
-      img.src=ev.target.result;
+      img.src=compressed.dataUrl;
       img.style.cssText='width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #2c2c2c;';
       thumbs.appendChild(img);
-    };
-    reader.readAsDataURL(f);
+    });
   });
 }
 
