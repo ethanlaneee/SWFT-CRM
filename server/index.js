@@ -481,6 +481,7 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
 app.use("/api/me",        auth,               require("./routes/user"));
+app.use("/api/2fa",       auth,               require("./routes/twoFactor"));
 app.use("/api/auth/google", auth,             googleAuthRouter);
 app.use("/api/billing",   auth,               billingRouter);
 app.use("/api/dashboard", auth, checkAccess,  require("./routes/dashboard"));

@@ -867,6 +867,61 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- Privacy & Data -->
+<div class="settings-section" data-group="account" id="sec-2fa">
+  <div class="settings-header"><span class="settings-header-icon">🔐</span><h3>TWO-FACTOR AUTHENTICATION</h3></div>
+  <div class="settings-body">
+    <div class="settings-row" id="2fa-status-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Authenticator App (TOTP)</div>
+        <div class="settings-row-desc" id="2fa-desc">Add an extra layer of security. After signing in, you'll be asked for a code from your authenticator app (e.g. Google Authenticator, Authy).</div>
+      </div>
+      <button class="settings-btn" id="2fa-toggle-btn" onclick="toggle2FA()">Loading…</button>
+    </div>
+
+    <!-- Setup flow: QR code + secret + verify -->
+    <div id="2fa-setup-panel" style="display:none;padding:20px 0 4px;">
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px;line-height:1.6;">
+        Scan the QR code below with your authenticator app, then enter the 6-digit code to confirm.
+      </div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+        <div id="2fa-qr-wrap" style="background:#fff;border-radius:10px;padding:10px;display:inline-block;">
+          <img id="2fa-qr-img" src="" width="160" height="160" alt="2FA QR Code"/>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div style="font-size:12px;color:var(--gray);margin-bottom:6px;">Or enter this secret manually:</div>
+          <div id="2fa-secret-text" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--green);background:rgba(200,241,53,0.06);border:1px solid rgba(200,241,53,0.15);border-radius:8px;padding:10px 14px;word-break:break-all;letter-spacing:0.05em;"></div>
+          <div style="margin-top:16px;">
+            <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:6px;">Verification Code</label>
+            <input type="text" id="2fa-verify-input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="off"
+              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--white);font-size:16px;letter-spacing:0.15em;outline:none;"/>
+            <div id="2fa-setup-err" style="color:var(--red);font-size:12px;margin-top:6px;display:none;"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <button class="settings-btn primary" onclick="confirm2FASetup()" id="2fa-confirm-btn">Enable 2FA</button>
+            <button class="settings-btn" onclick="cancel2FASetup()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disable flow: verify code first -->
+    <div id="2fa-disable-panel" style="display:none;padding:20px 0 4px;">
+      <div style="font-size:13px;color:var(--gray);margin-bottom:14px;line-height:1.6;">
+        Enter your authenticator code to confirm disabling 2FA.
+      </div>
+      <div style="max-width:260px;">
+        <input type="text" id="2fa-disable-input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="off"
+          style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--white);font-size:16px;letter-spacing:0.15em;outline:none;"/>
+        <div id="2fa-disable-err" style="color:var(--red);font-size:12px;margin-top:6px;display:none;"></div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="settings-btn danger" onclick="confirm2FADisable()" id="2fa-disable-btn">Disable 2FA</button>
+          <button class="settings-btn" onclick="cancel2FADisable()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="settings-section" data-group="account" id="sec-privacy">
   <div class="settings-header"><span class="settings-header-icon">🔒</span><h3>PRIVACY & DATA</h3></div>
   <div class="settings-body">
@@ -1627,6 +1682,130 @@ async function exportToSheets() {
   }
 }
 
+// ── 2FA ──
+(function init2FA() {
+  var _currentUser = null;
+
+  async function apiFetch(path, opts = {}) {
+    const user = _currentUser || window.__swftUser;
+    if (!user) return null;
+    const token = await user.getIdToken();
+    return fetch(path, {
+      ...opts,
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    });
+  }
+
+  async function load2FAStatus() {
+    try {
+      const res = await apiFetch('/api/2fa/status');
+      if (!res || !res.ok) return;
+      const data = await res.json();
+      const btn = document.getElementById('2fa-toggle-btn');
+      const desc = document.getElementById('2fa-desc');
+      if (data.enabled) {
+        btn.textContent = 'Disable 2FA';
+        btn.classList.add('danger');
+        desc.textContent = '2FA is enabled. Your account is protected with an authenticator app.';
+      } else {
+        btn.textContent = 'Set Up 2FA';
+        btn.classList.remove('danger');
+        desc.textContent = 'Add an extra layer of security. After signing in, you\'ll be asked for a code from your authenticator app (e.g. Google Authenticator, Authy).';
+      }
+      btn.dataset.enabled = data.enabled ? '1' : '0';
+    } catch (e) {
+      const btn = document.getElementById('2fa-toggle-btn');
+      if (btn) btn.textContent = 'Set Up 2FA';
+    }
+  }
+
+  window.toggle2FA = function() {
+    const btn = document.getElementById('2fa-toggle-btn');
+    if (btn.dataset.enabled === '1') {
+      document.getElementById('2fa-disable-panel').style.display = 'block';
+      document.getElementById('2fa-setup-panel').style.display = 'none';
+      setTimeout(() => document.getElementById('2fa-disable-input').focus(), 50);
+    } else {
+      start2FASetup();
+    }
+  };
+
+  async function start2FASetup() {
+    const btn = document.getElementById('2fa-toggle-btn');
+    btn.textContent = 'Loading…';
+    btn.disabled = true;
+    try {
+      const res = await apiFetch('/api/2fa/setup', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Failed to start 2FA setup.'); btn.textContent = 'Set Up 2FA'; btn.disabled = false; return; }
+      document.getElementById('2fa-qr-img').src = data.qrDataUrl;
+      document.getElementById('2fa-secret-text').textContent = data.secret;
+      document.getElementById('2fa-setup-panel').style.display = 'block';
+      document.getElementById('2fa-disable-panel').style.display = 'none';
+      document.getElementById('2fa-verify-input').value = '';
+      document.getElementById('2fa-setup-err').style.display = 'none';
+      setTimeout(() => document.getElementById('2fa-verify-input').focus(), 50);
+    } catch {
+      alert('Failed to load 2FA setup. Please try again.');
+    }
+    btn.textContent = 'Set Up 2FA';
+    btn.disabled = false;
+  }
+
+  window.cancel2FASetup = function() {
+    document.getElementById('2fa-setup-panel').style.display = 'none';
+  };
+
+  window.confirm2FASetup = async function() {
+    const code = document.getElementById('2fa-verify-input').value.replace(/\s/g, '');
+    const errEl = document.getElementById('2fa-setup-err');
+    errEl.style.display = 'none';
+    if (!code || code.length < 6) { errEl.textContent = 'Enter the 6-digit code.'; errEl.style.display = 'block'; return; }
+    const btn = document.getElementById('2fa-confirm-btn');
+    btn.textContent = 'Verifying…'; btn.disabled = true;
+    try {
+      const res = await apiFetch('/api/2fa/enable', { method: 'POST', body: JSON.stringify({ code }) });
+      const data = await res.json();
+      if (!res.ok) { errEl.textContent = data.error || 'Invalid code.'; errEl.style.display = 'block'; btn.textContent = 'Enable 2FA'; btn.disabled = false; return; }
+      document.getElementById('2fa-setup-panel').style.display = 'none';
+      await load2FAStatus();
+      if (window.showToast) showToast('Two-factor authentication enabled!');
+    } catch { errEl.textContent = 'Network error. Try again.'; errEl.style.display = 'block'; }
+    btn.textContent = 'Enable 2FA'; btn.disabled = false;
+  };
+
+  window.cancel2FADisable = function() {
+    document.getElementById('2fa-disable-panel').style.display = 'none';
+    document.getElementById('2fa-disable-input').value = '';
+    document.getElementById('2fa-disable-err').style.display = 'none';
+  };
+
+  window.confirm2FADisable = async function() {
+    const code = document.getElementById('2fa-disable-input').value.replace(/\s/g, '');
+    const errEl = document.getElementById('2fa-disable-err');
+    errEl.style.display = 'none';
+    if (!code || code.length < 6) { errEl.textContent = 'Enter the 6-digit code.'; errEl.style.display = 'block'; return; }
+    const btn = document.getElementById('2fa-disable-btn');
+    btn.textContent = 'Disabling…'; btn.disabled = true;
+    try {
+      const res = await apiFetch('/api/2fa/disable', { method: 'POST', body: JSON.stringify({ code }) });
+      const data = await res.json();
+      if (!res.ok) { errEl.textContent = data.error || 'Invalid code.'; errEl.style.display = 'block'; btn.textContent = 'Disable 2FA'; btn.disabled = false; return; }
+      document.getElementById('2fa-disable-panel').style.display = 'none';
+      document.getElementById('2fa-disable-input').value = '';
+      await load2FAStatus();
+      if (window.showToast) showToast('Two-factor authentication disabled.');
+    } catch { errEl.textContent = 'Network error. Try again.'; errEl.style.display = 'block'; }
+    btn.textContent = 'Disable 2FA'; btn.disabled = false;
+  };
+
+  // Called from auth state callback with the resolved user object
+  window.load2FAStatusFromAuth = function(user) {
+    _currentUser = user;
+    load2FAStatus();
+  };
+})();
+
 async function deleteAccount() {
   var ok = await swftConfirm(
     'This will <strong>permanently delete</strong> your entire account including all customers, jobs, quotes, invoices, and settings. This cannot be undone.',
@@ -2216,6 +2395,8 @@ function downloadQR() {
           if(el) el.scrollIntoView({behavior:'smooth'});
         }
       });
+      // Load 2FA status once auth is ready
+      if (window.load2FAStatusFromAuth) window.load2FAStatusFromAuth(user);
     }
   });
 </script>
