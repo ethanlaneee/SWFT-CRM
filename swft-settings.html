@@ -868,6 +868,56 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   </div>
 </div>
 
+<!-- Account Security -->
+<div class="settings-section" data-group="account" id="sec-security">
+  <div class="settings-header"><span class="settings-header-icon">🛡️</span><h3>ACCOUNT SECURITY</h3></div>
+  <div class="settings-body">
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Two-factor authentication</div>
+        <div class="settings-row-desc" id="mfa-status-desc">Add a time-based one-time password (TOTP) from an authenticator app like Google Authenticator, Authy, or 1Password. Required to sign in once enabled.</div>
+      </div>
+      <button class="settings-btn primary" id="mfa-action-btn" onclick="handleMfaAction()">Set up 2FA</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">Sign out everywhere</div>
+        <div class="settings-row-desc">Revoke every active session on every device. You'll need to sign in again on each device. Use this if you suspect your account has been accessed by someone else.</div>
+      </div>
+      <button class="settings-btn danger" onclick="signOutEverywhere()">Sign out everywhere</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2FA enrollment modal -->
+<div class="billing-overlay" id="mfa-overlay" style="display:none;" onclick="if(event.target===this)closeMfaModal()">
+  <div class="billing-modal" id="mfa-modal" style="max-width:440px;">
+    <div class="billing-modal-header">
+      <span class="billing-modal-title" id="mfa-modal-title">Set up two-factor authentication</span>
+      <button class="billing-modal-close" onclick="closeMfaModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="billing-modal-body" id="mfa-modal-body">
+      <div id="mfa-step-loading" style="text-align:center;padding:24px;color:#7a7a7a;">Generating secret…</div>
+      <div id="mfa-step-enroll" style="display:none;">
+        <p style="font-size:13px;color:#7a7a7a;margin:0 0 12px;">Scan this QR code with your authenticator app, then enter the 6-digit code it displays.</p>
+        <div style="display:flex;justify-content:center;margin:12px 0;">
+          <img id="mfa-qr" alt="2FA QR code" style="width:180px;height:180px;border-radius:8px;background:#fff;padding:8px;"/>
+        </div>
+        <p style="font-size:11px;color:#7a7a7a;text-align:center;margin:8px 0 16px;">Or paste this secret manually: <code id="mfa-secret" style="user-select:all;background:#1a1a1a;padding:2px 6px;border-radius:4px;font-size:11px;"></code></p>
+        <input type="text" id="mfa-code" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="width:100%;padding:12px;font-size:18px;letter-spacing:6px;text-align:center;border:1px solid #2a2a2a;border-radius:8px;background:#1a1a1a;color:#f0f0f0;margin-bottom:12px;"/>
+        <button class="settings-btn primary" style="width:100%;" onclick="confirmMfaEnrollment()">Enable 2FA</button>
+        <div id="mfa-error" style="display:none;color:#ef4444;font-size:13px;margin-top:12px;text-align:center;"></div>
+      </div>
+      <div id="mfa-step-unsupported" style="display:none;text-align:center;padding:8px 0 16px;">
+        <p style="color:#f0f0f0;font-size:14px;margin:0 0 8px;">Two-factor authentication isn't available yet.</p>
+        <p style="color:#7a7a7a;font-size:13px;margin:0;" id="mfa-unsupported-reason">Please contact support to enable 2FA on your account.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Privacy & Data -->
 <div class="settings-section" data-group="account" id="sec-privacy">
   <div class="settings-header"><span class="settings-header-icon">🔒</span><h3>PRIVACY & DATA</h3></div>
@@ -1626,6 +1676,21 @@ async function deleteAccount() {
       method: 'DELETE',
       headers: { 'Authorization': 'Bearer ' + token }
     });
+
+    // The recent-reauth gate may reject the delete with HTTP 403. Walk the
+    // user through a fresh sign-in and retry once.
+    if (res.status === 403) {
+      var body = await res.json().catch(function(){ return {}; });
+      if (body.code === 'reauth_required') {
+        var fresh = await reauthenticateCurrentUser();
+        if (!fresh) { showToast('Re-authentication cancelled'); return; }
+        token = await getToken(true);
+        res = await fetch('/api/me/delete-account', {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+      }
+    }
     if (!res.ok) throw new Error('Delete failed');
 
     // Sign out
@@ -1635,6 +1700,199 @@ async function deleteAccount() {
   } catch(e) {
     showToast('Error: ' + e.message);
   }
+}
+
+// ─── Account Security: re-authentication helper ───────────────────────────
+// Some endpoints require the user's last sign-in to be very recent (5 min).
+// This walks them through a Firebase reauthenticateWithCredential (password
+// users) or reauthenticateWithPopup (Google users) and resolves to true on
+// success. We only ever ask for the password in a clean modal — never an
+// alert() or prompt() that an XSS payload could spoof.
+async function reauthenticateCurrentUser() {
+  try {
+    var fbAuth = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    var auth = fbAuth.getAuth();
+    var user = auth.currentUser;
+    if (!user) return false;
+
+    // Pick the right re-auth flow based on the provider used to sign in.
+    var providerId = (user.providerData && user.providerData[0] && user.providerData[0].providerId) || '';
+    if (providerId === 'google.com') {
+      var provider = new fbAuth.GoogleAuthProvider();
+      await fbAuth.reauthenticateWithPopup(user, provider);
+      return true;
+    }
+
+    // Password user — prompt for password via a styled modal (not window.prompt)
+    var pwd = await new Promise(function(resolve){
+      var ok = swftConfirm(
+        '<div style="text-align:left;"><p style="margin:0 0 12px;color:#7a7a7a;font-size:13px;">For your security, please re-enter your password.</p><input type="password" id="reauth-pwd" placeholder="Password" autocomplete="current-password" style="width:100%;padding:12px;font-size:14px;border:1px solid #2a2a2a;border-radius:8px;background:#1a1a1a;color:#f0f0f0;"/></div>',
+        'Confirm',
+        '🔐'
+      );
+      // swftConfirm returns a promise — wire its resolution to ours, but
+      // also pull the typed password from the dialog before it closes.
+      Promise.resolve(ok).then(function(confirmed){
+        var el = document.getElementById('reauth-pwd');
+        var typed = el ? el.value : '';
+        resolve(confirmed ? typed : null);
+      });
+    });
+    if (!pwd) return false;
+    var cred = fbAuth.EmailAuthProvider.credential(user.email, pwd);
+    await fbAuth.reauthenticateWithCredential(user, cred);
+    return true;
+  } catch (e) {
+    showToast('Re-authentication failed: ' + (e && e.message || 'unknown error'));
+    return false;
+  }
+}
+
+// ─── Account Security: sign out every device ──────────────────────────────
+async function signOutEverywhere() {
+  var ok = await swftConfirm(
+    'This will sign you out on every device, including this one. You\'ll need to sign in again. Continue?',
+    'Sign out everywhere',
+    '🚪'
+  );
+  if (!ok) return;
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/auth/revoke-all-sessions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var fbAuth = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    await fbAuth.signOut(fbAuth.getAuth());
+    window.location.href = 'swft-login';
+  } catch(e) {
+    showToast('Error: ' + (e && e.message || 'unknown'));
+  }
+}
+
+// ─── Account Security: TOTP 2FA enrollment ────────────────────────────────
+// Uses Firebase's built-in TotpMultiFactorGenerator. Requires the project
+// to be on Firebase Identity Platform (paid tier) with TOTP enabled in the
+// Auth providers list. If those preconditions aren't met, the API throws a
+// recognizable error code which we surface as a "not available" message
+// rather than failing silently.
+var _mfaEnrollState = null;
+
+function refreshMfaStatus() {
+  var btn = document.getElementById('mfa-action-btn');
+  var desc = document.getElementById('mfa-status-desc');
+  if (!btn || !desc) return;
+  import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js").then(function(fbAuth){
+    var user = fbAuth.getAuth().currentUser;
+    if (!user) return;
+    try {
+      var enrolled = (fbAuth.multiFactor(user).enrolledFactors || []);
+      if (enrolled.length > 0) {
+        btn.textContent = 'Disable 2FA';
+        btn.classList.remove('primary');
+        btn.classList.add('danger');
+        desc.textContent = 'Enabled — using ' + (enrolled[0].displayName || 'authenticator app') + '. You\'ll be asked for a 6-digit code on every sign-in.';
+      } else {
+        btn.textContent = 'Set up 2FA';
+        btn.classList.remove('danger');
+        btn.classList.add('primary');
+      }
+    } catch (_) { /* multiFactor unavailable on this SDK build */ }
+  });
+}
+document.addEventListener('DOMContentLoaded', function(){ setTimeout(refreshMfaStatus, 1500); });
+
+async function handleMfaAction() {
+  var fbAuth = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+  var user = fbAuth.getAuth().currentUser;
+  if (!user) { showToast('Please sign in first'); return; }
+
+  var enrolled = [];
+  try { enrolled = fbAuth.multiFactor(user).enrolledFactors || []; } catch(_) {}
+
+  if (enrolled.length > 0) {
+    var ok = await swftConfirm(
+      'Disabling 2FA makes your account significantly easier for an attacker to compromise. Are you sure?',
+      'Disable 2FA',
+      '⚠️'
+    );
+    if (!ok) return;
+    try {
+      await fbAuth.multiFactor(user).unenroll(enrolled[0]);
+      showToast('2FA disabled');
+      refreshMfaStatus();
+    } catch (e) {
+      if (e.code === 'auth/requires-recent-login') {
+        var fresh = await reauthenticateCurrentUser();
+        if (fresh) {
+          try { await fbAuth.multiFactor(user).unenroll(enrolled[0]); refreshMfaStatus(); showToast('2FA disabled'); }
+          catch (e2) { showToast('Failed: ' + e2.message); }
+        }
+      } else { showToast('Failed: ' + e.message); }
+    }
+    return;
+  }
+
+  // Begin enrollment
+  document.getElementById('mfa-overlay').style.display = 'flex';
+  document.getElementById('mfa-step-loading').style.display = 'block';
+  document.getElementById('mfa-step-enroll').style.display = 'none';
+  document.getElementById('mfa-step-unsupported').style.display = 'none';
+  document.getElementById('mfa-error').style.display = 'none';
+
+  try {
+    var session = await fbAuth.multiFactor(user).getSession();
+    var secret = await fbAuth.TotpMultiFactorGenerator.generateSecret(session);
+    _mfaEnrollState = { secret: secret, fbAuth: fbAuth };
+    var qrUrl = secret.generateQrCodeUrl(user.email || 'SWFT user', 'SWFT CRM');
+    document.getElementById('mfa-qr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl);
+    document.getElementById('mfa-secret').textContent = secret.secretKey;
+    document.getElementById('mfa-step-loading').style.display = 'none';
+    document.getElementById('mfa-step-enroll').style.display = 'block';
+  } catch (e) {
+    document.getElementById('mfa-step-loading').style.display = 'none';
+    document.getElementById('mfa-step-unsupported').style.display = 'block';
+    var reason = document.getElementById('mfa-unsupported-reason');
+    if (e.code === 'auth/requires-recent-login') {
+      // Try a fresh reauth then retry once
+      closeMfaModal();
+      var fresh = await reauthenticateCurrentUser();
+      if (fresh) handleMfaAction();
+      return;
+    } else if (e.code === 'auth/operation-not-allowed' || /identity.platform|admin-restricted/i.test(e.message || '')) {
+      reason.textContent = 'TOTP-based 2FA needs to be enabled on this Firebase project (Identity Platform → Authentication → Multi-factor → Add TOTP). Once enabled, refresh this page.';
+    } else {
+      reason.textContent = 'Error: ' + (e.message || 'unknown');
+    }
+  }
+}
+
+async function confirmMfaEnrollment() {
+  if (!_mfaEnrollState) return;
+  var code = (document.getElementById('mfa-code').value || '').trim();
+  var errEl = document.getElementById('mfa-error');
+  errEl.style.display = 'none';
+  if (!/^\d{6}$/.test(code)) { errEl.textContent = 'Enter the 6-digit code from your authenticator app.'; errEl.style.display = 'block'; return; }
+  try {
+    var fbAuth = _mfaEnrollState.fbAuth;
+    var user = fbAuth.getAuth().currentUser;
+    var assertion = fbAuth.TotpMultiFactorGenerator.assertionForEnrollment(_mfaEnrollState.secret, code);
+    await fbAuth.multiFactor(user).enroll(assertion, 'Authenticator app');
+    closeMfaModal();
+    showToast('Two-factor authentication enabled');
+    refreshMfaStatus();
+  } catch (e) {
+    errEl.textContent = e.code === 'auth/invalid-verification-code'
+      ? 'Code didn\'t match. Try the latest one from your app.'
+      : 'Failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function closeMfaModal() {
+  document.getElementById('mfa-overlay').style.display = 'none';
+  _mfaEnrollState = null;
 }
 
 // ── Integrations ──

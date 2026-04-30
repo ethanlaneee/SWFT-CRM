@@ -343,8 +343,12 @@ router.get("/status", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// DELETE /api/me/delete-account — permanently delete all user data
-router.delete("/delete-account", async (req, res, next) => {
+// DELETE /api/me/delete-account — permanently delete all user data.
+// Requires the caller to have re-authenticated within the last 5 minutes
+// — even with a stolen ID token, an attacker can't nuke an account
+// without first knowing the user's password (or MFA factor).
+const { requireRecentAuth } = require("../middleware/requireRecentAuth");
+router.delete("/delete-account", requireRecentAuth(), async (req, res, next) => {
   try {
     const uid = req.uid;
 

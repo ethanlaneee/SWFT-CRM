@@ -1,0 +1,138 @@
+rules_version = '2';
+
+// SWFT CRM Firestore security rules.
+//
+// Threat model:
+//   • Server uses Firebase Admin SDK, which bypasses these rules entirely.
+//     All sensitive reads/writes (jobs, customers, invoices, messages, …)
+//     go through /api/* and are protected by the auth + checkAccess
+//     middleware in /server/middleware/. These rules therefore only need
+//     to defend the *direct client-side* surface area: anything the
+//     browser can hit at firestore.googleapis.com with a Firebase ID
+//     token instead of going through our server.
+//
+//   • Default posture: deny all. Every collection is explicitly enumerated
+//     so a new collection added in the future is locked until rules are
+//     updated.
+//
+//   • The only direct client access today (verified by grep over
+//     swft-*.html / swft-*.js) is:
+//       1. swft-login.html      — writes /users/{uid} on signup
+//       2. swft-checkout.html   — writes /users/{uid} after Stripe checkout
+//       3. swft-dashboard.html  — reads /users/{uid}
+//       4. swft-user-sync.js    — reads /users/{uid}
+//     All four scope themselves to the signed-in user's own document.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ────────────────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // True if the requester is a member of the org (orgId == uid means the
+    // user owns their own org; team members have orgId == another uid).
+    function inOrg(orgId) {
+      return signedIn() && (
+        request.auth.uid == orgId ||
+        (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId == orgId
+        )
+      );
+    }
+
+    // The signup pages (swft-login.html, swft-checkout.html) write the user
+    // doc directly with safe defaults for subscription state (isSubscribed
+    // = false, accountStatus = trialing, plan = starter, stripeCustomerId
+    // = ''). The server later upgrades these fields when the user actually
+    // pays. We must not let the client cross those defaults — otherwise a
+    // malicious user could mark themselves as a paying customer for free.
+    //
+    // Strategy: forbid any change to identity fields (role, orgId,
+    // permissions, demoAccount, stripeSubscriptionId) outright, and pin
+    // each subscription field to its allow-list of "safe default" values.
+    // The fields can be set/re-set to those defaults freely, but can never
+    // be escalated beyond them by the client.
+    function safeSubscriptionState(r) {
+      return (!('isSubscribed' in r) || r.isSubscribed == false)
+          && (!('accountStatus' in r) || r.accountStatus in ['trialing', 'expired'])
+          && (!('plan' in r) || r.plan in ['', 'starter'])
+          && (!('stripeCustomerId' in r) || r.stripeCustomerId == '')
+          && (!('role' in r) || r.role == 'owner')
+          && (!('demoAccount' in r) || r.demoAccount == false);
+    }
+
+    function safeUserUpdate() {
+      let r = request.resource.data;
+      let changed = r.diff(resource.data).affectedKeys();
+      let identityFields = ['orgId', 'permissions', 'stripeSubscriptionId'];
+      return !changed.hasAny(identityFields) && safeSubscriptionState(r);
+    }
+
+    // ─── /users/{uid} ───────────────────────────────────────────────────────
+    // Users may read and write their own profile. They cannot create a doc
+    // for any uid other than their own, cannot escalate their role/plan, and
+    // cannot read other users' profiles. Team-mate name lookups go through
+    // the server (which uses admin SDK).
+    match /users/{uid} {
+      allow get:    if isOwner(uid);
+      allow list:   if false; // never allow client-side enumeration of users
+      allow create: if isOwner(uid)
+                       && request.resource.data.uid == uid
+                       && safeSubscriptionState(request.resource.data);
+      allow update: if isOwner(uid) && safeUserUpdate();
+      allow delete: if false; // account deletion goes through server
+    }
+
+    // ─── Everything else — locked down ──────────────────────────────────────
+    // All operational data is read/written through /api/* using the Admin
+    // SDK. No client should ever talk to these collections directly.
+    // Listing them explicitly (instead of relying solely on the catch-all
+    // below) makes the intent visible at review time.
+    match /jobs/{doc=**}                 { allow read, write: if false; }
+    match /customers/{doc=**}            { allow read, write: if false; }
+    match /quotes/{doc=**}               { allow read, write: if false; }
+    match /invoices/{doc=**}             { allow read, write: if false; }
+    match /schedule/{doc=**}             { allow read, write: if false; }
+    match /messages/{doc=**}             { allow read, write: if false; }
+    match /conversations/{doc=**}        { allow read, write: if false; }
+    match /conversationModes/{doc=**}    { allow read, write: if false; }
+    match /notifications/{doc=**}        { allow read, write: if false; }
+    match /broadcasts/{doc=**}           { allow read, write: if false; }
+    match /scheduledMessages/{doc=**}    { allow read, write: if false; }
+    match /automations/{doc=**}          { allow read, write: if false; }
+    match /tasks/{doc=**}                { allow read, write: if false; }
+    match /team/{doc=**}                 { allow read, write: if false; }
+    match /teamChats/{doc=**}            { allow read, write: if false; }
+    match /serviceRequests/{doc=**}      { allow read, write: if false; }
+    match /intakeForms/{doc=**}          { allow read, write: if false; }
+    match /jobPhotos/{doc=**}            { allow read, write: if false; }
+    match /callLogs/{doc=**}             { allow read, write: if false; }
+    match /phoneSettings/{doc=**}        { allow read, write: if false; }
+    match /aiSettings/{doc=**}           { allow read, write: if false; }
+    match /orgs/{doc=**}                 { allow read, write: if false; }
+    match /orgRoles/{doc=**}             { allow read, write: if false; }
+    match /usage/{doc=**}                { allow read, write: if false; }
+    match /unsubscribes/{doc=**}         { allow read, write: if false; }
+    match /ses_suppressions/{doc=**}     { allow read, write: if false; }
+    match /metaConnectTemp/{doc=**}      { allow read, write: if false; }
+    match /outreach_config/{doc=**}      { allow read, write: if false; }
+    match /outreach_emails/{doc=**}      { allow read, write: if false; }
+    match /outreach_leads/{doc=**}       { allow read, write: if false; }
+    match /loginAttempts/{doc=**}        { allow read, write: if false; }
+    match /securityAudit/{doc=**}        { allow read, write: if false; }
+
+    // Catch-all: any collection not listed above is denied. Adding a new
+    // collection requires an explicit rule update, which forces a security
+    // review.
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

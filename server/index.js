@@ -73,11 +73,111 @@ app.set("trust proxy", 1);
 app.use(compression({ level: 6 }));
 
 // ── Security headers ──
+// CSP is enabled with structural protections (frame-ancestors, base-uri,
+// form-action, object-src) which defend against clickjacking and base-tag
+// hijacking even with 'unsafe-inline' present. 'unsafe-inline' for scripts
+// stays because the frontend has thousands of inline event handlers and
+// inline <script> blocks; removing it would require a full rewrite of every
+// HTML page. The structural directives below give us the bulk of CSP's
+// real-world value without that.
+const CSP_DIRECTIVES = {
+  defaultSrc: ["'self'"],
+  scriptSrc: [
+    "'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "https://www.gstatic.com",
+    "https://*.firebaseio.com",
+    "https://*.googleapis.com",
+    "https://js.stripe.com",
+    "https://m.stripe.network",
+    "https://connect.facebook.net",
+    "https://www.facebook.com",
+    "https://challenges.cloudflare.com",
+    "https://cdnjs.cloudflare.com",
+    "https://maps.googleapis.com",
+    "https://www.google.com",
+    "https://www.googletagmanager.com",
+    "https://www.google-analytics.com",
+  ],
+  scriptSrcAttr: ["'unsafe-inline'"],
+  styleSrc: [
+    "'self'",
+    "'unsafe-inline'",
+    "https://fonts.googleapis.com",
+    "https://cdnjs.cloudflare.com",
+  ],
+  fontSrc: [
+    "'self'",
+    "data:",
+    "https://fonts.gstatic.com",
+    "https://cdnjs.cloudflare.com",
+  ],
+  imgSrc: [
+    "'self'",
+    "data:",
+    "blob:",
+    "https:",  // job photos, customer avatars, third-party logos — too many sources to enumerate
+  ],
+  connectSrc: [
+    "'self'",
+    "https://*.googleapis.com",
+    "https://*.firebaseio.com",
+    "https://*.firebaseapp.com",
+    "https://identitytoolkit.googleapis.com",
+    "https://securetoken.googleapis.com",
+    "https://firestore.googleapis.com",
+    "https://firebasestorage.googleapis.com",
+    "https://api.stripe.com",
+    "https://api.open-meteo.com",
+    "https://wttr.in",
+    "https://api.qrserver.com",
+    "https://api.pwnedpasswords.com",
+    "https://graph.facebook.com",
+    "https://www.facebook.com",
+    "https://challenges.cloudflare.com",
+    "wss://*.firebaseio.com",
+  ],
+  frameSrc: [
+    "'self'",
+    "https://js.stripe.com",
+    "https://hooks.stripe.com",
+    "https://m.stripe.network",
+    "https://*.firebaseapp.com",
+    "https://challenges.cloudflare.com",
+    "https://www.google.com",
+    "https://calendar.google.com",
+  ],
+  workerSrc: ["'self'", "blob:"],
+  childSrc: ["'self'", "blob:"],
+  mediaSrc: ["'self'", "blob:", "https:"],
+  objectSrc: ["'none'"],
+  baseUri: ["'self'"],
+  formAction: ["'self'"],
+  frameAncestors: ["'self'"],
+  upgradeInsecureRequests: [],
+};
+
 app.use(helmet({
-  contentSecurityPolicy: false,  // disabled — frontend uses inline scripts and external CDNs
+  contentSecurityPolicy: { useDefaults: false, directives: CSP_DIRECTIVES },
   crossOriginEmbedderPolicy: false,  // disabled — Stripe embeds
-  hsts: { maxAge: 63072000, includeSubDomains: true },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // Google sign-in popup
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  hsts: { maxAge: 63072000, includeSubDomains: true, preload: true },
 }));
+
+// Permissions-Policy: lock down powerful browser APIs we don't use
+app.use((req, res, next) => {
+  res.setHeader(
+    "Permissions-Policy",
+    "accelerometer=(), autoplay=(), camera=(self), encrypted-media=(), " +
+    "fullscreen=(self), geolocation=(self), gyroscope=(), magnetometer=(), " +
+    "microphone=(self), midi=(), payment=(self \"https://js.stripe.com\"), " +
+    "picture-in-picture=(), sync-xhr=(self), usb=(), interest-cohort=()"
+  );
+  next();
+});
 
 // ── CORS — restrict to production domain ──
 const APP_URL = process.env.APP_URL || "https://goswft.com";
@@ -106,6 +206,21 @@ const authLimiter = rateLimit({
 });
 app.use("/api/me/status", authLimiter);
 app.use("/api/billing/create-checkout-session", authLimiter);
+
+// ── Auth-security endpoints (lockout, HIBP, session revocation) ──
+// Public-facing lockout endpoints get an extra-tight per-IP limit on top of
+// the apiLimiter. 30 precheck/attempt calls per 15 minutes per IP — enough
+// for normal humans (and slow typists) but quickly throttles botnets.
+const authSecurityLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please try again later." },
+});
+app.use("/api/auth/login-precheck", authSecurityLimiter);
+app.use("/api/auth/login-attempt", authSecurityLimiter);
+app.use("/api/auth/check-password", authSecurityLimiter);
 
 // ── Stripe webhooks — MUST be registered before express.json() ──
 // Stripe requires the raw request body to verify the webhook signature.
@@ -393,6 +508,10 @@ app.use(express.static(staticRoot, {
     }
   }
 }));
+
+// ── Auth-security routes (lockout, HIBP, revoke-all) ──
+const { router: authSecurityRouter } = require("./routes/authSecurity");
+app.use("/api/auth", authSecurityRouter);
 
 // ── Login hint — public, no auth ──
 // Looks up a Firestore user by email and returns only first name + initials

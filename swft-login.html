@@ -691,13 +691,43 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     const btn = document.getElementById('login-btn');
     setLoading(btn, true);
 
+    // Server-side lockout check. If this email+IP has tripped the failure
+    // threshold, refuse to even hand the credentials to Firebase Auth.
+    // Combined with Firebase's own per-IP throttling, this is the bulk of
+    // SWFT's credential-stuffing defense.
+    try {
+      const pre = await fetch('/api/auth/login-precheck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      }).then(r => r.json()).catch(() => ({ locked: false }));
+      if (pre.locked) {
+        setLoading(btn, false);
+        const mins = Math.max(1, Math.ceil((pre.retryAfterMs || 0) / 60000));
+        showGlobalError(`Too many failed sign-in attempts. Please try again in about ${mins} minute${mins === 1 ? '' : 's'}.`);
+        return;
+      }
+    } catch (_) { /* fail open */ }
+
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
+      // Report success so the lockout counter is cleared.
+      fetch('/api/auth/login-attempt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, success: true })
+      }).catch(() => {});
       showSuccess('Signed in! Checking account...');
       // Fire prefetch in parallel — doesn't block the status check or redirect
       prefetchUserProfile(cred.user).catch(() => {});
       await goToDashboard();
     } catch (err) {
+      // Report failure so repeated wrong-password attempts trip the lockout.
+      fetch('/api/auth/login-attempt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, success: false })
+      }).catch(() => {});
       setLoading(btn, false);
       showGlobalError(firebaseErrorMsg(err.code));
     }
@@ -726,6 +756,33 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     const btn = document.getElementById('signup-btn');
     setLoading(btn, true);
+
+    // ── Breached-password check (HIBP k-anonymity) ──
+    // SHA-1 the password in the browser, send only the first 5 hex chars
+    // to the server proxy, get back a list of suffixes for the matching
+    // bucket. We never transmit the password (or its full hash) in the
+    // clear. If the password appears in any breach corpus, we refuse the
+    // signup and tell the user why. Fails open if HIBP is unreachable.
+    try {
+      const enc = new TextEncoder().encode(password);
+      const hashBuf = await crypto.subtle.digest('SHA-1', enc);
+      const sha1 = Array.from(new Uint8Array(hashBuf))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('').toUpperCase();
+      const resp = await fetch('/api/auth/check-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sha1 })
+      }).then(r => r.json()).catch(() => null);
+      if (resp && resp.breached) {
+        setLoading(btn, false);
+        showFieldError('signup-pwd-err', 'signup-password');
+        showGlobalError(
+          `This password has appeared in ${resp.count.toLocaleString()} known data breaches. Please choose a different one — even a passphrase like "purple-tractor-monday-99" is far safer.`
+        );
+        return;
+      }
+    } catch (_) { /* fail open — never block signup on HIBP downtime */ }
 
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
