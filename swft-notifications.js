@@ -83,6 +83,15 @@
   var _notifications = [];
   var _isOpen = false;
   var _bellBtn = null;
+  var LAST_SEEN_KEY = 'swft_notifs_last_seen';
+
+  function getLastSeen() {
+    try { return parseInt(localStorage.getItem(LAST_SEEN_KEY) || '0', 10) || 0; }
+    catch (e) { return 0; }
+  }
+  function setLastSeen(ts) {
+    try { localStorage.setItem(LAST_SEEN_KEY, String(ts)); } catch (e) {}
+  }
 
   // Icon map by type
   var TYPE_ICONS = {
@@ -137,14 +146,26 @@
         '</div>' +
       '</div>';
     }).join('');
-    updateBadge(_notifications.some(function(n){ return !n.read; }));
+    updateBadge();
   }
 
-  function updateBadge(hasUnread) {
-    document.querySelectorAll('.badge-dot').forEach(function(d) {
-      d.style.display = hasUnread ? '' : 'none';
+  // The badge + bell-ring fire only when there is at least one *unread*
+  // notification that arrived after the last time the user opened the
+  // dropdown. Items that are still unread but already-seen don't ring
+  // the bell — opening the dropdown is enough to silence it.
+  function hasUnseenNew() {
+    var lastSeen = getLastSeen();
+    return _notifications.some(function(n) {
+      return !n.read && (n.createdAt || 0) > lastSeen;
     });
-    if (_bellBtn) _bellBtn.classList.toggle('bell-ringing', hasUnread);
+  }
+
+  function updateBadge() {
+    var alert = hasUnseenNew();
+    document.querySelectorAll('.badge-dot').forEach(function(d) {
+      d.style.display = alert ? '' : 'none';
+    });
+    if (_bellBtn) _bellBtn.classList.toggle('bell-ringing', alert);
   }
 
   window._notifClick = function(id, link) {
@@ -195,6 +216,11 @@
             dropdown.style.top  = (rect.bottom + 8) + 'px';
             dropdown.style.right = (window.innerWidth - rect.right) + 'px';
             loadNotifications(); // refresh on open
+            // Mark everything currently in the bell as "seen" so the
+            // badge clears immediately. Anything that arrives later
+            // (createdAt > now) will re-light the bell on next poll.
+            setLastSeen(Date.now());
+            updateBadge();
           }
         });
       }

@@ -116,6 +116,17 @@ router.get("/", async (req, res, next) => {
 });
 
 // PUT /api/me
+//
+// One source of truth for company info: every consumer (invoices, quotes,
+// public intake, phone agent, AI prompts, broadcast email) reads from the
+// same `users/{uid}` doc that this handler writes. Two pairs of fields
+// look like duplicates but are intentional and must stay separate:
+//   • `email` (Firebase Auth login, self-healed in GET above)
+//     vs `companyEmail` (user-edited contact email shown on invoices /
+//     used as outbound sender fallback).
+//   • `address` (mailing address shown on invoices)
+//     vs `bizArea` (free-text service-territory description for AI prompts).
+// `website` is the canonical URL — there is no `bizWebsite`.
 router.put("/", async (req, res, next) => {
   try {
     const updates = {};
@@ -133,7 +144,7 @@ router.put("/", async (req, res, next) => {
       // Logo
       "companyLogo",
       // Business Profile for AI
-      "bizAbout", "bizServices", "bizArea", "bizHours", "bizWebsite", "bizNotes",
+      "bizAbout", "bizServices", "bizArea", "bizHours", "bizNotes",
       "bizPricing", "bizPaymentMethods", "bizBookingLink", "bizFaqs",
       // AI custom instructions
       "aiCustomInstructions",
