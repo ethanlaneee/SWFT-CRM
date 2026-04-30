@@ -332,22 +332,31 @@
 
     // Inject SWFT logo before "TEAM CHAT" title
     var chatListTitle = document.querySelector('.chat-list-title');
-    if (chatListTitle && chatListTitle.parentNode) {
+    var chatListHeader = document.querySelector('.chat-list-header');
+    if (chatListTitle && chatListHeader) {
       var tcLogo = document.createElement('span');
       tcLogo.className = 'mob-topbar-logo';
-      tcLogo.innerHTML = 'SWFT<em>.</em>';
-      chatListTitle.parentNode.insertBefore(tcLogo, chatListTitle);
+      tcLogo.innerHTML = 'SWFT<em></em>';
+      chatListHeader.insertBefore(tcLogo, chatListTitle);
     }
 
-    // Inject "+" new chat button into thread list header
-    var chatListHeader = document.querySelector('.chat-list-header');
+    // Inject "+" new chat button into thread list header (topbar-right style)
     if (chatListHeader) {
+      var topbarRight = document.createElement('div');
+      topbarRight.className = 'topbar-right';
       var newChatBtn = document.createElement('button');
-      newChatBtn.className = 'mob-new-btn';
+      newChatBtn.className = 'tc-new-chat-btn';
       newChatBtn.setAttribute('aria-label', 'New chat');
-      newChatBtn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      newChatBtn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New Chat</span>';
       newChatBtn.onclick = function () { if (typeof openNewChatModal === 'function') openNewChatModal(); };
-      chatListHeader.appendChild(newChatBtn);
+      topbarRight.appendChild(newChatBtn);
+      chatListHeader.appendChild(topbarRight);
+
+      // Move search bar below the header (outside of it) so header stays 54px tall
+      var chatSearch = chatListHeader.querySelector('.chat-list-search');
+      if (chatSearch) {
+        chatListHeader.parentNode.insertBefore(chatSearch, chatListHeader.nextSibling);
+      }
     }
 
     // Replace tc-list-toggle with back arrow matching mob-chat-back style
