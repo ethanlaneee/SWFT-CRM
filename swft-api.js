@@ -346,6 +346,17 @@ const API = {
     optimizeRoute:  (data)     => apiFetch("/api/tracker/optimize-route", { method: "POST", body: JSON.stringify(data) }),
   },
 
+  // ── Door Knocking ──
+  doors: {
+    list:      ()         => apiFetch("/api/doors"),
+    get:       (id)       => apiFetch(`/api/doors/${id}`),
+    create:    (data)     => apiFetch("/api/doors",         { method: "POST", body: JSON.stringify(data) }),
+    logVisit:  (id, data) => apiFetch(`/api/doors/${id}/visit`, { method: "POST", body: JSON.stringify(data) }),
+    update:    (id, data) => apiFetch(`/api/doors/${id}`,   { method: "PUT",  body: JSON.stringify(data) }),
+    delete:    (id)       => apiFetch(`/api/doors/${id}`,   { method: "DELETE" }),
+    statsToday:()         => apiFetch("/api/doors/stats/today"),
+  },
+
   // ── Automations ──
   automations: {
     list:    ()         => apiFetch("/api/automations"),
