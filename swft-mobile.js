@@ -60,6 +60,12 @@
       ]
     },
     {
+      label: 'Sales',
+      items: [
+        { id: 'swft-doors', label: 'SWFT Doors', svg: svgWrap('<path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><line x1="3" y1="21" x2="21" y2="21"/><circle cx="15" cy="12" r="1" fill="currentColor"/>') }
+      ]
+    },
+    {
       label: 'Admin',
       items: [
         { id: 'swft-team',         label: 'Team',     svg: svgWrap('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>') },
