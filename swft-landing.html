@@ -727,6 +727,8 @@ section{position:relative;z-index:1;}
 .pt-sub{font-size:10px;color:var(--gray);font-weight:400;}
 .pt-cta-row td{padding:16px 14px;border-bottom:none;}
 .pt-cta-row .pt-featured{background:rgba(200,241,53,0.03);}
+/* Mobile tabs — hidden on desktop */
+.pt-mobile-tabs{display:none;}
 
 /* ── VALUE STACK ── */
 .value-breakdown{padding:100px 0 40px;}
@@ -911,6 +913,28 @@ section{position:relative;z-index:1;}
   .compare{padding:60px 0 80px;}
   .pricing-grid{grid-template-columns:1fr;max-width:400px;}
   .pricing{padding:60px 0 80px;}
+  /* Pricing table mobile — tab switcher */
+  .pt-mobile-tabs{
+    display:flex;gap:6px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;
+  }
+  .pt-tab{
+    padding:7px 14px;border-radius:8px;border:1px solid var(--border2);
+    background:var(--surface);color:var(--gray);font-size:13px;font-weight:600;
+    cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
+  }
+  .pt-tab-active{background:var(--green-dim);border-color:rgba(200,241,53,0.35);color:var(--green);}
+  /* On mobile: hide non-active plan columns */
+  .pricing-table [data-col]:not(.pt-col-active){display:none;}
+  /* Group row colspan collapses to 2 on mobile */
+  .pricing-table .pt-group-row td{colspan:2;}
+  /* Make first column take remaining space */
+  .pricing-table thead th:first-child{width:55%;}
+  /* Active featured column keeps its highlight */
+  .pricing-table [data-col].pt-col-active.pt-featured{
+    background:rgba(200,241,53,0.05);
+    border-left:1px solid rgba(200,241,53,0.2);
+    border-right:1px solid rgba(200,241,53,0.2);
+  }
 }
 </style>
 <!-- ── CHAT BUBBLE STYLES ── -->
@@ -1527,31 +1551,39 @@ function toggleSidebar(){
     </div>
 
     <!-- Comparison table -->
+    <!-- Mobile plan tabs -->
+    <div class="pt-mobile-tabs" id="ptMobileTabs">
+      <button class="pt-tab" data-col="1" onclick="ptSelectCol(1)">Core</button>
+      <button class="pt-tab pt-tab-active" data-col="2" onclick="ptSelectCol(2)">SWFT+</button>
+      <button class="pt-tab" data-col="3" onclick="ptSelectCol(3)">Pro</button>
+      <button class="pt-tab" data-col="4" onclick="ptSelectCol(4)">Enterprise</button>
+    </div>
+
     <div class="pricing-table-wrap reveal" id="pricingTableWrap">
       <table class="pricing-table">
         <thead>
           <tr>
             <th class="pt-feature-col"></th>
-            <th>
+            <th data-col="1">
               <div class="pt-plan-name">SWFT CORE</div>
               <div class="pt-price"><span class="pt-dollar">$</span><span class="monthly-price">149</span><span class="annual-price">119</span><span class="pt-period">/mo</span></div>
               <div class="pt-desc">Solo operators</div>
               <a class="pt-btn secondary" href="/swft-checkout?plan=starter" data-plan="starter">Start Free Trial</a>
             </th>
-            <th class="pt-featured">
+            <th class="pt-featured" data-col="2">
               <div class="pt-popular-badge">MOST POPULAR</div>
               <div class="pt-plan-name">SWFT+</div>
               <div class="pt-price"><span class="pt-dollar">$</span><span class="monthly-price">349</span><span class="annual-price">279</span><span class="pt-period">/mo</span></div>
               <div class="pt-desc">Growing teams</div>
               <a class="pt-btn primary" href="/swft-checkout?plan=pro" data-plan="pro">Start Free Trial</a>
             </th>
-            <th>
+            <th data-col="3">
               <div class="pt-plan-name">SWFT PRO</div>
               <div class="pt-price"><span class="pt-dollar">$</span><span class="monthly-price">599</span><span class="annual-price">479</span><span class="pt-period">/mo</span></div>
               <div class="pt-desc">High-volume ops</div>
               <a class="pt-btn secondary" href="/swft-checkout?plan=business" data-plan="business">Start Free Trial</a>
             </th>
-            <th>
+            <th data-col="4">
               <div class="pt-plan-name">ENTERPRISE</div>
               <div class="pt-price pt-custom">Custom</div>
               <div class="pt-desc">50+ people</div>
@@ -1562,41 +1594,41 @@ function toggleSidebar(){
         <tbody>
           <!-- Core -->
           <tr class="pt-group-row"><td colspan="5">Core Features</td></tr>
-          <tr><td>Full CRM &amp; customer management</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
-          <tr><td>Quotes &amp; invoicing</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
-          <tr><td>Job scheduling &amp; calendar sync</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
-          <tr><td>Gmail &amp; Google Calendar</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
-          <tr><td>QuickBooks integration</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
-          <tr><td>AI estimator &amp; follow-ups</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
-          <tr><td>Data import</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
-          <tr><td>16-day weather forecasts</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>Full CRM &amp; customer management</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
+          <tr><td>Quotes &amp; invoicing</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
+          <tr><td>Job scheduling &amp; calendar sync</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
+          <tr><td>Gmail &amp; Google Calendar</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
+          <tr><td>QuickBooks integration</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
+          <tr><td>AI estimator &amp; follow-ups</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
+          <tr><td>Data import</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
+          <tr><td>16-day weather forecasts</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td><td data-col="4" class="pt-check">&#10003;</td></tr>
           <!-- Usage -->
           <tr class="pt-group-row"><td colspan="5">Usage</td></tr>
-          <tr><td>Users</td><td>1</td><td class="pt-featured pt-green">10 <span class="pt-sub">(+$23/mo ea)</span></td><td class="pt-green">25 <span class="pt-sub">(+$10/mo ea)</span></td><td class="pt-green">Unlimited</td></tr>
-          <tr><td>AI messages / month</td><td>250</td><td class="pt-featured pt-green">1,000</td><td class="pt-green">Unlimited</td><td class="pt-green">Unlimited</td></tr>
-          <tr><td>SMS</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-green">Unlimited</td><td class="pt-green">Unlimited</td></tr>
-          <tr><td>Broadcasts</td><td class="pt-dash">—</td><td class="pt-featured pt-green">25 / mo</td><td class="pt-green">Unlimited</td><td class="pt-green">Unlimited</td></tr>
+          <tr><td>Users</td><td data-col="1">1</td><td data-col="2" class="pt-featured pt-green">10 <span class="pt-sub">(+$23/mo ea)</span></td><td data-col="3" class="pt-green">25 <span class="pt-sub">(+$10/mo ea)</span></td><td data-col="4" class="pt-green">Unlimited</td></tr>
+          <tr><td>AI messages / month</td><td data-col="1">250</td><td data-col="2" class="pt-featured pt-green">1,000</td><td data-col="3" class="pt-green">Unlimited</td><td data-col="4" class="pt-green">Unlimited</td></tr>
+          <tr><td>SMS</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-green">Unlimited</td><td data-col="4" class="pt-green">Unlimited</td></tr>
+          <tr><td>Broadcasts</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-featured pt-green">25 / mo</td><td data-col="3" class="pt-green">Unlimited</td><td data-col="4" class="pt-green">Unlimited</td></tr>
           <!-- Team -->
           <tr class="pt-group-row"><td colspan="5">Team</td></tr>
-          <tr><td>Team management &amp; chat</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
-          <tr><td>Team Tracker</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>Team management &amp; chat</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td><td data-col="4" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>Team Tracker</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td><td data-col="4" class="pt-check pt-green">&#10003;</td></tr>
           <!-- AI -->
           <tr class="pt-group-row"><td colspan="5">AI &amp; Automation</td></tr>
-          <tr><td>AI Agents</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>AI Agents</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td><td data-col="4" class="pt-check pt-green">&#10003;</td></tr>
           <!-- Integrations -->
           <tr class="pt-group-row"><td colspan="5">Integrations</td></tr>
-          <tr><td>Facebook &amp; Instagram</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>Facebook &amp; Instagram</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td><td data-col="4" class="pt-check pt-green">&#10003;</td></tr>
           <!-- Enterprise -->
           <tr class="pt-group-row"><td colspan="5">Enterprise</td></tr>
-          <tr><td>Dedicated account manager</td><td class="pt-dash">—</td><td class="pt-dash pt-featured">—</td><td class="pt-dash">—</td><td class="pt-check pt-green">&#10003;</td></tr>
-          <tr><td>Custom onboarding &amp; training</td><td class="pt-dash">—</td><td class="pt-dash pt-featured">—</td><td class="pt-dash">—</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>Dedicated account manager</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-dash pt-featured">—</td><td data-col="3" class="pt-dash">—</td><td data-col="4" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>Custom onboarding &amp; training</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-dash pt-featured">—</td><td data-col="3" class="pt-dash">—</td><td data-col="4" class="pt-check pt-green">&#10003;</td></tr>
           <!-- CTA row -->
           <tr class="pt-cta-row">
             <td></td>
-            <td><a class="pt-btn secondary" href="/swft-checkout?plan=starter" data-plan="starter">Start Free Trial</a></td>
-            <td class="pt-featured"><a class="pt-btn primary" href="/swft-checkout?plan=pro" data-plan="pro">Start Free Trial</a></td>
-            <td><a class="pt-btn secondary" href="/swft-checkout?plan=business" data-plan="business">Start Free Trial</a></td>
-            <td><a class="pt-btn secondary" href="/swft-contact">Contact Sales</a></td>
+            <td data-col="1"><a class="pt-btn secondary" href="/swft-checkout?plan=starter" data-plan="starter">Start Free Trial</a></td>
+            <td data-col="2" class="pt-featured"><a class="pt-btn primary" href="/swft-checkout?plan=pro" data-plan="pro">Start Free Trial</a></td>
+            <td data-col="3"><a class="pt-btn secondary" href="/swft-checkout?plan=business" data-plan="business">Start Free Trial</a></td>
+            <td data-col="4"><a class="pt-btn secondary" href="/swft-contact">Contact Sales</a></td>
           </tr>
         </tbody>
       </table>
@@ -1701,6 +1733,29 @@ document.querySelectorAll('.compare-col.reveal').forEach((el, i) => { el.dataset
       const plan = a.dataset.plan;
       a.href = '/swft-checkout?plan=' + plan + (isAnnual ? '&billing=annual' : '');
     });
+  });
+})();
+
+/* ── Pricing table mobile column switcher ── */
+function ptSelectCol(col) {
+  // Update tab active states
+  document.querySelectorAll('.pt-tab').forEach(function(btn) {
+    btn.classList.toggle('pt-tab-active', parseInt(btn.dataset.col) === col);
+  });
+  // Show only the selected column
+  document.querySelectorAll('.pricing-table [data-col]').forEach(function(el) {
+    const active = parseInt(el.dataset.col) === col;
+    el.classList.toggle('pt-col-active', active);
+  });
+}
+// Init: show SWFT+ (col 2) by default on mobile
+(function() {
+  if (window.innerWidth <= 768) ptSelectCol(2);
+  window.addEventListener('resize', function() {
+    if (window.innerWidth <= 768) {
+      var hasActive = document.querySelector('.pricing-table [data-col].pt-col-active');
+      if (!hasActive) ptSelectCol(2);
+    }
   });
 })();
 </script>
