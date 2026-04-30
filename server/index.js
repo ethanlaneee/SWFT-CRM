@@ -577,6 +577,26 @@ app.post("/api/demo-cleanup", demoCleanupLimiter, async (req, res) => {
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
 
+// ONE-TIME purge — remove after running
+app.post("/api/admin/purge-demos2", async (req, res) => {
+  if (req.headers["x-purge-secret"] !== "d9f3a1c820be74e6f5120d94c3b8ea57") return res.status(403).end();
+  const { db, authAdmin } = require("./firebase");
+  const snap = await db.collection("users").where("demoAccount", "==", true).get();
+  let deleted = 0;
+  for (const doc of snap.docs) {
+    const uid = doc.id;
+    for (const col of ["customers","jobs","quotes","invoices","schedule","messages","scheduledMessages","followups"]) {
+      const s = await db.collection(col).where("userId","==",uid).get();
+      if (!s.empty) { const b=db.batch(); s.docs.forEach(d=>b.delete(d.ref)); await b.commit(); }
+    }
+    try { const cs=await db.collection("conversations").doc(uid).collection("messages").get(); if(!cs.empty){const b=db.batch();cs.docs.forEach(d=>b.delete(d.ref));await b.commit();} await db.collection("conversations").doc(uid).delete(); } catch(_){}
+    await db.collection("users").doc(uid).delete();
+    try { await authAdmin.deleteUser(uid); } catch(_){}
+    deleted++;
+  }
+  res.json({ deleted });
+});
+
 app.use("/api/me",        auth,               require("./routes/user"));
 app.use("/api/2fa",       auth,               require("./routes/twoFactor"));
 app.use("/api/auth/google", auth,             googleAuthRouter);

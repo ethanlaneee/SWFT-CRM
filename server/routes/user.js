@@ -368,7 +368,7 @@ router.get("/status", async (req, res, next) => {
       });
     }
 
-    return res.json({ accountStatus, allowed: true });
+    return res.json({ accountStatus, allowed: true, trialEndDate: data.trialEndDate || null });
   } catch (err) { next(err); }
 });
 

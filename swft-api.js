@@ -102,6 +102,43 @@ async function getAuthToken() {
   return token;
 }
 
+// ── Trial banner ──
+// Injected once into the page when account is trialing.
+function _showTrialBanner(daysLeft) {
+  if (document.getElementById("swft-trial-banner")) return;
+  const urgent = daysLeft <= 3;
+  const banner = document.createElement("div");
+  banner.id = "swft-trial-banner";
+  banner.style.cssText = [
+    "position:fixed", "top:0", "left:0", "right:0", "z-index:9990",
+    `background:${urgent ? "#ff5252" : "#c8f135"}`,
+    `color:${urgent ? "#fff" : "#0a0a0a"}`,
+    "font-size:13px", "font-weight:600", "font-family:'DM Sans',sans-serif",
+    "padding:9px 20px", "display:flex", "align-items:center", "justify-content:center",
+    "gap:12px", "box-shadow:0 2px 12px rgba(0,0,0,0.3)",
+  ].join(";");
+  const msg = daysLeft <= 0
+    ? "Your free trial has ended."
+    : `Free trial: ${daysLeft} day${daysLeft === 1 ? "" : "s"} remaining.`;
+  banner.innerHTML = `<span>${msg}</span><a href="swft-billing" style="background:${urgent?"rgba(255,255,255,0.25)":"rgba(0,0,0,0.15)"};color:inherit;text-decoration:none;padding:4px 12px;border-radius:6px;font-size:12px;white-space:nowrap;">Upgrade Now →</a>`;
+  // Push page content down so the banner doesn't overlap
+  document.addEventListener("DOMContentLoaded", () => {
+    document.body.style.paddingTop = (parseInt(document.body.style.paddingTop || 0) + 40) + "px";
+    document.body.prepend(banner);
+  });
+  if (document.readyState !== "loading") {
+    document.body.style.paddingTop = (parseInt(document.body.style.paddingTop || 0) + 40) + "px";
+    document.body.prepend(banner);
+  }
+}
+
+// ── Redirect to billing on trial expiry ──
+function _handleTrialExpired() {
+  const here = window.location.pathname + window.location.search;
+  if (here.includes("swft-billing") || here.includes("swft-checkout") || here.includes("swft-login")) return;
+  window.location.href = "swft-billing";
+}
+
 // ── Base fetch wrapper ──
 async function apiFetch(path, options = {}, _retried) {
   const token = await getAuthToken();
@@ -119,6 +156,11 @@ async function apiFetch(path, options = {}, _retried) {
     throw new Error(res.ok ? "Empty response from server" : `Server error (${res.status})`);
   }
   if (!res.ok) {
+    // Trial expired / payment required — redirect to billing immediately
+    if (res.status === 402) {
+      _handleTrialExpired();
+      throw new Error(data.message || "Subscription required.");
+    }
     // On 401, force-refresh the token and retry once
     if (res.status === 401 && !_retried) {
       _cachedToken = null;
@@ -375,8 +417,8 @@ const API = {
 };
 
 // ── Auth guard — call on every protected page ──
-// Redirects to login if not signed in, but only after Firebase has
-// definitively settled the initial auth state.
+// Redirects to login if not signed in. Checks account/trial status and either
+// shows a countdown banner (trialing) or redirects to billing (expired).
 async function requireAuth() {
   const user = await waitForAuthUser();
   if (!user) {
@@ -384,5 +426,28 @@ async function requireAuth() {
     window.location.href = "swft-login";
     return;
   }
+
+  // Check account status — non-blocking so it doesn't slow page render.
+  // Billing + checkout pages are exempt so users can always upgrade.
+  const here = window.location.pathname;
+  const exempt = here.includes("swft-billing") || here.includes("swft-checkout") || here.includes("swft-login");
+  if (!exempt) {
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/me/status", { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 402) {
+        _handleTrialExpired();
+        return user;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        if (data.accountStatus === "trialing" && data.trialEndDate) {
+          const daysLeft = Math.ceil((data.trialEndDate - Date.now()) / (1000 * 60 * 60 * 24));
+          _showTrialBanner(Math.max(0, daysLeft));
+        }
+      }
+    } catch (_) { /* network error — don't block */ }
+  }
+
   return user;
 }
