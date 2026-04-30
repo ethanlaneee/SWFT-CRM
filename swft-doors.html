@@ -133,6 +133,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .door-row:hover{background:var(--surface2);}
 .door-row.selected{background:rgba(200,241,53,0.06);}
 .door-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.door-step{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--green);color:#0a0a0a;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;margin-top:1px;}
 .door-info{flex:1;min-width:0;}
 .door-addr{font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .door-meta{font-size:11px;color:var(--gray);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -363,6 +364,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
             <option value="sale">Sales</option>
           </select>
           <select class="control-select" id="sort-select" aria-label="Sort doors">
+            <option value="optimize">Walking route (nearest first)</option>
             <option value="addr_desc">Address # — high to low</option>
             <option value="addr_asc">Address # — low to high</option>
             <option value="recent">Most recent</option>
@@ -525,6 +527,8 @@ var _activeSort = 'addr_desc';
 var _selectedDoorId = null;
 var _selectMode = false;          // when true, rows show checkboxes for multi-select
 var _selectedIds = {};            // map of id -> true
+var _userLocation = null;         // cached { lat, lng } for nearest-neighbor sort
+var _optimizedOrder = {};         // map of door id -> step number (1-based) when sort='optimize'
 var _detailDoor = null;        // door currently open in detail modal
 var _detailSelectedStatus = null;  // status the user has selected in the detail modal (not yet saved)
 var _logCoords = null;    // { lat, lng, accuracy }
@@ -736,6 +740,56 @@ function filteredDoors(){
   return sortDoors(rows);
 }
 
+// Great-circle distance between two lat/lng points in kilometers.
+// Plenty accurate for door-knocking (hundreds of meters apart) without
+// pulling in the full Google Distance Matrix API.
+function haversineKm(lat1, lng1, lat2, lng2){
+  var R = 6371;
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLng = (lng2 - lng1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2)
+        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+        * Math.sin(dLng/2) * Math.sin(dLng/2);
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Nearest-neighbor TSP heuristic — at each step pick the closest unvisited
+// door from the current position. Not optimal for the worst cases but
+// produces a sensible walking order in O(n²) with no API calls.
+function nearestNeighborOrder(doors, start){
+  if(!doors.length) return [];
+  var remaining = doors.slice();
+  var ordered = [];
+  var cur = start || { lat: doors[0].lat, lng: doors[0].lng };
+  while(remaining.length){
+    var bestIdx = 0;
+    var bestDist = Infinity;
+    for(var i = 0; i < remaining.length; i++){
+      var d = remaining[i];
+      if(typeof d.lat !== 'number' || typeof d.lng !== 'number') continue;
+      var dist = haversineKm(cur.lat, cur.lng, d.lat, d.lng);
+      if(dist < bestDist){ bestDist = dist; bestIdx = i; }
+    }
+    var picked = remaining.splice(bestIdx, 1)[0];
+    ordered.push(picked);
+    cur = { lat: picked.lat, lng: picked.lng };
+  }
+  return ordered;
+}
+
+// Try to grab the user's current location once. Caches in _userLocation.
+// On failure, returns null and the caller falls back to the first door.
+function ensureUserLocation(){
+  return new Promise(function(resolve){
+    if(_userLocation){ resolve(_userLocation); return; }
+    if(!('geolocation' in navigator)){ resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(function(pos){
+      _userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      resolve(_userLocation);
+    }, function(){ resolve(null); }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 });
+  });
+}
+
 // Pull the leading street number off an address. "456 Oak Ave" -> 456.
 // Returns -Infinity for missing/non-numeric so they sort to one end.
 function addrNumber(addr){
@@ -753,7 +807,18 @@ var STATUS_RANK = {
 
 function sortDoors(rows){
   var sorted = rows.slice();
+  // _optimizedOrder is rebuilt only when sort=optimize so other sorts don't
+  // carry stale step numbers into the rendered list.
+  _optimizedOrder = {};
   switch(_activeSort){
+    case 'optimize':
+      var start = _userLocation || (sorted[0] ? { lat: sorted[0].lat, lng: sorted[0].lng } : null);
+      var withCoords = sorted.filter(function(d){ return typeof d.lat === 'number' && typeof d.lng === 'number'; });
+      var noCoords  = sorted.filter(function(d){ return typeof d.lat !== 'number' || typeof d.lng !== 'number'; });
+      var ordered = nearestNeighborOrder(withCoords, start);
+      ordered.forEach(function(d, i){ _optimizedOrder[d.id] = i + 1; });
+      sorted = ordered.concat(noCoords);
+      break;
     case 'addr_asc':
       sorted.sort(function(a,b){ return addrNumber(a.address) - addrNumber(b.address); });
       break;
@@ -832,9 +897,15 @@ function renderDoors(){
     var checked = _selectedIds[d.id];
     var classes = 'door-row' + (d.id === _selectedDoorId ? ' selected' : '') + (checked ? ' checked' : '');
     var clickFn = _selectMode ? 'toggleDoorChecked' : 'focusDoor';
-    var prefix = _selectMode
-      ? '<div class="door-checkbox">' + (checked ? '✓' : '') + '</div>'
-      : '<div class="door-status-dot" style="background:' + meta.color + '" title="' + meta.label + '"></div>';
+    var step = _activeSort === 'optimize' ? _optimizedOrder[d.id] : null;
+    var prefix;
+    if(_selectMode){
+      prefix = '<div class="door-checkbox">' + (checked ? '✓' : '') + '</div>';
+    } else if(step){
+      prefix = '<div class="door-step" title="Stop ' + step + '">' + step + '</div>';
+    } else {
+      prefix = '<div class="door-status-dot" style="background:' + meta.color + '" title="' + meta.label + '"></div>';
+    }
     return '<div class="' + classes + '" data-id="' + d.id + '" onclick="' + clickFn + '(\'' + d.id + '\')">'
       + prefix
       + '<div class="door-info">'
@@ -965,8 +1036,16 @@ function wireListControls(){
   }
   if(ss){
     ss.value = _activeSort;
-    ss.addEventListener('change', function(){
+    ss.addEventListener('change', async function(){
       _activeSort = ss.value || 'addr_desc';
+      // Optimize sort needs GPS to pick a starting point. Try once silently
+      // — if denied, we fall back to starting from the first door.
+      if(_activeSort === 'optimize' && !_userLocation){
+        showToast('Finding your location…');
+        await ensureUserLocation();
+        if(_userLocation) showToast('Route optimized from your location');
+        else              showToast('Location unavailable — starting from first door');
+      }
       renderDoors();
     });
   }
