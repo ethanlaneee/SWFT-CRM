@@ -355,6 +355,7 @@ const API = {
     logVisit:  (id, data) => apiFetch(`/api/doors/${id}/visit`, { method: "POST", body: JSON.stringify(data) }),
     update:    (id, data) => apiFetch(`/api/doors/${id}`,   { method: "PUT",  body: JSON.stringify(data) }),
     delete:    (id)       => apiFetch(`/api/doors/${id}`,   { method: "DELETE" }),
+    bulkDelete:(ids)      => apiFetch("/api/doors/bulk-delete", { method: "POST", body: JSON.stringify({ ids }) }),
     statsToday:()         => apiFetch("/api/doors/stats/today"),
   },
 

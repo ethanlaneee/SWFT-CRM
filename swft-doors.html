@@ -110,7 +110,21 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .door-panel-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .door-panel-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);font-weight:600;}
 .door-count{color:var(--green);font-family:'JetBrains Mono',monospace;font-size:11px;}
-.list-controls{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);}
+.list-controls{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);align-items:center;}
+.select-toggle{flex-shrink:0;background:var(--surface2);border:1px solid var(--border2);color:var(--gray);font-size:11.5px;font-weight:600;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.select-toggle:hover{color:var(--white);}
+.select-toggle.active{background:rgba(200,241,53,0.1);border-color:var(--green);color:var(--green);}
+.bulk-bar{display:none;background:rgba(200,241,53,0.07);border-bottom:1px solid var(--border);padding:9px 12px;align-items:center;justify-content:space-between;gap:8px;font-size:12px;}
+.bulk-bar.show{display:flex;}
+.bulk-bar-count{color:var(--green);font-weight:600;}
+.bulk-bar-actions{display:flex;gap:6px;}
+.bulk-btn{background:transparent;border:1px solid var(--border2);color:var(--gray);font-size:11.5px;font-weight:500;padding:6px 11px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;}
+.bulk-btn:hover{color:var(--white);}
+.bulk-btn.danger{color:var(--red);border-color:rgba(255,82,82,0.3);}
+.bulk-btn.danger:hover{background:rgba(255,82,82,0.12);}
+.door-checkbox{flex-shrink:0;margin-top:6px;width:18px;height:18px;border:1.5px solid var(--border2);border-radius:5px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:#0a0a0a;font-size:12px;font-weight:700;transition:all 0.12s;}
+.door-row.checked .door-checkbox{background:var(--green);border-color:var(--green);}
+.door-row.checked{background:rgba(200,241,53,0.06);}
 .control-select{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--white);font-size:12px;font-weight:500;padding:8px 28px 8px 12px;border-radius:9px;cursor:pointer;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7a7a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
 .control-select:focus{border-color:var(--green);}
 .control-select option{background:var(--surface2);color:var(--white);}
@@ -145,14 +159,15 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:520px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.22s,transform 0.22s;}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);width:520px;max-width:calc(100vw - 24px);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;background:var(--surface);border:1px solid var(--border2);border-radius:16px;z-index:600;box-shadow:0 24px 80px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.22s,transform 0.22s;}
 .modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%) scale(1);}
-.modal-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.modal-head{flex-shrink:0;padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--white);}
 .modal-close{width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.14s;font-size:18px;line-height:1;}
 .modal-close:hover{background:var(--surface2);color:var(--white);}
-.modal-body{padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
-.modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.modal-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
+.modal-foot{flex-shrink:0;padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--surface);}
+@media (max-width:480px){.modal-foot{flex-wrap:wrap;}.modal-btn{font-size:12px;padding:10px 8px;}}
 .modal-btn{flex:1;padding:11px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;font-weight:500;}
 .modal-btn:hover{background:var(--surface2);color:var(--white);}
 .modal-btn.primary{background:var(--green);color:#0a0a0a;font-weight:700;border-color:var(--green);flex:2;}
@@ -355,6 +370,18 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
             <option value="status">By status</option>
             <option value="alpha">Address A → Z</option>
           </select>
+          <button class="select-toggle" id="select-toggle" onclick="toggleSelectMode()" title="Select doors to bulk-delete">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Select
+          </button>
+        </div>
+        <div class="bulk-bar" id="bulk-bar">
+          <div><span class="bulk-bar-count" id="bulk-count">0</span> selected</div>
+          <div class="bulk-bar-actions">
+            <button class="bulk-btn" onclick="selectAllVisible()">Select all</button>
+            <button class="bulk-btn" onclick="clearSelection()">Clear</button>
+            <button class="bulk-btn danger" onclick="bulkDeleteSelected()">Delete</button>
+          </div>
         </div>
         <div class="door-list" id="door-list">
           <div class="door-empty">
@@ -496,6 +523,8 @@ var _selectedStatus = 'no_answer';
 var _activeFilter = 'all';
 var _activeSort = 'addr_desc';
 var _selectedDoorId = null;
+var _selectMode = false;          // when true, rows show checkboxes for multi-select
+var _selectedIds = {};            // map of id -> true
 var _detailDoor = null;        // door currently open in detail modal
 var _detailSelectedStatus = null;  // status the user has selected in the detail modal (not yet saved)
 var _logCoords = null;    // { lat, lng, accuracy }
@@ -646,15 +675,43 @@ function centerOnViewer(){
   }, function(){}, { enableHighAccuracy: false, maximumAge: 60000, timeout: 8000 });
 }
 
-/* ── Pin rendering ── */
-function pinSvg(color, mark, count){
-  var glyph = count && count > 1 ? String(count) : (mark || '');
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 36 46">' +
-    '<path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 28 18 28s18-14.5 18-28C36 8.06 27.94 0 18 0z" fill="' + color + '"/>' +
-    '<circle cx="18" cy="18" r="11" fill="#0a0a0a"/>' +
-    '<text x="18" y="22.5" text-anchor="middle" font-family="DM Sans,Arial,sans-serif" font-size="13" font-weight="700" fill="' + color + '">' + glyph + '</text>' +
-    '</svg>';
-  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+/* ── Pin rendering ──
+   Uses Google Maps' vector Symbol path with a label, instead of a
+   data-URI SVG image. Why: iOS Safari caches data-URI images
+   aggressively, so changing a pin's color via setIcon often did nothing
+   visually. Symbol paths are drawn fresh each frame by the Maps SDK,
+   guaranteeing color/glyph updates appear immediately. */
+function makeMarkerOptions(d){
+  var meta = statusMeta(d.status);
+  var visits = Array.isArray(d.visits) ? d.visits.length : 0;
+  var glyph = visits > 1 ? String(visits) : (meta.mark || '');
+
+  // Choose a label color that contrasts with the pin color.
+  var lightFill = meta.color === '#ffffff' || meta.color === '#c8f135' || meta.color === '#4de2ff';
+  var labelColor = lightFill ? '#0a0a0a' : '#ffffff';
+  var strokeColor = lightFill ? '#0a0a0a' : '#0a0a0a';
+
+  return {
+    title: d.address || meta.label,
+    icon: {
+      // Teardrop pin path — point at (0,0), bulb above
+      path: 'M0,0 C-10,-12 -16,-18 -16,-26 C-16,-34 -9,-40 0,-40 C9,-40 16,-34 16,-26 C16,-18 10,-12 0,0 Z',
+      fillColor: meta.color,
+      fillOpacity: 1,
+      strokeColor: strokeColor,
+      strokeWeight: 1.5,
+      scale: 1,
+      anchor: new google.maps.Point(0, 0),
+      labelOrigin: new google.maps.Point(0, -26),
+    },
+    label: {
+      text: glyph,
+      color: labelColor,
+      fontSize: '13px',
+      fontWeight: '700',
+      fontFamily: 'DM Sans, Arial, sans-serif',
+    },
+  };
 }
 
 /* ── Loading + filtering ── */
@@ -772,9 +829,14 @@ function renderDoors(){
     var when = fmtAgo(d.updatedAt || d.createdAt);
     var nameBit = d.name ? '<span class="pill">' + escapeHtml(d.name) + '</span>' : '';
     var visitsBit = visits > 1 ? '<span class="pill">' + visits + ' visits</span>' : '';
-    var sel = (d.id === _selectedDoorId) ? ' selected' : '';
-    return '<div class="door-row' + sel + '" data-id="' + d.id + '" onclick="focusDoor(\'' + d.id + '\')">'
-      + '<div class="door-status-dot" style="background:' + meta.color + '" title="' + meta.label + '"></div>'
+    var checked = _selectedIds[d.id];
+    var classes = 'door-row' + (d.id === _selectedDoorId ? ' selected' : '') + (checked ? ' checked' : '');
+    var clickFn = _selectMode ? 'toggleDoorChecked' : 'focusDoor';
+    var prefix = _selectMode
+      ? '<div class="door-checkbox">' + (checked ? '✓' : '') + '</div>'
+      : '<div class="door-status-dot" style="background:' + meta.color + '" title="' + meta.label + '"></div>';
+    return '<div class="' + classes + '" data-id="' + d.id + '" onclick="' + clickFn + '(\'' + d.id + '\')">'
+      + prefix
       + '<div class="door-info">'
         + '<div class="door-addr">' + escapeHtml(addr) + '</div>'
         + '<div class="door-meta">'
@@ -787,51 +849,92 @@ function renderDoors(){
   }).join('');
 }
 
+/* ── Multi-select / bulk delete ── */
+function toggleSelectMode(){
+  _selectMode = !_selectMode;
+  _selectedIds = {};
+  document.getElementById('select-toggle').classList.toggle('active', _selectMode);
+  document.getElementById('bulk-bar').classList.toggle('show', _selectMode);
+  updateBulkCount();
+  renderDoors();
+}
+
+function toggleDoorChecked(id){
+  if(_selectedIds[id]) delete _selectedIds[id];
+  else                  _selectedIds[id] = true;
+  updateBulkCount();
+  renderDoors();
+}
+
+function selectAllVisible(){
+  filteredDoors().forEach(function(d){ _selectedIds[d.id] = true; });
+  updateBulkCount();
+  renderDoors();
+}
+
+function clearSelection(){
+  _selectedIds = {};
+  updateBulkCount();
+  renderDoors();
+}
+
+function updateBulkCount(){
+  var n = Object.keys(_selectedIds).length;
+  document.getElementById('bulk-count').textContent = String(n);
+}
+
+async function bulkDeleteSelected(){
+  var ids = Object.keys(_selectedIds);
+  if(!ids.length){ showToast('No doors selected'); return; }
+  if(!confirm('Delete ' + ids.length + ' door' + (ids.length === 1 ? '' : 's') + ' and all their visit history? This cannot be undone.')) return;
+
+  // Optimistic UI: remove immediately, then call server. Roll back on failure.
+  var before = _doors.slice();
+  _doors = _doors.filter(function(d){ return !_selectedIds[d.id]; });
+  ids.forEach(function(id){ if(_markers[id]){ _markers[id].setMap(null); delete _markers[id]; } });
+  _selectedIds = {};
+  toggleSelectMode();   // exits select mode + re-renders
+  refreshKpis();
+  renderMarkers();
+
+  try {
+    var resp = await API.doors.bulkDelete(ids);
+    showToast('Deleted ' + (resp.deleted || ids.length) + ' door' + (ids.length === 1 ? '' : 's'));
+  } catch (e) {
+    _doors = before;
+    refreshKpis();
+    renderDoors();
+    renderMarkers();
+    showToast('Could not delete: ' + (e.message || 'error'));
+  }
+}
+
 function renderMarkers(){
   if(!_mapReady || !_map) return;
   var rows = filteredDoors();
-  var seen = {};
+
+  // Wipe and re-create all markers — the page never has more than ~200, so
+  // the cost is negligible, and this guarantees no stale visuals or cached
+  // icons on iOS Safari.
+  Object.keys(_markers).forEach(function(id){ _markers[id].setMap(null); });
+  _markers = {};
+
   var bounds = new google.maps.LatLngBounds();
   var hasPin = false;
 
   rows.forEach(function(d){
     if(typeof d.lat !== 'number' || typeof d.lng !== 'number') return;
-    seen[d.id] = true;
     var pos = { lat: d.lat, lng: d.lng };
-    var meta = statusMeta(d.status);
-    var visits = Array.isArray(d.visits) ? d.visits.length : 0;
-    var iconUrl = pinSvg(meta.color, meta.mark, visits);
-
-    // If the marker exists with a different icon, kill it and recreate.
-    // setIcon() with a fresh URL is unreliable on iOS Safari with data: URIs —
-    // the cached image stays on screen. Removing + re-adding guarantees a
-    // visible color change.
-    var existing = _markers[d.id];
-    if(existing && existing._iconUrl !== iconUrl){
-      existing.setMap(null);
-      delete _markers[d.id];
-      existing = null;
-    }
-
-    if(existing){
-      existing.setPosition(pos);
-    } else {
-      var marker = new google.maps.Marker({
-        position: pos,
-        map: _map,
-        title: d.address || (meta.label),
-        icon: { url: iconUrl, scaledSize: new google.maps.Size(32, 41), anchor: new google.maps.Point(16, 41) },
-      });
-      marker._iconUrl = iconUrl;
-      marker.addListener('click', function(){ openDetailModal(d.id); });
-      _markers[d.id] = marker;
-    }
+    var opts = makeMarkerOptions(d);
+    opts.position = pos;
+    opts.map = _map;
+    var marker = new google.maps.Marker(opts);
+    marker.addListener('click', (function(id){
+      return function(){ openDetailModal(id); };
+    })(d.id));
+    _markers[d.id] = marker;
     bounds.extend(pos);
     hasPin = true;
-  });
-
-  Object.keys(_markers).forEach(function(id){
-    if(!seen[id]){ _markers[id].setMap(null); delete _markers[id]; }
   });
 
   if(hasPin && !renderMarkers._fitOnce){
@@ -1171,6 +1274,12 @@ function renderDetailBody(d){
   html += '  </div>';
   html += '</div>';
 
+  // Notes field — slides in once a status is selected
+  html += '<div class="field" id="detail-notes-wrap" style="display:none;">';
+  html += '  <label class="field-label">Notes <span style="color:var(--gray2);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>';
+  html += '  <textarea class="field-input field-textarea" id="detail-visit-notes" placeholder="e.g., No one home, came back at 2pm" rows="2"></textarea>';
+  html += '</div>';
+
   html += '<div class="field-row">';
   html += '  <div class="field"><label class="field-label">Name</label><input class="field-input" id="detail-name"  value="' + escapeHtml(d.name || '') + '" placeholder="Owner name"/></div>';
   html += '  <div class="field"><label class="field-label">Phone</label><input class="field-input" id="detail-phone" value="' + escapeHtml(d.phone || '') + '" placeholder="(555) 555-5555"/></div>';
@@ -1206,7 +1315,10 @@ function selectDetailStatus(status){
   document.querySelectorAll('#detail-status-grid .status-btn').forEach(function(b){
     b.classList.toggle('selected', b.dataset.status === status);
   });
-  // Enable the save button now that a status is picked
+  // Reveal the notes field once a status is picked
+  var notesWrap = document.getElementById('detail-notes-wrap');
+  if(notesWrap) notesWrap.style.display = 'flex';
+  // Enable the save button
   var save = document.getElementById('detail-save-visit');
   if(save) save.disabled = false;
 }
@@ -1219,10 +1331,12 @@ async function saveDetailVisit(){
   }
   var doorId = _detailDoor.id;
   var status = _detailSelectedStatus;
+  var notesEl = document.getElementById('detail-visit-notes');
+  var notes = notesEl ? notesEl.value.trim() : '';
   var btn = document.getElementById('detail-save-visit');
   if(btn) btn.disabled = true;
   try {
-    var saved = await API.doors.logVisit(doorId, { status: status, notes: '' });
+    var saved = await API.doors.logVisit(doorId, { status: status, notes: notes });
     var idx = _doors.findIndex(function(x){ return x.id === doorId; });
     if(idx >= 0) _doors[idx] = saved;
     var meta = statusMeta(status);

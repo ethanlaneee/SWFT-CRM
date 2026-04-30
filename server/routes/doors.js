@@ -368,6 +368,30 @@ router.put("/:id", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/doors/bulk-delete — delete many doors in one batch
+// Body: { ids: ["..."] }   max 200 per call
+router.post("/bulk-delete", async (req, res, next) => {
+  try {
+    const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
+    if (!ids.length) return res.status(400).json({ error: "No ids provided" });
+    if (ids.length > 200) return res.status(400).json({ error: "Too many ids (max 200 per call)" });
+
+    // Verify each doc belongs to this org before deleting
+    const refs = ids.map(id => col().doc(String(id)));
+    const docs = await db.getAll(...refs);
+    const batch = db.batch();
+    let deleted = 0;
+    for (const d of docs) {
+      if (d.exists && d.data().orgId === req.orgId) {
+        batch.delete(d.ref);
+        deleted++;
+      }
+    }
+    if (deleted) await batch.commit();
+    res.json({ success: true, deleted });
+  } catch (err) { next(err); }
+});
+
 // DELETE /api/doors/:id
 router.delete("/:id", async (req, res, next) => {
   try {
