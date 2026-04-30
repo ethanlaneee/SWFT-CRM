@@ -193,9 +193,10 @@ const API = {
 
   // ── Dev (admin only) ──
   dev: {
-    stats:  ()   => apiFetch("/api/dev/stats"),
-    users:  ()   => apiFetch("/api/dev/users"),
-    user:   (id) => apiFetch(`/api/dev/user/${id}`),
+    stats:      ()       => apiFetch("/api/dev/stats"),
+    users:      ()       => apiFetch("/api/dev/users"),
+    user:       (id)     => apiFetch(`/api/dev/user/${id}`),
+    createUser: (data)   => apiFetch("/api/dev/users", { method: "POST", body: JSON.stringify(data) }),
   },
 
   // ── User ──

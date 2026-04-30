@@ -479,4 +479,59 @@ router.post("/resubscribe", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── POST /api/dev/users — create a new user account ──
+router.post("/users", async (req, res, next) => {
+  try {
+    const { authAdmin, db } = require("../firebase");
+    const { email, password, firstName, lastName, company, plan, accountStatus } = req.body;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Valid email is required." });
+    }
+    if (!password || password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters." });
+    }
+
+    const name = [firstName, lastName].filter(Boolean).join(" ") || email.split("@")[0];
+
+    // Create Firebase Auth account
+    const authUser = await authAdmin.createUser({
+      email,
+      password,
+      displayName: name,
+    });
+
+    const now = Date.now();
+    const status = accountStatus || "trialing";
+    const profile = {
+      uid: authUser.uid,
+      email,
+      firstName: firstName || "",
+      lastName: lastName || "",
+      name,
+      displayName: name,
+      company: company || "",
+      businessName: company || "",
+      plan: plan || "starter",
+      isSubscribed: status === "active",
+      accountStatus: status,
+      stripeCustomerId: "",
+      trialStartDate: now,
+      trialEndDate: now + 14 * 24 * 60 * 60 * 1000,
+      role: "owner",
+      orgId: authUser.uid,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await db.collection("users").doc(authUser.uid).set(profile);
+    res.json({ success: true, uid: authUser.uid, ...profile });
+  } catch (err) {
+    if (err.code === "auth/email-already-exists") {
+      return res.status(400).json({ error: "An account with this email already exists." });
+    }
+    next(err);
+  }
+});
+
 module.exports = router;

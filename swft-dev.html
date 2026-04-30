@@ -522,7 +522,13 @@ function renderDashboard(stats, users) {
           <span class="table-title">All Users</span>
           <span class="table-count" id="userCount"></span>
         </div>
-        <input class="search-input" type="text" placeholder="Search users..." id="userSearch" oninput="window._filterUsers(this.value)"/>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input class="search-input" type="text" placeholder="Search users..." id="userSearch" oninput="window._filterUsers(this.value)"/>
+          <button class="action-btn primary" onclick="openCreateUserModal()" style="white-space:nowrap;">
+            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
+            <span class="btn-label">Create User</span>
+          </button>
+        </div>
       </div>
       <div class="table-scroll">
         <table class="data-table">
@@ -1829,5 +1835,108 @@ onAuthStateChanged(auth, (user) => {
 });
 </script>
 <script src="swft-mobile.js"></script>
+
+<!-- ── CREATE USER MODAL ── -->
+<div id="createUserModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:calc(100% - 40px);max-width:440px;box-shadow:0 24px 64px rgba(0,0,0,0.5);">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:20px;">Create User</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div>
+        <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">First Name</label>
+        <input id="cu-fname" type="text" placeholder="Jake" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;"/>
+      </div>
+      <div>
+        <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">Last Name</label>
+        <input id="cu-lname" type="text" placeholder="Reynolds" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;"/>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">Email <span style="color:var(--red);">*</span></label>
+      <input id="cu-email" type="email" placeholder="jake@example.com" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;"/>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">Password <span style="color:var(--red);">*</span></label>
+      <input id="cu-password" type="text" placeholder="Min 8 characters" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;"/>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">Company</label>
+      <input id="cu-company" type="text" placeholder="Reynolds Concrete LLC" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;"/>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div>
+        <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">Plan</label>
+        <select id="cu-plan" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option value="starter">Starter</option>
+          <option value="pro">Pro</option>
+          <option value="elite">Elite</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);font-weight:600;display:block;margin-bottom:5px;">Status</label>
+        <select id="cu-status" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--white);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;">
+          <option value="trialing">Trialing</option>
+          <option value="active">Active</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="cu-error" style="color:var(--red);font-size:12px;margin-bottom:12px;display:none;"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeCreateUserModal()" style="background:transparent;border:1px solid var(--border2);color:var(--gray);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancel</button>
+      <button id="cu-submit-btn" onclick="submitCreateUser()" style="background:var(--green);border:1px solid var(--green);color:#0a0a0a;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Create User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openCreateUserModal() {
+  ['cu-fname','cu-lname','cu-email','cu-password','cu-company'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cu-plan').value = 'starter';
+  document.getElementById('cu-status').value = 'trialing';
+  document.getElementById('cu-error').style.display = 'none';
+  document.getElementById('createUserModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('cu-fname').focus(), 50);
+}
+function closeCreateUserModal() {
+  document.getElementById('createUserModal').style.display = 'none';
+}
+document.getElementById('createUserModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeCreateUserModal();
+});
+async function submitCreateUser() {
+  const errEl = document.getElementById('cu-error');
+  errEl.style.display = 'none';
+  const body = {
+    firstName:     document.getElementById('cu-fname').value.trim(),
+    lastName:      document.getElementById('cu-lname').value.trim(),
+    email:         document.getElementById('cu-email').value.trim(),
+    password:      document.getElementById('cu-password').value,
+    company:       document.getElementById('cu-company').value.trim(),
+    plan:          document.getElementById('cu-plan').value,
+    accountStatus: document.getElementById('cu-status').value,
+  };
+  if (!body.email) { errEl.textContent = 'Email is required.'; errEl.style.display = 'block'; return; }
+  if (!body.password || body.password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('cu-submit-btn');
+  btn.textContent = 'Creating…'; btn.disabled = true;
+  try {
+    const data = await API.dev.createUser(body);
+    if (data.error) throw new Error(data.error);
+    closeCreateUserModal();
+    loadAllData(); // Refresh the user table
+  } catch (err) {
+    errEl.textContent = err.message || 'Failed to create user.';
+    errEl.style.display = 'block';
+  }
+  btn.textContent = 'Create User'; btn.disabled = false;
+}
+</script>
 </body>
 </html>
