@@ -8,6 +8,7 @@ const router = require("express").Router();
 const { google } = require("googleapis");
 const { admin, db } = require("../firebase");
 const { getOAuthClient } = require("../utils/email");
+const { requireRecentAuth } = require("../middleware/requireRecentAuth");
 const FieldValue = admin.firestore.FieldValue;
 
 // All available integrations and their metadata
@@ -310,8 +311,11 @@ router.post("/:id/connect", (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/integrations/:id/disconnect — remove an integration
-router.post("/:id/disconnect", async (req, res, next) => {
+// POST /api/integrations/:id/disconnect — remove an integration.
+// Reauth required: disconnecting Stripe/Gmail/Calendar can disrupt
+// billing flows and customer communication. A stolen ID token alone must
+// not be enough to break critical integrations.
+router.post("/:id/disconnect", requireRecentAuth(), async (req, res, next) => {
   try {
     const integrationId = req.params.id;
     const userRef = db.collection("users").doc(req.uid);

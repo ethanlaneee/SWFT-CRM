@@ -132,10 +132,71 @@ async function apiFetch(path, options = {}, _retried) {
         return apiFetch(path, options, true);
       }
     }
+    // On 403 + reauth_required, walk the user through a fresh sign-in and
+    // retry once. This makes endpoints protected by requireRecentAuth
+    // (account deletion, team role changes, integration disconnects)
+    // transparent to callers — they don't need to handle reauth themselves.
+    if (res.status === 403 && data && data.code === "reauth_required" && !_retried) {
+      const ok = await _inlineReauth();
+      if (ok) {
+        _cachedToken = null;
+        _cachedTokenTime = 0;
+        return apiFetch(path, options, true);
+      }
+    }
     const msg = data.error || "API error";
     throw new Error(msg);
   }
   return data;
+}
+
+// Inline reauthentication — used by apiFetch when the server demands a
+// recent sign-in. Renders a self-contained password modal and resolves to
+// true on success. For Google sign-in users, opens the popup flow instead.
+async function _inlineReauth() {
+  const { getAuth, EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup } =
+    await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+  const user = getAuth().currentUser;
+  if (!user) return false;
+  const provider = (user.providerData?.[0]?.providerId) || "";
+  try {
+    if (provider === "google.com") {
+      await reauthenticateWithPopup(user, new GoogleAuthProvider());
+      return true;
+    }
+    const pwd = await _promptPassword();
+    if (!pwd) return false;
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, pwd));
+    return true;
+  } catch (e) {
+    console.warn("[apiFetch] reauth failed:", e.code || e.message);
+    return false;
+  }
+}
+
+function _promptPassword() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);";
+    overlay.innerHTML = `
+      <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;padding:24px;max-width:380px;width:90%;color:#f0f0f0;font-family:-apple-system,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px;">🔐 Confirm your identity</div>
+        <p style="font-size:13px;color:#7a7a7a;margin:0 0 14px;line-height:1.5;">For your security, please re-enter your password to perform this action.</p>
+        <input type="password" id="__swft_reauth_pwd" placeholder="Password" autocomplete="current-password"
+          style="width:100%;padding:12px;font-size:14px;border:1px solid #2a2a2a;border-radius:8px;background:#1a1a1a;color:#f0f0f0;margin-bottom:14px;box-sizing:border-box;outline:none;"/>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="__swft_reauth_cancel" style="padding:10px 16px;border:1px solid #2a2a2a;border-radius:8px;background:transparent;color:#7a7a7a;cursor:pointer;font-size:13px;">Cancel</button>
+          <button id="__swft_reauth_ok" style="padding:10px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;cursor:pointer;font-size:13px;font-weight:500;">Confirm</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector("#__swft_reauth_pwd");
+    setTimeout(() => input.focus(), 50);
+    const done = (v) => { overlay.remove(); resolve(v); };
+    overlay.querySelector("#__swft_reauth_ok").onclick = () => done(input.value);
+    overlay.querySelector("#__swft_reauth_cancel").onclick = () => done(null);
+    input.onkeydown = (e) => { if (e.key === "Enter") done(input.value); else if (e.key === "Escape") done(null); };
+  });
 }
 
 // ════════════════════════════════════════════════

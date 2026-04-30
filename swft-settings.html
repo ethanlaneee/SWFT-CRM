@@ -886,6 +886,18 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <button class="settings-btn danger" onclick="signOutEverywhere()">Sign out everywhere</button>
     </div>
+    <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+      <div class="settings-row-info" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div class="settings-row-label">Recent security activity</div>
+          <div class="settings-row-desc">Sign-ins, sign-outs, lockouts and reauth challenges from the last few weeks. Anything you don't recognise is a sign your account may be compromised.</div>
+        </div>
+        <button class="settings-btn" id="audit-refresh-btn" onclick="loadAuditLog()">Refresh</button>
+      </div>
+      <div id="audit-log-list" style="background:#0a0a0a;border:1px solid #1f1f1f;border-radius:8px;padding:8px;max-height:280px;overflow-y:auto;font-size:12px;color:#a0a0a0;">
+        <div style="text-align:center;padding:16px;color:#5a5a5a;">Loading…</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1894,6 +1906,68 @@ function closeMfaModal() {
   document.getElementById('mfa-overlay').style.display = 'none';
   _mfaEnrollState = null;
 }
+
+// ─── Account Security: audit log viewer ───────────────────────────────────
+const AUDIT_KIND_LABELS = {
+  login_success:      { icon: '✓', text: 'Signed in',                color: '#10b981' },
+  lockout_triggered:  { icon: '🔒', text: 'Account locked (too many failed sign-ins)', color: '#ef4444' },
+  sessions_revoked:   { icon: '🚪', text: 'All sessions revoked',    color: '#f59e0b' },
+  reauth_challenged:  { icon: '🔐', text: 'Re-authentication required for sensitive action', color: '#3b82f6' },
+};
+function formatAuditTime(ts) {
+  if (!ts) return '';
+  var d = new Date(ts);
+  var now = Date.now();
+  var diff = now - ts;
+  if (diff < 60_000) return 'Just now';
+  if (diff < 3600_000) return Math.floor(diff / 60_000) + ' min ago';
+  if (diff < 86400_000) return Math.floor(diff / 3600_000) + ' hr ago';
+  if (diff < 7 * 86400_000) return Math.floor(diff / 86400_000) + ' days ago';
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+async function loadAuditLog() {
+  var list = document.getElementById('audit-log-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:16px;color:#5a5a5a;">Loading…</div>';
+  try {
+    var token = await getToken();
+    var res = await fetch('/api/auth/audit-log', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var events = data.events || [];
+    if (events.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:16px;color:#5a5a5a;">No recent activity.</div>';
+      return;
+    }
+    list.innerHTML = events.map(function(e){
+      var label = AUDIT_KIND_LABELS[e.kind] || { icon: '•', text: e.kind, color: '#7a7a7a' };
+      var ipBit = e.ip ? '<span style="color:#5a5a5a;margin-left:6px;font-family:JetBrains Mono,monospace;font-size:11px;">' + e.ip + '</span>' : '';
+      var pathBit = e.path ? '<span style="color:#5a5a5a;margin-left:6px;font-size:11px;">' + e.path + '</span>' : '';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid #1a1a1a;">' +
+             '<span style="font-size:14px;color:' + label.color + ';">' + label.icon + '</span>' +
+             '<div style="flex:1;min-width:0;">' +
+               '<div style="color:#e0e0e0;font-size:13px;">' + label.text + ipBit + pathBit + '</div>' +
+               '<div style="color:#5a5a5a;font-size:11px;">' + formatAuditTime(e.ts) + '</div>' +
+             '</div>' +
+           '</div>';
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="text-align:center;padding:16px;color:#ef4444;">Failed to load: ' + (e && e.message || 'unknown') + '</div>';
+  }
+}
+// Auto-load when the user navigates to the Account tab. The settings page
+// uses data-group attributes — we hook the nav click. Falls back to loading
+// once on settle.
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.settings-nav-item[data-group="account"]').forEach(function(el){
+    el.addEventListener('click', function(){ setTimeout(loadAuditLog, 200); });
+  });
+  // If the page lands directly on the account tab, load immediately.
+  setTimeout(function(){
+    var sec = document.getElementById('sec-security');
+    if (sec && sec.offsetParent !== null) loadAuditLog();
+  }, 1500);
+});
 
 // ── Integrations ──
 async function loadIntegrations() {

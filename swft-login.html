@@ -397,6 +397,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     <div class="forgot-link" onclick="handleForgotPassword()">Forgot password?</div>
 
+    <div id="turnstile-login" style="display:flex;justify-content:center;margin:8px 0;"></div>
+
     <button class="submit-btn" id="login-btn" onclick="handleLogin()">
       <span class="btn-text">Sign In</span>
       <div class="spinner"></div>
@@ -472,6 +474,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       </div>
       <span class="field-error" id="signup-pwd-err">Password must be at least 8 characters.</span>
     </div>
+
+    <div id="turnstile-signup" style="display:flex;justify-content:center;margin:8px 0;"></div>
 
     <button class="submit-btn" id="signup-btn" onclick="handleSignup()">
       <span class="btn-text">Create Account</span>
@@ -569,6 +573,63 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   document.body.style.visibility = 'visible';
 
   // Do not auto-redirect — wait for the user to sign in manually
+
+  // ── Cloudflare Turnstile (CAPTCHA) ──
+  // Renders a privacy-friendly, low-friction CAPTCHA on both the login and
+  // signup forms. Tokens are short-lived and verified server-side. If the
+  // server reports Turnstile isn't configured, the widget is skipped and
+  // the precheck endpoint accepts a missing token. This keeps the page
+  // working in dev environments that haven't set TURNSTILE_SITE_KEY.
+  let _turnstileLoginToken = '';
+  let _turnstileSignupToken = '';
+  let _turnstileLoginWidgetId = null;
+  let _turnstileSignupWidgetId = null;
+  window.turnstileEnabled = false;
+  (async () => {
+    try {
+      const cfg = await fetch('/api/auth/turnstile-config').then(r => r.json()).catch(() => ({}));
+      if (!cfg.siteKey) return; // not configured — skip
+      window.turnstileEnabled = true;
+
+      // Inject the Turnstile script once.
+      await new Promise((resolve, reject) => {
+        if (window.turnstile) return resolve();
+        const s = document.createElement('script');
+        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__onTurnstileLoad';
+        s.async = true; s.defer = true;
+        window.__onTurnstileLoad = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+
+      const renderInto = (containerId, tokenSetter) => {
+        const el = document.getElementById(containerId);
+        if (!el || !window.turnstile) return null;
+        return window.turnstile.render(el, {
+          sitekey: cfg.siteKey,
+          theme: 'dark',
+          size: 'flexible',
+          callback: (token) => tokenSetter(token),
+          'expired-callback': () => tokenSetter(''),
+          'error-callback': () => tokenSetter(''),
+        });
+      };
+      _turnstileLoginWidgetId = renderInto('turnstile-login', (t) => { _turnstileLoginToken = t; });
+      _turnstileSignupWidgetId = renderInto('turnstile-signup', (t) => { _turnstileSignupToken = t; });
+    } catch (e) { console.warn('[turnstile] init skipped:', e.message); }
+  })();
+  // Reset after each successful submit so the same token isn't reused.
+  function resetTurnstile(form) {
+    if (!window.turnstile) return;
+    if (form === 'login' && _turnstileLoginWidgetId !== null) {
+      window.turnstile.reset(_turnstileLoginWidgetId);
+      _turnstileLoginToken = '';
+    }
+    if (form === 'signup' && _turnstileSignupWidgetId !== null) {
+      window.turnstile.reset(_turnstileSignupWidgetId);
+      _turnstileSignupToken = '';
+    }
+  }
 
   // ── SAVE USER TO FIRESTORE ──
   async function saveUserToFirestore(user, extraData = {}) {
@@ -691,16 +752,23 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     const btn = document.getElementById('login-btn');
     setLoading(btn, true);
 
-    // Server-side lockout check. If this email+IP has tripped the failure
-    // threshold, refuse to even hand the credentials to Firebase Auth.
-    // Combined with Firebase's own per-IP throttling, this is the bulk of
-    // SWFT's credential-stuffing defense.
+    // Server-side lockout + Turnstile check. If this email+IP has tripped
+    // the failure threshold, refuse to even hand the credentials to
+    // Firebase Auth. Combined with Firebase's own per-IP throttling and
+    // the Turnstile CAPTCHA, this is the bulk of SWFT's credential-
+    // stuffing defense.
     try {
-      const pre = await fetch('/api/auth/login-precheck', {
+      const preResp = await fetch('/api/auth/login-precheck', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      }).then(r => r.json()).catch(() => ({ locked: false }));
+        body: JSON.stringify({ email, turnstileToken: _turnstileLoginToken })
+      });
+      const pre = await preResp.json().catch(() => ({}));
+      if (preResp.status === 400 && pre.captchaRequired) {
+        setLoading(btn, false);
+        showGlobalError('Please complete the CAPTCHA challenge before signing in.');
+        return;
+      }
       if (pre.locked) {
         setLoading(btn, false);
         const mins = Math.max(1, Math.ceil((pre.retryAfterMs || 0) / 60000));
@@ -728,6 +796,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, success: false })
       }).catch(() => {});
+      // Each Turnstile token is one-time-use; reset so the user can retry.
+      resetTurnstile('login');
       setLoading(btn, false);
       showGlobalError(firebaseErrorMsg(err.code));
     }
@@ -756,6 +826,25 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
     const btn = document.getElementById('signup-btn');
     setLoading(btn, true);
+
+    // ── Turnstile CAPTCHA check ──
+    // Same endpoint as login-precheck; if Turnstile is enabled server-side
+    // and the token is missing or invalid, we get a 400 with captchaRequired.
+    if (window.turnstileEnabled) {
+      try {
+        const tsResp = await fetch('/api/auth/login-precheck', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, turnstileToken: _turnstileSignupToken })
+        });
+        const ts = await tsResp.json().catch(() => ({}));
+        if (tsResp.status === 400 && ts.captchaRequired) {
+          setLoading(btn, false);
+          showGlobalError('Please complete the CAPTCHA challenge before creating an account.');
+          return;
+        }
+      } catch (_) { /* fail open */ }
+    }
 
     // ── Breached-password check (HIBP k-anonymity) ──
     // SHA-1 the password in the browser, send only the first 5 hex chars

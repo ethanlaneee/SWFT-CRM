@@ -6,6 +6,7 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const crypto = require("crypto");
 const { sendSimpleGmail } = require("../utils/email");
+const { requireRecentAuth } = require("../middleware/requireRecentAuth");
 
 // Accounts whose role can never be changed by any team operation
 const PROTECTED_EMAILS = ["ethan@goswft.com"];
@@ -208,8 +209,10 @@ router.get("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/team/invite — invite a new team member
-router.post("/invite", async (req, res, next) => {
+// POST /api/team/invite — invite a new team member.
+// Reauth required: handing org access to a new email is a high-blast-radius
+// action — a stolen ID token must not be enough to grant that access.
+router.post("/invite", requireRecentAuth(), async (req, res, next) => {
   try {
     if (!(await checkTeamLimit(req, res))) return;
     if (!canManageTeam(req.userRole)) {
@@ -291,8 +294,9 @@ router.post("/invite", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// PUT /api/team/:memberId — update a team member's role
-router.put("/:memberId", async (req, res, next) => {
+// PUT /api/team/:memberId — update a team member's role.
+// Reauth required: role escalation grants access to org data.
+router.put("/:memberId", requireRecentAuth(), async (req, res, next) => {
   try {
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can update roles" });
@@ -336,8 +340,9 @@ router.put("/:memberId", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// DELETE /api/team/:memberId — remove a team member
-router.delete("/:memberId", async (req, res, next) => {
+// DELETE /api/team/:memberId — remove a team member.
+// Reauth required: kicking a teammate is destructive (they lose access).
+router.delete("/:memberId", requireRecentAuth(), async (req, res, next) => {
   try {
     if (!canManageTeam(req.userRole)) {
       return res.status(403).json({ error: "Only owners and admins can remove members" });

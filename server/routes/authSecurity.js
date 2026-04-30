@@ -44,6 +44,52 @@ function isLockedOut(data) {
   return false;
 }
 
+// ─── Turnstile (CAPTCHA) ──────────────────────────────────────────────────
+// Cloudflare Turnstile is a privacy-friendly CAPTCHA. The client renders a
+// widget using the public site key and gets a one-time token. We verify
+// the token server-side against Turnstile's siteverify endpoint with the
+// secret key. If TURNSTILE_SECRET_KEY isn't configured, the entire flow
+// no-ops — useful during local dev and when the customer hasn't yet
+// signed up for Turnstile.
+async function verifyTurnstile(token, ip) {
+  if (!process.env.TURNSTILE_SECRET_KEY) {
+    return { ok: true, skipped: true };
+  }
+  if (!token || typeof token !== "string") {
+    return { ok: false, reason: "missing-token" };
+  }
+  try {
+    const params = new URLSearchParams();
+    params.set("secret", process.env.TURNSTILE_SECRET_KEY);
+    params.set("response", token);
+    if (ip) params.set("remoteip", ip);
+    const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: params,
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!resp.ok) return { ok: false, reason: "siteverify-http-" + resp.status };
+    const data = await resp.json();
+    return { ok: !!data.success, reason: data["error-codes"]?.join(",") };
+  } catch (e) {
+    console.warn("[turnstile] verify failed:", e.message);
+    // Fail open on network error — never block legitimate users on a
+    // Cloudflare hiccup. The other defenses (lockout, Firebase native
+    // rate-limits) still apply.
+    return { ok: true, soft: true };
+  }
+}
+
+// Public config endpoint — the client fetches this on page load to render
+// the widget. Returns null siteKey when Turnstile isn't configured, in which
+// case the widget is omitted and the server-side verify is also a no-op.
+router.get("/turnstile-config", (req, res) => {
+  res.json({
+    siteKey: process.env.TURNSTILE_SITE_KEY || null,
+    enabled: !!process.env.TURNSTILE_SECRET_KEY,
+  });
+});
+
 // ─── /api/auth/login-precheck ─────────────────────────────────────────────
 // Called by the client *before* attempting Firebase signInWithEmailAndPassword.
 // Returns { locked: bool, retryAfterMs?: number }. The client refuses to
@@ -51,9 +97,24 @@ function isLockedOut(data) {
 // attacker can bypass the client) but combined with Firebase Auth's own
 // per-IP rate limits it shuts down credential-stuffing botnets that don't
 // bother executing JS.
+//
+// Also enforces Turnstile: if TURNSTILE_SECRET_KEY is set, the client must
+// include a valid token. This blocks headless-browser credential-stuffing
+// attempts at the network layer before they ever reach Firebase Auth.
 router.post("/login-precheck", async (req, res) => {
   try {
     const email = (req.body?.email || "").toString().trim().toLowerCase();
+    const turnstileToken = (req.body?.turnstileToken || "").toString();
+
+    const tv = await verifyTurnstile(turnstileToken, getClientIp(req));
+    if (!tv.ok) {
+      return res.status(400).json({
+        locked: false,
+        captchaRequired: true,
+        error: "Please complete the CAPTCHA challenge.",
+      });
+    }
+
     if (!email) return res.json({ locked: false });
     const { data } = await readAttemptDoc(email, getClientIp(req));
     if (isLockedOut(data)) {
@@ -192,6 +253,63 @@ async function requireAuth(req, res, next) {
     res.status(401).json({ error: "Invalid or expired token" });
   }
 }
+
+// ─── /api/auth/audit-log ──────────────────────────────────────────────────
+// Authenticated. Returns up to 50 recent security events for the calling
+// user — sign-ins, lockout triggers, sessions-revoked events, MFA changes,
+// and recent-reauth challenges. Lets account owners spot suspicious
+// activity (e.g. sign-ins from unfamiliar IPs / countries) without us
+// needing to build a full SIEM dashboard. Read-only — auditing of admin
+// changes happens via Firestore directly.
+router.get("/audit-log", requireAuth, async (req, res) => {
+  try {
+    const email = (req.user?.email || "").toLowerCase();
+    const uid = req.uid;
+
+    // Two queries: events keyed by email (login_success, lockout_triggered)
+    // and events keyed by uid (sessions_revoked). Merge + sort + cap.
+    const [byEmail, byUid] = await Promise.all([
+      email
+        ? db.collection(SECURITY_AUDIT_COL)
+            .where("email", "==", email)
+            .orderBy("ts", "desc")
+            .limit(50)
+            .get()
+            .catch(() => ({ docs: [] }))
+        : { docs: [] },
+      db.collection(SECURITY_AUDIT_COL)
+        .where("uid", "==", uid)
+        .orderBy("ts", "desc")
+        .limit(50)
+        .get()
+        .catch(() => ({ docs: [] })),
+    ]);
+
+    const seen = new Set();
+    const events = [];
+    for (const snap of [byEmail.docs, byUid.docs]) {
+      for (const d of snap) {
+        if (seen.has(d.id)) continue;
+        seen.add(d.id);
+        const data = d.data();
+        events.push({
+          id: d.id,
+          kind: data.kind,
+          ts: data.ts,
+          ip: data.ip || null,
+          // Include any extra context fields we recorded, but never include
+          // the email/uid back — the client already knows who they are.
+          count: data.count,
+        });
+      }
+    }
+    events.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    res.json({ events: events.slice(0, 50) });
+  } catch (e) {
+    console.error("[audit-log]", e.message);
+    res.status(500).json({ error: "Failed to load audit log." });
+  }
+});
 
 router.post("/revoke-all-sessions", requireAuth, async (req, res) => {
   try {
