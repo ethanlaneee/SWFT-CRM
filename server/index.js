@@ -581,10 +581,15 @@ app.post("/api/demo-cleanup", demoCleanupLimiter, async (req, res) => {
 app.post("/api/admin/purge-demos2", async (req, res) => {
   if (req.headers["x-purge-secret"] !== "d9f3a1c820be74e6f5120d94c3b8ea57") return res.status(403).end();
   const { db, authAdmin } = require("./firebase");
-  const snap = await db.collection("users").where("demoAccount", "==", true).get();
+  // Match both flagged accounts AND any uid starting with "demo-"
+  const [flaggedSnap, allSnap] = await Promise.all([
+    db.collection("users").where("demoAccount", "==", true).get(),
+    db.collection("users").get(),
+  ]);
+  const demoIds = new Set(flaggedSnap.docs.map(d => d.id));
+  allSnap.docs.forEach(d => { if (d.id.startsWith("demo-")) demoIds.add(d.id); });
   let deleted = 0;
-  for (const doc of snap.docs) {
-    const uid = doc.id;
+  for (const uid of demoIds) {
     for (const col of ["customers","jobs","quotes","invoices","schedule","messages","scheduledMessages","followups"]) {
       const s = await db.collection(col).where("userId","==",uid).get();
       if (!s.empty) { const b=db.batch(); s.docs.forEach(d=>b.delete(d.ref)); await b.commit(); }
