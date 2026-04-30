@@ -168,6 +168,12 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .modal-close:hover{background:var(--surface2);color:var(--white);}
 .modal-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
 .modal-foot{flex-shrink:0;padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--surface);}
+@media (max-width:768px){
+  /* Lift the modal above the mobile bottom-nav so the footer buttons are
+     always visible. The bottom nav is ~80px tall (z-index 800 > modal 600),
+     so we cap the modal height and shift it up off-center. */
+  .modal{max-height:calc(100vh - 180px);top:calc(50% - 40px);}
+}
 @media (max-width:480px){.modal-foot{flex-wrap:wrap;}.modal-btn{font-size:12px;padding:10px 8px;}}
 .modal-btn{flex:1;padding:11px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--gray);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;font-weight:500;}
 .modal-btn:hover{background:var(--surface2);color:var(--white);}
