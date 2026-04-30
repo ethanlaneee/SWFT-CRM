@@ -577,17 +577,23 @@ app.post("/api/demo-cleanup", demoCleanupLimiter, async (req, res) => {
 // /api/me is auth-only: expired/canceled users must still reach their profile
 // and billing page to upgrade. All other routes are fully gated by checkAccess.
 
-// ONE-TIME purge — remove after running
+// ONE-TIME: list + purge demo accounts — remove after running
+app.get("/api/admin/purge-demos2", async (req, res) => {
+  if (req.headers["x-purge-secret"] !== "d9f3a1c820be74e6f5120d94c3b8ea57") return res.status(403).end();
+  const { db } = require("./firebase");
+  const snap = await db.collection("users").get();
+  const demos = snap.docs
+    .filter(d => d.id.startsWith("demo-") || d.data().demoAccount || (d.data().email || "").includes("demo@"))
+    .map(d => ({ id: d.id, email: d.data().email, visitorEmail: d.data().demoVisitorEmail, createdAt: d.data().demoCreatedAt }));
+  res.json({ count: demos.length, demos });
+});
 app.post("/api/admin/purge-demos2", async (req, res) => {
   if (req.headers["x-purge-secret"] !== "d9f3a1c820be74e6f5120d94c3b8ea57") return res.status(403).end();
   const { db, authAdmin } = require("./firebase");
-  // Match both flagged accounts AND any uid starting with "demo-"
-  const [flaggedSnap, allSnap] = await Promise.all([
-    db.collection("users").where("demoAccount", "==", true).get(),
-    db.collection("users").get(),
-  ]);
-  const demoIds = new Set(flaggedSnap.docs.map(d => d.id));
-  allSnap.docs.forEach(d => { if (d.id.startsWith("demo-")) demoIds.add(d.id); });
+  const snap = await db.collection("users").get();
+  const demoIds = snap.docs
+    .filter(d => d.id.startsWith("demo-") || d.data().demoAccount || (d.data().email || "").includes("demo@"))
+    .map(d => d.id);
   let deleted = 0;
   for (const uid of demoIds) {
     for (const col of ["customers","jobs","quotes","invoices","schedule","messages","scheduledMessages","followups"]) {
