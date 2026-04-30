@@ -452,7 +452,25 @@ async function loadQuotes(){
         openNewQuote();
       }
     }catch(e){}
-  }catch(e){console.error(e);}
+  }catch(e){
+    console.error(e);
+    // If the parallel list fetch failed, the page is empty and the body may
+    // still be hidden. Open the modal anyway when arriving from the pipeline,
+    // and reveal the body, so the owner can finish the quote with whatever
+    // they already entered upstream instead of seeing a blank screen.
+    try {
+      var pipeData2=sessionStorage.getItem('swft_pipeline_quote');
+      if (pipeData2) {
+        sessionStorage.removeItem('swft_pipeline_quote');
+        window._pipelineQuoteData=JSON.parse(pipeData2);
+        _quotes=_quotes||[]; _customers=_customers||[]; _jobs=_jobs||[];
+        openNewQuote();
+      }
+    } catch(_) {}
+    if (document.body.style.visibility !== 'visible') {
+      document.body.style.visibility = 'visible';
+    }
+  }
 }
 
 // ── Stats ──
@@ -572,6 +590,15 @@ function openNewQuote(){
     if(pd.sqft&&document.getElementById('f-sqft')) document.getElementById('f-sqft').value=pd.sqft;
   }
   document.getElementById('modal-overlay').classList.add('open');
+  // The page body starts with visibility:hidden and only flips visible once
+  // swft-account.js confirms auth/perms. If that's still pending when we open
+  // the modal (common for navigation immediately after dashboard pipeline →
+  // quotes), the modal renders into a hidden body and the user sees a
+  // completely blank screen. Reveal the body now — backend already enforces
+  // access on every API call.
+  if (document.body.style.visibility !== 'visible') {
+    document.body.style.visibility = 'visible';
+  }
 }
 
 function populateModal(q){
