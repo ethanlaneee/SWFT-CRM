@@ -405,7 +405,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="forgot-link" onclick="handleForgotPassword()">Forgot password?</div>
 
     <div class="cf-turnstile" id="login-turnstile"
-      data-sitekey="0x4AAAAAABkMicPCq73N7F5Z"
+      data-sitekey="0x4AAAAAADGiDy_xnqOxNrsg"
       data-theme="dark"
       data-size="normal"
       data-callback="onLoginTurnstileSuccess"
@@ -521,7 +521,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
 
     <div class="cf-turnstile" id="signup-turnstile"
-      data-sitekey="0x4AAAAAABkMicPCq73N7F5Z"
+      data-sitekey="0x4AAAAAADGiDy_xnqOxNrsg"
       data-theme="dark"
       data-size="normal"
       data-callback="onSignupTurnstileSuccess"
@@ -768,20 +768,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
     if (!valid) return;
 
-    // Verify Turnstile captcha — only enforce if the widget actually rendered
-    const loginWidgetRendered = document.querySelector('#login-turnstile iframe');
-    if (loginWidgetRendered) {
-      if (!_loginTurnstileToken) {
-        showGlobalError('Please complete the security check before signing in.');
-        return;
-      }
-      const captchaOk = await verifyTurnstile(_loginTurnstileToken);
-      if (!captchaOk) {
-        showGlobalError('Security check failed. Please refresh and try again.');
-        if (window.turnstile) turnstile.reset('#login-turnstile');
-        _loginTurnstileToken = '';
-        return;
-      }
+    // Verify Turnstile captcha — required for every sign-in
+    if (!_loginTurnstileToken) {
+      showGlobalError('Please complete the security check before signing in.');
+      return;
+    }
+    const captchaOk = await verifyTurnstile(_loginTurnstileToken);
+    if (!captchaOk) {
+      showGlobalError('Security check failed. Please refresh and try again.');
+      if (window.turnstile) turnstile.reset('#login-turnstile');
+      _loginTurnstileToken = '';
+      return;
     }
 
     const btn = document.getElementById('login-btn');
@@ -896,20 +893,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
     if (!valid) return;
 
-    // Verify Turnstile captcha — only enforce if the widget actually rendered
-    const signupWidgetRendered = document.querySelector('#signup-turnstile iframe');
-    if (signupWidgetRendered) {
-      if (!_signupTurnstileToken) {
-        showGlobalError('Please complete the security check before creating your account.');
-        return;
-      }
-      const captchaOkSignup = await verifyTurnstile(_signupTurnstileToken);
-      if (!captchaOkSignup) {
-        showGlobalError('Security check failed. Please refresh and try again.');
-        if (window.turnstile) turnstile.reset('#signup-turnstile');
-        _signupTurnstileToken = '';
-        return;
-      }
+    // Verify Turnstile captcha — required for every sign-up
+    if (!_signupTurnstileToken) {
+      showGlobalError('Please complete the security check before creating your account.');
+      return;
+    }
+    const captchaOkSignup = await verifyTurnstile(_signupTurnstileToken);
+    if (!captchaOkSignup) {
+      showGlobalError('Security check failed. Please refresh and try again.');
+      if (window.turnstile) turnstile.reset('#signup-turnstile');
+      _signupTurnstileToken = '';
+      return;
     }
 
     const btn = document.getElementById('signup-btn');
