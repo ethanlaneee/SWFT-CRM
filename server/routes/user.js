@@ -61,6 +61,22 @@ router.get("/", async (req, res, next) => {
       data = { ...data, email: req.user.email };
     }
 
+    // Backfill personal name from the Firebase Auth displayName captured at
+    // signup. Older accounts (and team-invite joiners) sometimes land here
+    // with no firstName/lastName/name in Firestore even though the auth
+    // profile has the name the user typed. Without this, the sidebar falls
+    // back to the email prefix.
+    if (!data.firstName && !data.lastName && !data.name && req.user?.name) {
+      const parts = req.user.name.trim().split(/\s+/);
+      const firstName = parts[0] || "";
+      const lastName = parts.slice(1).join(" ") || "";
+      const heal = { name: req.user.name };
+      if (firstName) heal.firstName = firstName;
+      if (lastName) heal.lastName = lastName;
+      await col().doc(req.uid).set(heal, { merge: true });
+      data = { ...data, ...heal };
+    }
+
     // Return effective permissions so the frontend can gate nav/pages correctly.
     // For non-owner roles, check orgRoles for custom overrides, then fall back to built-in defaults.
     const role = data.role || "owner";
