@@ -433,6 +433,13 @@ const DEFAULT_PERMISSIONS = [
   // Team Tracker
   { id: "tracker.view",         label: "View Team Tracker",      group: "Team Tracker" },
   { id: "tracker.viewAll",      label: "See All Teammates on Map", group: "Team Tracker" },
+  // Door Knocking
+  { id: "doors.view",           label: "View Own Doors",         group: "Door Knocking" },
+  { id: "doors.viewAll",        label: "View All Team Doors",    group: "Door Knocking" },
+  { id: "doors.add",            label: "Log Knocks",             group: "Door Knocking" },
+  { id: "doors.edit",           label: "Edit Door Details",      group: "Door Knocking" },
+  { id: "doors.delete",         label: "Delete Doors",           group: "Door Knocking" },
+  { id: "doors.import",         label: "Bulk Import Addresses",  group: "Door Knocking" },
   // Admin
   { id: "team.manage",          label: "Manage Team",            group: "Admin" },
   { id: "integrations.manage",  label: "Manage SWFT Connect",    group: "Admin" },
@@ -462,6 +469,7 @@ const BUILT_IN_ROLES = {
     "import.use",
     "teamchat.view","teamchat.send",
     "tracker.view","tracker.viewAll",
+    "doors.view","doors.viewAll","doors.add","doors.edit","doors.delete","doors.import",
     "team.manage","integrations.manage","settings.manage",
   ]},
   office: { name: "Office", builtIn: true, permissions: [
@@ -481,6 +489,7 @@ const BUILT_IN_ROLES = {
     "intake.view",
     "teamchat.view","teamchat.send",
     "tracker.view",
+    "doors.view","doors.viewAll","doors.add","doors.edit","doors.delete","doors.import",
   ]},
   technician: { name: "Technician", builtIn: true, permissions: [
     "dashboard.view",
@@ -491,6 +500,7 @@ const BUILT_IN_ROLES = {
     "ai.use",
     "teamchat.view","teamchat.send",
     "tracker.view",
+    "doors.view","doors.add","doors.edit",
   ]},
 };
 

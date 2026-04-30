@@ -208,6 +208,12 @@ router.post("/", async (req, res, next) => {
 // as planned-but-not-yet-knocked. Capped at 200 per call.
 router.post("/bulk", async (req, res, next) => {
   try {
+    // Bulk import is its own permission so owners can grant "log knocks"
+    // to most of the team but reserve mass-imports for managers.
+    if (req.userPermissions && !req.userPermissions.has("doors.import")) {
+      return res.status(403).json({ error: "You don't have permission to bulk-import addresses." });
+    }
+
     const rawAddresses = Array.isArray(req.body && req.body.addresses) ? req.body.addresses : [];
     const preGeocoded  = Array.isArray(req.body && req.body.entries)   ? req.body.entries   : [];
 
@@ -374,6 +380,11 @@ router.put("/:id", async (req, res, next) => {
 // with an empty visit history. Useful for re-using a route on a new day.
 router.post("/bulk-reset", async (req, res, next) => {
   try {
+    // Bulk-reset rewrites visit history on every selected door, so it
+    // requires the same permission as editing them.
+    if (req.userPermissions && !req.userPermissions.has("doors.edit")) {
+      return res.status(403).json({ error: "You don't have permission to clear door logs." });
+    }
     const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
     if (!ids.length) return res.status(400).json({ error: "No ids provided" });
     if (ids.length > 200) return res.status(400).json({ error: "Too many ids (max 200 per call)" });
@@ -403,6 +414,11 @@ router.post("/bulk-reset", async (req, res, next) => {
 // Body: { ids: ["..."] }   max 200 per call
 router.post("/bulk-delete", async (req, res, next) => {
   try {
+    // Even though bulk-delete is a POST (carries a body), it's a delete
+    // operation — so it needs doors.delete, not doors.add.
+    if (req.userPermissions && !req.userPermissions.has("doors.delete")) {
+      return res.status(403).json({ error: "You don't have permission to delete doors." });
+    }
     const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
     if (!ids.length) return res.status(400).json({ error: "No ids provided" });
     if (ids.length > 200) return res.status(400).json({ error: "Too many ids (max 200 per call)" });

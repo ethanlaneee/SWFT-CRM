@@ -60,6 +60,7 @@ const METHOD_PERMISSION = {
   "/api/import":            { GET: "import.use",       POST: "import.use" },
   "/api/team-chat":         { GET: "teamchat.view",    POST: "teamchat.send",          DELETE: "teamchat.view" },
   "/api/tracker":           { GET: "tracker.view",     POST: "tracker.view" },
+  "/api/doors":             { GET: "doors.view",       POST: "doors.add",              PUT: "doors.edit",       DELETE: "doors.delete" },
   "/api/agent-actions":     { GET: "dashboard.view",   POST: "dashboard.view",         DELETE: "dashboard.view" },
 };
 
@@ -113,6 +114,12 @@ const PERM_LABEL = {
   "teamchat.send":         "send team messages",
   "tracker.view":          "view the team tracker",
   "tracker.viewAll":       "see all teammates on the map",
+  "doors.view":            "view your door knocks",
+  "doors.viewAll":         "view the whole team's door knocks",
+  "doors.add":             "log door knocks",
+  "doors.edit":            "edit door details",
+  "doors.delete":          "delete doors",
+  "doors.import":          "bulk-import addresses",
 };
 
 // Permissions per built-in role
@@ -137,6 +144,7 @@ const ROLE_PERMISSIONS = {
     "import.use",
     "teamchat.view","teamchat.send",
     "tracker.view","tracker.viewAll",
+    "doors.view","doors.viewAll","doors.add","doors.edit","doors.delete","doors.import",
     "team.manage",
     "integrations.manage",
     "settings.manage",
@@ -158,6 +166,7 @@ const ROLE_PERMISSIONS = {
     "intake.view",
     "teamchat.view","teamchat.send",
     "tracker.view",
+    "doors.view","doors.viewAll","doors.add","doors.edit","doors.delete","doors.import",
   ]),
   technician: new Set([
     "dashboard.view",
@@ -169,6 +178,7 @@ const ROLE_PERMISSIONS = {
     "ai.use",
     "teamchat.view","teamchat.send",
     "tracker.view",
+    "doors.view","doors.add","doors.edit",
   ]),
 };
 
