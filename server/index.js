@@ -594,6 +594,7 @@ const { router: teamRouter, publicRouter: teamPublicRouter } = require("./routes
 app.use("/api/team",        teamPublicRouter);                        // validate invite (no auth), join (has own auth)
 app.use("/api/team",        auth, checkAccess, requirePlan("pro"), teamRouter);           // SWFT+ and above
 app.use("/api/tracker",     auth, checkAccess, requirePlan("pro"), require("./routes/tracker")); // SWFT+ and above
+app.use("/api/doors",       auth, checkAccess,  require("./routes/doors")); // Door knocking tracker — all plans
 app.use("/api/integrations", auth, checkAccess, requirePlan("pro"), integrationsRouter);  // SWFT+ and above
 app.use("/api/team-chat",    auth, checkAccess, requirePlan("pro"), require("./routes/teamChat")); // SWFT+ and above
 app.use("/api/email",           auth, checkAccess,  require("./routes/email"));
