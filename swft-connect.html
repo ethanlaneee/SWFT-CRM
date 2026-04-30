@@ -268,9 +268,12 @@ async function loadIntegrations(user) {
     var data = await res.json();
     var integrations = data.integrations || [];
 
-    var connected = integrations.filter(function(i){ return i.connected; }).length;
+    var visibleIds = new Set();
+    CATEGORIES.forEach(function(cat){ cat.ids.forEach(function(id){ visibleIds.add(id); }); });
+    var visible = integrations.filter(function(i){ return visibleIds.has(i.id); });
+    var connected = visible.filter(function(i){ return i.connected; }).length;
     document.getElementById('st-connected').textContent = connected;
-    document.getElementById('st-total').textContent = integrations.length + 1; // +1 Apple
+    document.getElementById('st-total').textContent = visible.length + 1; // +1 Apple Calendar
 
     var map = {};
     integrations.forEach(function(i){ map[i.id] = i; });
