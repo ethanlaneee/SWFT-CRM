@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<title>Contact Sales — SWFT Enterprise</title>
+<meta name="description" content="Get in touch with the SWFT team to discuss an Enterprise plan for your company."/>
+<meta name="robots" content="noindex"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--surface:#111111;--surface2:#181818;
+  --border:#1f1f1f;--border2:#2c2c2c;
+  --green:#c8f135;--green-dim:rgba(200,241,53,0.12);
+  --white:#f0f0f0;--gray:#7a7a7a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{width:100%;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden;line-height:1.6;min-height:100vh;}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(200,241,53,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(77,159,255,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:48px 48px;pointer-events:none;z-index:0;
+}
+
+/* NAV */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(10,10,10,0.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;
+  color:var(--white);text-decoration:none;
+}
+.nav-logo span{color:var(--green);}
+.nav-back{
+  font-size:14px;font-weight:500;color:var(--gray);text-decoration:none;
+  display:flex;align-items:center;gap:6px;transition:color 0.2s;
+}
+.nav-back:hover{color:var(--white);}
+.nav-back svg{width:16px;height:16px;}
+
+/* PAGE */
+.page{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:100px 24px 60px;
+}
+.contact-wrap{
+  display:grid;grid-template-columns:1fr 1fr;gap:64px;
+  max-width:960px;width:100%;align-items:start;
+}
+@media(max-width:720px){
+  .contact-wrap{grid-template-columns:1fr;gap:40px;}
+  .nav{padding:16px 20px;}
+}
+
+/* LEFT SIDE */
+.contact-info{}
+.contact-tag{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--green);
+  padding:5px 14px;border-radius:100px;
+  background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);
+  margin-bottom:24px;
+}
+.contact-title{
+  font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1.05;
+  letter-spacing:2px;color:var(--white);margin-bottom:16px;
+}
+.contact-title span{color:var(--green);}
+.contact-sub{font-size:16px;color:var(--gray);line-height:1.7;margin-bottom:40px;}
+.perks{display:flex;flex-direction:column;gap:16px;}
+.perk{display:flex;align-items:flex-start;gap:14px;}
+.perk-icon{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:var(--green-dim);border:1px solid rgba(200,241,53,0.15);
+  display:flex;align-items:center;justify-content:center;
+}
+.perk-icon svg{width:18px;height:18px;color:var(--green);}
+.perk-text{}
+.perk-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.perk-desc{font-size:13px;color:var(--gray);}
+
+/* RIGHT SIDE — FORM */
+.contact-form-wrap{
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+  padding:40px;
+}
+.form-title{font-size:20px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.form-sub{font-size:14px;color:var(--gray);margin-bottom:32px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.form-group label{font-size:13px;font-weight:500;color:var(--gray);}
+.form-group input,.form-group select,.form-group textarea{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:10px;
+  padding:12px 16px;font-size:14px;color:var(--white);font-family:'DM Sans',sans-serif;
+  transition:border-color 0.2s;outline:none;width:100%;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:rgba(200,241,53,0.4);
+}
+.form-group input::placeholder,.form-group textarea::placeholder{color:var(--gray);}
+.form-group select{appearance:none;cursor:pointer;}
+.form-group select option{background:var(--surface2);}
+.form-group textarea{resize:vertical;min-height:100px;}
+.form-row .form-group{margin-bottom:0;}
+.submit-btn{
+  width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;
+  background:var(--green);color:#0a0a0a;font-size:15px;font-weight:700;
+  font-family:'DM Sans',sans-serif;letter-spacing:0.5px;
+  transition:all 0.2s;box-shadow:0 0 20px rgba(200,241,53,0.15);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:8px;
+}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(200,241,53,0.25);}
+.submit-btn svg{width:18px;height:18px;}
+.form-note{font-size:12px;color:var(--gray);text-align:center;margin-top:12px;}
+
+/* SUCCESS STATE */
+.success-state{display:none;text-align:center;padding:20px 0;}
+.success-icon{
+  width:56px;height:56px;border-radius:50%;
+  background:var(--green-dim);border:1px solid rgba(200,241,53,0.2);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+}
+.success-icon svg{width:28px;height:28px;color:var(--green);}
+.success-title{font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;}
+.success-msg{font-size:14px;color:var(--gray);line-height:1.6;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-logo" href="/">SWF<span>T</span></a>
+  <a class="nav-back" href="/#pricing">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to pricing
+  </a>
+</nav>
+
+<div class="page">
+  <div class="contact-wrap">
+
+    <!-- Left: info -->
+    <div class="contact-info">
+      <span class="contact-tag">Enterprise</span>
+      <h1 class="contact-title">LET'S BUILD<br/>YOUR <span>CUSTOM</span><br/>PLAN</h1>
+      <p class="contact-sub">For companies with 50+ people. We'll put together a custom setup, onboarding, and pricing that works for your operation.</p>
+      <div class="perks">
+        <div class="perk">
+          <div class="perk-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="perk-text">
+            <div class="perk-title">Unlimited Users</div>
+            <div class="perk-desc">Add your entire team with no per-seat charges.</div>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="perk-text">
+            <div class="perk-title">Dedicated Account Manager</div>
+            <div class="perk-desc">A real person who knows your business and is always reachable.</div>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="perk-text">
+            <div class="perk-title">Custom Onboarding &amp; Training</div>
+            <div class="perk-desc">We set everything up for you and train your whole team.</div>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div class="perk-text">
+            <div class="perk-title">Everything Unlimited</div>
+            <div class="perk-desc">Unlimited AI messages, SMS, broadcasts, and integrations.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: form -->
+    <div class="contact-form-wrap">
+      <div id="contactForm">
+        <div class="form-title">Get in touch</div>
+        <div class="form-sub">We'll get back to you within one business day.</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>First name</label>
+            <input type="text" id="firstName" placeholder="John" required/>
+          </div>
+          <div class="form-group">
+            <label>Last name</label>
+            <input type="text" id="lastName" placeholder="Smith" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Work email</label>
+          <input type="email" id="email" placeholder="john@yourcompany.com" required/>
+        </div>
+        <div class="form-group">
+          <label>Company name</label>
+          <input type="text" id="company" placeholder="Acme Roofing Co." required/>
+        </div>
+        <div class="form-group">
+          <label>Team size</label>
+          <select id="teamSize">
+            <option value="" disabled selected>Select range</option>
+            <option value="50-100">50–100 people</option>
+            <option value="100-250">100–250 people</option>
+            <option value="250-500">250–500 people</option>
+            <option value="500+">500+ people</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>What are you looking for? <span style="color:var(--gray);font-weight:400;">(optional)</span></label>
+          <textarea id="message" placeholder="Tell us about your business and what you need..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="submitForm()">
+          Send Message
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <p class="form-note">No spam. We'll only reach out about your request.</p>
+      </div>
+
+      <div class="success-state" id="successState">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="success-title">Message sent!</div>
+        <div class="success-msg">Thanks — we'll be in touch within one business day.<br/>In the meantime, feel free to <a href="/" style="color:var(--green);text-decoration:none;">explore SWFT</a>.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+async function submitForm() {
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName  = document.getElementById('lastName').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const company   = document.getElementById('company').value.trim();
+  const teamSize  = document.getElementById('teamSize').value;
+  const message   = document.getElementById('message').value.trim();
+
+  if (!firstName || !lastName || !email || !company) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+
+  const btn = document.querySelector('.submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    await fetch('/api/contact/enterprise', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName, lastName, email, company, teamSize, message }),
+    });
+  } catch(e) {
+    // fail silently — show success regardless so the UX isn't broken
+  }
+
+  document.getElementById('contactForm').style.display = 'none';
+  document.getElementById('successState').style.display = 'block';
+}
+</script>
+</body>
+</html>

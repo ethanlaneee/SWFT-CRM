@@ -622,6 +622,8 @@ app.post(
 );
 // Twilio inbound SMS — no auth, Twilio signs the request itself
 app.use("/api/sms", require("./routes/smsWebhook"));
+// Enterprise contact form — public, no auth
+app.use("/api/contact", require("./routes/contact"));
 app.use("/api/broadcasts",        auth, checkAccess, requirePlan("pro"), require("./routes/broadcasts"));
 app.use("/api/sending-domain",    auth, checkAccess, requirePlan("pro"), require("./routes/sendingDomain"));
 app.use("/api/transcribe",        auth, checkAccess,  require("./routes/transcribe"));

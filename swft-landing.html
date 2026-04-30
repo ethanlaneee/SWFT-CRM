@@ -670,6 +670,70 @@ section{position:relative;z-index:1;}
 .pricing-note{text-align:center;margin-top:32px;font-size:13px;color:var(--gray);}
 .pricing-note strong{color:var(--white);}
 
+/* ── PRICING TABLE ── */
+.pricing-table-wrap{overflow-x:auto;margin:0 auto;max-width:1100px;}
+.pricing-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+.pricing-table thead th{
+  padding:28px 20px 24px;text-align:center;vertical-align:bottom;
+  border-bottom:1px solid var(--border2);
+  background:var(--surface);
+}
+.pricing-table thead th:first-child{text-align:left;width:28%;}
+.pricing-table thead th.pt-featured{
+  background:linear-gradient(180deg,rgba(200,241,53,0.07),rgba(200,241,53,0.02));
+  border-left:1px solid rgba(200,241,53,0.2);
+  border-right:1px solid rgba(200,241,53,0.2);
+  border-top:2px solid rgba(200,241,53,0.4);
+}
+.pt-popular-badge{
+  display:inline-block;font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--green);
+  padding:4px 12px;border-radius:100px;
+  background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);
+  margin-bottom:14px;
+}
+.pt-plan-name{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;
+  color:var(--white);margin-bottom:6px;
+}
+.pt-price{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;}
+.pt-dollar{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green);}
+.pt-price .monthly-price,.pt-price .annual-price{font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--white);line-height:1;}
+.pt-period{font-size:14px;color:var(--gray);font-weight:500;margin-left:2px;}
+.pt-custom{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);line-height:1.2;justify-content:center;}
+.pt-desc{font-size:12px;color:var(--gray);margin-bottom:16px;}
+.pt-btn{
+  display:inline-block;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;white-space:nowrap;
+}
+.pt-btn.primary{background:var(--green);color:#0a0a0a;box-shadow:0 0 16px rgba(200,241,53,0.15);}
+.pt-btn.primary:hover{transform:translateY(-1px);box-shadow:0 0 28px rgba(200,241,53,0.25);}
+.pt-btn.secondary{background:transparent;color:var(--white);border:1px solid var(--border2);}
+.pt-btn.secondary:hover{border-color:var(--gray);background:var(--surface2);}
+/* body rows */
+.pricing-table tbody tr{border-bottom:1px solid var(--border);}
+.pricing-table tbody tr:hover{background:rgba(255,255,255,0.02);}
+.pricing-table tbody td{
+  padding:14px 20px;font-size:14px;color:var(--gray);text-align:center;vertical-align:middle;
+}
+.pricing-table tbody td:first-child{text-align:left;color:var(--white);font-weight:500;}
+.pricing-table tbody td.pt-featured{
+  background:rgba(200,241,53,0.03);
+  border-left:1px solid rgba(200,241,53,0.12);
+  border-right:1px solid rgba(200,241,53,0.12);
+}
+.pt-group-row td{
+  padding:10px 20px;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gray);background:var(--surface2) !important;
+  text-align:left !important;
+}
+.pt-check{color:var(--gray);font-size:16px;font-weight:700;}
+.pt-green{color:var(--green) !important;font-weight:600;}
+.pt-dash{color:var(--border2) !important;}
+.pt-sub{font-size:11px;color:var(--gray);font-weight:400;}
+.pt-cta-row td{padding:24px 20px;border-bottom:none;}
+.pt-cta-row .pt-featured{background:rgba(200,241,53,0.03);}
+
 /* ── VALUE STACK ── */
 .value-breakdown{padding:100px 0 40px;}
 .value-list{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:0;}
@@ -748,6 +812,10 @@ section{position:relative;z-index:1;}
 .pricing-amount .annual-price{display:none;}
 .billing-annual .pricing-amount .monthly-price{display:none;}
 .billing-annual .pricing-amount .annual-price{display:inline;}
+/* table billing toggle */
+.pt-price .annual-price{display:none;}
+.billing-annual .pt-price .monthly-price{display:none;}
+.billing-annual .pt-price .annual-price{display:inline;}
 
 /* ── VALUE STACK (below pricing) ── */
 .value-stack{padding:0 0 80px;}
@@ -1464,105 +1532,80 @@ function toggleSidebar(){
       <span class="save-badge">Save 20%</span>
     </div>
 
-    <div class="pricing-grid" id="pricingGrid">
-
-      <!-- ── SWFT CORE ── -->
-      <div class="pricing-card reveal" data-delay="0">
-        <div class="pricing-plan-name">SWFT CORE</div>
-        <div class="pricing-price">
-          <span class="pricing-dollar">$</span>
-          <span class="pricing-amount"><span class="monthly-price">149</span><span class="annual-price">119</span></span>
-          <span class="pricing-period">/mo</span>
-        </div>
-        <p class="pricing-desc">Everything a solo operator needs to run their business.</p>
-        <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li><span class="check">&#10003;</span> Full CRM &amp; customer management</li>
-          <li><span class="check">&#10003;</span> Quotes &amp; invoicing</li>
-          <li><span class="check">&#10003;</span> Job scheduling &amp; calendar sync</li>
-          <li><span class="check">&#10003;</span> Gmail &amp; Google Calendar integration</li>
-          <li><span class="check">&#10003;</span> QuickBooks integration</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">250 AI messages</span> / month</li>
-          <li><span class="check">&#10003;</span> AI estimator &amp; follow-ups</li>
-          <li><span class="check">&#10003;</span> Data import</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">1 user</span></li>
-        </ul>
-        <a class="pricing-cta secondary" href="/swft-checkout?plan=starter" data-plan="starter">
-          Start 14-Day Free Trial
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-
-      <!-- ── SWFT+ ── -->
-      <div class="pricing-card featured reveal" data-delay="100">
-        <div class="pricing-badge">MOST POPULAR</div>
-        <div class="pricing-plan-name">SWFT+</div>
-        <div class="pricing-price">
-          <span class="pricing-dollar">$</span>
-          <span class="pricing-amount"><span class="monthly-price">349</span><span class="annual-price">279</span></span>
-          <span class="pricing-period">/mo</span>
-        </div>
-        <p class="pricing-desc">For growing businesses ready to bring on a team.</p>
-        <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li><span class="check">&#10003;</span> Everything in SWFT Core</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">1,000 AI messages</span> / month</li>
-          <li><span class="check">&#10003;</span> Two-way <span class="highlight">SMS</span></li>
-          <li><span class="check">&#10003;</span> Team management &amp; chat</li>
-          <li><span class="check">&#10003;</span> Team Tracker</li>
-          <li><span class="check">&#10003;</span> Up to <span class="highlight">10 users</span> (+$23/mo each)</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">16-day weather forecasts</span></li>
-          <li><span class="check">&#10003;</span> AI Agents</li>
-          <li><span class="check">&#10003;</span> Facebook &amp; Instagram integrations</li>
-          <li><span class="check">&#10003;</span> Broadcasts <span style="font-size:11px;color:var(--gray);">(25/mo)</span></li>
-        </ul>
-        <a class="pricing-cta primary" href="/swft-checkout?plan=pro" data-plan="pro">
-          Start 14-Day Free Trial
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-
-      <!-- ── SWFT PRO ── -->
-      <div class="pricing-card reveal" data-delay="200">
-        <div class="pricing-plan-name">SWFT PRO</div>
-        <div class="pricing-price">
-          <span class="pricing-dollar">$</span>
-          <span class="pricing-amount"><span class="monthly-price">599</span><span class="annual-price">479</span></span>
-          <span class="pricing-period">/mo</span>
-        </div>
-        <p class="pricing-desc">Unlimited power for high-volume operations.</p>
-        <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li><span class="check">&#10003;</span> Everything in SWFT+</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited AI messages</span></li>
-          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited SMS</span></li>
-          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited broadcasts</span></li>
-          <li><span class="check">&#10003;</span> Up to <span class="highlight">25 users</span> (+$10/mo each)</li>
-        </ul>
-        <a class="pricing-cta secondary" href="/swft-checkout?plan=business" data-plan="business">
-          Start 14-Day Free Trial
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-
-      <!-- ── ENTERPRISE ── -->
-      <div class="pricing-card reveal" data-delay="300">
-        <div class="pricing-plan-name">SWFT ENTERPRISE</div>
-        <div class="pricing-price" style="font-size:26px;font-weight:700;color:var(--white);padding:14px 0 10px;">Custom Pricing</div>
-        <p class="pricing-desc">For companies with 50+ people who need a fully custom setup, contract, and onboarding.</p>
-        <div class="pricing-divider"></div>
-        <ul class="pricing-features">
-          <li><span class="check">&#10003;</span> Everything in SWFT Pro</li>
-          <li><span class="check">&#10003;</span> <span class="highlight">Unlimited users</span></li>
-          <li><span class="check">&#10003;</span> Dedicated account manager</li>
-          <li><span class="check">&#10003;</span> Custom onboarding &amp; training</li>
-        </ul>
-        <a class="pricing-cta secondary" href="mailto:sales@goswft.com">
-          Contact Sales
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-
+    <!-- Comparison table -->
+    <div class="pricing-table-wrap reveal" id="pricingTableWrap">
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th class="pt-feature-col"></th>
+            <th>
+              <div class="pt-plan-name">SWFT CORE</div>
+              <div class="pt-price"><span class="pt-dollar">$</span><span class="monthly-price">149</span><span class="annual-price">119</span><span class="pt-period">/mo</span></div>
+              <div class="pt-desc">Solo operators</div>
+              <a class="pt-btn secondary" href="/swft-checkout?plan=starter" data-plan="starter">Start Free Trial</a>
+            </th>
+            <th class="pt-featured">
+              <div class="pt-popular-badge">MOST POPULAR</div>
+              <div class="pt-plan-name">SWFT+</div>
+              <div class="pt-price"><span class="pt-dollar">$</span><span class="monthly-price">349</span><span class="annual-price">279</span><span class="pt-period">/mo</span></div>
+              <div class="pt-desc">Growing teams</div>
+              <a class="pt-btn primary" href="/swft-checkout?plan=pro" data-plan="pro">Start Free Trial</a>
+            </th>
+            <th>
+              <div class="pt-plan-name">SWFT PRO</div>
+              <div class="pt-price"><span class="pt-dollar">$</span><span class="monthly-price">599</span><span class="annual-price">479</span><span class="pt-period">/mo</span></div>
+              <div class="pt-desc">High-volume ops</div>
+              <a class="pt-btn secondary" href="/swft-checkout?plan=business" data-plan="business">Start Free Trial</a>
+            </th>
+            <th>
+              <div class="pt-plan-name">ENTERPRISE</div>
+              <div class="pt-price pt-custom">Custom</div>
+              <div class="pt-desc">50+ people</div>
+              <a class="pt-btn secondary" href="/swft-contact">Contact Sales</a>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Core -->
+          <tr class="pt-group-row"><td colspan="5">Core Features</td></tr>
+          <tr><td>Full CRM &amp; customer management</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>Quotes &amp; invoicing</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>Job scheduling &amp; calendar sync</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>Gmail &amp; Google Calendar</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>QuickBooks integration</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>AI estimator &amp; follow-ups</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>Data import</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <tr><td>16-day weather forecasts</td><td class="pt-check">&#10003;</td><td class="pt-check pt-featured">&#10003;</td><td class="pt-check">&#10003;</td><td class="pt-check">&#10003;</td></tr>
+          <!-- Usage -->
+          <tr class="pt-group-row"><td colspan="5">Usage</td></tr>
+          <tr><td>Users</td><td>1</td><td class="pt-featured pt-green">10 <span class="pt-sub">(+$23/mo ea)</span></td><td class="pt-green">25 <span class="pt-sub">(+$10/mo ea)</span></td><td class="pt-green">Unlimited</td></tr>
+          <tr><td>AI messages / month</td><td>250</td><td class="pt-featured pt-green">1,000</td><td class="pt-green">Unlimited</td><td class="pt-green">Unlimited</td></tr>
+          <tr><td>SMS</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-green">Unlimited</td><td class="pt-green">Unlimited</td></tr>
+          <tr><td>Broadcasts</td><td class="pt-dash">—</td><td class="pt-featured pt-green">25 / mo</td><td class="pt-green">Unlimited</td><td class="pt-green">Unlimited</td></tr>
+          <!-- Team -->
+          <tr class="pt-group-row"><td colspan="5">Team</td></tr>
+          <tr><td>Team management &amp; chat</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>Team Tracker</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <!-- AI -->
+          <tr class="pt-group-row"><td colspan="5">AI &amp; Automation</td></tr>
+          <tr><td>AI Agents</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <!-- Integrations -->
+          <tr class="pt-group-row"><td colspan="5">Integrations</td></tr>
+          <tr><td>Facebook &amp; Instagram</td><td class="pt-dash">—</td><td class="pt-check pt-featured pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <!-- Enterprise -->
+          <tr class="pt-group-row"><td colspan="5">Enterprise</td></tr>
+          <tr><td>Dedicated account manager</td><td class="pt-dash">—</td><td class="pt-dash pt-featured">—</td><td class="pt-dash">—</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td>Custom onboarding &amp; training</td><td class="pt-dash">—</td><td class="pt-dash pt-featured">—</td><td class="pt-dash">—</td><td class="pt-check pt-green">&#10003;</td></tr>
+          <!-- CTA row -->
+          <tr class="pt-cta-row">
+            <td></td>
+            <td><a class="pt-btn secondary" href="/swft-checkout?plan=starter" data-plan="starter">Start Free Trial</a></td>
+            <td class="pt-featured"><a class="pt-btn primary" href="/swft-checkout?plan=pro" data-plan="pro">Start Free Trial</a></td>
+            <td><a class="pt-btn secondary" href="/swft-checkout?plan=business" data-plan="business">Start Free Trial</a></td>
+            <td><a class="pt-btn secondary" href="/swft-contact">Contact Sales</a></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <p class="pricing-note reveal">
@@ -1646,12 +1689,10 @@ document.querySelectorAll('.competitor-card.reveal').forEach((el, i) => { el.dat
 /* Stagger compare cols */
 document.querySelectorAll('.compare-col.reveal').forEach((el, i) => { el.dataset.delay = i * 150; });
 /* Stagger pricing cards */
-document.querySelectorAll('.pricing-card.reveal').forEach((el, i) => { el.dataset.delay = i * 120; });
-
 /* ── Billing toggle (monthly ↔ annual) ── */
 (function() {
   const track = document.getElementById('billingSwitch');
-  const grid = document.getElementById('pricingGrid');
+  const wrap = document.getElementById('pricingTableWrap');
   const mLabel = document.getElementById('monthlyLabel');
   const aLabel = document.getElementById('annualLabel');
   let isAnnual = false;
@@ -1659,11 +1700,10 @@ document.querySelectorAll('.pricing-card.reveal').forEach((el, i) => { el.datase
   track.addEventListener('click', function() {
     isAnnual = !isAnnual;
     track.classList.toggle('annual', isAnnual);
-    grid.classList.toggle('billing-annual', isAnnual);
+    wrap.classList.toggle('billing-annual', isAnnual);
     mLabel.classList.toggle('active', !isAnnual);
     aLabel.classList.toggle('active', isAnnual);
-    // Update CTA links with billing param
-    document.querySelectorAll('.pricing-cta[data-plan]').forEach(function(a) {
+    document.querySelectorAll('.pt-btn[data-plan]').forEach(function(a) {
       const plan = a.dataset.plan;
       a.href = '/swft-checkout?plan=' + plan + (isAnnual ? '&billing=annual' : '');
     });
