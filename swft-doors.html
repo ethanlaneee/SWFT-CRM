@@ -59,6 +59,9 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .btn-primary{display:flex;align-items:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
 .btn-primary:hover{background:#d5ff40;transform:translateY(-1px);}
+.btn-secondary{display:flex;align-items:center;gap:7px;background:transparent;color:var(--gray);font-weight:600;font-size:12.5px;padding:7px 14px;border-radius:9px;border:1px solid var(--border2);cursor:pointer;transition:all 0.16s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+.btn-secondary:hover{color:var(--white);border-color:var(--gray);}
+@media (max-width:640px){.btn-secondary span,.btn-secondary{font-size:12px;padding:7px 12px;}}
 .page-body{flex:1;padding:20px 28px 28px;display:flex;flex-direction:column;gap:14px;min-height:0;}
 
 /* KPI STRIP */
@@ -75,9 +78,24 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .kpi-sub{font-size:10.5px;color:var(--gray2);margin-top:4px;}
 @media (max-width:760px){.kpi-strip{grid-template-columns:repeat(2,1fr);} .kpi-card.kpi-hide-mobile{display:none;}}
 
-/* TWO-COL SPLIT */
-.split{flex:1;display:grid;grid-template-columns:340px 1fr;gap:14px;min-height:420px;}
-@media (max-width:860px){.split{grid-template-columns:1fr;grid-template-rows:minmax(auto,38vh) 1fr;min-height:0;}.door-panel{max-height:38vh;}#map{min-height:340px;}}
+/* TABS */
+.tabs{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;width:fit-content;}
+.tab-btn{background:transparent;border:none;color:var(--gray);font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;padding:8px 18px;border-radius:9px;cursor:pointer;transition:all 0.14s;letter-spacing:0.3px;display:flex;align-items:center;gap:7px;}
+.tab-btn:hover{color:var(--white);}
+.tab-btn.active{background:var(--green);color:#0a0a0a;}
+.tab-btn svg{width:14px;height:14px;}
+.tab-pane{display:none;flex:1;min-height:0;animation:fadeUp 0.25s ease both;}
+.tab-pane.active{display:flex;flex-direction:column;}
+
+/* ROUTES PANE — full-width door list */
+.routes-pane{gap:0;}
+.routes-pane .door-panel{flex:1;}
+
+/* MAP PANE — full-bleed map */
+.map-pane #map{height:100%;min-height:0;}
+.map-pane .map-wrap{flex:1;min-height:0;}
+
+@media (max-width:768px){.map-legend{display:none;}.door-empty{padding:28px 16px;}.page-body{padding:14px 14px 24px;}.kpi-card{padding:11px 14px 9px;}.kpi-value{font-size:24px;}.tabs{width:100%;}.tab-btn{flex:1;justify-content:center;padding:9px 14px;}}
 
 /* DOOR LIST PANEL */
 .door-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden;animation:fadeUp 0.4s ease both;}
@@ -160,6 +178,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .status-btn.s-callback{--accent:var(--purple);}
 .status-btn.s-lead{--accent:var(--cyan);}
 .status-btn.s-sale{--accent:var(--green);}
+.status-grid.quick-grid .status-btn{min-height:60px;padding:10px 6px 8px;font-size:11.5px;}
+.status-grid.quick-grid .status-btn .ic{width:20px;height:20px;font-size:11px;}
 
 /* DETAIL MODAL — VISIT TIMELINE */
 .detail-head-meta{display:flex;flex-direction:column;gap:3px;}
@@ -249,6 +269,10 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
     <span class="topbar-slash">/</span>
     <div class="topbar-sub" id="topbar-sub">log every knock with a timestamp</div>
     <div class="topbar-right">
+      <button class="btn-secondary" onclick="openImportModal()" title="Import a list of addresses">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.8" stroke-linecap="round"/><polyline points="17 8 12 3 7 8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Import
+      </button>
       <button class="btn-primary" onclick="openLogModal()">
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2.5" stroke-linecap="round"/></svg>
         Log Knock
@@ -285,7 +309,18 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
       </div>
     </div>
 
-    <div class="split">
+    <div class="tabs" id="doors-tabs">
+      <button class="tab-btn active" data-tab="routes">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+        Routes
+      </button>
+      <button class="tab-btn" data-tab="map">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>
+        Map
+      </button>
+    </div>
+
+    <div class="tab-pane routes-pane active" id="pane-routes">
       <div class="door-panel">
         <div class="door-panel-head">
           <span class="door-panel-title">Doors</span>
@@ -294,6 +329,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
         <div class="filter-row" id="filter-row">
           <button class="filter-chip active" data-filter="all">All</button>
           <button class="filter-chip" data-filter="today">Today</button>
+          <button class="filter-chip" data-filter="pending">Planned</button>
           <button class="filter-chip" data-filter="no_answer">No answer</button>
           <button class="filter-chip" data-filter="not_interested">Not interested</button>
           <button class="filter-chip" data-filter="chatted">Chatted</button>
@@ -305,22 +341,17 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
         <div class="door-list" id="door-list">
           <div class="door-empty">
             <strong>No doors yet</strong>
-            Tap <em style="color:var(--green);font-style:normal;">Log Knock</em> to drop your first pin.
+            Tap <em style="color:var(--green);font-style:normal;">Log Knock</em> to drop your first pin, or
+            <em style="color:var(--green);font-style:normal;cursor:pointer;text-decoration:underline;" onclick="openImportModal()">import a list of addresses</em>.
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="tab-pane map-pane" id="pane-map">
       <div class="map-wrap">
         <div id="map"></div>
         <div class="map-overlay" id="map-overlay">Loading map…</div>
-        <div class="map-legend" id="map-legend">
-          <div class="map-legend-row"><span class="map-legend-dot" style="background:#7a7a7a"></span>No answer</div>
-          <div class="map-legend-row"><span class="map-legend-dot" style="background:#ff5252"></span>Not interested</div>
-          <div class="map-legend-row"><span class="map-legend-dot" style="background:#4d9fff"></span>Chatted</div>
-          <div class="map-legend-row"><span class="map-legend-dot" style="background:#f5a623"></span>Come back</div>
-          <div class="map-legend-row"><span class="map-legend-dot" style="background:#b388ff"></span>Callback</div>
-          <div class="map-legend-row"><span class="map-legend-dot" style="background:#4de2ff"></span>Lead</div>
-          <div class="map-legend-row"><span class="map-legend-dot" style="background:#c8f135"></span>Sale</div>
-        </div>
       </div>
     </div>
   </div>
@@ -381,6 +412,38 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
   <div class="modal-foot">
     <button class="modal-btn" onclick="closeLogModal()">Cancel</button>
     <button class="modal-btn primary" id="log-save" onclick="saveKnock()">Save Knock</button>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="import-overlay" onclick="closeImportModal()"></div>
+<div class="modal" id="import-modal" role="dialog" aria-modal="true">
+  <div class="modal-head">
+    <div class="modal-title">Import Addresses</div>
+    <button class="modal-close" onclick="closeImportModal()" aria-label="Close">&times;</button>
+  </div>
+  <div class="modal-body">
+    <div style="font-size:12.5px;color:var(--gray);line-height:1.5;">
+      Paste one address per line. Each becomes a planned door you can knock on the route.
+      Up to 200 at a time.
+    </div>
+    <div class="field">
+      <label class="field-label">Addresses</label>
+      <textarea class="field-input field-textarea" id="import-text" rows="8" style="min-height:140px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.5;" placeholder="123 Main St, Austin, TX 78701&#10;456 Oak Ave, Austin, TX 78704&#10;789 Pine Rd, Austin, TX 78702"></textarea>
+    </div>
+    <div id="import-progress" style="display:none;font-size:12px;color:var(--gray);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span id="import-progress-label">Geocoding…</span>
+        <span id="import-progress-count">0 / 0</span>
+      </div>
+      <div style="height:5px;background:var(--surface2);border-radius:99px;overflow:hidden;">
+        <div id="import-progress-bar" style="height:100%;width:0%;background:var(--green);transition:width 0.2s;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="modal-btn" onclick="closeImportModal()">Cancel</button>
+    <button class="modal-btn primary" id="import-submit" onclick="runImport()">Import</button>
   </div>
 </div>
 
@@ -462,6 +525,7 @@ function fmtTime(ms){
 
 /* ── Status metadata ── */
 var STATUS_META = {
+  pending:        { label: 'Planned',        color: '#9aa0a6', mark: '?' },
   no_answer:      { label: 'No answer',      color: '#7a7a7a', mark: '—' },
   not_interested: { label: 'Not interested', color: '#ff5252', mark: '×' },
   chatted:        { label: 'Chatted',        color: '#4d9fff', mark: '●' },
@@ -700,11 +764,8 @@ function renderMarkers(){
 function focusDoor(id){
   _selectedDoorId = id;
   document.querySelectorAll('.door-row').forEach(function(el){ el.classList.toggle('selected', el.dataset.id === id); });
-  var d = _doors.find(function(x){ return x.id === id; });
-  if(d && _mapReady && _map){
-    _map.panTo({ lat: d.lat, lng: d.lng });
-    if(_map.getZoom() < 16) _map.setZoom(16);
-  }
+  // Don't auto-switch tabs or load map — just open the detail sheet so the
+  // user can quick-log without losing their place in the list.
   openDetailModal(id);
 }
 
@@ -717,6 +778,139 @@ function wireFilters(){
       renderMarkers();
     });
   });
+}
+
+/* ── Tabs ── */
+function switchTab(tab){
+  document.querySelectorAll('#doors-tabs .tab-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+  var pane = document.getElementById('pane-' + tab);
+  if(pane) pane.classList.add('active');
+
+  if(tab === 'map'){
+    if(!_mapReady && !_mapLoading){
+      // Lazy-load on first activation
+      loadMapsSdk().then(function(){
+        centerOnViewer();
+        renderMarkers();
+      });
+    } else if(_mapReady && _map){
+      // Map containers that were hidden need a resize nudge.
+      setTimeout(function(){
+        google.maps.event.trigger(_map, 'resize');
+        var bounds = new google.maps.LatLngBounds();
+        var hasPin = false;
+        Object.keys(_markers).forEach(function(id){
+          var m = _markers[id];
+          if(m && m.getPosition){ bounds.extend(m.getPosition()); hasPin = true; }
+        });
+        if(hasPin){ _map.fitBounds(bounds, 60); if(_map.getZoom() > 17) _map.setZoom(17); }
+      }, 50);
+    }
+  }
+}
+
+function wireTabs(){
+  document.querySelectorAll('#doors-tabs .tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ switchTab(btn.dataset.tab); });
+  });
+}
+
+/* ── Import addresses (bulk) ── */
+function openImportModal(){
+  document.getElementById('import-overlay').classList.add('open');
+  document.getElementById('import-modal').classList.add('open');
+  document.getElementById('import-text').value = '';
+  document.getElementById('import-progress').style.display = 'none';
+  document.getElementById('import-submit').disabled = false;
+  document.getElementById('import-submit').textContent = 'Import';
+}
+
+function closeImportModal(){
+  document.getElementById('import-overlay').classList.remove('open');
+  document.getElementById('import-modal').classList.remove('open');
+}
+
+function setImportProgress(done, total, label){
+  var p = document.getElementById('import-progress');
+  p.style.display = 'block';
+  document.getElementById('import-progress-label').textContent = label || 'Geocoding…';
+  document.getElementById('import-progress-count').textContent = done + ' / ' + total;
+  var pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('import-progress-bar').style.width = pct + '%';
+}
+
+function geocodeOne(geocoder, address){
+  return new Promise(function(resolve){
+    geocoder.geocode({ address: address }, function(results, status){
+      if(status === 'OK' && results && results[0]){
+        var loc = results[0].geometry.location;
+        resolve({ address: results[0].formatted_address || address, lat: loc.lat(), lng: loc.lng() });
+      } else {
+        resolve({ address: address, error: status || 'GEOCODE_FAILED' });
+      }
+    });
+  });
+}
+
+async function runImport(){
+  var raw = document.getElementById('import-text').value || '';
+  var lines = raw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+  if(!lines.length){ showToast('Paste at least one address'); return; }
+  if(lines.length > 200){ showToast('Up to 200 addresses per import — split into batches'); return; }
+
+  var btn = document.getElementById('import-submit');
+  btn.disabled = true;
+  btn.textContent = 'Working…';
+
+  // Lazy-load the Maps SDK so the Geocoder is available
+  if(!_mapReady){
+    setImportProgress(0, lines.length, 'Loading map service…');
+    await loadMapsSdk();
+  }
+  if(!window.google || !google.maps || !google.maps.Geocoder){
+    showToast('Map service unavailable — try again');
+    btn.disabled = false; btn.textContent = 'Import';
+    return;
+  }
+
+  var geocoder = new google.maps.Geocoder();
+  var entries = [];
+  var failed = [];
+  for (var i = 0; i < lines.length; i++){
+    setImportProgress(i, lines.length, 'Geocoding…');
+    var r = await geocodeOne(geocoder, lines[i]);
+    if(r.error){ failed.push(lines[i]); }
+    else { entries.push({ address: r.address, lat: r.lat, lng: r.lng }); }
+    // throttle: 50ms between calls keeps us under Google's per-second limit
+    await new Promise(function(res){ setTimeout(res, 50); });
+  }
+  setImportProgress(lines.length, lines.length, 'Saving…');
+
+  if(!entries.length){
+    showToast('Could not geocode any address — check formatting');
+    btn.disabled = false; btn.textContent = 'Import';
+    return;
+  }
+
+  try {
+    var resp = await API.doors.bulk(entries);
+    var added = (resp && resp.created) || [];
+    _doors = added.concat(_doors);
+    closeImportModal();
+    var msg = 'Imported ' + added.length + ' door' + (added.length === 1 ? '' : 's');
+    if(failed.length) msg += ' · ' + failed.length + ' failed to geocode';
+    showToast(msg);
+    refreshKpis();
+    renderDoors();
+    renderMarkers();
+  } catch (e) {
+    showToast('Could not import: ' + (e.message || 'error'));
+    btn.disabled = false;
+    btn.textContent = 'Import';
+  }
 }
 
 /* ── Log Knock modal ── */
@@ -888,28 +1082,68 @@ function renderDetailBody(d){
   var visits = (Array.isArray(d.visits) ? d.visits.slice() : []).sort(function(a,b){ return (b.ts||0) - (a.ts||0); });
   var html = '';
 
+  // Quick-log status grid — visible on every door for one-tap logging
+  html += '<div class="field">';
+  html += '  <label class="field-label">' + (visits.length === 0 ? 'Tap to log first knock' : 'Tap to log a visit') + '</label>';
+  html += '  <div class="status-grid quick-grid">';
+  ['no_answer','not_interested','chatted','come_back','callback','lead','sale'].forEach(function(s){
+    var sm = statusMeta(s);
+    html += '<button type="button" class="status-btn s-' + s + '" onclick="quickLogVisit(\'' + d.id + '\',\'' + s + '\')"><span class="ic">' + sm.mark + '</span>' + sm.label + '</button>';
+  });
+  html += '  </div>';
+  html += '</div>';
+
   html += '<div class="field-row">';
   html += '  <div class="field"><label class="field-label">Name</label><input class="field-input" id="detail-name"  value="' + escapeHtml(d.name || '') + '" placeholder="Owner name"/></div>';
   html += '  <div class="field"><label class="field-label">Phone</label><input class="field-input" id="detail-phone" value="' + escapeHtml(d.phone || '') + '" placeholder="(555) 555-5555"/></div>';
   html += '</div>';
 
   html += '<div class="detail-section-label">Visit history (' + visits.length + ')</div>';
-  html += '<div class="timeline">';
-  visits.forEach(function(v){
-    var vm = statusMeta(v.status);
-    html += '<div class="timeline-row" style="--accent:' + vm.color + ';">';
-    html +=   '<div class="timeline-dot">' + (vm.mark || '·') + '</div>';
-    html +=   '<div class="timeline-body">';
-    html +=     '<div class="timeline-status">' + vm.label + '</div>';
-    html +=     '<div class="timeline-when">' + fmtTime(v.ts) + ' · ' + fmtAgo(v.ts) + '</div>';
-    if(v.notes) html += '<div class="timeline-notes">' + escapeHtml(v.notes) + '</div>';
-    if(v.byName) html += '<div class="timeline-by">by ' + escapeHtml(v.byName) + '</div>';
-    html +=   '</div>';
+  if(visits.length === 0){
+    html += '<div style="font-size:12px;color:var(--gray2);padding:8px 0;">No visits yet — tap a status above to log one.</div>';
+  } else {
+    html += '<div class="timeline">';
+    visits.forEach(function(v){
+      var vm = statusMeta(v.status);
+      html += '<div class="timeline-row" style="--accent:' + vm.color + ';">';
+      html +=   '<div class="timeline-dot">' + (vm.mark || '·') + '</div>';
+      html +=   '<div class="timeline-body">';
+      html +=     '<div class="timeline-status">' + vm.label + '</div>';
+      html +=     '<div class="timeline-when">' + fmtTime(v.ts) + ' · ' + fmtAgo(v.ts) + '</div>';
+      if(v.notes) html += '<div class="timeline-notes">' + escapeHtml(v.notes) + '</div>';
+      if(v.byName) html += '<div class="timeline-by">by ' + escapeHtml(v.byName) + '</div>';
+      html +=   '</div>';
+      html += '</div>';
+    });
     html += '</div>';
-  });
-  html += '</div>';
+  }
 
   document.getElementById('detail-body').innerHTML = html;
+}
+
+async function quickLogVisit(doorId, status){
+  try {
+    var saved = await API.doors.logVisit(doorId, { status: status, notes: '' });
+    var idx = _doors.findIndex(function(x){ return x.id === doorId; });
+    if(idx >= 0) _doors[idx] = saved;
+    var meta = statusMeta(status);
+    showToast('Logged · ' + meta.label);
+    refreshKpis();
+    renderDoors();
+    renderMarkers();
+    // Refresh the detail modal in place so the user sees the new visit
+    if(_detailDoor && _detailDoor.id === doorId){
+      _detailDoor = saved;
+      var pill = document.getElementById('detail-status');
+      pill.querySelector('.dot').style.background = meta.color;
+      pill.querySelector('.lbl').textContent = meta.label;
+      pill.style.color = meta.color;
+      pill.style.borderColor = meta.color + '55';
+      renderDetailBody(saved);
+    }
+  } catch (e) {
+    showToast('Could not log: ' + (e.message || 'error'));
+  }
 }
 
 function renderDetailFoot(d){
@@ -1009,9 +1243,9 @@ async function deleteDoor(id){
 
     wireStatusGrid();
     wireFilters();
+    wireTabs();
 
-    await loadMapsSdk();
-    centerOnViewer();
+    // Map loads lazily when the Map tab is first opened.
     await loadDoors();
 
     // Refresh every 30s so multi-knocker teams stay in sync

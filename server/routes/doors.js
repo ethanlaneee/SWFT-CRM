@@ -18,6 +18,7 @@ const { db } = require("../firebase");
 const col = () => db.collection("doorKnocks");
 
 const ALLOWED_STATUSES = new Set([
+  "pending",         // planned but not yet knocked (bulk-imported)
   "no_answer",
   "not_interested",
   "chatted",
@@ -27,9 +28,9 @@ const ALLOWED_STATUSES = new Set([
   "sale",
 ]);
 
-function sanitizeStatus(s) {
-  const v = String(s || "no_answer").toLowerCase().trim();
-  return ALLOWED_STATUSES.has(v) ? v : "no_answer";
+function sanitizeStatus(s, fallback) {
+  const v = String(s || fallback || "no_answer").toLowerCase().trim();
+  return ALLOWED_STATUSES.has(v) ? v : (fallback || "no_answer");
 }
 
 function clampStr(v, max) {
@@ -132,6 +133,62 @@ router.post("/", async (req, res, next) => {
 
     const ref = await col().add(data);
     res.status(201).json({ id: ref.id, ...data });
+  } catch (err) { next(err); }
+});
+
+// POST /api/doors/bulk — bulk-create planned doors from a list of geocoded addresses
+// Body: { entries: [{ address, lat, lng }] }
+// Each door starts with status='pending' and an empty visits[] so it shows
+// as planned-but-not-yet-knocked. Capped at 200 entries per call.
+router.post("/bulk", async (req, res, next) => {
+  try {
+    const entries = Array.isArray(req.body && req.body.entries) ? req.body.entries : [];
+    if (!entries.length) return res.status(400).json({ error: "No entries provided" });
+    if (entries.length > 200) return res.status(400).json({ error: "Too many entries (max 200 per import)" });
+
+    const userName = await getKnockerName(req);
+    const now = Date.now();
+
+    const valid = [];
+    const skipped = [];
+    for (const e of entries) {
+      const lat = Number(e.lat);
+      const lng = Number(e.lng);
+      const address = clampStr(e.address, 300);
+      if (!address) { skipped.push({ reason: "missing address" }); continue; }
+      if (!validCoord(lat, lng)) { skipped.push({ address, reason: "invalid coordinates" }); continue; }
+      valid.push({
+        orgId: req.orgId,
+        userId: req.uid,
+        userName,
+        lat,
+        lng,
+        accuracy: null,
+        address,
+        name: clampStr(e.name, 120),
+        phone: clampStr(e.phone, 40),
+        email: "",
+        notes: clampStr(e.notes, 2000),
+        status: "pending",
+        visits: [],
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    if (!valid.length) return res.status(400).json({ error: "No valid entries to import", skipped });
+
+    // Firestore batched writes max 500 ops per batch — we cap at 200 so one batch is enough.
+    const batch = db.batch();
+    const created = [];
+    for (const data of valid) {
+      const ref = col().doc();
+      batch.set(ref, data);
+      created.push({ id: ref.id, ...data });
+    }
+    await batch.commit();
+
+    res.status(201).json({ created, count: created.length, skippedCount: skipped.length, skipped });
   } catch (err) { next(err); }
 });
 
