@@ -1045,7 +1045,7 @@ function toggleDescCustom(selId, inputId) {
 function billingPhotoEstimate(){
   var plan=window.SWFT_PLAN||sessionStorage.getItem('swft_plan')||'starter';
   var lvl={starter:0,pro:1,business:2};
-  if((lvl[plan]||0)<1){if(window.swftUpgradeRequired)window.swftUpgradeRequired('AI Photo Estimator is available on the Pro plan and higher.','pro');return;}
+  if((lvl[plan]||0)<1){if(window.swftUpgradeRequired)window.swftUpgradeRequired('AI Photo Estimator is available on SWFT+ and higher.','pro');return;}
 
   // Show photo source picker
   var existing = document.getElementById('billing-photo-picker');
@@ -1122,7 +1122,7 @@ async function _billingRunEstimate(files){
     showToast('AI estimate applied — review and adjust as needed');
   }catch(e){
     if(e.message&&e.message.toLowerCase().includes('plan')&&window.swftUpgradeRequired){
-      window.swftUpgradeRequired('AI Estimator requires the Pro plan or higher.','pro');
+      window.swftUpgradeRequired('AI Estimator requires SWFT+ or higher.','pro');
     }else{showToast('AI estimate failed: '+e.message);}
   }finally{
     if(btn){btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> AI Estimate';btn.disabled=false;}

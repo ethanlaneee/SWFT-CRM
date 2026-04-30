@@ -1325,7 +1325,8 @@ async function loadSettings() {
   } catch (e) {}
 }
 
-const PLAN_PRICES = { starter: { monthly: 89, annual: 71 }, pro: { monthly: 179, annual: 143 }, business: { monthly: 349, annual: 279 } };
+const PLAN_PRICES = { starter: { monthly: 149, annual: 119 }, pro: { monthly: 349, annual: 279 }, business: { monthly: 599, annual: 479 } };
+const PLAN_NAMES = { starter: 'SWFT Core', pro: 'SWFT+', business: 'SWFT Pro', enterprise: 'SWFT Enterprise' };
 
 async function loadBillingInfo(userData, token) {
   try {
@@ -1342,8 +1343,8 @@ async function loadBillingInfo(userData, token) {
     var priceEl = document.getElementById('billing-plan-price');
     var cycleEl = document.getElementById('billing-plan-cycle');
 
-    nameEl.textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
-    badgeEl.textContent = plan.toUpperCase();
+    nameEl.textContent = PLAN_NAMES[plan] || plan;
+    badgeEl.textContent = (PLAN_NAMES[plan] || plan).toUpperCase();
     badgeEl.className = 'billing-plan-badge ' + plan;
     priceEl.textContent = '$' + price + '/mo';
     cycleEl.textContent = cycle === 'annual' ? 'Billed annually (save 20%)' : 'Billed monthly';
@@ -1365,7 +1366,7 @@ async function loadBillingInfo(userData, token) {
       upgradeBtn.style.display = 'none';
     } else {
       upgradeBtn.href = '/swft-checkout?plan=' + (plan === 'starter' ? 'pro' : 'business');
-      upgradeBtn.textContent = plan === 'starter' ? 'Upgrade to Pro' : 'Upgrade to Business';
+      upgradeBtn.textContent = plan === 'starter' ? 'Upgrade to SWFT+' : 'Upgrade to SWFT Pro';
     }
 
     // Usage bars
