@@ -671,67 +671,61 @@ section{position:relative;z-index:1;}
 .pricing-note strong{color:var(--white);}
 
 /* ── PRICING TABLE ── */
-.pricing-table-wrap{overflow-x:auto;margin:0 auto;max-width:1100px;}
+.pricing-table-wrap{overflow-x:auto;margin:0 auto;max-width:980px;}
 .pricing-table{width:100%;border-collapse:collapse;table-layout:fixed;}
 .pricing-table thead th{
-  padding:28px 20px 24px;text-align:center;vertical-align:bottom;
-  border-bottom:1px solid var(--border2);
-  background:var(--surface);
+  padding:20px 14px 16px;text-align:center;vertical-align:bottom;
+  border-bottom:1px solid var(--border2);background:var(--surface);
 }
-.pricing-table thead th:first-child{text-align:left;width:28%;}
+.pricing-table thead th:first-child{text-align:left;width:30%;}
 .pricing-table thead th.pt-featured{
   background:linear-gradient(180deg,rgba(200,241,53,0.07),rgba(200,241,53,0.02));
-  border-left:1px solid rgba(200,241,53,0.2);
-  border-right:1px solid rgba(200,241,53,0.2);
+  border-left:1px solid rgba(200,241,53,0.2);border-right:1px solid rgba(200,241,53,0.2);
   border-top:2px solid rgba(200,241,53,0.4);
 }
 .pt-popular-badge{
-  display:inline-block;font-size:10px;font-weight:700;letter-spacing:2px;
+  display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;
   text-transform:uppercase;color:var(--green);
-  padding:4px 12px;border-radius:100px;
+  padding:3px 10px;border-radius:100px;
   background:rgba(200,241,53,0.1);border:1px solid rgba(200,241,53,0.15);
-  margin-bottom:14px;
+  margin-bottom:10px;
 }
-.pt-plan-name{
-  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;
-  color:var(--white);margin-bottom:6px;
-}
-.pt-price{display:flex;align-items:baseline;justify-content:center;gap:2px;margin-bottom:4px;}
-.pt-dollar{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green);}
-.pt-price .monthly-price,.pt-price .annual-price{font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--white);line-height:1;}
-.pt-period{font-size:14px;color:var(--gray);font-weight:500;margin-left:2px;}
-.pt-custom{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);line-height:1.2;justify-content:center;}
-.pt-desc{font-size:12px;color:var(--gray);margin-bottom:16px;}
+.pt-plan-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--white);margin-bottom:4px;}
+.pt-price{display:flex;align-items:baseline;justify-content:center;gap:1px;margin-bottom:2px;}
+.pt-dollar{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--green);}
+.pt-price .monthly-price,.pt-price .annual-price{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--white);line-height:1;}
+.pt-period{font-size:12px;color:var(--gray);font-weight:500;margin-left:2px;}
+.pt-custom{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white);line-height:1.2;justify-content:center;}
+.pt-desc{font-size:11px;color:var(--gray);margin-bottom:12px;}
 .pt-btn{
-  display:inline-block;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;
+  display:inline-block;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:600;
   text-decoration:none;cursor:pointer;transition:all 0.2s;white-space:nowrap;
 }
-.pt-btn.primary{background:var(--green);color:#0a0a0a;box-shadow:0 0 16px rgba(200,241,53,0.15);}
-.pt-btn.primary:hover{transform:translateY(-1px);box-shadow:0 0 28px rgba(200,241,53,0.25);}
+.pt-btn.primary{background:var(--green);color:#0a0a0a;box-shadow:0 0 14px rgba(200,241,53,0.15);}
+.pt-btn.primary:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(200,241,53,0.25);}
 .pt-btn.secondary{background:transparent;color:var(--white);border:1px solid var(--border2);}
 .pt-btn.secondary:hover{border-color:var(--gray);background:var(--surface2);}
 /* body rows */
 .pricing-table tbody tr{border-bottom:1px solid var(--border);}
 .pricing-table tbody tr:hover{background:rgba(255,255,255,0.02);}
 .pricing-table tbody td{
-  padding:14px 20px;font-size:14px;color:var(--gray);text-align:center;vertical-align:middle;
+  padding:9px 14px;font-size:13px;color:var(--gray);text-align:center;vertical-align:middle;
 }
 .pricing-table tbody td:first-child{text-align:left;color:var(--white);font-weight:500;}
 .pricing-table tbody td.pt-featured{
   background:rgba(200,241,53,0.03);
-  border-left:1px solid rgba(200,241,53,0.12);
-  border-right:1px solid rgba(200,241,53,0.12);
+  border-left:1px solid rgba(200,241,53,0.12);border-right:1px solid rgba(200,241,53,0.12);
 }
 .pt-group-row td{
-  padding:10px 20px;font-size:11px;font-weight:700;letter-spacing:2px;
+  padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:1.5px;
   text-transform:uppercase;color:var(--gray);background:var(--surface2) !important;
   text-align:left !important;
 }
-.pt-check{color:var(--gray);font-size:16px;font-weight:700;}
+.pt-check{color:var(--gray);font-size:14px;font-weight:700;}
 .pt-green{color:var(--green) !important;font-weight:600;}
 .pt-dash{color:var(--border2) !important;}
-.pt-sub{font-size:11px;color:var(--gray);font-weight:400;}
-.pt-cta-row td{padding:24px 20px;border-bottom:none;}
+.pt-sub{font-size:10px;color:var(--gray);font-weight:400;}
+.pt-cta-row td{padding:16px 14px;border-bottom:none;}
 .pt-cta-row .pt-featured{background:rgba(200,241,53,0.03);}
 
 /* ── VALUE STACK ── */
