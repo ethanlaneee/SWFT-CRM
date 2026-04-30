@@ -469,6 +469,28 @@ const demoLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many requests." },
 });
+// Deletes a single demo account and all its sub-collections.
+async function deleteDemoAccount(db, authAdmin, uid) {
+  const collections = ["customers", "jobs", "quotes", "invoices", "schedule"];
+  for (const colName of collections) {
+    const snap = await db.collection(colName).where("userId", "==", uid).get();
+    if (snap.docs.length > 0) {
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+  }
+  try {
+    const convSnap = await db.collection("conversations").doc(uid).collection("messages").get();
+    if (convSnap.docs.length > 0) {
+      const b = db.batch(); convSnap.docs.forEach(d => b.delete(d.ref)); await b.commit();
+    }
+    await db.collection("conversations").doc(uid).delete();
+  } catch (_) {}
+  await db.collection("users").doc(uid).delete();
+  try { await authAdmin.deleteUser(uid); } catch (_) {}
+}
+
 app.post("/api/demo-login", demoLimiter, async (req, res) => {
   try {
     const { authAdmin, db } = require("./firebase");
@@ -482,6 +504,17 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
     if (!visitorFirstName) {
       return res.status(400).json({ error: "First name is required to start the demo." });
     }
+
+    // Passive sweep: delete demo accounts older than 2 hours
+    const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+    db.collection("users")
+      .where("demoAccount", "==", true)
+      .where("demoCreatedAt", "<", cutoff)
+      .get()
+      .then(snap => {
+        snap.docs.forEach(d => deleteDemoAccount(db, authAdmin, d.id).catch(() => {}));
+      })
+      .catch(() => {});
 
     // Unique UID per demo session — each visitor gets their own org
     const demoUid = "demo-" + crypto.randomBytes(8).toString("hex");
@@ -512,10 +545,31 @@ app.post("/api/demo-login", demoLimiter, async (req, res) => {
     });
 
     const token = await authAdmin.createCustomToken(demoUid);
-    return res.json({ token });
+    return res.json({ token, demoUid });
   } catch (err) {
     console.error("[demo-login]", err.message);
     return res.status(500).json({ error: "Demo login unavailable." });
+  }
+});
+
+// POST /api/demo-cleanup — called by sendBeacon when the demo user leaves.
+// No auth required (the user may already be signed out by the time this fires).
+const demoCleanupLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
+app.post("/api/demo-cleanup", demoCleanupLimiter, async (req, res) => {
+  try {
+    const { authAdmin, db } = require("./firebase");
+    let uid = req.body?.uid || "";
+    if (typeof req.body === "string") {
+      try { uid = JSON.parse(req.body).uid || ""; } catch (_) {}
+    }
+    if (!uid || !uid.startsWith("demo-")) return res.sendStatus(204);
+    const doc = await db.collection("users").doc(uid).get();
+    if (!doc.exists || !doc.data().demoAccount) return res.sendStatus(204);
+    await deleteDemoAccount(db, authAdmin, uid);
+    res.sendStatus(204);
+  } catch (err) {
+    console.error("[demo-cleanup]", err.message);
+    res.sendStatus(204);
   }
 });
 

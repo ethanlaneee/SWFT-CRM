@@ -46,6 +46,16 @@ function deriveNameParts(data) {
   return { firstName, lastName };
 }
 
+// ── Demo account cleanup ──
+// If this is a demo session, fire a beacon to delete the account when the user leaves.
+function setupDemoCleanup(uid) {
+  if (!uid || !uid.startsWith("demo-")) return;
+  const payload = JSON.stringify({ uid });
+  const fire = () => navigator.sendBeacon("/api/demo-cleanup", new Blob([payload], { type: "application/json" }));
+  window.addEventListener("beforeunload", fire);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") fire(); });
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
@@ -100,4 +110,5 @@ onAuthStateChanged(auth, async (user) => {
 
   sessionStorage.setItem("swft_profile", JSON.stringify({ fullName, initials, email: displayEmail }));
   applyProfile(fullName, initials, displayEmail);
+  setupDemoCleanup(user.uid);
 });

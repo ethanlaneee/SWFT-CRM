@@ -1013,7 +1013,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Demo unavailable');
       }
-      const { token } = await res.json();
+      const { token, demoUid } = await res.json();
+      if (demoUid) sessionStorage.setItem('swft_demo_uid', demoUid);
       const cred = await signInWithCustomToken(auth, token);
       prefetchUserProfile(cred.user).catch(() => {});
       window.closeDemoModal();
