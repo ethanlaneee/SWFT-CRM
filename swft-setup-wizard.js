@@ -1,11 +1,16 @@
 // ════════════════════════════════════════════════
-// SWFT Setup Wizard
+// SWFT Setup Wizard (Expanded — covers everything)
 // First-run guided setup: question-by-question, full-screen on mobile.
 // Auto-opens on the dashboard when `users/{uid}.setupComplete` isn't true.
 // Re-runnable from Settings → Profile → "Run Setup Wizard".
-// Each "Continue" PUTs the field to /api/me. Step 1 is mandatory
-// (website + autofill or skip-autofill); after that the user can
-// "Finish later" at any step.
+//
+// Saves are routed to one of three APIs based on each field's `target`:
+//   • me      → PUT /api/me           (profile, company, biz, defaults, prefs)
+//   • ai      → PUT /api/ai-settings  (quote/invoice/review/auto-reply)
+//   • intake  → PUT /api/intake-forms (public intake QR form)
+//
+// Step 1 (website autofill) is the only mandatory step. After that, the user
+// can "Finish later" at any time.
 // ════════════════════════════════════════════════
 
 (function () {
@@ -24,16 +29,16 @@
     }
     .sw-overlay.open{opacity:1;pointer-events:all;}
     .sw-card{
-      width:100%;max-width:560px;background:#111;border:1px solid #2c2c2c;
-      border-radius:18px;padding:36px 36px 28px;
+      width:100%;max-width:600px;background:#111;border:1px solid #2c2c2c;
+      border-radius:18px;padding:32px 36px 24px;
       box-shadow:0 24px 80px rgba(0,0,0,0.6);
-      display:flex;flex-direction:column;gap:18px;
+      display:flex;flex-direction:column;gap:16px;
       transform:translateY(8px);opacity:0;
       transition:transform 0.28s cubic-bezier(0.22,1,0.36,1),opacity 0.22s ease;
       max-height:calc(100vh - 48px);overflow:hidden;
     }
     .sw-overlay.open .sw-card{transform:translateY(0);opacity:1;}
-    .sw-progress-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+    .sw-progress-row{display:flex;align-items:center;gap:10px;}
     .sw-progress-bar{
       flex:1;height:3px;background:#1f1f1f;border-radius:2px;overflow:hidden;
     }
@@ -48,7 +53,11 @@
       transition:color 0.14s,background 0.14s;
     }
     .sw-skip-all:hover{color:#f0f0f0;background:#181818;}
-    .sw-step{display:flex;flex-direction:column;gap:12px;min-height:0;flex:1;overflow-y:auto;}
+    .sw-section-tag{
+      font-family:'Bebas Neue',sans-serif;font-size:10.5px;letter-spacing:2.5px;
+      color:#888;text-transform:uppercase;
+    }
+    .sw-step{display:flex;flex-direction:column;gap:12px;min-height:0;flex:1;overflow-y:auto;padding-right:2px;}
     .sw-step::-webkit-scrollbar{width:4px;}
     .sw-step::-webkit-scrollbar-thumb{background:#2c2c2c;border-radius:2px;}
     .sw-eyebrow{
@@ -56,23 +65,48 @@
       color:#c8f135;text-transform:uppercase;
     }
     .sw-title{
-      font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.5px;
+      font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1.5px;
       color:#f0f0f0;line-height:1.05;margin:0;
     }
     .sw-sub{font-size:13.5px;color:#999;line-height:1.55;margin:0;}
-    .sw-input,.sw-textarea{
+    .sw-label{
+      font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;
+      color:#bdbdbd;font-weight:600;margin-bottom:5px;display:block;
+    }
+    .sw-input,.sw-textarea,.sw-select{
       width:100%;background:#181818;border:1px solid #2c2c2c;border-radius:10px;
       padding:13px 14px;font-size:14px;color:#f0f0f0;font-family:'DM Sans',sans-serif;
-      outline:none;transition:border-color 0.14s;
+      outline:none;transition:border-color 0.14s;box-sizing:border-box;
     }
-    .sw-input:focus,.sw-textarea:focus{border-color:#c8f135;}
+    .sw-input:focus,.sw-textarea:focus,.sw-select:focus{border-color:#c8f135;}
     .sw-textarea{resize:vertical;line-height:1.5;min-height:90px;}
+    .sw-select{appearance:none;-webkit-appearance:none;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+      background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;cursor:pointer;}
     .sw-helper{font-size:11.5px;color:#666;margin-top:2px;}
     .sw-row{display:flex;gap:10px;}
     .sw-row > *{flex:1;min-width:0;}
+    .sw-field{display:flex;flex-direction:column;}
+    .sw-toggle-row{
+      display:flex;align-items:center;justify-content:space-between;gap:14px;
+      padding:12px 14px;background:#181818;border:1px solid #2c2c2c;border-radius:10px;
+    }
+    .sw-toggle-row .sw-toggle-info{flex:1;min-width:0;}
+    .sw-toggle-label{font-size:13.5px;color:#f0f0f0;font-weight:500;}
+    .sw-toggle-desc{font-size:11.5px;color:#888;margin-top:3px;line-height:1.45;}
+    .sw-toggle{
+      position:relative;width:42px;height:24px;background:#2c2c2c;border-radius:12px;
+      cursor:pointer;transition:background 0.18s;flex-shrink:0;
+    }
+    .sw-toggle::after{
+      content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;
+      background:#7a7a7a;border-radius:50%;transition:transform 0.18s,background 0.18s;
+    }
+    .sw-toggle.on{background:rgba(200,241,53,0.25);}
+    .sw-toggle.on::after{transform:translateX(18px);background:#c8f135;}
     .sw-actions{
-      display:flex;gap:10px;align-items:center;margin-top:6px;
-      padding-top:16px;border-top:1px solid #1f1f1f;
+      display:flex;gap:10px;align-items:center;flex-shrink:0;
+      padding-top:14px;border-top:1px solid #1f1f1f;
     }
     .sw-btn{
       padding:11px 18px;border-radius:10px;font-size:13px;cursor:pointer;
@@ -100,54 +134,460 @@
       display:flex;align-items:center;justify-content:center;font-size:32px;
       align-self:flex-start;
     }
+    .sw-cta-list{display:flex;flex-direction:column;gap:10px;}
+    .sw-cta{
+      display:flex;align-items:center;gap:14px;padding:14px 16px;
+      background:#181818;border:1px solid #2c2c2c;border-radius:12px;
+      cursor:pointer;transition:border-color 0.14s,background 0.14s;
+      text-decoration:none;color:inherit;
+    }
+    .sw-cta:hover{border-color:#c8f135;background:#1d1d1d;}
+    .sw-cta-icon{font-size:24px;flex-shrink:0;}
+    .sw-cta-body{flex:1;min-width:0;}
+    .sw-cta-title{font-size:13.5px;color:#f0f0f0;font-weight:600;}
+    .sw-cta-desc{font-size:11.5px;color:#888;margin-top:2px;line-height:1.45;}
+    .sw-cta-arrow{color:#666;font-size:16px;flex-shrink:0;}
+    .sw-logo-row{display:flex;align-items:center;gap:14px;}
+    .sw-logo-preview{
+      width:72px;height:72px;border-radius:12px;background:#181818;
+      border:1px solid #2c2c2c;display:flex;align-items:center;justify-content:center;
+      overflow:hidden;flex-shrink:0;
+    }
+    .sw-logo-preview img{width:100%;height:100%;object-fit:contain;}
+    .sw-logo-placeholder{font-family:'Space Mono',monospace;font-weight:700;font-size:14px;letter-spacing:2px;color:#c8f135;text-transform:uppercase;}
+    .sw-summary{
+      display:flex;flex-direction:column;gap:6px;
+      background:#181818;border:1px solid #2c2c2c;border-radius:10px;padding:14px;
+    }
+    .sw-summary-row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;}
+    .sw-summary-row .k{color:#888;}
+    .sw-summary-row .v{color:#f0f0f0;text-align:right;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     @media (max-width:640px){
       .sw-overlay{padding:0;}
       .sw-card{
         max-width:none;width:100%;height:100%;max-height:100vh;
-        border-radius:0;padding:24px 22px;
+        border-radius:0;padding:22px 20px;
       }
-      .sw-title{font-size:26px;}
+      .sw-title{font-size:24px;}
       .sw-row{flex-direction:column;}
     }
   `;
   document.head.appendChild(style);
 
-  // ── Steps ───────────────────────────────────────────────────────────────
-  // The first step (website autofill) is mandatory in the sense that the user
-  // sees it before anything else. After that, "Finish later" appears.
+  // ── Field & Step types ──────────────────────────────────────────────────
+  // A "field" appears on a `fields` step. Each field has:
+  //   id          internal key
+  //   kind        text | textarea | select | toggle | number
+  //   label       UI label
+  //   placeholder hint
+  //   helper      sub-label below input
+  //   options     [{value,label}] for select
+  //   default     default value if nothing saved
+  //   path        key into _data (defaults to id; supports dotted "autoReply.enabled")
+  //   target      "me" | "ai" | "intake" — which API to PUT
+  //   optional    if true, no validation
+  //   sub         (toggle) description shown beside the toggle
+  //
+  // A "step" can have:
+  //   kind: 'website' | 'fields' | 'cta' | 'done' | 'logo'
+  //   section: short label shown above the title (e.g. "Your business")
+  //   title, sub, fields[], optional, ctas[]
+
   var STEPS = [
+    // ── Welcome / Autofill ────────────────────────────────────────────────
     {
       id: 'website',
-      eyebrow: 'Step 1 of 15',
+      section: 'Welcome',
+      eyebrow: "Let's get you set up — under 10 minutes.",
       title: "Got a website?",
-      sub: "Paste the URL and we'll auto-fill the rest. Skip if you'd rather fill it in by hand.",
+      sub: "Paste the URL and I'll auto-fill almost everything. Skip if you'd rather fill it in by hand.",
       kind: 'website',
     },
-    { id: 'firstName',          title: "What's your first name?",          field: 'firstName',          placeholder: 'Jake' },
-    { id: 'lastName',           title: "And your last name?",              field: 'lastName',           placeholder: 'Reynolds' },
-    { id: 'company',            title: "What's your business called?",     field: 'company',            placeholder: 'SWFT Concrete' },
-    { id: 'phone',              title: "Business phone?",                  field: 'phone',              placeholder: '(555) 123-4567' },
-    { id: 'address',            title: "Where are you based?",             field: 'address',            placeholder: '123 Main St, Austin TX 78745' },
-    { id: 'bizAbout',           title: "Tell me about your business.",     field: 'bizAbout',           textarea: true,
-      placeholder: "We're a family-owned exterior cleaning company serving the Austin area since 2020." },
-    { id: 'bizServices',        title: "What services do you offer?",      field: 'bizServices',        textarea: true,
-      placeholder: 'Pressure washing, soft washing, window cleaning, gutter cleaning' },
-    { id: 'bizArea',            title: "Where do you serve?",              field: 'bizArea',            placeholder: 'Austin, Round Rock, Cedar Park' },
-    { id: 'bizHours',           title: "When are you open?",               field: 'bizHours',           placeholder: 'Mon-Sat 8am-6pm' },
-    { id: 'bizPricing',         title: "How do you price your work?",      field: 'bizPricing',         textarea: true,
-      placeholder: 'Window cleaning starts at $75. Pressure washing from $150. Free estimates.' },
-    { id: 'bizPaymentMethods',  title: "What payment methods do you take?",field: 'bizPaymentMethods',  placeholder: 'Card, e-Transfer, cash, cheque' },
-    { id: 'bizFaqs',            title: "Common questions you hear?",       field: 'bizFaqs',            textarea: true, optional: true,
-      placeholder: 'Q: Are you insured?\nA: Yes, fully licensed and insured.\n\nQ: Do you do same-day?\nA: Yes, subject to availability.' },
-    { id: 'aiCustomInstructions', title: "Anything the AI should always do?", field: 'aiCustomInstructions', textarea: true, optional: true,
-      sub: "Hard rules — tone, sign-offs, things to never quote, etc.",
-      placeholder: "- Always greet customers by first name\n- Never quote prices over the phone\n- Sign off with 'Talk soon!'" },
-    { id: 'done', kind: 'done', title: "You're all set!", sub: "SWFT now knows your business. You can edit any of this later in Settings." },
+
+    // ── About You ─────────────────────────────────────────────────────────
+    {
+      id: 'name',
+      section: 'About you',
+      title: "What's your name?",
+      sub: "Used in your sign-offs, invoices, and the AI's tone of voice.",
+      kind: 'fields',
+      fields: [
+        { id: 'firstName', label: 'First name', placeholder: 'Jake',     target: 'me' },
+        { id: 'lastName',  label: 'Last name',  placeholder: 'Reynolds', target: 'me' },
+      ],
+    },
+
+    // ── Company Basics ────────────────────────────────────────────────────
+    {
+      id: 'company',
+      section: 'Your company',
+      title: "Name & phone",
+      sub: "How customers know you and the number that goes on every quote.",
+      kind: 'fields',
+      fields: [
+        { id: 'company', label: 'Company name',  placeholder: 'SWFT Concrete',     target: 'me' },
+        { id: 'phone',   label: 'Business phone', placeholder: '(512) 555-1234',    target: 'me' },
+      ],
+    },
+    {
+      id: 'companyContact',
+      section: 'Your company',
+      title: "Address & contact email",
+      sub: "Address shows on invoices. Email is your business contact — separate from your login.",
+      kind: 'fields',
+      fields: [
+        { id: 'address',      label: 'Mailing address', placeholder: '123 Main St, Austin TX 78745', target: 'me' },
+        { id: 'companyEmail', label: 'Contact email',   placeholder: 'hello@yourbusiness.com',       target: 'me' },
+      ],
+    },
+    {
+      id: 'companyMeta',
+      section: 'Your company',
+      title: "Country & website",
+      sub: "We use country for currency formatting and tax defaults.",
+      kind: 'fields',
+      fields: [
+        { id: 'country', kind: 'select', label: 'Country', target: 'me',
+          options: [
+            { value: '',   label: 'Select…' },
+            { value: 'US', label: 'United States' },
+            { value: 'CA', label: 'Canada' },
+            { value: 'GB', label: 'United Kingdom' },
+            { value: 'AU', label: 'Australia' },
+            { value: 'NZ', label: 'New Zealand' },
+            { value: 'IE', label: 'Ireland' },
+            { value: 'OTHER', label: 'Other' },
+          ] },
+        { id: 'website', label: 'Website', placeholder: 'www.yourbusiness.com', target: 'me' },
+      ],
+    },
+    {
+      id: 'logo',
+      section: 'Your company',
+      title: "Add your logo",
+      sub: "Shown on quotes, invoices, and customer-facing pages. PNG or JPG, square works best.",
+      kind: 'logo',
+      optional: true,
+    },
+
+    // ── Business profile for AI ───────────────────────────────────────────
+    {
+      id: 'bizAbout',
+      section: 'AI knowledge base',
+      title: "Tell me about your business.",
+      sub: "2–3 sentences. The AI uses this to introduce you and answer general questions.",
+      kind: 'fields',
+      fields: [
+        { id: 'bizAbout', kind: 'textarea', label: 'About', target: 'me',
+          placeholder: "We're a family-owned exterior cleaning company in Austin, serving residential and commercial clients since 2020." },
+      ],
+    },
+    {
+      id: 'bizServices',
+      section: 'AI knowledge base',
+      title: "What services do you offer?",
+      sub: "These also become your defaults for quotes, jobs, and the intake form.",
+      kind: 'fields',
+      fields: [
+        { id: 'bizServices', kind: 'textarea', label: 'Services', target: 'me',
+          placeholder: 'Pressure washing, soft washing, window cleaning, gutter cleaning' },
+      ],
+    },
+    {
+      id: 'bizArea',
+      section: 'AI knowledge base',
+      title: "Where do you serve?",
+      sub: "Cities or regions. Helps the AI screen out-of-area requests.",
+      kind: 'fields',
+      fields: [
+        { id: 'bizArea', label: 'Service area', target: 'me',
+          placeholder: 'Austin, Round Rock, Cedar Park' },
+      ],
+    },
+    {
+      id: 'bizHours',
+      section: 'AI knowledge base',
+      title: "When are you open?",
+      kind: 'fields',
+      fields: [
+        { id: 'bizHours', label: 'Business hours', target: 'me',
+          placeholder: 'Mon–Sat 8am–6pm' },
+      ],
+    },
+    {
+      id: 'bizPricing',
+      section: 'AI knowledge base',
+      title: "How do you price your work?",
+      sub: "The AI uses this when asked for ballpark numbers. Be as specific or as fuzzy as you like.",
+      kind: 'fields',
+      fields: [
+        { id: 'bizPricing', kind: 'textarea', label: 'Pricing notes', target: 'me',
+          placeholder: 'Window cleaning starts at $75. Pressure washing from $150. Free estimates.' },
+      ],
+    },
+    {
+      id: 'bizPaymentMethods',
+      section: 'AI knowledge base',
+      title: "What payment methods do you accept?",
+      kind: 'fields',
+      fields: [
+        { id: 'bizPaymentMethods', label: 'Payment methods', target: 'me',
+          placeholder: 'Card, e-Transfer, cash, cheque' },
+      ],
+    },
+    {
+      id: 'bizBookingLink',
+      section: 'AI knowledge base',
+      title: "Booking or scheduling link?",
+      sub: "Calendly, Acuity, your own page — anywhere customers can book themselves. Optional.",
+      kind: 'fields',
+      optional: true,
+      fields: [
+        { id: 'bizBookingLink', label: 'Booking URL', target: 'me', optional: true,
+          placeholder: 'https://calendly.com/yourcompany' },
+      ],
+    },
+    {
+      id: 'bizFaqs',
+      section: 'AI knowledge base',
+      title: "Common questions you hear?",
+      sub: "Q&A pairs. The AI mines these to answer customers without bothering you. Optional.",
+      kind: 'fields',
+      optional: true,
+      fields: [
+        { id: 'bizFaqs', kind: 'textarea', label: 'FAQs', target: 'me', optional: true,
+          placeholder: 'Q: Are you insured?\nA: Yes, fully licensed and insured.\n\nQ: Do you do same-day?\nA: Yes, subject to availability.' },
+      ],
+    },
+    {
+      id: 'bizNotes',
+      section: 'AI knowledge base',
+      title: "Anything else the AI should know?",
+      sub: "Extra context — what you don't do, deal-breakers, fun facts. Optional.",
+      kind: 'fields',
+      optional: true,
+      fields: [
+        { id: 'bizNotes', kind: 'textarea', label: 'Notes', target: 'me', optional: true,
+          placeholder: "We don't do roofs. Free estimates always. Licensed and insured." },
+      ],
+    },
+    {
+      id: 'aiCustomInstructions',
+      section: 'AI personality',
+      title: "Hard rules for the AI?",
+      sub: "Tone, sign-offs, things to never say or quote. Optional but powerful.",
+      kind: 'fields',
+      optional: true,
+      fields: [
+        { id: 'aiCustomInstructions', kind: 'textarea', label: 'Custom instructions', target: 'me', optional: true,
+          placeholder: "- Always greet customers by first name\n- Never quote prices over the phone\n- Sign off with 'Talk soon!'" },
+      ],
+    },
+
+    // ── Operations / Defaults ─────────────────────────────────────────────
+    {
+      id: 'taxAndTerms',
+      section: 'Operations',
+      title: "Tax & payment terms",
+      sub: "Defaults for new quotes and invoices — always editable per-job.",
+      kind: 'fields',
+      fields: [
+        { id: 'taxRate', label: 'Default tax rate', placeholder: '0%', default: '0%', target: 'me' },
+        { id: 'paymentTerms', kind: 'select', label: 'Payment terms', target: 'me', default: 'Net 30',
+          options: [
+            { value: 'Due on Receipt', label: 'Due on Receipt' },
+            { value: 'Net 7',  label: 'Net 7' },
+            { value: 'Net 14', label: 'Net 14' },
+            { value: 'Net 30', label: 'Net 30' },
+            { value: 'Net 60', label: 'Net 60' },
+          ] },
+      ],
+    },
+    {
+      id: 'serviceTypes',
+      section: 'Operations',
+      title: "Service type list",
+      sub: "Comma-separated. Used in job/quote forms and the intake form. We'll pre-fill from your services above.",
+      kind: 'fields',
+      fields: [
+        { id: 'serviceTypes', label: 'Service types', target: 'me',
+          placeholder: 'Pressure Washing, Window Cleaning, Gutter Cleaning' },
+      ],
+    },
+    {
+      id: 'lineItemsAndCrews',
+      section: 'Operations',
+      title: "Line items & crew names",
+      sub: "Comma-separated. Optional — helps with auto-complete on quotes and the schedule.",
+      kind: 'fields',
+      optional: true,
+      fields: [
+        { id: 'lineItemTypes', label: 'Line item descriptions', target: 'me', optional: true,
+          placeholder: 'Materials, Labor, Equipment Rental' },
+        { id: 'crewNames', label: 'Crew names', target: 'me', optional: true,
+          placeholder: 'Crew A, Crew B' },
+      ],
+    },
+
+    // ── AI automations ────────────────────────────────────────────────────
+    {
+      id: 'autoQuoteFollowup',
+      section: 'AI automations',
+      title: "Auto-follow up on unanswered quotes",
+      sub: "If a customer hasn't responded, SWFT can ping them for you on the schedule below.",
+      kind: 'fields',
+      fields: [
+        { id: 'quoteFollowup_enabled', kind: 'toggle', label: 'Enabled',
+          desc: 'Skips automatically if the AI sees the quote was already accepted.',
+          default: true, target: 'ai', path: 'quoteFollowup.enabled' },
+        { id: 'quoteFollowup_delayDays', kind: 'number', label: 'Days to wait', default: 3, min: 0, max: 30,
+          target: 'ai', path: 'quoteFollowup.delayDays' },
+        { id: 'quoteFollowup_channel', kind: 'select', label: 'Send via', default: 'sms',
+          options: [{ value: 'sms', label: 'SMS' }, { value: 'email', label: 'Email' }],
+          target: 'ai', path: 'quoteFollowup.channel' },
+      ],
+    },
+    {
+      id: 'autoInvoiceFollowup',
+      section: 'AI automations',
+      title: "Auto-remind unpaid invoices",
+      sub: "Friendly reminders for invoices still outstanding.",
+      kind: 'fields',
+      fields: [
+        { id: 'invoiceFollowup_enabled', kind: 'toggle', label: 'Enabled',
+          desc: 'Skips if the customer says they\'ll pay or the invoice is already paid.',
+          default: true, target: 'ai', path: 'invoiceFollowup.enabled' },
+        { id: 'invoiceFollowup_delayDays', kind: 'number', label: 'Days after due date', default: 7, min: 0, max: 60,
+          target: 'ai', path: 'invoiceFollowup.delayDays' },
+        { id: 'invoiceFollowup_channel', kind: 'select', label: 'Send via', default: 'sms',
+          options: [{ value: 'sms', label: 'SMS' }, { value: 'email', label: 'Email' }],
+          target: 'ai', path: 'invoiceFollowup.channel' },
+      ],
+    },
+    {
+      id: 'autoReviewRequest',
+      section: 'AI automations',
+      title: "Auto-request reviews after the job",
+      sub: "Send a thank-you with your review link a day or two after job completion.",
+      kind: 'fields',
+      fields: [
+        { id: 'reviewRequest_enabled', kind: 'toggle', label: 'Enabled',
+          desc: 'Skips if the AI sees the customer was unhappy in the last conversation.',
+          default: true, target: 'ai', path: 'reviewRequest.enabled' },
+        { id: 'reviewRequest_delayDays', kind: 'number', label: 'Days after job complete', default: 1, min: 0, max: 30,
+          target: 'ai', path: 'reviewRequest.delayDays' },
+        { id: 'reviewRequest_reviewLink', label: 'Google review link (optional)', target: 'ai', optional: true,
+          path: 'reviewRequest.reviewLink',
+          placeholder: 'https://search.google.com/local/writereview?placeid=…',
+          helper: "Find yours in Settings → Profile → Find on Google. Leave blank to set later." },
+      ],
+    },
+    {
+      id: 'autoReply',
+      section: 'AI automations',
+      title: "AI auto-replies for inbound messages",
+      sub: "Pick which channels SWFT should reply to instantly using your business profile.",
+      kind: 'fields',
+      fields: [
+        { id: 'autoReply_enabled', kind: 'toggle', label: 'Master switch',
+          desc: 'When off, no auto-replies are sent on any channel.',
+          default: true, target: 'ai', path: 'autoReply.enabled' },
+        { id: 'autoReply_sms', kind: 'toggle', label: 'SMS / text messages',
+          default: true, target: 'ai', path: 'autoReply.channels.sms' },
+        { id: 'autoReply_instagram', kind: 'toggle', label: 'Instagram DMs',
+          default: true, target: 'ai', path: 'autoReply.channels.instagram' },
+        { id: 'autoReply_facebook', kind: 'toggle', label: 'Facebook Messenger',
+          default: true, target: 'ai', path: 'autoReply.channels.facebook' },
+      ],
+    },
+
+    // ── Customer intake form ──────────────────────────────────────────────
+    {
+      id: 'intakeBasics',
+      section: 'Customer intake',
+      title: "Public intake form (QR code)",
+      sub: "When enabled, you get a public link + QR for trucks, signs, and trade shows. Submissions land in Jobs → Service Requests.",
+      kind: 'fields',
+      fields: [
+        { id: 'intake_active', kind: 'toggle', label: 'Enable intake form',
+          default: true, target: 'intake', path: 'active',
+          desc: 'You can always toggle this off later in Settings → Operations.' },
+        { id: 'intake_formTitle', label: 'Form title', target: 'intake', path: 'formTitle',
+          placeholder: 'Request a Quote', default: 'Request a Quote' },
+        { id: 'intake_formSubtitle', label: 'Form subtitle', target: 'intake', path: 'formSubtitle',
+          placeholder: "Fill out the form and we'll get back to you within a day.",
+          default: "Fill out the form below and we'll be in touch shortly." },
+      ],
+    },
+    {
+      id: 'intakeOptions',
+      section: 'Customer intake',
+      title: "Intake options",
+      sub: "Live quote estimation needs per-sq-ft rates set in Settings → Operations afterward.",
+      kind: 'fields',
+      fields: [
+        { id: 'intake_quoteEnabled', kind: 'toggle', label: 'Show live quote estimate',
+          desc: 'Customers see an estimated price as they fill out the form.',
+          default: false, target: 'intake', path: 'quoteEnabled' },
+        { id: 'intake_requirePhotos', kind: 'toggle', label: 'Require job-site photos',
+          desc: 'Helpful for service-based estimates and fewer back-and-forths.',
+          default: false, target: 'intake', path: 'requirePhotos' },
+        { id: 'intake_hearAboutOptions', label: '"How did you hear about us?" options',
+          target: 'intake', path: 'hearAboutOptions',
+          placeholder: 'Google, Social Media, Referral, Other',
+          default: 'Google, Social Media, Referral, Other' },
+      ],
+    },
+
+    // ── Preferences ───────────────────────────────────────────────────────
+    {
+      id: 'preferences',
+      section: 'Preferences',
+      title: "Display preferences",
+      kind: 'fields',
+      fields: [
+        { id: 'weatherUnit', kind: 'select', label: 'Temperature units', target: 'me',
+          default: 'auto',
+          options: [
+            { value: 'auto', label: 'Auto-detect' },
+            { value: 'fahrenheit', label: 'Fahrenheit (°F)' },
+            { value: 'celsius', label: 'Celsius (°C)' },
+          ] },
+      ],
+    },
+
+    // ── Wrap-up CTAs ──────────────────────────────────────────────────────
+    {
+      id: 'importInviteFinish',
+      section: 'Last bits',
+      title: "Two optional shortcuts",
+      sub: "Open in a new tab — they don't block setup. You can always do these later.",
+      kind: 'cta',
+      ctas: [
+        { icon: '📥', title: 'Import customers & jobs',
+          desc: 'CSV from Jobber, Housecall Pro, ServiceTitan or any spreadsheet. Up to 500 records at a time.',
+          href: '/swft-import', target: '_blank' },
+        { icon: '👥', title: 'Invite your team',
+          desc: 'Add admins, office staff, or technicians by email. Each gets a join link.',
+          href: '/swft-team', target: '_blank' },
+      ],
+    },
+
+    // ── Done ──────────────────────────────────────────────────────────────
+    {
+      id: 'done',
+      kind: 'done',
+      section: 'You did it',
+      title: "You're all set!",
+      sub: "SWFT now knows your business inside and out. Edit any of this anytime in Settings.",
+    },
   ];
 
   // ── State ───────────────────────────────────────────────────────────────
   var _step = 0;
-  var _data = {};       // accumulating field values + existing profile
+  var _data = {};       // accumulating values + existing profile (flat for `me`)
+  var _ai = {};         // ai-settings values, nested per server schema
+  var _intake = {};     // intake form values
   var _autofillRan = false;
   var _autofillSkipped = false;
 
@@ -158,12 +598,11 @@
   document.body.appendChild(overlay);
   var card = overlay.querySelector('#sw-card');
 
-  // Click outside to close (only after step 1, otherwise stays put)
   overlay.addEventListener('click', function (e) {
     if (e.target === overlay && _step > 0) finishLater();
   });
 
-  // ── Auth helper (matches the pattern used in swft-settings.html) ────────
+  // ── Auth + API helpers ──────────────────────────────────────────────────
   async function getToken() {
     var mod = await import('https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js');
     var auth = mod.getAuth();
@@ -212,6 +651,79 @@
     return await r.json();
   }
 
+  async function apiGetAi() {
+    if (window.API && window.API.aiSettings && window.API.aiSettings.get) {
+      try { return await window.API.aiSettings.get(); } catch (_) { return {}; }
+    }
+    try {
+      var t = await getToken();
+      var r = await fetch('/api/ai-settings', { headers: { Authorization: 'Bearer ' + t } });
+      return await r.json();
+    } catch (_) { return {}; }
+  }
+
+  async function apiPutAi(patch) {
+    if (window.API && window.API.aiSettings && window.API.aiSettings.save) {
+      try { return await window.API.aiSettings.save(patch); } catch (_) { return null; }
+    }
+    try {
+      var t = await getToken();
+      var r = await fetch('/api/ai-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
+        body: JSON.stringify(patch),
+      });
+      return await r.json();
+    } catch (_) { return null; }
+  }
+
+  async function apiGetIntake() {
+    if (window.API && window.API.intakeForms && window.API.intakeForms.get) {
+      try { return await window.API.intakeForms.get(); } catch (_) { return {}; }
+    }
+    try {
+      var t = await getToken();
+      var r = await fetch('/api/intake-forms', { headers: { Authorization: 'Bearer ' + t } });
+      return await r.json();
+    } catch (_) { return {}; }
+  }
+
+  async function apiPutIntake(patch) {
+    if (window.API && window.API.intakeForms && window.API.intakeForms.save) {
+      try { return await window.API.intakeForms.save(patch); } catch (_) { return null; }
+    }
+    try {
+      var t = await getToken();
+      var r = await fetch('/api/intake-forms', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
+        body: JSON.stringify(patch),
+      });
+      return await r.json();
+    } catch (_) { return null; }
+  }
+
+  // ── Path helpers (for nested ai-settings keys) ──────────────────────────
+  function getPath(obj, path) {
+    if (!obj || !path) return undefined;
+    var parts = path.split('.');
+    var cur = obj;
+    for (var i = 0; i < parts.length; i++) {
+      if (cur == null) return undefined;
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
+  function setPath(obj, path, val) {
+    var parts = path.split('.');
+    var cur = obj;
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (cur[parts[i]] == null || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
+      cur = cur[parts[i]];
+    }
+    cur[parts[parts.length - 1]] = val;
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────
   function esc(s) {
     return String(s == null ? '' : s)
@@ -220,15 +732,59 @@
   }
 
   function progressFraction() {
-    return Math.round(((_step) / (STEPS.length - 1)) * 100);
+    return Math.round((_step / (STEPS.length - 1)) * 100);
+  }
+
+  function fieldValue(f) {
+    var path = f.path || f.id;
+    var bag = f.target === 'ai' ? _ai : f.target === 'intake' ? _intake : _data;
+    var v = getPath(bag, path);
+    if (v === undefined || v === null || v === '') {
+      return f.default !== undefined ? f.default : (f.kind === 'toggle' ? false : '');
+    }
+    return v;
+  }
+
+  function renderField(f) {
+    var v = fieldValue(f);
+    var html = '';
+    if (f.kind === 'toggle') {
+      html += '<div class="sw-toggle-row" data-field="' + esc(f.id) + '">';
+      html += '<div class="sw-toggle-info">';
+      html += '<div class="sw-toggle-label">' + esc(f.label) + '</div>';
+      if (f.desc) html += '<div class="sw-toggle-desc">' + esc(f.desc) + '</div>';
+      html += '</div>';
+      html += '<div class="sw-toggle ' + (v ? 'on' : '') + '" data-toggle-id="' + esc(f.id) + '"></div>';
+      html += '</div>';
+      return html;
+    }
+    html += '<div class="sw-field">';
+    if (f.label) html += '<label class="sw-label" for="sw-f-' + esc(f.id) + '">' + esc(f.label) + '</label>';
+    if (f.kind === 'textarea') {
+      html += '<textarea class="sw-textarea" id="sw-f-' + esc(f.id) + '" data-field="' + esc(f.id) + '" rows="4" placeholder="' + esc(f.placeholder || '') + '">' + esc(v) + '</textarea>';
+    } else if (f.kind === 'select') {
+      html += '<select class="sw-select" id="sw-f-' + esc(f.id) + '" data-field="' + esc(f.id) + '">';
+      (f.options || []).forEach(function (op) {
+        var sel = String(op.value) === String(v) ? ' selected' : '';
+        html += '<option value="' + esc(op.value) + '"' + sel + '>' + esc(op.label) + '</option>';
+      });
+      html += '</select>';
+    } else if (f.kind === 'number') {
+      html += '<input class="sw-input" id="sw-f-' + esc(f.id) + '" data-field="' + esc(f.id) + '" type="number" min="' + (f.min != null ? f.min : 0) + '" max="' + (f.max != null ? f.max : 999) + '" value="' + esc(v) + '" placeholder="' + esc(f.placeholder || '') + '"/>';
+    } else {
+      html += '<input class="sw-input" id="sw-f-' + esc(f.id) + '" data-field="' + esc(f.id) + '" type="text" placeholder="' + esc(f.placeholder || '') + '" value="' + esc(v) + '"/>';
+    }
+    if (f.helper) html += '<div class="sw-helper">' + esc(f.helper) + '</div>';
+    html += '</div>';
+    return html;
   }
 
   function render() {
     var s = STEPS[_step];
     var canFinishLater = _step > 0 && s.kind !== 'done';
     var pf = progressFraction();
-    var totalForLabel = STEPS.length;
     var stepNum = _step + 1;
+    var totalForLabel = STEPS.length;
 
     var inner = '';
     inner += '<div class="sw-progress-row">';
@@ -241,30 +797,85 @@
 
     inner += '<div class="sw-step">';
 
+    if (s.section) inner += '<div class="sw-section-tag">' + esc(s.section) + '</div>';
+
     if (s.kind === 'website') {
-      inner += '<div class="sw-eyebrow">' + esc(s.eyebrow || '') + '</div>';
+      if (s.eyebrow) inner += '<div class="sw-eyebrow">' + esc(s.eyebrow) + '</div>';
       inner += '<h2 class="sw-title">' + esc(s.title) + '</h2>';
       inner += '<p class="sw-sub">' + esc(s.sub) + '</p>';
-      inner += '<input class="sw-input" id="sw-website-url" placeholder="https://yourbusiness.com" value="' +
-               esc(_data.website || '') + '" autofocus />';
-      inner += '<div class="sw-helper">We read your homepage and About page only. Takes about 10 seconds.</div>';
+      inner += '<input class="sw-input" id="sw-website-url" placeholder="https://yourbusiness.com" value="' + esc(_data.website || '') + '" autofocus />';
+      inner += '<div class="sw-helper">We read your homepage and About page only — about 10 seconds.</div>';
       inner += '<div id="sw-autofill-status" class="sw-autofill-status" style="display:none;"></div>';
+
+    } else if (s.kind === 'logo') {
+      inner += '<h2 class="sw-title">' + esc(s.title) + '</h2>';
+      if (s.sub) inner += '<p class="sw-sub">' + esc(s.sub) + '</p>';
+      inner += '<div class="sw-logo-row">';
+      inner +=   '<div class="sw-logo-preview" id="sw-logo-preview">';
+      if (_data.companyLogo) {
+        inner += '<img src="' + esc(_data.companyLogo) + '" alt="logo"/>';
+      } else {
+        inner += '<span class="sw-logo-placeholder">' + esc(((_data.company || 'SWFT').match(/\b\w/g) || ['S']).join('').slice(0, 4)) + '</span>';
+      }
+      inner +=   '</div>';
+      inner +=   '<div style="display:flex;flex-direction:column;gap:8px;flex:1;">';
+      inner +=     '<button class="sw-btn" id="sw-logo-pick">Choose image…</button>';
+      if (_data.companyLogo) {
+        inner +=   '<button class="sw-btn ghost" id="sw-logo-remove">Remove</button>';
+      }
+      inner +=     '<input type="file" id="sw-logo-file" accept="image/*" style="display:none;"/>';
+      inner +=   '</div>';
+      inner += '</div>';
+      inner += '<div class="sw-helper">PNG / JPG / SVG. We resize to fit — square logos look best.</div>';
+
+    } else if (s.kind === 'cta') {
+      inner += '<h2 class="sw-title">' + esc(s.title) + '</h2>';
+      if (s.sub) inner += '<p class="sw-sub">' + esc(s.sub) + '</p>';
+      inner += '<div class="sw-cta-list">';
+      (s.ctas || []).forEach(function (c) {
+        inner += '<a class="sw-cta" href="' + esc(c.href) + '" target="' + esc(c.target || '_self') + '" rel="noopener">';
+        inner += '<div class="sw-cta-icon">' + esc(c.icon || '→') + '</div>';
+        inner += '<div class="sw-cta-body">';
+        inner += '<div class="sw-cta-title">' + esc(c.title) + '</div>';
+        inner += '<div class="sw-cta-desc">' + esc(c.desc) + '</div>';
+        inner += '</div>';
+        inner += '<div class="sw-cta-arrow">↗</div>';
+        inner += '</a>';
+      });
+      inner += '</div>';
 
     } else if (s.kind === 'done') {
       inner += '<div class="sw-confetti">🎉</div>';
       inner += '<h2 class="sw-title">' + esc(s.title) + '</h2>';
       inner += '<p class="sw-sub">' + esc(s.sub) + '</p>';
+      // Quick recap
+      var recap = [];
+      if (_data.company) recap.push({ k: 'Company', v: _data.company });
+      if (_data.bizServices) recap.push({ k: 'Services', v: _data.bizServices });
+      if (_data.bizArea) recap.push({ k: 'Service area', v: _data.bizArea });
+      var autoCount = 0;
+      ['quoteFollowup','invoiceFollowup','reviewRequest','autoReply'].forEach(function (k) {
+        if (_ai && _ai[k] && _ai[k].enabled) autoCount++;
+      });
+      if (autoCount) recap.push({ k: 'AI automations', v: autoCount + ' enabled' });
+      if (_intake && _intake.active) recap.push({ k: 'Intake form', v: 'Live' });
+      if (recap.length) {
+        inner += '<div class="sw-summary">';
+        recap.forEach(function (r) {
+          inner += '<div class="sw-summary-row"><span class="k">' + esc(r.k) + '</span><span class="v">' + esc(r.v) + '</span></div>';
+        });
+        inner += '</div>';
+      }
 
-    } else {
+    } else if (s.kind === 'fields') {
       inner += '<h2 class="sw-title">' + esc(s.title) + '</h2>';
       if (s.sub) inner += '<p class="sw-sub">' + esc(s.sub) + '</p>';
-      var val = esc(_data[s.field] || '');
-      if (s.textarea) {
-        inner += '<textarea class="sw-textarea" id="sw-input" rows="4" placeholder="' + esc(s.placeholder || '') + '" autofocus>' + val + '</textarea>';
-      } else {
-        inner += '<input class="sw-input" id="sw-input" type="text" placeholder="' + esc(s.placeholder || '') + '" value="' + val + '" autofocus />';
-      }
-      if (s.optional) inner += '<div class="sw-helper">Optional — leave blank to skip.</div>';
+      var twoCol = (s.fields || []).length === 2 && (s.fields || []).every(function (f) {
+        return !f.kind || f.kind === 'text' || f.kind === 'select' || f.kind === 'number';
+      });
+      if (twoCol) inner += '<div class="sw-row">';
+      (s.fields || []).forEach(function (f) { inner += renderField(f); });
+      if (twoCol) inner += '</div>';
     }
 
     inner += '</div>';
@@ -286,7 +897,7 @@
     } else if (s.kind === 'done') {
       inner += '<button class="sw-btn primary" id="sw-finish">Take me to SWFT →</button>';
     } else {
-      if (s.optional) {
+      if (s.kind === 'cta' || s.optional) {
         inner += '<button class="sw-btn ghost" id="sw-skip-step">Skip</button>';
       }
       inner += '<button class="sw-btn primary" id="sw-next">Continue →</button>';
@@ -296,9 +907,8 @@
     card.innerHTML = inner;
     wireStep();
 
-    // Focus the relevant input
     setTimeout(function () {
-      var el = card.querySelector('#sw-input,#sw-website-url');
+      var el = card.querySelector('#sw-website-url, .sw-step input.sw-input:not([readonly]), .sw-step textarea, .sw-step select');
       if (el) try { el.focus(); } catch (_) {}
     }, 60);
   }
@@ -330,36 +940,36 @@
         try {
           var json = await apiAnalyze(url);
           var d = json.data || {};
-          // Merge into _data — but don't overwrite anything the user has
-          // already entered (existing _data takes precedence).
           var picked = 0;
           var map = {
-            company:           'company',
-            phone:             'phone',
-            address:           'address',
-            email:             'companyEmail',   // analyzer's `email` → companyEmail
-            about:             'bizAbout',
-            services:          'bizServices',
-            serviceArea:       'bizArea',
-            hours:             'bizHours',
-            pricing:           'bizPricing',
-            paymentMethods:    'bizPaymentMethods',
-            faqs:              'bizFaqs',
+            company:        'company',
+            phone:          'phone',
+            address:        'address',
+            email:          'companyEmail',
+            about:          'bizAbout',
+            services:       'bizServices',
+            serviceArea:    'bizArea',
+            hours:          'bizHours',
+            pricing:        'bizPricing',
+            paymentMethods: 'bizPaymentMethods',
+            bookingLink:    'bizBookingLink',
+            faqs:           'bizFaqs',
           };
           for (var k in map) {
             if (d[k] && !_data[map[k]]) { _data[map[k]] = d[k]; picked++; }
           }
-          // Always store the URL itself
+          // Pre-fill serviceTypes from extracted services if user hasn't set them
+          if (d.services && !_data.serviceTypes) {
+            _data.serviceTypes = d.services;
+          }
           _data.website = url;
           _autofillRan = true;
-          // Persist what we got so a refresh doesn't lose it
           await apiPut(Object.assign({}, _data, { website: url })).catch(function () {});
           if (picked > 0) {
             showAutofillStatus('Filled ' + picked + ' field' + (picked === 1 ? '' : 's') + ' — review them next.', 'ok');
           } else {
             showAutofillStatus("Couldn't extract much from that page. You can fill in the rest manually.", 'err');
           }
-          // Re-render so the Continue button replaces the autofill controls
           setTimeout(render, 600);
         } catch (e) {
           runBtn.disabled = false;
@@ -380,22 +990,63 @@
       var doneBtn = card.querySelector('#sw-finish');
       if (doneBtn) doneBtn.addEventListener('click', finishComplete);
 
-    } else {
-      var input = card.querySelector('#sw-input');
-      var nextBtn2 = card.querySelector('#sw-next');
-      var skipStep = card.querySelector('#sw-skip-step');
-      if (input) {
-        input.addEventListener('keydown', function (ev) {
-          // Enter advances on single-line inputs; Shift+Enter on textareas keeps newline
-          if (ev.key === 'Enter' && !s.textarea) { ev.preventDefault(); advance(); }
-        });
-      }
-      if (nextBtn2) nextBtn2.addEventListener('click', advance);
-      if (skipStep) skipStep.addEventListener('click', function () {
-        // Don't write anything for explicitly-skipped optional fields
-        _step++;
+    } else if (s.kind === 'logo') {
+      var pick = card.querySelector('#sw-logo-pick');
+      var file = card.querySelector('#sw-logo-file');
+      var rm   = card.querySelector('#sw-logo-remove');
+      var nb   = card.querySelector('#sw-next');
+      var sk   = card.querySelector('#sw-skip-step');
+      if (pick) pick.addEventListener('click', function () { file && file.click(); });
+      if (file) file.addEventListener('change', function (ev) {
+        var f = ev.target.files && ev.target.files[0];
+        if (!f) return;
+        if (f.size > 2 * 1024 * 1024) {
+          alert('Image is over 2 MB — please pick a smaller one.');
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          _data.companyLogo = reader.result;
+          render();
+        };
+        reader.readAsDataURL(f);
+      });
+      if (rm) rm.addEventListener('click', function () {
+        _data.companyLogo = '';
         render();
       });
+      if (nb) nb.addEventListener('click', advance);
+      if (sk) sk.addEventListener('click', function () { _step++; render(); });
+
+    } else if (s.kind === 'cta') {
+      var nb2 = card.querySelector('#sw-next');
+      var sk2 = card.querySelector('#sw-skip-step');
+      if (nb2) nb2.addEventListener('click', advance);
+      if (sk2) sk2.addEventListener('click', advance);
+
+    } else if (s.kind === 'fields') {
+      // Toggle clicks
+      var toggles = card.querySelectorAll('.sw-toggle');
+      toggles.forEach(function (t) {
+        t.addEventListener('click', function () {
+          t.classList.toggle('on');
+        });
+      });
+
+      var inputs = card.querySelectorAll('.sw-input, .sw-textarea, .sw-select');
+      inputs.forEach(function (el) {
+        el.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter' && el.tagName !== 'TEXTAREA') {
+            ev.preventDefault();
+            advance();
+          }
+        });
+      });
+
+      var nb3 = card.querySelector('#sw-next');
+      var sk3 = card.querySelector('#sw-skip-step');
+      if (nb3) nb3.addEventListener('click', advance);
+      if (sk3) sk3.addEventListener('click', function () { _step++; render(); });
     }
   }
 
@@ -408,36 +1059,122 @@
     el.innerHTML = (icon ? icon + ' ' : '') + esc(msg);
   }
 
+  function collectStepValues() {
+    // Returns { mePatch, aiPatch, intakePatch } for the current step.
+    var s = STEPS[_step];
+    var mePatch = null, aiPatch = null, intakePatch = null;
+    if (s.kind !== 'fields') return { mePatch: mePatch, aiPatch: aiPatch, intakePatch: intakePatch };
+
+    (s.fields || []).forEach(function (f) {
+      var path = f.path || f.id;
+      var val;
+      if (f.kind === 'toggle') {
+        var t = card.querySelector('[data-toggle-id="' + f.id + '"]');
+        val = t ? t.classList.contains('on') : !!fieldValue(f);
+      } else {
+        var el = card.querySelector('[data-field="' + f.id + '"]');
+        if (!el) return;
+        val = el.value;
+        if (f.kind === 'number') {
+          val = val === '' ? null : Number(val);
+        } else if (typeof val === 'string') {
+          val = val.trim();
+        }
+      }
+
+      // Update local state
+      if (f.target === 'ai') {
+        setPath(_ai, path, val);
+        if (!aiPatch) aiPatch = {};
+        setPath(aiPatch, path, val);
+      } else if (f.target === 'intake') {
+        setPath(_intake, path, val);
+        if (!intakePatch) intakePatch = {};
+        intakePatch[path] = val; // intake schema is flat
+      } else {
+        _data[path] = val;
+        if (!mePatch) mePatch = {};
+        mePatch[path] = val;
+        // synthesize `name` when both halves exist
+        if (path === 'firstName' || path === 'lastName') {
+          mePatch.name = [_data.firstName || '', _data.lastName || ''].filter(Boolean).join(' ');
+          _data.name = mePatch.name;
+        }
+      }
+    });
+
+    return { mePatch: mePatch, aiPatch: aiPatch, intakePatch: intakePatch };
+  }
+
+  function aiSectionPayload(patch) {
+    // Server expects a per-section object. We expand the merged patch into the
+    // sections it touches by merging with what we've already loaded.
+    if (!patch) return null;
+    var out = {};
+    ['quoteFollowup', 'invoiceFollowup', 'reviewRequest', 'autoReply', 'customerMemory'].forEach(function (sec) {
+      if (patch[sec] !== undefined || (_ai[sec] && Object.keys(_ai[sec]).length)) {
+        out[sec] = Object.assign({}, _ai[sec] || {}, patch[sec] || {});
+      }
+    });
+    return out;
+  }
+
+  async function persistPatches(patches) {
+    var promises = [];
+    if (patches.mePatch) {
+      promises.push(apiPut(patches.mePatch).catch(function () {}));
+    }
+    if (patches.aiPatch) {
+      // Send the merged section data the server expects
+      var payload = aiSectionPayload(patches.aiPatch);
+      if (payload) promises.push(apiPutAi(payload).catch(function () {}));
+    }
+    if (patches.intakePatch) {
+      // Server requires a full doc — merge with what we have
+      var full = Object.assign({}, _intake, patches.intakePatch);
+      promises.push(apiPutIntake(full).catch(function () {}));
+    }
+    if (promises.length) await Promise.all(promises);
+  }
+
   async function advance() {
     var s = STEPS[_step];
     if (s.kind === 'website') {
-      // After autofill or skip-autofill, just move forward
       _step++;
       render();
       return;
     }
-    var input = card.querySelector('#sw-input');
-    var val = input ? input.value.trim() : '';
 
-    // Persist whatever was entered (or blank, to clear)
-    if (s.field) {
-      _data[s.field] = val;
-      // Synthesize `name` when both halves are present
-      var patch = {};
-      patch[s.field] = val;
-      if (s.field === 'firstName' || s.field === 'lastName') {
-        patch.name = [_data.firstName || '', _data.lastName || ''].filter(Boolean).join(' ');
+    if (s.kind === 'logo') {
+      // Save logo (data URL) and move on
+      if (_data.companyLogo !== undefined) {
+        apiPut({ companyLogo: _data.companyLogo }).catch(function () {});
       }
-      apiPut(patch).catch(function () {});
+      _step++;
+      render();
+      return;
     }
+
+    if (s.kind === 'cta') {
+      _step++;
+      render();
+      return;
+    }
+
+    if (s.kind === 'fields') {
+      var patches = collectStepValues();
+      // fire-and-forget — wizard stays snappy even on slow networks
+      persistPatches(patches);
+      _step++;
+      render();
+      return;
+    }
+
     _step++;
     render();
   }
 
   async function finishLater() {
-    // Treat "Finish later" as an opt-out rather than a re-prompt next session.
-    // The user has seen the wizard and made a choice — auto-popping again would
-    // be nagging. They can always relaunch from Settings → Profile.
     try { await apiPut({ setupComplete: true }); } catch (_) {}
     close();
   }
@@ -457,15 +1194,37 @@
     document.body.style.overflow = '';
   }
 
+  function seedDefaultsIntoState() {
+    // Fill in any defaults from the schema so toggles render in the right state
+    // even when the server returned no value for them yet.
+    STEPS.forEach(function (s) {
+      if (s.kind !== 'fields') return;
+      (s.fields || []).forEach(function (f) {
+        if (f.default === undefined) return;
+        var path = f.path || f.id;
+        var bag = f.target === 'ai' ? _ai : f.target === 'intake' ? _intake : _data;
+        var cur = getPath(bag, path);
+        if (cur === undefined || cur === null || cur === '') {
+          setPath(bag, path, f.default);
+        }
+      });
+    });
+  }
+
+  async function loadAll() {
+    var results = await Promise.all([
+      apiGet().catch(function () { return {}; }),
+      apiGetAi().catch(function () { return {}; }),
+      apiGetIntake().catch(function () { return {}; }),
+    ]);
+    _data = Object.assign({}, results[0] || {});
+    _ai = Object.assign({}, results[1] || {});
+    _intake = Object.assign({}, results[2] || {});
+    seedDefaultsIntoState();
+  }
+
   async function start() {
-    // Pre-populate from existing profile so re-running is non-destructive
-    try {
-      var me = await apiGet();
-      _data = Object.assign({}, me || {});
-      // If the user already pasted a website at signup, seed the input
-    } catch (_) {
-      _data = {};
-    }
+    try { await loadAll(); } catch (_) { _data = {}; _ai = {}; _intake = {}; seedDefaultsIntoState(); }
     _step = 0;
     _autofillRan = false;
     _autofillSkipped = false;
@@ -476,26 +1235,22 @@
   // ── Public API ──────────────────────────────────────────────────────────
   window.swftOpenSetupWizard = start;
 
-  // Heuristic: an existing account that already filled in any company-shaped
-  // info isn't a brand-new signup — don't auto-pop the wizard for them, even
-  // if `setupComplete` is missing (older accounts predate the flag).
+  // Heuristic: don't auto-pop the wizard for accounts that already have key
+  // fields filled in (older accounts predate the `setupComplete` flag).
   function looksAlreadySetup(me) {
     if (!me) return false;
     return !!(me.company || me.bizAbout || me.bizServices || me.bizArea);
   }
 
-  // Auto-trigger on the dashboard for users who haven't completed setup.
-  // Pages opt in by setting `data-setup-wizard="auto"` on <body>.
   function autoMaybe() {
     if (document.body.getAttribute('data-setup-wizard') !== 'auto') return;
-    // Small delay to let auth + /api/me cache settle
     setTimeout(async function () {
       try {
         var me = await apiGet();
         if (!me) return;
         if (me.setupComplete === true) return;
         if (looksAlreadySetup(me)) return;
-        _data = Object.assign({}, me);
+        await loadAll();
         _step = 0;
         _autofillRan = false;
         _autofillSkipped = false;
