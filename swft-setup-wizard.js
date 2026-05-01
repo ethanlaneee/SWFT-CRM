@@ -404,17 +404,6 @@
       ],
     },
     {
-      id: 'serviceTypes',
-      section: 'Operations',
-      title: "Service type list",
-      sub: "Comma-separated. Used in job/quote forms and the intake form. We'll pre-fill from your services above.",
-      kind: 'fields',
-      fields: [
-        { id: 'serviceTypes', label: 'Service types', target: 'me',
-          placeholder: 'Pressure Washing, Window Cleaning, Gutter Cleaning' },
-      ],
-    },
-    {
       id: 'lineItemsAndCrews',
       section: 'Operations',
       title: "Line items & crew names",
@@ -1099,6 +1088,13 @@
         if (path === 'firstName' || path === 'lastName') {
           mePatch.name = [_data.firstName || '', _data.lastName || ''].filter(Boolean).join(' ');
           _data.name = mePatch.name;
+        }
+        // `bizServices` doubles as the canonical service-type list. Mirror it
+        // to `serviceTypes` so legacy consumers (intake form, server) keep
+        // working without a second input box.
+        if (path === 'bizServices') {
+          mePatch.serviceTypes = val;
+          _data.serviceTypes = val;
         }
       }
     });

@@ -241,7 +241,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   /* ALL inputs and selects go full width regardless of inline style */
   .settings-input,
   .settings-select,
-  #s-tax, #s-services, #s-line-items, #s-crews,
+  #s-tax, #s-line-items, #s-crews,
   #intake-hear-about, #intake-title, #intake-subtitle,
   #export-data-type {
     width: 100% !important;
@@ -281,10 +281,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     align-items: stretch !important;
     gap: 14px !important;
   }
-
-  /* Quick Setup banner */
-  #quick-setup-banner > div { flex-direction: column !important; align-items: stretch !important; }
-  #quick-setup-btn { width: 100% !important; justify-content: center !important; }
 
   /* Prevent text overflow everywhere */
   .settings-row-label,
@@ -402,7 +398,22 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <div class="settings-field"><label>Company Name</label><input class="settings-input" id="s-company" style="width:100%;" placeholder="e.g. SWFT Concrete"/></div>
       <div class="settings-field"><label>Phone</label><input class="settings-input" id="s-phone" style="width:100%;" placeholder="(512) 555-1234"/></div>
     </div>
-    <div class="settings-field"><label>Address</label><input class="settings-input" id="s-address" style="width:100%;" placeholder="123 Main St, Austin TX 78745"/></div>
+    <div class="settings-2col">
+      <div class="settings-field"><label>Address</label><input class="settings-input" id="s-address" style="width:100%;" placeholder="123 Main St, Austin TX 78745"/></div>
+      <div class="settings-field">
+        <label>Country</label>
+        <select class="settings-select" id="s-country" style="width:100%;">
+          <option value="">Select…</option>
+          <option value="US">United States</option>
+          <option value="CA">Canada</option>
+          <option value="GB">United Kingdom</option>
+          <option value="AU">Australia</option>
+          <option value="NZ">New Zealand</option>
+          <option value="IE">Ireland</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+    </div>
     <div class="settings-2col">
       <div class="settings-field"><label>Email</label><input class="settings-input" id="s-company-email" style="width:100%;" placeholder="hello@swftconcrete.com"/><div style="font-size:11px;color:var(--gray);margin-top:4px;">Shown on invoices, quotes, and outgoing emails. Separate from your login email.</div></div>
       <div class="settings-field"><label>Website</label><input class="settings-input" id="s-website" style="width:100%;" placeholder="www.swftconcrete.com"/></div>
@@ -504,22 +515,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <div class="settings-section" data-group="profile" id="sec-ai-profile">
   <div class="settings-header"><span class="settings-header-icon">🧠</span><h3>BUSINESS PROFILE FOR AI</h3></div>
   <div class="settings-body">
-    <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.5;">This info powers your AI agents. The more you fill in, the smarter your estimator and follow-up agents will be. As you add jobs and customers, the AI also learns automatically.</div>
-
-    <!-- Quick Setup: AI reads the website and fills the fields below -->
-    <div id="quick-setup-banner" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(200,241,53,0.08) 0%,rgba(200,241,53,0.02) 100%);border:1px solid rgba(200,241,53,0.2);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:220px;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--green);">QUICK SETUP</div>
-          <div style="font-size:12px;color:var(--gray);margin-top:3px;line-height:1.5;">Paste your website URL — AI fills in services, pricing, hours, FAQs and more. You can edit anything afterwards.</div>
-        </div>
-        <button onclick="quickSetupFromWebsite()" id="quick-setup-btn" class="settings-btn primary" style="white-space:nowrap;flex-shrink:0;">
-          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:-1px;margin-right:4px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
-          Auto-fill with AI
-        </button>
-      </div>
-      <input class="settings-input" id="quick-setup-url" placeholder="https://yourbusiness.com" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;"/>
-    </div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.5;">This info powers your AI agents. The more you fill in, the smarter your estimator and follow-up agents will be. As you add jobs and customers, the AI also learns automatically. To auto-fill from your website, run the <a href="#" onclick="window.swftOpenSetupWizard && window.swftOpenSetupWizard();return false;" style="color:var(--green);text-decoration:none;">setup wizard</a>.</div>
 
     <div class="settings-field">
       <label>About Your Business</label>
@@ -528,7 +524,8 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="settings-2col">
       <div class="settings-field">
         <label>Services You Offer</label>
-        <textarea class="settings-input" id="s-biz-services" rows="2" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. Pressure washing, soft washing, window cleaning, gutter cleaning, deck restoration"></textarea>
+        <textarea class="settings-input" id="s-biz-services" rows="2" style="width:100%;resize:vertical;line-height:1.5;" placeholder="e.g. Pressure washing, soft washing, window cleaning, gutter cleaning, deck restoration" oninput="renderIntakeServicesList()"></textarea>
+        <span style="font-size:10px;color:var(--gray2);margin-top:4px;display:block;">Comma-separated. Doubles as your service-type list for jobs, quotes, and the intake form.</span>
       </div>
       <div class="settings-field">
         <label>Service Area</label>
@@ -590,13 +587,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       <select class="settings-select" id="s-terms">
         <option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Due on Receipt</option>
       </select>
-    </div>
-    <div class="settings-row">
-      <div class="settings-row-info"><div class="settings-row-label">Service Types</div><div class="settings-row-desc">Available in job and quote forms</div></div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <input class="settings-input" id="s-services" style="width:300px;" value="" placeholder="e.g. Pressure Washing, Window Cleaning, Gutter Cleaning" oninput="renderIntakeServicesList()"/>
-        <span style="font-size:10px;color:var(--gray2);">Separate with commas</span>
-      </div>
     </div>
     <div class="settings-row">
       <div class="settings-row-info"><div class="settings-row-label">Line Item Descriptions</div><div class="settings-row-desc">Available in quote and invoice line items</div></div>
@@ -783,7 +773,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:12px;">
       <div class="settings-row-info">
         <div class="settings-row-label">Rates</div>
-        <div class="settings-row-desc">Services are pulled from the <strong>Service Types</strong> field above. Set an optional per-sq-ft rate next to each service to enable automatic quote estimation.</div>
+        <div class="settings-row-desc">Services are pulled from the <strong>Services You Offer</strong> field in your Business Profile above. Set an optional per-sq-ft rate next to each service to enable automatic quote estimation.</div>
       </div>
       <div id="intake-services-list" style="display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px;">No services configured. Add some in the Service Types field above.</div>
@@ -977,8 +967,7 @@ function toggleSidebar(){
   var nav = document.getElementById('settingsNav');
   if (!nav) return;
   var items    = nav.querySelectorAll('.settings-nav-item');
-  /* Include the quick-setup-banner (not a .settings-section but has data-group) */
-  var sections = document.querySelectorAll('.settings-section, #quick-setup-banner');
+  var sections = document.querySelectorAll('.settings-section');
 
   var tabLabels = { profile: 'Profile', operations: 'Operations', billing: 'Billing', account: 'Account' };
 
@@ -1048,94 +1037,6 @@ async function findGoogleBusiness() {
   } finally {
     btn.textContent = 'Find My Business';
     btn.disabled = false;
-  }
-}
-
-// Called from the Quick Setup banner. Reads the URL from the banner's input,
-// also copies it into Company Profile → Website (so it persists), then runs
-// the AI extract + auto-save.
-async function quickSetupFromWebsite() {
-  var top = document.getElementById('quick-setup-url');
-  var url = (top && top.value || '').trim();
-  if (!url) { showToast('Enter your website URL first'); if (top) top.focus(); return; }
-  var siteEl = document.getElementById('s-website');
-  if (siteEl && !siteEl.value.trim()) siteEl.value = url;
-  var btn = document.getElementById('quick-setup-btn');
-  var orig = btn.innerHTML;
-  btn.innerHTML = 'Analyzing…';
-  btn.disabled = true;
-  try {
-    await analyzeWebsite(url);
-  } finally {
-    btn.innerHTML = orig;
-    btn.disabled = false;
-  }
-}
-
-async function analyzeWebsite(urlArg) {
-  var btn = document.getElementById('quick-setup-btn');
-  var url = (urlArg || (document.getElementById('quick-setup-url')?.value) || (document.getElementById('s-website')?.value) || '').trim();
-  if (!url) { showToast('Enter your website URL first'); return; }
-
-  var origHtml = btn ? btn.innerHTML : '';
-  if (btn) { btn.innerHTML = 'Analyzing...'; btn.disabled = true; }
-
-  try {
-    var token = await getToken();
-    var res = await fetch('/api/me/analyze-website', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
-    });
-    var json = await res.json();
-    if (!res.ok) { showToast(json.error || 'Could not analyze website'); return; }
-
-    var d = json.data || {};
-    var filled = [];
-
-    function fillIfEmpty(id, value, label) {
-      var el = document.getElementById(id);
-      if (el && value && !el.value.trim()) { el.value = value; filled.push(label); }
-    }
-    function fillAlways(id, value, label) {
-      var el = document.getElementById(id);
-      if (el && value) { el.value = value; filled.push(label); }
-    }
-
-    // Business Profile — the AI's background knowledge about you
-    fillAlways('s-biz-about', d.about, 'About');
-    fillAlways('s-biz-services', d.services, 'Services');
-    fillAlways('s-biz-area', d.serviceArea, 'Service Area');
-    fillAlways('s-biz-hours', d.hours, 'Hours');
-    fillAlways('s-biz-pricing', d.pricing, 'Pricing');
-    fillAlways('s-biz-payment-methods', d.paymentMethods, 'Payment Methods');
-    fillAlways('s-biz-booking-link', d.bookingLink, 'Booking Link');
-    fillAlways('s-biz-faqs', d.faqs, 'FAQs');
-
-    // Company Profile — only fill if empty, these are on-invoice fields
-    fillIfEmpty('s-company', d.company, 'Company Name');
-    fillIfEmpty('s-phone', d.phone, 'Phone');
-    fillIfEmpty('s-address', d.address, 'Address');
-    fillIfEmpty('s-company-email', d.email, 'Company Email');
-
-    // Also feed the Services field that powers job/quote dropdowns
-    fillIfEmpty('s-services', d.services, 'Service Types');
-
-    if (filled.length) {
-      // Auto-save so the owner doesn't have to find and click Save in each section
-      try {
-        await Promise.all([saveSettings('company'), saveSettings('bizprofile'), saveSettings('defaults')]);
-        showToast('Filled & saved: ' + filled.join(', '));
-      } catch (saveErr) {
-        showToast('Filled: ' + filled.join(', ') + ' (save failed — click Save manually)');
-      }
-    } else {
-      showToast('AI could not extract enough info from that page. Try your homepage or About page.');
-    }
-  } catch(e) {
-    showToast('Error: ' + (e.message || 'Could not analyze website'));
-  } finally {
-    if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
   }
 }
 
@@ -1232,12 +1133,18 @@ async function saveSettings(section) {
       data.company = document.getElementById('s-company').value.trim();
       data.phone = document.getElementById('s-phone').value.trim();
       data.address = document.getElementById('s-address').value.trim();
+      var countryEl = document.getElementById('s-country');
+      if (countryEl) data.country = countryEl.value;
       data.companyEmail = document.getElementById('s-company-email').value.trim();
       data.website = document.getElementById('s-website').value.trim();
       if (_companyLogo !== null) data.companyLogo = _companyLogo || '';
     } else if (section === 'bizprofile') {
       data.bizAbout = document.getElementById('s-biz-about').value.trim();
       data.bizServices = document.getElementById('s-biz-services').value.trim();
+      // Services You Offer is also the source of truth for service-type
+      // dropdowns and intake-form rate rows — keep `serviceTypes` in sync so
+      // older consumers (server, settings-loader) keep working.
+      data.serviceTypes = data.bizServices;
       data.bizArea = document.getElementById('s-biz-area').value.trim();
       data.bizHours = document.getElementById('s-biz-hours').value.trim();
       data.bizNotes = document.getElementById('s-biz-notes').value.trim();
@@ -1251,7 +1158,6 @@ async function saveSettings(section) {
     } else if (section === 'defaults') {
       data.taxRate = document.getElementById('s-tax').value.trim();
       data.paymentTerms = document.getElementById('s-terms').value;
-      data.serviceTypes = document.getElementById('s-services').value.trim();
       data.lineItemTypes = document.getElementById('s-line-items').value.trim();
       data.crewNames = document.getElementById('s-crews').value.trim();
     } else if (section === 'prefs') {
@@ -1295,19 +1201,23 @@ async function loadSettings() {
     if (data.company) document.getElementById('s-company').value = data.company;
     if (data.phone) document.getElementById('s-phone').value = data.phone;
     if (data.address) document.getElementById('s-address').value = data.address;
+    var countryEl = document.getElementById('s-country');
+    if (countryEl) countryEl.value = data.country || '';
     var companyEmailField = document.getElementById('s-company-email');
     if (companyEmailField) companyEmailField.value = data.companyEmail || data.email || '';
     if (data.website) document.getElementById('s-website').value = data.website || '';
     if (data.taxRate) document.getElementById('s-tax').value = data.taxRate;
     if (data.paymentTerms) document.getElementById('s-terms').value = data.paymentTerms;
-    if (data.serviceTypes) document.getElementById('s-services').value = data.serviceTypes;
     if (data.lineItemTypes) document.getElementById('s-line-items').value = data.lineItemTypes;
     if (data.crewNames) document.getElementById('s-crews').value = data.crewNames;
     if (data.weatherUnit) document.getElementById('s-weather-unit').value = data.weatherUnit;
     if (data.companyLogo) showLogo(data.companyLogo);
-    // Business profile for AI
+    // Business profile for AI — `bizServices` is now the single source of
+    // truth for the service list. We fall back to legacy `serviceTypes` for
+    // accounts that filled in only the old Defaults field.
     if (data.bizAbout) document.getElementById('s-biz-about').value = data.bizAbout;
-    if (data.bizServices) document.getElementById('s-biz-services').value = data.bizServices;
+    var bizSvcEl = document.getElementById('s-biz-services');
+    if (bizSvcEl) bizSvcEl.value = data.bizServices || data.serviceTypes || '';
     if (data.bizArea) document.getElementById('s-biz-area').value = data.bizArea;
     if (data.bizHours) document.getElementById('s-biz-hours').value = data.bizHours;
     if (data.bizNotes) document.getElementById('s-biz-notes').value = data.bizNotes;
@@ -2225,13 +2135,14 @@ function renderIntakeServicesList() {
   var container = document.getElementById('intake-services-list');
   if (!container) return;
 
-  // Read service names from the Service Types input in Defaults
-  var svcInput = document.getElementById('s-services');
+  // Read service names from the canonical Services You Offer input in
+  // Business Profile. (Was previously a duplicate `Service Types` field.)
+  var svcInput = document.getElementById('s-biz-services');
   var raw = svcInput ? svcInput.value : '';
   var names = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
 
   if (names.length === 0) {
-    container.innerHTML = '<div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px;">No services configured. Add some in the <strong>Service Types</strong> field above.</div>';
+    container.innerHTML = '<div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px;">No services configured. Add some in the <strong>Services You Offer</strong> field above.</div>';
     return;
   }
 
@@ -2274,8 +2185,8 @@ async function saveIntakeForm() {
   var titleVal   = (document.getElementById('intake-title')    || {}).value || '';
   var subVal     = (document.getElementById('intake-subtitle') || {}).value || '';
 
-  // Build services array from Service Types names + rate inputs in the DOM
-  var svcTypeInput = document.getElementById('s-services');
+  // Build services array from Services You Offer names + rate inputs in the DOM
+  var svcTypeInput = document.getElementById('s-biz-services');
   var svcRaw = svcTypeInput ? svcTypeInput.value : '';
   var svcNames = svcRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
   var services = svcNames.map(function(name) {
@@ -2451,11 +2362,6 @@ function downloadQR() {
     document.querySelectorAll('.billing-plan-card').forEach(function(el) {
       s(el,'flex-direction','column'); s(el,'align-items','stretch');
     });
-    /* Quick setup banner */
-    var qs = document.querySelector('#quick-setup-banner > div');
-    if (qs) { s(qs,'flex-direction','column'); s(qs,'align-items','stretch'); }
-    var qsb = document.getElementById('quick-setup-btn');
-    if (qsb) { s(qsb,'width','100%'); s(qsb,'justify-content','center'); }
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', fix);

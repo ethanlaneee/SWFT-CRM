@@ -14,7 +14,10 @@
     window._swftSettings = settings;
 
     // ── Service type dropdowns ──
-    const serviceTypes = (settings.serviceTypes || "")
+    // The Settings UI now has a single "Services You Offer" field that mirrors
+    // to `serviceTypes` on save. Fall back to `bizServices` for accounts that
+    // saved through the new wizard before the legacy mirror caught up.
+    const serviceTypes = (settings.serviceTypes || settings.bizServices || "")
       .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
     document.querySelectorAll("#e-service, #nj-service").forEach(function (sel) {
       const current = sel.value;

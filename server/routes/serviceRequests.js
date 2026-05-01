@@ -61,9 +61,10 @@ publicRouter.get("/:orgId/config", async (req, res) => {
     const cfgDoc = await db.collection("intakeForms").doc(orgId).get();
     const cfg = cfgDoc.exists ? cfgDoc.data() : {};
 
-    // Build services list: pull names from company Service Types setting,
-    // then layer in any per-service rates saved in the intake form config.
-    const serviceTypeNames = (userData.serviceTypes || "")
+    // Build services list: pull names from the canonical "Services You Offer"
+    // field (`bizServices`), falling back to legacy `serviceTypes`. Layer in
+    // any per-service rates saved in the intake form config.
+    const serviceTypeNames = (userData.bizServices || userData.serviceTypes || "")
       .split(",").map(s => s.trim()).filter(Boolean);
 
     const rateMap = {};
