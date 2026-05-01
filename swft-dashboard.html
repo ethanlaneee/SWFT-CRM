@@ -359,7 +359,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <!-- AI Agent Activity Strip -->
 
 <!-- AI Chat + Schedule Side by Side -->
-<div id="dash-main-grid" style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start;min-height:calc(100vh - 190px);">
+<div id="dash-main-grid" style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;min-height:calc(100vh - 190px);">
 
 <!-- SWFT AI AGENT -->
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
@@ -395,43 +395,43 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <!-- TODAY'S SCHEDULE + AI TASKS -->
-<div id="dash-schedule-col" style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
+<div id="dash-schedule-col" style="display:flex;flex-direction:column;gap:14px;">
 
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
-  <div class="panel-header" style="padding:10px 14px;">
-    <div class="panel-title" style="display:flex;align-items:center;gap:8px;font-size:12px;">TODAY'S SCHEDULE<span id="ai-tasks-badge" style="display:none;background:rgba(245,166,35,0.15);color:#f5a623;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span></div>
-    <a class="panel-link" style="font-size:10.5px;" onclick="window.location.href='swft-schedule'">Full calendar &#8594;</a>
+  <div class="panel-header">
+    <div class="panel-title" style="display:flex;align-items:center;gap:8px;">TODAY'S SCHEDULE<span id="ai-tasks-badge" style="display:none;background:rgba(245,166,35,0.15);color:#f5a623;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span></div>
+    <a class="panel-link" onclick="window.location.href='swft-schedule'">Full calendar &#8594;</a>
   </div>
-  <div class="weather-strip" style="padding:6px 14px;font-size:11px;"><span class="weather-icon">&#9925;</span><span class="weather-text"><strong>72&#176;F</strong> &nbsp;Partly cloudy</span><span class="weather-badge">&#10003; Clear</span></div>
-  <div id="schedule-list" style="overflow-y:auto;max-height:180px;"></div>
+  <div class="weather-strip"><span class="weather-icon">&#9925;</span><span class="weather-text"><strong>72&#176;F</strong> &nbsp;Partly cloudy</span><span class="weather-badge">&#10003; Clear</span></div>
+  <div id="schedule-list" style="flex:1;overflow-y:auto;"></div>
   <div id="ai-tasks-section" style="display:none;border-top:1px solid var(--border);">
-    <div style="padding:8px 14px 4px;display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#f5a623;font-weight:600;">AI Tasks</span>
-      <a style="font-size:10.5px;color:var(--green);cursor:pointer;" onclick="window.location.href='swft-messages?tab=ai'">View in messages &#8594;</a>
+    <div style="padding:10px 20px 6px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#f5a623;font-weight:600;">AI Tasks</span>
+      <a style="font-size:11px;color:var(--green);cursor:pointer;" onclick="window.location.href='swft-messages?tab=ai'">View in messages &#8594;</a>
     </div>
-    <div id="ai-tasks-list" style="max-height:160px;overflow-y:auto;"></div>
+    <div id="ai-tasks-list" style="max-height:240px;overflow-y:auto;"></div>
   </div>
 </div>
 
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
-  <div class="panel-header" style="padding:10px 14px;">
-    <div class="panel-title" style="font-size:12px;">THIS WEEK</div>
-    <a class="panel-link" style="font-size:10.5px;" onclick="window.location.href='swft-schedule'">Full calendar &#8594;</a>
+  <div class="panel-header">
+    <div class="panel-title">THIS WEEK</div>
+    <a class="panel-link" onclick="window.location.href='swft-schedule'">Full calendar &#8594;</a>
   </div>
-  <div id="week-list" style="overflow-y:auto;max-height:200px;"></div>
+  <div id="week-list" style="flex:1;overflow-y:auto;max-height:420px;"></div>
 </div>
 
 <div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
-  <div class="panel-header" style="padding:10px 14px;">
-    <div class="panel-title" style="display:flex;align-items:center;gap:8px;font-size:12px;">
-      <div style="width:7px;height:7px;border-radius:50%;background:var(--green);"></div>
+  <div class="panel-header">
+    <div class="panel-title" style="display:flex;align-items:center;gap:8px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
       WHAT YOUR AI DID
-      <span id="ai-act-count" style="display:none;background:rgba(200,241,53,0.15);color:var(--green);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span>
+      <span id="ai-act-count" style="display:none;background:rgba(200,241,53,0.15);color:var(--green);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span>
     </div>
-    <a class="panel-link" style="font-size:10.5px;" onclick="window.location.href='swft-agents'">Agents &#8594;</a>
+    <a class="panel-link" onclick="window.location.href='swft-agents'">Agents &#8594;</a>
   </div>
-  <div id="ai-activity-list" style="overflow-y:auto;max-height:220px;padding:4px 8px 6px;">
-    <div style="padding:12px;color:var(--gray);font-size:11.5px;text-align:center;">Loading…</div>
+  <div id="ai-activity-list" style="flex:1;overflow-y:auto;max-height:340px;padding:6px 12px 10px;">
+    <div style="padding:14px;color:var(--gray);font-size:12.5px;text-align:center;">Loading…</div>
   </div>
 </div>
 
