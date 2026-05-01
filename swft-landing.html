@@ -384,13 +384,18 @@ section{position:relative;z-index:1;}
 .pain-card p{font-size:14px;color:var(--gray);line-height:1.65;}
 .pain-bottom{text-align:center;font-size:18px;color:var(--gray);margin:36px 0 36px;}
 
-/* ── PROBLEM CARDS ── */
-.veq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:36px;}
-.veq-card{position:relative;padding:24px 24px 22px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.veq-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);}
-.veq-card-dream{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,2.4vw,28px);letter-spacing:1px;line-height:1.15;color:var(--white);margin-bottom:14px;}
-.veq-card-today{font-size:14px;color:var(--gray);line-height:1.6;border-top:1px solid var(--border);padding-top:14px;}
-.veq-today-label{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);background:rgba(255,82,82,0.1);padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:1px;}
+/* ── BEFORE / AFTER TABLE ── */
+.ba-table{display:grid;grid-template-columns:1fr 56px 1fr;gap:14px 16px;align-items:stretch;margin-bottom:36px;max-width:1000px;margin-left:auto;margin-right:auto;}
+.ba-head{display:flex;align-items:center;gap:9px;padding:14px 20px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;border-radius:10px;text-transform:uppercase;}
+.ba-head-before{background:rgba(255,82,82,0.07);border:1px solid rgba(255,82,82,0.22);color:#ff8e8e;}
+.ba-head-after{background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.3);color:var(--green);}
+.ba-head-arrow{}
+.ba-cell{padding:18px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:14.5px;line-height:1.55;display:flex;align-items:center;}
+.ba-cell.ba-before{color:var(--gray);}
+.ba-cell.ba-after{color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:clamp(20px,2vw,24px);letter-spacing:0.8px;line-height:1.2;border-color:rgba(200,241,53,0.25);background:linear-gradient(180deg,rgba(200,241,53,0.04),rgba(200,241,53,0) 70%),var(--surface);}
+.ba-arrow{display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--gray2);font-weight:300;}
+.ba-x{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,82,82,0.14);color:#ff8e8e;font-size:12px;font-weight:700;}
+.ba-check{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(200,241,53,0.16);color:var(--green);font-size:12px;font-weight:700;}
 
 .why-swft-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
 .why-swft-item{display:flex;gap:12px;align-items:flex-start;padding:18px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;}
@@ -832,10 +837,11 @@ section{position:relative;z-index:1;}
   .pain-grid{grid-template-columns:1fr;}
   .why-swft-strip{grid-template-columns:1fr;gap:10px;}
   .pain{padding:60px 0 80px;}
-  .veq-grid{grid-template-columns:1fr;gap:12px;}
-  .veq-card{padding:20px 18px 18px;}
-  .veq-card-dream{font-size:20px;}
-  .veq-card-today{font-size:13px;}
+  .ba-table{grid-template-columns:1fr;gap:8px;}
+  .ba-head-arrow{display:none;}
+  .ba-arrow{transform:rotate(90deg);font-size:18px;padding:2px 0;}
+  .ba-cell{padding:14px 18px;font-size:14px;}
+  .ba-cell.ba-after{font-size:20px;}
   .product{padding:60px 0 80px;}
   .feature-pills{gap:8px;}
   .product-grid{grid-template-columns:1fr;gap:12px;}
@@ -1098,31 +1104,34 @@ function toggleSidebar(){
 <section class="pain" id="problems">
   <div class="container">
     <div class="section-header reveal">
-      <span class="section-tag">The Problem</span>
-      <h2 class="section-title">WHAT YOU <span class="accent">REALLY WANT.</span></h2>
-      <p class="section-sub">And what's getting in the way today.</p>
+      <span class="section-tag">Before &amp; After</span>
+      <h2 class="section-title">TODAY <span class="accent">VS.</span> WITH SWFT</h2>
+      <p class="section-sub">Here's what changes the moment you switch.</p>
     </div>
 
-    <div class="veq-grid">
-      <div class="veq-card reveal">
-        <div class="veq-card-dream">More booked jobs. More time back.</div>
-        <div class="veq-card-today"><span class="veq-today-label">Today</span> Leads go cold while you're on a job site. You quote at 10pm because that's the only time you have.</div>
-      </div>
-      <div class="veq-card reveal">
-        <div class="veq-card-dream">A system that actually works for trades.</div>
-        <div class="veq-card-today"><span class="veq-today-label">Today</span> Customer info lives in spreadsheets, sticky notes, your phone, and your head. Generic CRMs weren't built for the truck.</div>
-      </div>
-      <div class="veq-card reveal">
-        <div class="veq-card-dream">Quote in 30 seconds. Paid in 2 days.</div>
-        <div class="veq-card-today"><span class="veq-today-label">Today</span> 20 minutes per quote. Invoices chased for weeks. Money slipping through cracks because nobody followed up.</div>
-      </div>
-      <div class="veq-card reveal">
-        <div class="veq-card-dream">One app. Run it from your truck.</div>
-        <div class="veq-card-today"><span class="veq-today-label">Today</span> Five apps that don't talk to each other. Per-seat fees stacking up. A learning curve that takes weeks.</div>
-      </div>
+    <div class="ba-table reveal">
+      <div class="ba-head ba-head-before"><span class="ba-x">✕</span> Today</div>
+      <div class="ba-head-arrow" aria-hidden="true"></div>
+      <div class="ba-head ba-head-after"><span class="ba-check">✓</span> With SWFT</div>
+
+      <div class="ba-cell ba-before">Leads go cold while you're on a job site. You quote at 10pm because that's the only time you have.</div>
+      <div class="ba-arrow" aria-hidden="true">→</div>
+      <div class="ba-cell ba-after">More booked jobs. More time back.</div>
+
+      <div class="ba-cell ba-before">Customer info lives in spreadsheets, sticky notes, your phone, and your head. Generic CRMs weren't built for the truck.</div>
+      <div class="ba-arrow" aria-hidden="true">→</div>
+      <div class="ba-cell ba-after">A system that actually works for trades.</div>
+
+      <div class="ba-cell ba-before">20 minutes per quote. Invoices chased for weeks. Money slipping through cracks because nobody followed up.</div>
+      <div class="ba-arrow" aria-hidden="true">→</div>
+      <div class="ba-cell ba-after">Quote in 30 seconds. Paid in 2 days.</div>
+
+      <div class="ba-cell ba-before">Five apps that don't talk to each other. Per-seat fees stacking up. A learning curve that takes weeks.</div>
+      <div class="ba-arrow" aria-hidden="true">→</div>
+      <div class="ba-cell ba-after">One app. Run it from your truck.</div>
     </div>
 
-    <p class="pain-bottom reveal">SWFT closes the gap. <strong style="color:var(--green)">More of what you want. Less of what you don't.</strong></p>
+    <p class="pain-bottom reveal">That's the whole point. <strong style="color:var(--green)">More of what you want. Less of what you don't.</strong></p>
 
     <div class="why-swft-strip reveal" id="compare">
       <div class="why-swft-item"><span class="why-check">&#10003;</span><div><strong>Flat fee</strong><span>No per-seat charges. No usage surprises.</span></div></div>
