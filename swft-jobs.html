@@ -652,12 +652,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
   </div>
 
-  <div class="drawer-stats">
-    <div class="dstat"><div class="dstat-label">Sqft</div><div class="dstat-value" id="d-sqft">480</div></div>
-    <div class="dstat"><div class="dstat-label">Service</div><div class="dstat-value" id="d-service" style="font-size:13px;margin-top:5px;">Stamped</div></div>
-    <div class="dstat"><div class="dstat-label">Payment</div><div class="dstat-value amber" id="d-pay" style="font-size:13px;margin-top:5px;">Deposit</div></div>
-  </div>
-
   <div class="drawer-tabs">
     <div class="dtab active" onclick="switchTab(this,'details')">Details</div>
     <div class="dtab" onclick="switchTab(this,'photos')">Photos</div>
@@ -669,6 +663,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <!-- DETAILS VIEW -->
 <div id="tab-details">
   <div id="d-view-mode">
+    <div class="drawer-stats" style="margin:0 -20px 14px;">
+      <div class="dstat"><div class="dstat-label">Sqft</div><div class="dstat-value" id="d-sqft">480</div></div>
+      <div class="dstat"><div class="dstat-label">Service</div><div class="dstat-value" id="d-service" style="font-size:13px;margin-top:5px;">Stamped</div></div>
+      <div class="dstat"><div class="dstat-label">Payment</div><div class="dstat-value amber" id="d-pay" style="font-size:13px;margin-top:5px;">Deposit</div></div>
+    </div>
     <div class="section-title">Job Info</div>
     <div class="detail-grid">
       <div class="detail-row">
@@ -1113,7 +1112,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     var sm = STATUS_MAP[j.status] || STATUS_MAP['scheduled'];
 
     document.querySelector('.drawer-tabs').style.display = '';
-    document.querySelector('.drawer-stats').style.display = '';
     document.getElementById('d-id').textContent        = '#JOB-' + (id ? id.slice(-4) : '0000') + ' \u00B7 ' + fmtDate(j.scheduledDate);
     document.getElementById('d-title').textContent     = j.title || '';
     document.getElementById('d-customer').textContent  = j.customerName || '';
@@ -1150,7 +1148,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('overlay').classList.remove('open');
     document.getElementById('drawer').classList.remove('open', 'center-modal');
     document.querySelector('.drawer-tabs').style.display = '';
-    document.querySelector('.drawer-stats').style.display = '';
   }
 
   function switchTab(el, tab) {
@@ -1835,7 +1832,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     document.getElementById('e-finish').value       = '';
 
     document.querySelector('.drawer-tabs').style.display = 'none';
-    document.querySelector('.drawer-stats').style.display = 'none';
 
     document.getElementById('overlay').classList.add('open');
     document.getElementById('drawer').classList.add('open', 'center-modal');
