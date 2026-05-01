@@ -225,13 +225,13 @@ initializeApp(firebaseConfig);
 
 const CATEGORIES = [
   { label: 'Google Workspace', ids: ['gmail','google_calendar','google_sheets','google_business','google_drive'] },
-  { label: 'Payments & Accounting', ids: ['stripe','quickbooks'] },
+  { label: 'Payments & Accounting', ids: ['stripe','square','quickbooks'] },
   { label: 'Social & Messaging', ids: ['facebook','instagram','whatsapp'] },
 ];
 const ICONS = {
   gmail:'📧', google_calendar:'📅', google_sheets:'📊', quickbooks:'💰', stripe:'💳',
   google_business:'⭐', facebook:'💬', instagram:'📸', whatsapp:'📱',
-  google_drive:'📁',
+  google_drive:'📁', square:'⬛',
 };
 
 function cardHtml(i) {
@@ -347,10 +347,88 @@ window.connectIntegration = async function(id) {
     var res = await fetch(endpoint, { method: method, headers: { Authorization: 'Bearer ' + token } });
     var data = await res.json();
     if (data.url) { window.location.href = data.url; }
+    else if (data.manual && data.integrationId === 'square') { openSquareConnectModal(); }
     else if (data.socialConnect) { openSocialConnectModal(data.provider); }
     else if (data.error) { showToast(data.error); }
   } catch(e) { showToast('Failed to start connection'); }
 };
+
+// Square: owner pastes Personal Access Token + Location ID. We POST to
+// /api/integrations/square/credentials, which validates by listing the
+// merchant's locations and confirming the ID exists, then stores the
+// credentials per-org. No external OAuth setup needed.
+function openSquareConnectModal() {
+  var existing = document.getElementById('square-connect-modal');
+  if (existing) existing.remove();
+  var html =
+    '<div id="square-connect-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">' +
+      '<div style="background:#111;border:1px solid #2c2c2c;border-radius:14px;width:100%;max-width:480px;padding:24px 26px;">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px;">' +
+          '<div>' +
+            '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;letter-spacing:2px;">CONNECT SQUARE</div>' +
+            '<div style="font-size:12.5px;color:#888;margin-top:4px;line-height:1.5;">Paste your Square Personal Access Token and Location ID. Find them in your Square Dashboard → Apps & Integrations → My Application.</div>' +
+          '</div>' +
+          '<button onclick="document.getElementById(\'square-connect-modal\').remove()" style="background:none;border:none;color:#666;font-size:22px;cursor:pointer;line-height:1;">×</button>' +
+        '</div>' +
+        '<div style="margin-top:18px;display:flex;flex-direction:column;gap:12px;">' +
+          '<label style="display:flex;flex-direction:column;gap:5px;">' +
+            '<span style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#999;">Access Token</span>' +
+            '<input id="sq-token" type="text" autocomplete="off" placeholder="EAAAxxxxx..." style="background:#1a1a1a;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#fff;font-family:\'JetBrains Mono\',monospace;font-size:12.5px;outline:none;"/>' +
+          '</label>' +
+          '<label style="display:flex;flex-direction:column;gap:5px;">' +
+            '<span style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#999;">Location ID</span>' +
+            '<input id="sq-location" type="text" autocomplete="off" placeholder="Lxxxxxxxxxxxx" style="background:#1a1a1a;border:1px solid #2c2c2c;border-radius:8px;padding:10px 12px;color:#fff;font-family:\'JetBrains Mono\',monospace;font-size:12.5px;outline:none;"/>' +
+          '</label>' +
+          '<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#aaa;cursor:pointer;">' +
+            '<input id="sq-sandbox" type="checkbox" style="margin:0;"/> Use Square Sandbox (testing)' +
+          '</label>' +
+          '<div id="sq-error" style="display:none;color:#ff6b6b;font-size:12px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);border-radius:6px;padding:8px 10px;"></div>' +
+          '<div style="display:flex;gap:8px;margin-top:8px;">' +
+            '<button id="sq-cancel" style="flex:1;padding:11px;background:#1a1a1a;border:1px solid #2c2c2c;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">Cancel</button>' +
+            '<button id="sq-save" style="flex:1;padding:11px;background:#c8f135;border:none;border-radius:8px;color:#0a0a0a;font-size:13px;font-weight:700;cursor:pointer;">Connect</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.getElementById('sq-cancel').onclick = function() { document.getElementById('square-connect-modal').remove(); };
+  document.getElementById('sq-save').onclick = async function() {
+    var btn = this;
+    var errBox = document.getElementById('sq-error');
+    errBox.style.display = 'none';
+    var accessToken = document.getElementById('sq-token').value.trim();
+    var locationId = document.getElementById('sq-location').value.trim();
+    var environment = document.getElementById('sq-sandbox').checked ? 'sandbox' : 'production';
+    if (!accessToken || !locationId) {
+      errBox.textContent = 'Both Access Token and Location ID are required.';
+      errBox.style.display = 'block';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Connecting...';
+    try {
+      var token = await getAuth().currentUser.getIdToken();
+      var resp = await fetch('/api/integrations/square/credentials', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: accessToken, locationId: locationId, environment: environment }),
+      });
+      var data = await resp.json();
+      if (!resp.ok || data.error) {
+        errBox.textContent = data.error || 'Could not connect Square.';
+        errBox.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Connect';
+        return;
+      }
+      document.getElementById('square-connect-modal').remove();
+      showToast('Square connected' + (data.merchantName ? ' — ' + data.merchantName : ''));
+      loadIntegrations();
+    } catch (e) {
+      errBox.textContent = 'Network error. Try again.';
+      errBox.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Connect';
+    }
+  };
+}
 
 window.disconnectIntegration = async function(id, name) {
   var ok = await window.swftConfirm('Disconnect ' + (name || id) + '?', 'You can reconnect at any time.', { danger: true, confirmLabel: 'Disconnect' });

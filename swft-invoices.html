@@ -692,7 +692,12 @@ function buildInvoiceHtml(){
   var custSel=document.getElementById('f-customer');var custName=custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'—';
   var lines=_items.map(function(l){return'<div class="pdf-line"><div>'+esc(l.desc)+'</div><div>'+(l.qty||1)+'</div><div>$'+l.rate.toFixed(2)+'</div><div class="amt">$'+l.total.toFixed(2)+'</div></div>';}).join('');
   var t=computeTotals();
-  if(t.subtotal===0&&_currentInv&&_currentInv.total>0){t.subtotal=Number(_currentInv.subtotal||_currentInv.total||0);t.tax=Number(_currentInv.tax||0);t.total=Number(_currentInv.total||t.subtotal);}
+  if(t.subtotal===0&&_currentInv&&_currentInv.total>0){
+    t.subtotal=Number(_currentInv.subtotal||_currentInv.total||0);
+    t.tax=Number(_currentInv.tax||0);
+    t.total=Number(_currentInv.total||t.subtotal);
+    if(_currentInv.taxRate!=null) t.taxRate=Number(_currentInv.taxRate)||0;
+  }
   var taxRow=t.taxRate>0?'<div class="pdf-total-row"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>$'+t.tax.toFixed(2)+'</span></div>':'';
   var due=document.getElementById('f-due').value?new Date(document.getElementById('f-due').value).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
 

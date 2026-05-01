@@ -2,12 +2,38 @@ const router = require("express").Router();
 const { db } = require("../firebase");
 const { pushNotification } = require("./notifications");
 
-function getSquareClient() {
+// Resolve Square credentials. Per-org first (stored when the owner
+// connects Square on the SWFT Connect page), then fall back to the
+// platform env vars for legacy / single-tenant setups.
+async function getSquareClient(orgId) {
+  if (orgId) {
+    try {
+      const ownerDoc = await db.collection("users").doc(orgId).get();
+      const sq = ownerDoc.exists ? ownerDoc.data()?.integrations?.square : null;
+      if (sq?.accessToken && sq?.locationId) {
+        return {
+          token: sq.accessToken,
+          locationId: sq.locationId,
+          baseUrl: sq.environment === "sandbox"
+            ? "https://connect.squareupsandbox.com"
+            : "https://connect.squareup.com",
+        };
+      }
+    } catch (_) {}
+  }
   const token = process.env.SQUARE_ACCESS_TOKEN;
-  if (!token) throw new Error("SQUARE_ACCESS_TOKEN is not set");
-  return { token, baseUrl: process.env.SQUARE_ENVIRONMENT === "production"
-    ? "https://connect.squareup.com"
-    : "https://connect.squareupsandbox.com" };
+  if (!token) {
+    const err = new Error("Square is not connected. Connect Square on the SWFT Connect page.");
+    err.notConnected = true;
+    throw err;
+  }
+  return {
+    token,
+    locationId: process.env.SQUARE_LOCATION_ID,
+    baseUrl: process.env.SQUARE_ENVIRONMENT === "production"
+      ? "https://connect.squareup.com"
+      : "https://connect.squareupsandbox.com",
+  };
 }
 
 async function squarePost(path, body, token, baseUrl) {
@@ -26,7 +52,13 @@ async function squarePost(path, body, token, baseUrl) {
 // POST /api/square/invoice/:id/link
 router.post("/invoice/:id/link", async (req, res, next) => {
   try {
-    const { token, baseUrl } = getSquareClient();
+    let token, baseUrl, locationId;
+    try {
+      ({ token, baseUrl, locationId } = await getSquareClient(req.orgId));
+    } catch (e) {
+      if (e.notConnected) return res.status(400).json({ error: e.message, notConnected: true });
+      throw e;
+    }
     const invDoc = await db.collection("invoices").doc(req.params.id).get();
     if (!invDoc.exists || invDoc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Invoice not found" });
@@ -42,8 +74,7 @@ router.post("/invoice/:id/link", async (req, res, next) => {
       return res.status(400).json({ error: "Invoice total must be at least $1.00" });
     }
 
-    const locationId = process.env.SQUARE_LOCATION_ID;
-    if (!locationId) return res.status(500).json({ error: "SQUARE_LOCATION_ID is not set" });
+    if (!locationId) return res.status(500).json({ error: "Square location ID missing" });
 
     const idempotencyKey = `inv-${req.params.id}-${Date.now()}`;
     const data = await squarePost("/v2/online-checkout/payment-links", {
@@ -84,7 +115,13 @@ router.post("/invoice/:id/link", async (req, res, next) => {
 // POST /api/square/quote/:id/link — same as invoice/link but for quotes.
 router.post("/quote/:id/link", async (req, res, next) => {
   try {
-    const { token, baseUrl } = getSquareClient();
+    let token, baseUrl, locationId;
+    try {
+      ({ token, baseUrl, locationId } = await getSquareClient(req.orgId));
+    } catch (e) {
+      if (e.notConnected) return res.status(400).json({ error: e.message, notConnected: true });
+      throw e;
+    }
     const qDoc = await db.collection("quotes").doc(req.params.id).get();
     if (!qDoc.exists || qDoc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
@@ -99,9 +136,7 @@ router.post("/quote/:id/link", async (req, res, next) => {
     if (amountCents < 100) {
       return res.status(400).json({ error: "Quote total must be at least $1.00" });
     }
-
-    const locationId = process.env.SQUARE_LOCATION_ID;
-    if (!locationId) return res.status(500).json({ error: "SQUARE_LOCATION_ID is not set" });
+    if (!locationId) return res.status(500).json({ error: "Square location ID missing" });
 
     const idempotencyKey = `quote-${req.params.id}-${Date.now()}`;
     const data = await squarePost("/v2/online-checkout/payment-links", {

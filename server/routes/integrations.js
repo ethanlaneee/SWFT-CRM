@@ -95,6 +95,14 @@ const INTEGRATIONS = [
     scopes: [],
   },
   {
+    id: "square",
+    name: "Square",
+    icon: "square",
+    description: "Accept payments on quotes and invoices via Square",
+    provider: "square",
+    scopes: [],
+  },
+  {
     id: "facebook",
     name: "Facebook Messenger",
     icon: "message-circle",
@@ -145,6 +153,16 @@ router.get("/", async (req, res, next) => {
           connected: !!accountId,
           account: connections.stripe?.accountEmail || accountId || null,
           configured,
+        };
+      }
+      // Square: connected when the owner has pasted their Access Token + Location ID
+      if (integration.id === "square") {
+        const sq = connections.square || {};
+        return {
+          ...integration,
+          connected: !!(sq.accessToken && sq.locationId),
+          account: sq.merchantName || sq.locationId || null,
+          configured: true,
         };
       }
       // Check both new integrations map and legacy fields
@@ -243,6 +261,12 @@ router.post("/:id/connect", (req, res, next) => {
       return res.json({ url });
     }
 
+    // Square: paste Access Token + Location ID (no OAuth setup needed).
+    // Frontend opens a modal and POSTs to /square/credentials.
+    if (integration.provider === "square") {
+      return res.json({ manual: true, integrationId: "square" });
+    }
+
     // Stripe Connect (Standard) — OAuth into the owner's Stripe account so
     // invoice pay links get created on their account and money lands in
     // their Stripe balance, not ours.
@@ -310,6 +334,65 @@ router.post("/:id/connect", (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/integrations/square/credentials — owner pastes their Square
+// Personal Access Token + Location ID. We validate by hitting Square's
+// /v2/locations endpoint and then store the credentials per-org.
+router.post("/square/credentials", async (req, res, next) => {
+  try {
+    const accessToken = (req.body?.accessToken || "").trim();
+    const locationId  = (req.body?.locationId || "").trim();
+    const environment = (req.body?.environment === "sandbox") ? "sandbox" : "production";
+    if (!accessToken || !locationId) {
+      return res.status(400).json({ error: "Both Access Token and Location ID are required." });
+    }
+
+    const baseUrl = environment === "production"
+      ? "https://connect.squareup.com"
+      : "https://connect.squareupsandbox.com";
+
+    // Validate by listing the merchant's locations and confirming the ID exists.
+    let locationResp;
+    try {
+      const r = await fetch(`${baseUrl}/v2/locations`, {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Square-Version": "2024-01-18",
+          "Accept": "application/json",
+        },
+      });
+      locationResp = await r.json();
+    } catch (e) {
+      return res.status(400).json({ error: "Could not reach Square. Check your connection." });
+    }
+    if (locationResp.errors) {
+      return res.status(400).json({ error: locationResp.errors[0]?.detail || "Square rejected those credentials." });
+    }
+    const locations = locationResp.locations || [];
+    const matched = locations.find(loc => loc.id === locationId);
+    if (!matched) {
+      return res.status(400).json({
+        error: `Location ID "${locationId}" not found on this Square account. Available IDs: ${locations.map(l => l.id).join(", ") || "(none)"}.`,
+      });
+    }
+
+    await db.collection("users").doc(req.uid).set({
+      integrations: {
+        square: {
+          connected: true,
+          accessToken,
+          locationId,
+          environment,
+          merchantName: matched.business_name || matched.name || null,
+          locationName: matched.name || null,
+          connectedAt: Date.now(),
+        },
+      },
+    }, { merge: true });
+
+    res.json({ success: true, merchantName: matched.business_name || matched.name || null });
+  } catch (err) { next(err); }
+});
+
 // POST /api/integrations/:id/disconnect — remove an integration
 router.post("/:id/disconnect", async (req, res, next) => {
   try {
@@ -344,6 +427,13 @@ router.post("/:id/disconnect", async (req, res, next) => {
     if (["facebook", "instagram", "whatsapp"].includes(integrationId)) {
       await userRef.update({
         [`integrations.${integrationId}`]: FieldValue.delete(),
+      }).catch(() => {});
+    }
+
+    // Square — clear the whole credentials block
+    if (integrationId === "square") {
+      await userRef.update({
+        "integrations.square": FieldValue.delete(),
       }).catch(() => {});
     }
 

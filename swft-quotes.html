@@ -757,6 +757,9 @@ function money(n){return '$'+(n||0).toLocaleString("en-US",{minimumFractionDigit
 function renderTotals(){
   var t=computeTotals();
   var html='<div class="pdf-total-line"><span>Subtotal</span><span>'+money(t.subtotal)+'</span></div>';
+  if(t.taxRate>0){
+    html+='<div class="pdf-total-line"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>'+money(t.tax)+'</span></div>';
+  }
   html+='<div class="pdf-total-line grand"><span>Total</span><span>'+money(t.total)+'</span></div>';
   document.getElementById('totals-area').innerHTML=html;
 }
@@ -768,8 +771,13 @@ function buildQuoteHtml(){
   var custSel=document.getElementById('f-customer');var custName=custSel.options[custSel.selectedIndex]?custSel.options[custSel.selectedIndex].textContent:'—';
   var lines=_items.map(function(l){return'<div class="pdf-line"><div>'+esc(l.desc)+'</div><div>'+(l.qty||1)+'</div><div>$'+l.rate.toFixed(2)+'</div><div class="amt">$'+l.total.toFixed(2)+'</div></div>';}).join('');
   var t=computeTotals();
-  if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);t.tax=Number(_currentQuote.tax||0);t.total=Number(_currentQuote.total||t.subtotal);}
-  var taxRow='<div class="pdf-total-row"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>$'+t.tax.toFixed(2)+'</span></div>';
+  if(t.subtotal===0&&_currentQuote&&_currentQuote.total>0){
+    t.subtotal=Number(_currentQuote.subtotal||_currentQuote.total||0);
+    t.tax=Number(_currentQuote.tax||0);
+    t.total=Number(_currentQuote.total||t.subtotal);
+    if(_currentQuote.taxRate!=null) t.taxRate=Number(_currentQuote.taxRate)||0;
+  }
+  var taxRow=t.taxRate>0?'<div class="pdf-total-row"><span>Tax ('+t.taxRate.toFixed(2).replace(/\.?0+$/,'')+'%)</span><span>$'+t.tax.toFixed(2)+'</span></div>':'';
   var sched=document.getElementById('f-scheduled').value?new Date(document.getElementById('f-scheduled').value).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
   var finish=document.getElementById('f-finish').value;
   var sqft=document.getElementById('f-sqft').value;
