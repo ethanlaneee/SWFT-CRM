@@ -651,15 +651,23 @@ function addLineItem(){
 
 ['add-qty','add-rate'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){var q=parseFloat(document.getElementById('add-qty').value)||0;var r=parseFloat(document.getElementById('add-rate').value)||0;document.getElementById('add-total').value=q&&r?'$'+(q*r).toFixed(2):'';});});
 
-// Parse the org's default tax rate (from Settings) into a numeric percent.
-// Stored as "8.25%" or "8.25" — we tolerate either. Invoices may also carry
-// a per-invoice override saved from a prior edit; that wins if present.
+// Resolve the tax rate to use. Priority:
+//   1. The live value in the f-tax-rate input — what the user just typed.
+//   2. The saved override on the current invoice (if any).
+//   3. The org default from Settings (stored as "8.25%" or "8.25").
+// (1) is critical: if the user types a new rate and clicks Send, the email
+// path needs to see THAT rate, not whatever was last saved.
 function getTaxRate(){
-  var s=window._swftSettings||{};
+  var el=document.getElementById('f-tax-rate');
+  if(el&&el.value!==''){
+    var typed=parseFloat(el.value);
+    if(isFinite(typed)&&typed>=0)return typed;
+  }
   if(_currentInv&&_currentInv.taxRate!=null&&_currentInv.taxRate!==''){
     var v=parseFloat(String(_currentInv.taxRate).replace('%',''));
     if(isFinite(v)) return v;
   }
+  var s=window._swftSettings||{};
   var raw=String(s.taxRate||'').replace('%','').trim();
   var n=parseFloat(raw);
   return isFinite(n)&&n>=0?n:0;
