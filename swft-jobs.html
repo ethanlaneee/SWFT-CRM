@@ -793,11 +793,15 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 
 <!-- PHOTOS -->
 <div id="tab-photos" style="display:none;">
-    <div class="section-title">Job Photos</div>
-    <div id="photo-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;"></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      Daily Progress Photos
+      <span id="photo-day-count" style="font-size:9.5px;color:var(--gray2);letter-spacing:1px;"></span>
+    </div>
+    <div id="photo-days" style="display:flex;flex-direction:column;gap:14px;margin-bottom:12px;"></div>
+    <textarea id="photo-caption" placeholder="Optional: caption for this batch (e.g. 'Forms set on west side')" style="width:100%;min-height:36px;max-height:90px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;margin-bottom:8px;box-sizing:border-box;"></textarea>
     <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--surface2);border:2px dashed var(--border2);border-radius:10px;cursor:pointer;color:var(--gray);font-size:13px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--gray)'">
       <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="1.8"/><polyline points="17,8 12,3 7,8" stroke-width="1.8"/><line x1="12" y1="3" x2="12" y2="15" stroke-width="1.8"/></svg>
-      Upload Photo
+      Upload Today's Photos
       <input type="file" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(this.files)"/>
     </label>
   </div>
@@ -1503,26 +1507,80 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     } catch(e) { showToast('Error: ' + e.message); }
   }
 
+  function _photoDayKeyFromTs(ts) {
+    var d = new Date(ts || Date.now());
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function _photoTodayKey() { return _photoDayKeyFromTs(Date.now()); }
+  function _photoFmtDay(key) {
+    var dt = /^\d{4}-\d{2}-\d{2}$/.test(key) ? new Date(key + 'T00:00:00') : new Date(key);
+    if (isNaN(dt.getTime())) return key;
+    return dt.toLocaleDateString('en-US',{ weekday:'short', month:'short', day:'numeric' });
+  }
+  function _photoDayNumber(key) {
+    var j = _currentJob;
+    if (!j || !j.scheduledDate) return null;
+    var start = new Date(j.scheduledDate + 'T00:00:00');
+    var d = new Date(key + 'T00:00:00');
+    if (isNaN(start.getTime()) || isNaN(d.getTime())) return null;
+    var diff = Math.round((d - start) / 86400000) + 1;
+    return diff >= 1 ? diff : null;
+  }
+  function _photoEscape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
   async function loadJobPhotos(jobId) {
     if (!jobId) return;
-    var grid = document.getElementById('photo-grid');
-    if (!grid) return;
-    grid.innerHTML = '<div style="font-size:12px;color:var(--gray);">Loading...</div>';
+    var container = document.getElementById('photo-days');
+    var counter = document.getElementById('photo-day-count');
+    if (!container) return;
+    container.innerHTML = '<div style="font-size:12px;color:var(--gray);">Loading...</div>';
+    if (counter) counter.textContent = '';
     try {
       var photos = await API.photos.list(jobId);
-      grid.innerHTML = '';
-      photos.forEach(function(p) {
-        var div = document.createElement('div');
-        div.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;';
-        div.innerHTML = '<img src="' + p.url + '" style="width:100%;height:100%;object-fit:cover;" onclick="window.open(\'' + p.url + '\',\'_blank\')" title="View full size"/>' +
-          '<div onclick="deletePhoto(\'' + p.id + '\',this.parentElement)" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.65);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:13px;font-weight:700;">×</div>';
-        grid.appendChild(div);
-      });
-      if (photos.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1;font-size:12.5px;color:var(--gray);text-align:center;padding:16px 0;">No photos yet</div>';
+      if (!photos.length) {
+        container.innerHTML = '<div style="font-size:12.5px;color:var(--gray);text-align:center;padding:24px 0;">No progress photos yet — upload below to start tracking.</div>';
+        return;
       }
+      // Group by dayKey (fall back to date derived from createdAt)
+      var groups = {};
+      photos.forEach(function(p) {
+        var key = p.dayKey || _photoDayKeyFromTs(p.createdAt);
+        (groups[key] = groups[key] || []).push(p);
+      });
+      var keys = Object.keys(groups).sort().reverse(); // newest day first
+      if (counter) counter.textContent = keys.length + ' DAY' + (keys.length === 1 ? '' : 'S') + ' · ' + photos.length + ' PHOTO' + (photos.length === 1 ? '' : 'S');
+      container.innerHTML = '';
+      keys.forEach(function(key) {
+        var dayPhotos = groups[key].slice().sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+        var dayNum = _photoDayNumber(key);
+        var section = document.createElement('div');
+        section.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+        var headerHtml =
+          '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">' +
+            '<div style="display:flex;align-items:baseline;gap:8px;">' +
+              '<div style="font-size:12.5px;color:var(--white);font-weight:600;">' + _photoEscape(_photoFmtDay(key)) + '</div>' +
+              (dayNum ? '<div style="font-size:9.5px;letter-spacing:1.5px;color:var(--green);text-transform:uppercase;">Day ' + dayNum + '</div>' : '') +
+            '</div>' +
+            '<div style="font-size:10.5px;color:var(--gray2);">' + dayPhotos.length + ' photo' + (dayPhotos.length === 1 ? '' : 's') + '</div>' +
+          '</div>';
+        var grid = '<div class="photo-grid">' + dayPhotos.map(function(p){
+          var safeUrl = _photoEscape(p.url);
+          var capHtml = p.caption ? '<div class="photo-label" title="' + _photoEscape(p.caption) + '">' + _photoEscape(p.caption) + '</div>' : '';
+          return '<div class="photo-tile">' +
+            '<img src="' + safeUrl + '" style="width:100%;height:100%;object-fit:cover;" onclick="window.open(\'' + safeUrl + '\',\'_blank\')" title="View full size"/>' +
+            capHtml +
+            '<div onclick="deletePhoto(\'' + p.id + '\',this.parentElement.parentElement)" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.65);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:13px;font-weight:700;">×</div>' +
+          '</div>';
+        }).join('') + '</div>';
+        section.innerHTML = headerHtml + grid;
+        container.appendChild(section);
+      });
     } catch(e) {
-      grid.innerHTML = '<div style="font-size:12px;color:var(--gray);">Could not load photos</div>';
+      container.innerHTML = '<div style="font-size:12px;color:var(--gray);">Could not load photos</div>';
     }
   }
 
@@ -1530,21 +1588,25 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!await swftConfirm('Delete Photo', 'Delete this photo? This cannot be undone.', { danger: true })) return;
     try {
       await API.photos.delete(photoId);
-      el.remove();
       showToast('Photo deleted');
+      if (_currentJobId) await loadJobPhotos(_currentJobId);
     } catch(e) { showToast('Error: ' + e.message); }
   }
 
   async function handlePhotoUpload(files) {
-    var grid = document.getElementById('photo-grid');
-    if (!grid || !_currentJobId || !files.length) return;
+    if (!_currentJobId || !files.length) return;
+    var captionEl = document.getElementById('photo-caption');
+    var caption = captionEl ? captionEl.value.trim() : '';
     showToast('Uploading ' + files.length + ' photo(s)...');
     try {
       var form = new FormData();
       for (var i = 0; i < files.length; i++) form.append('photos', files[i]);
+      form.append('dayKey', _photoTodayKey());
+      if (caption) form.append('caption', caption);
       var res = await API.photos.upload(_currentJobId, form);
       if (res.uploaded) {
         showToast(res.uploaded.length + ' photo(s) uploaded');
+        if (captionEl) captionEl.value = '';
         await loadJobPhotos(_currentJobId);
       } else {
         showToast(res.error || 'Upload failed');

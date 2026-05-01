@@ -25,6 +25,15 @@ router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) =>
       return res.status(400).json({ error: "No files uploaded" });
     }
 
+    const caption = (req.body && typeof req.body.caption === "string") ? req.body.caption.trim().slice(0, 500) : "";
+    let dayKey = (req.body && typeof req.body.dayKey === "string") ? req.body.dayKey.trim() : "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) {
+      const now = new Date();
+      dayKey = now.getFullYear() + "-" +
+               String(now.getMonth() + 1).padStart(2, "0") + "-" +
+               String(now.getDate()).padStart(2, "0");
+    }
+
     const uploaded = [];
     for (const file of req.files) {
       const ext = path.extname(file.originalname) || ".jpg";
@@ -55,6 +64,8 @@ router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) =>
         mimeType:     file.mimetype,
         size:         file.size,
         uploadedBy:   req.uid,
+        caption,
+        dayKey,
         createdAt:    Date.now(),
       };
       const ref = await db.collection("jobPhotos").add(photoData);
