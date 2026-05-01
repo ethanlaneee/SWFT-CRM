@@ -111,6 +111,77 @@ router.post("/_ceo_run", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/agents/_seed_test — seed a customer + job + sent quote + open
+// invoice with backdated timestamps so the autonomous agents have real
+// targets to act on right away. Use once, then "Run CEO Now" on the
+// hub. Body: { email: "..." }. Returns the created IDs so the user can
+// clean up later.
+router.post("/_seed_test", async (req, res, next) => {
+  try {
+    const email = (req.body?.email || "").trim();
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Valid email required in body.email" });
+    }
+    const now = Date.now();
+    const fiveDaysAgo = now - 5 * 86400000;
+    const tenDaysAgo  = now - 10 * 86400000;
+    const oneDayAgo   = now - 1 * 86400000;
+
+    const customerData = {
+      orgId: req.orgId,
+      userId: req.uid,
+      name: "Agent Test Customer",
+      email,
+      phone: "",
+      address: "123 Test Street",
+      notes: "Created by /api/agents/_seed_test for autonomous-agent testing. Safe to delete.",
+      tags: ["test", "lead"],
+      createdAt: oneDayAgo,
+    };
+    const custRef = await db.collection("customers").add(customerData);
+
+    const quoteRef = await db.collection("quotes").add({
+      orgId: req.orgId, userId: req.uid,
+      customerId: custRef.id, customerName: customerData.name, customerEmail: email,
+      service: "Test Service",
+      items: [{ desc: "Test line item", qty: 1, rate: 500, total: 500 }],
+      subtotal: 500, tax: 0, taxRate: 0, total: 500,
+      status: "sent",
+      sentAt: fiveDaysAgo, createdAt: fiveDaysAgo, updatedAt: fiveDaysAgo,
+    });
+
+    const invoiceRef = await db.collection("invoices").add({
+      orgId: req.orgId, userId: req.uid,
+      customerId: custRef.id, customerName: customerData.name, customerEmail: email,
+      service: "Test Service",
+      items: [{ desc: "Past-due test invoice", qty: 1, rate: 800, total: 800 }],
+      subtotal: 800, tax: 0, taxRate: 0, total: 800,
+      status: "open",
+      createdAt: tenDaysAgo, updatedAt: tenDaysAgo,
+    });
+
+    const jobRef = await db.collection("jobs").add({
+      orgId: req.orgId, userId: req.uid,
+      customerId: custRef.id, customerName: customerData.name, customerEmail: email,
+      title: "Agent Test Job", service: "Test Service",
+      address: "123 Test Street", status: "scheduled",
+      scheduledDate: new Date().toISOString().split("T")[0],
+      createdAt: now, updatedAt: now,
+    });
+
+    res.json({
+      success: true,
+      customerId: custRef.id,
+      jobId: jobRef.id,
+      quoteId: quoteRef.id,
+      invoiceId: invoiceRef.id,
+      ageOfQuoteDays: 5,
+      ageOfInvoiceDays: 10,
+      next: "Open the Agents page, flip CEO Agent on, click Run CEO Now. The CEO should dispatch Admin to send a payment reminder + quote follow-up to " + email + ".",
+    });
+  } catch (err) { next(err); }
+});
+
 // GET /api/agents/:agentId — get single agent config
 router.get("/:agentId", async (req, res, next) => {
   try {

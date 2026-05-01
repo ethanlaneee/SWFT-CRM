@@ -281,6 +281,7 @@ const API = {
     },
     scan:     ()           => apiFetch("/api/agents/_scan", { method: "POST", body: JSON.stringify({}) }),
     runCeo:   ()           => apiFetch("/api/agents/_ceo_run", { method: "POST", body: JSON.stringify({}) }),
+    seedTest: (email)      => apiFetch("/api/agents/_seed_test", { method: "POST", body: JSON.stringify({ email }) }),
     automationStats: ()    => apiFetch("/api/agents/automations/stats"),
     conversationMode:    (customerId)       => apiFetch(`/api/agents/conversations/${encodeURIComponent(customerId)}/mode`),
     setConversationMode: (customerId, mode) => apiFetch(`/api/agents/conversations/${encodeURIComponent(customerId)}/mode`, { method: "PUT", body: JSON.stringify({ mode }) }),
