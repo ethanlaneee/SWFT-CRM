@@ -272,7 +272,14 @@ const API = {
     get:      (id)         => apiFetch(`/api/agents/${id}`),
     update:   (id, data)   => apiFetch(`/api/agents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     toggle:   (id)         => apiFetch(`/api/agents/${id}/toggle`, { method: "POST", body: JSON.stringify({}) }),
-    activity: (id)         => apiFetch(`/api/agents/${id}/activity`),
+    // activity(): global feed across every agent, limit-defaulted.
+    // activity('estimator'): per-agent feed (legacy).
+    activity: (idOrLimit)  => {
+      if (typeof idOrLimit === "string" && idOrLimit) return apiFetch(`/api/agents/${idOrLimit}/activity`);
+      const limit = typeof idOrLimit === "number" ? idOrLimit : 30;
+      return apiFetch(`/api/agents/_activity?limit=${limit}`);
+    },
+    scan:     ()           => apiFetch("/api/agents/_scan", { method: "POST", body: JSON.stringify({}) }),
     automationStats: ()    => apiFetch("/api/agents/automations/stats"),
     conversationMode:    (customerId)       => apiFetch(`/api/agents/conversations/${encodeURIComponent(customerId)}/mode`),
     setConversationMode: (customerId, mode) => apiFetch(`/api/agents/conversations/${encodeURIComponent(customerId)}/mode`, { method: "PUT", body: JSON.stringify({ mode }) }),

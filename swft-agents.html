@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<title>SWFT — AI Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--surface:#111111;--surface2:#181818;--border:#1f1f1f;--border2:#2c2c2c;--green:#c8f135;--green-dim:rgba(200,241,53,0.12);--white:#f0f0f0;--gray:#7a7a7a;--gray2:#444444;--blue:#4d9fff;--amber:#f5a623;--red:#ff5252;--purple:#b388ff;--sidebar-w:228px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{background:#0a0a0a;}
+body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);}
+.sidebar.collapsed{transform:translateX(-100%);}
+.collapse-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);flex-shrink:0;transition:all 0.14s;}
+.collapse-btn:hover{background:var(--surface2);color:var(--white);}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:9000;width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all 0.15s;opacity:0;pointer-events:none;}
+.sidebar-toggle.visible{opacity:1;pointer-events:all;}
+.sidebar-toggle:hover{background:var(--surface2);color:var(--white);}
+.logo-wrap{padding:26px 22px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo-mark{font-family:'Space Mono',monospace;font-weight:700;font-size:26px;color:var(--white);line-height:1;display:inline-flex;align-items:baseline;}
+.logo-mark em{display:block;width:5px;height:5px;background:var(--green);flex-shrink:0;margin-left:3px;}
+.logo-sub{font-size:9.5px;color:var(--gray2);letter-spacing:1.8px;margin-top:3px;font-weight:300;}
+.nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;padding:14px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--gray);transition:background 0.14s,color 0.14s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--surface2);color:var(--white);}
+.nav-item.active{background:rgba(200,241,53,0.07);color:var(--green);font-weight:500;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--green);border-radius:0 3px 3px 0;}
+.nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
+.nav-item.active .nav-icon{opacity:1;}
+.sidebar-footer{border-top:1px solid var(--border);padding:12px 10px;}
+
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left 0.28s cubic-bezier(0.22,1,0.36,1);}
+.main.expanded{margin-left:0!important;}
+.topbar{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:var(--bg);}
+.topbar-page{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2.5px;color:var(--white);}
+.topbar-slash{color:var(--gray2);font-size:18px;}
+.topbar-sub{font-size:12.5px;color:var(--gray);letter-spacing:0.5px;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btn-scan{display:inline-flex;align-items:center;gap:7px;background:var(--green);color:#0a0a0a;font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:9px;border:none;cursor:pointer;transition:background 0.18s;font-family:'DM Sans',sans-serif;}
+.btn-scan:hover{background:#d5ff40;}
+.btn-scan:disabled{opacity:0.6;cursor:wait;}
+
+.page-body{padding:24px 28px 32px;display:flex;flex-direction:column;gap:24px;max-width:1400px;width:100%;}
+.section-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;font-weight:600;}
+
+.agents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;}
+.agent-head{display:flex;align-items:flex-start;gap:14px;}
+.agent-icon{width:42px;height:42px;border-radius:11px;background:rgba(200,241,53,0.08);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(200,241,53,0.2);}
+.agent-icon svg{width:20px;height:20px;}
+.agent-card.disabled .agent-icon{background:var(--surface2);color:var(--gray2);border-color:var(--border);}
+.agent-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--white);}
+.agent-status{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-top:4px;}
+.status-on{background:rgba(200,241,53,0.12);color:var(--green);}
+.status-off{background:var(--surface2);color:var(--gray);}
+.status-auto{background:rgba(77,159,255,0.12);color:var(--blue);}
+.agent-desc{font-size:12.5px;color:var(--gray);line-height:1.6;flex:1;}
+.agent-controls{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);padding-top:14px;}
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.ctrl-label{font-size:12px;color:var(--white);}
+.ctrl-hint{font-size:10.5px;color:var(--gray2);margin-top:2px;}
+
+.toggle{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border2);border-radius:22px;transition:0.2s;}
+.toggle-slider::before{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--gray);border-radius:50%;transition:0.2s;}
+.toggle input:checked + .toggle-slider{background:rgba(200,241,53,0.18);border-color:var(--green);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px);background:var(--green);}
+
+.threshold-input{width:62px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:6px 8px;color:var(--white);font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center;outline:none;transition:border-color 0.15s;}
+.threshold-input:focus{border-color:var(--green);}
+
+.activity-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;}
+.activity-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.activity-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--white);}
+.activity-list{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow-y:auto;}
+.activity-row{display:grid;grid-template-columns:80px 1fr auto;gap:14px;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+.act-pill{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 8px;border-radius:4px;text-align:center;}
+.act-sent{background:rgba(200,241,53,0.12);color:var(--green);}
+.act-drafted{background:rgba(77,159,255,0.12);color:var(--blue);}
+.act-errored{background:rgba(255,82,82,0.12);color:var(--red);}
+.act-meta{min-width:0;}
+.act-line{font-size:12.5px;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.act-sub{font-size:10.5px;color:var(--gray2);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.act-time{font-size:10px;color:var(--gray2);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.empty-state{padding:36px 12px;text-align:center;color:var(--gray);font-size:13px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:#111;color:#fff;border:1px solid var(--border2);border-radius:10px;padding:11px 16px;font-size:13px;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;box-shadow:0 12px 40px rgba(0,0,0,0.5);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar-toggle{opacity:1;pointer-events:all;}
+  .main{margin-left:0;}
+  .topbar{padding:16px 16px 16px 60px;}
+  .page-body{padding:16px 14px;}
+  .agents-grid{grid-template-columns:1fr;}
+  .activity-row{grid-template-columns:64px 1fr;}
+  .activity-row .act-time{grid-column:span 2;}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="21" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo-wrap">
+    <div>
+      <div class="logo-mark">SWFT<em></em></div>
+      <div class="logo-sub">simple. smart. swft.</div>
+    </div>
+    <div class="collapse-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="12" x2="15" y2="12" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="18" x2="9" y2="18" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item" onclick="window.location.href='swft-dashboard'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke-width="1.8"/></svg>Dashboard
+    </div>
+    <div class="nav-item active">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z" stroke-width="1.8"/><path d="M9 9a3 3 0 0 1 6 1c0 2-3 3-3 3" stroke-width="1.8"/><circle cx="12" cy="17" r=".7" fill="currentColor"/></svg>AI Agents
+    </div>
+    <div class="nav-label">CRM</div>
+    <div class="nav-item" onclick="window.location.href='swft-customers'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Customers
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-jobs'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.8" stroke-linecap="round"/></svg>Jobs
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-billing'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke-width="1.8"/><line x1="12" y1="18" x2="12" y2="12" stroke-width="1.8"/><path d="M15 15H9.5" stroke-width="1.8" stroke-linecap="round"/></svg>Billing
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-schedule'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="1.8"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="1.8"/></svg>Schedule
+    </div>
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="window.location.href='swft-messages'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8"/></svg>Messages
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-broadcasts'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-width="1.8" stroke-linejoin="round"/></svg>Broadcasts
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-connect'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round"/></svg>SWFT Connect
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-doors'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="21" x2="21" y2="21" stroke-width="1.8" stroke-linecap="round"/><circle cx="15" cy="12" r="1" fill="currentColor"/></svg>SWFT Doors
+    </div>
+    <div class="nav-label">Team</div>
+    <div class="nav-item" onclick="window.location.href='swft-team'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.8"/><circle cx="9" cy="7" r="4" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.8"/></svg>Team
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-team-tracker'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke-width="1.8"/></svg>Team Tracker
+    </div>
+    <div class="nav-item" onclick="window.location.href='swft-team-chat'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke-width="1.8"/></svg>Team Chat
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="window.location.href='swft-settings'">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-width="1.8"/></svg>Settings
+    </div>
+  </div>
+</aside>
+
+<div class="main" id="main">
+  <header class="topbar">
+    <div class="topbar-page">AI AGENTS</div>
+    <span class="topbar-slash">/</span>
+    <div class="topbar-sub">Autonomous workers — turn one on and it acts on its own</div>
+    <div class="topbar-right">
+      <button class="btn-scan" id="btn-scan" onclick="runScanNow()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" stroke-width="2" stroke-linecap="round"/><polyline points="21 3 21 8 16 8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Run Scan Now
+      </button>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div>
+      <div class="section-label" style="margin-bottom:10px;">Active Agents</div>
+      <div class="agents-grid" id="agents-grid">
+        <div style="grid-column:1/-1;color:var(--gray);font-size:13px;">Loading agents…</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:10px;">Recent Activity</div>
+      <div class="activity-panel">
+        <div class="activity-head">
+          <div class="activity-title">What your agents have done</div>
+          <button class="btn-scan" style="padding:6px 12px;font-size:11px;background:transparent;color:var(--gray);border:1px solid var(--border2);" onclick="loadActivity()">Refresh</button>
+        </div>
+        <div class="activity-list" id="activity-list">
+          <div class="empty-state">Loading activity…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('collapsed');
+  document.getElementById('main').classList.toggle('expanded');
+  document.getElementById('sidebar-toggle').classList.toggle('visible');
+}
+
+var _toastTimer;
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){t.classList.remove('show');}, 2800);
+}
+
+// Visual metadata for each agent type. Server-side DEFAULTS in agents.js
+// is the source of truth for behavior; this is just for the UI.
+var AGENT_META = {
+  estimator:        { label: 'AI Estimator',     icon: '<rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.8"/><line x1="3" y1="9" x2="21" y2="9" stroke-width="1.8"/><line x1="9" y1="21" x2="9" y2="9" stroke-width="1.8"/>', desc: 'Drafts a quote estimate from a description, sqft, or photos. Triggered when you click AI Estimate on a job or quote.' },
+  quote_followup:   { label: 'Quote Follow-up',  icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.8"/><polyline points="14 2 14 8 20 8" stroke-width="1.8"/><path d="M9 18a3 3 0 1 0 6 0" stroke-width="1.8" stroke-linecap="round"/>', desc: 'Scans every sent quote. If the customer hasn’t replied after the threshold, sends a warm follow-up email on its own.' },
+  invoice_followup: { label: 'Payment Reminder', icon: '<rect x="2" y="5" width="20" height="14" rx="2" stroke-width="1.8"/><path d="M2 10h20" stroke-width="1.8"/><circle cx="12" cy="15" r="1" fill="currentColor"/>', desc: 'Scans every open invoice. If it’s past due, sends a polite payment reminder on its own.' },
+  review_request:   { label: 'Review Request',   icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke-width="1.8" stroke-linejoin="round"/>', desc: 'Watches every completed job. After the threshold, sends a thank-you email asking for a Google review.' },
+  auto_reply:       { label: 'Auto-Reply',       icon: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke-width="1.8"/>', desc: 'Answers incoming SMS, email, Facebook, and Instagram messages from customers. Replies on its own using your business info.' },
+};
+
+// Render each agent card. The card always shows enable + auto-send toggles
+// and a threshold input where applicable. The estimator card hides the
+// threshold input since it has no time-based scan.
+function renderAgent(id, cfg){
+  var meta = AGENT_META[id] || { label: id, icon: '<circle cx="12" cy="12" r="9" stroke-width="1.8"/>', desc: '' };
+  var enabled = !!cfg.enabled;
+  var threshold = cfg.thresholdDays != null ? cfg.thresholdDays : '';
+  var hasThreshold = id !== 'estimator' && id !== 'auto_reply';
+
+  var statusPill = enabled
+    ? '<span class="agent-status status-auto">Active · Acting on its own</span>'
+    : '<span class="agent-status status-off">Off</span>';
+
+  var thresholdRow = hasThreshold ? (
+    '<div class="ctrl-row">' +
+      '<div>' +
+        '<div class="ctrl-label">Threshold</div>' +
+        '<div class="ctrl-hint">Days to wait before this agent acts</div>' +
+      '</div>' +
+      '<input class="threshold-input" type="number" min="0" max="60" value="' + threshold + '" data-agent="' + id + '" data-field="thresholdDays"/>' +
+    '</div>'
+  ) : '';
+
+  return (
+    '<div class="agent-card' + (enabled ? '' : ' disabled') + '" data-agent-card="' + id + '">' +
+      '<div class="agent-head">' +
+        '<div class="agent-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">' + meta.icon + '</svg></div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div class="agent-title">' + meta.label + '</div>' +
+          statusPill +
+        '</div>' +
+      '</div>' +
+      '<div class="agent-desc">' + meta.desc + '</div>' +
+      '<div class="agent-controls">' +
+        '<div class="ctrl-row">' +
+          '<div><div class="ctrl-label">Turn agent on</div><div class="ctrl-hint">Lets this agent act on its own — no approval queue</div></div>' +
+          '<label class="toggle"><input type="checkbox"' + (enabled ? ' checked' : '') + ' data-agent="' + id + '" data-field="enabled"/><span class="toggle-slider"></span></label>' +
+        '</div>' +
+        thresholdRow +
+      '</div>' +
+    '</div>'
+  );
+}
+
+async function loadAgents(){
+  var grid = document.getElementById('agents-grid');
+  try {
+    var configs = await API.agents.list();
+    var ids = ['quote_followup','invoice_followup','review_request','estimator','auto_reply'];
+    var html = ids.map(function(id){ return renderAgent(id, configs[id] || {}); }).join('');
+    grid.innerHTML = html;
+    // Wire change handlers for every toggle / input
+    grid.querySelectorAll('[data-agent]').forEach(function(el){
+      el.addEventListener('change', function(){
+        var agent = el.dataset.agent;
+        var field = el.dataset.field;
+        var value;
+        if (el.type === 'checkbox') value = el.checked;
+        else if (el.type === 'number') {
+          var n = parseInt(el.value, 10);
+          value = isFinite(n) && n >= 0 ? n : 0;
+        } else value = el.value;
+        saveAgentConfig(agent, field, value);
+      });
+    });
+  } catch (e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;color:var(--red);font-size:13px;">Could not load agents: ' + (e.message || 'error') + '</div>';
+  }
+}
+
+async function saveAgentConfig(agent, field, value){
+  try {
+    var update = {}; update[field] = value;
+    await API.agents.update(agent, update);
+    showToast('Saved · ' + (AGENT_META[agent] && AGENT_META[agent].label || agent));
+    // Re-load so the status pill / disabled state updates
+    loadAgents();
+  } catch (e) {
+    showToast('Could not save: ' + (e.message || 'error'));
+    loadAgents(); // restore previous state
+  }
+}
+
+function fmtTime(ts){
+  if (!ts) return '';
+  var d = new Date(ts);
+  var diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  if (diff < 7*86400000) return Math.floor(diff/86400000) + 'd ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+async function loadActivity(){
+  var box = document.getElementById('activity-list');
+  box.innerHTML = '<div class="empty-state">Loading activity…</div>';
+  try {
+    var rows = await API.agents.activity(50);
+    if (!rows.length) {
+      box.innerHTML = '<div class="empty-state">No agent activity yet. Once an agent drafts or sends an email it will show up here.</div>';
+      return;
+    }
+    box.innerHTML = rows.map(function(r){
+      var label = (AGENT_META[r.agent] && AGENT_META[r.agent].label) || r.agent;
+      var pillClass = r.action === 'sent' ? 'act-sent' : (r.action === 'errored' ? 'act-errored' : 'act-drafted');
+      var line = label + ' → ' + (r.customerName || 'customer');
+      if (r.subject) line += ': ' + r.subject;
+      var sub = (r.recipientEmail || '') + (r.action === 'errored' && r.errorMessage ? '  ·  ' + r.errorMessage : '');
+      return (
+        '<div class="activity-row">' +
+          '<span class="act-pill ' + pillClass + '">' + r.action + '</span>' +
+          '<div class="act-meta">' +
+            '<div class="act-line">' + escapeHtml(line) + '</div>' +
+            '<div class="act-sub">' + escapeHtml(sub) + '</div>' +
+          '</div>' +
+          '<div class="act-time">' + fmtTime(r.createdAt) + '</div>' +
+        '</div>'
+      );
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty-state" style="color:var(--red);">Could not load activity: ' + escapeHtml(e.message || 'error') + '</div>';
+  }
+}
+
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+async function runScanNow(){
+  var btn = document.getElementById('btn-scan');
+  var orig = btn.innerHTML;
+  btn.disabled = true; btn.textContent = 'Scanning…';
+  try {
+    var res = await API.agents.scan();
+    var n = res && res.drafted != null ? res.drafted : 0;
+    showToast(n > 0 ? 'Scan complete — ' + n + ' action' + (n === 1 ? '' : 's') : 'Scan complete — nothing to do right now');
+    loadActivity();
+  } catch (e) {
+    showToast('Scan failed: ' + (e.message || 'error'));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+}
+
+async function init(){
+  try { await requireAuth(); } catch(e) { console.error('Auth failed:', e); return; }
+  await Promise.all([loadAgents(), loadActivity()]);
+}
+init();
+</script>
+
+<script type="module" src="swft-user-sync.js"></script>
+<script src="swft-api.js"></script>
+<script src="swft-confirm.js"></script>
+<script src="swft-settings-loader.js"></script>
+<script src="swft-account.js"></script>
+<script src="swft-notifications.js"></script>
+<script src="swft-agent-inbox.js"></script>
+<script src="swft-mobile.js"></script>
+</body>
+</html>

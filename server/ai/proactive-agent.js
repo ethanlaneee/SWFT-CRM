@@ -3,17 +3,62 @@ const { db } = require("../firebase");
 
 const client = new Anthropic();
 
-const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
-const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+// Defaults match the keys in routes/agents.js DEFAULTS. Each agent runs
+// autonomously when enabled — there's no drafts-for-approval queue.
+const DEFAULTS = {
+  quote_followup:   { enabled: false, thresholdDays: 3 },
+  invoice_followup: { enabled: false, thresholdDays: 7 },
+  review_request:   { enabled: false, thresholdDays: 1 },
+};
 
-async function hasPendingAction(orgId, targetId) {
-  const snap = await db.collection("pendingAgentActions")
-    .where("orgId", "==", orgId)
-    .where("targetId", "==", targetId)
-    .where("status", "==", "pending")
-    .limit(1)
-    .get();
-  return !snap.empty;
+// Read the per-org config for an agent. Falls back to DEFAULTS if the org
+// hasn't configured this agent yet — newly added orgs get the default
+// behavior automatically.
+async function getAgentConfig(orgId, type) {
+  try {
+    const doc = await db.collection("orgs").doc(orgId).collection("agentConfigs").doc(type).get();
+    return doc.exists ? { ...DEFAULTS[type], ...doc.data() } : { ...DEFAULTS[type] };
+  } catch (_) {
+    return { ...DEFAULTS[type] };
+  }
+}
+
+// Append an entry to the agent activity log so the user can see what each
+// agent has been doing. The Agents hub reads from here.
+async function logActivity(orgId, entry) {
+  try {
+    await db.collection("orgs").doc(orgId).collection("agentActivity").add({
+      ...entry,
+      createdAt: Date.now(),
+    });
+  } catch (e) {
+    console.warn("[proactive-agent] activity log failed:", e.message);
+  }
+}
+
+// Skip targets we've already acted on so the hourly scan doesn't email the
+// same customer over and over for the same quote/invoice/job. Checks both
+// the activity log (new agent runs write here) and the legacy
+// pendingAgentActions collection (kept for backward compat with the
+// Agent Inbox dropdown).
+async function alreadyHandled(orgId, targetId) {
+  try {
+    const actSnap = await db.collection("orgs").doc(orgId).collection("agentActivity")
+      .where("targetId", "==", targetId)
+      .limit(1)
+      .get();
+    if (!actSnap.empty) return true;
+  } catch (_) { /* fall through */ }
+  try {
+    const snap = await db.collection("pendingAgentActions")
+      .where("orgId", "==", orgId)
+      .where("targetId", "==", targetId)
+      .limit(1)
+      .get();
+    return !snap.empty;
+  } catch (_) {
+    return false;
+  }
 }
 
 async function draftMessage(type, record, businessName) {
@@ -41,175 +86,189 @@ async function draftMessage(type, record, businessName) {
   }
 }
 
+// Send the email through the org owner's Gmail and log a 'sent' activity
+// entry. Agents are autonomous: if they're enabled, they act. No
+// drafts-for-approval queue. Caller has already verified config.enabled.
+async function dispatch(orgId, uid, userData, type, action, draft) {
+  if (!userData.gmailConnected || !userData.gmailTokens) {
+    await logActivity(orgId, {
+      agent: type, action: "errored",
+      targetType: action.targetType, targetId: action.targetId,
+      customerName: action.customerName, recipientEmail: action.recipientEmail,
+      subject: draft.subject, errorMessage: "Gmail not connected — cannot send",
+    });
+    return { errored: "no_gmail" };
+  }
+  try {
+    const { sendViaGmail } = require("../routes/messages");
+    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${draft.body}</div>`;
+    const userForSend = { ...userData, _uid: uid };
+    await sendViaGmail(userForSend, action.recipientEmail, draft.subject, htmlBody, draft.body);
+    await logActivity(orgId, {
+      agent: type, action: "sent",
+      targetType: action.targetType, targetId: action.targetId,
+      customerId: action.customerId || null,
+      customerName: action.customerName, recipientEmail: action.recipientEmail,
+      subject: draft.subject, body: draft.body,
+      reasoning: draft.reasoning || "",
+    });
+    return { sent: true };
+  } catch (e) {
+    console.error(`[proactive-agent] send ${type} failed:`, e.message);
+    await logActivity(orgId, {
+      agent: type, action: "errored",
+      targetType: action.targetType, targetId: action.targetId,
+      customerName: action.customerName, recipientEmail: action.recipientEmail,
+      subject: draft.subject, errorMessage: e.message,
+    });
+    return { errored: e.message };
+  }
+}
+
 async function scanAndDraft(orgId, uid) {
   let drafted = 0;
+  let sent = 0;
 
-  // Load owner user doc for business name
   const userDoc = await db.collection("users").doc(uid).get();
   const userData = userDoc.exists ? userDoc.data() : {};
   const businessName = userData.company || userData.name || "our business";
 
   const now = Date.now();
 
+  // Each agent type: load config once, skip if disabled, otherwise scan its
+  // target collection with the config's threshold.
+  const cfgQuote   = await getAgentConfig(orgId, "quote_followup");
+  const cfgInvoice = await getAgentConfig(orgId, "invoice_followup");
+  const cfgReview  = await getAgentConfig(orgId, "review_request");
+
   // ── Quote follow-ups ──────────────────────────────────────────────────────
-  try {
-    const quotesSnap = await db.collection("quotes")
-      .where("orgId", "==", orgId)
-      .where("status", "==", "sent")
-      .get();
+  if (cfgQuote.enabled) {
+    const thresholdMs = (cfgQuote.thresholdDays || 3) * 86400000;
+    try {
+      const quotesSnap = await db.collection("quotes")
+        .where("orgId", "==", orgId)
+        .where("status", "==", "sent")
+        .get();
 
-    for (const doc of quotesSnap.docs) {
-      const q = doc.data();
-      const sentAt = q.sentAt || q.updatedAt || q.createdAt || 0;
-      if ((now - sentAt) < THREE_DAYS) continue;
-      if (!q.customerEmail && !q.email) continue;
-      if (await hasPendingAction(orgId, doc.id)) continue;
+      for (const doc of quotesSnap.docs) {
+        const q = doc.data();
+        const sentAt = q.sentAt || q.updatedAt || q.createdAt || 0;
+        if ((now - sentAt) < thresholdMs) continue;
+        if (!q.customerEmail && !q.email) continue;
+        if (await alreadyHandled(orgId, doc.id)) continue;
 
-      const draft = await draftMessage("quote_followup", {
-        ...q, id: doc.id, sentAt,
-      }, businessName);
-      if (!draft) continue;
+        const draft = await draftMessage("quote_followup", { ...q, id: doc.id, sentAt }, businessName);
+        if (!draft) continue;
 
-      await db.collection("pendingAgentActions").add({
-        orgId, uid,
-        type: "quote_followup",
-        targetId: doc.id,
-        targetType: "quote",
-        customerId: q.customerId || null,
-        customerName: q.customerName || "Customer",
-        draftSubject: draft.subject,
-        draftMessage: draft.body,
-        channel: "email",
-        recipientEmail: q.customerEmail || q.email,
-        reasoning: draft.reasoning || "",
-        status: "pending",
-        createdAt: Date.now(),
-      });
-      drafted++;
+        const result = await dispatch(orgId, uid, userData, "quote_followup", {
+          targetId: doc.id, targetType: "quote",
+          customerId: q.customerId || null, customerName: q.customerName || "Customer",
+          recipientEmail: q.customerEmail || q.email,
+        }, draft);
+        if (result.sent) sent++;
+        if (result.drafted) drafted++;
+      }
+    } catch (e) {
+      console.error("[proactive-agent] Quote scan error:", e.message);
     }
-  } catch (e) {
-    console.error("[proactive-agent] Quote scan error:", e.message);
   }
 
   // ── Invoice follow-ups ────────────────────────────────────────────────────
-  try {
-    const invSnap = await db.collection("invoices")
-      .where("orgId", "==", orgId)
-      .where("status", "==", "open")
-      .get();
+  if (cfgInvoice.enabled) {
+    const thresholdMs = (cfgInvoice.thresholdDays || 7) * 86400000;
+    try {
+      const invSnap = await db.collection("invoices")
+        .where("orgId", "==", orgId)
+        .where("status", "==", "open")
+        .get();
 
-    for (const doc of invSnap.docs) {
-      const inv = doc.data();
-      const createdAt = inv.createdAt || 0;
-      if ((now - createdAt) < SEVEN_DAYS) continue;
-      if (!inv.customerEmail && !inv.email) continue;
-      if (await hasPendingAction(orgId, doc.id)) continue;
+      for (const doc of invSnap.docs) {
+        const inv = doc.data();
+        const createdAt = inv.createdAt || 0;
+        if ((now - createdAt) < thresholdMs) continue;
+        if (!inv.customerEmail && !inv.email) continue;
+        if (await alreadyHandled(orgId, doc.id)) continue;
 
-      const draft = await draftMessage("invoice_followup", {
-        ...inv, id: doc.id,
-      }, businessName);
-      if (!draft) continue;
+        const draft = await draftMessage("invoice_followup", { ...inv, id: doc.id }, businessName);
+        if (!draft) continue;
 
-      await db.collection("pendingAgentActions").add({
-        orgId, uid,
-        type: "invoice_followup",
-        targetId: doc.id,
-        targetType: "invoice",
-        customerId: inv.customerId || null,
-        customerName: inv.customerName || "Customer",
-        draftSubject: draft.subject,
-        draftMessage: draft.body,
-        channel: "email",
-        recipientEmail: inv.customerEmail || inv.email,
-        reasoning: draft.reasoning || "",
-        status: "pending",
-        createdAt: Date.now(),
-      });
-      drafted++;
+        const result = await dispatch(orgId, uid, userData, "invoice_followup", {
+          targetId: doc.id, targetType: "invoice",
+          customerId: inv.customerId || null, customerName: inv.customerName || "Customer",
+          recipientEmail: inv.customerEmail || inv.email,
+        }, draft);
+        if (result.sent) sent++;
+        if (result.drafted) drafted++;
+      }
+    } catch (e) {
+      console.error("[proactive-agent] Invoice scan error:", e.message);
     }
-  } catch (e) {
-    console.error("[proactive-agent] Invoice scan error:", e.message);
   }
 
   // ── Review requests ───────────────────────────────────────────────────────
-  try {
-    const jobsSnap = await db.collection("jobs")
-      .where("orgId", "==", orgId)
-      .where("status", "==", "completed")
-      .get();
-
-    for (const doc of jobsSnap.docs) {
-      const job = doc.data();
-      const completedAt = job.completedAt || job.updatedAt || 0;
-      if (!completedAt || (now - completedAt) > THREE_DAYS) continue;
-      if (!job.customerEmail && !job.email) continue;
-      if (await hasPendingAction(orgId, doc.id)) continue;
-
-      // Check if we already sent a review request for this job (any status)
-      const existing = await db.collection("pendingAgentActions")
+  if (cfgReview.enabled) {
+    const thresholdMs = (cfgReview.thresholdDays || 1) * 86400000;
+    const recencyWindow = 7 * 86400000; // ignore jobs completed > 7 days ago
+    try {
+      const jobsSnap = await db.collection("jobs")
         .where("orgId", "==", orgId)
-        .where("targetId", "==", doc.id)
-        .limit(1)
+        .where("status", "==", "completed")
         .get();
-      if (!existing.empty) continue;
 
-      const draft = await draftMessage("review_request", {
-        ...job, id: doc.id,
-      }, businessName);
-      if (!draft) continue;
+      for (const doc of jobsSnap.docs) {
+        const job = doc.data();
+        const completedAt = job.completedAt || job.updatedAt || 0;
+        if (!completedAt) continue;
+        if ((now - completedAt) < thresholdMs) continue;       // not old enough
+        if ((now - completedAt) > recencyWindow) continue;      // too old to bother
+        if (!job.customerEmail && !job.email) continue;
+        if (await alreadyHandled(orgId, doc.id)) continue;
 
-      await db.collection("pendingAgentActions").add({
-        orgId, uid,
-        type: "review_request",
-        targetId: doc.id,
-        targetType: "job",
-        customerId: job.customerId || null,
-        customerName: job.customerName || "Customer",
-        draftSubject: draft.subject,
-        draftMessage: draft.body,
-        channel: "email",
-        recipientEmail: job.customerEmail || job.email,
-        reasoning: draft.reasoning || "",
-        status: "pending",
-        createdAt: Date.now(),
-      });
-      drafted++;
+        const draft = await draftMessage("review_request", { ...job, id: doc.id }, businessName);
+        if (!draft) continue;
+
+        const result = await dispatch(orgId, uid, userData, "review_request", {
+          targetId: doc.id, targetType: "job",
+          customerId: job.customerId || null, customerName: job.customerName || "Customer",
+          recipientEmail: job.customerEmail || job.email,
+        }, draft);
+        if (result.sent) sent++;
+        if (result.drafted) drafted++;
+      }
+    } catch (e) {
+      console.error("[proactive-agent] Job scan error:", e.message);
     }
-  } catch (e) {
-    console.error("[proactive-agent] Job scan error:", e.message);
   }
 
-  return drafted;
+  return drafted + sent;
 }
 
 async function runProactiveAgentForAllOrgs() {
   try {
-    // Find all org owners (users who are their own org)
     const usersSnap = await db.collection("users")
       .where("accountStatus", "in", ["trial", "active"])
       .get();
 
-    let totalDrafted = 0;
+    let total = 0;
     for (const doc of usersSnap.docs) {
       const uid = doc.id;
       const data = doc.data();
-      // Skip team members — they share their owner's org
-      if (data.orgId && data.orgId !== uid) continue;
+      if (data.orgId && data.orgId !== uid) continue;     // skip team members
       if (!data.gmailConnected || !data.gmailTokens) continue;
 
       try {
         const count = await scanAndDraft(uid, uid);
         if (count > 0) {
-          console.log(`[proactive-agent] Drafted ${count} actions for org ${uid}`);
-          totalDrafted += count;
+          console.log(`[proactive-agent] Processed ${count} actions for org ${uid}`);
+          total += count;
         }
       } catch (e) {
         console.error(`[proactive-agent] Error for org ${uid}:`, e.message);
       }
     }
 
-    if (totalDrafted > 0) {
-      console.log(`[proactive-agent] Total new actions drafted: ${totalDrafted}`);
+    if (total > 0) {
+      console.log(`[proactive-agent] Total actions this run: ${total}`);
     }
   } catch (e) {
     console.error("[proactive-agent] Runner error:", e.message);

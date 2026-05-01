@@ -8,7 +8,11 @@ function agentsRef(orgId) {
   return db.collection("orgs").doc(orgId).collection("agentConfigs");
 }
 
-// Default configs for each agent type
+// Default configs for each agent type. Each proactive agent runs
+// autonomously when enabled — when an agent is on, it scans your data
+// and sends emails on your behalf. No drafts-for-approval queue: if
+// you've turned it on, you've handed it the wheel. Default off so new
+// orgs explicitly opt in.
 const DEFAULTS = {
   estimator: {
     enabled: false,
@@ -17,6 +21,30 @@ const DEFAULTS = {
     basePriceMax: 17,
     markupPct: 22,
     autoSend: false,
+  },
+  quote_followup: {
+    enabled: false,
+    thresholdDays: 3,
+    description: "Watches every sent quote. If the customer hasn't replied after the threshold, sends a warm follow-up email.",
+    label: "Quote Follow-up",
+  },
+  invoice_followup: {
+    enabled: false,
+    thresholdDays: 7,
+    description: "Watches every open invoice. If it's been unpaid past the threshold, sends a polite payment reminder.",
+    label: "Payment Reminder",
+  },
+  review_request: {
+    enabled: false,
+    thresholdDays: 1,
+    description: "Watches every completed job. After the threshold, sends a thank-you that asks for a Google review.",
+    label: "Review Request",
+  },
+  auto_reply: {
+    enabled: false,
+    thresholdDays: 0,
+    description: "Replies to incoming SMS, email, Facebook, and Instagram messages from customers. Trained on your business info.",
+    label: "Auto-Reply",
   },
 };
 
@@ -35,6 +63,30 @@ router.get("/", async (req, res, next) => {
       if (!configs[id]) configs[id] = { ...DEFAULTS[id] };
     }
     res.json(configs);
+  } catch (err) { next(err); }
+});
+
+// GET /api/agents/_activity — global recent activity across every agent.
+// Underscore prefix keeps it from colliding with the /:agentId route.
+router.get("/_activity", async (req, res, next) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 30, 100);
+    const snap = await db.collection("orgs").doc(req.orgId)
+      .collection("agentActivity")
+      .orderBy("createdAt", "desc")
+      .limit(limit)
+      .get();
+    res.json(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  } catch (err) { next(err); }
+});
+
+// POST /api/agents/_scan — manually trigger the proactive agent for this org.
+// Surfaces in the UI as a "Run scan now" button.
+router.post("/_scan", async (req, res, next) => {
+  try {
+    const { scanAndDraft } = require("../ai/proactive-agent");
+    const drafted = await scanAndDraft(req.orgId, req.uid);
+    res.json({ drafted });
   } catch (err) { next(err); }
 });
 
