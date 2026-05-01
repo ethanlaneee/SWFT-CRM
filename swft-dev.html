@@ -941,9 +941,50 @@ function fmt$(n) {
   return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function perPlanCard(p, r, a) {
+  // Resolve limits — null means unlimited; substitute the assumption
+  const aiUsed = p.aiMessageLimit ?? Number(a.assumedUnlimitedAi || 0);
+  const smsUsed = p.smsLimit ?? Number(a.assumedUnlimitedSms || 0);
+  const broadcastsUsed = p.broadcastLimit ?? Number(a.assumedUnlimitedBroadcasts || 0);
+
+  const aiCost = aiUsed * Number(r.anthropicPerMessage || 0);
+  const smsCost = smsUsed * Number(r.twilioPerSms || 0);
+  const broadcastCost = (broadcastsUsed / 1000) * Number(r.sesPerThousandEmails || 0);
+  const stripeFee = (p.monthlyPrice * Number(r.stripePercent || 0) / 100) + Number(r.stripeFixedPerCharge || 0);
+  const otherCost = Number(a.otherPerUserMonthly || 0);
+
+  const totalCost = aiCost + smsCost + broadcastCost + stripeFee + otherCost;
+  const profit = p.monthlyPrice - totalCost;
+  const margin = p.monthlyPrice > 0 ? (profit / p.monthlyPrice) * 100 : 0;
+  const accent = margin >= 70 ? 'green' : margin >= 40 ? 'amber' : 'red';
+
+  const fmtUsed = (n, isUnlimited) => `${n.toLocaleString()}${isUnlimited ? ' <span style="color:var(--gray2);">(assumed)</span>' : ''}`;
+
+  return `
+    <div class="plan-cost-card ${accent}">
+      <div class="pcc-header">
+        <div class="pcc-name">${p.name}</div>
+        <div class="pcc-price">${fmt$(p.monthlyPrice)}<span class="pcc-period">/mo</span></div>
+      </div>
+      <div class="pcc-rows">
+        <div class="pcc-row"><span>AI msgs</span><span>${fmtUsed(aiUsed, p.aiMessageLimit === null)} × ${fmt$(r.anthropicPerMessage)}</span><span class="pcc-amt">${fmt$(aiCost)}</span></div>
+        <div class="pcc-row"><span>SMS</span><span>${fmtUsed(smsUsed, p.smsLimit === null)} × ${fmt$(r.twilioPerSms)}</span><span class="pcc-amt">${fmt$(smsCost)}</span></div>
+        <div class="pcc-row"><span>Broadcasts</span><span>${fmtUsed(broadcastsUsed, p.broadcastLimit === null)} × ${fmt$(r.sesPerThousandEmails)}/1k</span><span class="pcc-amt">${fmt$(broadcastCost)}</span></div>
+        <div class="pcc-row"><span>Stripe fee</span><span>${r.stripePercent}% + ${fmt$(r.stripeFixedPerCharge)}</span><span class="pcc-amt">${fmt$(stripeFee)}</span></div>
+        <div class="pcc-row"><span>Other (Maps, Firebase…)</span><span>flat</span><span class="pcc-amt">${fmt$(otherCost)}</span></div>
+      </div>
+      <div class="pcc-totals">
+        <div class="pcc-total-row"><span>Total cost</span><span class="pcc-amt">${fmt$(totalCost)}</span></div>
+        <div class="pcc-total-row"><span>Profit / user</span><span class="pcc-amt ${profit >= 0 ? 'pos' : 'neg'}">${fmt$(profit)}</span></div>
+        <div class="pcc-margin">${margin.toFixed(1)}% margin</div>
+      </div>
+    </div>
+  `;
+}
+
 function renderCosts() {
-  const { settings, usage } = costsData;
-  const f = settings.fixed, r = settings.rates;
+  const { settings, usage, plans } = costsData;
+  const f = settings.fixed, r = settings.rates, a = settings.assumptions || {};
 
   // Compute variable costs from current usage
   const aiCost      = usage.totalAiMessages * r.anthropicPerMessage;
@@ -991,6 +1032,28 @@ function renderCosts() {
       .saving-pill{display:inline-block;background:rgba(200,241,53,0.1);color:var(--green);font-size:10px;padding:2px 8px;border-radius:10px;letter-spacing:1px;margin-left:8px;opacity:0;transition:opacity 0.3s;}
       .saving-pill.show{opacity:1;}
       .section-help{font-size:11px;color:var(--gray2);margin-top:-8px;margin-bottom:14px;line-height:1.5;}
+      .per-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:24px;}
+      .plan-cost-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;}
+      .plan-cost-card.green{border-color:rgba(200,241,53,0.25);}
+      .plan-cost-card.amber{border-color:rgba(245,166,35,0.25);}
+      .plan-cost-card.red{border-color:rgba(255,82,82,0.25);}
+      .pcc-header{display:flex;align-items:flex-end;justify-content:space-between;}
+      .pcc-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);}
+      .pcc-price{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--green);}
+      .pcc-period{font-size:11px;color:var(--gray);margin-left:2px;}
+      .pcc-rows{display:flex;flex-direction:column;gap:6px;}
+      .pcc-row{display:grid;grid-template-columns:1fr 1.4fr auto;gap:10px;font-size:11.5px;color:var(--gray);align-items:baseline;}
+      .pcc-row span:first-child{color:var(--white);font-weight:500;}
+      .pcc-amt{font-family:'JetBrains Mono',monospace;color:var(--gray);text-align:right;}
+      .pcc-totals{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:5px;}
+      .pcc-total-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--white);font-weight:500;}
+      .pcc-total-row .pcc-amt{font-size:13px;}
+      .pcc-total-row .pcc-amt.pos{color:var(--green);}
+      .pcc-total-row .pcc-amt.neg{color:var(--red);}
+      .pcc-margin{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1.5px;text-align:right;margin-top:4px;}
+      .plan-cost-card.green .pcc-margin{color:var(--green);}
+      .plan-cost-card.amber .pcc-margin{color:var(--amber);}
+      .plan-cost-card.red .pcc-margin{color:var(--red);}
     </style>
 
     <div class="section-label" style="margin-bottom:8px;">Profit Snapshot <span id="cost-saving" class="saving-pill">SAVED</span></div>
@@ -1023,6 +1086,18 @@ function renderCosts() {
       </div>
     </div>
 
+    <div class="section-label" style="margin-bottom:8px;">Per-Plan Profit (per user, worst case)</div>
+    <div class="section-help">Assumes users hit their monthly limits. Edit the "Assumed unlimited usage" inputs to model heavy users on plans with no caps.</div>
+    <div class="per-plan-grid" id="perPlanGrid">${plans.map(p => perPlanCard(p, r, a)).join('')}</div>
+
+    <div class="cost-panel" style="margin-bottom:24px;max-width:520px;">
+      <h3>Per-Plan Assumptions</h3>
+      <div class="cost-row"><label>Assumed AI msgs (unlimited tier)</label>${rateInput('assumptions.assumedUnlimitedAi', a.assumedUnlimitedAi || 5000, '1')}</div>
+      <div class="cost-row"><label>Assumed SMS (unlimited tier)</label>${rateInput('assumptions.assumedUnlimitedSms', a.assumedUnlimitedSms || 3000, '1')}</div>
+      <div class="cost-row"><label>Assumed broadcasts (unlimited tier)</label>${rateInput('assumptions.assumedUnlimitedBroadcasts', a.assumedUnlimitedBroadcasts || 500, '1')}</div>
+      <div class="cost-row"><label>Other per-user / mo (Maps, Firebase, etc.)</label>${rateInput('assumptions.otherPerUserMonthly', a.otherPerUserMonthly || 0.50, '0.01')}</div>
+    </div>
+
     <div class="section-label" style="margin-bottom:14px;">This Month Breakdown</div>
     <table class="breakdown-table">
       <thead>
@@ -1050,12 +1125,13 @@ function renderCosts() {
 
 let _costSaveTimer;
 async function saveCostSettings() {
-  const fixed = {}, rates = {};
+  const fixed = {}, rates = {}, assumptions = {};
   document.querySelectorAll('.cost-input').forEach(inp => {
     const [bucket, key] = inp.dataset.path.split('.');
     const val = parseFloat(inp.value) || 0;
     if (bucket === 'fixed') fixed[key] = val;
     else if (bucket === 'rates') rates[key] = val;
+    else if (bucket === 'assumptions') assumptions[key] = val;
   });
   try {
     const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
@@ -1065,10 +1141,10 @@ async function saveCostSettings() {
     await fetch('/api/dev/costs', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fixed, rates }),
+      body: JSON.stringify({ fixed, rates, assumptions }),
     });
     // Re-fetch to recompute totals with new rates
-    costsData.settings = { fixed, rates };
+    costsData.settings = { fixed, rates, assumptions };
     renderCosts();
     // Show "saved" pill briefly
     const pill = document.getElementById('cost-saving');

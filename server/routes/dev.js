@@ -552,6 +552,14 @@ const DEFAULT_COST_SETTINGS = {
     stripePercent: 2.9,            // Stripe processing fee on subscriptions
     stripeFixedPerCharge: 0.30,
   },
+  // Assumed per-user usage for plans with "unlimited" caps (Pro), and a flat
+  // "other apps" per-user cost (Maps, Firebase share, etc.) for the per-plan calculator
+  assumptions: {
+    assumedUnlimitedAi: 5000,
+    assumedUnlimitedSms: 3000,
+    assumedUnlimitedBroadcasts: 500,
+    otherPerUserMonthly: 0.50,
+  },
 };
 
 router.get("/costs", async (req, res, next) => {
@@ -562,6 +570,7 @@ router.get("/costs", async (req, res, next) => {
     const settings = {
       fixed: { ...DEFAULT_COST_SETTINGS.fixed, ...(saved.fixed || {}) },
       rates: { ...DEFAULT_COST_SETTINGS.rates, ...(saved.rates || {}) },
+      assumptions: { ...DEFAULT_COST_SETTINGS.assumptions, ...(saved.assumptions || {}) },
     };
 
     // Aggregate current-month usage across all users
@@ -625,18 +634,36 @@ router.get("/costs", async (req, res, next) => {
       stripeMRR = Math.round(stripeMRR) / 100;
     } catch (_) {}
 
+    // Surface plan metadata (price + limits) so the frontend can compute
+    // per-user worst-case profit margins for each plan
+    const planList = ["starter", "pro", "business"].map(key => {
+      const p = PLANS[key];
+      return {
+        key,
+        name: p.name,
+        monthlyPrice: p.monthlyPrice,
+        seatLimit: p.seatLimit === Infinity ? null : p.seatLimit,
+        aiMessageLimit: p.aiMessageLimit === Infinity ? null : p.aiMessageLimit,
+        smsLimit: p.smsLimit === Infinity ? null : p.smsLimit,
+        broadcastLimit: p.broadcastLimit === Infinity ? null : (p.broadcastLimit ?? 0),
+      };
+    });
+
     res.json({
       settings,
       usage: { totalAiMessages, totalSmsSent, totalBroadcasts, stripeMRR, payingSubscriptions },
+      plans: planList,
     });
   } catch (err) { next(err); }
 });
 
 router.post("/costs", async (req, res, next) => {
   try {
-    const { fixed, rates } = req.body || {};
+    const { fixed, rates, assumptions } = req.body || {};
     if (!fixed || !rates) return res.status(400).json({ error: "Missing fixed or rates" });
-    await db.collection("config").doc("costs").set({ fixed, rates }, { merge: true });
+    const update = { fixed, rates };
+    if (assumptions) update.assumptions = assumptions;
+    await db.collection("config").doc("costs").set(update, { merge: true });
     res.json({ success: true });
   } catch (err) { next(err); }
 });
