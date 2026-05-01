@@ -133,58 +133,15 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     const custNameClean = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
     const pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
 
-    // Auto-create a Stripe pay link (if owner has Stripe Connect) so the
-    // customer can pay the quote with one tap from the email.
-    let payLinkUrl = quoteData.paymentLinkUrl || null;
+    // Embed a "Pay Now" button only if the owner has Stripe Connect set up.
+    // Links to our public pay-redirect route which creates a fresh Checkout
+    // Session attached to the pre-existing Stripe Customer at click-time.
     const ownerStripe = user.integrations?.stripe;
     const connectedAccountId = ownerStripe?.accountId;
-    try {
-      if (connectedAccountId && (!payLinkUrl || quoteData.stripeConnectAccountId !== connectedAccountId)) {
-        const stripe = getStripe();
-        const amountCents = Math.round((quoteData.total || 0) * 100);
-        if (amountCents >= 50) {
-          const stripeOpts = { stripeAccount: connectedAccountId };
-          if (quoteData.customerId) {
-            try {
-              await ensureStripeCustomer({
-                db, customerId: quoteData.customerId, orgId: req.orgId, connectedAccountId,
-              });
-            } catch (e) {
-              console.warn("[quotes/email] ensureStripeCustomer failed:", e.message);
-            }
-          }
-          const price = await stripe.prices.create({
-            currency: "usd",
-            unit_amount: amountCents,
-            product_data: {
-              name: `Quote — ${quoteData.customerName || "Customer"}${quoteData.service ? ` (${quoteData.service})` : ""}`,
-            },
-          }, stripeOpts);
-          const paymentLink = await stripe.paymentLinks.create({
-            line_items: [{ price: price.id, quantity: 1 }],
-            metadata: {
-              quoteId: req.params.id,
-              orgId: req.orgId,
-              customerId: quoteData.customerId || "",
-            },
-            after_completion: {
-              type: "hosted_confirmation",
-              hosted_confirmation: { custom_message: "Payment received. Thank you!" },
-            },
-          }, stripeOpts);
-          payLinkUrl = paymentLink.url;
-          await col().doc(req.params.id).update({
-            paymentLinkUrl: payLinkUrl,
-            stripePaymentLinkId: paymentLink.id,
-            stripeConnectAccountId: connectedAccountId,
-            updatedAt: Date.now(),
-          });
-        }
-      }
-    } catch (e) {
-      console.warn("[quotes] Could not auto-create Stripe pay link:", e.message);
-      // Fall through — still send the email, just without the button
-    }
+    const APP_URL = process.env.APP_URL || "https://goswft.com";
+    const payLinkUrl = connectedAccountId && (quoteData.total || 0) >= 0.5
+      ? `${APP_URL}/api/pay/quote/${req.params.id}`
+      : null;
 
     const fromName = user.company || user.name || "SWFT";
     const subject = `Quote from ${fromName}`;

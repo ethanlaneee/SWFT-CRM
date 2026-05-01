@@ -68,10 +68,12 @@ router.post("/invoice/:id/link", async (req, res, next) => {
 
     const url = data.payment_link?.url;
     const linkId = data.payment_link?.id;
+    const orderId = data.payment_link?.order_id;
 
     await db.collection("invoices").doc(req.params.id).update({
       squarePaymentLinkUrl: url,
       squarePaymentLinkId: linkId,
+      squareOrderId: orderId,
       updatedAt: Date.now(),
     });
 
@@ -186,31 +188,50 @@ async function squareWebhookHandler(req, res) {
           updatedAt: Date.now(),
         });
 
-        // Mirror as a paid invoice so the financial record + customer
-        // payment history land in the right collection.
-        await db.collection("invoices").add({
-          orgId: q.orgId || null,
-          userId: q.userId || null,
-          customerId: q.customerId || null,
-          customerName: q.customerName || "",
-          quoteId: qDoc.id,
-          items: q.items || [],
-          subtotal: q.subtotal || q.total || 0,
-          taxRate: q.taxRate || 0,
-          tax: q.tax || 0,
-          total: q.total || 0,
-          service: q.service || "",
-          sqft: q.sqft || "",
-          address: q.address || "",
-          finish: q.finish || "",
-          notes: q.notes || "",
-          status: "paid",
-          paidAt: Date.now(),
-          paymentMethod: "square",
-          squarePaymentId: payment.id,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
+        // Mirror as a paid invoice — but if this quote was already converted
+        // to an invoice manually, mark THAT one paid instead of duplicating.
+        let mirrored = false;
+        if (q.orgId) {
+          const existingSnap = await db.collection("invoices")
+            .where("orgId", "==", q.orgId)
+            .where("quoteId", "==", qDoc.id)
+            .limit(1).get();
+          if (!existingSnap.empty) {
+            await existingSnap.docs[0].ref.update({
+              status: "paid",
+              paidAt: Date.now(),
+              paymentMethod: "square",
+              squarePaymentId: payment.id,
+              updatedAt: Date.now(),
+            });
+            mirrored = true;
+          }
+        }
+        if (!mirrored) {
+          await db.collection("invoices").add({
+            orgId: q.orgId || null,
+            userId: q.userId || null,
+            customerId: q.customerId || null,
+            customerName: q.customerName || "",
+            quoteId: qDoc.id,
+            items: q.items || [],
+            subtotal: q.subtotal || q.total || 0,
+            taxRate: q.taxRate || 0,
+            tax: q.tax || 0,
+            total: q.total || 0,
+            service: q.service || "",
+            sqft: q.sqft || "",
+            address: q.address || "",
+            finish: q.finish || "",
+            notes: q.notes || "",
+            status: "paid",
+            paidAt: Date.now(),
+            paymentMethod: "square",
+            squarePaymentId: payment.id,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
 
         await pushNotification(q.userId || q.orgId, {
           type: "payment",

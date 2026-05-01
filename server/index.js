@@ -263,6 +263,11 @@ const intakeLimiter = rateLimit({
 app.use("/api/public/intake", intakeLimiter);
 app.use("/api/public/intake", intakePublicRouter);
 
+// Public pay-redirect: customer clicks the button in a quote/invoice email
+// → we create a fresh Stripe Checkout Session attached to their Customer
+// record and 302 to it. No auth (the URL is in customer-facing emails).
+app.use("/api/pay", require("./routes/payRedirect"));
+
 // ── Serve frontend files ──
 const staticRoot = path.join(__dirname, "..");
 

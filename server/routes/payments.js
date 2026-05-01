@@ -4,100 +4,46 @@ const { pushNotification } = require("./notifications");
 const { getStripe, ensureStripeCustomer } = require("../utils/stripe");
 const { triggerAutomation } = require("./automations");
 
-// POST /api/payments/invoice/:id/link
-// Creates (or retrieves) a Stripe Payment Link for an invoice on the
-// owner's connected Stripe account. Returns 400 with a "notConnected"
-// flag if the owner hasn't linked Stripe yet — the UI uses that to prompt
-// them to go connect.
+// Helper: build the public pay-redirect URL for a quote or invoice.
+// The redirect creates a fresh Stripe Checkout Session at click-time
+// attached to the pre-existing Stripe Customer, so customer attribution
+// works in the owner's Stripe dashboard even though paymentLinks.create()
+// can't accept a customer:.
+function payRedirectUrl(kind, id) {
+  const base = process.env.APP_URL || "https://goswft.com";
+  return `${base}/api/pay/${kind}/${id}`;
+}
+
+// Returns the persistent pay-redirect URL for an invoice. Requires the
+// owner has Stripe Connect set up (so the redirect can build a session).
 router.post("/invoice/:id/link", async (req, res, next) => {
   try {
-    const stripe = getStripe();
     const invDoc = await db.collection("invoices").doc(req.params.id).get();
     if (!invDoc.exists || invDoc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Invoice not found" });
     }
     const inv = invDoc.data();
 
-    // Look up the org owner's Stripe Connect account
     const ownerDoc = await db.collection("users").doc(req.orgId).get();
-    const ownerStripe = ownerDoc.exists ? ownerDoc.data()?.integrations?.stripe : null;
-    const connectedAccountId = ownerStripe?.accountId;
+    const connectedAccountId = ownerDoc.exists ? ownerDoc.data()?.integrations?.stripe?.accountId : null;
     if (!connectedAccountId) {
       return res.status(400).json({
         error: "Connect your Stripe account first to accept payments on invoices.",
         notConnected: true,
       });
     }
-
-    // Return existing link if it was already created on this same account
-    if (inv.paymentLinkUrl && inv.stripeConnectAccountId === connectedAccountId) {
-      return res.json({ url: inv.paymentLinkUrl, existing: true });
-    }
-
-    const amountCents = Math.round((inv.total || 0) * 100);
-    if (amountCents < 50) {
+    if (Math.round((inv.total || 0) * 100) < 50) {
       return res.status(400).json({ error: "Invoice total must be at least $0.50 to create a payment link" });
     }
 
-    // Everything below runs on the connected account, so the money lands
-    // in the owner's Stripe balance — not ours.
-    const stripeOpts = { stripeAccount: connectedAccountId };
-
-    // Attach to a Stripe Customer so payments roll up per customer in the
-    // owner's Stripe dashboard. ensureStripeCustomer caches the ID under
-    // customers/{id}.stripeCustomers[connectedAccountId] so subsequent links
-    // reuse the same Customer record.
-    let stripeCustomerId = null;
-    if (inv.customerId) {
-      try {
-        stripeCustomerId = await ensureStripeCustomer({
-          db, customerId: inv.customerId, orgId: req.orgId, connectedAccountId,
-        });
-      } catch (e) {
-        console.warn("[payments/invoice/link] ensureStripeCustomer failed:", e.message);
-      }
-    }
-
-    const price = await stripe.prices.create({
-      currency: "usd",
-      unit_amount: amountCents,
-      product_data: {
-        name: `Invoice — ${inv.customerName || "Customer"}${inv.service ? ` (${inv.service})` : ""}`,
-      },
-    }, stripeOpts);
-
-    const paymentLink = await stripe.paymentLinks.create({
-      line_items: [{ price: price.id, quantity: 1 }],
-      metadata: {
-        invoiceId: req.params.id,
-        orgId: req.orgId,
-        customerId: inv.customerId || "",
-      },
-      after_completion: {
-        type: "hosted_confirmation",
-        hosted_confirmation: { custom_message: "Payment received. Thank you!" },
-      },
-    }, stripeOpts);
-
-    await db.collection("invoices").doc(req.params.id).update({
-      paymentLinkUrl: paymentLink.url,
-      stripePaymentLinkId: paymentLink.id,
-      stripeConnectAccountId: connectedAccountId,
-      updatedAt: Date.now(),
-    });
-
-    res.json({ url: paymentLink.url });
+    res.json({ url: payRedirectUrl("invoice", req.params.id) });
   } catch (err) { next(err); }
 });
 
-// POST /api/payments/quote/:id/link
-// Mirror of /invoice/:id/link for quotes — lets the customer pay (deposit
-// or full) directly from the quote email or shared link. On payment, the
-// webhook below marks the quote paid and auto-creates a matching paid
-// invoice so the financial record lives where it should.
+// Returns the persistent pay-redirect URL for a quote. Requires the
+// owner has Stripe Connect set up.
 router.post("/quote/:id/link", async (req, res, next) => {
   try {
-    const stripe = getStripe();
     const qDoc = await db.collection("quotes").doc(req.params.id).get();
     if (!qDoc.exists || qDoc.data().orgId !== req.orgId) {
       return res.status(404).json({ error: "Quote not found" });
@@ -105,65 +51,18 @@ router.post("/quote/:id/link", async (req, res, next) => {
     const q = qDoc.data();
 
     const ownerDoc = await db.collection("users").doc(req.orgId).get();
-    const ownerStripe = ownerDoc.exists ? ownerDoc.data()?.integrations?.stripe : null;
-    const connectedAccountId = ownerStripe?.accountId;
+    const connectedAccountId = ownerDoc.exists ? ownerDoc.data()?.integrations?.stripe?.accountId : null;
     if (!connectedAccountId) {
       return res.status(400).json({
         error: "Connect your Stripe account first to accept payments on quotes.",
         notConnected: true,
       });
     }
-
-    if (q.paymentLinkUrl && q.stripeConnectAccountId === connectedAccountId) {
-      return res.json({ url: q.paymentLinkUrl, existing: true });
-    }
-
-    const amountCents = Math.round((q.total || 0) * 100);
-    if (amountCents < 50) {
+    if (Math.round((q.total || 0) * 100) < 50) {
       return res.status(400).json({ error: "Quote total must be at least $0.50 to create a payment link" });
     }
 
-    const stripeOpts = { stripeAccount: connectedAccountId };
-
-    if (q.customerId) {
-      try {
-        await ensureStripeCustomer({
-          db, customerId: q.customerId, orgId: req.orgId, connectedAccountId,
-        });
-      } catch (e) {
-        console.warn("[payments/quote/link] ensureStripeCustomer failed:", e.message);
-      }
-    }
-
-    const price = await stripe.prices.create({
-      currency: "usd",
-      unit_amount: amountCents,
-      product_data: {
-        name: `Quote — ${q.customerName || "Customer"}${q.service ? ` (${q.service})` : ""}`,
-      },
-    }, stripeOpts);
-
-    const paymentLink = await stripe.paymentLinks.create({
-      line_items: [{ price: price.id, quantity: 1 }],
-      metadata: {
-        quoteId: req.params.id,
-        orgId: req.orgId,
-        customerId: q.customerId || "",
-      },
-      after_completion: {
-        type: "hosted_confirmation",
-        hosted_confirmation: { custom_message: "Payment received. Thank you!" },
-      },
-    }, stripeOpts);
-
-    await db.collection("quotes").doc(req.params.id).update({
-      paymentLinkUrl: paymentLink.url,
-      stripePaymentLinkId: paymentLink.id,
-      stripeConnectAccountId: connectedAccountId,
-      updatedAt: Date.now(),
-    });
-
-    res.json({ url: paymentLink.url });
+    res.json({ url: payRedirectUrl("quote", req.params.id) });
   } catch (err) { next(err); }
 });
 
@@ -339,33 +238,58 @@ async function webhookHandler(req, res) {
           updatedAt: Date.now(),
         });
 
-        // Auto-create a paid invoice mirroring the quote.
-        const newInvoiceData = {
-          orgId: q.orgId || session.metadata?.orgId || null,
-          userId: q.userId || null,
-          customerId: q.customerId || null,
-          customerName: q.customerName || "",
-          quoteId,
-          items: q.items || [],
-          subtotal: q.subtotal || q.total || 0,
-          taxRate: q.taxRate || 0,
-          tax: q.tax || 0,
-          total: q.total || 0,
-          service: q.service || "",
-          sqft: q.sqft || "",
-          address: q.address || "",
-          finish: q.finish || "",
-          notes: q.notes || "",
-          status: "paid",
-          paidAt: Date.now(),
-          paymentMethod: "stripe",
-          stripeSessionId: session.id,
-          stripeConnectAccountId: q.stripeConnectAccountId || null,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        const invRef = await db.collection("invoices").add(newInvoiceData);
-        console.log(`Quote ${quoteId} paid; auto-created paid invoice ${invRef.id}`);
+        // Mirror as a paid invoice. If the quote was already converted to
+        // an invoice manually, mark THAT one paid instead of duplicating.
+        const orgIdForLookup = q.orgId || session.metadata?.orgId || null;
+        let invRefId = null;
+        if (orgIdForLookup) {
+          const existingSnap = await db.collection("invoices")
+            .where("orgId", "==", orgIdForLookup)
+            .where("quoteId", "==", quoteId)
+            .limit(1).get();
+          if (!existingSnap.empty) {
+            const existing = existingSnap.docs[0];
+            await existing.ref.update({
+              status: "paid",
+              paidAt: Date.now(),
+              paymentMethod: "stripe",
+              stripeSessionId: session.id,
+              stripeConnectAccountId: q.stripeConnectAccountId || null,
+              updatedAt: Date.now(),
+            });
+            invRefId = existing.id;
+            console.log(`Quote ${quoteId} paid; marked existing invoice ${invRefId} paid`);
+          }
+        }
+        if (!invRefId) {
+          const newInvoiceData = {
+            orgId: orgIdForLookup,
+            userId: q.userId || null,
+            customerId: q.customerId || null,
+            customerName: q.customerName || "",
+            quoteId,
+            items: q.items || [],
+            subtotal: q.subtotal || q.total || 0,
+            taxRate: q.taxRate || 0,
+            tax: q.tax || 0,
+            total: q.total || 0,
+            service: q.service || "",
+            sqft: q.sqft || "",
+            address: q.address || "",
+            finish: q.finish || "",
+            notes: q.notes || "",
+            status: "paid",
+            paidAt: Date.now(),
+            paymentMethod: "stripe",
+            stripeSessionId: session.id,
+            stripeConnectAccountId: q.stripeConnectAccountId || null,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+          const invRef = await db.collection("invoices").add(newInvoiceData);
+          invRefId = invRef.id;
+          console.log(`Quote ${quoteId} paid; auto-created paid invoice ${invRefId}`);
+        }
 
         if (q.userId) {
           await pushNotification(q.userId, {

@@ -355,48 +355,17 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     const custNameClean = (invData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
     const pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Invoice-${custNameClean}.pdf` };
 
-    // If the owner has Stripe Connect set up, make sure this invoice has a
-    // pay link on their connected account — create one on the fly if not.
-    // Then embed a big "Pay Now" button in the email so the customer can
-    // pay with one click.
-    let payLinkUrl = invData.paymentLinkUrl || null;
+    // Embed a "Pay Now" button only if the owner has Stripe Connect set up.
+    // The button links to our public pay-redirect route, which creates a
+    // fresh Checkout Session attached to the pre-existing Stripe Customer
+    // at click-time. Permanent link, customer always rolls up correctly in
+    // the owner's Stripe dashboard.
     const ownerStripe = user.integrations?.stripe;
     const connectedAccountId = ownerStripe?.accountId;
-    try {
-      if (connectedAccountId && (!payLinkUrl || invData.stripeConnectAccountId !== connectedAccountId)) {
-        const { getStripe } = require("../utils/stripe");
-        const stripe = getStripe();
-        const amountCents = Math.round((invData.total || 0) * 100);
-        if (amountCents >= 50) {
-          const stripeOpts = { stripeAccount: connectedAccountId };
-          const price = await stripe.prices.create({
-            currency: "usd",
-            unit_amount: amountCents,
-            product_data: {
-              name: `Invoice — ${invData.customerName || "Customer"}${invData.service ? ` (${invData.service})` : ""}`,
-            },
-          }, stripeOpts);
-          const paymentLink = await stripe.paymentLinks.create({
-            line_items: [{ price: price.id, quantity: 1 }],
-            metadata: { invoiceId: req.params.id, orgId: req.orgId },
-            after_completion: {
-              type: "hosted_confirmation",
-              hosted_confirmation: { custom_message: "Payment received. Thank you!" },
-            },
-          }, stripeOpts);
-          payLinkUrl = paymentLink.url;
-          await col().doc(req.params.id).update({
-            paymentLinkUrl: payLinkUrl,
-            stripePaymentLinkId: paymentLink.id,
-            stripeConnectAccountId: connectedAccountId,
-            updatedAt: Date.now(),
-          });
-        }
-      }
-    } catch (e) {
-      console.warn("[invoices] Could not auto-create Stripe pay link:", e.message);
-      // Fall through — still send the email, just without the button
-    }
+    const APP_URL = process.env.APP_URL || "https://goswft.com";
+    const payLinkUrl = connectedAccountId && (invData.total || 0) >= 0.5
+      ? `${APP_URL}/api/pay/invoice/${req.params.id}`
+      : null;
 
     const fromName = user.company || user.name || "SWFT";
     const subject = `Invoice from ${fromName}`;
