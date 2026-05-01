@@ -384,31 +384,10 @@ section{position:relative;z-index:1;}
 .pain-card p{font-size:14px;color:var(--gray);line-height:1.65;}
 .pain-bottom{text-align:center;font-size:18px;color:var(--gray);margin:36px 0 36px;}
 
-/* ── VALUE EQUATION ── */
-.veq{position:relative;max-width:840px;margin:0 auto 48px;padding:48px 32px 36px;background:linear-gradient(180deg,rgba(200,241,53,0.025) 0%,rgba(0,0,0,0) 70%),var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
-.veq-glow{position:absolute;inset:auto 50% -120px auto;transform:translateX(50%);width:520px;height:240px;background:radial-gradient(ellipse at center,rgba(200,241,53,0.18) 0%,rgba(200,241,53,0) 70%);filter:blur(32px);pointer-events:none;}
-.veq-formula{position:relative;display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:nowrap;}
-.veq-value{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,6vw,68px);letter-spacing:3px;color:var(--white);line-height:1;}
-.veq-eq{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,5vw,52px);color:var(--green);line-height:1;}
-.veq-fraction{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:0;}
-.veq-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
-.veq-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;font-size:13.5px;font-weight:600;letter-spacing:0.2px;border:1px solid;font-family:'DM Sans',sans-serif;white-space:nowrap;}
-.veq-pill.up{background:rgba(200,241,53,0.08);border-color:rgba(200,241,53,0.3);color:var(--green);}
-.veq-pill.down{background:rgba(245,166,35,0.08);border-color:rgba(245,166,35,0.32);color:var(--amber);}
-.veq-arrow{font-size:9px;line-height:1;display:inline-block;}
-.veq-op{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gray);letter-spacing:1px;}
-.veq-bar{height:1px;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.4) 50%,rgba(255,255,255,0) 100%);}
-.veq-attribution{position:relative;text-align:center;margin-top:28px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white);font-weight:600;}
-.veq-attribution span{display:block;text-transform:none;letter-spacing:0;color:var(--gray2);font-size:11.5px;font-weight:400;margin-top:4px;}
-
+/* ── PROBLEM CARDS ── */
 .veq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:36px;}
 .veq-card{position:relative;padding:24px 24px 22px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.veq-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;}
-.veq-card.up::before{background:var(--green);}
-.veq-card.down::before{background:var(--amber);}
-.veq-card-eyebrow{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;margin-bottom:12px;}
-.veq-card.up .veq-card-eyebrow{color:var(--green);}
-.veq-card.down .veq-card-eyebrow{color:var(--amber);}
+.veq-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);}
 .veq-card-dream{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,2.4vw,28px);letter-spacing:1px;line-height:1.15;color:var(--white);margin-bottom:14px;}
 .veq-card-today{font-size:14px;color:var(--gray);line-height:1.6;border-top:1px solid var(--border);padding-top:14px;}
 .veq-today-label{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);background:rgba(255,82,82,0.1);padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:1px;}
@@ -853,10 +832,6 @@ section{position:relative;z-index:1;}
   .pain-grid{grid-template-columns:1fr;}
   .why-swft-strip{grid-template-columns:1fr;gap:10px;}
   .pain{padding:60px 0 80px;}
-  .veq{padding:32px 18px 28px;border-radius:14px;}
-  .veq-formula{flex-direction:column;gap:12px;}
-  .veq-row{gap:6px;}
-  .veq-pill{font-size:12px;padding:6px 11px;}
   .veq-grid{grid-template-columns:1fr;gap:12px;}
   .veq-card{padding:20px 18px 18px;}
   .veq-card-dream{font-size:20px;}
@@ -1119,61 +1094,35 @@ function toggleSidebar(){
   </div>
 </section>
 
-<!-- ── PROBLEM (Value Equation) ── -->
+<!-- ── PROBLEM ── -->
 <section class="pain" id="problems">
   <div class="container">
     <div class="section-header reveal">
-      <span class="section-tag">The Value Equation</span>
-      <h2 class="section-title">MAKE YOUR BUSINESS<br/><span class="accent">WORTH MORE.</span></h2>
-      <p class="section-sub">Every business runs on the same equation. Most home service operators lose to it. SWFT flips it.</p>
-    </div>
-
-    <div class="veq reveal">
-      <div class="veq-glow" aria-hidden="true"></div>
-      <div class="veq-formula">
-        <div class="veq-value">VALUE</div>
-        <div class="veq-eq">=</div>
-        <div class="veq-fraction">
-          <div class="veq-row veq-num">
-            <span class="veq-pill up"><span class="veq-arrow">▲</span>Dream Outcome</span>
-            <span class="veq-op">×</span>
-            <span class="veq-pill up"><span class="veq-arrow">▲</span>Likelihood</span>
-          </div>
-          <div class="veq-bar"></div>
-          <div class="veq-row veq-den">
-            <span class="veq-pill down"><span class="veq-arrow">▼</span>Time Delay</span>
-            <span class="veq-op">×</span>
-            <span class="veq-pill down"><span class="veq-arrow">▼</span>Effort &amp; Sacrifice</span>
-          </div>
-        </div>
-      </div>
-      <div class="veq-attribution">Maximize the top. Minimize the bottom. <span>— the Value Equation, Alex Hormozi</span></div>
+      <span class="section-tag">The Problem</span>
+      <h2 class="section-title">WHAT YOU <span class="accent">REALLY WANT.</span></h2>
+      <p class="section-sub">And what's getting in the way today.</p>
     </div>
 
     <div class="veq-grid">
-      <div class="veq-card up reveal">
-        <div class="veq-card-eyebrow"><span class="veq-arrow">▲</span> Dream Outcome</div>
+      <div class="veq-card reveal">
         <div class="veq-card-dream">More booked jobs. More time back.</div>
         <div class="veq-card-today"><span class="veq-today-label">Today</span> Leads go cold while you're on a job site. You quote at 10pm because that's the only time you have.</div>
       </div>
-      <div class="veq-card up reveal">
-        <div class="veq-card-eyebrow"><span class="veq-arrow">▲</span> Perceived Likelihood</div>
+      <div class="veq-card reveal">
         <div class="veq-card-dream">A system that actually works for trades.</div>
         <div class="veq-card-today"><span class="veq-today-label">Today</span> Customer info lives in spreadsheets, sticky notes, your phone, and your head. Generic CRMs weren't built for the truck.</div>
       </div>
-      <div class="veq-card down reveal">
-        <div class="veq-card-eyebrow"><span class="veq-arrow">▼</span> Time Delay</div>
+      <div class="veq-card reveal">
         <div class="veq-card-dream">Quote in 30 seconds. Paid in 2 days.</div>
         <div class="veq-card-today"><span class="veq-today-label">Today</span> 20 minutes per quote. Invoices chased for weeks. Money slipping through cracks because nobody followed up.</div>
       </div>
-      <div class="veq-card down reveal">
-        <div class="veq-card-eyebrow"><span class="veq-arrow">▼</span> Effort &amp; Sacrifice</div>
+      <div class="veq-card reveal">
         <div class="veq-card-dream">One app. Run it from your truck.</div>
         <div class="veq-card-today"><span class="veq-today-label">Today</span> Five apps that don't talk to each other. Per-seat fees stacking up. A learning curve that takes weeks.</div>
       </div>
     </div>
 
-    <p class="pain-bottom reveal">SWFT pulls every lever in your favor. <strong style="color:var(--green)">More dream, less delay.</strong></p>
+    <p class="pain-bottom reveal">SWFT closes the gap. <strong style="color:var(--green)">More of what you want. Less of what you don't.</strong></p>
 
     <div class="why-swft-strip reveal" id="compare">
       <div class="why-swft-item"><span class="why-check">&#10003;</span><div><strong>Flat fee</strong><span>No per-seat charges. No usage surprises.</span></div></div>
