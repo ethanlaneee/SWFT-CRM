@@ -534,4 +534,111 @@ router.post("/users", async (req, res, next) => {
   }
 });
 
+// ── Default cost rates (editable via dashboard, persisted to Firestore) ──
+const DEFAULT_COST_SETTINGS = {
+  fixed: {
+    render: 0,            // Hobby plan = free
+    domain: 1.25,         // ~$15/yr / 12
+    firebase: 0,          // free tier estimate
+    twilioPhone: 1.15,    // monthly per phone number
+    elevenlabsBase: 0,    // pay-as-you-go
+    vapiBase: 0,          // pay-as-you-go
+  },
+  rates: {
+    anthropicPerMessage: 0.005,    // ~$5 per 1k AI messages (rough avg across Haiku+Sonnet)
+    twilioPerSms: 0.0079,          // outbound US SMS
+    sesPerThousandEmails: 0.10,    // SES outbound
+    googleMapsMonthly: 0,          // covered by $200 free credit unless heavy
+    stripePercent: 2.9,            // Stripe processing fee on subscriptions
+    stripeFixedPerCharge: 0.30,
+  },
+};
+
+router.get("/costs", async (req, res, next) => {
+  try {
+    // Load saved settings (or fall back to defaults)
+    const settingsDoc = await db.collection("config").doc("costs").get();
+    const saved = settingsDoc.exists ? settingsDoc.data() : {};
+    const settings = {
+      fixed: { ...DEFAULT_COST_SETTINGS.fixed, ...(saved.fixed || {}) },
+      rates: { ...DEFAULT_COST_SETTINGS.rates, ...(saved.rates || {}) },
+    };
+
+    // Aggregate current-month usage across all users
+    const mk = monthKey();
+    const usersSnap = await db.collection("users").get();
+    let totalAiMessages = 0;
+    let totalSmsSent = 0;
+    await Promise.all(usersSnap.docs.map(async (doc) => {
+      try {
+        const usageDoc = await db.collection("usage").doc(doc.id).collection("months").doc(mk).get();
+        if (usageDoc.exists) {
+          const u = usageDoc.data();
+          totalAiMessages += u.aiMessageCount || 0;
+          totalSmsSent += u.smsCount || 0;
+        }
+      } catch (_) {}
+    }));
+
+    // Broadcast emails this month (from messages collection)
+    let totalBroadcasts = 0;
+    try {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0);
+      const broadcastsSnap = await db.collection("messages")
+        .where("type", "==", "email")
+        .where("sentAt", ">=", startOfMonth.getTime())
+        .get();
+      totalBroadcasts = broadcastsSnap.docs.filter(d => d.data().broadcastId).length;
+    } catch (_) {}
+
+    // Stripe MRR + paying subscriptions count (mirrors /stats)
+    let stripeMRR = 0;
+    let payingSubscriptions = 0;
+    try {
+      const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+      let hasMore = true;
+      let startingAfter;
+      while (hasMore) {
+        const params = { status: "active", limit: 100, expand: ["data.discount"] };
+        if (startingAfter) params.starting_after = startingAfter;
+        const subs = await stripe.subscriptions.list(params);
+        for (const sub of subs.data) {
+          let subTotal = 0;
+          for (const item of sub.items.data) {
+            const amount = item.price.unit_amount || 0;
+            const interval = item.price.recurring?.interval;
+            if (interval === "year") subTotal += amount / 12;
+            else subTotal += amount;
+          }
+          if (sub.discount?.coupon) {
+            const coupon = sub.discount.coupon;
+            if (coupon.percent_off) subTotal *= (1 - coupon.percent_off / 100);
+            else if (coupon.amount_off) subTotal = Math.max(0, subTotal - coupon.amount_off);
+          }
+          stripeMRR += subTotal;
+          if (subTotal > 0) payingSubscriptions++;
+        }
+        hasMore = subs.has_more;
+        if (subs.data.length) startingAfter = subs.data[subs.data.length - 1].id;
+      }
+      stripeMRR = Math.round(stripeMRR) / 100;
+    } catch (_) {}
+
+    res.json({
+      settings,
+      usage: { totalAiMessages, totalSmsSent, totalBroadcasts, stripeMRR, payingSubscriptions },
+    });
+  } catch (err) { next(err); }
+});
+
+router.post("/costs", async (req, res, next) => {
+  try {
+    const { fixed, rates } = req.body || {};
+    if (!fixed || !rates) return res.status(400).json({ error: "Missing fixed or rates" });
+    await db.collection("config").doc("costs").set({ fixed, rates }, { merge: true });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

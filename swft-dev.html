@@ -318,6 +318,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div class="tab-nav" id="tabNav">
     <button class="tab-btn active" data-tab="platform" onclick="window._switchTab('platform')">PLATFORM</button>
     <button class="tab-btn" data-tab="outreach" onclick="window._switchTab('outreach')">OUTREACH</button>
+    <button class="tab-btn" data-tab="costs" onclick="window._switchTab('costs')">COSTS</button>
   </div>
 
   <!-- PLATFORM TAB -->
@@ -333,6 +334,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     <div class="page-loader" id="outreachLoader">
       <div class="spinner"></div>
       <span>Loading outreach data...</span>
+    </div>
+  </div>
+
+  <!-- COSTS TAB -->
+  <div class="page-body" id="costsBody" style="display:none;">
+    <div class="page-loader" id="costsLoader">
+      <div class="spinner"></div>
+      <span>Loading cost breakdown...</span>
     </div>
   </div>
 </div>
@@ -898,7 +907,9 @@ window._switchTab = function(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.getElementById('pageBody').style.display = tab === 'platform' ? '' : 'none';
   document.getElementById('outreachBody').style.display = tab === 'outreach' ? '' : 'none';
+  document.getElementById('costsBody').style.display = tab === 'costs' ? '' : 'none';
   if (tab === 'outreach' && !outreachLoaded) loadOutreachData();
+  if (tab === 'costs') loadCostsData();
   // Auto-refresh outreach data every 30s while tab is active
   if (tab === 'outreach') {
     if (!outreachPollTimer) outreachPollTimer = setInterval(() => { if (activeTab === 'outreach') loadOutreachData(); }, 30000);
@@ -906,6 +917,170 @@ window._switchTab = function(tab) {
     if (outreachPollTimer) { clearInterval(outreachPollTimer); outreachPollTimer = null; }
   }
 };
+
+/* ── COSTS TAB ── */
+let costsData = null;
+async function loadCostsData() {
+  const loader = document.getElementById('costsLoader');
+  if (loader) loader.style.display = '';
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const user = getAuth().currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+    const res = await fetch('/api/dev/costs', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) throw new Error('Failed to load costs');
+    costsData = await res.json();
+    renderCosts();
+  } catch (e) {
+    document.getElementById('costsBody').innerHTML = '<div style="color:var(--red);padding:24px;font-size:13px;">Could not load cost data. ' + (e.message || '') + '</div>';
+  }
+}
+
+function fmt$(n) {
+  return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderCosts() {
+  const { settings, usage } = costsData;
+  const f = settings.fixed, r = settings.rates;
+
+  // Compute variable costs from current usage
+  const aiCost      = usage.totalAiMessages * r.anthropicPerMessage;
+  const smsCost     = usage.totalSmsSent * r.twilioPerSms;
+  const emailCost   = (usage.totalBroadcasts / 1000) * r.sesPerThousandEmails;
+  const stripeCost  = (usage.stripeMRR * r.stripePercent / 100) + (usage.payingSubscriptions * r.stripeFixedPerCharge);
+  const mapsCost    = Number(r.googleMapsMonthly) || 0;
+
+  // Fixed
+  const fixedTotal = (Number(f.render) || 0) + (Number(f.domain) || 0) + (Number(f.firebase) || 0)
+                   + (Number(f.twilioPhone) || 0) + (Number(f.elevenlabsBase) || 0) + (Number(f.vapiBase) || 0);
+
+  const variableTotal = aiCost + smsCost + emailCost + stripeCost + mapsCost;
+  const totalCost = fixedTotal + variableTotal;
+  const profit = usage.stripeMRR - totalCost;
+  const margin = usage.stripeMRR > 0 ? (profit / usage.stripeMRR) * 100 : 0;
+
+  const rateInput = (path, val, step = '0.0001') =>
+    `<input class="cost-input" type="number" step="${step}" data-path="${path}" value="${Number(val).toString()}"/>`;
+
+  const html = `
+    <style>
+      .costs-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
+      .cost-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
+      .cost-panel h3{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white);margin-bottom:14px;}
+      .cost-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--gray);}
+      .cost-row:last-child{border-bottom:none;}
+      .cost-row label{flex:1;}
+      .cost-input{width:100px;background:var(--bg,#0a0a0a);border:1px solid var(--border2);border-radius:7px;padding:6px 9px;color:var(--white);font-family:'JetBrains Mono',monospace;font-size:12px;text-align:right;}
+      .cost-input:focus{outline:none;border-color:var(--green);}
+      .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+      .sum-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+      .sum-card .lbl{font-size:11px;letter-spacing:1.5px;color:var(--gray);text-transform:uppercase;margin-bottom:6px;}
+      .sum-card .val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;}
+      .sum-card.green .val{color:var(--green);}
+      .sum-card.red .val{color:var(--red);}
+      .sum-card.amber .val{color:var(--amber);}
+      .sum-card.white .val{color:var(--white);}
+      .breakdown-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+      .breakdown-table th{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);padding:14px 18px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;}
+      .breakdown-table td{padding:11px 18px;font-size:13px;color:var(--gray);border-bottom:1px solid var(--border);}
+      .breakdown-table td:first-child{color:var(--white);font-weight:500;}
+      .breakdown-table tr:last-child td{border-bottom:none;}
+      .breakdown-table .num{font-family:'JetBrains Mono',monospace;text-align:right;}
+      .saving-pill{display:inline-block;background:rgba(200,241,53,0.1);color:var(--green);font-size:10px;padding:2px 8px;border-radius:10px;letter-spacing:1px;margin-left:8px;opacity:0;transition:opacity 0.3s;}
+      .saving-pill.show{opacity:1;}
+      .section-help{font-size:11px;color:var(--gray2);margin-top:-8px;margin-bottom:14px;line-height:1.5;}
+    </style>
+
+    <div class="section-label" style="margin-bottom:8px;">Profit Snapshot <span id="cost-saving" class="saving-pill">SAVED</span></div>
+    <div class="section-help">Calculated from current month usage and Stripe MRR. Edit rates below to refine.</div>
+    <div class="summary-grid">
+      <div class="sum-card green"><div class="lbl">MRR</div><div class="val">${fmt$(usage.stripeMRR)}</div></div>
+      <div class="sum-card red"><div class="lbl">Total Costs</div><div class="val">${fmt$(totalCost)}</div></div>
+      <div class="sum-card ${profit >= 0 ? 'green' : 'red'}"><div class="lbl">Profit</div><div class="val">${fmt$(profit)}</div></div>
+      <div class="sum-card ${margin >= 0 ? 'amber' : 'red'}"><div class="lbl">Margin</div><div class="val">${margin.toFixed(1)}%</div></div>
+    </div>
+
+    <div class="costs-grid">
+      <div class="cost-panel">
+        <h3>Fixed Monthly Costs</h3>
+        <div class="cost-row"><label>Render (Hobby plan)</label>${rateInput('fixed.render', f.render, '0.01')}</div>
+        <div class="cost-row"><label>Domain (annualized)</label>${rateInput('fixed.domain', f.domain, '0.01')}</div>
+        <div class="cost-row"><label>Firebase / Firestore</label>${rateInput('fixed.firebase', f.firebase, '0.01')}</div>
+        <div class="cost-row"><label>Twilio phone number</label>${rateInput('fixed.twilioPhone', f.twilioPhone, '0.01')}</div>
+        <div class="cost-row"><label>ElevenLabs base</label>${rateInput('fixed.elevenlabsBase', f.elevenlabsBase, '0.01')}</div>
+        <div class="cost-row"><label>Vapi base</label>${rateInput('fixed.vapiBase', f.vapiBase, '0.01')}</div>
+      </div>
+      <div class="cost-panel">
+        <h3>Variable Rates</h3>
+        <div class="cost-row"><label>Anthropic / AI message</label>${rateInput('rates.anthropicPerMessage', r.anthropicPerMessage, '0.0001')}</div>
+        <div class="cost-row"><label>Twilio / SMS</label>${rateInput('rates.twilioPerSms', r.twilioPerSms, '0.0001')}</div>
+        <div class="cost-row"><label>SES / 1,000 emails</label>${rateInput('rates.sesPerThousandEmails', r.sesPerThousandEmails, '0.01')}</div>
+        <div class="cost-row"><label>Google Maps / month (est)</label>${rateInput('rates.googleMapsMonthly', r.googleMapsMonthly, '0.01')}</div>
+        <div class="cost-row"><label>Stripe % of MRR</label>${rateInput('rates.stripePercent', r.stripePercent, '0.01')}</div>
+        <div class="cost-row"><label>Stripe $ per charge</label>${rateInput('rates.stripeFixedPerCharge', r.stripeFixedPerCharge, '0.01')}</div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:14px;">This Month Breakdown</div>
+    <table class="breakdown-table">
+      <thead>
+        <tr><th>Line Item</th><th class="num">Usage</th><th class="num">Rate</th><th class="num">Cost</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Anthropic (Claude)</td><td class="num">${usage.totalAiMessages.toLocaleString()} msgs</td><td class="num">${fmt$(r.anthropicPerMessage)} ea</td><td class="num">${fmt$(aiCost)}</td></tr>
+        <tr><td>Twilio SMS</td><td class="num">${usage.totalSmsSent.toLocaleString()} msgs</td><td class="num">${fmt$(r.twilioPerSms)} ea</td><td class="num">${fmt$(smsCost)}</td></tr>
+        <tr><td>AWS SES (Broadcasts)</td><td class="num">${usage.totalBroadcasts.toLocaleString()} emails</td><td class="num">${fmt$(r.sesPerThousandEmails)} / 1k</td><td class="num">${fmt$(emailCost)}</td></tr>
+        <tr><td>Stripe fees</td><td class="num">${usage.payingSubscriptions} subs</td><td class="num">${r.stripePercent}% + ${fmt$(r.stripeFixedPerCharge)}</td><td class="num">${fmt$(stripeCost)}</td></tr>
+        <tr><td>Google Maps</td><td class="num">—</td><td class="num">${fmt$(mapsCost)} flat</td><td class="num">${fmt$(mapsCost)}</td></tr>
+        <tr><td>Fixed costs (subtotal)</td><td class="num">—</td><td class="num">—</td><td class="num">${fmt$(fixedTotal)}</td></tr>
+        <tr style="font-weight:600;background:var(--surface2);"><td style="color:var(--white);">Total Operating Cost</td><td></td><td></td><td class="num" style="color:var(--white);">${fmt$(totalCost)}</td></tr>
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById('costsBody').innerHTML = html;
+
+  // Wire up rate input auto-save
+  document.querySelectorAll('.cost-input').forEach(inp => {
+    inp.addEventListener('change', saveCostSettings);
+  });
+}
+
+let _costSaveTimer;
+async function saveCostSettings() {
+  const fixed = {}, rates = {};
+  document.querySelectorAll('.cost-input').forEach(inp => {
+    const [bucket, key] = inp.dataset.path.split('.');
+    const val = parseFloat(inp.value) || 0;
+    if (bucket === 'fixed') fixed[key] = val;
+    else if (bucket === 'rates') rates[key] = val;
+  });
+  try {
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js");
+    const user = getAuth().currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+    await fetch('/api/dev/costs', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fixed, rates }),
+    });
+    // Re-fetch to recompute totals with new rates
+    costsData.settings = { fixed, rates };
+    renderCosts();
+    // Show "saved" pill briefly
+    const pill = document.getElementById('cost-saving');
+    if (pill) {
+      pill.classList.add('show');
+      clearTimeout(_costSaveTimer);
+      _costSaveTimer = setTimeout(() => pill.classList.remove('show'), 1200);
+    }
+  } catch (e) {
+    console.error('Save cost settings failed:', e);
+  }
+}
 
 /* ── OUTREACH STATE ── */
 let outreachData = { stats: { leads: {}, emails: {} }, leads: [], drafts: [] };
