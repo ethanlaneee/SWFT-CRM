@@ -1567,6 +1567,9 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     }
   }
 
+  var _photoList = []; // flat, in render order (newest day first, newest within day)
+  var _photoIndex = 0;
+
   async function loadJobPhotos(jobId) {
     if (!jobId) return;
     var container = document.getElementById('photo-days');
@@ -1574,6 +1577,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!container) return;
     container.innerHTML = '<div style="font-size:12px;color:var(--gray);">Loading...</div>';
     if (counter) counter.textContent = '';
+    _photoList = [];
     try {
       var photos = await API.photos.list(jobId);
       if (!photos.length) {
@@ -1603,10 +1607,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
             '<div style="font-size:10.5px;color:var(--gray2);">' + dayPhotos.length + ' photo' + (dayPhotos.length === 1 ? '' : 's') + '</div>' +
           '</div>';
         var grid = '<div class="photo-grid">' + dayPhotos.map(function(p){
+          // Stash a flat index for the lightbox
+          var idx = _photoList.length;
+          _photoList.push({ id: p.id, url: p.url, caption: p.caption || '', dayKey: key });
           var safeUrl = _photoEscape(p.url);
           var capHtml = p.caption ? '<div class="photo-label" title="' + _photoEscape(p.caption) + '">' + _photoEscape(p.caption) + '</div>' : '';
           return '<div class="photo-tile">' +
-            '<img src="' + safeUrl + '" style="width:100%;height:100%;object-fit:cover;" onclick="window.open(\'' + safeUrl + '\',\'_blank\')" title="View full size"/>' +
+            '<img src="' + safeUrl + '" style="width:100%;height:100%;object-fit:cover;" onclick="openPhotoLightbox(' + idx + ')" title="View full size"/>' +
             capHtml +
             '<div onclick="deletePhoto(\'' + p.id + '\',this.parentElement.parentElement)" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.65);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:13px;font-weight:700;">×</div>' +
           '</div>';
@@ -1617,6 +1624,40 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     } catch(e) {
       container.innerHTML = '<div style="font-size:12px;color:var(--gray);">Could not load photos</div>';
     }
+  }
+
+  function openPhotoLightbox(idx) {
+    if (!_photoList.length) return;
+    _photoIndex = Math.max(0, Math.min(idx|0, _photoList.length - 1));
+    _renderPhotoLightbox();
+    document.getElementById('photo-lightbox').style.display = 'flex';
+    document.addEventListener('keydown', _photoLightboxKey);
+  }
+  function closePhotoLightbox() {
+    document.getElementById('photo-lightbox').style.display = 'none';
+    document.removeEventListener('keydown', _photoLightboxKey);
+  }
+  function movePhotoLightbox(delta) {
+    if (!_photoList.length) return;
+    _photoIndex = (_photoIndex + delta + _photoList.length) % _photoList.length;
+    _renderPhotoLightbox();
+  }
+  function _renderPhotoLightbox() {
+    var p = _photoList[_photoIndex]; if (!p) return;
+    document.getElementById('photo-lightbox-img').src = p.url;
+    var dayNum = _photoDayNumber(p.dayKey);
+    var meta = _photoEscape(_photoFmtDay(p.dayKey)) + (dayNum ? ' · Day ' + dayNum : '') +
+               ' · ' + (_photoIndex + 1) + ' / ' + _photoList.length;
+    if (p.caption) meta += '<div style="margin-top:4px;color:#cfcfcf;">' + _photoEscape(p.caption) + '</div>';
+    document.getElementById('photo-lightbox-meta').innerHTML = meta;
+    var multi = _photoList.length > 1;
+    document.getElementById('photo-lightbox-prev').style.display = multi ? 'flex' : 'none';
+    document.getElementById('photo-lightbox-next').style.display = multi ? 'flex' : 'none';
+  }
+  function _photoLightboxKey(e) {
+    if (e.key === 'Escape') closePhotoLightbox();
+    else if (e.key === 'ArrowLeft')  movePhotoLightbox(-1);
+    else if (e.key === 'ArrowRight') movePhotoLightbox(1);
   }
 
   async function deletePhoto(photoId, el) {
@@ -2116,6 +2157,17 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- PHOTO LIGHTBOX -->
+<div id="photo-lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closePhotoLightbox()">
+  <div onclick="closePhotoLightbox()" style="position:absolute;top:16px;right:18px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:20px;font-weight:700;line-height:1;z-index:2;">×</div>
+  <div id="photo-lightbox-prev" onclick="movePhotoLightbox(-1)" style="position:absolute;left:18px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);display:none;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:24px;line-height:1;user-select:none;z-index:2;">‹</div>
+  <div id="photo-lightbox-next" onclick="movePhotoLightbox(1)"  style="position:absolute;right:18px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);display:none;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:24px;line-height:1;user-select:none;z-index:2;">›</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;max-width:92vw;max-height:92vh;">
+    <img id="photo-lightbox-img" src="" alt="" style="max-width:92vw;max-height:78vh;object-fit:contain;border-radius:6px;background:#000;"/>
+    <div id="photo-lightbox-meta" style="color:#fff;font-size:12.5px;text-align:center;max-width:88vw;line-height:1.4;"></div>
+  </div>
+</div>
 
 <!-- ── FIREBASE AUTH GUARD ── -->
 
