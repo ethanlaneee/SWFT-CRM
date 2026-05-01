@@ -14,7 +14,7 @@ Running an electrical contracting business means juggling residential service ca
 
 SWFT was built to solve this. It's a single platform where you manage every customer, every job site, every quote, and every invoice. When a homeowner calls about flickering lights while you're elbow-deep in a rewiring project, SWFT's AI receptionist captures the lead even if you can't answer. The AI follow-up agent makes sure no project estimate goes cold and no invoice goes unpaid.
 
-Whether you're a solo electrician or running a team across residential and commercial sites, SWFT scales with your operation — and there are no per-user fees eating into your margins.
+Whether you're a solo electrician or running a team across residential and commercial sites, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew up to the user limit.
 
 ## Features Built for Electricians
 
@@ -32,7 +32,7 @@ Whether you're a solo electrician or running a team across residential and comme
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -58,7 +58,7 @@ SWFT's CRM tracks every job per property with full history, service notes, and d
 
 **How much does electrical contractor CRM software cost?**
 
-Electrical contractor CRM software typically costs $50-$500+/month. Competitors charge per user which adds up fast for growing teams. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+Electrical contractor CRM software typically costs $50-$500+/month. Competitors charge per user which adds up fast for growing teams. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 ## Ready?
 

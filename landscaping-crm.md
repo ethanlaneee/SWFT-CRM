@@ -14,7 +14,7 @@ Running a landscaping business means juggling weekly mowing clients, seasonal cr
 
 SWFT was built to solve this. It's a single platform where you manage every property, every recurring schedule, every quote, and every invoice. When a homeowner calls about a new lawn care contract while your crew is out mowing, SWFT's AI receptionist captures the lead even if you can't answer. The AI follow-up agent makes sure no hardscape estimate goes cold and no seasonal reminder gets forgotten.
 
-Whether you're a solo landscaper or running crews across town, SWFT scales with your operation — and there are no per-user fees eating into your margins when you hire seasonal help in spring.
+Whether you're a solo landscaper or running crews across town, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew, even seasonal hires.
 
 ## Features Built for Landscaping
 
@@ -32,7 +32,7 @@ Whether you're a solo landscaper or running crews across town, SWFT scales with 
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -54,11 +54,11 @@ Yes. SWFT makes it easy to manage weekly, biweekly, and custom recurring mowing 
 
 **How does SWFT help with seasonal crew management?**
 
-SWFT's team management features let you scale your crew up in spring and down in winter without losing track of assignments. Assign crew members to specific routes and properties, manage job notes per property, and use broadcast messaging to coordinate seasonal transitions. There are no per-user fees, so adding seasonal crew members doesn't increase your software costs.
+SWFT's team management features let you scale your crew up in spring and down in winter without losing track of assignments. Assign crew members to specific routes and properties, manage job notes per property, and use broadcast messaging to coordinate seasonal transitions. Generous user limits (up to 25 on SWFT Pro) mean adding seasonal crew rarely costs more — and overages are just $10 per user per month.
 
 **How much does landscaping CRM software cost?**
 
-Landscaping CRM software typically costs $50-$500+/month. Competitors charge per user which adds up fast when you hire seasonal crews. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+Landscaping CRM software typically costs $50-$500+/month. Competitors charge per user which adds up fast when you hire seasonal crews. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 ## Ready?
 

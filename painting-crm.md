@@ -14,7 +14,7 @@ Running a painting business means juggling estimate requests, crew scheduling ac
 
 SWFT was built to solve this. It's a single platform where you manage every customer, every estimate, every job, and every invoice. When a homeowner calls for an exterior repaint quote while your crew is on a ladder, SWFT's AI receptionist captures the lead and books the estimate. The AI follow-up agent makes sure no open quote goes cold and no invoice goes unpaid.
 
-Whether you're a solo painter or running multiple crews across residential and commercial properties, SWFT scales with your operation — and there are no per-user fees eating into your margins.
+Whether you're a solo painter or running multiple crews across residential and commercial properties, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew up to the user limit.
 
 ## Features Built for Painters
 
@@ -32,7 +32,7 @@ Whether you're a solo painter or running multiple crews across residential and c
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -50,7 +50,7 @@ SWFT is an AI-powered CRM built specifically for painting companies. It includes
 
 **How much does painting CRM software cost?**
 
-Painting CRM software ranges from $50-$500+/month. Many platforms charge per user which adds up fast when you have multiple crews. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+Painting CRM software ranges from $50-$500+/month. Many platforms charge per user which adds up fast when you have multiple crews. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 **Can SWFT handle multi-room and multi-property painting estimates?**
 

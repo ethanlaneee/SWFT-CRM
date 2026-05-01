@@ -70,8 +70,8 @@ SWFT is designed for contractors, plumbers, HVAC technicians, electricians, roof
 - Invite team members by email
 - Role-based access
 - Crew scheduling and assignment
-- No per-user fees (included in plan price)
-- Up to 10 users on Pro, unlimited on Business
+- Generous user limits per plan (1 on Core, up to 10 on SWFT+, up to 25 on Pro)
+- Overages: $23/user/mo on SWFT+, $10/user/mo on Pro
 
 ### Integrations
 - Gmail (email sync)
@@ -152,7 +152,7 @@ SWFT serves these specific home service industries:
 ## Competitive Advantages
 
 ### vs Jobber ($29-$699/mo depending on plan & team size)
-- SWFT has no per-user fees
+- SWFT plans include generous user limits
 - AI automation included in every SWFT plan (Jobber's AI Receptionist is a $99/mo add-on)
 - Two-way SMS included on all SWFT plans (Jobber requires Grow plan at $199+/mo)
 - SWFT Pro with team management = $179/mo flat
@@ -160,7 +160,7 @@ SWFT serves these specific home service industries:
 ### vs Housecall Pro ($59-$329/mo + ~$35/extra user)
 - Key features like QuickBooks integration locked behind higher tiers at Housecall Pro
 - SWFT includes AI follow-ups, quote generation, and SMS from $89/mo
-- No per-user pricing
+- Team-friendly user limits
 
 ### vs ServiceTitan ($245-$500+/technician/mo + $5K-$50K+ implementation)
 - No demo required, instant signup

@@ -14,7 +14,7 @@ Running a cleaning business means juggling recurring schedules, client preferenc
 
 SWFT was built to solve this. It's a single platform where you manage every client, every recurring schedule, every booking, and every invoice. When a potential customer calls for a quote while your team is mid-clean, SWFT's AI receptionist captures the lead and books the consultation. The AI follow-up agent converts one-time deep-clean clients into recurring revenue.
 
-Whether you're a solo cleaner or managing a team across residential and commercial properties, SWFT scales with your operation — and there are no per-user fees eating into your margins.
+Whether you're a solo cleaner or managing a team across residential and commercial properties, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew up to the user limit.
 
 ## Features Built for Cleaning Businesses
 
@@ -32,7 +32,7 @@ Whether you're a solo cleaner or managing a team across residential and commerci
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -50,7 +50,7 @@ SWFT is an AI-powered CRM built specifically for cleaning businesses. It include
 
 **How much does cleaning business CRM software cost?**
 
-Cleaning business CRM software ranges from $50-$500+/month. Many platforms charge per user which adds up fast as you hire more cleaners. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+Cleaning business CRM software ranges from $50-$500+/month. Many platforms charge per user which adds up fast as you hire more cleaners. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 **Can SWFT manage recurring cleaning schedules?**
 

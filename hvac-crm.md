@@ -14,7 +14,7 @@ Running an HVAC business means juggling service calls, maintenance agreements, e
 
 SWFT was built to solve this. It's a single platform where you manage every customer, every job, every quote, and every invoice. When a homeowner calls about a broken AC unit on the hottest day of the year, SWFT's AI receptionist captures the lead even if you're on another job. The AI follow-up agent makes sure no service call quote goes cold and no invoice goes unpaid.
 
-Whether you're a solo HVAC tech or running a crew of 15, SWFT scales with your operation — and there are no per-user fees eating into your margins.
+Whether you're a solo HVAC tech or running a crew of 15, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew up to the user limit.
 
 ## Features Built for HVAC
 
@@ -32,7 +32,7 @@ Whether you're a solo HVAC tech or running a crew of 15, SWFT scales with your o
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -50,7 +50,7 @@ SWFT is an AI-powered CRM built specifically for HVAC companies. It includes ser
 
 **How much does HVAC CRM software cost?**
 
-HVAC CRM software ranges from $50-$500+/month. Competitors like Jobber charge per user which adds up fast for crews. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+HVAC CRM software ranges from $50-$500+/month. Competitors like Jobber charge per user which adds up fast for crews. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 **Can SWFT handle seasonal HVAC scheduling?**
 

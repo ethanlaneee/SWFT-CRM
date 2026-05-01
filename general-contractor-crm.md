@@ -14,7 +14,7 @@ Running a general contracting business means juggling multiple projects, coordin
 
 SWFT was built to solve this. It's a single platform where you manage every project, every subcontractor, every quote, and every invoice. When a potential client calls about a kitchen remodel while you're on a job site, SWFT's AI receptionist captures the lead and books the consultation. The AI follow-up agent makes sure no open bid goes cold and no invoice goes unpaid.
 
-Whether you're a solo GC or managing a team across multiple active projects, SWFT scales with your operation — and there are no per-user fees eating into your margins.
+Whether you're a solo GC or managing a team across multiple active projects, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew up to the user limit.
 
 ## Features Built for General Contractors
 
@@ -32,7 +32,7 @@ Whether you're a solo GC or managing a team across multiple active projects, SWF
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -50,7 +50,7 @@ SWFT is an AI-powered CRM built specifically for general contractors. It include
 
 **How much does general contractor CRM software cost?**
 
-General contractor CRM software ranges from $50-$500+/month. Many platforms charge per user which adds up fast when you have project managers, estimators, and field staff. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+General contractor CRM software ranges from $50-$500+/month. Many platforms charge per user which adds up fast when you have project managers, estimators, and field staff. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 **Can SWFT handle multiple construction projects at once?**
 

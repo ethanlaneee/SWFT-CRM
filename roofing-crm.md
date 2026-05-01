@@ -14,7 +14,7 @@ Running a roofing business means managing storm damage leads, scheduling inspect
 
 SWFT was built to solve this. It's a single platform where you manage every lead, every inspection, every quote, and every invoice. When a hailstorm hits and your phone explodes with calls, SWFT's AI receptionist captures every lead even if your crews are already on rooftops. The AI follow-up agent makes sure no inspection estimate goes cold and no insurance-coordinated job slips through the cracks.
 
-Whether you're a two-man crew or running 10 roofing teams across a metro area, SWFT scales with your operation — and there are no per-user fees eating into your margins.
+Whether you're a two-man crew or running 10 roofing teams across a metro area, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew up to the user limit.
 
 ## Features Built for Roofing
 
@@ -32,7 +32,7 @@ Whether you're a two-man crew or running 10 roofing teams across a metro area, S
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -58,7 +58,7 @@ Yes. SWFT's job management lets you break roofing projects into phases like insp
 
 **How much does roofing CRM software cost?**
 
-Roofing CRM software ranges from $50-$500+/month. Competitors like JobNimbus charge per user which adds up fast when you have sales reps, project managers, and crews. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+Roofing CRM software ranges from $50-$500+/month. Competitors like JobNimbus charge per user which adds up fast when you have sales reps, project managers, and crews. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 ## Ready?
 

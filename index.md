@@ -25,7 +25,7 @@ SWFT replaces your scattered tools with one AI-powered platform:
 - **SMS & Email** — Two-way SMS and email messaging built in. No separate app needed
 - **AI Agents** — AI receptionist answers missed calls 24/7. AI follow-up agent chases invoices and nurtures leads automatically
 - **Automations** — Set up triggers for reminders, follow-ups, review requests, and lead nurturing
-- **Team Management** — Invite your crew, assign roles, manage schedules. No per-user fees
+- **Team Management** — Invite your crew, assign roles, manage schedules. Generous user limits per plan (1, 10, or 25)
 
 ---
 
@@ -62,7 +62,7 @@ All plans include a 14-day free trial. Add-on packs: $15 for 200 SMS or $10 for 
 SWFT is an AI-powered CRM built specifically for home service professionals. Plans start at $89/month with a 14-day free trial.
 
 **How much does home service CRM software cost?**
-SWFT starts at $89/month with no per-user fees. Starter $89/mo, Pro $179/mo, Business $349/mo. Annual billing saves 20%.
+SWFT starts at $89/month with team-friendly user limits. Starter $89/mo, Pro $179/mo, Business $349/mo. Annual billing saves 20%.
 
 **Does SWFT replace invoicing and scheduling apps?**
 Yes. SWFT combines CRM, invoicing, scheduling, SMS, email, and AI in one platform starting at $89/month.

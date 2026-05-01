@@ -14,7 +14,7 @@ Running a plumbing business means juggling emergency calls, drain cleaning appoi
 
 SWFT was built to solve this. It's a single platform where you manage every customer, every job, every quote, and every invoice. When a homeowner calls about a burst pipe at 10 PM, SWFT's AI receptionist captures the lead even if you can't answer. The AI follow-up agent makes sure no open estimate goes cold and no invoice goes unpaid — whether it's a $200 drain cleaning or a $5,000 repipe.
 
-Whether you're a solo plumber or running a crew of 15, SWFT scales with your operation — and there are no per-user fees eating into your margins.
+Whether you're a solo plumber or running a crew of 15, SWFT scales with your operation — and per-seat charges won't pile up like with competitors — your plan covers your whole crew up to the user limit.
 
 ## Features Built for Plumbing
 
@@ -32,7 +32,7 @@ Whether you're a solo plumber or running a crew of 15, SWFT scales with your ope
 
 ## Pricing
 
-Simple, flat pricing. No per-user fees. All plans include a 14-day free trial. Save 20% with annual billing.
+Simple, flat pricing. Team-friendly user limits per plan. All plans include a 14-day free trial. Save 20% with annual billing.
 
 | Plan | Price | Includes |
 |------|-------|----------|
@@ -50,7 +50,7 @@ SWFT is an AI-powered CRM built specifically for plumbing businesses. It include
 
 **How much does plumbing CRM software cost?**
 
-Plumbing CRM software ranges from $50-$500+/month. Competitors like Jobber charge per user which adds up fast when you have multiple plumbers on the road. SWFT offers flat pricing with no per-user fees: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
+Plumbing CRM software ranges from $50-$500+/month. Competitors like Jobber charge per user which adds up fast when you have multiple plumbers on the road. SWFT offers team-friendly plan pricing: Starter at $89/mo, Pro at $179/mo, and Business at $349/mo. All plans include CRM, quotes, invoicing, scheduling, SMS, and AI.
 
 **Can SWFT manage emergency plumbing calls?**
 
