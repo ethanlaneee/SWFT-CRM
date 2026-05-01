@@ -26,7 +26,7 @@ const col = () => db.collection("serviceRequests");
 // ── Multer config for public photo uploads ──
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
   fileFilter: (req, file, cb) => {
     const ok = file.mimetype.startsWith("image/");
     cb(ok ? null : new Error("Only images are allowed"), ok);

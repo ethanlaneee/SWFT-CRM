@@ -1673,10 +1673,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!_currentJobId || !files.length) return;
     var captionEl = document.getElementById('photo-caption');
     var caption = captionEl ? captionEl.value.trim() : '';
+    var MAX = 100 * 1024 * 1024; // keep in sync with server cap
     showToast('Preparing ' + files.length + ' photo(s)...');
     try {
-      var prepared = [];
-      for (var i = 0; i < files.length; i++) prepared.push(await _photoDownsize(files[i]));
+      var prepared = [], skipped = [];
+      for (var i = 0; i < files.length; i++) {
+        var f = await _photoDownsize(files[i]);
+        if (f.size > MAX) {
+          skipped.push((f.name || 'file') + ' (' + (f.size / 1024 / 1024).toFixed(1) + ' MB)');
+        } else {
+          prepared.push(f);
+        }
+      }
+      if (skipped.length) showToast('Too large, skipped: ' + skipped.join(', '));
+      if (!prepared.length) return;
       showToast('Uploading ' + prepared.length + ' photo(s)...');
       var form = new FormData();
       for (var k = 0; k < prepared.length; k++) form.append('photos', prepared[k]);

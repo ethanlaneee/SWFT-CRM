@@ -5,7 +5,7 @@ const path = require("path");
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB max
   fileFilter: (req, file, cb) => {
     const ok = file.mimetype.startsWith("image/") ||
                file.mimetype === "video/mp4"       ||
@@ -15,7 +15,18 @@ const upload = multer({
 });
 
 // POST /api/photos/job/:jobId — upload one or more photos to a job
-router.post("/job/:jobId", upload.array("photos", 20), async (req, res, next) => {
+router.post("/job/:jobId", (req, res, next) => {
+  upload.array("photos", 20)(req, res, (err) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        const fname = err.field || (err.file && err.file.originalname) || "a file";
+        return res.status(413).json({ error: `${fname} is larger than the 100 MB upload limit. Try a shorter video or smaller photo.` });
+      }
+      return res.status(400).json({ error: err.message || "Upload failed" });
+    }
+    next();
+  });
+}, async (req, res, next) => {
   try {
     const jobDoc = await db.collection("jobs").doc(req.params.jobId).get();
     if (!jobDoc.exists || jobDoc.data().orgId !== req.orgId) {
