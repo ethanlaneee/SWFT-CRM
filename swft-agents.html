@@ -54,6 +54,25 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 .section-label{font-size:9.5px;letter-spacing:2.5px;color:var(--gray2);text-transform:uppercase;font-weight:600;}
 
 .agents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+
+/* CEO hero card — visually distinct from the specialist cards */
+.ceo-card{position:relative;background:linear-gradient(180deg,rgba(200,241,53,0.05) 0%,rgba(0,0,0,0) 70%),var(--surface);border:1px solid rgba(200,241,53,0.25);border-radius:16px;padding:26px 28px;display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;overflow:hidden;}
+.ceo-card::before{content:"";position:absolute;inset:auto -60px -120px auto;width:280px;height:240px;background:radial-gradient(ellipse at center,rgba(200,241,53,0.16) 0%,rgba(200,241,53,0) 70%);filter:blur(28px);pointer-events:none;}
+.ceo-icon{width:56px;height:56px;border-radius:14px;background:rgba(200,241,53,0.12);color:var(--green);display:flex;align-items:center;justify-content:center;border:1px solid rgba(200,241,53,0.3);position:relative;z-index:1;}
+.ceo-icon svg{width:26px;height:26px;}
+.ceo-meta{position:relative;z-index:1;}
+.ceo-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--white);}
+.ceo-status{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:1.5px;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-left:10px;vertical-align:3px;}
+.ceo-desc{font-size:13px;color:var(--gray);line-height:1.6;margin-top:6px;max-width:780px;}
+.ceo-controls{position:relative;z-index:1;display:flex;align-items:center;gap:14px;}
+.ceo-run-btn{display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--green);border:1px solid rgba(200,241,53,0.4);font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.ceo-run-btn:hover{background:rgba(200,241,53,0.06);}
+.ceo-run-btn:disabled{opacity:0.6;cursor:wait;}
+
+@media (max-width:768px){
+  .ceo-card{grid-template-columns:1fr;padding:20px;gap:14px;}
+  .ceo-controls{justify-content:flex-start;}
+}
 .agent-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;}
 .agent-head{display:flex;align-items:flex-start;gap:14px;}
 .agent-icon{width:42px;height:42px;border-radius:11px;background:rgba(200,241,53,0.08);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(200,241,53,0.2);}
@@ -193,7 +212,14 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 
   <div class="page-body">
     <div>
-      <div class="section-label" style="margin-bottom:10px;">Active Agents</div>
+      <div class="section-label" style="margin-bottom:10px;">Autonomous Mode</div>
+      <div id="ceo-card" class="ceo-card">
+        <div style="grid-column:1/-1;color:var(--gray);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:10px;">Specialist Agents</div>
       <div class="agents-grid" id="agents-grid">
         <div style="grid-column:1/-1;color:var(--gray);font-size:13px;">Loading agents…</div>
       </div>
@@ -287,10 +313,44 @@ function renderAgent(id, cfg){
   );
 }
 
+function renderCeoCard(cfg){
+  var enabled = !!cfg.enabled;
+  var statusPill = enabled
+    ? '<span class="ceo-status status-auto">Active · Running every hour</span>'
+    : '<span class="ceo-status status-off">Off</span>';
+  return (
+    '<div class="ceo-icon">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">' +
+        '<circle cx="12" cy="12" r="3"/>' +
+        '<circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/>' +
+        '<circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/>' +
+        '<path d="M12 9V7M12 15v2M9 12H7M15 12h2M9.5 9.5L7 7M14.5 9.5L17 7M9.5 14.5L7 17M14.5 14.5L17 17"/>' +
+      '</svg>' +
+    '</div>' +
+    '<div class="ceo-meta">' +
+      '<div class="ceo-title">CEO AGENT' + statusPill + '</div>' +
+      '<div class="ceo-desc">Every hour, the CEO scans your business and dispatches three specialists — <strong style="color:var(--green)">Admin</strong> (chases payments, follows up on quotes), <strong style="color:var(--green)">Sales</strong> (warms leads), and <strong style="color:var(--green)">Customer Service</strong> (replies to inbound messages). It uses Claude\'s reasoning to decide what\'s worth doing — no fixed rules, no approval queue. Activity below shows every action and the reasoning behind it.</div>' +
+    '</div>' +
+    '<div class="ceo-controls">' +
+      '<button class="ceo-run-btn" id="btn-ceo-run" onclick="runCeoNow()">Run CEO Now</button>' +
+      '<label class="toggle"><input type="checkbox"' + (enabled ? ' checked' : '') + ' data-agent="ceo" data-field="enabled"/><span class="toggle-slider"></span></label>' +
+    '</div>'
+  );
+}
+
 async function loadAgents(){
   var grid = document.getElementById('agents-grid');
+  var ceoCard = document.getElementById('ceo-card');
   try {
     var configs = await API.agents.list();
+    if (ceoCard) {
+      ceoCard.innerHTML = renderCeoCard(configs.ceo || {});
+      ceoCard.querySelectorAll('[data-agent]').forEach(function(el){
+        el.addEventListener('change', function(){
+          saveAgentConfig(el.dataset.agent, el.dataset.field, el.checked);
+        });
+      });
+    }
     var ids = ['lead_followup','quote_followup','invoice_followup','review_request','estimator','auto_reply'];
     var html = ids.map(function(id){ return renderAgent(id, configs[id] || {}); }).join('');
     grid.innerHTML = html;
@@ -310,6 +370,26 @@ async function loadAgents(){
     });
   } catch (e) {
     grid.innerHTML = '<div style="grid-column:1/-1;color:var(--red);font-size:13px;">Could not load agents: ' + (e.message || 'error') + '</div>';
+    if (ceoCard) ceoCard.innerHTML = '<div style="color:var(--red);font-size:13px;">Could not load CEO config.</div>';
+  }
+}
+
+async function runCeoNow(){
+  var btn = document.getElementById('btn-ceo-run');
+  if (!btn) return;
+  var orig = btn.innerHTML;
+  btn.disabled = true; btn.textContent = 'Thinking…';
+  try {
+    var res = await API.agents.runCeo();
+    var n = res && res.dispatches != null ? res.dispatches : 0;
+    var summary = res && res.summary ? ' — ' + res.summary : '';
+    showToast('CEO tick complete · ' + n + ' dispatch' + (n === 1 ? '' : 'es') + summary);
+    loadActivity();
+  } catch (e) {
+    showToast('CEO run failed: ' + (e.message || 'error'));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
   }
 }
 
@@ -347,11 +427,20 @@ async function loadActivity(){
       return;
     }
     box.innerHTML = rows.map(function(r){
-      var label = (AGENT_META[r.agent] && AGENT_META[r.agent].label) || r.agent;
-      var pillClass = r.action === 'sent' ? 'act-sent' : (r.action === 'errored' ? 'act-errored' : 'act-drafted');
-      var line = label + ' → ' + (r.customerName || 'customer');
-      if (r.subject) line += ': ' + r.subject;
-      var sub = (r.recipientEmail || '') + (r.action === 'errored' && r.errorMessage ? '  ·  ' + r.errorMessage : '');
+      var label = (AGENT_META[r.agent] && AGENT_META[r.agent].label) || r.agent || 'agent';
+      var pillClass = r.action === 'sent'        ? 'act-sent'
+                    : r.action === 'errored'     ? 'act-errored'
+                    : r.action === 'dispatched'  ? 'act-drafted'
+                    :                              'act-drafted';
+      var line, sub;
+      if (r.action === 'dispatched' || r.action === 'tick_complete' || r.action === 'summary') {
+        line = label + (r.action === 'tick_complete' ? ' · tick complete' : (r.action === 'dispatched' ? ' → dispatched ' + (r.targetType || '') : ''));
+        sub = r.reasoning || r.body || '';
+      } else {
+        line = label + ' → ' + (r.customerName || 'customer');
+        if (r.subject) line += ': ' + r.subject;
+        sub = (r.recipientEmail || r.recipientPhone || '') + (r.reasoning ? '  ·  ' + r.reasoning : '') + (r.action === 'errored' && r.errorMessage ? '  ·  ' + r.errorMessage : '');
+      }
       return (
         '<div class="activity-row">' +
           '<span class="act-pill ' + pillClass + '">' + r.action + '</span>' +

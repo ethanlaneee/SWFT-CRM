@@ -14,6 +14,11 @@ function agentsRef(orgId) {
 // you've turned it on, you've handed it the wheel. Default off so new
 // orgs explicitly opt in.
 const DEFAULTS = {
+  ceo: {
+    enabled: false,
+    description: "The autonomous CEO that runs your AI team. Each hour it scans your business, decides what's worth doing, and dispatches the Admin / Sales / Customer Service specialists. Turn this on and it acts on its own — no approval queue.",
+    label: "CEO Agent",
+  },
   estimator: {
     enabled: false,
     inputTypes: "photos_text",
@@ -93,6 +98,16 @@ router.post("/_scan", async (req, res, next) => {
     const { scanAndDraft } = require("../ai/proactive-agent");
     const drafted = await scanAndDraft(req.orgId, req.uid);
     res.json({ drafted });
+  } catch (err) { next(err); }
+});
+
+// POST /api/agents/_ceo_run — manually trigger the CEO agent for this org.
+// Lets the user kick off a tick on demand to see what the CEO decides.
+router.post("/_ceo_run", async (req, res, next) => {
+  try {
+    const { runCeo } = require("../ai/ceo-agent");
+    const result = await runCeo(req.orgId, req.uid);
+    res.json(result);
   } catch (err) { next(err); }
 });
 

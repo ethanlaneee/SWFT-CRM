@@ -705,6 +705,15 @@ const { runProactiveAgentForAllOrgs } = require("./ai/proactive-agent");
 setInterval(() => runProactiveAgentForAllOrgs().catch(console.error), 60 * 60 * 1000);
 setTimeout(() => runProactiveAgentForAllOrgs().catch(console.error), 30000);
 
+// ── CEO meta-agent worker ──
+// Runs hourly for every org that has the CEO toggle on. Loads a snapshot
+// of the org state, calls Claude with dispatch tools, and lets the CEO
+// dispatch the Admin / Sales / Customer Service specialists. See
+// server/ai/ceo-agent.js for the full architecture.
+const { runCeoForAllOrgs } = require("./ai/ceo-agent");
+setInterval(() => runCeoForAllOrgs().catch(console.error), 60 * 60 * 1000);
+setTimeout(() => runCeoForAllOrgs().catch(console.error), 60 * 1000);
+
 // ── Outreach lead finder worker ──
 // Auto-discovers 15 leads per day via Google Places API.
 // Runs every 24 hours. Checks Firestore for last run to avoid duplicating on restart.
