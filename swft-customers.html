@@ -620,23 +620,6 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     </div>
   </div>
 
-  <!-- Quick stats -->
-
-  <div class="drawer-stats">
-    <div class="dstat">
-      <div class="dstat-label">Total Spend</div>
-      <div class="dstat-value green" id="d-spend">$14,800</div>
-    </div>
-    <div class="dstat">
-      <div class="dstat-label">Jobs</div>
-      <div class="dstat-value" id="d-jobs">4</div>
-    </div>
-    <div class="dstat">
-      <div class="dstat-label">Last Job</div>
-      <div class="dstat-value" id="d-last" style="font-size:16px;">Mar 27</div>
-    </div>
-  </div>
-
   <!-- Tabs -->
 
   <div class="drawer-tabs">
@@ -654,6 +637,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 <div id="tab-contact">
   <!-- VIEW MODE -->
   <div id="c-view-mode">
+    <div class="drawer-stats" style="margin:0 -20px 14px;">
+      <div class="dstat">
+        <div class="dstat-label">Total Spend</div>
+        <div class="dstat-value green" id="d-spend">$14,800</div>
+      </div>
+      <div class="dstat">
+        <div class="dstat-label">Jobs</div>
+        <div class="dstat-value" id="d-jobs">4</div>
+      </div>
+      <div class="dstat">
+        <div class="dstat-label">Last Job</div>
+        <div class="dstat-value" id="d-last" style="font-size:16px;">Mar 27</div>
+      </div>
+    </div>
     <div class="drawer-section-title">Info</div>
     <div class="contact-grid">
       <div class="contact-row">
@@ -1058,7 +1055,6 @@ function getInitials(name) {
 function openDrawer(id) {
   if (id === 'new') { closeDrawer(); return; }
   document.querySelector('.drawer-tabs').style.display = '';
-  document.querySelector('.drawer-stats').style.display = '';
   var c = window._customers[id];
   if (!c) return;
   var initials = c._initials || getInitials(c.name);
@@ -1162,7 +1158,6 @@ function openNewCustomer() {
   document.getElementById('c-footer-view').style.display = 'none';
   document.getElementById('c-footer-edit').style.display = 'flex';
   document.querySelector('.drawer-tabs').style.display = 'none';
-  document.querySelector('.drawer-stats').style.display = 'none';
   document.getElementById('overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open', 'center-modal');
 }
@@ -1171,7 +1166,6 @@ function closeDrawer() {
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open', 'center-modal');
   document.querySelector('.drawer-tabs').style.display = '';
-  document.querySelector('.drawer-stats').style.display = '';
 }
 
 function switchTab(el, tab) {
