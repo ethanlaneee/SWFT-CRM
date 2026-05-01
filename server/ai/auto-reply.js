@@ -185,12 +185,22 @@ function buildSystemPrompt(orgUser, customerContext, customerMemory = [], custom
  * @returns {Promise<string|null>}
  */
 async function generateAutoReply(orgId, ownerData, customerId, fromIdentifier, body, matched, channel) {
-  // Settings-gated. If the org has disabled auto-reply globally or for this
-  // channel, skip without contacting Claude.
+  // Source of truth for the master switch is the Agents hub
+  // (orgs/{orgId}/agentConfigs/auto_reply). aiSettings.autoReply still
+  // controls per-channel toggles + advanced options for backward compat.
+  let agentEnabled = null;
+  try {
+    const agentDoc = await db.collection("orgs").doc(orgId).collection("agentConfigs").doc("auto_reply").get();
+    if (agentDoc.exists && typeof agentDoc.data().enabled === "boolean") {
+      agentEnabled = agentDoc.data().enabled;
+    }
+  } catch (_) { /* fall through to legacy aiSettings */ }
+
   const settings = await getAiSettings(orgId);
   const ar = settings.autoReply;
-  if (!ar.enabled) {
-    console.log(`[auto-reply] Global auto-reply disabled for org ${orgId}`);
+  const masterEnabled = agentEnabled !== null ? agentEnabled : !!ar.enabled;
+  if (!masterEnabled) {
+    console.log(`[auto-reply] Auto-reply disabled for org ${orgId}`);
     return null;
   }
   if (channel && ar.channels && ar.channels[channel] === false) {

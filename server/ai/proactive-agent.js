@@ -9,6 +9,7 @@ const DEFAULTS = {
   quote_followup:   { enabled: false, thresholdDays: 3 },
   invoice_followup: { enabled: false, thresholdDays: 7 },
   review_request:   { enabled: false, thresholdDays: 1 },
+  lead_followup:    { enabled: false, thresholdDays: 1 },
 };
 
 // Read the per-org config for an agent. Falls back to DEFAULTS if the org
@@ -61,13 +62,44 @@ async function alreadyHandled(orgId, targetId) {
   }
 }
 
+// How many reminders have we already sent for this target, and when was
+// the most recent? Used by Payment Reminder for multi-stage chasing —
+// after the first nudge we wait another full cycle before escalating.
+async function sendCountFor(orgId, targetId) {
+  try {
+    const snap = await db.collection("orgs").doc(orgId).collection("agentActivity")
+      .where("targetId", "==", targetId)
+      .where("action", "==", "sent")
+      .get();
+    let lastSentAt = 0;
+    snap.docs.forEach(d => {
+      const ts = d.data().createdAt || 0;
+      if (ts > lastSentAt) lastSentAt = ts;
+    });
+    return { count: snap.size, lastSentAt };
+  } catch (_) {
+    return { count: 0, lastSentAt: 0 };
+  }
+}
+
 async function draftMessage(type, record, businessName) {
+  // Payment reminders escalate over time. Stage 1 = gentle ping, stage 2
+  // = firmer, stage 3 = final notice. After stage 3 the agent stops and
+  // the owner takes it from there.
+  const invoiceTone = record.stage === 3
+    ? "FINAL notice tone — direct, short, says payment is significantly past due and that this is the last automated reminder. Respectful but firm."
+    : record.stage === 2
+    ? "Firmer tone than a first nudge — polite but clear that the invoice is overdue."
+    : "Warm, gentle reminder tone — assume the customer just forgot.";
+
   const prompts = {
     quote_followup: `You are a friendly business assistant for ${businessName}. Write a short, warm follow-up email to a customer named "${record.customerName}" about quote #${record.quoteNum || record.id} for "${record.service || "services"}" totaling $${record.total || "TBD"}. The quote was sent ${Math.floor((Date.now() - record.sentAt) / 86400000)} days ago with no response. Ask if they have any questions and whether they'd like to move forward. Keep it under 4 sentences. Return JSON: {"subject":"...","body":"...","reasoning":"..."}`,
 
-    invoice_followup: `You are a friendly business assistant for ${businessName}. Write a short, polite payment reminder email to a customer named "${record.customerName}" about invoice #${record.invoiceNum || record.id} for $${record.total || "TBD"} that has been open for ${Math.floor((Date.now() - record.createdAt) / 86400000)} days. Be warm, not aggressive. Keep it under 4 sentences. Return JSON: {"subject":"...","body":"...","reasoning":"..."}`,
+    invoice_followup: `You are a business assistant for ${businessName}. Write a payment reminder email to "${record.customerName}" about invoice #${record.invoiceNum || record.id} for $${record.total || "TBD"}, which has been open for ${Math.floor((Date.now() - record.createdAt) / 86400000)} days. Tone: ${invoiceTone} This is reminder #${record.stage} of up to 3. Keep it under 4 sentences. Return JSON: {"subject":"...","body":"...","reasoning":"..."}`,
 
     review_request: `You are a friendly business assistant for ${businessName}. Write a short, genuine email to a customer named "${record.customerName}" who recently had a job completed (${record.service || "service"}). Thank them for their business and kindly ask them to leave a Google review. Keep it under 4 sentences. Return JSON: {"subject":"...","body":"...","reasoning":"..."}`,
+
+    lead_followup: `You are a sales-conscious business assistant for ${businessName}. Write a short, warm intro/follow-up email to a prospective customer named "${record.customerName}" who reached out about ${record.service ? `"${record.service}"` : "your services"} ${Math.floor((Date.now() - record.firstContactAt) / 86400000)} days ago and hasn't gotten a quote yet. Acknowledge their interest, ask if they'd like to schedule a quote or have questions, and keep it under 4 sentences. Return JSON: {"subject":"...","body":"...","reasoning":"..."}`,
   };
 
   const resp = await client.messages.create({
@@ -173,9 +205,16 @@ async function scanAndDraft(orgId, uid) {
     }
   }
 
-  // ── Invoice follow-ups ────────────────────────────────────────────────────
+  // ── Invoice follow-ups (multi-stage chase) ───────────────────────────────
+  // Stage 1: send first reminder once the invoice is `thresholdDays` overdue.
+  // Stage 2: send a firmer one 7 days after stage 1.
+  // Stage 3: send a final notice 7 days after stage 2.
+  // After stage 3 the agent stops. The escalation lives in the prompt
+  // (invoiceTone in draftMessage), so the same agent voices three different
+  // tones over time.
   if (cfgInvoice.enabled) {
     const thresholdMs = (cfgInvoice.thresholdDays || 7) * 86400000;
+    const escalateMs = 7 * 86400000;
     try {
       const invSnap = await db.collection("invoices")
         .where("orgId", "==", orgId)
@@ -185,20 +224,24 @@ async function scanAndDraft(orgId, uid) {
       for (const doc of invSnap.docs) {
         const inv = doc.data();
         const createdAt = inv.createdAt || 0;
-        if ((now - createdAt) < thresholdMs) continue;
         if (!inv.customerEmail && !inv.email) continue;
-        if (await alreadyHandled(orgId, doc.id)) continue;
 
-        const draft = await draftMessage("invoice_followup", { ...inv, id: doc.id }, businessName);
+        const { count, lastSentAt } = await sendCountFor(orgId, doc.id);
+        if (count >= 3) continue;                              // capped — owner takes over
+        if (count === 0 && (now - createdAt) < thresholdMs) continue;
+        if (count > 0  && (now - lastSentAt) < escalateMs) continue;
+
+        const stage = count + 1;
+        const draft = await draftMessage("invoice_followup", { ...inv, id: doc.id, stage }, businessName);
         if (!draft) continue;
 
         const result = await dispatch(orgId, uid, userData, "invoice_followup", {
           targetId: doc.id, targetType: "invoice",
           customerId: inv.customerId || null, customerName: inv.customerName || "Customer",
           recipientEmail: inv.customerEmail || inv.email,
+          stage,
         }, draft);
         if (result.sent) sent++;
-        if (result.drafted) drafted++;
       }
     } catch (e) {
       console.error("[proactive-agent] Invoice scan error:", e.message);
@@ -237,6 +280,79 @@ async function scanAndDraft(orgId, uid) {
       }
     } catch (e) {
       console.error("[proactive-agent] Job scan error:", e.message);
+    }
+  }
+
+  // ── Lead follow-up ────────────────────────────────────────────────────────
+  // Watches new leads in two places: pending serviceRequests (intake form
+  // submissions waiting to be approved into customers) AND customers that
+  // are tagged 'lead' or 'from doors' but have no jobs yet. Sends a single
+  // warm intro/follow-up so the lead doesn't go cold.
+  const cfgLead = await getAgentConfig(orgId, "lead_followup");
+  if (cfgLead.enabled) {
+    const thresholdMs = (cfgLead.thresholdDays || 1) * 86400000;
+    try {
+      // 1. Service requests still pending (form submitted, no quote yet)
+      const srSnap = await db.collection("serviceRequests")
+        .where("orgId", "==", orgId)
+        .where("status", "==", "pending")
+        .get();
+      for (const doc of srSnap.docs) {
+        const sr = doc.data();
+        const firstContactAt = sr.createdAt || 0;
+        if (!firstContactAt || (now - firstContactAt) < thresholdMs) continue;
+        if (!sr.email) continue;
+        if (await alreadyHandled(orgId, doc.id)) continue;
+
+        const draft = await draftMessage("lead_followup", {
+          customerName: sr.name || "there",
+          service: sr.service || "",
+          firstContactAt,
+        }, businessName);
+        if (!draft) continue;
+
+        const result = await dispatch(orgId, uid, userData, "lead_followup", {
+          targetId: doc.id, targetType: "serviceRequest",
+          customerId: sr.customerId || null, customerName: sr.name || "Lead",
+          recipientEmail: sr.email,
+        }, draft);
+        if (result.sent) sent++;
+      }
+
+      // 2. Customers tagged as leads with no jobs and no previous outreach
+      const custSnap = await db.collection("customers")
+        .where("orgId", "==", orgId)
+        .where("tags", "array-contains-any", ["lead", "from doors"])
+        .get();
+      for (const doc of custSnap.docs) {
+        const c = doc.data();
+        const firstContactAt = c.createdAt || 0;
+        if (!firstContactAt || (now - firstContactAt) < thresholdMs) continue;
+        if (!c.email) continue;
+        if (await alreadyHandled(orgId, doc.id)) continue;
+        // Skip if customer already has a job — they're past the lead stage
+        const jobsSnap = await db.collection("jobs")
+          .where("orgId", "==", orgId)
+          .where("customerId", "==", doc.id)
+          .limit(1).get();
+        if (!jobsSnap.empty) continue;
+
+        const draft = await draftMessage("lead_followup", {
+          customerName: c.name || "there",
+          service: "",
+          firstContactAt,
+        }, businessName);
+        if (!draft) continue;
+
+        const result = await dispatch(orgId, uid, userData, "lead_followup", {
+          targetId: doc.id, targetType: "customer",
+          customerId: doc.id, customerName: c.name || "Lead",
+          recipientEmail: c.email,
+        }, draft);
+        if (result.sent) sent++;
+      }
+    } catch (e) {
+      console.error("[proactive-agent] Lead scan error:", e.message);
     }
   }
 

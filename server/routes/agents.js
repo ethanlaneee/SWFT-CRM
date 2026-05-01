@@ -40,6 +40,12 @@ const DEFAULTS = {
     description: "Watches every completed job. After the threshold, sends a thank-you that asks for a Google review.",
     label: "Review Request",
   },
+  lead_followup: {
+    enabled: false,
+    thresholdDays: 1,
+    description: "Watches new leads from your intake form and customers tagged as leads who haven't gotten a quote. Sends a personalized follow-up so warm interest doesn't go cold.",
+    label: "Lead Follow-up",
+  },
   auto_reply: {
     enabled: false,
     thresholdDays: 0,
