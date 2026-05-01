@@ -13,6 +13,17 @@ const { sendSms } = require("../utils/twilio");
  * Send email via user's connected Gmail account.
  * Full-featured: supports attachments and reply threading.
  */
+// RFC 2047 encoded-word for mail headers. Mail headers default to ASCII;
+// any non-ASCII char (em-dash, emoji, é, etc.) gets reinterpreted as
+// Latin-1 by the receiving client and shows up as mojibake (Ã¢Â€Â"…).
+// Wrap the value in =?UTF-8?B?<base64>?= when it contains anything
+// outside ASCII so Gmail and friends decode it correctly.
+function encodeHeader(value) {
+  const s = String(value || "");
+  if (/^[\x00-\x7F]*$/.test(s)) return s;
+  return `=?UTF-8?B?${Buffer.from(s, "utf8").toString("base64")}?=`;
+}
+
 async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyHeaders = {}) {
   const { gmail, fromAddr, fromName } = await getGmailClient(user);
 
@@ -22,9 +33,9 @@ async function sendViaGmail(user, to, subject, htmlBody, textBody, files, replyH
   // Build MIME message
   const boundary = "swft_boundary_" + Date.now();
   let mime = "";
-  mime += `From: ${fromName} <${fromAddr}>\r\n`;
+  mime += `From: ${encodeHeader(fromName)} <${fromAddr}>\r\n`;
   mime += `To: ${to}\r\n`;
-  mime += `Subject: ${subject}\r\n`;
+  mime += `Subject: ${encodeHeader(subject)}\r\n`;
   if (replyHeaders.inReplyTo) mime += `In-Reply-To: ${replyHeaders.inReplyTo}\r\n`;
   if (replyHeaders.references) mime += `References: ${replyHeaders.references}\r\n`;
   mime += `MIME-Version: 1.0\r\n`;

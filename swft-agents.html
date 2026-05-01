@@ -443,7 +443,7 @@ async function loadActivity(){
       }
       return (
         '<div class="activity-row">' +
-          '<span class="act-pill ' + pillClass + '">' + r.action + '</span>' +
+          '<span class="act-pill ' + pillClass + '">' + String(r.action || '').replace(/_/g, ' ') + '</span>' +
           '<div class="act-meta">' +
             '<div class="act-line">' + escapeHtml(line) + '</div>' +
             '<div class="act-sub">' + escapeHtml(sub) + '</div>' +
