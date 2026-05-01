@@ -361,12 +361,21 @@ app.get("/health", async (req, res) => {
     firebaseError = e.message;
     console.error("[health] Firebase auth check failed:", e.message);
   }
+  const appUrl = process.env.APP_URL || "https://goswft.com";
   res.json({
     status: "ok",
     firebaseAuth: firebaseOk,
     firebaseError,
     adminProjectId: fb.projectId,
     appUrl: process.env.APP_URL || "not set",
+    stripeConnect: {
+      clientIdConfigured: !!process.env.STRIPE_CLIENT_ID,
+      clientIdLast4: process.env.STRIPE_CLIENT_ID ? process.env.STRIPE_CLIENT_ID.slice(-4) : null,
+      secretConfigured: !!process.env.STRIPE_SECRET_KEY,
+      secretMode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_") ? "live" : process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_") ? "test" : null,
+      expectedCallbackUrl: `${appUrl}/api/integrations/stripe/callback`,
+      webhookSecretConfigured: !!process.env.STRIPE_WEBHOOK_SECRET,
+    },
   });
 });
 
