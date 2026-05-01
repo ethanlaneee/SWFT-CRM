@@ -79,6 +79,64 @@ router.post("/invoice/:id/link", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/square/quote/:id/link — same as invoice/link but for quotes.
+router.post("/quote/:id/link", async (req, res, next) => {
+  try {
+    const { token, baseUrl } = getSquareClient();
+    const qDoc = await db.collection("quotes").doc(req.params.id).get();
+    if (!qDoc.exists || qDoc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Quote not found" });
+    }
+    const q = qDoc.data();
+
+    if (q.squarePaymentLinkUrl) {
+      return res.json({ url: q.squarePaymentLinkUrl, existing: true });
+    }
+
+    const amountCents = Math.round((q.total || 0) * 100);
+    if (amountCents < 100) {
+      return res.status(400).json({ error: "Quote total must be at least $1.00" });
+    }
+
+    const locationId = process.env.SQUARE_LOCATION_ID;
+    if (!locationId) return res.status(500).json({ error: "SQUARE_LOCATION_ID is not set" });
+
+    const idempotencyKey = `quote-${req.params.id}-${Date.now()}`;
+    const data = await squarePost("/v2/online-checkout/payment-links", {
+      idempotency_key: idempotencyKey,
+      quick_pay: {
+        name: `Quote — ${q.customerName || "Customer"}${q.service ? ` (${q.service})` : ""}`,
+        price_money: { amount: amountCents, currency: "USD" },
+        location_id: locationId,
+      },
+      checkout_options: {
+        redirect_url: `${process.env.APP_URL || "https://goswft.com"}/swft-quotes`,
+      },
+      pre_populated_data: {
+        buyer_email: q.customerEmail || undefined,
+      },
+    }, token, baseUrl);
+
+    if (data.errors) {
+      console.error("Square error:", data.errors);
+      return res.status(400).json({ error: data.errors[0]?.detail || "Square error" });
+    }
+
+    const url = data.payment_link?.url;
+    const linkId = data.payment_link?.id;
+    const orderId = data.payment_link?.order_id;
+
+    await db.collection("quotes").doc(req.params.id).update({
+      squarePaymentLinkUrl: url,
+      squarePaymentLinkId: linkId,
+      squareOrderId: orderId,
+      updatedAt: Date.now(),
+    });
+
+    res.json({ url });
+  } catch (err) { next(err); }
+});
+
 // POST /api/square/webhook — Square sends payment.completed events
 async function squareWebhookHandler(req, res) {
   try {
@@ -89,12 +147,11 @@ async function squareWebhookHandler(req, res) {
     const payment = event.data?.object?.payment;
     if (!payment || payment.status !== "COMPLETED") return res.json({ received: true });
 
-    // Find invoice by squarePaymentLinkId
-    const invoiceRef = payment.order_id
-      ? await db.collection("invoices").where("squareOrderId", "==", payment.order_id).limit(1).get()
-      : null;
+    if (!payment.order_id) return res.json({ received: true });
 
-    if (invoiceRef && !invoiceRef.empty) {
+    // Try invoice match first.
+    const invoiceRef = await db.collection("invoices").where("squareOrderId", "==", payment.order_id).limit(1).get();
+    if (!invoiceRef.empty) {
       const invDoc = invoiceRef.docs[0];
       const inv = invDoc.data();
       if (inv.status !== "paid") {
@@ -109,6 +166,56 @@ async function squareWebhookHandler(req, res) {
           type: "payment",
           title: "Payment Received (Square)",
           body: `${inv.customerName} paid invoice — $${inv.total}`,
+          link: "/swft-invoices",
+        });
+      }
+      return res.json({ received: true });
+    }
+
+    // Fall through to quote match — pay link was created on a quote.
+    const quoteRef = await db.collection("quotes").where("squareOrderId", "==", payment.order_id).limit(1).get();
+    if (!quoteRef.empty) {
+      const qDoc = quoteRef.docs[0];
+      const q = qDoc.data();
+      if (q.status !== "paid") {
+        await qDoc.ref.update({
+          status: "paid",
+          paidAt: Date.now(),
+          paymentMethod: "square",
+          squarePaymentId: payment.id,
+          updatedAt: Date.now(),
+        });
+
+        // Mirror as a paid invoice so the financial record + customer
+        // payment history land in the right collection.
+        await db.collection("invoices").add({
+          orgId: q.orgId || null,
+          userId: q.userId || null,
+          customerId: q.customerId || null,
+          customerName: q.customerName || "",
+          quoteId: qDoc.id,
+          items: q.items || [],
+          subtotal: q.subtotal || q.total || 0,
+          taxRate: q.taxRate || 0,
+          tax: q.tax || 0,
+          total: q.total || 0,
+          service: q.service || "",
+          sqft: q.sqft || "",
+          address: q.address || "",
+          finish: q.finish || "",
+          notes: q.notes || "",
+          status: "paid",
+          paidAt: Date.now(),
+          paymentMethod: "square",
+          squarePaymentId: payment.id,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await pushNotification(q.userId || q.orgId, {
+          type: "payment",
+          title: "Quote Paid (Square)",
+          body: `${q.customerName} paid quote — $${q.total}`,
           link: "/swft-invoices",
         });
       }

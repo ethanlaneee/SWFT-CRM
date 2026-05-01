@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { pushNotification } = require("./notifications");
-const { getStripe } = require("../utils/stripe");
+const { getStripe, ensureStripeCustomer } = require("../utils/stripe");
 const { triggerAutomation } = require("./automations");
 
 // POST /api/payments/invoice/:id/link
@@ -43,6 +43,21 @@ router.post("/invoice/:id/link", async (req, res, next) => {
     // in the owner's Stripe balance — not ours.
     const stripeOpts = { stripeAccount: connectedAccountId };
 
+    // Attach to a Stripe Customer so payments roll up per customer in the
+    // owner's Stripe dashboard. ensureStripeCustomer caches the ID under
+    // customers/{id}.stripeCustomers[connectedAccountId] so subsequent links
+    // reuse the same Customer record.
+    let stripeCustomerId = null;
+    if (inv.customerId) {
+      try {
+        stripeCustomerId = await ensureStripeCustomer({
+          db, customerId: inv.customerId, orgId: req.orgId, connectedAccountId,
+        });
+      } catch (e) {
+        console.warn("[payments/invoice/link] ensureStripeCustomer failed:", e.message);
+      }
+    }
+
     const price = await stripe.prices.create({
       currency: "usd",
       unit_amount: amountCents,
@@ -56,6 +71,7 @@ router.post("/invoice/:id/link", async (req, res, next) => {
       metadata: {
         invoiceId: req.params.id,
         orgId: req.orgId,
+        customerId: inv.customerId || "",
       },
       after_completion: {
         type: "hosted_confirmation",
@@ -64,6 +80,83 @@ router.post("/invoice/:id/link", async (req, res, next) => {
     }, stripeOpts);
 
     await db.collection("invoices").doc(req.params.id).update({
+      paymentLinkUrl: paymentLink.url,
+      stripePaymentLinkId: paymentLink.id,
+      stripeConnectAccountId: connectedAccountId,
+      updatedAt: Date.now(),
+    });
+
+    res.json({ url: paymentLink.url });
+  } catch (err) { next(err); }
+});
+
+// POST /api/payments/quote/:id/link
+// Mirror of /invoice/:id/link for quotes — lets the customer pay (deposit
+// or full) directly from the quote email or shared link. On payment, the
+// webhook below marks the quote paid and auto-creates a matching paid
+// invoice so the financial record lives where it should.
+router.post("/quote/:id/link", async (req, res, next) => {
+  try {
+    const stripe = getStripe();
+    const qDoc = await db.collection("quotes").doc(req.params.id).get();
+    if (!qDoc.exists || qDoc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Quote not found" });
+    }
+    const q = qDoc.data();
+
+    const ownerDoc = await db.collection("users").doc(req.orgId).get();
+    const ownerStripe = ownerDoc.exists ? ownerDoc.data()?.integrations?.stripe : null;
+    const connectedAccountId = ownerStripe?.accountId;
+    if (!connectedAccountId) {
+      return res.status(400).json({
+        error: "Connect your Stripe account first to accept payments on quotes.",
+        notConnected: true,
+      });
+    }
+
+    if (q.paymentLinkUrl && q.stripeConnectAccountId === connectedAccountId) {
+      return res.json({ url: q.paymentLinkUrl, existing: true });
+    }
+
+    const amountCents = Math.round((q.total || 0) * 100);
+    if (amountCents < 50) {
+      return res.status(400).json({ error: "Quote total must be at least $0.50 to create a payment link" });
+    }
+
+    const stripeOpts = { stripeAccount: connectedAccountId };
+
+    if (q.customerId) {
+      try {
+        await ensureStripeCustomer({
+          db, customerId: q.customerId, orgId: req.orgId, connectedAccountId,
+        });
+      } catch (e) {
+        console.warn("[payments/quote/link] ensureStripeCustomer failed:", e.message);
+      }
+    }
+
+    const price = await stripe.prices.create({
+      currency: "usd",
+      unit_amount: amountCents,
+      product_data: {
+        name: `Quote — ${q.customerName || "Customer"}${q.service ? ` (${q.service})` : ""}`,
+      },
+    }, stripeOpts);
+
+    const paymentLink = await stripe.paymentLinks.create({
+      line_items: [{ price: price.id, quantity: 1 }],
+      metadata: {
+        quoteId: req.params.id,
+        orgId: req.orgId,
+        customerId: q.customerId || "",
+      },
+      after_completion: {
+        type: "hosted_confirmation",
+        hosted_confirmation: { custom_message: "Payment received. Thank you!" },
+      },
+    }, stripeOpts);
+
+    await db.collection("quotes").doc(req.params.id).update({
       paymentLinkUrl: paymentLink.url,
       stripePaymentLinkId: paymentLink.id,
       stripeConnectAccountId: connectedAccountId,
@@ -222,6 +315,91 @@ async function webhookHandler(req, res) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+
+    // Quote paid → mark quote, mirror as a paid invoice so the financial
+    // record lives in the invoices collection (and the customer's payment
+    // history). Runs first so a payment link that somehow has both IDs
+    // is treated as a quote payment, not duplicated.
+    const quoteId = session.metadata?.quoteId;
+    if (quoteId && !session.metadata?.invoiceId) {
+      try {
+        const qDoc = await db.collection("quotes").doc(quoteId).get();
+        const q = qDoc.exists ? qDoc.data() : {};
+
+        if (event.account && q.stripeConnectAccountId && event.account !== q.stripeConnectAccountId) {
+          console.warn(`[stripe-webhook] account mismatch for quote ${quoteId}`);
+          return res.json({ received: true, ignored: "account_mismatch" });
+        }
+
+        await db.collection("quotes").doc(quoteId).update({
+          status: "paid",
+          paidAt: Date.now(),
+          paymentMethod: "stripe",
+          stripeSessionId: session.id,
+          updatedAt: Date.now(),
+        });
+
+        // Auto-create a paid invoice mirroring the quote.
+        const newInvoiceData = {
+          orgId: q.orgId || session.metadata?.orgId || null,
+          userId: q.userId || null,
+          customerId: q.customerId || null,
+          customerName: q.customerName || "",
+          quoteId,
+          items: q.items || [],
+          subtotal: q.subtotal || q.total || 0,
+          taxRate: q.taxRate || 0,
+          tax: q.tax || 0,
+          total: q.total || 0,
+          service: q.service || "",
+          sqft: q.sqft || "",
+          address: q.address || "",
+          finish: q.finish || "",
+          notes: q.notes || "",
+          status: "paid",
+          paidAt: Date.now(),
+          paymentMethod: "stripe",
+          stripeSessionId: session.id,
+          stripeConnectAccountId: q.stripeConnectAccountId || null,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        const invRef = await db.collection("invoices").add(newInvoiceData);
+        console.log(`Quote ${quoteId} paid; auto-created paid invoice ${invRef.id}`);
+
+        if (q.userId) {
+          await pushNotification(q.userId, {
+            type: "payment",
+            title: "Quote Paid",
+            body: `${q.customerName || "A customer"} paid quote #${quoteId.slice(-4)} — $${(q.total || 0).toLocaleString()}`,
+            link: "/swft-invoices",
+          });
+        }
+
+        const orgId = q.orgId || session.metadata?.orgId;
+        if (orgId && q.customerId) {
+          try {
+            const custDoc = await db.collection("customers").doc(q.customerId).get();
+            const cust = custDoc.exists ? custDoc.data() : {};
+            const customer = {
+              id: q.customerId,
+              name: cust.name || q.customerName || "",
+              phone: cust.phone || "",
+              email: cust.email || "",
+              total: q.total || 0,
+              service: q.service || "",
+            };
+            triggerAutomation(orgId, "quote_paid", customer).catch(console.error);
+            triggerAutomation(orgId, "invoice_paid", customer).catch(console.error);
+          } catch (autoErr) {
+            console.error("Quote-paid automation error:", autoErr);
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to mark quote ${quoteId} as paid:`, err);
+      }
+    }
+
     const invoiceId = session.metadata?.invoiceId;
     if (invoiceId) {
       try {

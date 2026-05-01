@@ -4,6 +4,7 @@ const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
 const { sendViaGmail } = require("./messages");
 const { normalizeItems } = require("../utils/normalizeItems");
+const { getStripe, ensureStripeCustomer } = require("../utils/stripe");
 
 const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const col = () => db.collection("quotes");
@@ -132,10 +133,67 @@ router.post("/:id/email", pdfUpload.single("pdf"), async (req, res, next) => {
     const custNameClean = (quoteData.customerName || "Customer").replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, "-");
     const pdfFile = { buffer: req.file.buffer, mimetype: "application/pdf", originalname: `Quote-${custNameClean}.pdf` };
 
+    // Auto-create a Stripe pay link (if owner has Stripe Connect) so the
+    // customer can pay the quote with one tap from the email.
+    let payLinkUrl = quoteData.paymentLinkUrl || null;
+    const ownerStripe = user.integrations?.stripe;
+    const connectedAccountId = ownerStripe?.accountId;
+    try {
+      if (connectedAccountId && (!payLinkUrl || quoteData.stripeConnectAccountId !== connectedAccountId)) {
+        const stripe = getStripe();
+        const amountCents = Math.round((quoteData.total || 0) * 100);
+        if (amountCents >= 50) {
+          const stripeOpts = { stripeAccount: connectedAccountId };
+          if (quoteData.customerId) {
+            try {
+              await ensureStripeCustomer({
+                db, customerId: quoteData.customerId, orgId: req.orgId, connectedAccountId,
+              });
+            } catch (e) {
+              console.warn("[quotes/email] ensureStripeCustomer failed:", e.message);
+            }
+          }
+          const price = await stripe.prices.create({
+            currency: "usd",
+            unit_amount: amountCents,
+            product_data: {
+              name: `Quote — ${quoteData.customerName || "Customer"}${quoteData.service ? ` (${quoteData.service})` : ""}`,
+            },
+          }, stripeOpts);
+          const paymentLink = await stripe.paymentLinks.create({
+            line_items: [{ price: price.id, quantity: 1 }],
+            metadata: {
+              quoteId: req.params.id,
+              orgId: req.orgId,
+              customerId: quoteData.customerId || "",
+            },
+            after_completion: {
+              type: "hosted_confirmation",
+              hosted_confirmation: { custom_message: "Payment received. Thank you!" },
+            },
+          }, stripeOpts);
+          payLinkUrl = paymentLink.url;
+          await col().doc(req.params.id).update({
+            paymentLinkUrl: payLinkUrl,
+            stripePaymentLinkId: paymentLink.id,
+            stripeConnectAccountId: connectedAccountId,
+            updatedAt: Date.now(),
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("[quotes] Could not auto-create Stripe pay link:", e.message);
+      // Fall through — still send the email, just without the button
+    }
+
     const fromName = user.company || user.name || "SWFT";
     const subject = `Quote from ${fromName}`;
-    const bodyText = req.body.message || `Hi ${cust.name || ""},\n\nPlease find your quote attached.\n\nBest,\n${fromName}`;
-    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>`;
+    const bodyText = req.body.message
+      || `Hi ${cust.name || ""},\n\nPlease find your quote attached.${payLinkUrl ? `\n\nPay online: ${payLinkUrl}` : ""}\n\nBest,\n${fromName}`;
+    const payButtonHtml = payLinkUrl
+      ? `<div style="margin:20px 0;"><a href="${payLinkUrl}" style="display:inline-block;background:#635bff;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 32px;border-radius:8px;letter-spacing:0.3px;">Pay $${(quoteData.total || 0).toFixed(2)}</a><div style="font-size:11px;color:#888;margin-top:6px;">Secure checkout powered by Stripe</div></div>`
+      : "";
+    const htmlBody = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${bodyText}</div>${payButtonHtml}`;
 
     user._uid = req.uid;
     const sendResult = await sendViaGmail(user, cust.email, subject, htmlBody, bodyText, [pdfFile]);

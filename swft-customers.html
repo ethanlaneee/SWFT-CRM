@@ -679,6 +679,11 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <div><div class="contact-label">Customer ID</div><div class="contact-value" id="d-since">January 2024</div></div>
       </div>
     </div>
+
+    <div class="drawer-section-title" style="margin-top:18px;">Payments</div>
+    <div id="cust-payments" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px 0;">Loading payment history…</div>
+    </div>
   </div>
   <!-- EDIT MODE -->
   <div id="c-edit-mode" style="display:none;flex-direction:column;gap:12px;">
@@ -1081,6 +1086,9 @@ function openDrawer(id) {
   document.getElementById('overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
 
+  // Fetch payment history for this customer and populate the Payments panel
+  loadCustomerPayments(id);
+
   // Fetch jobs for this customer and populate job history
   API.jobs.list().then(function(jobs) {
     var custJobs = jobs.filter(function(j) { return j.customerId === id; });
@@ -1166,6 +1174,46 @@ function closeDrawer() {
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open', 'center-modal');
   document.querySelector('.drawer-tabs').style.display = '';
+}
+
+async function loadCustomerPayments(id) {
+  var box = document.getElementById('cust-payments');
+  if (!box) return;
+  box.innerHTML = '<div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px 0;">Loading payment history…</div>';
+  try {
+    var data = await API.customers.payments(id);
+    if (!data || !data.invoices || data.invoices.length === 0) {
+      box.innerHTML = '<div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px 0;">No payments yet.</div>';
+      return;
+    }
+    var fmt = function(n){ return '$' + (Number(n)||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); };
+    var fmtDate = function(ts){ if(!ts) return '—'; try { return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); } catch(_) { return '—'; } };
+    var summary =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+        '<div style="padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;">' +
+          '<div style="font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);">Lifetime Paid</div>' +
+          '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--green);margin-top:3px;">' + fmt(data.totalPaid) + '</div>' +
+        '</div>' +
+        '<div style="padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;">' +
+          '<div style="font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray2);">Last Payment</div>' +
+          '<div style="font-size:14px;color:var(--white);margin-top:6px;">' + fmtDate(data.lastPaidAt) + '</div>' +
+        '</div>' +
+      '</div>';
+    var rows = data.invoices.slice(0, 8).map(function(p){
+      var label = p.quoteId ? 'Quote → Invoice' : 'Invoice';
+      var method = p.paymentMethod ? ' · ' + p.paymentMethod : '';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;">' +
+        '<div style="min-width:0;">' +
+          '<div style="font-size:12.5px;color:var(--white);">' + label + (p.service ? ' — ' + p.service : '') + '</div>' +
+          '<div style="font-size:11px;color:var(--gray2);font-family:\'JetBrains Mono\',monospace;margin-top:2px;">' + fmtDate(p.paidAt) + method + '</div>' +
+        '</div>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:var(--green);font-weight:600;">' + fmt(p.total) + '</div>' +
+      '</div>';
+    }).join('');
+    box.innerHTML = summary + '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">' + rows + '</div>';
+  } catch (e) {
+    box.innerHTML = '<div style="font-size:12.5px;color:var(--gray);text-align:center;padding:12px 0;">Could not load payment history.</div>';
+  }
 }
 
 function switchTab(el, tab) {

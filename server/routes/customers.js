@@ -1,8 +1,61 @@
 const router = require("express").Router();
 const { db } = require("../firebase");
 const { triggerAutomation } = require("./automations");
+const { getStripe, ensureStripeCustomer } = require("../utils/stripe");
 
 const col = () => db.collection("customers");
+
+// Resolve the org owner's connected Stripe account ID, or null if not set up.
+async function getOwnerStripeAccountId(orgId) {
+  try {
+    const ownerDoc = await db.collection("users").doc(orgId).get();
+    return ownerDoc.exists ? (ownerDoc.data()?.integrations?.stripe?.accountId || null) : null;
+  } catch (_) { return null; }
+}
+
+// Fire-and-forget: ensure a Stripe Customer exists on the org's connected
+// account so payment links can attach to a Customer object for per-customer
+// reporting. Does not block the API response.
+function ensureStripeCustomerAsync(customerId, orgId) {
+  setImmediate(async () => {
+    try {
+      const connectedAccountId = await getOwnerStripeAccountId(orgId);
+      if (!connectedAccountId) return;
+      await ensureStripeCustomer({ db, customerId, orgId, connectedAccountId });
+    } catch (e) {
+      console.warn(`[customers] ensureStripeCustomer failed for ${customerId}:`, e.message);
+    }
+  });
+}
+
+// Push name/email/phone changes to the existing Stripe Customer on the
+// owner's currently-connected account. No-op if no Stripe Customer was
+// ever created. Fire-and-forget.
+function syncStripeCustomerAsync(customerId, orgId, updates) {
+  setImmediate(async () => {
+    try {
+      const connectedAccountId = await getOwnerStripeAccountId(orgId);
+      if (!connectedAccountId) return;
+      const custDoc = await col().doc(customerId).get();
+      if (!custDoc.exists) return;
+      const stripeCustId = custDoc.data()?.stripeCustomers?.[connectedAccountId];
+      if (!stripeCustId) {
+        // No Stripe Customer yet — create one now from the latest data.
+        await ensureStripeCustomer({ db, customerId, orgId, connectedAccountId });
+        return;
+      }
+      const patch = {};
+      if (updates.name !== undefined) patch.name = updates.name || undefined;
+      if (updates.email !== undefined) patch.email = updates.email || undefined;
+      if (updates.phone !== undefined) patch.phone = updates.phone || undefined;
+      if (Object.keys(patch).length === 0) return;
+      const stripe = getStripe();
+      await stripe.customers.update(stripeCustId, patch, { stripeAccount: connectedAccountId });
+    } catch (e) {
+      console.warn(`[customers] syncStripeCustomer failed for ${customerId}:`, e.message);
+    }
+  });
+}
 
 // Collections that hold records tied to a customer via customerId.
 // When a customer is deleted, every record in these collections with a
@@ -56,6 +109,44 @@ router.get("/", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/customers/:id/payments — payment history for a customer
+// Returns total paid (lifetime), last payment timestamp, and a list of paid
+// invoices for this customer. Pulls from the invoices collection where
+// status === "paid". Quote payments auto-create paid invoices via the
+// Stripe/Square webhooks, so this single source covers both flows.
+router.get("/:id/payments", async (req, res, next) => {
+  try {
+    const custDoc = await col().doc(req.params.id).get();
+    if (!custDoc.exists || custDoc.data().orgId !== req.orgId) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+    const snap = await db.collection("invoices")
+      .where("orgId", "==", req.orgId)
+      .where("customerId", "==", req.params.id)
+      .where("status", "==", "paid")
+      .get();
+    const paid = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    paid.sort((a, b) => (b.paidAt || b.updatedAt || 0) - (a.paidAt || a.updatedAt || 0));
+
+    let totalPaid = 0;
+    paid.forEach(p => { totalPaid += Number(p.total) || 0; });
+
+    res.json({
+      totalPaid,
+      count: paid.length,
+      lastPaidAt: paid[0]?.paidAt || paid[0]?.updatedAt || null,
+      invoices: paid.map(p => ({
+        id: p.id,
+        total: p.total || 0,
+        paidAt: p.paidAt || p.updatedAt || null,
+        paymentMethod: p.paymentMethod || null,
+        service: p.service || "",
+        quoteId: p.quoteId || null,
+      })),
+    });
+  } catch (err) { next(err); }
+});
+
 // Get single customer
 router.get("/:id", async (req, res, next) => {
   try {
@@ -92,6 +183,10 @@ router.post("/", async (req, res, next) => {
       tags: data.tags || [],
     }).catch(console.error);
 
+    // Eagerly create a Stripe Customer on the owner's connected account so
+    // every payment links to a Customer object. Non-blocking.
+    ensureStripeCustomerAsync(ref.id, req.orgId);
+
     res.status(201).json({ id: ref.id, ...data });
   } catch (err) { next(err); }
 });
@@ -110,6 +205,13 @@ router.put("/:id", async (req, res, next) => {
     updates.updatedAt = Date.now();
     await col().doc(req.params.id).update(updates);
     const updated = await col().doc(req.params.id).get();
+
+    // Mirror name/email/phone edits to the matching Stripe Customer so the
+    // dashboard stays in sync. Non-blocking.
+    if (updates.name !== undefined || updates.email !== undefined || updates.phone !== undefined) {
+      syncStripeCustomerAsync(req.params.id, req.orgId, updates);
+    }
+
     res.json({ id: updated.id, ...updated.data() });
   } catch (err) { next(err); }
 });

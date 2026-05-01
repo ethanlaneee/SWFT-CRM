@@ -208,12 +208,13 @@ const API = {
 
   // ── Customers ──
   customers: {
-    list:   ()       => apiFetch("/api/customers"),
-    get:    (id)     => apiFetch(`/api/customers/${id}`),
-    create: (data)   => apiFetch("/api/customers",      { method: "POST",   body: JSON.stringify(data) }),
-    update: (id, data) => apiFetch(`/api/customers/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    delete: (id)     => apiFetch(`/api/customers/${id}`, { method: "DELETE" }),
-    bulkDelete: (ids)=> apiFetch("/api/customers/bulk-delete", { method: "POST", body: JSON.stringify({ ids }) }),
+    list:     ()         => apiFetch("/api/customers"),
+    get:      (id)       => apiFetch(`/api/customers/${id}`),
+    create:   (data)     => apiFetch("/api/customers",      { method: "POST",   body: JSON.stringify(data) }),
+    update:   (id, data) => apiFetch(`/api/customers/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete:   (id)       => apiFetch(`/api/customers/${id}`, { method: "DELETE" }),
+    bulkDelete: (ids)    => apiFetch("/api/customers/bulk-delete", { method: "POST", body: JSON.stringify({ ids }) }),
+    payments: (id)       => apiFetch(`/api/customers/${id}/payments`),
   },
 
   // ── Jobs ──
@@ -315,11 +316,13 @@ const API = {
   // ── Payments (Stripe) ──
   payments: {
     invoiceLink: (id) => apiFetch(`/api/payments/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
+    quoteLink:   (id) => apiFetch(`/api/payments/quote/${id}/link`,   { method: "POST", body: JSON.stringify({}) }),
   },
 
   // ── Square ──
   square: {
     invoiceLink: (id) => apiFetch(`/api/square/invoice/${id}/link`, { method: "POST", body: JSON.stringify({}) }),
+    quoteLink:   (id) => apiFetch(`/api/square/quote/${id}/link`,   { method: "POST", body: JSON.stringify({}) }),
   },
 
   // ── Import ──

@@ -373,6 +373,14 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke-width="1.8"/><rect x="6" y="14" width="12" height="8" stroke-width="1.8"/></svg>
         Print / Save PDF
       </button>
+      <button class="pdf-btn" id="btn-quote-paylink" onclick="getQuotePaymentLink('stripe')" style="background:rgba(200,241,53,0.08);color:#c8f135;border-color:rgba(200,241,53,0.25);">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Pay Link
+      </button>
+      <button class="pdf-btn" id="btn-quote-square-link" onclick="getQuotePaymentLink('square')" style="background:rgba(0,120,255,0.08);color:#4d9fff;border-color:rgba(77,159,255,0.25);">
+        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" stroke-width="1.8"/><path d="M9 9h6v6H9z" stroke-width="1.8"/></svg>
+        Square Link
+      </button>
       <button class="pdf-btn primary" id="btn-save-quote" onclick="saveQuote('draft')">Save Quote</button>
       <button class="pdf-btn" id="btn-send-email" onclick="sendQuoteEmail()" style="background:#111;color:#fff;border-color:#111;">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke-width="1.8" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -836,6 +844,32 @@ async function saveQuote(action){
     _quoteSaving=false;
     if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save Quote';}
     if(sendBtn)sendBtn.disabled=false;
+  }
+}
+
+async function getQuotePaymentLink(processor){
+  if(!_currentQuote||!_currentQuote.id){showToast('Save the quote first');return;}
+  var isSquare = processor === 'square';
+  var btn = document.getElementById(isSquare ? 'btn-quote-square-link' : 'btn-quote-paylink');
+  var origHtml = btn.innerHTML;
+  btn.textContent = 'Getting link...';
+  try{
+    var res = isSquare
+      ? await API.square.quoteLink(_currentQuote.id)
+      : await API.payments.quoteLink(_currentQuote.id);
+    if(res.url){
+      try{await navigator.clipboard.writeText(res.url);}catch(e){
+        var ta=document.createElement('textarea');ta.value=res.url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      }
+      showToast((isSquare?'Square':'Stripe')+' link '+(res.existing?'copied!':'created & copied!'));
+      if(isSquare) _currentQuote.squarePaymentLinkUrl=res.url;
+      else _currentQuote.paymentLinkUrl=res.url;
+      btn.textContent='Link Copied!';
+      setTimeout(function(){ btn.innerHTML=origHtml; }, 2000);
+    }
+  }catch(e){
+    showToast('Error: '+e.message);
+    btn.innerHTML=origHtml;
   }
 }
 
