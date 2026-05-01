@@ -330,7 +330,7 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
         <div class="kpi-sub" id="kpi-leads-sub">today</div>
       </div>
       <div class="kpi-card c-red kpi-hide-mobile">
-        <button class="kpi-reset-btn" onclick="resetAllDoors()" title="Reset count — deletes all doors">
+        <button class="kpi-reset-btn" onclick="resetAllDoors()" title="Reset knock activity — clears logs but keeps addresses">
           <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7" stroke-linecap="round"/><polyline points="3 4 3 9 8 9" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Reset
         </button>
@@ -1011,27 +1011,35 @@ async function bulkDeleteSelected(){
   }
 }
 
+// Reset KPI counts WITHOUT deleting addresses. Clears every door's visit
+// log, notes, and status (back to pending) so the counters go to zero,
+// but the addresses on the map and in the route stay where you entered
+// them. Bulk-delete is a separate destructive action available from
+// select-mode if you actually want to remove addresses.
 window.resetAllDoors = async function(){
   if(!_doors.length){ showToast('Nothing to reset'); return; }
   var n = _doors.length;
-  var ok = await swftConfirm('Reset Total Doors', 'Reset Total doors to 0? This will permanently delete all ' + n + ' logged door' + (n === 1 ? '' : 's') + ' and visit history. Cannot be undone.', { danger: true, confirmLabel: 'Reset to 0' });
+  var ok = await swftConfirm('Reset Knock Activity', 'Clear visit logs and notes from all ' + n + ' door' + (n === 1 ? '' : 's') + '? Addresses stay — they just go back to Planned and the knock counters reset to zero.', { danger: true, confirmLabel: 'Clear All Logs' });
   if (!ok) return;
 
-  // Optimistic UI: clear immediately, roll back on failure
-  var before = _doors.slice();
-  _doors = [];
-  Object.keys(_markers).forEach(function(id){ _markers[id].setMap(null); delete _markers[id]; });
+  // Optimistic UI: snapshot in case the server call fails
+  var before = _doors.map(function(d){ return Object.assign({}, d); });
+
+  // Apply the reset locally so the UI updates immediately
+  _doors = _doors.map(function(d){
+    return Object.assign({}, d, { status: 'pending', notes: '', visits: [], updatedAt: Date.now() });
+  });
   refreshKpis();
   renderDoors();
   renderMarkers();
 
-  // Bulk-delete is capped at 200 ids per call — chunk if needed
+  // bulkReset is capped at 200 ids per call — chunk if needed
   var ids = before.map(function(d){ return d.id; });
   try {
     for(var i = 0; i < ids.length; i += 200){
-      await API.doors.bulkDelete(ids.slice(i, i + 200));
+      await API.doors.bulkReset(ids.slice(i, i + 200));
     }
-    showToast('Reset complete — deleted ' + n + ' door' + (n === 1 ? '' : 's'));
+    showToast('Reset complete — cleared logs on ' + n + ' door' + (n === 1 ? '' : 's'));
   } catch (e) {
     _doors = before;
     refreshKpis();
