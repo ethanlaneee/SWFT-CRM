@@ -5,7 +5,7 @@ const path = require("path");
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB max
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max
   fileFilter: (req, file, cb) => {
     const ok = file.mimetype.startsWith("image/") ||
                file.mimetype === "video/mp4"       ||

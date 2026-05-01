@@ -1532,6 +1532,41 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     });
   }
 
+  // Resize large images on the client before upload. Cuts a 30 MB phone shot
+  // to ~1-2 MB so uploads finish on weak signal. Falls back to the original
+  // file on any failure (unknown format, decode error, etc.).
+  async function _photoDownsize(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return file;
+    if (file.size <= 1024 * 1024) return file; // already small
+    var MAX_EDGE = 2560, QUALITY = 0.85;
+    var url = null;
+    try {
+      url = URL.createObjectURL(file);
+      var img = await new Promise(function(resolve, reject) {
+        var im = new Image();
+        im.onload  = function(){ resolve(im); };
+        im.onerror = function(){ reject(new Error('decode failed')); };
+        im.src = url;
+      });
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (!w || !h) return file;
+      var scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+      if (scale === 1 && file.size <= 5 * 1024 * 1024) return file; // small enough already
+      var canvas = document.createElement('canvas');
+      canvas.width  = Math.max(1, Math.round(w * scale));
+      canvas.height = Math.max(1, Math.round(h * scale));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      var blob = await new Promise(function(resolve){ canvas.toBlob(resolve, 'image/jpeg', QUALITY); });
+      if (!blob || blob.size >= file.size) return file; // re-encode made it bigger; keep original
+      var name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+      return new File([blob], name, { type: 'image/jpeg', lastModified: Date.now() });
+    } catch (e) {
+      return file;
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+    }
+  }
+
   async function loadJobPhotos(jobId) {
     if (!jobId) return;
     var container = document.getElementById('photo-days');
@@ -1597,10 +1632,13 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     if (!_currentJobId || !files.length) return;
     var captionEl = document.getElementById('photo-caption');
     var caption = captionEl ? captionEl.value.trim() : '';
-    showToast('Uploading ' + files.length + ' photo(s)...');
+    showToast('Preparing ' + files.length + ' photo(s)...');
     try {
+      var prepared = [];
+      for (var i = 0; i < files.length; i++) prepared.push(await _photoDownsize(files[i]));
+      showToast('Uploading ' + prepared.length + ' photo(s)...');
       var form = new FormData();
-      for (var i = 0; i < files.length; i++) form.append('photos', files[i]);
+      for (var k = 0; k < prepared.length; k++) form.append('photos', prepared[k]);
       form.append('dayKey', _photoTodayKey());
       if (caption) form.append('caption', caption);
       var res = await API.photos.upload(_currentJobId, form);
