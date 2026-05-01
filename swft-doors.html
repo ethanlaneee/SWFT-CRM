@@ -67,6 +67,8 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
 /* KPI STRIP */
 .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px 12px;position:relative;overflow:hidden;animation:sharpIn 0.4s cubic-bezier(0.22,1,0.36,1) both;}
+.kpi-reset-btn{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px solid var(--border2);color:var(--gray);font-size:10px;font-weight:500;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.3px;transition:all 0.14s;z-index:1;}
+.kpi-reset-btn:hover{color:var(--red);border-color:rgba(255,82,82,0.4);background:rgba(255,82,82,0.06);}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
 .kpi-card.c-green{--accent:var(--green);}
 .kpi-card.c-blue{--accent:var(--blue);}
@@ -328,6 +330,10 @@ body{visibility:hidden;background:var(--bg);color:var(--white);font-family:'DM S
         <div class="kpi-sub" id="kpi-leads-sub">today</div>
       </div>
       <div class="kpi-card c-red kpi-hide-mobile">
+        <button class="kpi-reset-btn" onclick="resetAllDoors()" title="Reset count — deletes all doors">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7" stroke-linecap="round"/><polyline points="3 4 3 9 8 9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Reset
+        </button>
         <div class="kpi-label">Total doors</div>
         <div class="kpi-value" id="kpi-total">0</div>
         <div class="kpi-sub">all-time</div>
@@ -1002,6 +1008,35 @@ async function bulkDeleteSelected(){
     showToast('Could not delete: ' + (e.message || 'error'));
   }
 }
+
+window.resetAllDoors = async function(){
+  if(!_doors.length){ showToast('Nothing to reset'); return; }
+  var n = _doors.length;
+  if(!confirm('Reset Total doors to 0? This will permanently delete all ' + n + ' logged door' + (n === 1 ? '' : 's') + ' and visit history. Cannot be undone.')) return;
+
+  // Optimistic UI: clear immediately, roll back on failure
+  var before = _doors.slice();
+  _doors = [];
+  Object.keys(_markers).forEach(function(id){ _markers[id].setMap(null); delete _markers[id]; });
+  refreshKpis();
+  renderDoors();
+  renderMarkers();
+
+  // Bulk-delete is capped at 200 ids per call — chunk if needed
+  var ids = before.map(function(d){ return d.id; });
+  try {
+    for(var i = 0; i < ids.length; i += 200){
+      await API.doors.bulkDelete(ids.slice(i, i + 200));
+    }
+    showToast('Reset complete — deleted ' + n + ' door' + (n === 1 ? '' : 's'));
+  } catch (e) {
+    _doors = before;
+    refreshKpis();
+    renderDoors();
+    renderMarkers();
+    showToast('Could not reset: ' + (e.message || 'error'));
+  }
+};
 
 function renderMarkers(){
   if(!_mapReady || !_map) return;
