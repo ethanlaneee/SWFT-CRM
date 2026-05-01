@@ -48,7 +48,7 @@ Rules:
   - Limit yourself to dispatching at most one specialist per area per tick.
 
 You are NOT the one sending the emails — your specialists do. You decide
-what's worth doing and dispatch accordingly.`;
+what's worth doing and dispatch accordingly.{voiceLine}`;
 
 const TOOLS = [
   {
@@ -160,7 +160,12 @@ async function runCeo(orgId, uid) {
   const safeSnapshot = { ...snapshot };
   delete safeSnapshot.user_data;
 
-  const systemPrompt = SYSTEM_PROMPT.replace(/{business}/g, businessName);
+  const voiceLine = userData && userData.aiCustomInstructions
+    ? `\n\nThe owner has set custom instructions for how the AI team should write and act. When you dispatch specialists, remind them to follow these rules:\n${userData.aiCustomInstructions}`
+    : "";
+  const systemPrompt = SYSTEM_PROMPT
+    .replace(/{business}/g, businessName)
+    .replace(/{voiceLine}/g, voiceLine);
   const userMessage = `Current state:\n\`\`\`json\n${JSON.stringify(safeSnapshot, null, 2)}\n\`\`\`\n\n` +
     `Decide what the team should do this tick. Dispatch the specialists you need, or call done() if nothing warrants action right now.`;
 

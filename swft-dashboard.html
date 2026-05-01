@@ -421,6 +421,20 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
   <div id="week-list" style="flex:1;overflow-y:auto;max-height:420px;"></div>
 </div>
 
+<div class="panel" style="display:flex;flex-direction:column;overflow:hidden;">
+  <div class="panel-header">
+    <div class="panel-title" style="display:flex;align-items:center;gap:8px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
+      WHAT YOUR AI DID
+      <span id="ai-act-count" style="display:none;background:rgba(200,241,53,0.15);color:var(--green);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;"></span>
+    </div>
+    <a class="panel-link" onclick="window.location.href='swft-agents'">Agents &#8594;</a>
+  </div>
+  <div id="ai-activity-list" style="flex:1;overflow-y:auto;max-height:340px;padding:6px 12px 10px;">
+    <div style="padding:14px;color:var(--gray);font-size:12.5px;text-align:center;">Loading…</div>
+  </div>
+</div>
+
 </div>
 
 </div>
@@ -933,6 +947,87 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     } catch (e) { console.error('loadSchedule error:', e); }
   }
 
+  // Renders the "What your AI did" panel on the dashboard. Pulls the
+  // 8 most-recent agent activity entries via API.agents.activity() and
+  // shows a compact one-line summary per row. The header shows a count
+  // of items in the last 24 hours so glanceable.
+  function _aiAgentLabel(agent){
+    var m = { 'CEO':'CEO', 'Admin':'Admin', 'Sales':'Sales', 'Customer Service':'CS',
+              'estimator':'AI Estimator', 'quote_followup':'Quote Follow-up',
+              'invoice_followup':'Payment Reminder', 'review_request':'Review Request',
+              'lead_followup':'Lead Follow-up', 'auto_reply':'Auto-Reply' };
+    return m[agent] || agent || 'agent';
+  }
+  function _aiActPillColor(action){
+    if (action === 'sent')        return ['rgba(200,241,53,0.14)','#c8f135'];
+    if (action === 'errored')     return ['rgba(255,82,82,0.12)','#ff8e8e'];
+    if (action === 'dispatched')  return ['rgba(77,159,255,0.14)','#4d9fff'];
+    if (action === 'tick_complete')return ['rgba(179,136,255,0.14)','#b388ff'];
+    return ['rgba(255,255,255,0.06)','var(--gray)'];
+  }
+  function _aiFmtTime(ts){
+    if (!ts) return '';
+    var diff = Date.now() - ts;
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff/60000)+'m';
+    if (diff < 86400000) return Math.floor(diff/3600000)+'h';
+    return Math.floor(diff/86400000)+'d';
+  }
+  function _aiEsc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  async function loadAgentActivityWidget(){
+    var box = document.getElementById('ai-activity-list');
+    var countEl = document.getElementById('ai-act-count');
+    if (!box) return;
+    try {
+      var rows = await API.agents.activity(8);
+      if (!rows || !rows.length) {
+        box.innerHTML = '<div style="padding:18px 8px;color:var(--gray);font-size:12.5px;text-align:center;line-height:1.55;">No agent activity yet. Turn on the CEO Agent or a specialist on the <a style="color:var(--green);cursor:pointer;" onclick="window.location.href=\'swft-agents\'">Agents page</a> and your AI will start working in the background.</div>';
+        if (countEl) countEl.style.display = 'none';
+        return;
+      }
+      // Count last-24h activity for the badge
+      var dayCutoff = Date.now() - 86400000;
+      var dayCount = rows.filter(function(r){ return (r.createdAt||0) >= dayCutoff; }).length;
+      if (countEl) {
+        if (dayCount > 0) { countEl.textContent = dayCount + ' TODAY'; countEl.style.display = 'inline-block'; }
+        else countEl.style.display = 'none';
+      }
+      box.innerHTML = rows.map(function(r){
+        var label = _aiAgentLabel(r.agent);
+        var colors = _aiActPillColor(r.action);
+        var line, sub;
+        if (r.action === 'dispatched') {
+          line = label + ' → ' + (r.targetType || 'specialist');
+          sub = r.reasoning || r.body || '';
+        } else if (r.action === 'tick_complete' || r.action === 'summary') {
+          line = label + ' · tick complete';
+          sub = r.body || r.reasoning || '';
+        } else {
+          line = label + ' → ' + (r.customerName || 'customer');
+          if (r.subject) line += ': ' + r.subject;
+          sub = (r.recipientEmail || r.recipientPhone || '') + (r.action === 'errored' && r.errorMessage ? ' · ' + r.errorMessage : '');
+        }
+        return (
+          '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border);">' +
+            '<span style="display:inline-block;font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:' + colors[0] + ';color:' + colors[1] + ';flex-shrink:0;min-width:64px;text-align:center;">' + _aiEsc(r.action || '') + '</span>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-size:12px;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + _aiEsc(line) + '</div>' +
+              (sub ? '<div style="font-size:10.5px;color:var(--gray2);font-family:\'JetBrains Mono\',monospace;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + _aiEsc(sub) + '</div>' : '') +
+            '</div>' +
+            '<div style="font-size:10px;color:var(--gray2);font-family:\'JetBrains Mono\',monospace;flex-shrink:0;">' + _aiFmtTime(r.createdAt) + '</div>' +
+          '</div>'
+        );
+      }).join('');
+    } catch (e) {
+      box.innerHTML = '<div style="padding:14px;color:var(--gray);font-size:12px;text-align:center;">Could not load.</div>';
+      if (countEl) countEl.style.display = 'none';
+    }
+  }
+
   function loadWeek() {
     try {
       var list = document.getElementById('week-list');
@@ -1179,6 +1274,12 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
     // and renders. Runs on every dashboard load so the panels aren't empty
     // after a refresh.
     loadSchedule();
+
+    // ── Load "What your AI did" widget ──
+    loadAgentActivityWidget();
+    // refresh every 60s so the panel stays warm if a tick lands while
+    // the user is on the dashboard
+    setInterval(loadAgentActivityWidget, 60000);
 
     // ── Load Automations stats strip ──
     try {
