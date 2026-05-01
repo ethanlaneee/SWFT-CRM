@@ -1138,7 +1138,7 @@ function onAIEstPhotoChange(input){
 
 function openMapsFromAddress(){
   var addr=document.getElementById('ai-est-address').value.trim();
-  if(!addr){alert('Enter an address first');return;}
+  if(!addr){showToast('Enter an address first');return;}
   window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(addr),'_blank');
 }
 

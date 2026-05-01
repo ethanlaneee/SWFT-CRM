@@ -990,7 +990,8 @@
         var f = ev.target.files && ev.target.files[0];
         if (!f) return;
         if (f.size > 2 * 1024 * 1024) {
-          alert('Image is over 2 MB — please pick a smaller one.');
+          if (typeof showToast === 'function') showToast('Image is over 2 MB — pick a smaller one.');
+          else console.warn('Image too large');
           return;
         }
         var reader = new FileReader();

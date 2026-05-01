@@ -307,6 +307,23 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
 </div>
 
 <script>
+// ── In-app toast (no browser alert popups) ──
+var _tcToastTimer;
+function showToast(msg){
+  var t = document.getElementById('tc-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'tc-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;border:1px solid #2c2c2c;border-radius:10px;padding:12px 18px;font-size:13.5px;font-family:\'DM Sans\',sans-serif;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.18s, transform 0.18s;box-shadow:0 12px 40px rgba(0,0,0,0.4);';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(_tcToastTimer);
+  _tcToastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(8px)'; }, 2800);
+}
+
 // ── Sidebar toggle ──
 function toggleSidebar(){
   var sb=document.getElementById('sidebar');
@@ -544,7 +561,7 @@ var _pendingFiles = [];
 function handleFileSelect(files){
   for(var i = 0; i < files.length; i++){
     if(files[i].size > 10 * 1024 * 1024){
-      alert(files[i].name + ' is too large (max 10 MB)');
+      showToast(files[i].name + ' is too large (max 10 MB)');
       continue;
     }
     _pendingFiles.push(files[i]);
@@ -602,7 +619,7 @@ async function sendMessage(){
     renderMessages(_messages);
     loadChats();
   } catch(e){
-    alert('Failed to send message: ' + e.message);
+    showToast('Failed to send message: ' + e.message);
     input.value = text;
   }
 }
@@ -662,7 +679,7 @@ async function createChat(){
   selectedEls.forEach(function(el){ memberIds.push(el.getAttribute('data-id')); });
 
   if(!memberIds.length){
-    alert('Select at least one team member');
+    showToast('Select at least one team member');
     return;
   }
 
@@ -674,13 +691,14 @@ async function createChat(){
     await loadChats();
     selectChat(chat.id);
   } catch(e){
-    alert('Failed to create chat: ' + e.message);
+    showToast('Failed to create chat: ' + e.message);
   }
 }
 
 // ── Delete a chat ──
 async function deleteChat(chatId){
-  if(!confirm('Delete this chat and all its messages?')) return;
+  var ok = await swftConfirm('Delete Chat', 'Delete this chat and all its messages? This cannot be undone.', { danger: true, confirmLabel: 'Delete' });
+  if (!ok) return;
   try {
     await API.teamChat.deleteChat(chatId);
     if(_activeChatId === chatId){
@@ -693,7 +711,7 @@ async function deleteChat(chatId){
     }
     await loadChats();
   } catch(e){
-    alert('Failed to delete chat: ' + e.message);
+    showToast('Failed to delete chat: ' + e.message);
   }
 }
 </script>

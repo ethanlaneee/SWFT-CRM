@@ -277,7 +277,7 @@ function parseCSV(file, type) {
   reader.onload = function(e) {
     var text = e.target.result;
     var lines = text.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) { alert('CSV must have at least one data row'); return; }
+    if (lines.length < 2) { showToast('CSV must have at least one data row'); return; }
     var headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
     var rows = [];
     for (var i = 1; i < lines.length; i++) {

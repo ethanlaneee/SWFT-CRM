@@ -960,7 +960,8 @@ function updateBulkCount(){
 async function bulkClearLogs(){
   var ids = Object.keys(_selectedIds);
   if(!ids.length){ showToast('No doors selected'); return; }
-  if(!confirm('Clear visit logs and notes from ' + ids.length + ' door' + (ids.length === 1 ? '' : 's') + '? Addresses stay; they go back to Planned.')) return;
+  var ok = await swftConfirm('Clear Visit Logs', 'Clear visit logs and notes from ' + ids.length + ' door' + (ids.length === 1 ? '' : 's') + '? The addresses stay — they just go back to Planned.', { danger: true, confirmLabel: 'Clear Logs' });
+  if (!ok) return;
 
   var btnSnapshot = _selectedIds;
   try {
@@ -986,7 +987,8 @@ async function bulkClearLogs(){
 async function bulkDeleteSelected(){
   var ids = Object.keys(_selectedIds);
   if(!ids.length){ showToast('No doors selected'); return; }
-  if(!confirm('Delete ' + ids.length + ' door' + (ids.length === 1 ? '' : 's') + ' and all their visit history? This cannot be undone.')) return;
+  var ok = await swftConfirm('Delete Doors', 'Delete ' + ids.length + ' door' + (ids.length === 1 ? '' : 's') + ' and all their visit history? This cannot be undone.', { danger: true, confirmLabel: 'Delete' });
+  if (!ok) return;
 
   // Optimistic UI: remove immediately, then call server. Roll back on failure.
   var before = _doors.slice();
@@ -1012,7 +1014,8 @@ async function bulkDeleteSelected(){
 window.resetAllDoors = async function(){
   if(!_doors.length){ showToast('Nothing to reset'); return; }
   var n = _doors.length;
-  if(!confirm('Reset Total doors to 0? This will permanently delete all ' + n + ' logged door' + (n === 1 ? '' : 's') + ' and visit history. Cannot be undone.')) return;
+  var ok = await swftConfirm('Reset Total Doors', 'Reset Total doors to 0? This will permanently delete all ' + n + ' logged door' + (n === 1 ? '' : 's') + ' and visit history. Cannot be undone.', { danger: true, confirmLabel: 'Reset to 0' });
+  if (!ok) return;
 
   // Optimistic UI: clear immediately, roll back on failure
   var before = _doors.slice();
@@ -1549,7 +1552,8 @@ async function saveDetailEdits(id){
 }
 
 async function deleteDoor(id){
-  if(!confirm('Delete this door and all its visit history? This cannot be undone.')) return;
+  var ok = await swftConfirm('Delete Door', 'Delete this door and all its visit history? This cannot be undone.', { danger: true, confirmLabel: 'Delete' });
+  if (!ok) return;
   try {
     await API.doors.delete(id);
     _doors = _doors.filter(function(x){ return x.id !== id; });

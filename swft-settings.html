@@ -1650,7 +1650,7 @@ async function exportToSheets() {
     try {
       const res = await apiFetch('/api/2fa/setup', { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Failed to start 2FA setup.'); btn.textContent = 'Set Up 2FA'; btn.disabled = false; return; }
+      if (!res.ok) { showToast(data.error || 'Failed to start 2FA setup.'); btn.textContent = 'Set Up 2FA'; btn.disabled = false; return; }
       document.getElementById('2fa-qr-img').src = data.qrDataUrl;
       document.getElementById('2fa-secret-text').textContent = data.secret;
       document.getElementById('2fa-setup-panel').style.display = 'block';
@@ -1659,7 +1659,7 @@ async function exportToSheets() {
       document.getElementById('2fa-setup-err').style.display = 'none';
       setTimeout(() => document.getElementById('2fa-verify-input').focus(), 50);
     } catch {
-      alert('Failed to load 2FA setup. Please try again.');
+      showToast('Failed to load 2FA setup. Please try again.');
     }
     btn.textContent = 'Set Up 2FA';
     btn.disabled = false;

@@ -1035,7 +1035,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       closeEvtModal();
       renderWeekView();
       renderTimeReport();
-    } catch(e) { alert('Error saving block: ' + e.message); }
+    } catch(e) { showToast('Error saving block: ' + e.message); }
   }
 
   async function deleteEvtPrompt(id) {
@@ -1047,7 +1047,7 @@ src="https://www.facebook.com/tr?id=952032957792473&ev=PageView&noscript=1"
       closeEvtModal();
       renderWeekView();
       renderTimeReport();
-    } catch(e) { alert('Error: ' + e.message); }
+    } catch(e) { showToast('Error: ' + e.message); }
   }
 
   async function loadCalendarJobs() {
