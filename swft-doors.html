@@ -1324,6 +1324,53 @@ document.addEventListener('keydown', function(e){
   }
 });
 
+// When a door is marked as a 'sale', auto-create a SWFT customer + a
+// scheduled job for them, tagged "from doors". Idempotent: stores the
+// resulting customer/job ids back on the door so we don't dupe if the
+// status flips through 'sale' a second time.
+async function convertDoorToCustomerJob(door){
+  if (!door || door.status !== 'sale') return;
+  if (door.convertedCustomerId) return; // already converted
+  var hasContact = (door.name && door.name.trim()) || (door.phone && door.phone.trim()) || (door.address && door.address.trim());
+  if (!hasContact) return;
+  try {
+    var name = (door.name || '').trim() || (door.address ? door.address.split(',')[0] : 'Door Sale');
+    var cust = await API.customers.create({
+      name: name,
+      phone: (door.phone || '').trim(),
+      address: (door.address || '').trim(),
+      notes: door.notes ? 'From door knock: ' + door.notes : 'Created from SWFT Doors',
+      tags: ['from doors'],
+    });
+    var custId = cust.id || cust;
+    var today = new Date().toISOString().split('T')[0];
+    var job = await API.jobs.create({
+      title: name + ' — From Doors',
+      customerName: name,
+      customerId: custId,
+      address: (door.address || '').trim(),
+      status: 'scheduled',
+      scheduledDate: today,
+      startTime: '09:00',
+    });
+    var jobId = job.id || job;
+    try {
+      await API.doors.update(door.id, {
+        convertedCustomerId: custId,
+        convertedJobId: jobId,
+      });
+      var idx = _doors.findIndex(function(x){ return x.id === door.id; });
+      if (idx >= 0) {
+        _doors[idx] = Object.assign({}, _doors[idx], { convertedCustomerId: custId, convertedJobId: jobId });
+      }
+    } catch(_) { /* dedup ref is best-effort */ }
+    showToast('Sale → customer + job created ✓');
+  } catch (e) {
+    console.error('[doors→customer/job] conversion failed:', e);
+    showToast('Sale logged, but auto-create failed: ' + (e.message || 'error'));
+  }
+}
+
 async function saveKnock(){
   if(!_logCoords){
     showToast('Waiting for GPS — give it a second…');
@@ -1364,6 +1411,9 @@ async function saveKnock(){
       });
       _doors.unshift(saved);
       showToast('Knock logged · ' + statusMeta(saved.status).label);
+    }
+    if (saved && saved.status === 'sale') {
+      convertDoorToCustomerJob(saved);  // fire-and-forget, shows its own toast
     }
     closeLogModal();
     refreshKpis();
@@ -1489,6 +1539,9 @@ async function saveDetailVisit(){
     if(idx >= 0) _doors[idx] = saved;
     var meta = statusMeta(status);
     showToast('Logged · ' + meta.label);
+    if (saved && saved.status === 'sale') {
+      convertDoorToCustomerJob(saved);  // fire-and-forget, shows its own toast
+    }
     refreshKpis();
     renderDoors();
     renderMarkers();   // pin recolors immediately based on new status
