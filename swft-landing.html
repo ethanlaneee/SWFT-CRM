@@ -793,6 +793,43 @@ section{position:relative;z-index:1;}
 /* Mobile tabs — hidden on desktop */
 .pt-mobile-tabs{display:none;}
 
+/* Feature info popover */
+.pricing-table tbody td[data-info-key]{cursor:pointer;}
+.pricing-table tbody td[data-info-key]::after{
+  content:"i";
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:50%;
+  border:1px solid var(--border2);color:var(--gray2);
+  font-family:Georgia,serif;font-style:italic;font-size:10px;font-weight:700;
+  margin-left:8px;line-height:1;vertical-align:middle;
+  transition:all 0.15s;
+}
+.pricing-table tbody td[data-info-key]:hover{color:var(--green);}
+.pricing-table tbody td[data-info-key]:hover::after{
+  border-color:var(--green);color:var(--green);
+}
+.pt-info-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(4px);z-index:9000;
+  align-items:center;justify-content:center;padding:20px;
+}
+.pt-info-overlay.active{display:flex;}
+.pt-info-popover{
+  position:relative;background:var(--surface);border:1px solid var(--border2);
+  border-radius:14px;padding:22px 26px 22px;max-width:380px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.pt-info-popover-title{
+  font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;font-size:18px;
+  color:var(--green);margin-bottom:10px;padding-right:24px;line-height:1.2;
+}
+.pt-info-popover-body{font-size:14px;line-height:1.55;color:var(--white);}
+.pt-info-popover-close{
+  position:absolute;top:8px;right:10px;background:none;border:none;
+  color:var(--gray2);font-size:24px;cursor:pointer;line-height:1;padding:6px 8px;
+}
+.pt-info-popover-close:hover{color:var(--white);}
+
 /* ── BILLING TOGGLE ── */
 .billing-toggle{
   display:flex;align-items:center;justify-content:center;gap:16px;
@@ -1490,36 +1527,36 @@ function toggleSidebar(){
         </thead>
         <tbody>
           <tr class="pt-group-row"><td colspan="4">Core CRM</td></tr>
-          <tr><td>Customer &amp; lead management</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>Jobs &amp; project management</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>Quotes &amp; estimates</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>AI-powered estimator</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>Invoicing &amp; payments</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>Scheduling &amp; calendar</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>SWFT AI Assistant</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="customers">Customer &amp; lead management</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="jobs">Jobs &amp; project management</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="quotes">Quotes &amp; estimates</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="ai-estimator">AI-powered estimator</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="invoicing">Invoicing &amp; payments</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="scheduling">Scheduling &amp; calendar</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="ai-assistant">SWFT AI Assistant</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
 
           <tr class="pt-group-row"><td colspan="4">Integrations</td></tr>
-          <tr><td>Gmail sync</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>Google Calendar sync</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>QuickBooks integration</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>Data import &amp; export</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="gmail">Gmail sync</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="gcal">Google Calendar sync</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="quickbooks">QuickBooks integration</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="import-export">Data import &amp; export</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
 
           <tr class="pt-group-row"><td colspan="4">Usage</td></tr>
-          <tr><td>Users</td><td data-col="1">1</td><td data-col="2" class="pt-featured pt-green">10 <span class="pt-sub">(+$23/mo ea)</span></td><td data-col="3" class="pt-green">25 <span class="pt-sub">(+$10/mo ea)</span></td></tr>
-          <tr><td>AI messages</td><td data-col="1">250 / mo</td><td data-col="2" class="pt-featured pt-green">1,000 / mo</td><td data-col="3" class="pt-green">Unlimited</td></tr>
-          <tr><td>SMS</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-featured pt-green">1,000 / mo</td><td data-col="3" class="pt-green">Unlimited</td></tr>
-          <tr><td>Broadcasts</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-featured pt-green">25 / mo</td><td data-col="3" class="pt-green">Unlimited</td></tr>
+          <tr><td data-info-key="users">Users</td><td data-col="1">1</td><td data-col="2" class="pt-featured pt-green">10 <span class="pt-sub">(+$23/mo ea)</span></td><td data-col="3" class="pt-green">25 <span class="pt-sub">(+$10/mo ea)</span></td></tr>
+          <tr><td data-info-key="ai-messages">AI messages</td><td data-col="1">250 / mo</td><td data-col="2" class="pt-featured pt-green">1,000 / mo</td><td data-col="3" class="pt-green">Unlimited</td></tr>
+          <tr><td data-info-key="sms">SMS</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-featured pt-green">1,000 / mo</td><td data-col="3" class="pt-green">Unlimited</td></tr>
+          <tr><td data-info-key="broadcasts">Broadcasts</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-featured pt-green">25 / mo</td><td data-col="3" class="pt-green">Unlimited</td></tr>
 
           <tr class="pt-group-row"><td colspan="4">Team &amp; Automation</td></tr>
-          <tr><td>Team management &amp; permissions</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
-          <tr><td>Team chat</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
-          <tr><td>Team tracker (live location)</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
-          <tr><td>AI Agents</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
-          <tr><td>SWFT Doors</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td data-info-key="team-mgmt">Team management &amp; permissions</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td data-info-key="team-chat">Team chat</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td data-info-key="team-tracker">Team tracker (live location)</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td data-info-key="ai-agents">AI Agents</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td data-info-key="swft-doors">SWFT Doors</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-check pt-featured pt-green">&#10003;</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
 
           <tr class="pt-group-row"><td colspan="4">Support</td></tr>
-          <tr><td>Email support</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
-          <tr><td>Dedicated support</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-dash">—</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
+          <tr><td data-info-key="email-support">Email support</td><td data-col="1" class="pt-check">&#10003;</td><td data-col="2" class="pt-check pt-featured">&#10003;</td><td data-col="3" class="pt-check">&#10003;</td></tr>
+          <tr><td data-info-key="dedicated-support">Dedicated support</td><td data-col="1" class="pt-dash">—</td><td data-col="2" class="pt-dash">—</td><td data-col="3" class="pt-check pt-green">&#10003;</td></tr>
 
           <tr class="pt-cta-row">
             <td></td>
@@ -1848,5 +1885,63 @@ function ptSelectCol(col) {
 </script>
 
 <script src="swft-mobile.js"></script>
+
+<!-- Pricing-table feature info popover -->
+<div id="pt-info-overlay" class="pt-info-overlay" onclick="if(event.target===this)closePtInfo()">
+  <div class="pt-info-popover">
+    <button class="pt-info-popover-close" onclick="closePtInfo()" aria-label="Close">×</button>
+    <div class="pt-info-popover-title" id="pt-info-title"></div>
+    <div class="pt-info-popover-body" id="pt-info-body"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const FEATURE_INFO = {
+    'customers': { title:'Customer & Lead Management', body:"Your big list of everyone you've ever worked for, plus folks who might hire you next. SWFT remembers their address, phone, what jobs you did, and what they still owe — so you don't have to keep it in your head." },
+    'jobs': { title:'Jobs & Project Management', body:"Every job you're working on in one list. Who's it for, what needs doing, who's doing it, and what stage it's at — quote, scheduled, in progress, done." },
+    'quotes': { title:'Quotes & Estimates', body:"Send a customer a price for a job before you start. They get a clean-looking quote, click a button, and accept it. Way faster than typing it up in an email." },
+    'ai-estimator': { title:'AI-Powered Estimator', body:"Tell SWFT what the job is — 'roof replacement, 22 squares' — and the AI pulls your usual rates and writes the quote for you. No more doing math at 10pm." },
+    'invoicing': { title:'Invoicing & Payments', body:"Send a bill when the job's done. The customer pays right from the bill with a credit card or bank transfer. Money lands in your account in a couple days." },
+    'scheduling': { title:'Scheduling & Calendar', body:"A calendar showing every job booked, who's going, and when. The customer gets reminders. You stop double-booking yourself." },
+    'ai-assistant': { title:'SWFT AI Assistant', body:"A helper you can talk to or type at. Say 'send Marcus a quote for $1,200' and it does it. 'Who hasn't paid me from last month?' — it tells you. No clicking through menus." },
+    'gmail': { title:'Gmail Sync', body:"Hooks up your Gmail so customer emails show up next to their info inside SWFT. No more flipping between Gmail and your CRM to remember what they said." },
+    'gcal': { title:'Google Calendar Sync', body:"Jobs you book in SWFT also show up in Google Calendar (and the other way around). Book it once, it's everywhere — your phone, your computer, your spouse's calendar." },
+    'quickbooks': { title:'QuickBooks Integration', body:"Your invoices and payments automatically copy into QuickBooks for taxes. Your accountant will stop emailing you spreadsheets every quarter." },
+    'import-export': { title:'Data Import & Export', body:"Bring in customers from a spreadsheet on day one — no retyping. And anytime you want, pull all your data back out as a spreadsheet. It's your data, you can take it." },
+    'users': { title:'Users', body:"How many people on your team can log in. Each user has their own login and password. If you grow past your plan's user limit, you can add more for a small fee per person." },
+    'ai-messages': { title:'AI Messages', body:"How many times the AI assistant can do something for you each month. One request — like 'draft a quote' or 'who owes me money?' — counts as one AI message. Run out and you can buy more, or upgrade." },
+    'sms': { title:'SMS', body:"Real text messages sent to your customers from your business phone number. 'On my way, see you in 20 min.' Texts get read way faster than emails." },
+    'broadcasts': { title:'Broadcasts', body:"Send one text or email blast to a bunch of customers at once. Like 'we're booking up for spring — first come, first served' to all your VIPs. One click, hundreds of inboxes." },
+    'team-mgmt': { title:'Team Management & Permissions', body:"Add your crew to SWFT and decide what they can see. Office manager sees everything. Field crew only sees their own jobs. Nobody messes with the pricing." },
+    'team-chat': { title:'Team Chat', body:"A group chat for your crew, built into SWFT. Talk about jobs, share photos from the site, send updates. Like Slack, but inside the app you're already in." },
+    'team-tracker': { title:'Team Tracker (Live Location)', body:"See where each crew member is on a map, in real time. Know who's closest to a new job, or whether Devon actually got to the site at 9am like he said." },
+    'ai-agents': { title:'AI Agents', body:"Little AI workers that do things for you in the background, even when you're sleeping. One handles new lead replies. One chases unpaid invoices. One books appointments. Like extra staff, no payroll." },
+    'swft-doors': { title:'SWFT Doors', body:"A little website your customers can use to book you, see when you're coming, check their job status, and pay invoices. Cuts down on 'when are you here?' phone calls by a lot." },
+    'email-support': { title:'Email Support', body:"Got a problem? Email us and a real human emails back. Standard help — works for most stuff." },
+    'dedicated-support': { title:'Dedicated Support', body:"A real person assigned to your account who knows your business. Faster replies, more personal help, and they pick up the phone. For when email isn't fast enough." },
+  };
+
+  const overlay = document.getElementById('pt-info-overlay');
+  const titleEl = document.getElementById('pt-info-title');
+  const bodyEl = document.getElementById('pt-info-body');
+
+  document.addEventListener('click', function(e){
+    const cell = e.target.closest('.pricing-table td[data-info-key]');
+    if (!cell) return;
+    const info = FEATURE_INFO[cell.getAttribute('data-info-key')];
+    if (!info) return;
+    titleEl.textContent = info.title;
+    bodyEl.textContent = info.body;
+    overlay.classList.add('active');
+  });
+
+  window.closePtInfo = function(){ overlay.classList.remove('active'); };
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closePtInfo();
+  });
+})();
+</script>
 </body>
 </html>
